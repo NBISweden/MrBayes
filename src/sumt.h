@@ -1,0 +1,12 @@
+int      DoCompareTree (void);
+int      DoCompareTreeParm (char *parmName, char *tkn);
+int      DoSumt (void);
+int      DoSumtParm (char *parmName, char *tkn);
+int      DoTranslate (void);
+int      DoTranslateParm (char *parmName, char *tkn);
+int      DoSumtTree (void);
+int      DoSumtTreeParm (char *parmName, char *tkn);
+void     ResetTranslateTable (void);
+int		 ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int showSupport);
+void     SortInts (int *item, int *assoc, int count, int descendingOrder);
+void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
