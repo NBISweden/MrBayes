@@ -37280,8 +37280,9 @@ int RunChain (safeLong *seed)
 
 {
 	
-	int			i, j, k, n, chn, swapA=0, swapB=0, whichMove, acceptMove, lastDiagnostics, stopChain,
-				nErrors;
+	int			i, j, k, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
+	int			lastDiagnostics; //the sample nr when last diagnostic was performed
+	int 		stopChain, nErrors;
 	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f, CPUTime;
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
@@ -38009,15 +38010,20 @@ int RunChain (safeLong *seed)
 				/* the following function returns immediately in MPI if proc_id != 0 */
 				if (chainParams.relativeBurnin == YES)
 					{
-					if (RemoveTreeSamples ((int)(chainParams.burninFraction * lastDiagnostics) + 1, (int) (chainParams.burninFraction * ((n/chainParams.sampleFreq)+1))) == ERROR)
-						{
-                        MrBayesPrint("%s   Problem removing tree samples\n");
-#				        if defined (MPI_ENABLED)
-				        nErrors++;
-#	        	        else
-				        return ERROR;
-#                       endif
-                        }
+					int currentDiagnostics = (n/chainParams.sampleFreq)+1;
+					int removeFrom = (int)(chainParams.burninFraction * lastDiagnostics);
+					int removeTo = (int)(chainParams.burninFraction * currentDiagnostics);
+						if( removeFrom < removeTo ){
+						if ( RemoveTreeSamples (removeFrom + 1, removeTo ) == ERROR)
+							{
+                     	  	 MrBayesPrint("%s   Problem removing tree samples\n");
+#				      		  if defined (MPI_ENABLED)
+				     		   nErrors++;
+#	        	      		  else
+				      		  return ERROR;
+#                     		  endif
+                        	}
+						}
 #                   if defined (MPI_ENABLED)
 			        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 			        if (sumErrors > 0)
