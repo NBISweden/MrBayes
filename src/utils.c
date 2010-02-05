@@ -650,7 +650,7 @@ void *SafeMalloc(size_t s) {
 char *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) calloc (strlen(source)+1,sizeof(char));
+        *target = (char *) malloc ((strlen(source)+1)*sizeof(char));
     else
         *target = (char *) realloc ((void *)*target, (size_t)(strlen(source)+strlen(*target)+1)*sizeof(char));
 
@@ -664,7 +664,8 @@ char *SafeStrcat (char **target, const char *source)
 
 
 
-/* StripComments: Strip possibly nested comments from the string s */
+/* StripComments: Strip possibly nested comments from the string s.
+	Example: s="[[comment]]"-> s="comment" */
 void StripComments (char *s)
 {
 	char	*t;

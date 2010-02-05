@@ -37282,6 +37282,7 @@ int RunChain (safeLong *seed)
 	
 	int			i, j, k, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
 	int			lastDiagnostics; //the sample nr when last diagnostic was performed
+	int         removeFrom, removeTo;
 	int 		stopChain, nErrors;
 	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f, CPUTime;
 	MCMCMove	*theMove, *mv;
@@ -38010,10 +38011,10 @@ int RunChain (safeLong *seed)
 				/* the following function returns immediately in MPI if proc_id != 0 */
 				if (chainParams.relativeBurnin == YES)
 					{
-					int currentDiagnostics = (n/chainParams.sampleFreq)+1;
-					int removeFrom = (int)(chainParams.burninFraction * lastDiagnostics);
-					int removeTo = (int)(chainParams.burninFraction * currentDiagnostics);
-						if( removeFrom < removeTo ){
+					removeFrom = (int)(chainParams.burninFraction * lastDiagnostics);
+					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq)+1);
+					if( removeFrom < removeTo )
+						{
 						if ( RemoveTreeSamples (removeFrom + 1, removeTo ) == ERROR)
 							{
                      	  	 MrBayesPrint("%s   Problem removing tree samples\n");
