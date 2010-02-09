@@ -7,6 +7,7 @@ struct complex
 
 typedef struct complex complex;
 
+
 complex **AllocateSquareComplexMatrix (int dim);
 MrBFlt  **AllocateSquareDoubleMatrix (int dim);
 int     **AllocateSquareIntegerMatrix (int dim);

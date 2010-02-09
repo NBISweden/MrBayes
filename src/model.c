@@ -1,24 +1,21 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3
  *
- *  copyright 2002-2005
+ *  copyright 2002-2009
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
- *
- *  johnh@biomail.ucsd.edu
+ *  Department of Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
  *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  Department of Entomology
+ *  Swedish Museum of Natural History
+ *  SE-10405 Stockholm, Sweden
+ *  fredrik.ronquist@nrm.se
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  See the authors command for other important contributors.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,7 +29,7 @@
  *
  */
 /* id-string for ident, do not edit: cvs will update this string */
-const char modelID[]="$Id: model.c,v 3.73 2009/08/07 05:53:41 ronquist Exp $";
+const char modelID[]="$Id: model.c,v 3.72 2009/02/04 15:51:52 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,7 +78,6 @@ int     IsApplicableTreeAgeMove (Param *param);
 int		IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
 int		NumActiveParts (void);
 int     NumNonExcludedChar (void);
-int     NumNonExcludedTaxa (void);
 int		NumStates (int part);
 int		SetModelParams (void);
 int     SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
@@ -95,10 +91,10 @@ int 	UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt 
 
 
 /* globals */
-int				activeParams[NUM_LINKED][MAX_NUM_DIVS]; /* a table holding the parameter link status        */
+int				*activeParams[NUM_LINKED];              /* a table holding the parameter link status        */
 int				localOutGroup;							/* outgroup for non-excluded taxa				    */
 Calibration		**localTaxonCalibration = NULL;			/* stores local taxon calibrations (ages)           */
-char			*localTaxonNames = NULL;				/* stores names of non-excluded taxa                */
+char			**localTaxonNames = NULL;				/* points to names of non-excluded taxa             */
 Model			*modelParams;							/* holds model params								*/
 ModelInfo		*modelSettings;							/* stores important info on model params			*/
 MCMCMove		**moves;								/* vector of pointers to applicable moves			*/
@@ -114,6 +110,14 @@ Param			*params;								/* vector of parameters						 	    */
 Param			*printParams;						    /* vector of subst model parameters	to print        */
 ShowmovesParams	showmovesParams;						/* holds parameters for Showmoves command           */
 Param			*treePrintparams;						/* vector of tree parameters to print               */
+
+/* globals used to describe and change the current model; allocated in AllocCharacters and SetPartition */
+int         *numVars;                                   /* number of variables in setting arrays         */
+int         *activeParts;                               /* partitions changes should apply to            */
+int         *linkTable[NUM_LINKED];                     /* how parameters are linked across parts        */
+int         *tempLinkUnlink[NUM_LINKED];                /* for changing parameter linkage                */
+int         *tempLinkUnlinkVec;                         /* for changing parameter linkage                */
+MrBFlt      *tempNum;                                   /* vector of numbers used for setting arrays     */
 
 /* Aamodel parameters */
 MrBFlt			aaJones[20][20];	         /* rates for Jones model                        */
@@ -136,23 +140,19 @@ MrBFlt			vtPi[20];                    /* stationary frequencies for VT model    
 MrBFlt			blosPi[20];                  /* stationary frequencies for Blosum62 model    */
 
 
-/* local */
-static int		numVars[MAX_NUM_DIVS], activeParts[MAX_NUM_DIVS], fromI, toJ, foundDash, foundComma, foundEqual, foundBeta, foundAaSetting, foundExp, modelIsFixed,
-				linkNum, linkTable[NUM_LINKED][MAX_NUM_DIVS], tempLinkUnlink[NUM_LINKED][MAX_NUM_DIVS], tempLinkUnlinkVec[MAX_NUM_DIVS], tempNumStates, isNegative;
-static MrBFlt	tempStateFreqs[200], tempAaModelPrs[10], tempNum[MAX_NUM_DIVS];
-static char		colonPr[100];
+/* parser flags and variables */
+int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
+            foundAaSetting, foundExp, modelIsFixed, linkNum, 
+            tempNumStates, isNegative;
+MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
+char		colonPr[100];
 
 MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition      */
 Tree			**mcmcTree;                  /* pointers to trees for mcmc                   */
 int				paramValsRowSize;	         /* row size of paramValues matrix				 */
-int				paramValsRowSize;	         /* row size of paramValues matrix				 */
 MrBFlt			*paramValues = NULL;         /* stores actual values of chain parameters     */
 int				*relevantParts = NULL;       /* partitions that are affected by this move    */
 Param			**subParamPtrs;		         /* pointer to subparams for topology params     */
-
-
-
-
 
 
 void AllocateCppEvents (Param *p)
@@ -1188,7 +1188,7 @@ int CheckExpandedModels (void)
 				/* find first character in this partition */
 				for (c=0; c<numChar; c++)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] == d+1)
+					if (partitionId[c][partitionNum] == d+1)
 						break;
 					}
 				firstChar = c;
@@ -1197,7 +1197,7 @@ int CheckExpandedModels (void)
 				/* find last character in this partition */
 				for (c=numChar-1; c>=0; c--)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] == d+1)
+					if (partitionId[c][partitionNum] == d+1)
 						break;
 					}
 				lastChar = c;
@@ -1207,7 +1207,7 @@ int CheckExpandedModels (void)
 				numCharsInPart = 0;
 				for (c=0; c<numChar; c++)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] != d+1)
+					if (partitionId[c][partitionNum] != d+1)
 						continue;
 					numCharsInPart++;
 					}
@@ -1237,7 +1237,7 @@ int CheckExpandedModels (void)
 				contiguousPart = YES;
 				for (c=firstChar; c<=lastChar; c++)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] != d+1)
+					if (partitionId[c][partitionNum] != d+1)
 						contiguousPart = NO;
 					}
 				if (contiguousPart == NO)
@@ -1331,13 +1331,8 @@ int CheckExpandedModels (void)
 							if (oneGoodCodon == NO)
 								{
 								foundStopCodon = YES;
-								if (GetNameFromString (taxaNames, tempStr, t+1) == ERROR)
-									{
-									MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-									return (ERROR);
-									}
 								MrBayesPrint ("%s   Stop codon: taxon %s, sites %d to %d (%c%c%c, %s code)\n", spacer, 
-									tempStr, c+1, c+3, WhichNuc (nuc1), WhichNuc (nuc2), WhichNuc (nuc3), mp->geneticCode);
+									taxaNames[t], c+1, c+3, WhichNuc (nuc1), WhichNuc (nuc2), WhichNuc (nuc3), mp->geneticCode);
 								}
 							}
 						}
@@ -1378,18 +1373,18 @@ int CheckExpandedModels (void)
 				foundUnpaired = NO;
 				for (c=0; c<numChar; c++)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] == d+1 && charInfo[c].pairsId == 0 && charInfo[c].isExcluded == NO)
+					if (partitionId[c][partitionNum] == d+1 && charInfo[c].pairsId == 0 && charInfo[c].isExcluded == NO)
 						foundUnpaired = YES;
 					}
 					
 				for (c=0; c<numChar; c++)
 					{
-					if (charInfo[c].partitionId[partitionNum-1] == d+1 && charInfo[c].isExcluded == NO)
+					if (partitionId[c][partitionNum] == d+1 && charInfo[c].isExcluded == NO)
 						{
 						nPair = 1;
 						for (i=0; i<numChar; i++)
 							{
-							if (i != c && charInfo[i].partitionId[partitionNum-1] == d+1 && charInfo[i].isExcluded == NO && charInfo[c].pairsId == charInfo[i].pairsId)
+							if (i != c && partitionId[i][partitionNum] == d+1 && charInfo[i].isExcluded == NO && charInfo[c].pairsId == charInfo[i].pairsId)
 								nPair++;
 							}
 						if (nPair != 2)
@@ -1416,7 +1411,7 @@ int CheckExpandedModels (void)
 				for (c=0; c<numChar; c++)
 					{
 					nuc1 = nuc2 = -1;
-					if (charInfo[c].partitionId[partitionNum-1] == d+1 && charInfo[c].charId == 0)
+					if (partitionId[c][partitionNum] == d+1 && charInfo[c].charId == 0)
 						{
 						nuc1 = c;
 						for (i=0; i<numChar; i++)
@@ -1494,7 +1489,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 	for (i=from; i<to; i++)
 		{
 		treeHandle = p->tree + i*2*numTrees;
-		if ((*treeHandle = AllocateTree (numLocalTaxa, isRooted)) == NULL)
+		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
@@ -1502,7 +1497,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 		else
 			AllocateTreeFlags (*treeHandle);
 		treeHandle += numTrees;
-		if ((*treeHandle = AllocateTree (numLocalTaxa, isRooted)) == NULL)
+		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
@@ -1529,8 +1524,19 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 				sprintf (tree->name, "mcmc.tree_%d", i+j+1);
 			tree->nRelParts = p->nRelParts;
 			tree->relParts = p->relParts;
+            tree->isRooted = isRooted;
 			tree->isClock = isClock;
 			tree->isCalibrated = isCalibrated;
+            if (tree->isRooted == YES)
+                {
+                tree->nNodes = 2*numLocalTaxa;
+                tree->nIntNodes = numLocalTaxa - 1;
+                }
+            else /* if (tree->isRooted == NO) */
+                {
+                tree->nNodes = 2*numLocalTaxa - 2;
+                tree->nIntNodes = numLocalTaxa - 2;
+                }
 			if (p->checkConstraints == YES)
 				{
 				tree->checkConstraints = YES;
@@ -1561,7 +1567,7 @@ int DataType (int part)
 
 	for (i=0; i<numChar; i++)
 		{
-		if (charInfo[i].partitionId[partitionNum-1] == part + 1)
+		if (partitionId[i][partitionNum] == part + 1)
 			break;
 		}
 
@@ -1610,7 +1616,7 @@ int DoLink (void)
 
 	/* reinitialize the temporary table */
 	for (j=0; j<NUM_LINKED; j++)
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			tempLinkUnlink[j][i] = NO;
 
 	/* set up parameters and moves */
@@ -1640,7 +1646,7 @@ int DoLinkParm (char *parmName, char *tkn)
 	if (inValidCommand == YES)
 		{
 		for (j=0; j<NUM_LINKED; j++)
-			for (i=0; i<MAX_NUM_DIVS; i++)
+			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[j][i] = NO;
 		inValidCommand = NO;
 		}
@@ -1656,7 +1662,7 @@ int DoLinkParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(LEFTPAR))
 		{
 		/* initialize tempLinkUnlinkVec to no */
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			tempLinkUnlinkVec[i] = NO;
 		fromI = toJ = -1;
 		foundDash = NO;
@@ -1923,7 +1929,7 @@ int DoLsetParm (char *parmName, char *tkn)
 		}
 	if (inValidCommand == YES)
 		{
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			activeParts[i] = NO;
 		inValidCommand = NO;
 		}
@@ -1941,7 +1947,7 @@ int DoLsetParm (char *parmName, char *tkn)
 				expecting = Expecting(LEFTPAR);
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					activeParts[i] = NO;
 				fromI = toJ = -1;
 				foundDash = NO;
@@ -3009,7 +3015,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 
 {
 
-	int			i, j, k, tempInt, nApplied, howMany, ns;
+	int			i, j, k, tempInt, nApplied, index, ns;
 	MrBFlt		tempD, sum;
 	char		tempStr[100];
 
@@ -3018,9 +3024,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 		MrBayesPrint ("%s   A matrix must be specified before the model can be defined\n", spacer);
 		return (ERROR);
 		}
-	if (inValidCommand == YES)
+    if (inValidCommand == YES)
 		{
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			activeParts[i] = NO;
 		inValidCommand = NO;
 		}
@@ -3038,7 +3044,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				expecting = Expecting(LEFTPAR);
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					activeParts[i] = NO;
 				fromI = toJ = -1;
 				foundDash = NO;
@@ -3134,7 +3140,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -3573,7 +3579,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -3668,7 +3674,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -3748,7 +3754,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -3855,7 +3861,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				else
 					expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -3925,7 +3931,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -4012,7 +4018,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -4122,7 +4128,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -4212,7 +4218,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				foundDash = NO;
 				}
@@ -4318,7 +4324,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				foundDash = NO;
 				}
@@ -4444,7 +4450,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					expecting  = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				else
 					expecting = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -4553,7 +4559,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -4656,7 +4662,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						return (ERROR);
 						}
 					expecting  = Expecting(LEFTPAR);
-					for (i=0; i<MAX_NUM_DIVS; i++)
+					for (i=0; i<numCurrentDivisions; i++)
 						numVars[i] = 0;
 					foundBeta = YES;	
 					}	
@@ -4972,7 +4978,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 							    {
 							    strcpy(modelParams[i].topologyPr, tempStr);
 							    /* erase previous constraints, if any */
-							    for (j=0; j<MAX_NUM_CONSTRAINTS; j++)
+							    for (j=0; j<numDefinedConstraints; j++)
 								    modelParams[i].activeConstraints[j] = NO;
 							    if (nApplied == 0 && numCurrentDivisions == 1)
 								    MrBayesPrint ("%s   Setting Topologypr to %s\n", spacer, modelParams[i].topologyPr);
@@ -5009,31 +5015,31 @@ int DoPrsetParm (char *parmName, char *tkn)
 					if (!strcmp(modelParams[i].topologyPr,"Constraints"))
                         {
                         /* find constraint number */
-                        if (CheckString (tkn, constraintNames, &howMany) == ERROR)
+                        if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) == ERROR)
 						    {
 						    MrBayesPrint ("%s   Could not find constraint named %s\n", spacer, tkn);
 						    return (ERROR);
 						    }
-					    numVars[howMany - 1] = YES;
+					    numVars[index] = YES;
                         expecting = Expecting(RIGHTPAR);
                         expecting |= Expecting(COMMA);
                         }
                     else
                         {
                         /* find tree number */
-                        if (GetUserTreeFromName (&howMany, tkn) == ERROR)
+                        if (GetUserTreeFromName (&index, tkn) == ERROR)
 						    {
 						    MrBayesPrint ("%s   Could not set fixed topology from user tree '%s'\n", spacer, tkn);
 						    return (ERROR);
   						    }
-                        fromI = howMany + 1;        /* fromI is used to hold the index of the user tree, 1-based */
+                        fromI = index + 1;        /* fromI is used to hold the index of the user tree, 1-based */
                         expecting = Expecting(RIGHTPAR);
                         }
 					}
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = NO;
 				fromI = toJ = -1;
 				foundDash = foundComma = NO;
@@ -5132,7 +5138,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				        if (activeParts[i] == YES || nApplied == 0)
 					        {
 					        modelParams[i].numActiveConstraints = 0;
-					        for (j=0; j<MAX_NUM_CONSTRAINTS; j++)
+					        for (j=0; j<numDefinedConstraints; j++)
 						        {
 						        if (numVars[j] == YES)
 							        {
@@ -5240,9 +5246,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 		/* set Brlenspr (brlensPr) ************************************************************/
 		else if (!strcmp(parmName, "Brlenspr"))
 			{
-			if (expecting == Expecting(EQUALSIGN))
+            if (expecting == Expecting(EQUALSIGN))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = NO;
 				foundEqual = YES;
 				expecting = Expecting(ALPHA);
@@ -5307,7 +5313,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 								else
 									MrBayesPrint ("%s   Setting Brlenspr to Clock:Uniform for partition %d\n", spacer, i+1);
 								}
-                            strcpy(sumtParams.phylogramType,"Nodedepths");
 							}
 						else if (IsSame ("Birthdeath", tkn) == SAME || IsSame ("Birthdeath", tkn) == CONSISTENT_WITH)
 							{
@@ -5320,7 +5325,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 								else
 									MrBayesPrint ("%s   Setting Brlenspr to Clock:Birthdeath for partition %d\n", spacer, i+1);
 								}
-                            strcpy(sumtParams.phylogramType,"Nodedepths");
 							}
 						else if (IsSame ("Coalescence", tkn) == SAME || IsSame ("Coalescence", tkn) == CONSISTENT_WITH)
 							{
@@ -5333,7 +5337,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 								else
 									MrBayesPrint ("%s   Setting Brlenspr to Clock:Coalescence for partition %d\n", spacer, i+1);
 								}
-                            strcpy(sumtParams.phylogramType,"Nodedepths");
 							}
 						else
 							{
@@ -5351,7 +5354,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				expecting  = Expecting(NUMBER);
 				}
@@ -5387,7 +5390,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlensUni[0], modelParams[i].brlensUni[1]);
 									else
 										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlensUni[0], modelParams[i].brlensUni[1], i+1);
-                                    strcpy(sumtParams.phylogramType,"Brlens");
 									expecting  = Expecting(RIGHTPAR);
 									}
 								}
@@ -5399,7 +5401,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 									MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Exponential(%1.2lf)\n", spacer, modelParams[i].brlensExp);
 								else
 									MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].brlensExp, i+1);
-                                strcpy(sumtParams.phylogramType,"Brlens");
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
@@ -5445,7 +5446,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -5538,7 +5539,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -5659,7 +5660,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -5696,16 +5697,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 								MrBayesPrint ("%s   Setting Treeheightpr to Exponential(%1.2lf)\n", spacer, modelParams[i].treeHeightExp);
 							else
 								MrBayesPrint ("%s   Setting Treeheightpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].treeHeightExp, i+1);
-							expecting  = Expecting(RIGHTPAR);
-							}
-						else if (!strcmp(modelParams[i].treeHeightPr,"Fixed"))
-							{
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].treeHeightFix = tempD;
-							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Treeheightpr to Fixed(%1.2lf)\n", spacer, modelParams[i].treeHeightFix);
-							else
-								MrBayesPrint ("%s   Setting Treeheightpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].treeHeightFix, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
 						}
@@ -5752,7 +5743,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -5874,7 +5865,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -5969,7 +5960,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6044,7 +6035,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6139,7 +6130,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6234,7 +6225,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6333,7 +6324,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6696,7 +6687,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6801,7 +6792,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -6896,7 +6887,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					numVars[i] = 0;
 				}
 			else if (expecting == Expecting(LEFTPAR))
@@ -7012,7 +7003,7 @@ int DoReportParm (char *parmName, char *tkn)
 		}
 	if (inValidCommand == YES)
 		{
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			activeParts[i] = NO;
 		inValidCommand = NO;
 		}
@@ -7030,7 +7021,7 @@ int DoReportParm (char *parmName, char *tkn)
 				expecting = Expecting(LEFTPAR);
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<MAX_NUM_DIVS; i++)
+				for (i=0; i<numCurrentDivisions; i++)
 					activeParts[i] = NO;
 				fromI = toJ = -1;
 				foundDash = NO;
@@ -7567,11 +7558,6 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
 							return (ERROR);
 							}
-                        if (theTree->isClock == YES && !strcmp(modelParams[theTree->relParts[0]].treeHeightPr,"Fixed"))
-                            {
-                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") || !strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform"))
-                                ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeHeightFix);
-                            }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (theTree,0.001) == NO)
 							{
@@ -7916,7 +7902,7 @@ int DoUnlink (void)
 
 	/* reinitialize the temporary table */
 	for (j=0; j<NUM_LINKED; j++)
-		for (i=0; i<MAX_NUM_DIVS; i++)
+		for (i=0; i<numCurrentDivisions; i++)
 			tempLinkUnlink[j][i] = NO;
 
 	/* set up parameters and moves */
@@ -7950,7 +7936,7 @@ int DoShowMcmcTrees (void)
 					MrBayesPrint ("\n   Tree '%s' [rooted]:\n\n", t->name);
 				else
 					MrBayesPrint ("\n   Tree '%s' [unrooted]:\n\n", t->name);
-				if (ShowTree (t->root, t->isRooted, numTaxa) == ERROR)
+				if (ShowTree (t) == ERROR)
 					return (ERROR);
 				else
 					MrBayesPrint ("\n");
@@ -8700,7 +8686,7 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 
 	tree = GetTree (param, chn, state);
 	
-    for (i=1; i<param->nSubParams; i++)
+	for (i=1; i<param->nSubParams; i++)
 		{
 		q = param->subParams[i];
 		tree1 = GetTree (q, chn, state);
@@ -9106,7 +9092,7 @@ int GetEmpiricalFreqs (int *relParts, int nRelParts)
 				{
 				for (j=0; j<numChar; j++)
 					{
-					if (charInfo[j].isExcluded == NO && charInfo[j].partitionId[partitionNum-1] - 1 == thePartition)
+					if (charInfo[j].isExcluded == NO && partitionId[j][partitionNum] - 1 == thePartition)
 						{
 						if (isDNA == YES)
 							GetPossibleNucs (matrix[pos(i,j,numChar)], nuc);
@@ -9225,7 +9211,7 @@ int GetNumDivisionChars (void)
 		n = 0;
 		for (c=0; c<numChar; c++)
 			{
-			if (charInfo[c].isExcluded == NO && charInfo[c].partitionId[partitionNum-1] == d+1)
+			if (charInfo[c].isExcluded == NO && partitionId[c][partitionNum] == d+1)
 				n++;
 			}
 		if (m->dataType == DNA || m->dataType == RNA)
@@ -9547,7 +9533,7 @@ int InitializeLinks (void)
 	linkNum = 0;
 	for (i=0; i<NUM_LINKED; i++)
 		{
-		for (j=0; j<MAX_NUM_DIVS; j++)
+		for (j=0; j<numCurrentDivisions; j++)
 			linkTable[i][j] = linkNum;
 		}
 
@@ -10573,11 +10559,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						{
 						if (strcmp(modelParams[part1].treeHeightPr,modelParams[part2].treeHeightPr) != 0)
 							isSame = NO;
-						else if (!strcmp(modelParams[part1].treeHeightPr,"Fixed"))
-							{
-							if (AreDoublesEqual (modelParams[part1].treeHeightFix, modelParams[part2].treeHeightFix, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
 						else if (!strcmp(modelParams[part1].treeHeightPr,"Exponential"))
 							{
 							if (AreDoublesEqual (modelParams[part1].treeHeightExp, modelParams[part2].treeHeightExp, (MrBFlt) 0.00001) == NO)
@@ -11288,125 +11269,6 @@ int NumNonExcludedChar (void)
 		}
 	
 	return n;
-	
-}
-
-
-
-
-
-int NumNonExcludedTaxa (void)
-
-{
-
-	int			i, j, nt, howMany;
-	char		tempName[100];
-	
-	/* free memory if allocated */
-	if (memAllocs[ALLOC_LOCTAXANAMES] == YES)
-		{
-		free (localTaxonNames);
-		localTaxonNames = NULL;
-		memAllocs[ALLOC_LOCTAXANAMES] = NO;
-		}
-	if (memAllocs[ALLOC_LOCALTAXONCALIBRATION] == YES)
-		{
-		free (localTaxonCalibration);
-		localTaxonCalibration = NULL;
-		memAllocs[ALLOC_LOCALTAXONCALIBRATION] = NO;
-		}
-	
-	/* count number of non-excluded taxa */
-	nt = 0;
-	for (i=0; i<numTaxa; i++)
-		{
-		if (taxaInfo[i].isDeleted == NO)
-			{
-			nt++;
-			}
-		}
-		
-	/* allocate memory */
-	localTaxonNames = (char *)SafeMalloc((size_t) (nt * 100 * sizeof(char)));
-	if (!localTaxonNames)
-		{
-		MrBayesPrint ("%s   Problem allocating localTaxonNames (%d)\n", spacer, nt * 100 * sizeof(char));
-		return (ERROR);
-		}
-	for (i=0; i<nt*100; i++)
-		{
-		localTaxonNames[i] = ' ';
-		if (i == nt*100 - 1)
-			localTaxonNames[i] = '\0';
-		}
-	memAllocs[ALLOC_LOCTAXANAMES] = YES;
-
-	localTaxonCalibration = (Calibration **)SafeMalloc((size_t) (nt * sizeof(Calibration *)));
-	if (!localTaxonCalibration)
-		{
-		MrBayesPrint ("%s   Problem allocating localTaxonCalibratioin (%d)\n", spacer, nt * sizeof(Calibration));
-		return (ERROR);
-		}
-	for (i=0; i<nt; i++)
-		{
-		localTaxonCalibration[i] = NULL;
-		}
-	memAllocs[ALLOC_LOCALTAXONCALIBRATION] = YES;
-		
-	/* store names and ages of non-excluded taxa */
-	for (i=j=0; i<numTaxa; i++)
-		{
-		if (taxaInfo[i].isDeleted == NO)
-			{
-			if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-				{
-				MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-				return (0);
-				}
-			if (AddToString (tempName, localTaxonNames, &howMany) == ERROR)
-				{
-				MrBayesPrint ("%s   Problem adding charset %s to list\n", spacer, tempName);
-				return (0);
-				}
-			localTaxonCalibration[j++] = &taxaInfo[i].calibration;
-			}
-		}
-		
-	/* reset outgroup, if necessary */
-	if (taxaInfo[outGroupNum].isDeleted == YES)
-		{
-		localOutGroup = 0;
-		}
-	else
-		{
-		howMany = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (i == outGroupNum)
-				{
-				localOutGroup = howMany;
-				break;
-				}
-			if (taxaInfo[i].isDeleted == NO)
-				howMany++;
-			}
-		}
-		
-	
-#	if 0
-	/* show non-excluded taxa */
-	for (i=0; i<nt; i++)
-		{
-		if (GetNameFromString (localTaxonNames, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-			return (0);
-			}
-		MrBayesPrint ("%s   %4d %s\n", spacer, i+1, tempName);
-		}
-#	endif
-		
-	return (nt);
 	
 }
 
@@ -12824,6 +12686,73 @@ int SetAARates (void)
 
 
 
+int SetLocalTaxa (void)
+
+{
+
+	int			i, j;
+	
+	/* free memory if allocated */
+	if (memAllocs[ALLOC_LOCTAXANAMES] == YES)
+		{
+		free (localTaxonNames);
+		localTaxonNames = NULL;
+		memAllocs[ALLOC_LOCTAXANAMES] = NO;
+		}
+	if (memAllocs[ALLOC_LOCALTAXONCALIBRATION] == YES)
+		{
+		free (localTaxonCalibration);
+		localTaxonCalibration = NULL;
+		memAllocs[ALLOC_LOCALTAXONCALIBRATION] = NO;
+		}
+	
+	/* count number of non-excluded taxa */
+	numLocalTaxa = 0;
+	for (i=0; i<numTaxa; i++)
+		{
+		if (taxaInfo[i].isDeleted == NO)
+			numLocalTaxa++;
+		}
+		
+	/* allocate memory */
+	localTaxonNames = (char **)SafeCalloc((size_t) numLocalTaxa, sizeof(char *));
+	if (!localTaxonNames)
+		return (ERROR);
+	memAllocs[ALLOC_LOCTAXANAMES] = YES;
+
+	localTaxonCalibration = (Calibration **)SafeCalloc((size_t) numLocalTaxa, sizeof(Calibration *));
+	if (!localTaxonCalibration)
+		return (ERROR);
+	memAllocs[ALLOC_LOCALTAXONCALIBRATION] = YES;
+		
+	/* point to names and calibrations of non-excluded taxa */
+    localOutGroup = 0;
+    for (i=j=0; i<numTaxa; i++)
+		{
+		if (taxaInfo[i].isDeleted == NO)
+			{
+            localTaxonNames[j] = taxaNames[i];
+			localTaxonCalibration[j] = &tipCalibration[i];
+            if (i == outGroupNum)
+                localOutGroup = j;
+            j++;
+			}
+		}
+	
+#	if 0
+	/* show non-excluded taxa */
+	for (i=0; i<numLocalTaxa; i++)
+		MrBayesPrint ("%s   %4d %s\n", spacer, i+1, localTaxonNames[i]);
+#	endif
+		
+	return (NO_ERROR);
+	
+}
+
+
+
+
+
 /*----------------------------------------------------------------------------
 |
 |	SetModelDefaults: This function will set up model defaults in modelParams.
@@ -13454,7 +13383,7 @@ int SetModelParams (void)
                 SafeStrcat (&p->paramHeader, partString);
 				}
 			}
-		else if (j == P_REVMAT)
+        else if (j == P_REVMAT)
 			{
 			/* Set up revMat ****************************************************************************************/
 			p->paramType = P_REVMAT;
@@ -14725,9 +14654,9 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 		if (i == pt->nESets)
 			return (NO_ERROR);
 	
-		nEventsP = pt->nEvents + (i*2*numTaxa);
-		positionP = pt->position + (i*2*numTaxa);
-		rateMultP = pt->rateMult + (i*2*numTaxa);
+		nEventsP = pt->nEvents[i];
+		positionP = pt->position[i];
+		rateMultP = pt->rateMult[i];
 		nEvents = param->nEvents[2*chn+state];
 		position = param->position[2*chn+state];
 		rateMult = param->rateMult[2*chn+state];
@@ -14741,7 +14670,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 		if (i == pt->nBSets)
 			return (NO_ERROR);
 
-		bmBranchRateP = pt->branchRate + (i*2*numTaxa);
+		bmBranchRateP = pt->branchRate[i];
 		bmBranchRate = GetParamVals (param, chn, state);
 		}
 	else if (param->paramType == P_IBRBRANCHRATES)
@@ -14753,7 +14682,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 		if (i == pt->nBSets)
 			return (NO_ERROR);
 
-		ibrBranchRateP = pt->branchRate + (i*2*numTaxa);
+		ibrBranchRateP = pt->branchRate[i];
 		ibrBranchRate = GetParamVals (param, chn, state);
 		}
 
@@ -14843,7 +14772,7 @@ int SetUpAnalysis (safeLong *seed)
     /* calculate number of characters and taxa */
 	numLocalChar = NumNonExcludedChar ();
 	/* we are checking later to make sure no partition is without characters */
-	numLocalTaxa = NumNonExcludedTaxa ();
+	SetLocalTaxa ();
 	if (numLocalTaxa <= 2)
 		{
 		MrBayesPrint ("%s   There must be at least two included taxa, now there is %s\n", spacer,
@@ -17432,7 +17361,6 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 
 	int				a, b, d, i, j, k, m, n, run, chain, shouldPrint, isSame, areRunsSame, areChainsSame, nValues,
 					chainIndex, refIndex, numPrinted, numMovedChains;
-	char			tempName[100];
 	Param			*p;
 	Model			*mp;
     ModelInfo       *ms;
@@ -17882,12 +17810,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						b = 0;
 						for (a=0; a<numTaxa; a++)
 							{
-							if (taxaInfo[a].isDeleted == NO && taxaInfo[a].calibration.prior != unconstrained)
+							if (taxaInfo[a].isDeleted == NO && tipCalibration[a].prior != unconstrained)
 								b++;
 							}
-						for (a=0; a<MAX_NUM_CONSTRAINTS; a++)
+						for (a=0; a<numDefinedConstraints; a++)
 							{
-							if (mp->activeConstraints[a] == YES && constraintCalibration[a].prior != unconstrained)
+							if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
 								b++;
 							}
 						if (b > 0)
@@ -17895,20 +17823,18 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 							MrBayesPrint ("%s                         Node depths are constrained by the following age constraints:\n", spacer);
 							for (a=0; a<numTaxa; a++)
 								{
-								if (taxaInfo[a].isDeleted == NO && taxaInfo[a].calibration.prior != unconstrained)
+								if (taxaInfo[a].isDeleted == NO && tipCalibration[a].prior != unconstrained)
 									{
-									GetNameFromString (taxaNames, tempName, a+1);
-									MrBayesPrint ("%s                         -- The age of terminal \"%s\" is %s\n", spacer, tempName,
-										taxaInfo[a].calibration.name);
+									MrBayesPrint ("%s                         -- The age of terminal \"%s\" is %s\n", spacer, taxaNames[a],
+										tipCalibration[a].name);
 									}
 								}
 							for (a=0; a<numDefinedConstraints; a++)
 								{
-								if (mp->activeConstraints[a] == YES && constraintCalibration[a].prior != unconstrained)
+								if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
 									{
-									GetNameFromString (constraintNames, tempName, a+1);
-									MrBayesPrint ("%s                         -- The age of constrained node '%s' is %s\n", spacer, tempName,
-										constraintCalibration[a].name);
+									MrBayesPrint ("%s                         -- The age of constrained node '%s' is %s\n", spacer,
+                                        constraintNames[a], nodeCalibration[a].name);
 									}
 								}
 							}
@@ -18214,7 +18140,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					{
 					if (numPrinted == 0)
 						MrBayesPrint ("%s            Not used   = %s", spacer, mv->moveType->shortName);
-					else if (numPrinted % 10 != 0)
+					else if (numPrinted % 3 != 0)
 						MrBayesPrint (", %s", mv->moveType->shortName);
 					else
 					  MrBayesPrint (",\n%s                         %s", spacer, mv->moveType->shortName);
@@ -18669,7 +18595,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
             }
 		if (evolLength[p->index] < 1E-10 && p->anc != NULL && p->anc->anc != NULL)
             {
-			printf ("Effective branch length too smalli (%lf for node %d)\n", evolLength[p->index], p->index);
+			printf ("Effective branch length too small (%lf for node %d)\n", evolLength[p->index], p->index);
             return (ERROR);
             }
 		/* call left and right descendants */

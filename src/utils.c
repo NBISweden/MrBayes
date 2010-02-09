@@ -38,10 +38,53 @@ const char utilsID[]="$Id: utils.c,v 1.7 2009/01/05 14:09:49 ronquist Exp $";
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <math.h>
 
 #include "mb.h"
 #include "globals.h"
 #include "utils.h"
+
+
+
+
+
+/* AddBitfield: Add bitfield to list of bitfields */
+int AddBitfield (safeLong **list, int listLen, int *set, int setLen)
+{
+    int     i, nLongsNeeded;
+
+    nLongsNeeded = setLen / nBitsInALong;
+
+    list = (safeLong **) SafeRealloc ((void *)(list), (size_t)((listLen+1)*sizeof(safeLong *)));
+    if (!list)
+        return ERROR;
+    
+    list[0] = (safeLong *) SafeRealloc ((void *)(list[0]), (size_t)(nLongsNeeded*(listLen+1)*sizeof(safeLong)));
+    if (!list[0])
+        return ERROR;
+
+    list[listLen] = list[0] + nLongsNeeded * listLen;
+    ClearBits (list[listLen], nLongsNeeded);
+    for (i=0; i<setLen; i++)
+        if (set[i] == YES)
+            SetBit(i, list[listLen]);
+
+    return NO_ERROR;
+}
+
+
+
+
+
+/* ClearBits: Clear all bits in a bitfield */
+void ClearBits (safeLong *bits, int nLongs)
+{
+	int     i;
+    
+    for (i=0; i<nLongs; i++)
+        bits[i] = 0;
+}
 
 
 
@@ -132,6 +175,36 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
 
 
 
+/* FirstTaxonInPartition: Find index of first taxon in partition */
+int FirstTaxonInPartition (safeLong *partition, int length)
+
+{
+
+	int				i, j, nBits, taxon;
+	safeLong			x;
+
+	nBits = sizeof(safeLong) * 8;
+
+	for (i=taxon=0; i<length; i++)
+		{
+		x = 1;
+		for (j=0; j<nBits; j++)
+			{
+			if (partition[i] & x)
+				return taxon;
+			taxon++;
+			x <<= 1;
+			}
+		}
+
+	return taxon;
+
+}
+
+
+
+
+
 /* FirstTree: Return file position of first tree after current position */
 safeLong FirstTree (FILE *fp, char *lineBuf, int longestLine)
 {
@@ -204,93 +277,148 @@ void FlipOneBit (int n, safeLong *p)
 
 
 
-int GetNameFromNamestring (char *name, const char *nameString, int index)
+/* GetIntSummary: Get summary statistics for a number of runs (int version) */
+void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HPD)
 
 {
 
-	int		i;
-	const char   *p;
-	
-	for (i=0, p=&nameString[0]; (*p)!='\0'; p++)
-		{
-		if (i == index)
-			break;
-		if (*p == '|')
-			i++;
-		}
+    int     i, j, nVals;
+    MrBFlt  *theValues, *p;
 
-	if (i < index)
-		return (ERROR);
+    nVals = 0;
+    for (i=0; i<nRows; i++)
+        nVals += rowCount[i];
 
-	while (*p!='|' && *p!='\0')
-		(*name++) = (*p++);
+    theValues = (MrBFlt *) calloc (nVals, sizeof(MrBFlt));
 
-	*name = '\0';
+    /* extract values */
+    p = theValues;
+    for (i=0; i<nRows; i++)
+        {
+        for (j=0; j<rowCount[i]; j++)
+            {
+            (*p++) = (MrBFlt) (vals[i][j]);
+            }
+        }
+    
+    /* get statistics */
+    MeanVariance (theValues, nVals, &(theStats->mean), &(theStats->var));
+    if (HPD == YES)
+        LowerUpperMedian (theValues, nVals, &(theStats->lower), &(theStats->upper), &(theStats->median));
+    else
+        LowerUpperMedian (theValues, nVals, &(theStats->lower), &(theStats->upper), &(theStats->median));
 
-	return (NO_ERROR);
-	
+    free (theValues);
 }
 
 
 
 
 
-int GetNameFromString (char *s, char *tkn, int n)
+/* GetSummary: Get summary statistics for a number of runs */
+void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HPD)
 
 {
 
-	int		i, j, startI=0, numPrev;
-	   	
-	i = numPrev = 0;
-	while (s[i] != '\0')
+    int     i, nVals;
+    MrBFlt  *theValues, *p;
+
+    nVals = 0;
+    for (i=0; i<nRows; i++)
+        nVals += rowCount[i];
+
+    theValues = (MrBFlt *) calloc (nVals, sizeof(MrBFlt));
+
+    /* extract values */
+    p = theValues;
+    for (i=0; i<nRows; i++)
+        {
+        memcpy((void *)(p),(void *)(vals[i]),(size_t)(rowCount[i]*sizeof(MrBFlt)));
+        p += rowCount[i];
+        }
+    
+    /* get statistics */
+    MeanVariance (theValues, nVals, &(theStats->mean), &(theStats->var));
+    if (HPD == YES)
+        LowerUpperMedianHPD (theValues, nVals, &(theStats->lower), &(theStats->upper), &(theStats->median));
+    else
+        LowerUpperMedian (theValues, nVals, &(theStats->lower), &(theStats->upper), &(theStats->median));
+    if (nRows > 1)
+        theStats->PSRF = PotentialScaleReduction (vals, nRows, rowCount);
+
+    free (theValues);
+}
+
+
+
+
+
+/* HarmonicArithmeticMean: Calculate harmonic and arithmetic mean from log values */
+int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *harm_mean)
+{
+	int				i, reliable;
+	MrBFlt			a, aOld, x, y, scaler, n;
+
+	reliable = YES;
+	
+	scaler = vals[0];
+	a = aOld = n = 0.0;
+	for (i=0; i<nVals; i++)
 		{
-		if (s[i] == '|')
-			numPrev++;
-		i++;
+		y = vals[i];
+		y -= scaler;
+		if (y < -100.0 || y > 100.0)
+			{
+			reliable = NO;
+			continue;
+			}
+		else
+			x = (MrBFlt) exp(y);
+			
+		if (n < 0.5)
+			a = x;
+		else
+			{
+			aOld = a;
+			a = aOld + (x - aOld) / (n+(MrBFlt)1.0);
+			}
+		n += 1.0;
 		}
-	if (numPrev < n)
+
+	/* arithmetic mean */
+	(*mean) = (MrBFlt) log(a) + scaler;
+	
+	scaler = (MrBFlt) (0.0 - vals[0]);
+	a = aOld = n = 0.0;
+	for (i=0; i<nVals; i++)
 		{
-		return (ERROR);
+		y = (MrBFlt) (0.0 - vals[i]);
+		y -= scaler;
+		if (y < -100.0 || y > 100.0)
+			{
+			reliable = NO;
+			continue;
+			}
+		else
+			x = (MrBFlt) exp(y);
+			
+		if (n < 0.5)
+			a = x;
+		else
+			{
+			aOld = a;
+			a = aOld + (x - aOld) / (n+(MrBFlt)1.0);
+			}
+		n += (MrBFlt) 1.0;
 		}
-		
-	if (n == 1)
-		startI = 0;
+
+	/* harmonic mean */
+	(*harm_mean) = - (MrBFlt) log(a) - scaler;
+
+	if (reliable == YES)
+		return (NO_ERROR);
 	else
-		{
-		i = j = 0;
-		while (s[i] != '\0')
-			{
-			if (s[i] == '|')
-				j++;
-			i++;
-			if (j == n - 1)
-				{
-				startI = i;
-				break;
-				}
-			}
-		}
-		
-	if (s[startI] == '\0')
-		{
-		MrBayesPrint ("%s   String is too full\n", spacer);
 		return (ERROR);
-		}
-	
-	i = startI;
-	j = 0;
-	while(s[i] != '\0' && s[i] != '|')
-		{
-		tkn[j++] = s[i++];
-		if (s[i] == '\0')
-			{
-			MrBayesPrint ("%s   String is too full\n", spacer);
-			return (ERROR);
-			}
-		}
-	tkn[j] = '\0';
-
-	return (NO_ERROR);
 	
 }
 
@@ -298,6 +426,7 @@ int GetNameFromString (char *s, char *tkn, int n)
 
 
 
+/* IsBitSet: Is bit i set in safeLong *bits ? */
 int IsBitSet (int i, safeLong *bits)
 
 {
@@ -319,17 +448,42 @@ int IsBitSet (int i, safeLong *bits)
 
 
 
-int IsPartCompatible (safeLong *smaller, safeLong *larger, int length)
-
+/* IsConsistentWith: Is token consistent with expected word, case insensitive ? */
+int IsConsistentWith (const char *token, const char *expected)
 {
+    int     i, len;
 
+    if (strlen(token) > strlen(expected))
+        return NO;
+
+    len = (int) strlen (token);
+
+    for (i=0; i<len; i++)
+        {
+        if (tolower(token[i]) != tolower(expected[i]))
+            return NO;
+        }
+
+    return YES;
+}
+
+
+
+
+
+/* IsPartCompatible: Determine whether two partitions are nonoverlapping or nested (compatible) or
+        incompatible (partially overlapping) */
+int IsPartCompatible (safeLong *smaller, safeLong *larger, int length)
+{
 	int i;
 
+    /* test first if they overlap */
 	for (i=0; i<length; i++)
 		if ((smaller[i]&larger[i]) != 0)
 			break;
 
-	if (i != length)	/* potentially incompatible */
+	/* if they overlap, they must be nested */
+    if (i != length)	/* potentially incompatible */
 		{
 		for (i=0; i<length; i++)
 			if ((smaller[i]|larger[i]) != larger[i])
@@ -337,15 +491,15 @@ int IsPartCompatible (safeLong *smaller, safeLong *larger, int length)
 		}
 		
 	if (i == length)	/* passed either one of the tests */
-		return 1;
+		return YES;
 	else
-		return 0;
+		return NO;
 }
 
 
 
 
-
+/* IsPartNested: Test whether smaller partition is nested in larger partition */
 int IsPartNested (safeLong *smaller, safeLong *larger, int length)
 
 {
@@ -357,9 +511,9 @@ int IsPartNested (safeLong *smaller, safeLong *larger, int length)
 			break;
 		
 	if (i == length)
-		return 1;
+		return YES;
 	else
-		return 0;
+		return NO;
 
 }
 
@@ -453,6 +607,99 @@ int LongestLine (FILE *fp)
 
 
 
+/* LowerUpperMedian: Determine median and 95 % credible interval */
+void LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median)
+
+{    
+    SortMrBFlt (vals, 0, nVals-1);
+    
+    *lower  = vals[(int)(0.025*nVals)];
+    *upper  = vals[(int)(0.975*nVals)];
+    *median = vals[nVals/2];
+
+}
+
+
+
+
+/* LowerUpperMedianHPD: Use a simple way to determine HPD */
+void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median)
+{
+    int     i, width, theStart;
+    MrBFlt  f, g, interval;
+
+	SortMrBFlt (vals, 0, nVals-1);
+    
+    width = (int)(nVals * 0.95 + 0.5);
+    theStart = 0;
+    interval = vals[width-1] - vals[0];
+    for (i=1; i<nVals-width; i++)
+    {
+        f = vals[i];
+        g = vals[i+width];
+        if (g - f < interval)
+        {
+            interval = g - f;
+            theStart = i;
+        }
+    }
+
+    *lower  = vals[theStart];
+    *upper  = vals[theStart+width-1];
+    *median = vals[nVals/2];
+}
+
+
+
+
+
+char *MbPrintNum (MrBFlt num)
+{
+    static char s[40];
+
+    if (scientific == YES)
+        sprintf(s,"%.*le", precision, num);
+    else
+        sprintf(s,"%.*lf", precision, num);
+
+    return s;
+}
+
+
+
+
+
+void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
+
+{
+
+	int				i;
+	MrBFlt			a, aOld, s, x;
+
+	a = s = 0.0;
+	for (i=0; i<nVals; i++)
+		{
+		x = vals[i];
+		aOld = a;
+		a += (x - a) / (MrBFlt) (i + 1);
+		s += (x - a) * (x - aOld);
+		}
+
+	/* mean */
+	(*mean) = a;
+	
+	/* variance */
+	if (nVals <= 1)
+		(*var) = 0.0;
+	else
+		(*var) = s / (nVals - 1);
+			
+}
+
+
+
+
+
 void MrBayesPrint (char *format, ...)
 
 {
@@ -538,6 +785,28 @@ void MrBayesPrintf (FILE *f, char *format, ...)
 
 
 
+/* NumBits: Count bits in a bitfield */
+int NumBits (safeLong *x, int len)
+{
+	int         i, n=0;
+    safeLong    y;
+
+	for (i=0; i<len; i++)
+        {
+        y = x[i];
+        while (y != 0)
+            {
+		    y &= (y-1);
+            n++;
+            }
+        }
+	return n;
+}
+
+
+
+
+
 FILE *OpenBinaryFileR (char *name)
 
 {
@@ -617,6 +886,71 @@ FILE *OpenTextFileW (char *name)
 
 
 
+
+MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
+
+{
+
+	int				i, j, nVals;
+	MrBFlt			aW, aOldW, sW, sWj, aB, aOldB, sB, x, R2, weight;
+
+	aB = sB = sW = sWj = 0.0;
+    nVals = 0;
+	for (j=0; j<nRuns; j++)
+		{
+		aW = 0.0;
+		for (i=0; i<count[j]; i++)
+			{
+			x = vals[j][i];
+			aOldW = aW;
+			aW += (x - aW) / (MrBFlt) (i + 1);
+			if (i != 0)
+				sWj += (x - aW) * (x - aOldW);
+            nVals++;
+			}
+        sW += sWj / (MrBFlt)(count[j] - 1);
+		x = aW;
+		aOldB = aB;
+		aB += (x - aB) / (MrBFlt) (j + 1);
+		if (j!=0)
+			sB += (x - aB) * (x - aOldB);
+		}
+
+	sB = sB / (MrBFlt) (nRuns - 1);
+	sW = sW / (MrBFlt) (nRuns);
+
+	weight = (MrBFlt) nVals / (MrBFlt) nRuns;
+    if (sW > 0.0)
+		{
+		R2 = ((weight - 1.0) / weight) + ((MrBFlt)(nRuns + 1) / (MrBFlt) (nRuns)) * (sB / sW);
+		return sqrt(R2);
+		}
+	else
+		return -1.0;
+}
+
+
+
+
+
+/* SafeCalloc: Print error if out of memory */
+void *SafeCalloc(size_t n, size_t s) {
+
+    void *ptr = calloc(n, s);
+
+    if(ptr==NULL)
+        {
+        MrBayesPrint ("%s   Out of memory\n", spacer);
+        return NULL;
+        }
+
+    return ptr;
+}
+
+
+
+
+
 int SafeFclose(FILE **fp) {
 	int retval=-1;
 #if defined MPI_ENABLED
@@ -635,11 +969,48 @@ int SafeFclose(FILE **fp) {
 
 
 
+/* SafeFree: Set pointer to freed space to NULL */
+void SafeFree (void **ptr)
+{
+    free (*ptr);
+
+    (*ptr) = NULL;
+}
+
+
+
+
+
+/* SafeMalloc: Print error if out of memory; clear memory */
 void *SafeMalloc(size_t s) {
-        void *ptr = malloc(s);
-        if(ptr==NULL)
-                return NULL;
-        return memset(ptr,0,s);
+
+    void *ptr = malloc(s);
+
+    if(ptr==NULL)
+        {
+        MrBayesPrint ("%s   Out of memory\n", spacer);
+        return NULL;
+        }
+
+    return memset(ptr,0,s);
+}
+
+
+
+
+
+/* SafeRealloc: Print error if out of memory */
+void *SafeRealloc(void *ptr, size_t s) {
+
+    ptr = realloc (ptr, s);
+
+    if(ptr==NULL)
+        {
+        MrBayesPrint ("%s   Out of memory\n", spacer);
+        return NULL;
+        }
+
+    return ptr;
 }
 
 
@@ -650,7 +1021,7 @@ void *SafeMalloc(size_t s) {
 char *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) malloc ((strlen(source)+1)*sizeof(char));
+        *target = (char *) calloc (strlen(source)+1, sizeof(char));
     else
         *target = (char *) realloc ((void *)*target, (size_t)(strlen(source)+strlen(*target)+1)*sizeof(char));
 
@@ -664,8 +1035,176 @@ char *SafeStrcat (char **target, const char *source)
 
 
 
+/* SetBit: Set a particular bit in a series of longs */
+void SetBit (int i, safeLong *bits)
+{
+	safeLong		x;
+
+	bits += i / nBitsInALong;
+
+	x = 1 << (i % nBitsInALong);
+
+	(*bits) |= x;
+}
+
+
+
+
+
+void SortInts (int *item, int *assoc, int count, int descendingOrder)
+
+{
+
+	SortInts2 (item, assoc, 0, count-1, descendingOrder);
+
+}
+
+
+
+
+
+void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
+
+{
+
+	register int	i, j, x, y;
+
+	if (descendingOrder == YES)
+		{
+		i = left;
+		j = right;
+		x = item[(left+right)/2];
+		do 
+			{
+			while (item[i] > x && i < right)
+				i++;
+			while (x > item[j] && j > left)
+				j--;
+			if (i <= j)
+				{
+				y = item[i];
+				item[i] = item[j];
+				item[j] = y;
+				
+				if (assoc)
+					{
+					y = assoc[i];
+					assoc[i] = assoc[j];
+					assoc[j] = y;
+					}				
+				i++;
+				j--;
+				}
+			} while (i <= j);
+		if (left < j)
+			SortInts2 (item, assoc, left, j, descendingOrder);
+		if (i < right)
+			SortInts2 (item, assoc, i, right, descendingOrder);
+		}
+	else
+		{
+		i = left;
+		j = right;
+		x = item[(left+right)/2];
+		do 
+			{
+			while (item[i] < x && i < right)
+				i++;
+			while (x < item[j] && j > left)
+				j--;
+			if (i <= j)
+				{
+				y = item[i];
+				item[i] = item[j];
+				item[j] = y;
+				
+				if (assoc)
+					{
+					y = assoc[i];
+					assoc[i] = assoc[j];
+					assoc[j] = y;
+					}				
+				i++;
+				j--;
+				}
+			} while (i <= j);
+		if (left < j)
+			SortInts2 (item, assoc, left, j, descendingOrder);
+		if (i < right)
+			SortInts2 (item, assoc, i, right, descendingOrder);
+		}
+
+}
+
+
+
+
+
+/* SortMrBFlt: Sort in increasing order */
+void SortMrBFlt (MrBFlt *item, int left, int right)
+
+{
+
+	register int	i, j;
+	MrBFlt			x, temp;
+
+	i = left;
+	j = right;
+	x = item[(left+right)/2];
+	do 
+		{
+		while (item[i] < x && i < right)
+			i++;
+		while (x < item[j] && j > left)
+			j--;
+		if (i <= j)
+			{
+			temp = item[i];
+			item[i] = item[j];
+			item[j] = temp;
+				
+			i++;
+			j--;
+			}
+		} while (i <= j);
+	if (left < j)
+		SortMrBFlt (item, left, j);
+	if (i < right)
+		SortMrBFlt (item, i, right);
+}
+
+
+
+
+
+/* StrCmpCaseInsensitive: Case insensitive string comparison */
+int StrCmpCaseInsensitive (char *s, char *t)
+{
+    int i, minLen;
+
+    if (strlen(s) < strlen(t))
+        minLen = (int) strlen(s);
+    else
+        minLen = (int) strlen(t);
+
+    for (i=0; i<minLen; i++)
+        if (tolower(s[i])!= tolower(t[i]))
+            break;
+
+    if (s[i] == '\0' && t[i] == '\0')
+        return 0;
+    else if (tolower(s[i]) > tolower(t[i]))
+        return 1;
+    else
+        return -1;
+}
+
+
+
+
+
 /* StripComments: Strip possibly nested comments from the string s.
-	Example: s="[[comment]]"-> s="comment" */
+	Example: s="text1[text2[text3]]"-> s="text1" */
 void StripComments (char *s)
 {
 	char	*t;
@@ -693,6 +1232,40 @@ void StripComments (char *s)
 }
 
 
+
+
+
+int WantTo (const char *msg)
+{
+    char    s[100];
+    int     i;
+
+    MrBayesPrint ("%s   %s? (yes/no): ", spacer, msg);
+
+	for (i=0; i<10; i++)
+	    {
+	    if (fgets (s, 98, stdin) == NULL)
+		    {
+		    MrBayesPrint ("%s   Failed to retrieve answer; will take that as a no\n", spacer);
+		    return NO;
+		    }
+
+        /* Strip away the newline */
+        s[strlen(s)-1] = '\0';
+
+        /* Check answer */
+        if (IsConsistentWith (s, "yes") == YES)
+            return YES;
+        else if (IsConsistentWith (s, "no") == YES)
+            return NO;
+
+        MrBayesPrint ("%s   Enter yes or no: ", spacer);
+	    }
+
+    MrBayesPrint ("%s   MrBayes does not understand; will take that as a no\n", spacer);
+
+    return NO;
+}
 
 
 

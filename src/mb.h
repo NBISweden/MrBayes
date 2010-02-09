@@ -29,10 +29,8 @@
 /* This is a configuration option from the configure script. */
 #ifdef _64BIT
 typedef int safeLong;
-typedef unsigned int unsignedSafeLong;
 #else
 typedef long safeLong;
-typedef long unsigned int unsignedSafeLong;
 #endif
 
 
@@ -65,7 +63,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #endif
 
 /* For comparing floating points: two values are the same if the absolute difference is less then 
-   this value. 
+   this value.
 */
 #ifndef ETA
 #define ETA (1E-30)
@@ -78,11 +76,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #endif
 
 #if defined (MPI_ENABLED)
-#	if defined (__MWERKS__) & defined (MAC_VERSION)
-#		include "macmpi.h"
-#	else
-#		include "mpi.h"
-#	endif
+#include "mpi.h"
 #endif
 
 /*#define RELEASE*/
@@ -110,6 +104,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ERROR					1
 #define	NO_ERROR_QUIT			2
 #define ABORT					3
+#define SKIP_COMMAND            4
 
 #undef FALSE
 #undef TRUE
@@ -260,28 +255,15 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #define	ALLOC_MATRIX			 0
 #define	ALLOC_CHARINFO			 2
-#define	ALLOC_CHARSETNAMES		 3
-#define	ALLOC_TAXANAMES			 4
+#define	ALLOC_CHARSETS   		 3
+#define	ALLOC_TAXA			     4
 #define	ALLOC_TMPSET			 5
-#define	ALLOC_PARTITIONNAMES	 6
-#define	ALLOC_TAXAINFO			 7
-#define	ALLOC_TAXASETNAMES		 8
-#define	ALLOC_CONSTRAINTNAMES	 9
+#define	ALLOC_PARTITIONS	     6
+#define	ALLOC_PARTITIONVARS      7
+#define	ALLOC_TAXASETS   		 8
+#define	ALLOC_CONSTRAINTS    	 9
 #define	ALLOC_USERTREE			 10
-#define	ALLOC_SUMTTREE			 11
-#define	ALLOC_SUMTSTRING		 12
-#define	ALLOC_SUMTDP			 13
-#define	ALLOC_TREEBITS			 14
-#define	ALLOC_TREEPARTS			 15
-#define	ALLOC_NUMOFPART			 16
-#define	ALLOC_ABRLENS			 17
-#define	ALLOC_SUMB      		 18
-#define	ALLOC_TAXONMASK			 19
-#define	ALLOC_SBRLENS			 20
-#define	ALLOC_CONNODES			 21
-#define	ALLOC_OUTPART			 22
-#define	ALLOC_TRANSFROM			 23
-#define	ALLOC_TRANSTO			 24
+#define ALLOC_SUMTPARAMS         11
 #define	ALLOC_AVAILNODES		 25
 #define	ALLOC_AVAILINDICES		 26
 #define ALLOC_SCALERS			 27
@@ -315,10 +297,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_MARKOVTIS			 55
 #define ALLOC_RATEPROBS			 56
 #define ALLOC_STDTYPE			 57
-#define	ALLOC_TAXAFOUND			 58
-#define	ALLOC_FULLTREEINFO		 59
-#define	ALLOC_PARTORIGORDER		 60
-#define	ALLOC_PRUNEINFO			 61
+#define ALLOC_PACKEDTREES        58
 #define	ALLOC_SUMPSTRING		 62
 #define	ALLOC_SUMPINFO			 63
 #define	ALLOC_SWAPINFO			 64
@@ -327,26 +306,18 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_PARSSETS			 67
 #define	ALLOC_PBF				 68
 #define ALLOC_LOCALTAXONCALIBRATION		 69
-#define	ALLOC_FULLCOMPTREEINFO	 70
-#define	ALLOC_TOPO_DISTANCES	 71
 #define	ALLOC_SPR_PARSSETS		 72
 #define ALLOC_ANCSTATECONDLIKES  73
 #define ALLOC_PFCOUNTERS         74
 #define ALLOC_FILEPOINTERS       75
 #define	ALLOC_STATS				 76
-#define ALLOC_DIAGNUTREE         77
-#define ALLOC_DIAGNRTREE         78
-#define ALLOC_NUMINRUNOFPART     79
-#define ALLOC_A_WITHIN_BRLENS    80
-#define ALLOC_SUMSQB             81
-#define ALLOC_S_WITHIN_BRLENS    82
-#define ALLOC_USEDMOVES          83
-#define ALLOC_MODEL				 84
-#define ALLOC_STDSTATEFREQS		 85
-#define ALLOC_CLOCKRATE			 86
-#define ALLOC_PRINTPARAM		 87
-#define ALLOC_TREELIST			 88
-#define ALLOC_TFILEPOS           89
+#define ALLOC_DIAGNTREE          77
+#define ALLOC_USEDMOVES          82
+#define ALLOC_MODEL				 83
+#define ALLOC_STDSTATEFREQS		 84
+#define ALLOC_PRINTPARAM		 85
+#define ALLOC_TREELIST			 86
+#define ALLOC_TFILEPOS           87
 
 
 #define	NUM_LINKED				25
@@ -379,12 +350,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_IBRSHAPE              23
 #define P_IBRBRANCHRATES        24      /* NOTE: If you add another parameter, change NUM_LINKED */
 
+#define CPPm                    0       /* CPP rate multipliers */
+#define CPPi                    1       /* CPP independent rates */
+
 #define MAX_NUM_USERTREES		200     /* maximum number of user trees MrBayes will read */
-#define	MAX_NUM_DIVS			150		/* this is the maximum number of character divisions you can have */
-#define	MAX_NUM_CHARSETS		150     /* maximum number of character sets you can define */
-#define	MAX_NUM_PARTITIONS		30		/* this is the maximum number of partitioning schemes you can define */
-#define	MAX_NUM_TAXASETS		30      /* maximum number of taxa sets you can define */
-#define	MAX_NUM_CONSTRAINTS		30      /* maximum number of constraints you can define */
 #define	MAX_CHAINS				256     /* maximum numbder of chains you can run */
 
 typedef void * VoidPtr;
@@ -393,13 +362,15 @@ typedef int (*ParmFxn)(char *, char *);
 
 typedef struct
 	{
-	MrBFlt			sum;
+	MrBFlt			sum;            /* sum of standard deviations */
+    MrBFlt          max;            /* maximum standard deviation */
 	MrBFlt			numPartitions;
 	MrBFlt			numSamples;
 	MrBFlt			avgStdDev;
 	MrBFlt			**pair;
 	} STATS;
 
+/* enumeration for calibration prior */
 enum CALPRIOR
 	{
 	unconstrained,
@@ -408,9 +379,10 @@ enum CALPRIOR
 	uniform
 	};
 
+/* typedef for calibration */
 typedef struct calibration
 	{
-	char			name[30];
+	char			name[20];
 	enum CALPRIOR   prior;
 	MrBFlt			max;
 	MrBFlt			min;
@@ -420,66 +392,97 @@ typedef struct calibration
 	}
 	Calibration;
 
+/* typedef for tree (topology) list element */
 typedef struct element {
 	struct element *next;
 	int				*order;
 } TreeListElement;
 
+/* typedef for list of trees (topologies) */
 typedef struct {
 	TreeListElement *first;
 	TreeListElement *last;
 } TreeList;
 
+/* typedef for packed tree */
+typedef struct {
+	int     *order;
+	MrBFlt  *brlens;
+} PackedTree;
 
+/* typedef for binary tree node */
 /* NOTE: Any variable added here must also be copied in CopyTrees */
 typedef struct node
 	{
-	struct node		*left, *right, *anc;
-	int				memoryIndex, index, upDateCl, upDateTi, marked, x, y,
-					scalerNode, isLocked, lockID, isDated;
-	safeLong		*scalersSet, *clSpace, *tiSpace;
-	safeLong 		*partition;
-	char			label[100];
-	MrBFlt			length, nodeDepth, d, age;
-	Calibration		*calibration;
+	char			*label;                 /*!< name of node if tip                        */
+	struct node		*left, *right, *anc;    /*!< pointers to adjacent nodes                 */
+	int				memoryIndex;            /*!< memory index (do not change)               */
+    int             index;                  /*!< index to node (0 to numLocalTaxa for tips) */
+    int             upDateCl;               /*!< cond likes need update?                    */
+    int             upDateTi;               /*!< transition probs need update?              */
+    int             marked, x, y;           /*!< scratch variables                          */
+	int				scalerNode;             /*!< is node scaling cond likes?                */
+    int             isLocked;               /*!< is node locked?                            */
+    int             lockID;                 /*!< id of lock                                 */
+    int             isDated;                /*!< is node dated (calibrated)?                */
+	safeLong		*scalersSet;            /*!< bitfield for scalers                       */
+    safeLong        *clSpace;               /*!< bitfield pointing to cond like space       */
+    safeLong        *tiSpace;               /*!< bitfield pointing to trans prob space      */
+	safeLong 		*partition;             /*!< pointer to bitfield describing splits      */
+	MrBFlt			length;                 /*!< length of pending branch                   */
+    MrBFlt          nodeDepth;              /*!< node depth (height)                        */
+    MrBFlt          age;                    /*!< age of node                                */
+    MrBFlt          d;                      /*!< scratch variable                           */
+	Calibration		*calibration;           /*!< pointer to calibration data                */
 	}
 	TreeNode;
 
 
+/* typedef for binary tree */
 typedef struct 
 	{
-	int				nNodes;
-	int				nIntNodes;
-	int				isRooted;
-	int				isClock;
-	int				isCalibrated;
-	int				nRelParts;
-	int				*relParts;
-	int				checkConstraints;
-	int				*constraints;
-	int				nConstraints;
-	int				nLocks;
-	TreeNode		**allDownPass;
-	TreeNode		**intDownPass;
-	TreeNode		*root;
-	TreeNode		*nodes;
-	MrBFlt			clockRate;
-	safeLong		*bitsets;
-	safeLong		*flags;
-	char			name[100];
+	char			name[100];          /*!< name of tree                                 */
+	int				memNodes;           /*!< number of allocated nodes (do not exceed!)   */
+	int				nNodes;             /*!< number of nodes in tree (including lower root in rooted trees) */
+	int				nIntNodes;          /*!< number of interior nodes in tree (excluding lower root in rooted trees) */  
+	int				isRooted;           /*!< is tree rooted?                              */
+	int				isClock;            /*!< is tree clock?                               */
+	int				isCalibrated;       /*!< is tree calibrated?                          */
+	int				nRelParts;          /*!< number of relevant partitions                */
+	int				*relParts;          /*!< pointer to relevant partitions               */
+	int				checkConstraints;   /*!< does tree have constraints?                  */
+	int				nConstraints;       /*!< number of constraints                        */
+	int				*constraints;       /*!< pointer to constraints                       */
+	int				nLocks;             /*!< number of constrained (locked) nodes         */
+	TreeNode		**allDownPass;      /*!< downpass array of all nodes                  */
+	TreeNode		**intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
+	TreeNode		*root;              /*!< pointer to root (lower root in rooted trees) */
+	TreeNode		*nodes;             /*!< array containing the nodes                   */
+	MrBFlt			clockRate;          /*!< clock rate (0.0 if not clock tree)           */
+	safeLong		*bitsets;           /*!< pointer to bitsets describing splits         */
+	safeLong		*flags;             /*!< pointer to cond like flags                   */
 	}
 	Tree;
 
 
-/* typedef for nodes in polytomous tree */
+/* typedef for node in polytomous tree */
 typedef struct pNode
 	{
-	struct pNode	*left, *sib, *anc;
-	int				x, y, mark, index, memoryIndex, isLocked, lockID, isDated;
-	MrBFlt			length, support, f, age;
-	char			label[100];
-	safeLong		*partition;
-	Calibration		*calibration;
+	char			label[100];         /*!< name of node if terminal                     */
+	struct pNode	*left, *sib, *anc;  /*!< pointers to adjacent nodes                   */
+	int				x, y, mark;         /*!< scratch variables                            */
+    int             partitionIndex;     /*!< partition index in sumt (scratch)            */
+    int             index;              /*!< index of node (if < numLocalTaxa = local taxon index) */
+    int             memoryIndex;        /*!< immutable index of memory position           */
+    int             isLocked;           /*!< is the node locked?                          */
+    int             lockID;             /*!< id of lock                                   */
+    int             isDated;            /*!< is node dated?                               */
+	MrBFlt			length;             /*!< age of node                                  */
+	MrBFlt			depth;              /*!< depth (height) of node                       */
+    MrBFlt          age;                /*!< age of node                                  */
+    MrBFlt          support, f;         /*!< scratch variables                            */
+	safeLong		*partition;         /*!< pointer to partition (split) bitset          */
+	Calibration		*calibration;       /*!< pointer to dating of node                    */
 	}
 	PolyNode;
 
@@ -487,23 +490,32 @@ typedef struct pNode
 /* typedef for polytomous tree */
 typedef struct 
 	{
-	char			name[100];
-	int				nNodes;
-	int				nIntNodes;
-	PolyNode		**allDownPass;
-	PolyNode		**intDownPass;
-	PolyNode		*root;
-	PolyNode		*nodes;
-	safeLong		*bitsets;
-	int				nESets, nBSets;
-	char			**eSetName, **bSetName;
-	int				*nEvents;
-	MrBFlt			**position;
-	MrBFlt			**rateMult;
-	MrBFlt			*branchRate;
+	char			name[100];           /*!< name of tree                                */
+    int             memNodes;            /*!< number of allocated nodes; do not exceed!   */
+	int				nNodes;              /*!< number of nodes in tree                     */
+	int				nIntNodes;           /*!< number of interior nodes in tree            */
+	PolyNode		**allDownPass;       /*!< downpass array over all nodes               */
+	PolyNode		**intDownPass;       /*!< downpass array over interior nodes          */
+	PolyNode		*root;               /*!< pointer to root (lower for rooted trees     */
+	PolyNode		*nodes;              /*!< array holding the tree nodes                */  
+	safeLong		*bitsets;            /*!< bits describing partitions (splits)         */
+	int				nBSets;              /*!< number of branch rate sets                  */
+    int             nESets;              /*!< number of breakpoint rate sets              */
+    char            **bSetName;          /*!< names of branch rate sets                   */
+    char			**eSetName;          /*!< names of breakpoint rate sets               */
+    int             *eType;              /*!< type of breakpoint rate sets                */
+	int				**nEvents;           /*!< number of branch events of bp rate set      */
+	MrBFlt			***position;         /*!< position of branch events                   */
+	MrBFlt			***rateMult;         /*!< parameter of branch events                  */
+	MrBFlt			**branchRate;        /*!< branch rates of branch rate set             */
+    int             brlensDef;           /*!< are brlens defined ?                        */
+    int             isRooted;            /*!< is tree rooted?                             */
+    int             isClock;             /*!< is tree clock?                              */
+    int             isCalibrated;        /*!< is tree clock?                              */
+    int             isRelaxed;           /*!< is tree relaxed?                            */
+    MrBFlt          clockRate;           /*!< clock rate                                  */
 	}
 	PolyTree;
-
 
 /* struct for holding model parameter info for the mcmc run */
 typedef struct param
@@ -539,6 +551,7 @@ typedef struct param
 	MrBFlt			***position;	/* event positions for Cpp relaxed clock model  */
 	MrBFlt			***rateMult;	/* rate multipliers for Cpp relaxed clock model */
 	} Param;
+
 
 /* parameter ID values */
 /* identifies unique model parameter x prior combinations */
@@ -879,7 +892,6 @@ typedef struct model
 	char		treeHeightPr[100];    /* prior on tree height for clock models        */
 	MrBFlt		treeHeightGamma[2];
 	MrBFlt		treeHeightExp;
-	MrBFlt		treeHeightFix;
 	Calibration treeAgeCalibration;   /* prior on tree age for calibrated clock models */
 	char		thetaPr[100];         /* prior on coalescence                         */
 	MrBFlt		thetaFix;
@@ -953,8 +965,7 @@ typedef struct chain
 	MrBFlt      stopVal;               /* top conv diagn value to reach before stopping */
 	int		    stopRule;              /* use stop rule?                                */
 	STATS		*stat;				   /* ptr to structs with mcmc diagnostics info     */
-	Tree		*utree;				   /* pointing to utree used for conv diagnostics   */
-	Tree		*rtree;				   /* pointing to rtree used for conv diagnostics   */
+	Tree		*dtree;				   /* pointing to tree used for conv diagnostics    */
 	TreeList    *treeList;             /* vector of tree lists for saving trees         */
 	int			saveTrees;			   /* save tree samples for later removal?          */
 	int			stopTreeGen;		   /* generation after which no trees need be saved */
@@ -968,7 +979,6 @@ typedef struct chain
 	int			append;		           /* order taxa before printing tree to file?      */
 	int			autotune;		       /* autotune tuning parameters of proposals ?     */
 	int			tuneFreq;		       /* autotuning frequency                          */
-	int			scientific;	           /* use scientific format for sampled floats ?    */
 	} Chain;
 
 typedef struct modelinfo
@@ -1079,58 +1089,88 @@ typedef struct modelinfo
 
 typedef struct sumt
 	{
+    int        *absentTaxa;            /* information on absent taxa                    */
+    int         brlensDef;             /* branch lengths defined?                       */
 	char		sumtFileName[100];     /* name of input file                            */
-	char		pFile[100];			   /* name of parameter file (for clock trees)      */
+    char        sumtOutfile[100];      /* name of output file                           */
+    char        curFileName[100];      /* name of file being processed                  */
     int         relativeBurnin;        /* should burnin fraction be used?               */
-	int			sumtBurnIn;            /* absolute burn in                              */
+	int			sumtBurnIn;            /* absolute burn in setting                      */
     MrBFlt      sumtBurnInFraction;    /* relative burn in fraction                     */
+	int			burnin;                /* actual burnin when parsing tree files         */
 	char		sumtConType[100];      /* consensus tree type                           */
-	char		phylogramType[100];    /* type of phylogram for clock trees             */
 	int			calcTrprobs;           /* should the individual tree probs be calculated*/
 	int			showSumtTrees;         /* should the individual tree probs be shown     */
-	MrBFlt		freqDisplay;           /* threshold for printing partitions to screen   */
 	int			printBrlensToFile;     /* should branch lengths be printed to file      */
 	MrBFlt		brlensFreqDisplay;     /* threshold for printing branch lengths to file */
 	int			numRuns;			   /* number of independent analyses to summarize   */
-	int			numTrees;              /* number of trees to summarize                  */
+	int			numTrees;              /* number of tree params to summarize            */
 	int			orderTaxa;             /* order taxa in trees?                          */
     MrBFlt      minPartFreq;           /* minimum part. freq. for overall diagnostics   */
-    char        sumtOutfile[100];      /* name of output file                           */
     int         table;                 /* show table of partition frequencies?          */
     int         summary;               /* show summary diagnostics ?                    */
     int         showConsensus;         /* show consensus trees ?                        */
+    int         consensusFormat;       /* format of consensus tree                      */
+    PolyTree   *tree;                  /* for storing tree read from file               */
+    int        *order;                 /* for storing topology read from file           */
+    int         orderLen;              /* length of order array                         */
+    int         numTreesInLastBlock;   /* number of trees in last block                 */
+    int         numTreesEncountered;   /* number of trees encounted in total            */
+    int         numTreesSampled;       /* number of sampled trees in total              */
+    int         isRooted;              /* is sumt tree rooted ?                         */
+    int         isRelaxed;             /* is sumt tree a relaxed clock tree ?           */
+    int         isClock;               /* is sumt tree a clock tree ?                   */
+    int         isCalibrated;          /* is sumt tree calibrated ?                     */
+    int         nESets;                /* number of event sets                          */
+    int         nBSets;                /* number of branch rate sets                    */
+    int         safeLongsNeeded;       /* number of safe longs needed for taxon bits    */
+    int         runId;                 /* id of run being processed                     */
+    int         numTaxa;               /* number of sumt taxa                           */
+    int        *numFileTrees;          /* number of trees per file                      */
+    int        *numFileTreesSampled;   /* number of trees sampled per file              */
+    int         HPD;                   /* use highest posterior density?                */
 	} Sumt;
+
+/* formats for consensus trees */
+#define SIMPLE      0
+#define RICH        1
 
 typedef struct comptree
 	{
 	char		comptFileName1[100];    /* name of first input file                      */
 	char		comptFileName2[100];    /* name of second input file                     */
 	char		comptOutfile[100];      /* name of output file                           */
-	int			comptBurnIn;            /* burn in                                       */
+	int			relativeBurnin;         /* is relative burnin used ?                     */
+	int			comptBurnIn;            /* absolute burn in                              */
+	MrBFlt	    comptBurnInFrac;        /* relative burnin fraction                      */
+	int			burnin;                 /* actual burnin used when parsing tree files    */
+    MrBFlt      minPartFreq;            /* use partitions with frequency >= minPartFreq  */
 	} Comptree;
 
 typedef struct sump
 	{
 	char		sumpFileName[100];     /* name of input file                            */
+	char		sumpOutfile[100];      /* name of output file                            */
     int         relativeBurnin;        /* should burnin fraction be used?               */
 	int			sumpBurnIn;            /* absolute burn in                              */
     MrBFlt      sumpBurnInFraction;    /* relative burn in fraction                     */
 	int			plot;                  /* output plot (y/n)?                            */
 	int			table;                 /* output table (y/n)?                           */
 	int			margLike;              /* output marginal likelihood (y/n)?             */
-	int			printToFile;           /* print output to file (y/n)?                   */
-	char	    sumpOutfile[100];      /* name of output file                           */
 	int			numRuns;			   /* number of independent analyses to summarize   */
 	int			allRuns;			   /* should data for all runs be printed (yes/no)? */
 	int			overlayPlot;		   /* should plots from several runs be overlaid?   */
+    int         HPD;                   /* use highest posterior density?                */
 	} Sump;
 
 typedef struct plot
 	{
+	int			relativeBurnin;        /* is relative burnin used ?                     */
+	int			plotBurnIn;            /* absolute burnin                               */
+	MrBFlt	    plotBurnInFrac;        /* relative burnin fraction                      */
 	char		plotFileName[100];     /* name of input file                            */
 	char		parameter[100];        /* parameter(s) to be plotted                    */
 	char		match[100];            /* whether the match needs to be perfect         */
-	int			plotBurnIn;            /* burn in                                       */
 	} Plot;
 
 typedef struct
@@ -1173,18 +1213,13 @@ typedef struct
 	int			charId;                /* char ID index for doublet and codon models    */
 	int			pairsId;               /* char ID for doublets                          */
 	int			bigBreakAfter;         /* is there a large break after this character   */
-	int			charSet[MAX_NUM_CHARSETS]; /* holds defined character sets              */
-	int			partitionId[MAX_NUM_PARTITIONS];/* the partitions                       */
 	}
 	CharInformation;
 
 typedef struct 
 	{
 	int			isDeleted;             /* is the taxon deleted                          */
-	Calibration	calibration;           /* the age of the taxon                          */
 	int			charCount;             /* count holder                                  */
-	int			taxaSet[MAX_NUM_TAXASETS]; /* holds defined taxon sets                  */
-	int			constraints[MAX_NUM_CONSTRAINTS];/* the constraints                     */
 	}
 	TaxaInformation;
 

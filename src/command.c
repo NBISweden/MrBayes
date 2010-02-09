@@ -33,7 +33,7 @@
  */
 
 /* id-string for ident, do not edit: cvs will update this string */
-const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $";
+const char commandID[]="$Id: command.c,v 3.93 2009/02/03 15:11:30 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 #endif
 
 
-#define	NUMCOMMANDS					    55  /* Note: NUMCOMMANDS gives the total number  */
+#define	NUMCOMMANDS					    56  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
 #define	NUMPARAMS						250
 #define PARAM(i, s, f, l)				p->string = s;    \
@@ -69,7 +69,9 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 #undef	SHOW_TOKENS
 
 int      AddToSet (int i, int j, int k, int id);
+int      AllocCharacters (void);
 int      AllocMatrix (void);
+int      AllocTaxa (void);
 char     ChangeCase (char c);
 int      CharacterCode (char ch, int *charCode, int chType);
 int		 CharacterNumber (int charCode, int chType);
@@ -127,27 +129,33 @@ int      DoShowUserTrees (void);
 int      DoTaxaset (void);
 int      DoTaxasetParm (char *parmName, char *tkn);
 int      DoTaxaStat (void);
+int      DoTaxlabels (void);
+int      DoTaxlabelsParm (char *parmName, char *tkn);
+int      DoTranslate (void);
+int      DoTranslateParm (char *parmName, char *tkn);
 int      DoTree (void);
 int      DoTreeParm (char *parmName, char *tkn);
 int      DoUserTree (void);
 int      DoUserTreeParm (char *parmName, char *tkn);
 int      DoVersion (void);
 int      FindValidParam (char *tk, int *numMatches);
+int      FreeCharacters (void);
+int      FreeMatrix (void);
+int      FreeTaxa (void);
 int      GetNumPartDivisions (int n);
-int      GetNameFromNamestring (char *name, const char *nameString, int index);
 int      GetUserHelp (char *helpTkn);
 int		 IsAmbig (int charCode, int dType);
 int      IsMissing (int charCode, int dType);
+int      MBResID (char nuc);
 int      NBits (int x);
 int      NucID (char nuc);
 void     PrintSettings (char *command, ModelInfo *mp);
 void     PrintYesNo (int yn, char s[4]);
 int      ProtID (char aa);
-int      RemoveLastFromString (char *s1);
-int      MBResID (char nuc);
 void     SetPartition (int part);
+int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
-void     WhatVariableExp (unsignedSafeLong exp, char *st);
+void     WhatVariableExp (safeLong exp, char *st);
 char     WhichAA (int x);
 MrBFlt   WhichCont (int x);
 char     WhichRes (int x);
@@ -160,63 +168,84 @@ int				autoClose;             /* autoclose                                     *
 int 			autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes */
 Calibration		*calibrationPtr;       /* ptr to calibration being set                  */
 CharInformation *charInfo;             /* holds critical information about characters   */
-char			*charSetNames;         /* holds names of character sets                 */
+safeLong        **charSet;             /* holds information about defined charsets      */
+char			**charSetNames;        /* holds names of character sets                 */
 Comptree		comptreeParams;        /* holds parameters for comparetree command      */
-Calibration		constraintCalibration[MAX_NUM_CONSTRAINTS];/* holds calibration of constraints */
-char			*constraintNames;      /* holds names of constraints                    */
+char			**constraintNames;     /* holds names of constraints                    */
 int				dataType;              /* type of data                                  */
+Calibration     defaultCalibration;    /* default calibration                           */
+safeLong        **definedConstraint;   /* holds information about defined constraints   */
 int				echoMB;				   /* flag used by Manual to prevent echoing        */
-unsignedSafeLong expecting;             /* variable denoting expected token type        */
+safeLong        expecting;             /* variable denoting expected token type         */
 int				foundNewLine;          /* whether a new line has been found             */
 int 			inComment;             /* flag for whether input stream is commented    */
-int				inComparetreeCommand;  /* flag set whenever you enter the comparetree cmd  */
+int				inComparetreeCommand;  /* flag set whenever you enter comparetree cmd   */
 int				inferAncStates;		   /* should ancestral states be inferred (y/n)     */
 int				inferSiteOmegas;	   /* should site omegas be inferred (y/n)          */
 int				inferSiteRates;		   /* should site rates be inferred (y/n)           */
 int				inMrbayesBlock;        /* flag for whether we are in a mrbayes block    */
-int				inSumtCommand;         /* flag set whenever you enter the sumt cmd      */
+int				inSumtCommand;         /* flag set whenever you enter sumt cmd          */
 int				inTreesBlock;          /* flag for whether we are in a trees block      */
 int				inValidCommand;        /* a useful flag set whenever you enter a cmd    */
 int  			isInAmbig, isInPoly;   /* flags whether we are within () or {}          */
+int				isTaxsetDef;           /* is a taxon set defined                        */
 int				isTranslateDef;        /* is a translation block defined                */
 char			logFileName[100];      /* name of the log file                          */
 int				logToFile;             /* should screen output be logged to a file      */
 FILE			*logFileFp;            /* file pointer to log file                      */
+int				longIntegerSize;       /* size of an unsigned integer                   */
 char			manFileName[100];      /* name of the file for the command help info    */
 int				*matrix;               /* matrix containing original data               */
 int  			matrixHasPoly;		   /* flag for whether matrix has polymorphisms     */
 int				memAllocs[NUM_ALLOCS]; /* allocated memory flags                        */
 int				mode;                  /* mode of program (interactive/noninteractive)  */
+Calibration     *nodeCalibration;      /* holds information about node calibrations     */
 int				noWarn;                /* no warnings on overwriting files              */
-int				numCharSets;           /* holds number of character sets                */
+int				numChar;               /* number of characters in character matrix      */
+int				numCharSets;           /* number of character sets                      */
 int				numComments;		   /* counts how deeply nested a comment is         */
 int				numDefinedConstraints; /* number of constraints defined                 */
 int				numDefinedPartitions;  /* number of partitions defined                  */
+int				numNamedTaxa;          /* number of named taxa during parsing of cmd    */
 int				numOpenExeFiles;       /* number of execute files open                  */
-int				numTaxaSets;           /* holds number of taxa sets                     */
+int				numTaxa;               /* number of taxa in character matrix            */
+int				numTaxaSets;           /* number of taxa sets                           */
+int				numTranslates;         /* number of taxa in active translate block      */
 int				outGroupNum;           /* number of outgroup taxon                      */
 ParmInfo		paramTable[NUMPARAMS]; /* information on parameters                     */
-char			*partitionNames;       /* hold names of partitions (first is "default") */
-int				partitionNum;          /* number of current partition                   */
+char			**partitionNames;      /* hold names of partitions (first is "default") */
+int             **partitionId;         /* holds information about defined partitions    */
+int				partitionNum;          /* index of current partition                    */
 Plot			plotParams;            /* holds parameters for plot command             */
+int 			precision;             /* precision of samples and summary stats        */
 int				quitOnError;		   /* quit on error?					            */
-MrBFlt			relConstraintProbs[MAX_NUM_CONSTRAINTS];/* rel. probs. of constraint    */
 int				replaceLogFile;        /* should logfile be replace/appended to         */
+int 			scientific;            /* use scientific format for samples ?           */
 char			spacer[10];            /* holds blanks for printing indentations        */
 Sump			sumpParams;            /* holds parameters for sump command             */
 Sumt			sumtParams;            /* holds parameters for sumt command             */
 TaxaInformation *taxaInfo;             /* holds critical information about taxa         */
-char			*taxaNames;            /* holds name of taxa                            */
-int				*tempSet;              /* temporarily holds defined character set       */
-char			*taxaSetNames;         /* holds names of taxa sets                      */
+char			**taxaNames;           /* holds name of taxa                            */
+safeLong        **taxaSet;             /* holds information about defined taxasets      */
+char			**taxaSetNames;        /* holds names of taxa sets                      */
+int				*tempSet;              /* temporarily holds defined set                 */
 int  			theAmbigChar;          /* int containing ambiguous character            */
-char			*transFrom;            /* translation block information                 */
-char			*transTo;              /* translation block information                 */
+Calibration     *tipCalibration;       /* holds information about node calibrations     */
+char			**transFrom;           /* translation block information                 */
+char			**transTo;             /* translation block information                 */
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
-int				longIntegerSize;       /* size of an unsigned integer                   */
 
 /* local (to this file) */
 char			*tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
+Calibration     defaultCalibration = {
+                    /* name   = */ "Unconstrained",
+                    /* prior  = */ 0,   /* = unconstrained */
+                    /* max    = */ -1.0,
+                    /* min    = */ -1.0,
+                    /* offset = */ -1.0,
+                    /* lambda = */ -1.0,
+                    /* age    = */ -1.0};
+
 CmdType			commands[] =
 				{
 			/*	Information on commands initialization:
@@ -240,45 +269,45 @@ CmdType			commands[] =
 			{  0,               "#",  NO,              NULL,  1,                                                                                              {0},        4,                                                           "", IN_FILE, HIDE },
 			{  1,           "About",  NO,           DoAbout,  0,                                                                                             {-1},       32,                                      "Describes the program",  IN_CMD, SHOW },
 			{  2, "Acknowledgments",  NO, DoAcknowledgments,  0,                                                                                             {-1},       32,                              "Shows program acknowledgments",  IN_CMD, SHOW },
-			{  3,           "Begin",  NO,              NULL,  4,                                                                                      {1,2,3,201},        4,                         "Denotes beginning of block in file", IN_FILE, SHOW },
+			{  3,           "Begin",  NO,              NULL,  6,                                                                              {1,2,3,201,226,227},        4,                         "Denotes beginning of block in file", IN_FILE, SHOW },
 			{  4,       "Calibrate",  NO,       DoCalibrate,  1,                                                                                            {119},        4,               "Assigns dates to terminals or interior nodes",  IN_CMD, SHOW },
 			{  5,         "Charset",  NO,         DoCharset,  1,                                                                                             {15},        4,                          "Assigns a group of sites to a set",  IN_CMD, SHOW },
 			{  6,        "Charstat",  NO,        DoCharStat,  0,                                                                                             {-1},       32,                                 "Shows status of characters",  IN_CMD, SHOW },
 			{  7,       "Citations",  NO,       DoCitations,  0,                                                                                             {-1},       32,                            "Appropriate citation of program",  IN_CMD, SHOW },
-			{  8,     "Comparetree",  NO,     DoCompareTree,  4,																				{127,128,129,130},       36,                     "Compares the trees from two tree files",  IN_CMD, SHOW },
+			{  8,     "Comparetree",  NO,     DoCompareTree,  7,																	{127,128,129,130,221,222,223},       36,                     "Compares the trees from two tree files",  IN_CMD, SHOW },
 			{  9,      "Constraint",  NO,     DoConstraints,  1,                                                                                             {66},        4,                      "Defines a constraint on tree topology",  IN_CMD, SHOW },
 			{ 10,           "Ctype",  NO,           DoCtype,  1,                                                                                             {65},        4,                        "Assigns ordering for the characters",  IN_CMD, SHOW },
 			{ 11,      "Databreaks", YES,          DoBreaks,  1,                                                                                             {93},    32768,           "Defines data breaks for autodiscrete gamma model",  IN_CMD, SHOW },
 			{ 12,          "Delete", YES,          DoDelete,  1,                                                                                             {47},    49152,                             "Deletes taxa from the analysis",  IN_CMD, SHOW },
-			{ 13,      "Dimensions",  NO,      DoDimensions,  2,                                                                                            {4,5},        4,                           "Defines size of character matrix", IN_FILE, SHOW },
+			{ 13,      "Dimensions",  NO,      DoDimensions,  2,                                                                                            {4,5},        4,                            "Defines size of character matrix", IN_FILE, SHOW },
 			{ 14,      "Disclaimer",  NO,      DoDisclaimer,  0,                                                                                             {-1},       32,                               "Describes program disclaimer",  IN_CMD, SHOW },
-			{ 15,             "End",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                             "Denotes end of a block in file", IN_FILE, SHOW },
-			{ 16,        "Endblock",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                 "Alternative way of denoting end of a block", IN_FILE, SHOW },
+			{ 15,             "End",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                              "Denotes end of a block in file", IN_FILE, SHOW },
+			{ 16,        "Endblock",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                  "Alternative way of denoting end of a block", IN_FILE, SHOW },
 			{ 17,         "Exclude", YES,         DoExclude,  1,                                                                                             {45},    49152,                           "Excludes sites from the analysis",  IN_CMD, SHOW },
 			{ 18,         "Execute", YES,         DoExecute,  1,                                                                                             {12},    16384,                                            "Executes a file",  IN_CMD, SHOW },
-			{ 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                     "Defines character format in data block", IN_FILE, SHOW },
+			{ 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                      "Defines character format in data block", IN_FILE, SHOW },
 			{ 20,            "Help", YES,            DoHelp,  1,                                                                                             {50},    16416,                  "Provides detailed description of commands",  IN_CMD, SHOW },
 			{ 21,         "Include", YES,         DoInclude,  1,                                                                                             {46},    49152,                                             "Includes sites",  IN_CMD, SHOW },
 			{ 22,            "Link",  NO,            DoLink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
 			{ 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
 			{ 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
 			{ 25,	       "Manual",  NO,          DoManual,  1,								    														{126},       36,				  "Prints a command reference to a text file",  IN_CMD, SHOW },
-			{ 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},112381728,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
-			{ 27,            "Mcmc",  NO,            DoMcmc, 47,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-																			     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,216},      36,                   "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
-			{ 28,           "Mcmcp",  NO,           DoMcmcp, 47,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-																			     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,216},        4, "Sets the parameters of a chain (without starting analysis)",  IN_CMD, SHOW },
+			{ 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},112381728,                  "Defines matrix of characters in data block", IN_FILE, SHOW },
+			{ 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
+																			         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},      36,                    "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
+			{ 28,           "Mcmcp",  NO,           DoMcmcp, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
+																			         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},        4, "Sets the parameters of a chain (without starting analysis)",  IN_CMD, SHOW },
 			{ 29,        "Outgroup", YES,        DoOutgroup,  1,                                                                                             {78},    49152,                                     "Changes outgroup taxon",  IN_CMD, SHOW },
 			{ 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
 			{ 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
-			{ 32,            "Plot",  NO,            DoPlot,  4,                                                                                {106,107,108,109},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
+			{ 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
 			{ 33,           "Prset",  NO,           DoPrset, 35,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
 																												                 168,172,173,174,183,184,185,218},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
 			{ 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet,  10,                                                              {13,14,94,145,170,171,179,181,182},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 11,                                                          {13,14,94,145,170,171,179,181,182,216},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -287,22 +316,23 @@ CmdType			commands[] =
 			{ 44,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
 			{ 45,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
 			{ 46,            "Sump",  NO,            DoSump, 12,                                                  {96,97,137,138,139,140,141,161,162,178,211,212},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-			{ 47,            "Sumt",  NO,            DoSumt, 21,                 {80,81,82,95,99,146,147,163,164,165,167,175,176,177,204,205,206,207,208,209,210},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+			{ 47,            "Sumt",  NO,            DoSumt, 19,                        {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
 			{ 48,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
 			{ 49,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
-			{ 50,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
-			{ 51,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-			{ 52,          "Unlink",  NO,          DoUnlink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
-			{ 53,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
-			{ 54,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
+			{ 50,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
+			{ 51,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
+			{ 52,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
+			{ 53,          "Unlink",  NO,          DoUnlink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+			{ 54,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
+			{ 55,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		    
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
 		    { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
 		};
 int					inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRead, isFirstInterleavedBlock, 
 					taxonCount, fromI, toJ, everyK, foundDash, foundSlash, foundFirst, isMixed, whichPartition,
-					isNegative, numPartitions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
-					pairId, firstPair;
+					isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
+					pairId, firstPair, inTaxaBlock, inCharactersBlock;
 char				gapId, missingId, matchId, tempSetName[100];
 CmdType 			*commandPtr;
 ParmInfoPtr			paramPtr;
@@ -383,78 +413,36 @@ int AddToSet (int i, int j, int k, int id)
 
 
 
-int AddToString (char *s1, char *s2, int *x)
-
+/* AddString: Push a string onto the end of a list, with reallocation of list
+      to hold the extra element. The calling function needs to keep track of
+      the counter holding the length of the list. */
+int AddString (char ***list, int len, char *token)
 {
+    (*list) = (char **) SafeRealloc ((void *)(*list), (size_t)((len+1)*sizeof(char*)));
+    if (!(*list))
+        return ERROR;
 
-	int		i, j, startI=0, numPrev;
-	
-	/* s1 is the character string that should be appended to character string s2 
-	   We assume that the end of each character string has a "|". */
-	   
-	i = numPrev = 0;
-	while (s2[i] != '\0')
-		{
-		if (s2[i] == '|')
-			numPrev++;
-		i++;
-		}
-		
-	if (numPrev == 0)
-		startI = 0;
-	else
-		{
-		i = j = 0;
-		while (s2[i] != '\0')
-			{
-			if (s2[i] == '|')
-				j++;
-			i++;
-			if (j == numPrev)
-				{
-				startI = i;
-				break;
-				}
-			}
-		}
-		
-	if (s2[startI] == '\0')
-		{
-		MrBayesPrint ("%s   String is too full (1 %d)\n", spacer, startI);
-		return (ERROR);
-		}
-	
-	i = startI;
-	j = 0;
-	while(s1[j] != '\0')
-		{
-		s2[i++] = s1[j++];
-		if (s2[i] == '\0')
-			{
-			MrBayesPrint ("%s   String is too full (2 %d)\n", spacer, i);
-			return (ERROR);
-			}
-		}
-	s2[i] = '|';
-	
-	*x = numPrev + 1;
+    (*list)[len] = (char *) SafeCalloc ((size_t)(strlen(token)+1), sizeof(char));
+    if (!(*list)[len])
+        return ERROR;
 
-	return (NO_ERROR);
-	
+	strcpy ((*list)[len], token);
+    
+	return NO_ERROR;
 }
 
 
 
 
 
-int AllocMatrix (void)
+int AllocCharacters (void)
 
 {
 
-	int		i, j, tempSetSize;
+	int		i, tempSetSize;
 
-	if (memAllocs[ALLOC_MATRIX] == YES)
-		FreeMatrix();
+    if (memAllocs[ALLOC_MATRIX] == YES)
+		goto errorExit;
 	matrix = (int *)SafeMalloc((size_t) (numTaxa * numChar * sizeof(int)));
 	if (!matrix)
 		{
@@ -483,188 +471,163 @@ int AllocMatrix (void)
 		charInfo[i].charId = 0;
 		charInfo[i].pairsId = 0;
 		charInfo[i].bigBreakAfter = NO;
-		for (j=0; j<MAX_NUM_CHARSETS; j++)
-			charInfo[i].charSet[j] = NO;
-		for (j=0; j<MAX_NUM_PARTITIONS; j++)
-			charInfo[i].partitionId[j] = NO;
 		}
-	numTaxaSets = 0;
 	memAllocs[ALLOC_CHARINFO] = YES;
 
-	if (memAllocs[ALLOC_TAXAINFO] == YES)
+	if (memAllocs[ALLOC_CHARSETS] == YES)
 		goto errorExit;
-	taxaInfo = (TaxaInformation *)SafeMalloc((size_t) (numTaxa * sizeof(TaxaInformation)));
-	if (!taxaInfo)
-		{
-		MrBayesPrint ("%s   Problem allocating taxaInfo (%d)\n", spacer, numTaxa * sizeof(TaxaInformation));
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa; i++)
-		{
-		taxaInfo[i].isDeleted = NO;
-		taxaInfo[i].calibration.prior = unconstrained; /* no calibration set */
-		strcpy (taxaInfo[i].calibration.name, "Unconstrained");
-		taxaInfo[i].calibration.age = -1.0;
-		taxaInfo[i].calibration.min = -1.0;
-		taxaInfo[i].calibration.max = -1.0;
-		taxaInfo[i].calibration.offset = -1.0;
-		taxaInfo[i].calibration.lambda = -1.0;
-		taxaInfo[i].charCount = 0;
-		for (j=0; j<MAX_NUM_TAXASETS; j++)
-			taxaInfo[i].taxaSet[j] = 0;
-		for (j=0; j<MAX_NUM_CONSTRAINTS; j++)
-			taxaInfo[i].constraints[j] = 0;
-		}
-	for (i=0; i<MAX_NUM_CONSTRAINTS; i++)
-		{
-		relConstraintProbs[i] = 0.0;
-		constraintCalibration[i].prior = unconstrained; /* no calibration set */
-		strcpy (constraintCalibration[i].name, "Unconstrained");
-		constraintCalibration[i].age = -1.0;
-		constraintCalibration[i].min = -1.0;
-		constraintCalibration[i].max = -1.0;
-		constraintCalibration[i].offset = -1.0;
-		constraintCalibration[i].lambda = -1.0;
-		}
-	numDefinedConstraints = 0;
-	numTaxaSets = 0;
-	memAllocs[ALLOC_TAXAINFO] = YES;
+	charSetNames = NULL;
+    charSet = NULL;
+    numCharSets = 0;
+    memAllocs[ALLOC_CHARSETS] = YES;    /* safe to do free */
 
-	if (memAllocs[ALLOC_PARTITIONNAMES] == YES)
+    if (memAllocs[ALLOC_PARTITIONS] == YES)
 		goto errorExit;
-	partitionNames = (char *)SafeMalloc((size_t) (MAX_NUM_PARTITIONS * 100 * sizeof(char)));
-	if (!partitionNames)
-		{
-		MrBayesPrint ("%s   Problem allocating partitionNames (%d)\n", spacer, MAX_NUM_PARTITIONS * 100 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<100*MAX_NUM_PARTITIONS; i++)
-		{
-		partitionNames[i] = ' ';
-		if (i == (MAX_NUM_PARTITIONS*100 - 1))
-			partitionNames[i] = '\0';
-		}
-	memAllocs[ALLOC_PARTITIONNAMES] = YES;
+	partitionNames = NULL;
+    partitionId = (int**) SafeMalloc ((size_t)(numChar*sizeof(int*)));
+    for (i=0; i<numChar; i++)
+        partitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
+    numDefinedPartitions = 0;   /* number of user-defined partitions */
+    memAllocs[ALLOC_PARTITIONS] = YES;  /* safe to do free */
 
-	if (memAllocs[ALLOC_CHARSETNAMES] == YES)
-		goto errorExit;
-	charSetNames = (char *)SafeMalloc((size_t) (MAX_NUM_CHARSETS * 100 * sizeof(char)));
-	if (!charSetNames)
-		{
-		MrBayesPrint ("%s   Problem allocating charSetNames (%d)\n", spacer, MAX_NUM_CHARSETS * 100 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<MAX_NUM_CHARSETS*100; i++)
-		{
-		charSetNames[i] = ' ';
-		if (i == (MAX_NUM_CHARSETS*100 - 1))
-			charSetNames[i] = '\0';
-		}
-	memAllocs[ALLOC_CHARSETNAMES] = YES;
+    if (memAllocs[ALLOC_PARTITIONVARS] == YES)
+        goto errorExit;
+    numVars           = NULL;
+    tempLinkUnlinkVec = NULL;
+    activeParts       = NULL;
+    tempLinkUnlinkVec = NULL;
+    tempNum           = NULL;
+    linkTable[0]      = NULL;
+    tempLinkUnlink[0] = NULL;
+    for (i=0; i<NUM_LINKED; i++)
+        {
+        linkTable[i]      = NULL;
+        tempLinkUnlink[i] = NULL;
+        activeParams[i]   = NULL;
+        }
+    memAllocs[ALLOC_PARTITIONVARS] = YES;
 
-	if (memAllocs[ALLOC_TMPSET] == YES)
-		goto errorExit;
-	if (numChar > numTaxa)
+    if (memAllocs[ALLOC_TMPSET] == NO)
+        goto errorExit;
+    if (numChar > numTaxa)
 		tempSetSize = numChar;
 	else
 		tempSetSize = numTaxa;
-	tempSet = (int *)SafeMalloc((size_t) (tempSetSize * sizeof(int)));
+	tempSet = (int *)SafeRealloc((void *)tempSet, (size_t) (tempSetSize * sizeof(int)));
 	if (!tempSet)
 		{
-		MrBayesPrint ("%s   Problem allocating tempSet (%d)\n", spacer, tempSetSize * sizeof(int));
+		MrBayesPrint ("%s   Problem reallocating tempSet (%d)\n", spacer, tempSetSize * sizeof(int));
 		goto errorExit;
 		}
-	for (i=0; i<tempSetSize; i++)
-		tempSet[i] = 0;
-	memAllocs[ALLOC_TMPSET] = YES;
-
-	if (memAllocs[ALLOC_TAXANAMES] == YES)
-		goto errorExit;
-	taxaNames = (char *)SafeMalloc((size_t) (numTaxa * 100 * sizeof(char)));
-	if (!taxaNames)
-		{
-		MrBayesPrint ("%s   Problem allocating taxaNames (%d)\n", spacer, numTaxa * 100 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa*100; i++)
-		{
-		taxaNames[i] = ' ';
-		if (i == numTaxa*100 - 1)
-			taxaNames[i] = '\0';
-		}
-	memAllocs[ALLOC_TAXANAMES] = YES;
-
-	if (memAllocs[ALLOC_TAXASETNAMES] == YES)
-		goto errorExit;
-	taxaSetNames = (char *)SafeMalloc((size_t) (MAX_NUM_DIVS * 100 * sizeof(char)));
-	if (!taxaSetNames)
-		{
-		MrBayesPrint ("%s   Problem allocating taxaSetNames (%d)\n", spacer, 3000 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<3000; i++)
-		{
-		taxaSetNames[i] = ' ';
-		if (i == (3000 - 1))
-			taxaSetNames[i] = '\0';
-		}
-	memAllocs[ALLOC_TAXASETNAMES] = YES;
-
-	if (memAllocs[ALLOC_CONSTRAINTNAMES] == YES)
-		goto errorExit;
-	constraintNames = (char *)SafeMalloc((size_t) (30 * 100 * sizeof(char)));
-	if (!constraintNames)
-		{
-		MrBayesPrint ("%s   Problem allocating constraintNames (%d)\n", spacer, 3000 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<3000; i++)
-		{
-		constraintNames[i] = ' ';
-		if (i == (3000 - 1))
-			constraintNames[i] = '\0';
-		}
-	memAllocs[ALLOC_CONSTRAINTNAMES] = YES;
-	
-	if (memAllocs[ALLOC_TRANSFROM] == YES)
-		goto errorExit;
-	transFrom = (char *)SafeMalloc((size_t) (numTaxa * 100 * sizeof(char)));
-	if (!transFrom)
-		{
-		MrBayesPrint ("%s   Problem allocating transFrom (%d)\n", spacer, numTaxa * 100 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa*100; i++)
-		{
-		transFrom[i] = ' ';
-		if (i == numTaxa*100 - 1)
-			transFrom[i] = '\0';
-		}
-	memAllocs[ALLOC_TRANSFROM] = YES;
-
-	if (memAllocs[ALLOC_TRANSTO] == YES)
-		goto errorExit;
-	transTo = (char *)SafeMalloc((size_t) (numTaxa * 100 * sizeof(char)));
-	if (!transTo)
-		{
-		MrBayesPrint ("%s   Problem allocating transTo (%d)\n", spacer, numTaxa * 100 * sizeof(char));
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa*100; i++)
-		{
-		transTo[i] = ' ';
-		if (i == numTaxa*100 - 1)
-			transTo[i] = '\0';
-		}
-	memAllocs[ALLOC_TRANSTO] = YES;
 
 	MrBayesPrint ("%s   Allocated matrix\n", spacer);
 	return (NO_ERROR);
-	errorExit:
+
+    errorExit:
 		MrBayesPrint ("%s   Problem allocating matrix\n", spacer);
 		FreeMatrix();
 		return (ERROR);
+}
 
+
+
+
+
+int AllocMatrix (void)
+
+{
+    if (memAllocs[ALLOC_TAXA] == NO && AllocTaxa() == ERROR)
+        return ERROR;
+    else
+        return (AllocCharacters());
+}
+
+
+
+
+
+int AllocTaxa (void)
+
+{
+
+    int i;
+
+    if (defTaxa==NO)
+		{
+		MrBayesPrint ("%s   Number of taxa not defined\n", spacer);
+		return (ERROR);
+		}
+    if (numTaxa == 0)
+		{
+		MrBayesPrint ("%s   Number of taxa is 0\n", spacer);
+		return (ERROR);
+		}
+
+    /* allocate space for taxa */
+	if (memAllocs[ALLOC_TAXA] == YES)
+        goto errorExit;
+	taxaNames = NULL;   /* This variable is allocated in AddString */
+    taxaInfo = (TaxaInformation *)SafeMalloc((size_t) (numTaxa * sizeof(TaxaInformation)));
+    if (!taxaInfo)
+        {
+        goto errorExit;
+        }
+    tipCalibration = (Calibration *)SafeMalloc((size_t) (numTaxa * sizeof(TaxaInformation)));
+    if (!tipCalibration)
+        {
+        SafeFree ((void **)&taxaInfo);
+        goto errorExit;
+        }
+	for (i=0; i<numTaxa; i++)
+		{
+		taxaInfo[i].isDeleted = NO;
+        taxaInfo[i].charCount = 0;
+		}
+    memAllocs[ALLOC_TAXA] = YES;
+
+	/* taxa sets */
+    if (memAllocs[ALLOC_TAXASETS] == YES)
+        goto errorExit;
+    taxaSetNames = NULL;
+    taxaSet = NULL;
+    numTaxaSets = 0;
+    memAllocs[ALLOC_TAXASETS] = YES;    /* safe to free */
+
+	/* constraints */
+    if (memAllocs[ALLOC_CONSTRAINTS] == YES)
+        goto errorExit;
+    constraintNames = NULL;
+    definedConstraint = NULL;
+    numDefinedConstraints = 0;
+	memAllocs[ALLOC_CONSTRAINTS] = YES;     /* safe to free */
+
+	/* translate table */
+    transFrom = NULL;
+    transTo = NULL;
+    numTranslates = 0;
+
+    /* tempSet */
+    if (memAllocs[ALLOC_TMPSET] == YES)
+        goto errorExit;
+    tempSet = (int *) SafeMalloc ((size_t)(numTaxa*sizeof(int)));
+    if (!tempSet)
+        goto errorExit;
+    memAllocs[ALLOC_TMPSET] = YES;
+
+    /* make sure previous user trees are freed */
+    if (numUserTrees > 0)
+        {
+        MrBayesPrint ("%s   Previous user trees not freed\n", spacer);
+        goto errorExit;
+        }
+
+    MrBayesPrint ("%s   Allocated taxon set\n", spacer);
+    return NO_ERROR;
+
+errorExit:
+    MrBayesPrint ("%s   Problem allocating taxon set\n", spacer);
+    FreeTaxa();
+    return ERROR;
 }
 
 
@@ -769,7 +732,7 @@ int CheckInitialPartitions (void)
 	
 	for (i=0; i<numChar; i++)
 		{
-		if (charInfo[i].partitionId[0] <= 0 || charInfo[i].partitionId[0] > numPartitions)
+		if (partitionId[i][0] <= 0 || partitionId[i][0] > numDivisions)
 			{
 			MrBayesPrint ("%s   The partition for site %d is incorrect\n", spacer, i+1); 
 			return (ERROR);
@@ -823,7 +786,7 @@ int CheckStringValidity (char *s)
 								MrBayesPrint ("%s   The error is in the first taxon name\n", spacer);
 							else
 								{
-								GetNameFromString (taxaNames, temp, taxonCount);
+								strcpy(temp, taxaNames[taxonCount]);
 								if (isInterleaved == NO)
 									MrBayesPrint ("%s   The error is in the name of the taxon following taxon %s\n", spacer, temp);
 								else
@@ -871,74 +834,24 @@ int CheckStringValidity (char *s)
 
 
 
-int CheckString (char *s1, char *s2, int *x)
-
+/* CheckString: This function simply checks a vector of strings for a match against token.
+          Upon return, matchIndex contains the index of the matched string. An
+          ERROR is returned if there are no matches.  */
+int CheckString (char **list, int len, char *token, int *matchIndex)
 {
+	int			i;		
+		
+    *matchIndex = -1;
+    for (i=0; i<len; i++)
+        {
+        if (StrCmpCaseInsensitive(token,list[i]) == 0)
+            {
+            *matchIndex = i;
+            return (NO_ERROR);
+            }
+        }
 
-	int			i, j, len1, len2, numOfStr, foundString, isIdentical, nDiff;
-	char		tempStr[100];
-		
-	/* This function checks a string s1 against a list of names contained in s2. The
-	   list of names in s2 is formatted like:
-	   
-	      "name1|name2|name3|                         \0"
-	      
-	   This string contains only three names and the names are separated by a "|".
-	   When we go through the list of names, we know that we have found the end
-	   of a name when we find "|" and that we have found the end of the list of
-	   names when we find "\0" or " " (a blank). The command returns an ERROR if
-	   a match was not found. Otherwise, a NO_ERROR is returned and *x is the
-	   number in the list (s2) that matched s1. The number, x, is indexed 1, 2,
-	   3, ... */
-	
-	len1 = (int) strlen(s1);
-	i = j = numOfStr = 0;
-	foundString = NO;
-	while (s2[i] != '\0' && s2[i] != ' ')
-		{
-		if (j >= 100 - 2)
-			{
-			return (ERROR);
-			}
-		if (s2[i] != '|' && s2[i] != '\0' && s2[i] != ' ' && j < 100 - 2)
-			{
-			tempStr[j++] = s2[i];
-			}
-		else
-			{
-			tempStr[j++] = '\0';
-			len2 = (int) strlen(tempStr);
-			isIdentical = YES;
-			if (len1 != len2)
-				{
-				isIdentical = NO;
-				}
-			else
-				{
-				nDiff = 0;
-				for (j=0; j<len1; j++)
-					if (tolower(s1[j]) != tolower(tempStr[j]))
-						nDiff++;
-				if (nDiff > 0)
-					isIdentical = NO;
-				}
-			if (isIdentical == YES)
-				{
-				foundString = YES;
-				*x = numOfStr + 1;
-				break;
-				}
-			j = 0;
-			numOfStr++;
-			}
-		i++;
-		}
-		
-	if (foundString == NO)
-		return (ERROR);
-			
-	return (NO_ERROR);
-	
+    return (ERROR);	
 }
 
 
@@ -1025,6 +938,19 @@ int DoAbout (void)
 int DoAcknowledgments (void)
 
 {
+    /*
+ * html help Smithsonian ?
+ * Paul 20070501:
+ * Applied a pach from Julian Catchen <catchen@cs.uoregon.edu> for a bug
+ * concerning non-matching headers.
+ * "I tracked down the problem and fixed it in the attached patch. It was a
+ * simple problem where a string parsing variable (headerNames) would be
+ * reallocated when reading the second (or any subsequent file) file that
+ * had lines longer than those in the first file. Problem was, it would
+ * reallocate the variable and then clear it, causing any further header
+ * comparisons to fail with the above message."
+    
+    */
 
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 	MrBayesPrint ("   Acknowledgments                                                               \n");
@@ -1067,6 +993,30 @@ int DoBeginParm (char *parmName, char *tkn)
 				return (ERROR);
 			MrBayesPrint ("   Reading data block\n");
 			inDataBlock = YES;
+			expecting = Expecting(SEMICOLON);
+			strcpy (spacer, "   ");
+			}
+		/* set Characters (inCharactersBlock) *************************************************************/
+		else if (!strcmp(parmName, "Characters"))
+			{
+			if (FreeModel () == ERROR)
+				return (ERROR);
+			if (FreeCharacters () == ERROR)
+				return (ERROR);
+			MrBayesPrint ("   Reading characters block\n");
+			inCharactersBlock = YES;
+			expecting = Expecting(SEMICOLON);
+			strcpy (spacer, "   ");
+			}
+		/* set Taxa (inTaxaBlock) *************************************************************/
+		else if (!strcmp(parmName, "Taxa"))
+			{
+			if (FreeModel () == ERROR)
+				return (ERROR);
+			if (FreeMatrix () == ERROR)
+				return (ERROR);
+			MrBayesPrint ("   Reading taxa block\n");
+			inTaxaBlock = YES;
 			expecting = Expecting(SEMICOLON);
 			strcpy (spacer, "   ");
 			}
@@ -1266,18 +1216,18 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		howMany = 0;
 
 		/* first look in constraint names */
-		if (CheckString (tkn, constraintNames, &index) != ERROR)
+		if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) != ERROR)
 			{
-			calibrationPtr = &constraintCalibration[index-1];
+			calibrationPtr = &nodeCalibration[index];
 			howMany++;
 			isTaxon = NO;
 			strcpy (nodeName, tkn);
 			}
 		
 		/* then look in terminal taxon names */
-		if (CheckString (tkn, taxaNames, &index) != ERROR)
+		if (CheckString (taxaNames, numTaxa, tkn, &index) != ERROR)
 			{
-			calibrationPtr = &taxaInfo[index-1].calibration;
+			calibrationPtr = &tipCalibration[index];
 			howMany++;
 			isTaxon = YES;
 			strcpy (nodeName, tkn);
@@ -1301,13 +1251,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
 			}
 
 		/* reset the values of the calibration */
-		strcpy (calibrationPtr->name, "Unconstrained");
-		calibrationPtr->prior = unconstrained;
-		calibrationPtr->min = -1.0;
-		calibrationPtr->max = -1.0;
-		calibrationPtr->age = -1.0;
-		calibrationPtr->offset = -1.0;
-		calibrationPtr->lambda = -1.0;
+		*calibrationPtr = defaultCalibration;
 
 		/* get ready to find the equal sign */
 		expecting = Expecting(EQUALSIGN);
@@ -1453,59 +1397,32 @@ int DoCharset (void)
 
 {
 
-	int			i, howMany;
-
-	/* first add name to charSetName */
-	if (AddToString (tempSetName, charSetNames, &howMany) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem adding charset %s to list\n", spacer, tempSetName);
-		return (ERROR);
-		}
-	if (howMany != numCharSets + 1)
-		{
-		MrBayesPrint ("%s   Problem adding charset %s to list\n", spacer, tempSetName);
-		if (RemoveLastFromString (charSetNames) == ERROR)
-			return (ERROR);
-		return (ERROR);
-		}
-
-	/* add set to tempSet */
+	/* first add set to tempSet */
 	if (fromI >= 0 && toJ < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (charSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (charSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (charSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 		
-	/* merge tempSet with charset */
-	for (i=0; i<numChar; i++)
+	/* add name to charSetNames */
+	if (AddString (&charSetNames, numCharSets, tempSetName) == ERROR)
 		{
-		if (tempSet[i] != 0)
-			{
-			charInfo[i].charSet[numCharSets] = tempSet[i];
-			}
+		MrBayesPrint ("%s   Problem adding charset %s to list\n", spacer, tempSetName);
+		return (ERROR);
 		}
+
+	/* store charset */
+	AddBitfield (charSet, numCharSets, tempSet, numChar);
 	
 	/* increment number of char sets */
 	numCharSets++;
@@ -1522,7 +1439,7 @@ int DoCharsetParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt, allDigit;
+	int		i, index, tempInt, allDigit;
 	
 	if (defMatrix == NO)
 		{
@@ -1560,7 +1477,7 @@ int DoCharsetParm (char *parmName, char *tkn)
 			/* check to see if the name has already been used as a charset */
 			if (numCharSets > 1)
 				{
-				if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+				if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 					{
 					/* if the charset name has not been used, then we should have an ERROR returned */
 					/* we _want_ to be here */
@@ -1571,11 +1488,6 @@ int DoCharsetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Charset name has been used previously\n", spacer);
 					return (ERROR);
 					}
-				}
-			else if (numCharSets > MAX_NUM_CHARSETS)
-				{
-				MrBayesPrint ("%s   You cannot define more than %d charsets\n", spacer, MAX_NUM_CHARSETS);
-				return (ERROR);
 				}
 				
 			/* add the name to the character set */
@@ -1608,7 +1520,7 @@ int DoCharsetParm (char *parmName, char *tkn)
 			MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 			return (ERROR);
 			}
-		if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+		if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 			{
 			MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 			return (ERROR);
@@ -1616,7 +1528,7 @@ int DoCharsetParm (char *parmName, char *tkn)
 		/* add characters from charset "tkn" to new tempset */
 		for (i=0; i<numChar; i++)
 			{
-			if (charInfo[i].charSet[howMany-1] == 1)
+			if (IsBitSet(i,charSet[index]) == YES)
 				tempSet[i] = 1;
 			}		
 		fromI = toJ = everyK = -1;
@@ -1734,7 +1646,7 @@ int DoCharStat (void)
 {
 
 	int			i, j, numDivs;
-	char		tempName[100];
+    char        tempName[100];
 	
 	if (defMatrix == NO)
 		{
@@ -1748,23 +1660,13 @@ int DoCharStat (void)
 		MrBayesPrint ("%s   %d character partitions defined:\n", spacer, numDefinedPartitions);
 	for (i=0; i<numDefinedPartitions; i++)
 		{
-		if (GetNameFromString (partitionNames, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting partition names \n", spacer);
-			return (ERROR);
-			}
 		numDivs = GetNumPartDivisions (i+1);
 		if (numDivs == 1)
-			MrBayesPrint ("%s      Partition %d (\"%s\") does not divide the characters\n", spacer, i+1, tempName);
+			MrBayesPrint ("%s      Partition %d (\"%s\") does not divide the characters\n", spacer, i+1, partitionNames[i]);
 		else
-			MrBayesPrint ("%s      Partition %d (\"%s\") divides the characters into %d parts\n", spacer, i+1, tempName, numDivs);
+			MrBayesPrint ("%s      Partition %d (\"%s\") divides the characters into %d parts\n", spacer, i+1, partitionNames[i], numDivs);
 		}
-	if (GetNameFromString (partitionNames, tempName, partitionNum) == ERROR)
-		{
-		MrBayesPrint ("%s   Error getting current partition name \n", spacer);
-		return (ERROR);
-		}
-	MrBayesPrint ("%s      Current partition is \"%s\"\n", spacer, tempName);
+	MrBayesPrint ("%s      Current partition is \"%s\"\n", spacer, partitionNames[partitionNum]);
 	MrBayesPrint ("\n");
 
 	/* print out list of characters with information about each */
@@ -1830,7 +1732,7 @@ int DoCharStat (void)
 		MrBayesPrint ("  ");
 			
 		for (j=0; j<numDefinedPartitions; j++)
-			MrBayesPrint (" %2d", charInfo[i].partitionId[j]);
+			MrBayesPrint (" %2d", partitionId[i][j]);
 
 		/* MrBayesPrint ("%4d   ", charSet[i]);*/
 		
@@ -1849,7 +1751,7 @@ int DoCharStat (void)
 					
 		MrBayesPrint ("\n");
 		
-		if (charInfo[i].bigBreakAfter == YES)
+        if (charInfo[i].bigBreakAfter == YES)
 			{
 			MrBayesPrint ("%s   ", spacer);
 			MrBayesPrint ("     - - - - - - - - - - - - - - - - - - - -  \n");
@@ -2194,47 +2096,21 @@ int DoConstraints (void)
 
 	int			i, howMany;
 
-	/* first add name to constraintNames */
-	if (AddToString (tempSetName, constraintNames, &howMany) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
-		return (ERROR);
-		}
-	if (howMany != numDefinedConstraints + 1)
-		{
-		MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
-		if (RemoveLastFromString (constraintNames) == ERROR)
-			return (ERROR);
-		return (ERROR);
-		}
-
 	/* add set to tempSet */
 	if (fromI >= 0 && toJ < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (constraintNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (constraintNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (constraintNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 			
 	/* check that this is not a stupid constraint */
@@ -2244,22 +2120,30 @@ int DoConstraints (void)
 			howMany++;
 	if (howMany == numTaxa)
 		{
-		MrBayesPrint ("%s   This constraint includes all taxa and can only be used as a\n", spacer);
-		MrBayesPrint ("%s      placeholder for inferring ancestral states in clock trees.\n", spacer);
+		MrBayesPrint ("%s   This constraint includes all taxa and will not be defined\n", spacer);
+		return (ERROR);
 		}
-	else if (howMany == 0)
+    if (howMany == 0)
 		{
 		MrBayesPrint ("%s   This constraint does not include any taxa and will not be defined\n", spacer);
-		if (RemoveLastFromString (constraintNames) == ERROR)
-			return (ERROR);
 		return (ERROR);
 		}
 		
-	/* merge tempSet with constraints */
-	for (i=0; i<numTaxa; i++)
-		taxaInfo[i].constraints[numDefinedConstraints] = tempSet[i];
+	/* add name to constraintNames */
+	if (AddString (&constraintNames, numDefinedConstraints, tempSetName) == ERROR)
+		{
+		MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
+		return (ERROR);
+		}
+
+	/* store tempSet */
+	AddBitfield (definedConstraint, numDefinedConstraints, tempSet, numTaxa);
 	
-	/* increment number of defined constraints */
+    /* add a default node calibration */
+    nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
+    nodeCalibration[numDefinedConstraints] = defaultCalibration;
+
+    /* increment number of defined constraints */
 	numDefinedConstraints++;
 	
 	/* show taxset (for debugging) */
@@ -2280,7 +2164,7 @@ int DoConstraintsParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 	MrBFlt	tempD;
 	
 	if (defMatrix == NO)
@@ -2300,24 +2184,19 @@ int DoConstraintsParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 				
-			/* check to see if the name has already been used as a taxset */
+			/* check to see if the name has already been used as a constraint */
 			if (numDefinedConstraints > 0)
 				{
-				if (CheckString (tkn, constraintNames, &howMany) == ERROR)
+				if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) == ERROR)
 					{
 					/* if the constraint name has not been used, then we should have an ERROR returned */
 					/* we _want_ to be here */
 					}
 				else
 					{
-					MrBayesPrint ("%s   Constraint name has been used previously\n", spacer);
+					MrBayesPrint ("%s   Constraint name '%s' has been used previously\n", spacer, tkn);
 					return (ERROR);
 					}
-				}
-			else if (numDefinedConstraints > 30)
-				{
-				MrBayesPrint ("%s   You cannot define more than 30 constraints\n", spacer);
-				return (ERROR);
 				}
 				
 			/* add the name to the temporary constraint names string */
@@ -2389,14 +2268,14 @@ int DoConstraintsParm (char *parmName, char *tkn)
 			/* We are defining a constraint in terms of a taxon set (called tkn, here) or we are referring to
 			   the taxon name. We should be able to find tkn in the list of taxon set names or in the list
 			   of taxon names. If we cannot, then we have a problem and return an error. */
-			if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+			if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 				{
 				if (numTaxaSets < 1)
 					{
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
 					}
-				if (CheckString (tkn, taxaSetNames, &howMany) == ERROR)
+				if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
@@ -2404,13 +2283,13 @@ int DoConstraintsParm (char *parmName, char *tkn)
 				/* add taxa from taxset tkn to new tempSet */
 				for (i=0; i<numTaxa; i++)
 					{
-					if (taxaInfo[i].taxaSet[howMany-1] == 1)
+					if (IsBitSet(i, taxaSet[index]) == YES)
 						tempSet[i] = 1;
 					}
 				}
 			else
 				{
-				tempSet[howMany-1] = 1;
+				tempSet[index] = 1;
 				}
 			fromI = toJ = everyK = -1;
 
@@ -2434,15 +2313,10 @@ int DoConstraintsParm (char *parmName, char *tkn)
 				tempD *= -1.0;
 			if (foundExp == YES)
 				{
-				relConstraintProbs[numDefinedConstraints] = tempD;
 				expecting  = Expecting(RIGHTPAR);
 				}
 			else
 				{
-				if (tempD <= 0.0)
-					relConstraintProbs[numDefinedConstraints] = NEG_INFINITY;
-				else
-					relConstraintProbs[numDefinedConstraints] = log(tempD);
 				expecting  = Expecting(EQUALSIGN);
 				}
 			foundFirst = NO;
@@ -2653,7 +2527,7 @@ int DoCtypeParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 	
 	if (defMatrix == NO)
 		{
@@ -2736,7 +2610,7 @@ int DoCtypeParm (char *parmName, char *tkn)
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
 				}
-			if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+			if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 				{
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
@@ -2745,7 +2619,7 @@ int DoCtypeParm (char *parmName, char *tkn)
 			/* add characters from charset tkn to new tempset */
 			for (i=0; i<numChar; i++)
 				{
-				if (charInfo[i].charSet[howMany-1] == 1)
+				if (IsBitSet(i, charSet[index]) == YES)
 					tempSet[i] = 1;
 				}
 			fromI = toJ = everyK = -1;
@@ -2883,7 +2757,7 @@ int DoDelete (void)
 			return (ERROR);
 		}
 		
-	/* merge tempSet with taxset */
+	/* merge tempSet with taxaset */
 	alreadyDone = NO;
 	for (i=0; i<numTaxa; i++)
 		{
@@ -2897,6 +2771,8 @@ int DoDelete (void)
 			taxaInfo[i].isDeleted = YES;
 			}
 		}
+
+    SetLocalTaxa ();
 
 	/* show tempSet (for debugging) */
 #	if 0
@@ -2916,7 +2792,7 @@ int DoDeleteParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 		
 	if (defMatrix == NO)
 		{
@@ -2943,7 +2819,7 @@ int DoDeleteParm (char *parmName, char *tkn)
 			}
 		else
 			{
-			if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+			if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 				{
 				/* we are using a pre-defined taxa set */
 				if (numTaxaSets < 1)
@@ -2951,7 +2827,7 @@ int DoDeleteParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
 					}
-				if (CheckString (tkn, taxaSetNames, &howMany) == ERROR)
+				if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
@@ -2959,7 +2835,7 @@ int DoDeleteParm (char *parmName, char *tkn)
 				/* add taxa from taxset tkn to new tempSet */
 				for (i=0; i<numTaxa; i++)
 					{
-					if (taxaInfo[i].taxaSet[howMany-1] == 1)
+					if (IsBitSet (i, taxaSet[index]) == YES)
 						tempSet[i] = 1;
 					}
 				}
@@ -2977,7 +2853,7 @@ int DoDeleteParm (char *parmName, char *tkn)
 						return (ERROR);
 					}
 					
-				tempSet[howMany-1] = 1;
+				tempSet[index] = 1;
 				}
 			}
 		foundDash = NO;
@@ -3072,21 +2948,42 @@ int DoDimensions (void)
 
 {
 
-	if (defTaxa == NO || defChars == NO)
+    if (inDataBlock == NO && inTaxaBlock == NO && inCharactersBlock == NO)
 		{
-		MrBayesPrint ("%s   Expecting both Ntax and Nchar to be defined\n", spacer);
+		MrBayesPrint ("%s   Dimensions can only be defined in a data, characters or taxa block\n", spacer);
 		return (ERROR);
 		}
-	if (inDataBlock == NO)
+
+    /* other problems are detected already when reading in DoDimensionsParm */
+    if (inDataBlock == YES && (defTaxa == NO || defChars == NO))
 		{
-		MrBayesPrint ("%s   Dimensions can only be defined in a data block\n", spacer);
+		MrBayesPrint ("%s   Expecting both Ntax and Nchar to be defined in a data block\n", spacer);
 		return (ERROR);
 		}
-	/* allocate matrix */
-	if (AllocMatrix() == ERROR)
-		return (ERROR);
-	MrBayesPrint ("%s   Matrix has %d taxa and %d characters\n", spacer, numTaxa, numChar);
-	return (NO_ERROR);
+
+    /* allocate matrix */
+    if (inTaxaBlock == YES)
+        {
+        if (AllocTaxa () == ERROR)
+            return ERROR;
+        MrBayesPrint ("%s   Defining new set of %d taxa\n", spacer, numTaxa);
+        }
+
+    if (inCharactersBlock == YES)
+        {
+        if (AllocMatrix() == ERROR)
+		    return (ERROR);
+        MrBayesPrint ("%s   Defining new character matrix with %d characters\n", spacer, numChar);
+        }
+
+    if (inDataBlock == YES)
+        {
+        if (AllocMatrix() == ERROR)
+		    return (ERROR);
+        MrBayesPrint ("%s   Defining new matrix with %d taxa and %d characters\n", spacer, numTaxa, numChar);
+        }
+
+    return (NO_ERROR);
 	
 }
 
@@ -3107,6 +3004,11 @@ int DoDimensionsParm (char *parmName, char *tkn)
 		/* set Ntax (numTaxa) *****************************************************************/
 		if (!strcmp(parmName, "Ntax"))
 			{
+            if (inCharactersBlock == YES)
+                {
+                MrBayesPrint ("%s   You cannot define ntax in a characters block\n");
+                return (ERROR);
+                }
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(NUMBER);
 			else if (expecting == Expecting(NUMBER))
@@ -3121,6 +3023,11 @@ int DoDimensionsParm (char *parmName, char *tkn)
 		/* set Nchar (numChar) ****************************************************************/
 		else if (!strcmp(parmName, "Nchar"))
 			{
+            if (inTaxaBlock == YES)
+                {
+                MrBayesPrint ("%s   You cannot define nchar in a taxa block\n");
+                return (ERROR);
+                }
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(NUMBER);
 			else if (expecting == Expecting(NUMBER))
@@ -3137,7 +3044,6 @@ int DoDimensionsParm (char *parmName, char *tkn)
 		}
 
 	return (NO_ERROR);
-
 }
 
 
@@ -3181,6 +3087,21 @@ int DoEndBlock (void)
 		{
 		MrBayesPrint ("   Exiting data block\n");
 		inDataBlock = NO;
+		}
+	else if (inCharactersBlock == YES)
+		{
+		MrBayesPrint ("   Exiting characters block\n");
+		inCharactersBlock = NO;
+		}
+	else if (inTaxaBlock == YES)
+		{
+		MrBayesPrint ("   Exiting taxa block\n");
+        if (numNamedTaxa < numTaxa)
+            {
+            MrBayesPrint ("%s   Leaving taxa block without taxon labels being defined\n", spacer);
+            FreeTaxa();
+            }
+		inTaxaBlock = NO;
 		}
 	else if (inTreesBlock == YES)
 		{
@@ -3578,7 +3499,7 @@ int DoExcludeParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 		
 	if (defMatrix == NO)
 		{
@@ -3619,7 +3540,7 @@ int DoExcludeParm (char *parmName, char *tkn)
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
 				}
-			if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+			if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 				{
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
@@ -3627,7 +3548,7 @@ int DoExcludeParm (char *parmName, char *tkn)
 			/* add characters from charset tkn to new tempSet */
 			for (i=0; i<numChar; i++)
 				{
-				if (charInfo[i].charSet[howMany-1] == 1)
+				if (IsBitSet(i, charSet[index]) == YES)
 					tempSet[i] = 1;
 				}
 			fromI = toJ = everyK = -1;
@@ -3743,13 +3664,13 @@ int DoFormat (void)
 
 {
 
-	if (inDataBlock == NO)
+    if (inDataBlock == NO && inCharactersBlock == NO)
 		{
-		MrBayesPrint ("%s   Formats can only be defined in a data block\n", spacer);
+		MrBayesPrint ("%s   Formats can only be defined in a data or characters block\n", spacer);
 		return (ERROR);
 		}
 
-	return (CheckInitialPartitions());	
+    return CheckInitialPartitions();
 }
 
 
@@ -3764,9 +3685,9 @@ int DoFormatParm (char *parmName, char *tkn)
 	char		tempStr[100];
     static int  foundQuote;
 	
-	if (inDataBlock == NO)
+	if (inDataBlock == NO && inCharactersBlock == NO)
 		{
-		MrBayesPrint ("%s   Formats can only be defined in a data block\n", spacer);
+		MrBayesPrint ("%s   Formats can only be defined in a data or characters block\n", spacer);
 		return (ERROR);
 		}
 	if (defTaxa == NO || defChars == NO)
@@ -3817,7 +3738,7 @@ int DoFormatParm (char *parmName, char *tkn)
 								tempSet[i] = 0;
 							fromI = toJ = everyK = -1;
 							foundDash = foundSlash = NO;
-							numPartitions = 0;
+							numDivisions = 0;
 							MrBayesPrint ("%s   Data is Mixed\n", spacer);
 							}
 						if (dataType == MIXED)
@@ -3852,11 +3773,11 @@ int DoFormatParm (char *parmName, char *tkn)
 						}
 					if (isMixed == NO)
 						{
-						numPartitions = 1;
+						numDivisions = 1;
 						for (i=0; i<numChar; i++)
 							{
 							charInfo[i].charType = dataType;
-							charInfo[i].partitionId[0] = numPartitions;
+							partitionId[i][0] = numDivisions;
 							}
 						}
 					}
@@ -3868,7 +3789,7 @@ int DoFormatParm (char *parmName, char *tkn)
 				if (isMixed == NO)
 					MrBayesPrint ("%s   Data is %s\n", spacer, tempStr);
 				else if (strcmp(tempStr, "Mixed"))
-					MrBayesPrint ("%s      Data for partition %d is %s\n", spacer, numPartitions+1, tempStr);
+					MrBayesPrint ("%s      Data for partition %d is %s\n", spacer, numDivisions+1, tempStr);
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
@@ -3922,7 +3843,7 @@ int DoFormatParm (char *parmName, char *tkn)
 					{
 					if (fromI >= 0 && toJ < 0)
 						{
-						if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
+						if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 							return (ERROR);
 						fromI = tempInt;
 						}
@@ -3932,14 +3853,14 @@ int DoFormatParm (char *parmName, char *tkn)
 						}
 					else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 						{
-						if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
+						if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 							return (ERROR);
 						fromI = tempInt;
 						toJ = everyK = -1;
 						}
 					else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 						{
-						if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
+						if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 							return (ERROR);
 						fromI = tempInt;
 						toJ = everyK = -1;
@@ -3974,34 +3895,22 @@ int DoFormatParm (char *parmName, char *tkn)
 				/* add set to tempSet */
 				if (fromI >= 0 && toJ < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 				for (i=0; i<numChar; i++)
 					{
-					if (tempSet[i] == numPartitions)
+					if (tempSet[i] == numDivisions)
 						charInfo[i].charType = dataType;
 					}
 
@@ -4010,10 +3919,10 @@ int DoFormatParm (char *parmName, char *tkn)
 					{
 					if (tempSet[i] != 0)
 						{
-						if (charInfo[i].partitionId[0] == 0)
+						if (partitionId[i][0] == 0)
 							{
 							charInfo[i].charType = dataType;
-							charInfo[i].partitionId[0] = numPartitions + 1;
+							partitionId[i][0] = numDivisions + 1;
 							}
 						else
 							{
@@ -4024,7 +3933,7 @@ int DoFormatParm (char *parmName, char *tkn)
 					}
 				
 				/* increment number of partitions */
-				numPartitions++;				
+				numDivisions++;				
 				expecting = Expecting(ALPHA);
 				}
 			else if (expecting == Expecting(RIGHTPAR))
@@ -4032,30 +3941,18 @@ int DoFormatParm (char *parmName, char *tkn)
 				/* add set to tempSet */
 				if (fromI >= 0 && toJ < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, numPartitions+1) == ERROR)
-						{
-						if (RemoveLastFromString (charSetNames) == ERROR)
-							return (ERROR);
+					if (AddToSet (fromI, toJ, everyK, numDivisions+1) == ERROR)
 						return (ERROR);
-						}
 					}
 					
 				/* merge tempSet */
@@ -4063,10 +3960,10 @@ int DoFormatParm (char *parmName, char *tkn)
 					{
 					if (tempSet[i] != 0)
 						{
-						if (charInfo[i].partitionId[0] == 0)
+						if (partitionId[i][0] == 0)
 							{
 							charInfo[i].charType = dataType;
-							charInfo[i].partitionId[0] = numPartitions + 1;
+							partitionId[i][0] = numDivisions + 1;
 							}
 						else
 							{
@@ -4077,12 +3974,12 @@ int DoFormatParm (char *parmName, char *tkn)
 					}
 				
 				/* increment number of partitions */
-				numPartitions++;				
+				numDivisions++;				
 				if (isMixed == YES)
 					dataType = MIXED;
 					
-				if (numPartitions > 1)
-					MrBayesPrint ("%s   There are a total of %d default data divisions\n", spacer, numPartitions);
+				if (numDivisions > 1)
+					MrBayesPrint ("%s   There are a total of %d default data divisions\n", spacer, numDivisions);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -4471,7 +4368,7 @@ int DoIncludeParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 		
 	if (defMatrix == NO)
 		{
@@ -4512,7 +4409,7 @@ int DoIncludeParm (char *parmName, char *tkn)
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
 				}
-			if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+			if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 				{
 				MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 				return (ERROR);
@@ -4520,7 +4417,7 @@ int DoIncludeParm (char *parmName, char *tkn)
 			/* add characters from charset tkn to new tempSet */
 			for (i=0; i<numChar; i++)
 				{
-				if (charInfo[i].charSet[howMany-1] == 1)
+				if (IsBitSet(i, charSet[index]) == YES)
 					tempSet[i] = 1;
 				}
 			fromI = toJ = everyK = -1;
@@ -4948,16 +4845,17 @@ int DoMatrix (void)
 	if (matrixHasPoly == YES)
 		MrBayesPrint ("%s   Matrix  contains polymorphisms, interpreted as ambiguity\n", spacer);
 	defMatrix = YES;
-	
-	/* enter name of default partition */
-	if (AddToString ("Default", partitionNames, &i) == ERROR)
+	isTaxsetDef = YES;
+
+	/* add name of default partition */
+	if (AddString (&partitionNames, 0, "Default") == ERROR)
 		{
 		MrBayesPrint ("%s   Problem adding Default name to partition list\n", spacer);
 		return (ERROR);
 		}
 	numDefinedPartitions = 1;
 
-	SetPartition (1);
+    SetPartition (0);
 
 	if (numCurrentDivisions == 1)
 		MrBayesPrint ("%s   Setting default partition (does not divide up characters)\n", spacer);
@@ -4971,10 +4869,10 @@ int DoMatrix (void)
 
 	/* set default names for some output file names based on processed file */
     strcpy (sumtParams.sumtFileName, inputFileName);
+    strcpy (sumtParams.sumtOutfile, inputFileName);
 	strcpy (sumpParams.sumpFileName, inputFileName);
-	strcpy (sumpParams.sumpOutfile, sumpParams.sumpFileName);
-	strcat (sumpParams.sumpOutfile, ".stat");
-	strcpy (sumtParams.sumtOutfile, inputFileName);
+    strcpy (sumpParams.sumpOutfile, inputFileName);
+    strcpy (comptreeParams.comptOutfile, inputFileName);
 
 	if (chainParams.numRuns == 1)
         {
@@ -5022,7 +4920,7 @@ int DoMatrixParm (char *parmName, char *tkn)
 
 {
 
-	int				i, j, charCode, howMany;
+	int				i, j, charCode, index;
 	MrBFlt			charValue;
 
 	expecting  = Expecting(ALPHA);
@@ -5044,9 +4942,9 @@ int DoMatrixParm (char *parmName, char *tkn)
 		MrBayesPrint ("%s   Number of taxa and characters needs to be defined before matrix is read\n", spacer);
 		goto errorExit;
 		}
-	if (inDataBlock == NO)
+	if (inDataBlock == NO && inCharactersBlock == NO)
 		{
-		MrBayesPrint ("%s   Must be in data block to read in character matrix\n", spacer);
+		MrBayesPrint ("%s   Must be in data or characters block to read in character matrix\n", spacer);
 		goto errorExit;
 		}
 
@@ -5091,16 +4989,11 @@ int DoMatrixParm (char *parmName, char *tkn)
 		/* Should be a taxon. */
 		if (isFirstInterleavedBlock == YES)
 			{
-			/* If this is the first interleaved block, then we need to add the 
-			   taxon to the string of taxon names. */
-			if (AddToString (tkn, taxaNames, &howMany) == ERROR)
+			/* If this is the first interleaved block, then we need to add the taxon
+			   to the set of taxon names unless there is already a defined taxon set. */
+			if (isTaxsetDef == NO && AddString (&taxaNames, taxonCount, tkn) == ERROR)
 				{
-				MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-				goto errorExit;
-				}
-			if (howMany - 1 != taxonCount)
-				{
-				MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
+				MrBayesPrint ("%s   Problem adding taxon %s to taxon set\n", spacer, tkn);
 				goto errorExit;
 				}
 			if (numTaxa < 10)
@@ -5116,12 +5009,12 @@ int DoMatrixParm (char *parmName, char *tkn)
 			{
 			/* If this is not the first interleaved block, then we need to
 			   check to see if taxon name is present and in correct place. */
-			if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+			if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 				{
 				MrBayesPrint ("%s   Could not find taxon %s in list of taxa\n", spacer, tkn);
 				goto errorExit;
 				}
-			if (howMany - 1 != taxonCount)
+			if (index != taxonCount)
 				{
 				MrBayesPrint ("%s   Could not find taxon %s in correct position in list of taxa\n", spacer, tkn);
 				goto errorExit;
@@ -5312,14 +5205,7 @@ int DoOutgroup (void)
 
 {
 
-	char		tempName[100];
-
-	if (GetNameFromString (taxaNames, tempName, outGroupNum + 1) == ERROR)
-		{
-		MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-		return (ERROR);
-		}
-	MrBayesPrint ("%s   Setting outgroup to taxon \"%s\"\n", spacer, tempName);
+	MrBayesPrint ("%s   Setting outgroup to taxon \"%s\"\n", spacer, taxaNames[outGroupNum]);
 	
 	return (NO_ERROR);
 	
@@ -5334,22 +5220,22 @@ int DoOutgroupParm (char *parmName, char *tkn)
 
 {
 
-	int		howMany, tempInt;
+	int		index, tempInt;
 
 	if (expecting == Expecting(ALPHA))
 		{
-		if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+		if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 			{
 			MrBayesPrint ("%s   Could not find taxon %s in list of taxa\n", spacer, tkn);
 			return (ERROR);
 			}
-		outGroupNum = howMany - 1;
+		outGroupNum = index;
 		
 		expecting = Expecting(SEMICOLON);
 		}
 	else if (expecting == Expecting(NUMBER))
 		{
-		if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+		if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 			{
 			/* OK, as we expect, the taxon is not a digit. So, now we assume that
 			   the user is assigning the outgroup by its number */
@@ -5363,7 +5249,7 @@ int DoOutgroupParm (char *parmName, char *tkn)
 			}
 		else
 			{
-			outGroupNum = howMany - 1;
+			outGroupNum = index;
 			}
 		
 		expecting = Expecting(SEMICOLON);
@@ -5511,14 +5397,14 @@ int DoPartition (void)
 
 {
 
-	int		i, j, howMany, numDivs, partTypes[MAX_NUM_DIVS], checkEachPart[MAX_NUM_DIVS];
+	int		i, *partTypes;
 	
 	/* add set to tempSet */
 	if (fromI >= 0)
 		if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
 			return (ERROR);
 
-	/* add temporary information to partition */
+	/* check that all characters are included */
 	for (i=0; i<numChar; i++)
 		{
 		if (tempSet[i] == 0)
@@ -5527,68 +5413,75 @@ int DoPartition (void)
 			return (ERROR);
 			}
 		/*MrBayesPrint ("%4d %4d \n", i, tempSet[i]);*/
-		}
+        }
 		
-	/* check how many partitions were found against how many were expected */
-	if (whichPartition != numPartitions - 1)
-		{
-		MrBayesPrint ("%s   Did not find correct number of partitions (expecting %d, found %d)\n", spacer, numPartitions, whichPartition + 1);
-		return (ERROR);
-		}
-		
-	/* add name to list of valid partitions */
-	if (AddToString (tempSetName, partitionNames, &howMany) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem adding charset %s to list\n", spacer, tempSetName);
-		return (ERROR);
-		}
-		
-	/* increment number of defined partitions */
-	numDefinedPartitions++;
-
-	/* enter partition information */
+	/* make certain that the partition labels go from 1 - numDivisions, inclusive */
+	for (i=0; i<numDivisions; i++)
+		numVars[i] = NO;
 	for (i=0; i<numChar; i++)
-		charInfo[i].partitionId[numDefinedPartitions-1] = tempSet[i];
-		
-	/* make certain that the partition labels go from 1 - numPartitions, inclusive */
-	for (i=0; i<numPartitions; i++)
-		checkEachPart[i] = NO;
-	for (i=0; i<numChar; i++)
-		checkEachPart[ charInfo[i].partitionId[numDefinedPartitions-1] - 1 ] = YES;
-	for (i=0; i<numPartitions; i++)
+		numVars[tempSet[i] - 1] = YES;
+	for (i=0; i<numDivisions; i++)
 		{
-		if (checkEachPart[i] == NO)
+		if (numVars[i] == NO)
 			{
-			MrBayesPrint ("%s   Could not find a division for character division %d\n", spacer, i+1);
+			MrBayesPrint ("%s   Could not find a single character for division %d\n", spacer, i+1);
 			return (ERROR);
 			}
 		}
 		
+	/* check how many partitions were found against how many were expected */
+	if (whichPartition != numDivisions - 1)
+		{
+		MrBayesPrint ("%s   Did not find correct number of partitions (expecting %d, found %d)\n", spacer, numDivisions, whichPartition + 1);
+		return (ERROR);
+		}
+		
 	/* check if partition overruns data types */
-	numDivs = GetNumPartDivisions (numDefinedPartitions);
-	for (i=0; i<MAX_NUM_DIVS; i++)
+    partTypes = (int *) SafeCalloc (numDivisions, sizeof(int));
+    if (!partTypes)
+        return ERROR;
+
+    for (i=0; i<numDivisions; i++)
 		partTypes[i] = -1;
 	for (i=0; i<numChar; i++)
 		{
-		if (partTypes[ charInfo[i].partitionId[numDefinedPartitions-1]-1 ] == -1)
-			partTypes[ charInfo[i].partitionId[numDefinedPartitions-1]-1 ] = charInfo[i].charType;
+		if (partTypes[ tempSet[i]-1 ] == -1)
+			partTypes[ tempSet[i]-1 ] = charInfo[i].charType;
 		else
 			{
-			if (partTypes[ charInfo[i].partitionId[numDefinedPartitions-1]-1 ] != charInfo[i].charType)
+			if (partTypes[ tempSet[i]-1 ] != charInfo[i].charType)
 				{
-				MrBayesPrint ("%s   There are two different data types for partition division %d\n", spacer, charInfo[i].partitionId[numDefinedPartitions-1]);
-				if (RemoveLastFromString (partitionNames) == ERROR)
-					return (ERROR);
-				numDefinedPartitions--;
-				for (j=0; j<numChar; j++)
-					charInfo[j].partitionId[numDefinedPartitions] = 0;
-				return (ERROR);
+				MrBayesPrint ("%s   There are two different data types for partition division %d\n", spacer, tempSet[i]);
+				free (partTypes);
+                return (ERROR);
 				}
 			}
 		}
+    free (partTypes);
+
+    /* add name to list of valid partitions */
+	if (AddString (&partitionNames, numDefinedPartitions, tempSetName) == ERROR)
+		{
+		MrBayesPrint ("%s   Problem adding partition %s to list\n", spacer, tempSetName);
+		return (ERROR);
+        }
+		
+    /* add new partition */
+    for (i=0; i<numChar; i++) {
+        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
+        if (!partitionId[i])
+            return ERROR;
+    }
+
+    /* set new partition */
+	for (i=0; i<numChar; i++)
+		partitionId[i][numDefinedPartitions] = tempSet[i];
+
+    /* increment number of defined partitions */
+	numDefinedPartitions++;
 	
 	return (NO_ERROR);
-	
+
 }
 
 
@@ -5599,7 +5492,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 	
 	if (defMatrix == NO)
 		{
@@ -5622,7 +5515,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 			/* check to see if the name has already been used as a partition */
 			if (numDefinedPartitions > 1)
 				{
-				if (CheckString (tkn, partitionNames, &howMany) == ERROR)
+				if (CheckString (partitionNames, numDefinedPartitions, tkn, &index) == ERROR)
 					{
 					/* if the partition name has not been used, then we should have an ERROR returned */
 					/* we _want_ to be here */
@@ -5633,11 +5526,6 @@ int DoPartitionParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Partition name '%s' has been used previously\n", spacer, tkn);
 					return (ERROR);
 					}
-				}
-			else if (numDefinedPartitions > MAX_NUM_PARTITIONS)
-				{
-				MrBayesPrint ("%s   You cannot define more than %d partitions\n", spacer, MAX_NUM_PARTITIONS);
-				return (ERROR);
 				}
 				
 			/* add the name temporarily to tempSetName */
@@ -5651,7 +5539,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 			foundDash = foundSlash = NO;
 			whichPartition = 0;
 			foundFirst = NO;
-			numPartitions = 0;
+			numDivisions = 0;
 			MrBayesPrint ("%s   Defining partition called %s\n", spacer, tkn);
 			expecting = Expecting(EQUALSIGN);
 			}
@@ -5672,7 +5560,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 			MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 			return (ERROR);
 			}
-		if (CheckString (tkn, charSetNames, &howMany) == ERROR)
+		if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
 			{
 			MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
 			return (ERROR);
@@ -5680,7 +5568,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 		/* add characters from charset tkn to new tempSet */
 		for (i=0; i<numChar; i++)
 			{
-			if (charInfo[i].charSet[howMany-1] == 1)
+			if (IsBitSet (i, charSet[index]) == YES)
 				tempSet[i] = whichPartition + 1;
 			}
 		fromI = toJ = everyK = -1;
@@ -5695,7 +5583,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 		if (foundFirst == NO)
 			{
 			sscanf (tkn, "%d", &tempInt);
-			numPartitions = tempInt;
+			numDivisions = tempInt;
 			expecting  = Expecting(COLON);
 			foundFirst = YES;
 			}
@@ -5792,9 +5680,9 @@ int DoPartitionParm (char *parmName, char *tkn)
 		fromI = toJ = everyK = -1;
 		foundDash = foundSlash = NO;
 		whichPartition++;
-		if (whichPartition > numPartitions)
+		if (whichPartition > numDivisions)
 			{
-			MrBayesPrint ("%s   Too many partitions of the data (expecting %d)\n", spacer, numPartitions);
+			MrBayesPrint ("%s   Too many partitions of the data (expecting %d)\n", spacer, numDivisions);
 			return (ERROR);
 			}
 		expecting  = Expecting(NUMBER);
@@ -5863,6 +5751,8 @@ int DoRestore (void)
 			}
 		}
 
+    SetLocalTaxa();
+
 	/* show tempSet (for debugging) */
 #	if 0
 	for (i=0; i<numTaxa; i++)
@@ -5881,7 +5771,7 @@ int DoRestoreParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 		
 	if (defMatrix == NO)
 		{
@@ -5908,7 +5798,7 @@ int DoRestoreParm (char *parmName, char *tkn)
 			}
 		else
 			{
-			if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+			if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 				{
 				/* we are using a pre-defined taxa set */
 				if (numTaxaSets < 1)
@@ -5916,15 +5806,15 @@ int DoRestoreParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
 					}
-				if (CheckString (tkn, taxaSetNames, &howMany) == ERROR)
+				if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 					return (ERROR);
 					}
-				/* add taxa from taxaSet tkn to new tempSet */
+				/* add taxa from taxset tkn to new tempSet */
 				for (i=0; i<numTaxa; i++)
 					{
-					if (taxaInfo[i].taxaSet[howMany-1] == 1)
+					if (IsBitSet (i, taxaSet[index]) == YES)
 						tempSet[i] = 1;
 					}
 				}
@@ -5941,7 +5831,7 @@ int DoRestoreParm (char *parmName, char *tkn)
 					if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
 						return (ERROR);
 					}
-				tempSet[howMany-1] = 1;
+				tempSet[index] = 1;
 				}
 			fromI = toJ = everyK = -1;
 			}
@@ -6049,7 +5939,7 @@ int DoSetParm (char *parmName, char *tkn)
 
 {
 
-	int			howMany;
+	int			index;
 	char		tempStr[100];
 	int			tempI;
 
@@ -6116,7 +6006,7 @@ int DoSetParm (char *parmName, char *tkn)
 				return (ERROR);
 			}
 		/* set Quitonerror (quitOnError) **************************************************/
-		else if (!strcmp(parmName, "Mode"))
+		else if (!strcmp(parmName, "Quitonerror"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -6143,8 +6033,8 @@ int DoSetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set AutoOverwrite (autoOverwrite) **************************************************/
-		else if (!strcmp(parmName, "Autooverwrite"))
+		/* set Autoreplace (autoOverwrite) **************************************************/
+		else if (!strcmp(parmName, "Autoreplace"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -6155,17 +6045,17 @@ int DoSetParm (char *parmName, char *tkn)
 					if (!strcmp(tempStr, "Yes"))
 						{
 						autoOverwrite = YES;
-						MrBayesPrint ("%s   Setting autooverwrite to yes\n", spacer);
+						MrBayesPrint ("%s   Setting autoreplace to yes\n", spacer);
 						}
 					else
 						{
 						autoOverwrite = NO;
-						MrBayesPrint ("%s   Setting autooverwrite to no\n", spacer);
+						MrBayesPrint ("%s   Setting autoreplace to no\n", spacer);
 						}
 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid argument for autooverwrite\n", spacer);
+					MrBayesPrint ("%s   Invalid argument for autoreplace\n", spacer);
 					return (ERROR);
 					}					
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -6173,6 +6063,38 @@ int DoSetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}			
+		/* set Scientific (scientific) *********************************************/
+		else if (!strcmp(parmName, "Scientific"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						scientific = YES;
+					else
+						scientific = NO;
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for Scientific\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				if (chainParams.orderTaxa == YES)
+					MrBayesPrint ("%s   Setting Scientific to Yes\n", spacer);
+				else
+					MrBayesPrint ("%s   Setting Scientific to No\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				{
+				free(tempStr);
+				return (ERROR);
+				}
+			}
 		/* set Userlevel (userLevel) **********************************************************/
 		else if (!strcmp(parmName, "Userlevel"))
 			{
@@ -6221,6 +6143,29 @@ int DoSetParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
+		/* set Precision (number of decimals) ****************************************************/
+		else if (!strcmp(parmName, "Precision"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%d", &tempI);
+                if (tempI < 3 || tempI > 15)
+                    {
+                    MrBayesPrint ("%s   Precision must be in the range 3 to 15\n", spacer);
+                    return ERROR;
+                    }
+				precision = tempI;
+				MrBayesPrint ("%s   Setting Precision to %d\n", spacer, precision);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				free (tempStr);
+				return (ERROR);
+				}
+			}
 		/* set Partition (partitionNum) *******************************************************/
 		else if (!strcmp(parmName, "Partition"))
 			{
@@ -6234,12 +6179,12 @@ int DoSetParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(ALPHA))
 				{
 				/* first check to see if name is there */
-				if (CheckString (tkn, partitionNames, &howMany) == ERROR)
+				if (CheckString (partitionNames, numDefinedPartitions, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find \"%s\" as a defined partition\n", spacer, tkn);
 					return (ERROR);
 					}
-				SetPartition (howMany);
+				SetPartition (index);
 				if (numCurrentDivisions == 1)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, tkn); 
 				else
@@ -6252,24 +6197,20 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(NUMBER))
 				{
-				sscanf (tkn, "%d", &howMany);
-				if (howMany > numDefinedPartitions) 
+				sscanf (tkn, "%d", &index);
+				if (index > numDefinedPartitions) 
 					{
-					MrBayesPrint ("%s   Partition number %d is not a valid parition. Only %d partitions\n", spacer, howMany, numDefinedPartitions);
+					MrBayesPrint ("%s   Partition number %d is not a valid parition. Only %d partitions\n", spacer, index, numDefinedPartitions);
 					MrBayesPrint ("%s   have been defined.\n", spacer);
 					return (ERROR);
 					}
-				if (howMany < 1)
+				if (index < 1)
 					{
-					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, howMany, numDefinedPartitions);
+					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
 					return (ERROR);
 					}
-				if (GetNameFromString (partitionNames, tempStr, howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find name for partition number %d.\n", spacer, howMany);
-					return (ERROR);
-					}
-				SetPartition (howMany);
+				strcpy (tempStr, partitionNames[index]);
+				SetPartition (index);
 				if (numCurrentDivisions == 1)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, tempStr); 
 				else
@@ -6306,7 +6247,7 @@ int DoSetParm (char *parmName, char *tkn)
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(NUMBER);
-			else if (expecting == Expecting(NUMBER))
+ 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
 				swapSeed = tempI;
@@ -6349,12 +6290,7 @@ int DoShowMatrix (void)
 	longestName = 0;
 	for (i=0; i<numTaxa; i++)
 		{
-		if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-			return (ERROR);
-			}
-		nameLen = (int) strlen(tempStr);
+		nameLen = (int) strlen(taxaNames[i]);
 		if (nameLen > longestName)
 			longestName = nameLen;
 		}
@@ -6376,11 +6312,7 @@ int DoShowMatrix (void)
 
 		for (i=0; i<numTaxa; i++)
 			{
-			if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-				{
-				MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-				return (ERROR);
-				}
+			strcpy (tempStr, taxaNames[i]);
 			nameLen = (int) strlen(tempStr);
 			
 			MrBayesPrint ("%s   ", spacer);
@@ -6451,7 +6383,7 @@ int DoShowUserTrees (void)
 		for (i=0; i<numUserTrees; i++)
 			{
 			MrBayesPrint ("\n   Tree #%d -- '%s':\n\n", i+1, userTree[i]->name);
-			ShowConTree (stdout, userTree[i]->nNodes, userTree[i]->root, 70, NO);
+			ShowConTree (stdout, userTree[i], 70, NO);
 			MrBayesPrint ("\n");
 			}
 		}
@@ -6464,61 +6396,117 @@ int DoShowUserTrees (void)
 
 
 
-int DoTaxaset (void)
+int DoTaxlabels (void)
 
 {
 
-	int			i, howMany;
+    isTaxsetDef = YES;
+    return (NO_ERROR);
 
-	/* first add name to taxaSetName */
-	if (AddToString (tempSetName, taxaSetNames, &howMany) == ERROR)
+}
+
+
+
+
+
+int DoTaxlabelsParm (char *parmName, char *tkn)
+
+{
+
+	int			index;
+
+	if (inTaxaBlock == NO)
 		{
-		MrBayesPrint ("%s   Problem adding taxset %s to list\n", spacer, tempSetName);
+		MrBayesPrint ("%s   You must be in a taxa block to read a taxlabels command\n", spacer);
 		return (ERROR);
 		}
-	if (howMany != numTaxaSets + 1)
+
+    if (defTaxa == NO)
 		{
-		MrBayesPrint ("%s   Problem adding taxset %s to list\n", spacer, tempSetName, numTaxaSets);
-		if (RemoveLastFromString (taxaSetNames) == ERROR)
+		MrBayesPrint ("%s   The number of taxa must be given before a set of taxon labels can be read\n", spacer);
+        return ERROR;
+		}
+
+    if (isTaxsetDef == YES)
+		{
+		MrBayesPrint ("%s   A set of taxon labels has already been defined\n", spacer);
+        if (defMatrix == NO)
+            if (WantTo ("Do you want to delete the current set of taxon labels") == NO)
+                return (SKIP_COMMAND);
+            else
+                FreeTaxa();
+        else
+            if (WantTo ("Do you want to delete the current character matrix") == NO)
+                return (SKIP_COMMAND);
+            else
+                FreeMatrix();
+		}
+
+    if (expecting == Expecting(ALPHA) ||
+        expecting == Expecting(NUMBER))
+		{
+        if (CheckString (taxaNames, numNamedTaxa, tkn, &index) == ERROR)
+			{
+			if (AddString (&taxaNames, numNamedTaxa, tkn) == ERROR)
+				{
+				MrBayesPrint ("%s   Problem adding label %s to list of taxon labels\n", spacer, tkn);
+				return (ERROR);
+				}
+            numNamedTaxa++;
+			}
+		else
+			{
+			MrBayesPrint ("%s   Taxon label '%s' is included twice in list of taxon labels\n", spacer, tkn);
 			return (ERROR);
-		return (ERROR);
+			}
+        if (numNamedTaxa < numTaxa)
+            {
+            expecting = Expecting(ALPHA);
+		    expecting |= Expecting(NUMBER);
+            }
+        else
+            expecting |= Expecting(SEMICOLON);
 		}
 
+    return (NO_ERROR);
+	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
+	MrBayesPrint ("%s", tkn); 
+
+}
+
+
+
+
+
+int DoTaxaset (void)
+
+{
 	/* add set to tempSet */
 	if (fromI >= 0 && toJ < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (taxaSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (taxaSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 		{
 		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
-			{
-			if (RemoveLastFromString (taxaSetNames) == ERROR)
-				return (ERROR);
 			return (ERROR);
-			}
 		}
 		
-	/* merge tempSet with taxaSet */
-	for (i=0; i<numTaxa; i++)
+	/* add name to taxaSetNames */
+	if (AddString (&taxaSetNames, numTaxaSets, tempSetName) == ERROR)
 		{
-		if (tempSet[i] == 1)
-			taxaInfo[i].taxaSet[numTaxaSets] = 1;
+		MrBayesPrint ("%s   Problem adding taxset %s to list\n", spacer, tempSetName);
+		return (ERROR);
 		}
+
+	/* merge tempSet with taxaSet */
+	AddBitfield (taxaSet, numTaxaSets, tempSet, numTaxa);
 	
 	/* increment number of char sets */
 	numTaxaSets++;
@@ -6526,7 +6514,7 @@ int DoTaxaset (void)
 	/* show taxset (for debugging) */
 #	if 0
 	for (i=0; i<numTaxa; i++)
-		MrBayesPrint ("%4d  %4d\n", i+1, taxaSet[i]);
+		MrBayesPrint ("%4d  %4d\n", i+1, tempSet[i]);
 #	endif
 
 	return (NO_ERROR);
@@ -6541,7 +6529,7 @@ int DoTaxasetParm (char *parmName, char *tkn)
 
 {
 
-	int		i, howMany, tempInt;
+	int		i, index, tempInt;
 	
 	if (defMatrix == NO)
 		{
@@ -6563,7 +6551,7 @@ int DoTaxasetParm (char *parmName, char *tkn)
 			/* check to see if the name has already been used as a taxset */
 			if (numTaxaSets > 0)
 				{
-				if (CheckString (tkn, taxaSetNames, &howMany) == ERROR)
+				if (CheckString (taxaSetNames, numTaxa, tkn, &index) == ERROR)
 					{
 					/* if the taxset name has not been used, then we should have an ERROR returned */
 					/* we _want_ to be here */
@@ -6606,14 +6594,14 @@ int DoTaxasetParm (char *parmName, char *tkn)
 		/* We are defining a taxon set in terms of another (called tkn, here) or we are referring to
 		   the taxon name. We should be able to find tkn in the list of character set names or in the list
 		   of taxon names. If we cannot, then we have a problem and return an error. */
-		if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+		if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 			{
 			if (numTaxaSets < 1)
 				{
 				MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 				return (ERROR);
 				}
-			if (CheckString (tkn, taxaSetNames, &howMany) == ERROR)
+			if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
 				{
 				MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
 				return (ERROR);
@@ -6621,13 +6609,13 @@ int DoTaxasetParm (char *parmName, char *tkn)
 			/* add taxa from taxset tkn to new tempSet */
 			for (i=0; i<numTaxa; i++)
 				{
-				if (taxaInfo[i].taxaSet[howMany-1] == 1)
+				if (IsBitSet (i, taxaSet[index]) == YES)
 					tempSet[i] = 1;
 				}
 			}
 		else
 			{
-			tempSet[howMany-1] = 1;
+			tempSet[index] = 1;
 			}
 		fromI = toJ = everyK = -1;
 
@@ -6758,11 +6746,7 @@ int DoTaxaStat (void)
 	maxLen = nIncludedTaxa = 0;
 	for (i=0; i<numTaxa; i++)
 		{
-		if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-			return (ERROR);
-			}
+		strcpy (tempName, taxaNames[i]);
 		if ((int)strlen(tempName) > maxLen)
 			maxLen = (int) strlen(tempName);
 		if (taxaInfo[i].isDeleted == NO)
@@ -6780,44 +6764,12 @@ int DoTaxaStat (void)
 		{
 		for (j=0; j<numDefinedConstraints; j++)
 			{
-			if (GetNameFromString (constraintNames, tempName, j+1) == ERROR)
-				{
-				MrBayesPrint ("%s   Error getting constraint names \n", spacer);
-				return (ERROR);
-				}
+			strcpy (tempName, constraintNames[j]);
 
-			/* for now, ignore the probability */
+            /* for now, ignore the probability */
 			MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
 			MrBayesPrint ("%s           more probable than those without \n", spacer);
 
-			/* 
-			if (relConstraintProbs[j] > 0.0)
-				{
-				if (relConstraintProbs[j] > 900000.0)
-					{
-					MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
-					MrBayesPrint ("%s           more probable than those without \n", spacer);
-					}
-				else
-					{
-					MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are exp(%1.2lf)\n", spacer, j+1, tempName, relConstraintProbs[j]);
-					MrBayesPrint ("%s           times more probable than those without \n", spacer);
-					}
-				}
-			else
-				{
-				if (relConstraintProbs[j] < -900000.0)
-					{
-					MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
-					MrBayesPrint ("%s           less probable than those without \n", spacer);
-					}
-				else
-					{
-					MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are exp(%1.2lf)\n", spacer, j+1, tempName, -relConstraintProbs[j]);
-					MrBayesPrint ("%s           times less probable than those without \n", spacer);
-					}
-				}
-			*/
 			}
 		MrBayesPrint ("\n");
 		for (j=0; j<maxLen; j++)
@@ -6846,11 +6798,7 @@ int DoTaxaStat (void)
 	MrBayesPrint ("\n");
 	for (i=0; i<numTaxa; i++)
 		{
-		if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-			return (ERROR);
-			}
+		strcpy (tempName, taxaNames[i]);
 		nameLen = (int) strlen(tempName);
 		
 		if (i == outGroupNum)
@@ -6870,7 +6818,7 @@ int DoTaxaStat (void)
 			
 		for (j=0; j<numDefinedConstraints; j++)
 			{
-			if (taxaInfo[i].constraints[j] == 0)
+			if (IsBitSet(i, definedConstraint[j]) == NO)
 				MrBayesPrint ("  .");
 			else
 				MrBayesPrint ("  *");
@@ -6889,16 +6837,133 @@ int DoTaxaStat (void)
 
 
 
+int DoTranslate (void)
+
+{
+    int     i, j;
+
+	if (inTreesBlock == NO)
+		{
+		MrBayesPrint ("%s   You must be in a trees block to read a translate command\n", spacer);
+		return (ERROR);
+		}
+	numTranslates++;    /* number of taxa in translate table */
+	isTranslateDef = YES;
+
+    if (defMatrix == NO)
+        SetTaxaFromTranslateTable();
+    else
+        {
+        for (i=0; i<numTranslates; i++)
+            {
+            strcpy (token, transFrom[i]);
+            if (CheckString (taxaNames, numTaxa, token, &j) == ERROR)
+                {
+                MrBayesPrint ("%s   Could not find taxon '%s' in current taxon set\n", spacer, token);
+                MrBayesPrint ("%s   You need to define a set of taxon labels first\n", spacer, token);
+                return (ERROR);
+                }
+            }
+        }
+
+	return (NO_ERROR);
+
+}
+
+
+
+
+
+int DoTranslateParm (char *parmName, char *tkn)
+
+{
+
+	int			index;
+    static int  whichTranslate;
+
+	if (inTreesBlock == NO)
+		{
+		MrBayesPrint ("%s   You must be in a trees block to read a translate command\n", spacer);
+		return (ERROR);
+		}
+
+    if (isTranslateDef == YES)
+		{
+		MrBayesPrint ("%s   A translation has already been defined for this tree block\n", spacer);
+		return (ERROR);
+		}
+		
+	if (expecting == Expecting(ALPHA) ||
+        expecting == Expecting(NUMBER))
+		{
+		if (numTranslates == numTaxa)
+			{
+			MrBayesPrint ("%s   Too many entries in translation table\n", spacer);
+			return (ERROR);
+			}
+		if (whichTranslate == 0)
+			{
+			if (CheckString (transTo, numTranslates, tkn, &index) == ERROR)
+				{
+				if (AddString (&transTo, numTranslates, tkn) == ERROR)
+					{
+					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
+					return (ERROR);
+					}
+				}
+			else
+				{
+				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
+				return (ERROR);
+				}			
+			whichTranslate++;
+			expecting = Expecting(ALPHA);
+			expecting |= Expecting(NUMBER);
+			}
+		else 
+			{
+			if (CheckString (transFrom, numTranslates, tkn, &index) == ERROR)
+				{
+				if (AddString (&transFrom, numTranslates, tkn) == ERROR)
+					{
+					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
+					return (ERROR);
+					}
+				}
+			else
+				{
+				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
+				return (ERROR);
+				}			
+			whichTranslate = 0;
+			expecting = Expecting(COMMA);
+			expecting |= Expecting(SEMICOLON);
+			}
+		}
+	else if (expecting == Expecting(COMMA))
+		{
+		numTranslates++;
+		expecting = Expecting(ALPHA);
+		expecting |= Expecting(NUMBER);
+		}
+
+	return (NO_ERROR);
+	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
+	MrBayesPrint ("%s", tkn);
+}
+
+
+
+
+
 int DoTree (void)
 
 {
-	
-	if (inSumtCommand == YES)
-		DoSumtTree ();
-	else if (inComparetreeCommand == YES)
-		DoSumtTree ();
-	
-	readComment = NO;
+
+    readComment = NO;
+
+    if (inSumtCommand == YES || inComparetreeCommand == YES)
+        return (DoSumtTree ());
 
 	return (NO_ERROR);
 }
@@ -6911,11 +6976,11 @@ int DoTreeParm (char *parmName, char *tkn)
 
 {
 
-	int					i, tempInt, howMany;
+	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
 	static int			foundAmpersand, foundColon, foundEqual, foundComment, foundE, foundB, foundFirst,
-						eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
+						foundClockrate, eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
 	static PolyNode		*pp, *qq;
 	static PolyTree		*t;
 	
@@ -6929,12 +6994,10 @@ int DoTreeParm (char *parmName, char *tkn)
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
     */
-    if (inSumtCommand == YES || inComparetreeCommand == YES)
-		return (DoSumtTreeParm (parmName, tkn));
 
-	if (defMatrix == NO)
+	if (isTaxsetDef == NO)
 		{
-		MrBayesPrint ("%s   A matrix must be specified before a tree can be read in\n", spacer);
+		MrBayesPrint ("%s   Taxon labels must be specified before a tree can be read in\n", spacer);
 		return (ERROR);
 		}
 	if (inTreesBlock == NO)
@@ -6946,36 +7009,57 @@ int DoTreeParm (char *parmName, char *tkn)
 	if (expecting == Expecting(PARAMETER))
 		{
 		/* this is the name of the tree */
-		/* check if the tree exists */
-		treeIndex = 0;
-		for (i=0; i<numUserTrees; i++)
-			if (strcmp(tkn,userTree[i]->name) == 0)
-				break;
-		treeIndex = i;
-		if (treeIndex < numUserTrees)
-			{
-			MrBayesPrint ("%s   Overwriting tree '%s'.\n", spacer, userTree[treeIndex]);
-			FreePolyTree (userTree[treeIndex]);
-			}
-		if ((userTree[treeIndex] = AllocatePolyTree (numTaxa)) == NULL)
-			return (ERROR);
-		t = userTree[treeIndex];
-		strncpy (t->name, tkn, 100);
-		foundColon = foundAmpersand = foundEqual = foundComment = foundE = foundB = foundFirst = NO;
-		eSetIndex = bSetIndex = eventIndex = 0;
-		nextAvailableNode = 0;
+		if (inSumtCommand==YES || inComparetreeCommand == YES)
+            {
+            /* we are reading in a tree to sumt or comparetree counters */
+            t = sumtParams.tree;
+            ResetPolyTree (t);
+            }
+        else
+            {
+            /* we are reading in a user tree */
+    		/* check if the tree exists */
+            treeIndex = 0;
+		    for (i=0; i<numUserTrees; i++)
+			    if (strcmp(tkn,userTree[i]->name) == 0)
+				    break;
+		    treeIndex = i;
+		    if (treeIndex < numUserTrees)
+			    {
+			    MrBayesPrint ("%s   Overwriting tree '%s'.\n", spacer, userTree[treeIndex]);
+                FreePolyTree (userTree[treeIndex]);
+			    }
+		    if ((userTree[treeIndex] = AllocatePolyTree (numTaxa)) == NULL)
+			    return (ERROR);
+		    t = userTree[treeIndex];
+            }
+        strncpy (t->name, tkn, 100);
+	    foundColon = foundAmpersand = foundEqual = foundComment = NO;
+        foundE = foundB = foundFirst = foundClockrate = NO;
+	    eSetIndex = bSetIndex = eventIndex = 0;
+	    nextAvailableNode = 0;
         nextIntNodeIndex = numTaxa;
-		pp = &t->nodes[nextAvailableNode++];
-		t->root = pp;
+	    pp = &t->nodes[nextAvailableNode++];
+	    t->root = pp;
+        t->isRooted = NO;  /* expect unrooted tree */
+        t->isClock = NO;   /* expect nonclock tree */
+        t->isCalibrated = NO;  /* expect uncalibrated tree */
+        t->isRelaxed = NO;    /* expect strict clock if clock tree */
+        t->clockRate = 0.0;     /* expect no clock rate */
 		readComment = YES;
 		expecting = Expecting(EQUALSIGN) | Expecting(LEFTCOMMENT);
 		}
 	else if (expecting == Expecting(EQUALSIGN))
 		{
-		for (i=0; i<numTaxa; i++)
-			tempSet[i] = NO;
-        foundEqual = YES;
-		expecting  = Expecting(LEFTPAR);
+        if (foundClockrate == YES)
+            expecting = Expecting(NUMBER);
+        else
+            {
+		    for (i=0; i<numTaxa; i++)
+			    tempSet[i] = NO;
+            foundEqual = YES;
+		    expecting  = Expecting(LEFTPAR) | Expecting(LEFTCOMMENT);
+            }
 		}
 	else if (expecting == Expecting(LEFTPAR))
 		{
@@ -6986,10 +7070,11 @@ int DoTreeParm (char *parmName, char *tkn)
             if (nextAvailableNode >= 2*numTaxa)
 			    {
 			    MrBayesPrint ("%s   Too many nodes on tree '%s'\n", spacer, t->name);
-			    FreePolyTree (userTree[treeIndex]);
+                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
 			    return (ERROR);
 			    }
-		    qq = &userTree[treeIndex]->nodes[nextAvailableNode++];
+		    qq = &t->nodes[nextAvailableNode++];
 		    qq->anc = pp;
 		    pp->left = qq;
             pp->index = nextIntNodeIndex++;
@@ -7013,6 +7098,22 @@ int DoTreeParm (char *parmName, char *tkn)
 				foundB = YES;
 				expecting = Expecting(ALPHA);
 				}
+            else if (strcmp(tkn, "R") == 0)
+                {
+                t->isRooted = YES;
+                expecting = Expecting(RIGHTCOMMENT);
+                }
+            else if (strcmp(tkn, "U") == 0)
+                {
+                t->isRooted = NO;
+                expecting = Expecting(RIGHTCOMMENT);
+                }
+            else if (strcmp(tkn, "clockrate") == 0)
+                {
+                t->isClock = YES;
+                foundClockrate = YES;
+                expecting = Expecting(EQUALSIGN);
+                }
 			else
 				{
 				inComment = YES;
@@ -7031,15 +7132,13 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (foundEqual == NO)
 				{
 				t->nESets++;
-				t->nEvents = (int *) realloc ((void *)t->nEvents, t->nESets*2*numTaxa*sizeof(int));
-				t->position = (MrBFlt **) realloc ((void *)t->position, t->nESets*2*numTaxa*sizeof(MrBFlt *));
-				t->rateMult = (MrBFlt **) realloc ((void *)t->rateMult, t->nESets*2*numTaxa*sizeof(MrBFlt *));
-                for (i=0; i<2*numTaxa; i++)
-                    {
-                    t->nEvents[(t->nESets-1)*2*numTaxa+i] = 0;
-                    t->position[(t->nESets-1)*2*numTaxa+i] = NULL;
-                    t->rateMult[(t->nESets-1)*2*numTaxa+i] = NULL;
-                    }
+                t->isRelaxed = YES;
+				t->nEvents  = (int **) realloc ((void *)t->nEvents, t->nESets*sizeof(int *));
+				t->position = (MrBFlt ***) realloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
+				t->rateMult = (MrBFlt ***) realloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
+                t->nEvents[t->nESets-1]  = (int *) calloc ((size_t)(2*numTaxa), sizeof(int));
+                t->position[t->nESets=1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->rateMult[t->nESets=1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
 				t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));
 				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
 				strcpy (t->eSetName[t->nESets-1],tkn);
@@ -7055,7 +7154,8 @@ int DoTreeParm (char *parmName, char *tkn)
 				if (i == t->nESets)
 					{
 					MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+					if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
 				eSetIndex = i;
@@ -7067,9 +7167,11 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (foundEqual == NO)
 				{
 				t->nBSets++;
-				t->branchRate = (MrBFlt *) realloc ((void *)t->branchRate, t->nBSets*2*numTaxa*sizeof(MrBFlt));
+                t->isRelaxed = YES;
+				t->branchRate = (MrBFlt **) realloc ((void *)t->branchRate, (size_t)(t->nBSets*sizeof(MrBFlt *)));
+                t->branchRate[t->nBSets-1] = (MrBFlt *) calloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
                 for (i=0; i<2*numTaxa; i++)
-                    t->branchRate[(t->nBSets-1)*2*numTaxa+i] = 1.0;
+                    t->branchRate[t->nBSets-1][i] = 1.0;
                 t->bSetName = (char **) realloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
 				t->bSetName[t->nBSets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
 				strcpy (t->bSetName[t->nBSets-1],tkn);
@@ -7085,7 +7187,8 @@ int DoTreeParm (char *parmName, char *tkn)
 				if (i == t->nBSets)
 					{
 					MrBayesPrint ("%s   Could not find branch rate set '%s'\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+					if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
 				bSetIndex = i;
@@ -7097,56 +7200,56 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (isTranslateDef == YES)
 				{
 				/* we are using the translation table */
-				if (CheckString (tkn, transTo, &howMany) == ERROR)
+				if (CheckString (transTo, numTranslates, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find token '%s' in taxon translation table\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+					if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
 				else
 					{
-					if (GetNameFromString (transFrom, tempName, howMany) == ERROR)
-						{
-						MrBayesPrint ("%s   Error getting taxon name from translation table\n", spacer);
-						FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					if (CheckString (tempName, taxaNames, &howMany) == ERROR)
+					strcpy (tempName, transFrom[index]);
+					if (CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
 						{
 						MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
-						FreePolyTree (userTree[treeIndex]);
+					    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					if (tempSet[howMany-1] == YES)
+					if (tempSet[index] == YES)
 						{
 						MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
-						FreePolyTree (userTree[treeIndex]);
+					    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
 					else
-						tempSet[howMany-1] = YES;
+						tempSet[index] = YES;
 					}
 				}
 			else
 				{
 				/* Check to see if the name is in the list of taxon names. */
-				if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+				if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+				    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
-				if (tempSet[howMany-1] == YES)
+				if (tempSet[index] == YES)
 					{
 					MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+				    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
 				else
-					tempSet[howMany-1] = YES;
+					tempSet[index] = YES;
 				}
 			strcpy (pp->label, tkn);
-			pp->index = howMany - 1;
+			pp->index = index;
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(COLON);
 			expecting |= Expecting(RIGHTPAR);
@@ -7161,19 +7264,53 @@ int DoTreeParm (char *parmName, char *tkn)
             if (pp->anc == NULL)
 			    {
 			    MrBayesPrint ("%s   Incorrect tree format: cannot go down\n", spacer, tkn);
-			    FreePolyTree (userTree[treeIndex]);
+			    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
 			    return (ERROR);
 			    }
 		    pp = pp->anc;
 		    if (pp->anc == NULL)
 			    {
 			    /* finish up tree */
-			    userTree[treeIndex]->nNodes = nextAvailableNode;
-			    userTree[treeIndex]->nIntNodes = nextAvailableNode - numLocalTaxa;
-			    GetPolyDownPass(userTree[treeIndex]);
-			    if (treeIndex == numUserTrees)
-				    numUserTrees++;
-			    MrBayesPrint ("%s   Successfully read tree '%s'\n", spacer, userTree[treeIndex]->name);
+			    t->nNodes = nextAvailableNode;
+			    t->nIntNodes = t->nNodes;
+                for (i=0; i<t->nNodes; i++)
+                    {
+                    if (t->nodes[i].left == NULL)
+                        t->nIntNodes--;
+                    }
+                GetPolyDownPass(t);
+                
+                /* check that number of taxa is correct */
+                if (t->isRooted == NO && t->nNodes-t->nIntNodes == t->nIntNodes + 1)
+                    t->isRooted = YES;
+                if ((t->isRooted == YES && t->nNodes-t->nIntNodes != t->nIntNodes + 1) ||
+                    (t->isRooted == NO  && t->nNodes-t->nIntNodes != t->nIntNodes + 2))
+                    {
+                    /* we are protected from adding too many taxa by taxon-matching code above */
+			        MrBayesPrint ("%s   Taxa missing in tree\n", spacer);
+                    return (ERROR);
+                    }
+
+                /* check other properties */
+                if (t->isClock == YES && t->isRooted == NO)
+                    {
+			        MrBayesPrint ("%s   Tree has clock rate but is not rooted\n", spacer);
+                    return (ERROR);
+                    /* Note: any deviation from an ultrametric tree must be assumed to be due to dated
+                       tips at this point */
+                    }
+                if (t->isRelaxed == YES && t->isClock == NO)
+                    {
+			        MrBayesPrint ("%s   Tree has relaxed clock rates but is not a clock tree\n", spacer);
+                    return (ERROR);
+                    }
+			    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    {
+                    if (treeIndex == numUserTrees)
+				        numUserTrees++;
+			        MrBayesPrint ("%s   Successfully read tree '%s'\n", spacer, userTree[treeIndex]->name);
+                    }
                 readComment = NO;
 			    expecting = Expecting(SEMICOLON);
                 }
@@ -7202,10 +7339,11 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (nextAvailableNode >= 2*numTaxa)
 				{
 				MrBayesPrint ("%s   Too many nodes on tree '%s'\n", spacer, t->name);
-				FreePolyTree (userTree[treeIndex]);
+		        if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
 				return (ERROR);
 				}
-			qq = &userTree[treeIndex]->nodes[nextAvailableNode++];
+			qq = &t->nodes[nextAvailableNode++];
 			pp->sib = qq;
 			qq->anc = pp->anc;
 			pp = qq;
@@ -7216,10 +7354,19 @@ int DoTreeParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(NUMBER))
 		{
-		if (foundB == YES)
+		if (foundClockrate == YES)
+            {
+			sscanf (tkn, "%lf", &tempD);
+            t->clockRate = tempD;
+            foundClockrate = NO;
+            if (AreDoublesEqual(t->clockRate, 1.0, 1E-10) == NO)
+                t->isCalibrated = YES;
+            expecting = Expecting(RIGHTCOMMENT);
+            }
+        else if (foundB == YES)
 			{
 			sscanf (tkn, "%lf", &tempD);
-			t->branchRate[bSetIndex*2*numTaxa+pp->index] = tempD;
+			t->branchRate[bSetIndex][pp->index] = tempD;
 			foundB = NO;
 			expecting = Expecting(RIGHTCOMMENT);
 			}
@@ -7231,19 +7378,20 @@ int DoTreeParm (char *parmName, char *tkn)
 				if (tempInt <= 0)
 					{
 					MrBayesPrint ("%s   Wrong number of events (%d) for event set '%s'\n", spacer, tempInt, t->eSetName[eSetIndex]);
-					FreePolyTree (userTree[treeIndex]);
+			        if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
-				t->nEvents[2*numTaxa*eSetIndex+pp->index] = tempInt;
-				t->position[2*numTaxa*eSetIndex+pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-				t->rateMult[2*numTaxa*eSetIndex+pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+				t->nEvents[eSetIndex][pp->index]  = tempInt;
+				t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+				t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
 				eventIndex = 0;
 				expecting = Expecting (COLON);
                 }
 			else if (foundFirst == NO)
 				{
 				sscanf (tkn, "%lf", &tempD);
-				t->position[eSetIndex*2*numTaxa+pp->index][eventIndex] = tempD;
+				t->position[eSetIndex][pp->index][eventIndex] = tempD;
 				expecting = Expecting(NUMBER);
 				foundFirst = YES;
 				}
@@ -7251,9 +7399,9 @@ int DoTreeParm (char *parmName, char *tkn)
 				{
 				foundFirst = NO;
 				sscanf (tkn, "%lf", &tempD);
-				t->rateMult[eSetIndex*2*numTaxa+pp->index][eventIndex] = tempD;
+				t->rateMult[eSetIndex][pp->index][eventIndex] = tempD;
 				eventIndex++;
-				if (eventIndex == t->nEvents[2*numTaxa*eSetIndex+pp->index])
+				if (eventIndex == t->nEvents[eSetIndex][pp->index])
 					{
 					expecting = Expecting(RIGHTPAR);
 					foundColon = NO;
@@ -7268,6 +7416,7 @@ int DoTreeParm (char *parmName, char *tkn)
 			sscanf (tkn, "%lf", &tempD);
 			pp->length = tempD;
 			foundColon = NO;
+            t->brlensDef = YES;
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(RIGHTPAR);
 			expecting |= Expecting(LEFTCOMMENT);
@@ -7277,89 +7426,86 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (isTranslateDef == YES)
 				{
 				/* we are using the translation table */
-				if (CheckString (tkn, transTo, &howMany) == ERROR)
+				if (CheckString (transTo, numTranslates, tkn, &index) == ERROR)
 					{
 					MrBayesPrint ("%s   Could not find token '%s' in taxon translation table\n", spacer, tkn);
-					FreePolyTree (userTree[treeIndex]);
+			        if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
 				else
 					{
-					if (GetNameFromString (transFrom, tempName, howMany) == ERROR)
-						{
-						MrBayesPrint ("%s   Error getting taxon name from translation table\n", spacer);
-						FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					if (CheckString (tempName, taxaNames, &howMany) == ERROR)
+					strcpy (tempName, transFrom[index]);
+					if (CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
 						{
 						MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
-						FreePolyTree (userTree[treeIndex]);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					if (tempSet[howMany-1] == YES)
+					if (tempSet[index] == YES)
 						{
 						MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
-						FreePolyTree (userTree[treeIndex]);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
 					else
                         {
-						tempSet[howMany-1] = YES;
-                        tempInt = howMany-1;
+						tempSet[index] = YES;
+                        tempInt = index;
                         }
 					}
 				}
 			else
 				{
-				/* simply use taxon number */
-				sscanf (tkn, "%d", &tempInt);
-
-				/* Check to see if the name is in the list of taxon names. */
-				if (CheckString (tkn, taxaNames, &howMany) == ERROR)
+				/* Simply use taxon number; first check to see if the name is in the list of taxon names. */
+				if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
 					{
 					/* The number could not be found as a taxon name in the list of taxon names. We will
 						assume that the user has then input taxa as numbers and not the names. */
-					if (tempInt-1 < 0 || tempInt-1 >= numTaxa)
+    				sscanf (tkn, "%d", &index);
+					if (index < 1 || index > numTaxa)
 						{
-						MrBayesPrint ("%s   Taxon number is out of range\n", spacer);
-						FreePolyTree (userTree[treeIndex]);
+						MrBayesPrint ("%s   Taxon number %d is out of range\n", spacer, index);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					if (tempSet[tempInt-1] == YES)
+                    index--;
+					if (tempSet[index] == YES)
 						{
-						MrBayesPrint ("%s   Taxon name %d has already been used in tree '%s'\n", spacer, tempInt, t->name);
-						FreePolyTree (userTree[treeIndex]);
+						MrBayesPrint ("%s   Taxon name %d has already been used in tree '%s'\n", spacer, index+1, t->name);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
 					else
-						tempSet[tempInt-1] = YES;
-					tempInt--;
+						tempSet[index] = YES;
 					}
 				else
 					{
-					/* The taxon name is in the list of taxon names */
-					howMany--;
-					if (howMany < 0 || howMany >= numTaxa)
+					/* The number is in the list of taxon names */
+					if (index < 0 || index >= numTaxa)
 						{
-						MrBayesPrint ("%s   Taxon number is out of range\n", spacer);
-						FreePolyTree (userTree[treeIndex]);
+						MrBayesPrint ("%s   Taxon name %s could not be found\n", spacer, tkn);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					if (tempSet[howMany] == YES)
+					if (tempSet[index] == YES)
 						{
-						MrBayesPrint ("%s   Taxon %d has already been used in tree '%s'\n", spacer, howMany+1, t->name);
-						FreePolyTree (userTree[treeIndex]);
+						MrBayesPrint ("%s   Taxon %d has already been used in tree '%s'\n", spacer, index+1, t->name);
+		                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                            FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
 					else
-						tempSet[howMany] = YES;
-					tempInt = howMany;
+						tempSet[index] = YES;
 					}
 				}
-			GetNameFromString (taxaNames, tempName, tempInt+1);
-			strcpy (pp->label, tempName);
-			pp->index = tempInt;
+			strcpy (pp->label, taxaNames[index]);
+			pp->index = index;
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(COLON);
 			expecting |= Expecting(RIGHTPAR);
@@ -7378,7 +7524,9 @@ int DoTreeParm (char *parmName, char *tkn)
 			expecting |= Expecting(EQUALSIGN);
 		else
 			{
-			if (pp == pp->anc->left)
+			if (pp->anc == NULL)
+                expecting |= Expecting(LEFTPAR);
+            else if (pp == pp->anc->left)
 				expecting |= Expecting(COMMA);
 			else
 				expecting |= Expecting(RIGHTPAR);
@@ -7491,17 +7639,21 @@ int DoVersion (void)
 
 
 
-unsignedSafeLong Expecting (int y)
+safeLong Expecting (int y)
 
 {
 
-	unsignedSafeLong x;
+	safeLong x;
 	
-	x = (unsignedSafeLong)pow(2.0, (MrBFlt)y);
+	x = (safeLong)pow(2.0, (MrBFlt)y);
 	
 	return (x);
 
 }
+
+
+
+
 
 #ifdef HAVE_LIBREADLINE
 /* This function is for commandline substitution: first word is always a command */
@@ -7663,7 +7815,7 @@ void FinishTree (TreeNode *p, int *i, int isThisTreeRooted)
 
 
 
-int FreeMatrix (void)
+int FreeCharacters (void)
 
 {
 
@@ -7671,77 +7823,159 @@ int FreeMatrix (void)
 	
 	memoryLetFree = NO;
 
-	if (memAllocs[ALLOC_MATRIX] == YES)
+    if (memAllocs[ALLOC_TMPSET] == YES)
+        {
+        if (numChar > numTaxa)
+            tempSet = (int *) SafeRealloc ((void *) tempSet, (size_t)(numTaxa*sizeof(int)));
+        }
+    if (memAllocs[ALLOC_MATRIX] == YES)
 		{
-		free (matrix);
+		SafeFree (&matrix);
+        defMatrix = NO;
 		memAllocs[ALLOC_MATRIX] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_CHARINFO] == YES)
 		{
-		free (charInfo);
+		SafeFree (&charInfo);
 		memAllocs[ALLOC_CHARINFO] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_TAXAINFO] == YES)
+	if (memAllocs[ALLOC_CHARSETS] == YES)
 		{
-		free (taxaInfo);
-		memAllocs[ALLOC_TAXAINFO] = NO;
+		for (i=0; i<numCharSets; i++)
+            SafeFree (&charSetNames[i]);
+        SafeFree ((void **) &charSetNames);
+        if (charSet)
+            {
+            SafeFree (&charSet[0]);
+            SafeFree ((void **) &charSet);
+            }
+        numCharSets = 0;
+		memAllocs[ALLOC_CHARSETS] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_PARTITIONNAMES] == YES)
+	if (memAllocs[ALLOC_PARTITIONS] == YES)
 		{
-		free (partitionNames);
-		memAllocs[ALLOC_PARTITIONNAMES] = NO;
+        for (i=0; i<numDefinedPartitions; i++)
+            SafeFree (&partitionNames[i]);
+        SafeFree ((void **)&partitionNames);
+        for (i=0; i<numChar; i++)
+            SafeFree (&(partitionId[i]));
+        SafeFree ((void**)(&partitionId));
+        numDefinedPartitions = 0;
+		memAllocs[ALLOC_PARTITIONS] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_CHARSETNAMES] == YES)
+    if (memAllocs[ALLOC_PARTITIONVARS] == YES)
+        {
+        SafeFree (&numVars);
+        SafeFree (&tempNum);
+        SafeFree (&activeParams[0]);
+        SafeFree (&linkTable[0]);
+        tempLinkUnlinkVec = NULL;
+        activeParts = NULL;
+        tempLinkUnlinkVec = NULL;
+        for (i=0; i<NUM_LINKED; i++)
+            {
+            linkTable[i] = NULL;
+            activeParams[i] = NULL;
+            }
+        memAllocs[ALLOC_PARTITIONVARS] = NO;
+        memoryLetFree = YES;
+        }
+
+	/* reset all characters flags */
+    numChar              = 0;                        /* number of defined characters                  */
+    defChars             = NO;                       /* flag for whether number of characters is known*/
+	defMatrix            = NO;                       /* flag for whether matrix is successfull read   */
+	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms     */
+    isInAmbig			 = NO;						 /* flag for whether the parser is within ()      */
+	isInPoly			 = NO;						 /* flag for whether the parser is within {}      */
+	defPartition         = NO;                       /* flag for whether character partition is read  */
+	defPairs             = NO;                       /* flag indicating whether pairs have been defnd */
+	numDefinedPartitions = 0;                        /* number of defined partitions                  */
+	partitionNum         = 0;                        /* partition number currently enforced           */
+	numCurrentDivisions  = 0;                        /* number of partitions of data                  */
+	numCharSets          = 0;          			     /* holds number of character sets                */
+	numDivisions		 = 1;          			     /* holds number of partitions                    */
+	isMixed			     = NO;          			 /* are data mixed ?                              */
+	dataType             = NONE;          			 /* holds datatype                                */
+	matchId              = '.';                      /* allow default '.' for match character         */
+	gapId                = '-';                      /* allow default '-' for gap character           */
+	missingId            = '?';                      /* allow default '?' for missing characters      */
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+int FreeMatrix (void)
+
+{
+
+    if (FreeCharacters() == ERROR)
+        return ERROR;
+
+    return (FreeTaxa());
+
+}
+
+
+
+
+
+int FreeTaxa (void)
+
+{
+    int i, memoryLetFree;
+
+    memoryLetFree = NO;
+	if (memAllocs[ALLOC_TAXA] == YES)
 		{
-		free (charSetNames);
-		memAllocs[ALLOC_CHARSETNAMES] = NO;
-		memoryLetFree = YES;
-		}
-	if (memAllocs[ALLOC_TAXANAMES] == YES)
-		{
-		free (taxaNames);
-		memAllocs[ALLOC_TAXANAMES] = NO;
+		for (i=0; i<numTaxa; i++)
+            SafeFree (&taxaNames[i]);
+        SafeFree ((void **) &taxaNames);
+		SafeFree (&taxaInfo);
+        SafeFree (&tipCalibration);
+        numTaxa = 0;
+		memAllocs[ALLOC_TAXA] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_TMPSET] == YES)
 		{
-		free (tempSet);
+		SafeFree (&tempSet);
 		memAllocs[ALLOC_TMPSET] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_TAXASETNAMES] == YES)
+	if (memAllocs[ALLOC_TAXASETS] == YES)
 		{
-		free (taxaSetNames);
-		memAllocs[ALLOC_TAXASETNAMES] = NO;
+		for (i=0; i<numTaxaSets; i++)
+            SafeFree (&taxaSetNames[i]);
+        SafeFree ((void **) &taxaSetNames);
+        if (taxaSet)
+            SafeFree ((void **) &taxaSet[0]);
+        SafeFree ((void **) &taxaSet);
+        numTaxaSets = 0;
+		memAllocs[ALLOC_TAXASETS] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_CONSTRAINTNAMES] == YES)
+	if (memAllocs[ALLOC_CONSTRAINTS] == YES)
 		{
-		free (constraintNames);
-		memAllocs[ALLOC_CONSTRAINTNAMES] = NO;
+		for (i=0; i<numTaxaSets; i++)
+            SafeFree (&constraintNames[i]);
+		SafeFree ((void **) &constraintNames);
+        if (definedConstraint)
+            SafeFree ((void **) &definedConstraint[0]);
+        SafeFree ((void **) &definedConstraint);
+        SafeFree ((void **) &nodeCalibration);
+        numDefinedConstraints = 0;
+		memAllocs[ALLOC_CONSTRAINTS] = NO;
 		memoryLetFree = YES;
 		}
-	if (memAllocs[ALLOC_TRANSFROM] == YES)
-		{
-		free (transFrom);
-		memAllocs[ALLOC_TRANSFROM] = NO;
-		memoryLetFree = YES;
-		}
-	if (memAllocs[ALLOC_TRANSTO] == YES)
-		{
-		free (transTo);
-		memAllocs[ALLOC_TRANSTO] = NO;
-		memoryLetFree = YES;
-		}
-
-	if (memoryLetFree == YES)
-		MrBayesPrint ("%s   Deleting matrix\n", spacer);
-
-	if (numUserTrees > 0)
+    if (numUserTrees > 0)
 		{
 		MrBayesPrint ("%s   Deleting user trees\n", spacer);
 		for (i=0; i<numUserTrees; i++)
@@ -7752,12 +7986,22 @@ int FreeMatrix (void)
         numUserTrees = 0;
 		}
 
-    /* reinitialize everything dependent on a matrix */
-	if (ReinitializeMrBayes() == ERROR)
-		return (ERROR);
+    FreeCharacters();
 
-	return (NO_ERROR);
+	if (memoryLetFree == YES)
+		MrBayesPrint ("%s   Deleting previously defined taxon set\n", spacer);
 
+    /* reinitialize taxa variables */
+	numTaxa              = 0;          			     /* number of taxa                                */
+	numNamedTaxa         = 0;          			     /* number of named taxa                          */
+	defTaxa              = NO;                       /* flag for whether number of taxa is known      */
+    isTaxsetDef          = NO;                       /* is a taxlabels set defined                    */
+    isTranslateDef       = NO;                       /* is a translate block defined                  */
+	numDefinedConstraints = 0;       			     /* number of defined constraints                 */
+	outGroupNum			 = 0;            			 /* default outgroup                              */
+	numTaxaSets          = 0;          			     /* number of taxa sets                           */
+
+    return NO_ERROR;
 }
 
 
@@ -7768,21 +8012,28 @@ int GetNumPartDivisions (int n)
 
 {
 
-	int			i, divFound[MAX_NUM_DIVS], numDivs;
+	int			i, maxDiv, numDivs, *divFound;
 	
-	for (i=0; i<MAX_NUM_DIVS; i++)
+    maxDiv = 0;
+	for (i=0; i<numChar; i++)
+        if (partitionId[i][n] > maxDiv)
+            maxDiv = partitionId[i][n];
+
+    divFound = (int *) calloc (maxDiv, sizeof(int));
+    
+    for (i=0; i<maxDiv; i++)
 		divFound[i] = NO;
 	
 	for (i=0; i<numChar; i++)
-		{
-		divFound[charInfo[i].partitionId[n-1] - 1] = YES;
-		}
+		divFound[partitionId[i][n]] = YES;
 		
 	numDivs = 0;
-	for (i=0; i<MAX_NUM_DIVS; i++)
+	for (i=0; i<maxDiv; i++)
 		if (divFound[i] == YES)
 			numDivs++;
-		
+    
+    free (divFound);
+
 	return (numDivs);
 	
 }
@@ -7791,7 +8042,7 @@ int GetNumPartDivisions (int n)
 
 
 
-void GetToken (int *tokenType)
+void GetToken (char *token, int *tokenType, char **sourceH)
 
 {
 		
@@ -7801,193 +8052,176 @@ void GetToken (int *tokenType)
 	(*tokenType) = 0;
 	temp = token;
 	
-	while (IsWhite(*tokenP) == 1 || IsWhite(*tokenP) == 2)
+	while (IsWhite(**sourceH) == 1 || IsWhite(**sourceH) == 2)
 		{
-		if (IsWhite(*tokenP) == 2)
+		if (IsWhite(**sourceH) == 2)
 			{
 			*tokenType = RETURNSYMBOL;
-			/*foundNewLine = YES;*/
+			/* foundNewLine = YES;  Why is this commented out?? */
 			/* MrBayesPrint ("RETURN\n"); */
 			}
-		++tokenP;
+		++(*sourceH);
 		}
 	
-	if (readWord == YES && *tokenP != '"')
+	if (readWord == YES && **sourceH != '"')
 		{
-		while (isgraph(*tokenP) && *tokenP!=';')
-			*temp++ = *tokenP++;
+		while (isgraph(**sourceH) && **sourceH!=';')
+			*temp++ = *(*sourceH)++;
 		*temp = '\0';
 		*tokenType = ALPHA;
 		readWord = NO;
 		return;
 		}
-	*tokenType = UNKNOWN_TOKEN_TYPE;
-	if (IsIn(*tokenP,"="))
+
+    *tokenType = UNKNOWN_TOKEN_TYPE;
+	if (IsIn(**sourceH,"="))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = EQUALSIGN;
 		}
-	else if (IsIn(*tokenP,";"))
+	else if (IsIn(**sourceH,";"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = SEMICOLON;
 		}
-	else if (IsIn(*tokenP,":"))
+	else if (IsIn(**sourceH,":"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = COLON;
 		}
-	else if (IsIn(*tokenP,","))
+	else if (IsIn(**sourceH,","))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = COMMA;
 		}
-	else if (IsIn(*tokenP,"#"))
+	else if (IsIn(**sourceH,"#"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = POUNDSIGN;
 		}
-	else if (IsIn(*tokenP,"("))
+	else if (IsIn(**sourceH,"("))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = LEFTPAR;
 		}
-	else if (IsIn(*tokenP,")"))
+	else if (IsIn(**sourceH,")"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = RIGHTPAR;
 		}
-	else if (IsIn(*tokenP,"{"))
+	else if (IsIn(**sourceH,"{"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = LEFTCURL;
 		}
-	else if (IsIn(*tokenP,"}"))
+	else if (IsIn(**sourceH,"}"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = RIGHTCURL;
 		}
-	else if (IsIn(*tokenP,"["))
+	else if (IsIn(**sourceH,"["))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = LEFTCOMMENT;
 		}
-	else if (IsIn(*tokenP,"]"))
+	else if (IsIn(**sourceH,"]"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = RIGHTCOMMENT;
 		}
-	else if (IsIn(*tokenP,"?"))
+	else if (IsIn(**sourceH,"?"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = QUESTIONMARK;
 		}
-	else if (IsIn(*tokenP,"-"))
+	else if (IsIn(**sourceH,"-"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = DASH;
 		}
-	else if (IsIn(*tokenP,"$"))
+	else if (IsIn(**sourceH,"$"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = DOLLAR;
 		}
-	else if (IsIn(*tokenP,"\"") && readWord == YES)
+	else if (IsIn(**sourceH,"\"") && readWord == YES)
 		{
-		tokenP++;
-		while(*tokenP != '"' && *tokenP != '\0')
+		(*sourceH)++;
+		while(**sourceH != '"' && **sourceH != '\0')
 			{
-			*temp++ = *tokenP++;
+			*temp++ = *(*sourceH)++;
 			}
 		*tokenType = ALPHA;
-		tokenP++;
+		*(*sourceH)++;
 		}
-	else if (IsIn(*tokenP,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789."))
+	else if (IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789."))
 		{
-		if (IsIn(*tokenP,"0123456789."))
+		if (IsIn(**sourceH,"0123456789."))
 			allNumbers = TRUE;
 		else
 			allNumbers = FALSE;
         foundExp = foundExpSign = FALSE;
-		*temp++ = *tokenP++;
-		while(IsIn(*tokenP,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
+		*temp++ = *(*sourceH)++;
+		while(IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
 			{
-			if(allNumbers == TRUE && !IsIn(tokenP[-1],"Ee") && *tokenP=='-')
+			if(allNumbers == TRUE && !IsIn((*sourceH)[-1],"Ee") && **sourceH=='-')
                 break;
-            else if (allNumbers == TRUE && IsIn(*tokenP,"Ee") && foundExp == NO)
+            else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
-            else if (allNumbers == TRUE && IsIn(*tokenP,"+-") && IsIn(tokenP[-1],"Ee"))
+            else if (allNumbers == TRUE && IsIn(**sourceH,"+-") && IsIn((*sourceH)[-1],"Ee"))
                 foundExpSign = TRUE;
-            else if (!IsIn(*tokenP,"0123456789."))
+            else if (!IsIn(**sourceH,"0123456789."))
 				allNumbers = FALSE;
-            *temp++ = *tokenP++;
+            *temp++ = *(*sourceH)++;
 			}
 		if (allNumbers == TRUE)
 			*tokenType = NUMBER;
 		else
 			*tokenType = ALPHA;
 		}
-	else if (IsIn(*tokenP,"*"))
+	else if (IsIn(**sourceH,"*"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = ASTERISK;
 		}
-	else if (IsIn(*tokenP,"/"))
+	else if (IsIn(**sourceH,"/"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = FORWARDSLASH;
 		}
-	else if (IsIn(*tokenP,"'\\'"))
+	else if (IsIn(**sourceH,"'\\'"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = BACKSLASH;
 		}
-	else if (IsIn(*tokenP,"!"))
+	else if (IsIn(**sourceH,"!"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH++);
 		*tokenType = EXCLAMATIONMARK;
 		}
-	else if (IsIn(*tokenP,"%"))
+	else if (IsIn(**sourceH,"%"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = PERCENT;
 		}
-	else if (IsIn(*tokenP,"\""))
+	else if (IsIn(**sourceH,"\""))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = QUOTATIONMARK;
 		}
-	else if (IsIn(*tokenP,"&"))
+	else if (IsIn(**sourceH,"&"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = AMPERSAND;
 		}
-	else if (IsIn(*tokenP,"~+^@|{}`><"))
+	else if (IsIn(**sourceH,"~+^@|{}`><"))
 		{
-		*temp++ = *tokenP++;
+		*temp++ = *(*sourceH)++;
 		*tokenType = WEIRD;
 		}
 
 	*temp = '\0';
 	
-}
-
-
-
-
-
-void GetUserDownPass (TreeNode *p, TreeNode **x, int *y)
-
-{
-
-	if (p != NULL)
-		{
-		GetUserDownPass (p->left, x, y);
-		GetUserDownPass (p->right, x, y);
-		x[(*y)] = p;
-		(*y)++;
-		}
-		
 }
 
 
@@ -8096,10 +8330,45 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   be plotted. You can also set \"match=all\", in which case all of the          \n");
 		MrBayesPrint ("   parameters are plotted.                                                       \n");
 	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Options:                                                                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
+		MrBayesPrint ("                    samples will be discarded as burnin when creating the plot.  \n");
+        MrBayesPrint ("                    The proportion to be discarded is set with Burninfrac (see   \n");
+		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
+		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
+		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
+		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
+		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
+		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
+		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
+		MrBayesPrint ("                    to NO.                                                       \n");
+		MrBayesPrint ("   Burninfrac    -- Determines the fraction of samples that will be discarded    \n");
+		MrBayesPrint ("                    when creating a plot. The value of this parameter is only    \n");
+        MrBayesPrint ("                    relevant when Relburnin is set to YES. Example: A value of   \n");
+		MrBayesPrint ("                    this option of 0.25 means that 25 % of the samples will be   \n");
+		MrBayesPrint ("                    discarded.                                                   \n");
+		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
+		MrBayesPrint ("                    samples will be discarded as burnin when calculating summary \n");
+        MrBayesPrint ("                    statistics. The proportion to be discarded is set with       \n");
+		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
+		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
+		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
+		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
+		MrBayesPrint ("   Filename      -- The name of the file to plot.                                \n");
+		MrBayesPrint ("   Parameter     -- Specification of parameters to be plotted. See above for     \n");
+		MrBayesPrint ("                    details.                                                     \n");
+		MrBayesPrint ("   Match         -- Specifies how to match parameter names to the Parameter      \n");
+		MrBayesPrint ("                    specification. See above for details.                        \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Current settings:                                                             \n");
+	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                      Current Setting                  \n");
 		MrBayesPrint ("   ------------------------------------------------------------                  \n");
-		MrBayesPrint ("   Filename        <name>                       %s                               \n", plotParams.plotFileName);
+        MrBayesPrint ("   Relburnin       Yes/No                       %s                               \n", plotParams.relativeBurnin == YES ? "Yes" : "No");
 		MrBayesPrint ("   Burnin          <number>                     %d                               \n", plotParams.plotBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                     %1.2lf                           \n", plotParams.plotBurnInFrac);
+		MrBayesPrint ("   Filename        <name>                       %s                               \n", plotParams.plotFileName);
 		MrBayesPrint ("   Parameter       <name>                       %s                               \n", plotParams.parameter);
 		MrBayesPrint ("   Match           Perfect/Consistentwith/All   %s                               \n", plotParams.match);
 	    MrBayesPrint ("                                                                                 \n");
@@ -8425,152 +8694,37 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   This command defines a tree constraint. The format for the constraint         \n");
 	    MrBayesPrint ("   command is                                                                    \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      constraint <constraint name> <probability> = <list of taxa>                \n");
+	    MrBayesPrint ("      constraint <constraint name> = <list of taxa>                              \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   A list of taxa can be specified using a taxset, taxon names, or taxon         \n");
-	    MrBayesPrint ("   numbers. A probability must also be specified. For now, MrBayes ignores       \n");
-	    MrBayesPrint ("   this probability value and treats the constraint as an absolute requirement   \n");
-	    MrBayesPrint ("   of trees. That is, trees that are not compatible with the constraint have     \n");
-	    MrBayesPrint ("   zero prior (and hence zero posterior) probability.                            \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Future releases of MrBayes will use the probability value to determine how    \n");
-	    MrBayesPrint ("   much more probable a tree is that contains the constraint than a tree without \n");
-	    MrBayesPrint ("   the constraint. For example, the following command                            \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      constraint example 100 = taxon_2 taxon_3                                   \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   defines a constraint called \"example\" that includes two taxa. In future     \n");
-	    MrBayesPrint ("   releases of MrBayes, trees that contain a clade with those two taxa together  \n");
-	    MrBayesPrint ("   will have a prior probability that is 100 times that of trees without the     \n");
-	    MrBayesPrint ("   constraint. In the current version, the probability value will be ignored     \n");
-	    MrBayesPrint ("   and trees without the two taxa together will not be sampled.                  \n");
+	    MrBayesPrint ("   numbers. The constraint is treated as an absolute requirement of trees.       \n");
+	    MrBayesPrint ("   That is, trees that are not compatible with the constraint have zero prior    \n");
+	    MrBayesPrint ("   (and hence zero posterior) probability.                                       \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   If you are interested in inferring ancestral states for a particular node,    \n");
-	    MrBayesPrint ("   you need to constrain that node first using the 'constraint' command. For     \n");
-	    MrBayesPrint ("   more information on how to infer ancestral states, see the help for the       \n");
-	    MrBayesPrint ("   'report' command.                                                             \n");
-
-		/*
-		MrBayesPrint ("   An alternative way to specify the probability is to use \"exp(<number>)\"        \n");
-	    MrBayesPrint ("   instead. For example, the following command                                   \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      constraint example exp(10) = taxon_2 taxon_3                               \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   defines a constraint called \"example\" that includes two taxa. Trees         \n");
-	    MrBayesPrint ("   that contain the clade are exp(10), or 22026.46, times more probable than     \n");
-	    MrBayesPrint ("   trees not containing the clade.                                               \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   In principal, the use of constraints allows you to specify very compl-        \n");
-	    MrBayesPrint ("   icated prior probabilities on trees. It is hoped that this prior more         \n");
-	    MrBayesPrint ("   faithfully represents your prior beliefs in trees. Using several con-         \n");
-	    MrBayesPrint ("   straints simultaneously can create a very complicated prior on trees. For     \n");
-	    MrBayesPrint ("   example, consider the following two constraints:                              \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      constraint A 100 =  3 4 5                                                  \n");
-	    MrBayesPrint ("      constraint B 50 = 4 5                                                      \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   which can be summarized in a table (if there are 10 taxa total)               \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("       1  2  3  4  5  6  7  8  9 10  Times more probable                         \n");
-	    MrBayesPrint ("       ----------------------------  -------------------                         \n");
-	    MrBayesPrint ("    A  .  .  +  +  +  .  .  .  .  .         100                                  \n");
-	    MrBayesPrint ("    B  .  .  .  +  +  .  .  .  .  .          50                                  \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Trees that contain taxa 3, 4, and 5 are 100 times more probable than          \n");
-	    MrBayesPrint ("   trees not containing the group. Similarly, trees that contain taxa 4 and      \n");
-	    MrBayesPrint ("   5 are 50 times more probable than those without. Calculating the rela-        \n");
-	    MrBayesPrint ("   tive probabilties of any two trees is relatively easy. For example, say       \n");
-	    MrBayesPrint ("   we have two trees, T1 and T2, that have the following properties:             \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      Tree  Constraint A    Constraint B                                         \n");
-	    MrBayesPrint ("      ----------------------------------                                         \n");
-	    MrBayesPrint ("      T1    Consistent      Consistent                                           \n");
-	    MrBayesPrint ("      T2    Inconsistent    Consistent                                           \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Both trees are consistent with constraint B but T1 is consistent with         \n");
-	    MrBayesPrint ("   constraint A whereas T2 is not. Therefore, T1 is 100 times more probable      \n");
-	    MrBayesPrint ("   than T2. We only need to know the relative probabilies of the two trees       \n");
-	    MrBayesPrint ("   (i.e., the probabilities up to a constant) because the MCMC will allow        \n");
-	    MrBayesPrint ("   us to normalize the probabilities. Life is somewhat more complicated          \n");
-	    MrBayesPrint ("   when the trees differ at two or more constraints. For example, say the        \n");
-	    MrBayesPrint ("   two trees have the following properties:                                      \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      Tree  Constraint A    Constraint B                                         \n");
-	    MrBayesPrint ("      ----------------------------------                                         \n");
-	    MrBayesPrint ("      T1    Consistent      Consistent                                           \n");
-	    MrBayesPrint ("      T2    Inconsistent    Inconsistent                                         \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Now T1 is 50 X 100 = 5000 times more probable than T2. You can see that       \n");
-	    MrBayesPrint ("   by simply defining two constraints, we have defined a fairly complicated      \n");
-	    MrBayesPrint ("   prior probability distribution on trees:                                      \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("       |                                                                         \n");
-	    MrBayesPrint ("       |                             11              Trees with A and B          \n");
-	    MrBayesPrint ("       |                                                                         \n");
-	    MrBayesPrint ("    R  |                                                                         \n");
-	    MrBayesPrint ("    e  |                                                                         \n");
-	    MrBayesPrint ("    l  |                         2222  2222          Trees with A and not B      \n");
-	    MrBayesPrint ("       |                                                                         \n");
-	    MrBayesPrint ("    P  |                 33333333          33333333  Trees with B but not A      \n");
-	    MrBayesPrint ("    r  |                                                                         \n");
-	    MrBayesPrint ("    o  |                                                                         \n");
-	    MrBayesPrint ("    b  |                                                                         \n");
-	    MrBayesPrint ("       | 4444444444444444                          4444444444444444              \n");
-	    MrBayesPrint ("       |                                                                         \n");
-	    MrBayesPrint ("       |                                                                         \n");
-	    MrBayesPrint ("       |_____________________________________________________________            \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("                                    Trees                                        \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   There are four levels on this landscape of trees. The peak (1) contains       \n");
-	    MrBayesPrint ("   trees that are consistent with both constraints. The valley (4) has trees     \n");
-	    MrBayesPrint ("   that contain neither constraint. There are two plateaus of trees that         \n");
-	    MrBayesPrint ("   contain one but not both constraints. Note that the relative probab-          \n");
-	    MrBayesPrint ("   ilities between levels are as follows:                                        \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      T1 is 5000 times more probable than T4                                     \n");
-	    MrBayesPrint ("      T1 is  100 times more probable than T3                                     \n");
-	    MrBayesPrint ("      T1 is   50 times more probable than T2                                     \n");
-	    MrBayesPrint ("      T2 is  100 times more probable than T4                                     \n");
-	    MrBayesPrint ("      T2 is    2 times more probable than T3                                     \n");
-	    MrBayesPrint ("      T3 is   50 times more probable than T4                                     \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Conversely,                                                                   \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      T4 is 1/5000th as probable as T1                                           \n");
-	    MrBayesPrint ("      T3 is  1/100th as probable as T1                                           \n");
-	    MrBayesPrint ("      T2 is   1/50th as probable as T1                                           \n");
-	    MrBayesPrint ("      T4 is  1/100th as probable as T2                                           \n");
-	    MrBayesPrint ("      T3 is      1/2 as probable as T2                                           \n");
-	    MrBayesPrint ("      T4 is   1/50th as probable as T3                                           \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   To get the relative probabilities between levels 1 and 4, you can             \n");
-	    MrBayesPrint ("   simply multiply the probabilities to successive plateaus:                     \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("       P(1,4) = P(1,2) X P(2,3) X P(3,4) = 50 X 2 X 50 = 5000                    \n");
-	    */
+	    MrBayesPrint ("   you need to constrain that node first using the 'constraint' command. The     \n");
+	    MrBayesPrint ("   same applies if you wish to calibrate an interior node in a dated analysis.   \n");
+	    MrBayesPrint ("   For more information on how to infer ancestral states, see the help for the   \n");
+	    MrBayesPrint ("   'report' command. For more on dating, see the 'calibrate' command.            \n");
 		MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   It is important to note that simply defining a constraint using this          \n");
 	    MrBayesPrint ("   command is not sufficient for the program to actually implement the           \n");
 	    MrBayesPrint ("   constraint in an analysis. You must also specify the constraints using        \n");
 	    MrBayesPrint ("   'prset topologypr = constraints (<name of constraint>)'. For more infor-      \n");
-	    MrBayesPrint ("   mation, see the help on the 'prset' command.                                  \n");
+	    MrBayesPrint ("   mation on this, see the help on the 'prset' command.                          \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    if (numDefinedConstraints > 0)
             {
+            MrBayesPrint ("   Currently defined constraints:                                                \n");
+	        MrBayesPrint ("                                                                                 \n");
             MrBayesPrint ("   Constraint name                Number of included taxa                        \n");
 		    MrBayesPrint ("   ------------------------------------------------------------------            \n");		
             }
         for (i=0; i<numDefinedConstraints; i++)
 			{
-			GetNameFromNamestring (tempString, constraintNames, i);
-			for (j=(int)strlen(tempString); j<22; j++)
-				tempString[j] = ' ';
-			tempString[22] = '\0';
-			MrBayesPrint ("   %s   ", tempString);
-			for (j=k=0; j<numTaxa; j++)
-				if (taxaInfo[j].constraints[i] == 1)
-					k++;
+			strncpy (tempString, constraintNames[i], 22);
+			MrBayesPrint ("   %-22.22s   ", tempString);
+            k = NumBits (definedConstraint[i], numTaxa/nBitsInALong + 1);
 			MrBayesPrint ("%d\n", k);
 			}
 	    MrBayesPrint ("                                                                                 \n");
@@ -8626,15 +8780,13 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      calibrate <node_name> = unconstrained                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		for (i=j=0; i<numTaxa+numDefinedConstraints; i++)
-			{
-			if (i<numTaxa)
-				calibrationPtr = &taxaInfo[i].calibration;
-			else
-				calibrationPtr = &constraintCalibration[i-numTaxa];
-            if (calibrationPtr != NULL && strcmp(calibrationPtr->name,"Unconstrained"))
+		j = 0;
+        for (i=0; i<numTaxa; i++)
+            if (tipCalibration[i].prior != unconstrained)
                 j++;
-            }
+        for (i=0; i<numDefinedConstraints; i++)
+            if (nodeCalibration[i].prior != unconstrained)
+                j++;
         if (j > 0)
             {
 	        MrBayesPrint ("                                                                                 \n");
@@ -8645,22 +8797,19 @@ int GetUserHelp (char *helpTkn)
 		    for (i=0; i<numTaxa+numDefinedConstraints; i++)
 			    {
 			    if (i<numTaxa)
-				    calibrationPtr = &taxaInfo[i].calibration;
+				    calibrationPtr = &tipCalibration[i];
 			    else
-				    calibrationPtr = &constraintCalibration[i-numTaxa];
-			    if (calibrationPtr != NULL && strcmp(calibrationPtr->name,"Unconstrained")!=0)
+				    calibrationPtr = &nodeCalibration[i-numTaxa];
+			    if (calibrationPtr != NULL && calibrationPtr->prior != unconstrained)
 				    {
 				    if (i<numTaxa)
-					    GetNameFromNamestring (tempString,taxaNames,i);
+					    strncpy (tempString, taxaNames[i], 22);
 				    else
-					    GetNameFromNamestring (tempString,constraintNames,i-numTaxa);
-				    for (j=(int)strlen(tempString);j<22;j++)
-					    tempString[j] = ' ';
-				    tempString[22] = '\0';
+					    strncpy (tempString, constraintNames[i-numTaxa], 22);
 				    if (i<numTaxa)
-					    MrBayesPrint ("   %s   Terminal   %s\n", tempString, calibrationPtr->name);
+					    MrBayesPrint ("   %-22.22s   Terminal   %s\n", tempString, calibrationPtr->name);
 				    else
-					    MrBayesPrint ("   %s   Interior   %s\n", tempString, calibrationPtr->name);
+					    MrBayesPrint ("   %-22.22s   Interior   %s\n", tempString, calibrationPtr->name);
 				    }
 			    }
             }
@@ -10091,12 +10240,6 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Tunefreq     -- When a proposal has been tried 'Tunefreq' times, its tuning   \n");
 		MrBayesPrint ("                   parameter is adjusted to reach the target acceptance rate     \n");
 		MrBayesPrint ("                   if 'Autotune' is set to 'Yes'.                                \n");
-		MrBayesPrint ("   Scientific   -- Set this option to 'Yes' to write sampled values to file in   \n");
-		MrBayesPrint ("                   scientific format and to 'No' to write them in fixed format.  \n");
-		MrBayesPrint ("                   Fixed format is easier for humans to read but you risk losing \n");
-		MrBayesPrint ("                   precision for small numbers. For instance, sampled values that\n");
-		MrBayesPrint ("                   are less than 1E-6 will print to file as '0.000000' if fixed  \n");
-		MrBayesPrint ("                   format is used.                                               \n");
 	    MrBayesPrint ("                                                                                 \n");
 		PrintSettings ("Mcmc", NULL);
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -10126,54 +10269,57 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      set <parameter>=<value> ... <parameter>=<value>                            \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Only five parameters can be changed using \"set\". First, you can set         \n");
-		MrBayesPrint ("   the autoclose feature:                                                        \n");
+		MrBayesPrint ("   Available options:                                                            \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set autoclose=<yes/no>                                                     \n");
+		MrBayesPrint ("   Partition    -- Set this option to a valid partition id, either the number or \n");
+		MrBayesPrint ("                   name of a defined partition, to enforce a specific partition- \n");
+		MrBayesPrint ("                   ing of the data. When a data matrix is read in, a partition   \n");
+		MrBayesPrint ("                   called \"Default\" is automatically created. It divides the   \n");
+		MrBayesPrint ("                   data into one part for each data type. If you only have one   \n");
+		MrBayesPrint ("                   data type, DNA for instance, the default partition will not   \n");
+		MrBayesPrint ("                   divide up the data at all. The default partition is always    \n");
+		MrBayesPrint ("                   the first partition, so 'set partition=1' is the same as      \n");
+		MrBayesPrint ("                   'set partition=default'.                                      \n");
+		MrBayesPrint ("   Autoclose    -- If autoclose is set to 'yes', then the program will not prompt\n");
+		MrBayesPrint ("                   you during the course of executing a file. This is particular-\n");
+		MrBayesPrint ("                   ly useful when you run MrBayes in batch mode.                 \n");
+		MrBayesPrint ("   Nowarnings   -- If nowarnings is set to yes, then the program will not prompt \n");
+		MrBayesPrint ("                   you when overwriting or appending an ouput file that is al-   \n");
+		MrBayesPrint ("                   ready present. If 'nowarnings=no' (the default setting), then \n");
+		MrBayesPrint ("                   the program propts the user before overwriting output files.  \n");
+		MrBayesPrint ("   Autoreplace  -- When nowarnings is set to yes, then MrBayes will by default   \n");
+		MrBayesPrint ("                   overwrite output files that already exists. This may cause    \n");
+		MrBayesPrint ("                   irrecoverable loss of previous results if you have not removed\n");
+		MrBayesPrint ("                   or renamed the files from previous runs. To override this be- \n");
+		MrBayesPrint ("                   havior, set autooverwrite to no, in which case new output will\n");
+		MrBayesPrint ("                   be appended to existing files instead.                        \n");
+		MrBayesPrint ("   Quitonerror  -- If quitonerror is set to yes, then the program will quit when \n");
+		MrBayesPrint ("                   an error is encountered, after printing an error message. If  \n");
+		MrBayesPrint ("                   quitonerror is set to no (the default setting), then the      \n");
+		MrBayesPrint ("                   program will wait for additional commands from the command    \n");
+		MrBayesPrint ("                   line after the error message is printed.                      \n");
+		MrBayesPrint ("   Scientific   -- Set this option to 'Yes' to write sampled values to file in   \n");
+		MrBayesPrint ("                   scientific format and to 'No' to write them in fixed format.  \n");
+		MrBayesPrint ("                   Fixed format is easier for humans to read but you risk losing \n");
+		MrBayesPrint ("                   precision for small numbers. For instance, sampled values that\n");
+		MrBayesPrint ("                   are less than 1E-6 will print to file as '0.000000' if fixed  \n");
+		MrBayesPrint ("                   format is used and 'precision' is set to 6.                   \n");
+		MrBayesPrint ("   Precision    -- Precision allows you to set the number of decimals to be prin-\n");
+		MrBayesPrint ("                   ted when sampled values are written to file. Precision must be\n");
+		MrBayesPrint ("                   in the range 3 to 15.                                         \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   If autoclose is set to yes, then the program will not prompt you during       \n");
-		MrBayesPrint ("   the course of executing a file. Second, you can set the partition that        \n");
-		MrBayesPrint ("   is in effect:                                                                 \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set partition=<partition id>                                               \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   A valid partition ID is either a number or a partition name. This command     \n");
-		MrBayesPrint ("   enforces use of a specific partitioning of the data. When the program         \n");
-		MrBayesPrint ("   executes, a default partition (that may not divide the data at all) is        \n");
-		MrBayesPrint ("   created called \"Default\". You can always go back to the original or         \n");
-		MrBayesPrint ("   default partition by typing                                                   \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set partition=default                                                      \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   or                                                                            \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set partition=1                                                            \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Third, you can set the nowarnings feature:                                    \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set nowarnings=<yes/no>                                                    \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   If nowarnings is set to yes, then the program will not prompt you when        \n");
-		MrBayesPrint ("   overwriting or appending an output file that is already present. If           \n");
-		MrBayesPrint ("   nowarnings=no (the default setting) then the program prompts the user         \n");
-		MrBayesPrint ("   before overwriting output files.                                              \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Fourth, you can set the quitonerror feature:                                  \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set quitonerror=<yes/no>                                                   \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   If quitonerror is set to yes, then the program will quit when an error is     \n");
-		MrBayesPrint ("   encountered, after printing an error message. If quitonerror=no (the default  \n");
-		MrBayesPrint ("   setting) then the program will wait for additional commands from the command  \n");
-		MrBayesPrint ("   line after printing the error message.                                        \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Fifth, you can set the autooverwrite feature:                                 \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("      set autooverwrite=<yes/no>                                                 \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   When nowarnings is set to yes, by default MrBayes will overwrite output       \n");
-		MrBayesPrint ("   files. If autooverwrite=no, output will be appendend if the output file       \n");
-		MrBayesPrint ("   already exists. The default is autooverwrite=yes.                             \n"); 
+		MrBayesPrint ("   Current settings:                                                             \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
+		MrBayesPrint ("   --------------------------------------------------------                      \n");
+        MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
+        MrBayesPrint ("   Autoclose       Yes/No                   %s                                   \n", autoClose == YES ? "Yes" : "No");
+        MrBayesPrint ("   Nowarnings      Yes/No                   %s                                   \n", noWarn == YES ? "Yes" : "No");
+        MrBayesPrint ("   Autoreplace     Yes/No                   %s                                   \n", autoOverwrite == YES ? "Yes" : "No");
+        MrBayesPrint ("   Quitonerror     Yes/No                   %s                                   \n", quitOnError == YES ? "Yes" : "No");
+        MrBayesPrint ("   Sientific       Yes/No                   %s                                   \n", scientific == YES ? "Yes" : "No");
+        MrBayesPrint ("   Precision       <number>                 %d                                   \n", precision);
+	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Charset"))
@@ -10608,8 +10754,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   desired, set 'Printtofile' to 'Yes'. The name of the output file is specified \n");
 		MrBayesPrint ("   by setting the 'Outputname' option. When a new matrix is read in or when the  \n");
 		MrBayesPrint ("   'Mcmc' output filename or 'Sump' input filename are changed, the 'Sump'       \n");
-		MrBayesPrint ("   outputname is changed as well. If you want to output to another file than the \n");
-		MrBayesPrint ("   default, make sure you specify the outputname every time you invoke 'Sump'.   \n");
+		MrBayesPrint ("   outputfile is changed as well. If you want to output to another file than the \n");
+		MrBayesPrint ("   default, make sure you specify the outputfile every time you invoke 'Sump'.   \n");
 		MrBayesPrint ("   If the specified outputfile already exists, you will be asked whether         \n");
 		MrBayesPrint ("   you like to overwrite it or append to it. This behavior can be altered using  \n");
 		MrBayesPrint ("   'Set nowarn=yes'; see the help for the 'Set' command.                         \n");
@@ -10683,11 +10829,6 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Filename        <name>                   %s<.p>\n", sumpParams.sumpFileName);
 		else
 			MrBayesPrint ("   Filename        <name>                   %s<.run<i>.p>\n", sumpParams.sumpFileName);
-		MrBayesPrint ("   Printtofile     Yes/No                   %s                                   \n", sumpParams.printToFile == YES ? "Yes" : "No");
-		MrBayesPrint ("   Outputname      <name>                   %s\n", sumpParams.sumpOutfile);
-		MrBayesPrint ("   Plot            Yes/No                   %s                                   \n", sumpParams.plot == YES ? "Yes" : "No");
-		MrBayesPrint ("   Marglike        Yes/No                   %s                                   \n", sumpParams.margLike == YES ? "Yes" : "No");
-		MrBayesPrint ("   Table           Yes/No                   %s                                   \n", sumpParams.table == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -10709,12 +10850,42 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   like \"Comparetree\", \"Sumt\" can compare more than two tree samples and     \n");
 		MrBayesPrint ("   will calculate consensus trees and split frequencies from the pooled samples. \n");
 	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Options:                                                                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
+		MrBayesPrint ("                    samples will be discarded as burnin when calculating summary \n");
+        MrBayesPrint ("                    statistics. The proportion to be discarded is set with       \n");
+		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
+		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
+		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
+		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
+		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
+		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
+		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
+		MrBayesPrint ("                    to NO.                                                       \n");
+		MrBayesPrint ("   BurninFrac    -- Determines the fraction of samples that will be discarded    \n");
+		MrBayesPrint ("                    when summary statistics are calculated. The value of this    \n");
+		MrBayesPrint ("                    option is only relevant when Relburnin is set to YES.        \n");
+		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25 % of  \n");
+		MrBayesPrint ("                    the samples will be discarded.                               \n");
+		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");
+		MrBayesPrint ("                    statistics.                                                  \n");
+		MrBayesPrint ("   Filename1     -- The name of the first tree file to compare.                  \n");
+		MrBayesPrint ("   Filename2     -- The name of the second tree file to compare.                 \n");
+		MrBayesPrint ("   Outputname    -- Name of the file to which 'comparetree' results will be      \n");
+		MrBayesPrint ("                    printed.                                                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Current settings:                                                             \n");
+	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
+        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", comptreeParams.relativeBurnin == YES ? "Yes" : "No");
+		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", comptreeParams.comptBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", comptreeParams.comptBurnInFrac);
+        MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", comptreeParams.minPartFreq);
 		MrBayesPrint ("   Filename1       <name>                   %s                                   \n", comptreeParams.comptFileName1);
 		MrBayesPrint ("   Filename2       <name>                   %s                                   \n", comptreeParams.comptFileName2);
 		MrBayesPrint ("   Outputname      <name>                   %s                                   \n", comptreeParams.comptOutfile);
-		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", comptreeParams.comptBurnIn);
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -10826,19 +10997,6 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Contype       -- Type of consensus tree. 'Halfcompat' results in a 50 % major-\n");
 		MrBayesPrint ("                    ity rule tree, 'Allcompat' adds all compatible groups to such\n");
 		MrBayesPrint ("                    a tree.                                                      \n");
-		MrBayesPrint ("   Phylogramtype -- Type of phylogram. If set to 'nodedepth', the nodes in the   \n");
-		MrBayesPrint ("                    phylogram are placed at their mean depth in the sampled      \n");
-		MrBayesPrint ("                    trees. This is the best option for clock trees, particularly \n");
-		MrBayesPrint ("                    if they are calibrated, in which case the node depths will be\n");
-		MrBayesPrint ("                    measured in user-defined time units. Among other things, this\n");
-		MrBayesPrint ("                    results in the posterior distribution of estimated node ages \n");
-		MrBayesPrint ("                    being displayed in the partition table. For nonclock trees,  \n");
-		MrBayesPrint ("                    a more relevant option may be 'brlens', which uses the mean  \n");
-		MrBayesPrint ("                    branch lengths in the sampled trees to construct the phylo-  \n");
-		MrBayesPrint ("                    gram. If this option is applied to clock trees, the resulting\n");
-		MrBayesPrint ("                    phylogram may not be a clock tree. MrBayes does not try to   \n");
-		MrBayesPrint ("                    guess the type of the sampled trees; you need to specify the \n");
-		MrBayesPrint ("                    appropriate option for the trees you summarize.              \n");
 		MrBayesPrint ("   Calctreeprobs -- Determines whether tree probabilities should be calculated.  \n");
 		MrBayesPrint ("   Showtreeprobs -- Determines whether tree probabilities should be displayed on \n");
 		MrBayesPrint ("                    screen.                                                      \n");
@@ -10870,10 +11028,8 @@ int GetUserHelp (char *helpTkn)
 		else if (sumtParams.numRuns > 1 && sumtParams.numTrees > 1)
 			MrBayesPrint ("   Filename        <name>                   %s<.tree<i>.run<i>.t>\n", sumtParams.sumtFileName);
 		MrBayesPrint ("   Outputname      <name>                   %s<.parts|.con|.trprobs>\n", sumtParams.sumtOutfile);
-		MrBayesPrint ("   Displaygeq      <number>                 %1.2lf                               \n", sumtParams.freqDisplay);
         MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", sumtParams.minPartFreq);
 		MrBayesPrint ("   Contype         Halfcompat/Allcompat     %s\n", sumtParams.sumtConType);
-		MrBayesPrint ("   Phylogramtype   Brlens/Nodedepths        %s\n", sumtParams.phylogramType);
         MrBayesPrint ("   Table           Yes/No                   %s                                  \n", sumtParams.table == YES ? "Yes" : "No");
 		MrBayesPrint ("   Summary         Yes/No                   %s                                  \n", sumtParams.summary == YES ? "Yes" : "No");
 		MrBayesPrint ("   Consensus       Yes/No                   %s                                  \n", sumtParams.showConsensus == YES ? "Yes" : "No");
@@ -11650,17 +11806,17 @@ int ParseCommand (char *s)
 
 {
 
-	int				rc, tokenType, inError, numMatches;
-	char				errStr[100];
+	int				rc, tokenType, inError, numMatches, skipCmd;
+	char			errStr[100];
 
 	cmdStr = s;
 	tokenP = &s[0];
 	
-	inError = NO;
+	inError = skipCmd = NO;
 	do
 		{
 		/* Get the next token. A token is a valid word in a line. Token type is defined in "globals.h". */
-		GetToken (&tokenType);
+		GetToken (token, &tokenType, &tokenP);
 		if (strlen(token) > 0)
 			{
 #			if defined (SHOW_TOKENS)
@@ -11671,10 +11827,9 @@ int ParseCommand (char *s)
 				/* If the token is a left comment "[", then we don't want to
 				   actually process commands until we find a right comment.  */
 				/* The exception is if readComment is set to YES, in which case
-				   we will read the first level of comment */
-				if (readComment == YES && inComment == NO)
-					;
-				else
+				   we will leave it to the parser functions to decide on whether
+                   they want to read the comment or not */
+				if (readComment == NO || inComment == YES)
 					{
 					inComment = YES;
 					numComments++;
@@ -11719,6 +11874,7 @@ int ParseCommand (char *s)
 								}
 							if (strcmp(commandPtr->string, "Execute")==0)
 								{
+                                /* set the tokenizer to recognize quoted strings */
 								readWord = YES;
 								}
 							}
@@ -11797,7 +11953,12 @@ int ParseCommand (char *s)
 									{
 									MrBayesPrint ("   Mcmc run aborted\n");
 									}
-								else
+								else if (rc == SKIP_COMMAND)
+                                    {
+                                    MrBayesPrint ("   Cancelled execution of command\n");
+                                    skipCmd = YES;
+                                    }
+                                else
 									{
 									MrBayesPrint ("%s   Error in command \"%s\"\n", spacer, commandPtr->string);
 									inError = YES;
@@ -11828,7 +11989,7 @@ int ParseCommand (char *s)
 					}
 				else if (inComment == NO && readComment == YES)
                     {
-                    /* This is OK, we just pass through and rely on the command to handle the right comment */
+                    /* This is OK, we just pass through and rely on the command to handle the RIGHTCOMMENT */
                     }
                 else
                     {
@@ -11844,7 +12005,7 @@ int ParseCommand (char *s)
 				}
 			}
 		
-		} while (*token && inError == NO);
+		} while (*token && inError == NO && skipCmd == NO);
 		
 	if (inError == YES)
 		{
@@ -11919,7 +12080,6 @@ void PrintSettings (char *command, ModelInfo *mp)
 		MrBayesPrint ("   Append          Yes/No                %s                                     \n", chainParams.append == YES? "Yes" : "No");
 		MrBayesPrint ("   Autotune        Yes/No                %s                                     \n", chainParams.autotune == YES? "Yes" : "No");
 		MrBayesPrint ("   Tunefreq        <number>              %d                                     \n", chainParams.tuneFreq);;
-		MrBayesPrint ("   Scientific      Yes/No                %s                                     \n", chainParams.scientific == YES? "Yes" : "No");
 	    MrBayesPrint ("                                                                                \n");
 		}
 }
@@ -12125,20 +12285,61 @@ int MBResID (char nuc)
 
 
 
+/* SetPartition: Set model partition */
 void SetPartition (int part)
 
 {
 	int		i, j;
 	
-	/* Set model partition */
+    /* Set model partition */
 	partitionNum = part;
 	numCurrentDivisions = 0;
 	for (i=0; i<numChar; i++)
 		{
-		j = charInfo[i].partitionId[partitionNum-1];
+		j = partitionId[i][part];
 		if (j > numCurrentDivisions)
 			numCurrentDivisions = j;
 		}
+
+    numVars = (int *) SafeRealloc ((void *) numVars, (size_t)(4 * numCurrentDivisions * sizeof(int)));
+    tempLinkUnlinkVec = numVars + numCurrentDivisions;
+    activeParts       = numVars + 2*numCurrentDivisions;
+
+    tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, (size_t)(4 * numCurrentDivisions * sizeof(MrBFlt)));
+
+    activeParams[0] = (int *) SafeRealloc ((void *) (activeParams[0]), (size_t)(NUM_LINKED * numCurrentDivisions * sizeof(int)));
+    for (i=1; i<NUM_LINKED; i++)
+        activeParams[i] = activeParams[0] + i*numDivisions;
+ 
+    linkTable[0] = (int *) SafeRealloc ((void *) (linkTable[0]), (size_t)(3 * NUM_LINKED * numCurrentDivisions * sizeof(int)));
+    tempLinkUnlink[0] = linkTable[0] + NUM_LINKED*numCurrentDivisions;
+    for (i=1; i<NUM_LINKED; i++)
+        {
+        linkTable[i]      = linkTable[0] + i*numCurrentDivisions;
+        tempLinkUnlink[i] = tempLinkUnlink[0] + i*numCurrentDivisions;
+        }
+
+    
+}
+
+
+
+
+
+int SetTaxaFromTranslateTable (void)
+{
+    int     i;
+
+    if (numTaxa != 0)
+        return ERROR;
+
+    for (i=0; i<numTranslates; i++)
+        {
+        AddString(&taxaNames, numTaxa, transFrom[i]);
+        numTaxa++;
+        }
+    
+    return NO_ERROR;
 }
 
 
@@ -12176,7 +12377,7 @@ void SetUpParms (void)
 	PARAM   ( 22, "Temp",           DoMcmcParm,        "\0");
 	PARAM   ( 23, "Filename",       DoMcmcParm,        "\0");
 	PARAM   ( 24, "Burnin",         DoMcmcParm,        "\0");
-	PARAM   ( 25, "Starttree",     DoMcmcParm,         "Random|Current|User|Parsimony|NJ|\0");
+	PARAM   ( 25, "Starttree",      DoMcmcParm,        "Random|Current|User|Parsimony|NJ|\0");
 	PARAM   ( 26, "Nperts",         DoMcmcParm,        "\0");
 	PARAM   ( 27, "Savebrlens",     DoMcmcParm,        "Yes|No|\0");
 	PARAM   ( 28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Aa|\0");
@@ -12250,7 +12451,7 @@ void SetUpParms (void)
 	PARAM   ( 96, "Filename",       DoSumpParm,        "\0");
 	PARAM   ( 97, "Burnin",         DoSumpParm,        "\0");
 	PARAM   ( 98, "Reweight",       DoMcmcParm,        "\0");
-	PARAM   ( 99, "Displaygeq",     DoSumtParm,        "\0");
+	PARAM   ( 99, "Noop",           DoMcmcParm,        "\0");
 	PARAM   (100, "Ny98omega1pr",   DoPrsetParm,       "Beta|Fixed|\0");
 	PARAM   (101, "Ny98omega3pr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   (102, "Codoncatfreqs",  DoPrsetParm,       "Dirichlet|Fixed|\0");
@@ -12284,7 +12485,7 @@ void SetUpParms (void)
 	PARAM   (130, "Burnin",         DoCompareTreeParm, "\0");
 	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|\0");
 	PARAM   (132, "Swapadjacent",   DoMcmcParm,        "Yes|No|\0");
-	PARAM   (133, "Treeheightpr",   DoPrsetParm,       "Gamma|Exponential|Fixed|\0");
+	PARAM   (133, "Treeheightpr",   DoPrsetParm,       "Gamma|Exponential|\0");
 	PARAM   (134, "Ancstates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (135, "Siterates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (136, "Possel",         DoReportParm,      "Yes|No|\0");
@@ -12321,13 +12522,13 @@ void SetUpParms (void)
 	PARAM   (167, "Ordertaxa",	    DoSumtParm,        "Yes|No|\0");
 	PARAM   (168, "Aarevmatpr",     DoPrsetParm,       "Dirichlet|Fixed|\0");
 	PARAM   (169, "Nswaps",         DoMcmcParm,        "\0");
-	PARAM   (170, "Autooverwrite",  DoSetParm,         "Yes|No|\0");
+	PARAM   (170, "Autoreplace",    DoSetParm,         "Yes|No|\0");
 	PARAM   (171, "Npthreads",      DoSetParm,         "\0");
 	PARAM   (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
 	PARAM   (173, "Psigammashapepr",DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (174, "Nupr",           DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (175, "Pfile",			DoSumtParm,        "\0");
-	PARAM   (176, "Phylogramtype",  DoSumtParm,        "Brlens|Nodedepths|\0");
+	PARAM   (176, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (177, "Autocomplete",   DoSumtParm,        "Yes|No|\0");
 	PARAM   (178, "Autocomplete",   DoSumpParm,        "Yes|No|\0");
 	PARAM   (179, "Userlevel",      DoSetParm,         "Standard|Developer|\0");
@@ -12352,7 +12553,7 @@ void SetUpParms (void)
 	PARAM   (198, "Savetrees",      DoMcmcParm,        "Yes|No|\0");
 	PARAM   (199, "Diagnstat",      DoMcmcParm,        "Avgstddev|Maxstddev|\0");
 	PARAM   (200, "Startparams",    DoMcmcParm,        "Reset|Current|\0");
-	PARAM   (201, "Xxxxxxxxxx",     DoBeginParm,       "\0");
+	PARAM   (201, "Characters",     DoBeginParm,       "\0");
 	PARAM   (202, "Startingtrees",  DoMcmcParm,        "\0");
 	PARAM   (203, "Xxxxxxxxxx",     DoUserTreeParm,    "\0");
 	PARAM   (204, "Outputname",     DoSumtParm,        "\0");
@@ -12367,11 +12568,19 @@ void SetUpParms (void)
 	PARAM   (213, "Append",	        DoMcmcParm,        "Yes|No|\0");
 	PARAM   (214, "Autotune",	    DoMcmcParm,        "Yes|No|\0");
 	PARAM   (215, "Tunefreq",	    DoMcmcParm,        "\0");
-	PARAM   (216, "Scientific",	    DoMcmcParm,        "Yes|No|\0");
+	PARAM   (216, "Scientific",	    DoSetParm,         "Yes|No|\0");
 	PARAM   (217, "Siteomega",      DoReportParm,      "Yes|No|\0");
 	PARAM   (218, "Ibrshapepr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (219, "Symbols",        DoFormatParm,      "\0");
 	PARAM   (220, "Equate",         DoFormatParm,      "\0");
+	PARAM   (221, "Relburnin",	    DoCompareTreeParm, "Yes|No|\0");
+	PARAM   (222, "Burninfrac",	    DoCompareTreeParm, "\0");
+	PARAM   (223, "Minpartfreq",	DoCompareTreeParm, "\0");
+	PARAM   (224, "Relburnin",	    DoPlotParm,        "Yes|No|\0");
+	PARAM   (225, "Burninfrac",	    DoPlotParm,        "\0");
+    PARAM   (226, "Taxa",           DoBeginParm,       "\0");
+    PARAM   (227, "Xxxxxxxxxx",     DoBeginParm,       "\0");
+	PARAM   (228, "Xxxxxxxxxx",     DoTaxlabelsParm,   "\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary 
@@ -12432,188 +12641,6 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 		ShowNodes (p->right, indent + 2, isThisTreeRooted);
 		}
    
-}
-
-
-
-
-
-int ShowTree (TreeNode *r, int isThisTreeRooted, int nTips)
-
-{
-
-	int 			i, j, k, nNodes, x, nLines, nLevels, levelDepth, from, to;
-	char			treeLine[SCREENWIDTH2], labelLine[100];
-	TreeNode		**downPass, *p;
-
-	/* get down pass sequence */
-	if (isThisTreeRooted == YES)
-		nNodes = 2 * nTips;
-	else
-		nNodes = 2 * nTips - 2;
-	downPass = (TreeNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(TreeNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("   ERROR: Could not allocate downPass\n");
-		return (ERROR);
-		}
-	i = 0;
-	GetUserDownPass (r, downPass, &i);
-	
-	/* get coordinates */
-	x = 0;
-	nLines = 0;
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		if (p->left == NULL && p->right == NULL)
-			{
-			p->x = x;
-			x += 2;
-			p->y = 0;
-			nLines += 2;
-			}
-		else if (p->left != NULL && p->right != NULL && p->anc != NULL)
-			{
-			p->x = p->left->x + (p->right->x - p->left->x) / 2;
-			if (p->left->y > p->right->y)
-				p->y = p->left->y + 1;
-			else
-				p->y = p->right->y + 1;
-			}
-		else
-			{
-			p->x = x;
-			x += 2;
-			p->y = 0;
-			}
-		} 
-	/* print tree out, line-by-line */
-	levelDepth = SCREENWIDTH / r->left->y;
-	nLevels = r->left->y;
-	for (j=0; j<=nLines-2; j++)
-		{
-		if (j % 2 == 0)
-			{
-			for (i=0; i<nNodes; i++)
-				{
-				p = downPass[i];
-				if (p->left == NULL && p->x == j)
-					{
-					strcpy (labelLine, p->label);
-					}
-				}
-			}
-			
-		for (i=0; i<SCREENWIDTH-1; i++)
-			treeLine[i] = ' ';
-		treeLine[SCREENWIDTH-1] = '\0';
-		for (i=0; i<nNodes; i++)
-			{
-			p = downPass[i];
-			if (p->anc != NULL)
-				{
-				if (p->anc->anc != NULL)
-					{
-					if (p->x == j)
-						{
-						from = (nLevels - p->anc->y) * levelDepth;
-						to   = (nLevels - p->y) * levelDepth;
-						if (p->y == 0)
-							to = SCREENWIDTH-1;
-						if (to >= SCREENWIDTH)
-							to = SCREENWIDTH-1;
-							
-						for (k=from; k<to; k++)
-							treeLine[k] = '-';
-						if (p->anc->left == p)
-							treeLine[from] = '/';
-						else
-							treeLine[from] = '\\';
-						if (p->left != NULL)
-							{
-							treeLine[to] = '+';
-							}
-						if (p->anc->anc == r && p->anc->right == p)
-							{
-							if (isThisTreeRooted == NO)
-								treeLine[to] = '+';
-							else
-								treeLine[from] = '\\';
-							}
-						}
-					else
-						{
-						if (p->left != NULL && p->right != NULL)
-							{
-							if (j < p->x && j > p->left->x)
-								{
-								from = (nLevels - p->y) * levelDepth;
-								treeLine[from] = '|';
-								}
-							else if (j > p->x && j < p->right->x && p->left != NULL)
-								{
-								from = (nLevels - p->y) * levelDepth;
-								treeLine[from] = '|';
-								}
-							}
-						}
-					}
-				else
-					{
-					if (p->x == j)
-						{
-						treeLine[0] = '|'; /* temp */
-						}
-					else if (j < p->x && j > p->left->x)
-						{
-						treeLine[0] = '|';
-						}
-					else if (j > p->x && j < p->right->x)
-						{
-						treeLine[0] = '|';
-						}
-					if (isThisTreeRooted == NO)
-						{
-						if (j > p->x && j <= nLines-2)
-							treeLine[0] = '|';
-						if (j == p->right->x)
-							treeLine[0] = '+';
-						}
-					else
-						{
-						if (j == p->x)
-							treeLine[0] = '+';
-						}
-					}
-				}
-			}
-		treeLine[SCREENWIDTH-1] = '\0';
-		if (j % 2 == 0)
-			MrBayesPrint ("   %s %s\n", treeLine, labelLine);
-		else
-			MrBayesPrint ("   %s \n", treeLine);
-		}
-
-	if (isThisTreeRooted == NO)
-		{
-		for (i=0; i<SCREENWIDTH; i++)
-			treeLine[i] = ' ';
-		treeLine[SCREENWIDTH-1] = '\0';
-		MrBayesPrint ("   |\n");
-		for (k=0; k<SCREENWIDTH; k++)
-			treeLine[k] = '-';
-		treeLine[SCREENWIDTH-1] = '\0';
-		treeLine[0] = '\\';
-		strcpy (labelLine, r->label);
-		labelLine[19] = '\0';
-		MrBayesPrint ("   %s %s\n", treeLine, labelLine);
-		}
-	
-	free (downPass);
-	
-	return (NO_ERROR);
-	   
 }
 
 
@@ -12787,7 +12814,7 @@ int StateCode_Std (int n)
 
 
 
-void WhatVariableExp (unsignedSafeLong exp, char *st)
+void WhatVariableExp (safeLong exp, char *st)
 
 {
 

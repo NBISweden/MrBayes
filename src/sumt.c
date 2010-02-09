@@ -1,7 +1,7 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3.2
  *
- *  copyright 2002-2005
+ *  copyright 2002-2009
  *
  *  John P. Huelsenbeck
  *  Section of Ecology, Behavior and Evolution
@@ -41,83 +41,97 @@ const char sumtID[]="$Id: sumt.c,v 3.49 2009/02/04 13:19:49 ronquist Exp $";
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
+
 #include "mb.h"
 #include "globals.h"
-#include "command.h"
 #include "bayes.h"
+#include "command.h"
 #include "mbmath.h"
-#include "sumt.h"
-#include "sump.h"
 #include "mcmc.h"
 #include "model.h"
+#include "sump.h"
+#include "sumt.h"
+#include "tree.h"
 #include "utils.h"
+
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
 
-typedef struct stnode
+typedef struct partctr
 	{
-	struct stnode	*left, *right, *anc;
-	int				memoryIndex, index, upDateCl, upDateTi, marked, x, y,
-					scalerNode, taxonName;
-	safeLong        scalersSet, clSpace, tiSpace;
-	char			label[100];
-	MrBFlt			length, age;
+	struct partctr	*left, *right;
+	safeLong        *partition;
+    int             totCount;
+    int             *count;
+	MrBFlt          **length;
+    MrBFlt          **height;
+    MrBFlt          **age;
+    MrBFlt          ***eRate;
+	int             ***nEvents;
+	MrBFlt          ***bRate;
 	}
-	SumtNode;
+	PartCtr;
 
+typedef struct treectr
+	{
+	struct treectr	*left, *right;
+    int             count;
+	int             *order;
+	}
+	TreeCtr;
 
-#define	MAX_PARTITIONS					10000
-#define	MAX_TREES						1000
+typedef struct
+    {
+    int     longestLineLength;
+    int     numTreeBlocks;
+    int     lastTreeBlockBegin;
+    int     lastTreeBlockEnd;
+    int     numTreesInLastBlock;
+    }
+    SumtFileInfo;
+
+#define	MAX_PARTITIONS		    10000
+#define	MAX_TREES				1000
+#define ALLOC_LEN               100     /* number of values to allocate each time in partition counter nodes */
 
 #undef	DEBUG_CONTREE
 
 /* local prototypes */
-int      AddTreeToList (int whichList);
-int      AllocBits (int n);
-void     AssignIntPart (safeLong *lft, safeLong *rht, safeLong *p);
-void     AssignTipPart (int n, safeLong *p);
-int		 BrlensVals (int treeNo, char *s, int longestLineLength, int lastTreeBlockBegin, int lastTreeBlockEnd);
-void     CalculateTreeToTreeDistance (int *lst[2], MrBFlt *lngs[2], int nnds, int hasBrlens, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3);
-int      CheckSumtSpecies (void);
-int      ConTree (void);
-int      DerootSumtTree (SumtNode *p, int n, int outGrp);
-int      FindParts (int nodeDepthConTree);
-int      FindTree (void);
-void     FinishSumtTree (SumtNode *p, int *i, int isThisTreeRooted);
-int      FirstTaxonInPartition (safeLong *partition, int length);
-int      FreeBits (void);
-int		 GetClockRates (char *rateName, char *fileName);
-void     GetConDownPass (PolyNode **downPass, PolyNode *p, int *i);
-int      GetPartitions (void);
-void     GetSumtDownPass (SumtNode *p, SumtNode **dp, int *i);
-void     GetSumtToken (int *tokenType);
+PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId);
+TreeCtr *AddSumtTree (TreeCtr *r, int *order);
+PartCtr *AllocPartCtr (void);
+TreeCtr *AllocTreeCtr (void);
+void     CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3);
+int      ConTree (PartCtr **treeParts, int numTreeParts);
+MrBFlt   CppEvolRate (PolyTree *t, PolyNode *p, int eSet);
+int      ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef);
+void     FreePartCtr (PartCtr *r);
+void     FreeTreeCtr (TreeCtr *r);
 int      Label (PolyNode *p, int addIndex, char *label, int maxLength);
 int		 OpenBrlensFile (int treeNo);
 int      OpenComptFiles (void);
 int      OpenSumtFiles (int treeNo);
-int      PartFinder (safeLong *p, MrBFlt bl, int *partID);
-int		 PrintBrlensToFile (void);
-void     PrintParts (FILE *fp, safeLong *p, int nTaxaToShow);
-int      PruneSumt (void);
-int      ReallocateBits (void);
-int      ReallocateFullCompTrees (int whichList);
-int      ReallocateFullTrees (void);
-int      ReorderParts (void);
-int      RootSumtTree (SumtNode *p, int n, int out);
-void     ShowBits (safeLong *p, int nBitsToShow);
-void	 ShowConNodes (int nNodes, PolyNode *root);
-int		 ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int isCalibrated);
+void     PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index);
+int		 PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo);
+void     PrintConTree (FILE *fp, PolyTree *t);
+void     PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts);
+void     PrintRichNodeInfo (FILE *fp, PartCtr *x);
+void     PrintSumtTaxaInfo (void);
+void     Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max);
+void     ResetTaxonSet (void);
+int		 ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth);
 void     ShowParts (FILE *fp, safeLong *p, int nTaxaToShow);
-void     ShowSumtNodes (SumtNode *p, int indent, int isThisTreeRooted);
-void     SortIndParts (int *item, MrBFlt *assoc, int count, int descendingOrder);
-void     SortIndParts2 (int *item, MrBFlt *assoc, int left, int right, int descendingOrder);
-int      SortParts (int *item, int count);
-void     SortParts2 (int *item, int left, int right);
-int      SumtDex (SumtNode *p);
+void     ShowSomeParts (FILE *fp, safeLong *p, int offset, int nTaxaToShow);
+void     SortPartCtr (PartCtr **item, int left, int right);
+void     SortTerminalPartCtr (PartCtr **item, int len);
+void     SortTreeCtr (TreeCtr **item, int left, int right);
+int      StoreSumtTree (PackedTree *treeList, int index, PolyTree *t);
+void     TreeCtrUppass (TreeCtr *r, TreeCtr **uppass, int *index);
 int      TreeProb (void);
 void     WriteConTree (PolyNode *p, FILE *fp, int showSupport);
-void     WriteTree (PolyNode *p, FILE *fp);
+void     WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts);
 
 extern int DoUserTree (void);
 extern int DoUserTreeParm (char *parmName, char *tkn);
@@ -127,797 +141,328 @@ extern int inSumtCommand;
 extern int inComparetreeCommand;
 
 /* local (to this file) */
-char		*sumtTokenP, sumtToken[CMD_STRING_LENGTH];
-int			taxonLongsNeeded, numPartsAllocated, *numFoundOfThisPart, *numFoundOfThisPart1, *numFoundOfThisPart2, numTreesInLastBlock,
-			**numFoundInRunOfPart, numTreePartsFound, numSumtTrees, numSumTreesSampled, numTranslates,
-			whichTranslate, sumtBrlensDef, nextAvailableSumtNode, numSumtTaxa,
-			isFirstSumtNode, foundSumtColon, *sumTaxaFound, numIncludedTaxa,
-			isSumtTreeDefined, isSumtTreeRooted, *partOrigOrder, numAsterices,
-			numTreeParts, *treePartNums, *fullTreePartIds, *numOfThisFullTree, numFullTreesAllocated, numFullTreesFound,
-			*prunedTaxa, *absentTaxa, *firstPrunedTaxa, *firstAbsentTaxa, comparingFiles, fileNum, numCompTrees[2], numCompTreesSampled[2],
-			numFullCompTreesFound[2], numFullCompTreesAllocated[2], *fullCompTreePartIds1, *fullCompTreePartIds2,
-			numBrlens, printingBrlens, runIndex;
-safeLong	*treeBits, *treePartsFound, *taxonMask;
-MrBFlt		*aBrlens, *sBrlens, *treePartLengths, *fullCompTreePartLengths1, *fullCompTreePartLengths2,
-			*brlens, *aWithinBrlens, *sWithinBrlens, *sumB, *sumsqB;
-SumtNode	*pSumtPtr, *qSumtPtr, *sumtRoot, *sumtNodes;
-PolyNode	*conNodes, *conRoot;
-FILE		*fpParts, *fpCon, *fpTrees, *fpCompParts, *fpCompDists, *fpBrlens;
-int			nodeDepthConTree = NO;
-int			treeIndex;
-int			numClockRates;
-MrBFlt		*clockRate;
+int			numUniqueSplitsFound, numUniqueTreesFound, numPackedTrees[2], numAsterices;  /* length of local to this file variables */
+FILE		*fpParts=NULL, *fpTstat=NULL, *fpVstat, *fpCon=NULL, *fpTrees=NULL, *fpDists=NULL;     /* file pointers */
+PartCtr     *partCtrRoot = NULL;        /* binary tree for holding splits info      */
+TreeCtr     *treeCtrRoot = NULL;        /* binary tree for holding unique tree info */
+PackedTree  *packedTreeList[2];         /* list of trees in packed format           */
 
 
 
-int AddTreeToList (int whichList)
+
+PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
 
 {
-
-	int			i, *x;
-	MrBFlt		*y;
+	int		i, n, comp, nLongsNeeded = sumtParams.safeLongsNeeded;
 	
-	if (numTreeParts == 0)
+	if (r == NULL)
 		{
-		MrBayesPrint ("%s   Too few tree partitions\n", spacer);
-		return (ERROR);
-		}
-		
-	if (numFullCompTreesFound[whichList] + 1 > numFullCompTreesAllocated[whichList])
-		{
-		numFullCompTreesAllocated[whichList] += 500;
-		if (ReallocateFullCompTrees (whichList) == ERROR)
-			return (ERROR);
-		}
-		
-	if (whichList == 0)
-		{
-		x = &fullCompTreePartIds1[numFullCompTreesFound[0] * 2 * numTaxa];
-		for (i=0; i<numTreeParts; i++)
-			x[i] = treePartNums[i];
-		y = &fullCompTreePartLengths1[numFullCompTreesFound[0] * 2 * numTaxa];
-		for (i=0; i<numTreeParts; i++)
-			y[i] = treePartLengths[i];
-		numFullCompTreesFound[0]++;
+		/* new partition */
+        /* create a new node */
+        r = AllocPartCtr ();
+		if (r == NULL)
+			return NULL;
+        numUniqueSplitsFound++;
+		for (i=0; i<nLongsNeeded; i++)
+			r->partition[i] = p->partition[i];
+		for (i=0; i<sumtParams.numRuns; i++)
+			r->count[i] = 0;
+		r->left = r->right = NULL;
+        /* record values */
+        if (sumtParams.brlensDef == YES)
+            r->length[runId][0]= p->length;
+        if (sumtParams.isClock == YES)
+            r->height[runId][0]= p->depth;
+        if (sumtParams.isCalibrated == YES)
+            r->age[runId][0]= p->age;
+        for (i=0; i<t->nESets; i++)
+            {
+            r->nEvents[runId][i][0] = t->nEvents[i][p->index];
+            r->eRate[runId][i][0]   = CppEvolRate (t, p, i);
+            }
+        for (i=0; i<t->nBSets; i++)
+            r->bRate[runId][i][0] = t->branchRate[i][p->index];
+		r->count[runId] ++;
+        r->totCount++;
 		}
 	else
 		{
-		x = &fullCompTreePartIds2[numFullCompTreesFound[1] * 2 * numTaxa];
-		for (i=0; i<numTreeParts; i++)
-			x[i] = treePartNums[i];
-		y = &fullCompTreePartLengths2[numFullCompTreesFound[1] * 2 * numTaxa];
-		for (i=0; i<numTreeParts; i++)
-			y[i] = treePartLengths[i];
-		numFullCompTreesFound[1]++;
-		}
-
-	return (NO_ERROR);
-	
-}
-
-
-
-
-
-int AllocBits (int n)
-
-{
-
-	int					i, j, offSet;
-	safeLong				x, y;
-	
-	/* decide how many unsigned ints are going to be needed to
-	   represent a taxon number */
-	taxonLongsNeeded = (n / (sizeof(safeLong)*8)) + 1;
-	
-	/* how many partitions have been allocated */
-	numPartsAllocated = MAX_PARTITIONS;
-	
-	/* how many trees (partition number information) have been allocated */
-	numFullTreesAllocated = MAX_TREES;
-	numFullCompTreesAllocated[0] = MAX_TREES;
-	numFullCompTreesAllocated[1] = MAX_TREES;
-	
-	/* allocate memory */
-	if (memAllocs[ALLOC_TREEBITS] == YES)
-		{
-		MrBayesPrint ("%s   treeBits not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	treeBits = NULL;
-	treePartNums = NULL;
-	treePartLengths = NULL;
-	treeBits = (safeLong *)SafeMalloc((size_t) (2 * n * taxonLongsNeeded * sizeof(safeLong)));
-	treePartNums = (int *)SafeMalloc((size_t) (2 * n * sizeof(int)));
-	if (!treeBits || !treePartNums)
-		{
-		MrBayesPrint ("%s   Problem allocating treeBits (%d)\n", spacer, 2 * n * taxonLongsNeeded * sizeof(safeLong));
-		goto errorExit;
-		}
-	treePartLengths = (MrBFlt *)SafeMalloc((size_t) (2 * n * sizeof(MrBFlt)));
-	if (!treePartLengths)
-		{
-		MrBayesPrint ("%s   Problem allocating treePartLengths (%d)\n", spacer, 2 * n * sizeof(MrBFlt));
-		goto errorExit;
-		}
-	memAllocs[ALLOC_TREEBITS] = YES;
-	
-	if (memAllocs[ALLOC_FULLTREEINFO] == YES)
-		{
-		MrBayesPrint ("%s   fullTreePartIds not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	fullTreePartIds = numOfThisFullTree = NULL;
-	fullTreePartIds = (int *)SafeMalloc((size_t) (2 * numTaxa * MAX_TREES * sizeof(int)));
-	if (!fullTreePartIds)
-		{
-		MrBayesPrint ("%s   Problem allocating fullTreePartIds (%d)\n", spacer, 2 * n * MAX_TREES * sizeof(int));
-		goto errorExit;
-		}
-	numOfThisFullTree = (int *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(int)));
-	if (!numOfThisFullTree)
-		{
-		MrBayesPrint ("%s   Problem allocating numOfThisFullTree (%d)\n", spacer, MAX_TREES * sizeof(int));
-		goto errorExit;
-		}
-	memAllocs[ALLOC_FULLTREEINFO] = YES;
-
-	if (memAllocs[ALLOC_TREEPARTS] == YES)
-		{
-		MrBayesPrint ("%s   treePartsFound not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	treePartsFound = NULL;
-	treePartsFound = (safeLong *)SafeMalloc((size_t) (taxonLongsNeeded * MAX_PARTITIONS * sizeof(safeLong)));
-	if (!treePartsFound)
-		{
-		MrBayesPrint ("%s   Problem allocating treePartsFound (%d)\n", spacer, taxonLongsNeeded * MAX_PARTITIONS * sizeof(safeLong));
-		goto errorExit;
-		}
-	memAllocs[ALLOC_TREEPARTS] = YES;
-
-	if (memAllocs[ALLOC_NUMOFPART] == YES)
-		{
-		MrBayesPrint ("%s   numFoundOfThisPart not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	numFoundOfThisPart = NULL;
-	numFoundOfThisPart = (int *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(int)));
-	if (!numFoundOfThisPart)
-		{
-		MrBayesPrint ("%s   Problem allocating numFoundOfThisPart (%d)\n", spacer, MAX_PARTITIONS * sizeof(int));
-		goto errorExit;
-		}
-
-	if (sumtParams.numRuns > 1)
-		{
-		if (memAllocs[ALLOC_NUMINRUNOFPART] == YES)
+        for (i=0; i<nLongsNeeded; i++)
 			{
-			MrBayesPrint ("%s   numFoundOfThisPart not free in AllocBits\n", spacer);
-			goto errorExit;
+			if (r->partition[i] != p->partition[i])
+				break;
 			}
-		numFoundInRunOfPart = (int **) calloc ((size_t)(sumtParams.numRuns), sizeof (int *));
-		if (!numFoundInRunOfPart)
+		
+		if (i == nLongsNeeded)
+			comp = 0;
+		else if (r->partition[i] < p->partition[i])
+			comp = -1;
+		else
+			comp = 1;
+		
+		if (comp == 0)			/* repeated partition */
+            {
+            n = r->count[runId];
+            /* check if we need to allocate more space */
+            if (n % ALLOC_LEN == 0)
+                {
+                /* allocate more space */
+                if (sumtParams.brlensDef == YES)
+                    r->length[runId] = (MrBFlt *) realloc ((void *)r->length[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                if (sumtParams.isClock == YES)
+                    r->height[runId] = (MrBFlt *) realloc ((void *)r->height[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                if (sumtParams.isCalibrated == YES)
+                    r->age[runId] = (MrBFlt *) realloc ((void *)r->age[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                if (sumtParams.nESets > 0)
+                    {
+                    for (i=0; i<sumtParams.nESets; i++)
+                        {
+                        r->nEvents[runId][i] = (int *) calloc ((size_t)(n+ALLOC_LEN), sizeof(int));
+                        r->eRate[runId][i]   = (MrBFlt *) calloc ((size_t)(n+ALLOC_LEN), sizeof(MrBFlt));
+                        }
+                    }
+                if (sumtParams.nBSets > 0)
+                    {
+                    for (i=0; i<sumtParams.nBSets; i++)
+                        r->bRate[runId][i]   = (MrBFlt *) calloc ((size_t)(n+ALLOC_LEN), sizeof(MrBFlt));
+                    }
+                }
+            /* record values */
+            r->count[runId]++;
+            r->totCount++;
+            if (sumtParams.brlensDef == YES)
+                r->length[runId][n]= p->length;
+            if (sumtParams.isClock == YES)
+                r->height[runId][n]= p->depth;
+            if (sumtParams.isCalibrated == YES)
+                r->age[runId][n]= p->age;
+            if (sumtParams.nESets > 0)
+                {
+                for (i=0; i<sumtParams.nESets; i++)
+                    {
+                    r->nEvents[runId][i][n] = t->nEvents[i][p->index];
+                    r->eRate[runId][i][n]   = CppEvolRate (t, p, i);
+                    }
+                }
+            if (sumtParams.nBSets > 0)
+                {
+                for (i=0; i<sumtParams.nBSets; i++)
+                    r->bRate[runId][i][n]   = t->branchRate[i][p->index];
+                }
+            }
+		else if (comp < 0)		/* greater than -> into left subtree */
 			{
-			MrBayesPrint ("%s   Problem allocating numFoundInRunOfPart (%d bytes)\n", spacer, sumtParams.numRuns * sizeof (int *));
-			goto errorExit;
-			}
-		for (i=0; i<sumtParams.numRuns; i++)
-			{
-			numFoundInRunOfPart[i] = (int *) SafeMalloc ((size_t) (MAX_PARTITIONS * sizeof(int)));
-			if (!numFoundInRunOfPart[i])
+			if ((r->left = AddSumtPartition (r->left, t, p, runId)) == NULL)
 				{
-				MrBayesPrint ("%s   Problem allocating numFoundInRunOfPart[%d] (%d bytes)\n", spacer, i, MAX_PARTITIONS * sizeof (int *));
-				goto errorExit;
+				FreePartCtr (r);
+				return NULL;
 				}
 			}
-		memAllocs[ALLOC_NUMINRUNOFPART] = YES;
-		}
-
-	if (comparingFiles == YES)
-		{
-		numFoundOfThisPart1 = numFoundOfThisPart2 = NULL;
-		numFoundOfThisPart1 = (int *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(int)));
-		if (!numFoundOfThisPart1)
-			{
-			MrBayesPrint ("%s   Problem allocating numFoundOfThisPart1 (%d)\n", spacer, MAX_PARTITIONS * sizeof(int));
-			goto errorExit;
-			}
-		numFoundOfThisPart2 = (int *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(int)));
-		if (!numFoundOfThisPart2)
-			{
-			MrBayesPrint ("%s   Problem allocating numFoundOfThisPart2 (%d)\n", spacer, MAX_PARTITIONS * sizeof(int));
-			goto errorExit;
-			}
-		}
-	memAllocs[ALLOC_NUMOFPART] = YES;
-	
-	if (comparingFiles == YES)
-		{
-		if (memAllocs[ALLOC_FULLCOMPTREEINFO] == YES)
-			{
-			MrBayesPrint ("%s   fullTreePartIds1 not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		fullCompTreePartIds1 = fullCompTreePartIds2 = NULL;
-		fullCompTreePartLengths1 = fullCompTreePartLengths2 = NULL;
-		fullCompTreePartIds1 = (int *)SafeMalloc((size_t) (2 * numTaxa * MAX_TREES * sizeof(int)));
-		if (!fullCompTreePartIds1)
-			{
-			MrBayesPrint ("%s   Problem allocating fullCompTreePartIds1 (%d)\n", spacer, 2 * n * MAX_TREES * sizeof(int));
-			goto errorExit;
-			}
-		fullCompTreePartIds2 = (int *)SafeMalloc((size_t) (2 * numTaxa * MAX_TREES * sizeof(int)));
-		if (!fullCompTreePartIds2)
-			{
-			MrBayesPrint ("%s   Problem allocating fullCompTreePartIds2 (%d)\n", spacer, 2 * n * MAX_TREES * sizeof(int));
-			goto errorExit;
-			}
-		fullCompTreePartLengths1 = (MrBFlt *)SafeMalloc((size_t) (2 * numTaxa * MAX_TREES * sizeof(MrBFlt)));
-		if (!fullCompTreePartLengths1)
-			{
-			MrBayesPrint ("%s   Problem allocating fullCompTreePartLengths1 (%d)\n", spacer, 2 * n * MAX_TREES * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		fullCompTreePartLengths2 = (MrBFlt *)SafeMalloc((size_t) (2 * numTaxa * MAX_TREES * sizeof(MrBFlt)));
-		if (!fullCompTreePartLengths2)
-			{
-			MrBayesPrint ("%s   Problem allocating fullCompTreePartLengths2 (%d)\n", spacer, 2 * n * MAX_TREES * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_FULLCOMPTREEINFO] = YES;
-		}	
-
-	if (sumtBrlensDef == YES)
-		{
-		if (memAllocs[ALLOC_ABRLENS] == YES)
-			{
-			MrBayesPrint ("%s   aBrlens not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		aBrlens = NULL;
-		aBrlens = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!aBrlens)
-			{
-			MrBayesPrint ("%s   Problem allocating aBrlens (%d)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_ABRLENS] = YES;
-		
-		if (memAllocs[ALLOC_SBRLENS] == YES)
-			{
-			MrBayesPrint ("%s   sBrlens not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		sBrlens = NULL;
-		sBrlens = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!sBrlens)
-			{
-			MrBayesPrint ("%s   Problem allocating sBrlens (%d)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_SBRLENS] = YES;
-		}
-
-	if (sumtParams.numRuns > 1 && sumtBrlensDef == YES)
-		{
-		if (memAllocs[ALLOC_A_WITHIN_BRLENS] == YES)
-			{
-			MrBayesPrint ("%s   aWithinBrlens not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		aWithinBrlens = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!aWithinBrlens)
-			{
-			MrBayesPrint ("%s   Problem allocating aWithinBrlens (%d)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_A_WITHIN_BRLENS] = YES;
-		
-		if (memAllocs[ALLOC_S_WITHIN_BRLENS] == YES)
-			{
-			MrBayesPrint ("%s   sWithinBrlens not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		sWithinBrlens = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!sWithinBrlens)
-			{
-			MrBayesPrint ("%s   Problem allocating sWithinBrlens (%d)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_S_WITHIN_BRLENS] = YES;
-		
-		if (memAllocs[ALLOC_SUMB] == YES)
-			{
-			MrBayesPrint ("%s   sumB not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		sumB = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!sumB)
-			{
-			MrBayesPrint ("%s   Problem allocating sumB (%d bytes)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_SUMB] = YES;
-
-		if (memAllocs[ALLOC_SUMSQB] == YES)
-			{
-			MrBayesPrint ("%s   sumsqB not free in AllocBits\n", spacer);
-			goto errorExit;
-			}
-		sumsqB = (MrBFlt *)SafeMalloc((size_t) (MAX_PARTITIONS * sizeof(MrBFlt)));
-		if (!sumsqB)
-			{
-			MrBayesPrint ("%s   Problem allocating sumsqB (%d bytes)\n", spacer, MAX_PARTITIONS * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		memAllocs[ALLOC_SUMSQB] = YES;
-		}
-
-	if (memAllocs[ALLOC_TAXAFOUND] == YES)
-		{
-		MrBayesPrint ("%s   sumTaxaFound not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	sumTaxaFound = NULL;
-	sumTaxaFound = (int *)SafeMalloc((size_t) (numTaxa * sizeof(int)));
-	if (!sumTaxaFound)
-		{
-		MrBayesPrint ("%s   Problem allocating sumTaxaFound (%d)\n", spacer, numTaxa * sizeof(int));
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa; i++)
-		sumTaxaFound[i] = NO;
-	memAllocs[ALLOC_TAXAFOUND] = YES;
-
-	if (memAllocs[ALLOC_TAXONMASK] == YES)
-		{
-		MrBayesPrint ("%s   taxonMask not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	taxonMask = NULL;
-	taxonMask = (safeLong *)SafeMalloc((size_t) (taxonLongsNeeded * sizeof(safeLong)));
-	if (!taxonMask)
-		{
-		MrBayesPrint ("%s   Problem allocating taxonMask (%d)\n", spacer, taxonLongsNeeded * sizeof(safeLong));
-		goto errorExit;
-		}
-	memAllocs[ALLOC_TAXONMASK] = YES;
-	
-	if (memAllocs[ALLOC_PRUNEINFO] == YES)
-		{
-		MrBayesPrint ("%s   prunedTaxa not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	prunedTaxa = NULL;
-	if (sumtParams.numRuns > 1)
-		i = 4 * numTaxa;
-	else
-		i = 2 * numTaxa;
-	prunedTaxa = (int *)SafeMalloc((size_t) (i * sizeof(int)));
-	if (!prunedTaxa)
-		{
-		MrBayesPrint ("%s   Problem allocating prunedTaxa (%d)\n", spacer, i * sizeof(safeLong));
-		goto errorExit;
-		}
-	absentTaxa = prunedTaxa + numTaxa;
-	if (sumtParams.numRuns > 1)
-		{
-		firstPrunedTaxa = prunedTaxa + 2 * numTaxa;
-		firstAbsentTaxa = prunedTaxa + 3 * numTaxa;
-		}
-	memAllocs[ALLOC_PRUNEINFO] = YES;
-		
-	if (memAllocs[ALLOC_SUMTTREE] == YES)
-		{
-		MrBayesPrint ("%s   sumtNodes not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	sumtNodes = NULL;
-	sumtNodes = (SumtNode *)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode)));
-	if (!sumtNodes)
-		{
-		MrBayesPrint ("%s   Problem allocating sumtNodes (%d)\n", spacer, 2 * numTaxa * sizeof(SumtNode));
-		goto errorExit;
-		}
-	for (i=0; i<2*numTaxa; i++)
-		{
-		sumtNodes[i].left = sumtNodes[i].right = sumtNodes[i].anc = NULL;
-		sumtNodes[i].memoryIndex = i;
-		sumtNodes[i].length = 0.0;
-		sumtNodes[i].marked = NO;
-		sumtNodes[i].index = 0;
-		}
-	sumtRoot = NULL;
-	isSumtTreeDefined = NO;
-	memAllocs[ALLOC_SUMTTREE] = YES;
-
-	/* initialize */
-	for (i=0; i<2*n*taxonLongsNeeded; i++)
-		treeBits[i] = 0;
-	for (i=0; i<taxonLongsNeeded*MAX_PARTITIONS; i++)
-		treePartsFound[i] = 0;
-	for (i=0; i<MAX_PARTITIONS; i++)
-		numFoundOfThisPart[i] = 0;
-	if (sumtParams.numRuns > 1)
-		{
-		for (i=0; i<sumtParams.numRuns; i++)
-			for (j=0; j<MAX_PARTITIONS; j++)
-				numFoundInRunOfPart[i][j] = 0;
-		}
-	
-	if (comparingFiles == YES)
-		{
-		for (i=0; i<MAX_PARTITIONS; i++)
-			numFoundOfThisPart1[i] = numFoundOfThisPart2[i] = 0;
-		}
-	
-	if (sumtBrlensDef == YES)
-		{
-		for (i=0; i<MAX_PARTITIONS; i++)
-			aBrlens[i] = sBrlens[i] = 0.0;
-		if (sumtParams.numRuns > 1)
-			{
-			for (i=0; i<MAX_PARTITIONS; i++)
-				aWithinBrlens[i] = sWithinBrlens[i] = sumB[i] = sumsqB[i] = 0.0;
-			}
-		}
-	numTreePartsFound = 0;
-	numFullTreesFound = 0;
-	for (i=0; i<taxonLongsNeeded; i++)
-		taxonMask[i] = 0;
-
-	for (i=0; i<n; i++)
-		{
-		offSet = 0;
-		while ((i+1) > nBitsInALong*(offSet+1))
-			offSet++;
-		x = 1 << (i - offSet*nBitsInALong);
-		y = taxonMask[offSet];
-		taxonMask[offSet] = x | y;
-		}
-
-	for (i=0; i<numTaxa; i++)
-		absentTaxa[i] = prunedTaxa[i] = NO;
-	if (sumtParams.numRuns > 1)
-		{
-		for (i=0; i<numTaxa; i++)
-			firstAbsentTaxa[i] = firstPrunedTaxa[i] = NO;
-		}
-
-	return (NO_ERROR);
-
-	errorExit:
-		FreeBits();
-		return (ERROR);
-	
-}
-
-
-
-
-
-
-void AssignTipPart (int n, safeLong *p)
-
-{
-
-	safeLong		x;
-
-	p += n / nBitsInALong;
-	x = 1 << (n % nBitsInALong);
-	(*p) ^= x;
-	
-}
-
-
-
-
-
-void AssignIntPart (safeLong *lft, safeLong *rht, safeLong *p)
-
-{
-
-	int			i;
-	
-	for (i=0; i<taxonLongsNeeded; i++)
-		{
-		(*p) = ((*lft) | (*rht));
-		p++;
-		lft++;
-		rht++;
-		}
-	
-}
-
-
-
-
-
-int BrlensVals (int treeNo, char *s, int longestLineLength, int lastTreeBlockBegin, int lastTreeBlockEnd)
-
-{
-	int		i, runNo, foundBegin, inTreeBlock, inSumtComment, lineNum, tokenType;
-	FILE	*fp;
-	char	fileName[100];
-
-	/* Calculate number of branch lengths to print to file */
-	for (i=0; (MrBFlt)numFoundOfThisPart[i]/(sumtParams.numRuns * numSumTreesSampled) >= sumtParams.brlensFreqDisplay; i++)
-		;
-	numBrlens = i;
-	if (numBrlens < 1)
-		{
-		MrBayesPrint ("%s   No branch lengths above the frequency to display (%lf).", spacer, sumtParams.brlensFreqDisplay);
-		return ERROR;
-		}
-
-	/* Open brlens file */
-	if (OpenBrlensFile(treeNo) == ERROR)
-		return ERROR;
-
-	/* allocate space for brlens */
-	brlens = (MrBFlt *) SafeMalloc (numBrlens * sizeof(MrBFlt));
-	if (brlens == NULL)
-		{
-		SafeFclose (&fpBrlens);
-		return ERROR;
-		}
-	for (i=0; i<numBrlens; i++)
-		brlens[i] = -1.0;
-		
-	/* Change global setting so that DoTree does the right thing */
-	printingBrlens = YES;
-
-	for (runNo = 0; runNo < sumtParams.numRuns; runNo++)
-		{
-		/* Open tree file */
-		if (sumtParams.numRuns == 1 && sumtParams.numTrees == 1)
-			sprintf (fileName, "%s.t", sumtParams.sumtFileName);
-		else if (sumtParams.numRuns > 1 && sumtParams.numTrees == 1)
-			sprintf (fileName, "%s.run%d.t", sumtParams.sumtFileName, runNo+1);
-		else if (sumtParams.numRuns == 1 && sumtParams.numTrees > 1)
-			sprintf (fileName, "%s.tree%d.t", sumtParams.sumtFileName, treeNo+1);
-		else if (sumtParams.numRuns > 1 && sumtParams.numTrees > 1)
-			sprintf (fileName, "%s.tree%d.run%d.t", sumtParams.sumtFileName, treeNo+1, runNo+1);
-		
-		/* open binary file */
-		if ((fp = OpenBinaryFileR (fileName)) == NULL)
-			{
-			SafeFclose (&fpBrlens);
-			free (brlens);
-			return ERROR;
-			}
-		
-		/* find length of longest line */
-		longestLineLength = LongestLine (fp);
-		longestLineLength += 10;
-	
-		/* allocate a string long enough to hold a line */
-		if (runNo == 0)
-			s = (char *) SafeMalloc (sizeof (char) * longestLineLength);
 		else
 			{
-			free (s);
-			s = (char *) SafeMalloc (sizeof (char) * longestLineLength);
-			}
-
-		if (!s)
-			{
-			free (brlens);
-			SafeFclose (&fpBrlens);
-			return ERROR;
-			}
-
-		/* close binary file */
-		SafeFclose (&fp);
-	
-		/* open text file */
-		if ((fp = OpenTextFileR (fileName)) == NULL)
-			{
-			SafeFclose (&fpBrlens);
-			free (brlens);
-			free (s);
-			return ERROR;
-			}
-
-		/* Check file for appropriate blocks. We want to find the last tree block
-			in the file and start from there. */
-		foundBegin = inTreeBlock = inSumtComment = NO;
-		lineNum = lastTreeBlockBegin = lastTreeBlockEnd = 0;
-		while (fgets (s, longestLineLength, fp) != NULL)
-			{
-			sumtTokenP = &s[0];
-			do
+			/* smaller than -> into right subtree */
+			if ((r->right = AddSumtPartition (r->right, t, p, runId)) == NULL)
 				{
-				GetSumtToken (&tokenType);
-				if (IsSame("[", sumtToken) == SAME)
-					inSumtComment = YES;
-				if (IsSame("]", sumtToken) == SAME)
-					inSumtComment = NO;
-					
-				if (inSumtComment == NO)
-					{
-					if (foundBegin == YES)
-						{
-						if (IsSame("Trees", sumtToken) == SAME)
-							{
-							inTreeBlock = YES;
-							foundBegin = NO;
-							lastTreeBlockBegin = lineNum;
-							}
-						}
-					else
-						{
-						if (IsSame("Begin", sumtToken) == SAME)
-							{
-							foundBegin = YES;
-							}
-						else if (IsSame("End", sumtToken) == SAME)
-							{
-							if (inTreeBlock == YES)
-								{
-								inTreeBlock = NO;
-								lastTreeBlockEnd = lineNum;
-								}
-							}
-						}
-					}
-					
-				} while (*sumtToken);
-			lineNum++;
-			}
-				
-		/* Now fast rewind tree file */
-		(void)fseek(fp, 0L, 0);	
-	
-		/* ...and fast forward to beginning of last tree block. */
-		for (i=0; i<lastTreeBlockBegin+1; i++)
-			fgets (s, longestLineLength, fp);	
-	
-		/* Set up cheap status bar. */
-		if (runNo ==0)
-			{
-			MrBayesPrint ("\n%s   Rereading trees to process branch length values. Reading status:\n\n", spacer);
-			MrBayesPrint ("%s   0      10      20      30      40      50      60      70      80      90     100\n", spacer);
-			MrBayesPrint ("%s   v-------v-------v-------v-------v-------v-------v-------v-------v-------v-------v\n", spacer);
-			MrBayesPrint ("%s   *", spacer);
-			numAsterices = 0;
-			}
-
-		/* Parse file, tree-by-tree. We are only parsing lines between the "begin trees" and "end" statements. */
-		expecting = Expecting(COMMAND);
-		numSumtTrees = numSumTreesSampled = 0;
-		inTreesBlock = YES;
-		ResetTranslateTable();
-		for (i=0; i<lastTreeBlockEnd - lastTreeBlockBegin - 1; i++)
-			{
-			fgets (s, longestLineLength, fp);
-			/*MrBayesPrint ("%s", s);*/
-			if (ParseCommand (s) == ERROR)
-				{
-				free (brlens);
-				SafeFclose (&fpBrlens);
-				return ERROR;
+				FreePartCtr (r);
+				return NULL;
 				}
 			}
-		inTreesBlock = NO;
-		
-		/* Finish cheap status bar. */
-		if (runNo == sumtParams.numRuns - 1)
-			{
-			if (numAsterices < 80)
-				for (i=0; i<80 - numAsterices; i++)
-					MrBayesPrint ("*");
-			MrBayesPrint ("\n\n");
-			}
+		}
 
-		SafeFclose (&fp);
-		}	/* next file */
-		
-	/* reset status variable */
-	printingBrlens = NO;
-
-	/* close brlens file */
-	SafeFclose (&fpBrlens);
-	MrBayesPrint ("%s   Branch length values printed to file.\n", spacer);
-
-	return NO_ERROR;
+	return r;
 }
 
 
 
 
 
-void CalculateTreeToTreeDistance (int *lst[2], MrBFlt *lngs[2], int nnds, int hasBrlens, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3)
+TreeCtr *AddSumtTree (TreeCtr *r, int *order)
+
+{
+    int     i, comp;
+
+    if (r == NULL)
+		{
+		/* new tree */
+        /* create a new node */
+        r = AllocTreeCtr();
+        if (!r)
+            return NULL;
+        numUniqueTreesFound++;
+        for (i=0; i<sumtParams.orderLen; i++)
+            r->order[i] = order[i];
+        r->count = 1;
+		}
+	else
+		{
+        for (i=0; i<sumtParams.orderLen; i++)
+            if (r->order[i] != order[i])
+                break;
+        
+        if (i==sumtParams.orderLen)
+            comp = 0;
+        else if (order[i] < r->order[i])
+            comp = 1;
+        else
+            comp = -1;
+        
+		if (comp == 0)			/* repeated partition */
+            r->count++;
+		else if (comp < 0)		/* greater than -> into left subtree */
+			{
+			if ((r->left = AddSumtTree (r->left, order)) == NULL)
+				{
+				FreeTreeCtr (r);
+				return NULL;
+				}
+			}
+		else
+			{
+			/* smaller than -> into right subtree */
+			if ((r->right = AddSumtTree (r->right, order)) == NULL)
+				{
+				FreeTreeCtr (r);
+				return NULL;
+				}
+			}
+		}
+
+	return r;
+}
+
+
+
+
+
+/* AllocPartCtr: Allocate space for one partition counter node using info in sumtParams */
+PartCtr *AllocPartCtr ()
 
 {
 
-	int			i, j, foundPart, *identifiedParts, *list1, *list2;
-	MrBFlt		*lengths1, *lengths2, tl1=0.0, tl2=0.0, diff1, diff2;
+    int             i, j;
+	PartCtr         *r;
+	
+    /* allocate basic stuff */
+    r = (PartCtr *) calloc ((size_t) 1, sizeof(PartCtr));
+    r->left = r->right = NULL;
+    r->partition = (safeLong *) calloc ((size_t) sumtParams.safeLongsNeeded, sizeof(safeLong));
+    r->count = (int *) calloc ((size_t) sumtParams.numRuns, sizeof (int));
+    if (sumtParams.brlensDef)
+        {
+        r->length = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        for (i=0; i<sumtParams.numRuns; i++)
+            r->length[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+        }
+    if (sumtParams.isClock)
+        {
+        r->height = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        for (i=0; i<sumtParams.numRuns; i++)
+            r->height[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+        }
+    if (sumtParams.isCalibrated)
+        {
+        r->age = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        for (i=0; i<sumtParams.numRuns; i++)
+            r->age[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+        }
+
+    /* allocate relaxed clock parameters: eRate, nEvents, bRate */
+    if (sumtParams.nESets > 0)
+        {
+        r->nEvents = (int    ***) calloc ((size_t) sumtParams.numRuns, sizeof(int **));
+        r->eRate   = (MrBFlt ***) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt **));
+        }
+    if (sumtParams.nBSets > 0)
+        r->bRate = (MrBFlt ***) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt **));
+    for (i=0; i<sumtParams.numRuns; i++)
+        {
+        if (sumtParams.nESets > 0)
+            {
+            r->nEvents[i] = (int    **) calloc ((size_t) sumtParams.nESets, sizeof(int *));
+            r->eRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.nESets, sizeof(MrBFlt *));
+            for (j=0; j<sumtParams.nESets; j++)
+                {
+                r->nEvents[i][j] = (int    *) calloc ((size_t) ALLOC_LEN, sizeof(int));
+                r->eRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+                }
+            }
+        if (sumtParams.nBSets > 0)
+            {
+            r->bRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt *));
+            for (j=0; j<sumtParams.nBSets; j++)
+                r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+            }
+        }
+
+    return r;
+}
+
+
+
+
+
+/* AllocTreeCtr: Allocate space for a tree counter node using info in sumtParams struct*/
+TreeCtr *AllocTreeCtr ()
+
+{
+	TreeCtr     *r;
+
+    r = (TreeCtr *) calloc ((size_t) 1, sizeof(TreeCtr));
+    
+    r->left = r->right = NULL;
+    
+    r->order = (int *) calloc ((size_t) sumtParams.orderLen, sizeof(int));
+
+    return r;
+}
+
+
+
+
+
+void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3)
+{
+	int			i, j, k;
+	MrBFlt		treeLen1=0.0, treeLen2=0.0;
+    TreeNode    *p, *q;
 	
 	(*d1) = (*d2) = (*d3) = 0.0;
 
-	list1 = lst[0];
-	list2 = lst[1];
-	lengths1 = lngs[0];
-	lengths2 = lngs[1];
+    /* set distance-based measures to max value */
+    if (sumtParams.brlensDef == YES)
+        {
+        treeLen1 = TreeLen(tree1);
+        treeLen2 = TreeLen(tree2);
+        (*d2) = treeLen1 + treeLen2;
+        (*d3) = 2.0;
+        }
 
-	identifiedParts = (int *)SafeMalloc((size_t) (nnds * sizeof(int)));
-	if (!identifiedParts)
+	/* now we can get distances in a single pass */
+    for (i=0; i<tree1->nNodes; i++)
 		{
-		MrBayesPrint ("%s   Could not allocate identifiedParts\n", spacer);
-		}
-	for (i=0; i<nnds; i++)
-		identifiedParts[i] = 0;
-		
-	if (hasBrlens == YES)
-		{
-		tl1 = tl2 = 0.0;
-		for (i=0; i<nnds; i++)
+        p = tree1->allDownPass[i];
+		for (j=0; j<tree2->nNodes; j++)
 			{
-			tl1 += lengths1[i];
-			tl2 += lengths2[i];
-			}
-		}
-	
-	for (i=0; i<nnds; i++)
-		{
-		foundPart = NO;
-		for (j=0; j<nnds; j++)
-			{
-			if (list2[j] == list1[i])
+            q = tree2->allDownPass[j];
+			for (k=0; k<sumtParams.safeLongsNeeded; k++)
+                if (p->partition[k] != q->partition[k])
+                    break;
+			if (k == sumtParams.safeLongsNeeded)
+                break;
+            }
+        if (j < tree2->nNodes)
+            {
+			/* match */
+            if (sumtParams.brlensDef == YES)
 				{
-				foundPart = YES;
-				break;
-				}
-			}
-		if (foundPart == YES)
+			    (*d2) -= (p->length + q->length - fabs(p->length - q->length));
+				(*d3) -= (p->length/treeLen1 + q->length/treeLen2 - fabs(p->length/treeLen1 - q->length/treeLen2));
+                }
+            }
+    	else /* if (k < sumtParams.safeLongsNeeded) */
 			{
-			if (hasBrlens == YES)
-				{
-				diff1 = lengths1[i] - lengths2[j];
-				if (diff1 < 0.0)
-					diff1 = -diff1;
-				diff2 = lengths1[i]/tl1 - lengths2[j]/tl2;
-				if (diff2 < 0.0)
-					diff2 = -diff2;
-				(*d2) += diff1;
-				(*d3) += diff2;
-				}
-			identifiedParts[j] = 1;
-			}
-		else
-			{
-			if (hasBrlens == YES)
-				{
-				diff1 = lengths1[i];
-				if (diff1 < 0.0)
-					diff1 = -diff1;
-				diff2 = lengths1[i]/tl1;
-				if (diff2 < 0.0)
-					diff2 = -diff2;
-				(*d2) += diff1;
-				(*d3) += diff2;
-				}
-			(*d1) += 2.0;
-			}
-		}
-		
-	for (i=0; i<nnds; i++)
-		{
-		if (identifiedParts[i] == 0)
-			{
-			if (hasBrlens == YES)
-				{
-				diff1 = lengths2[i];
-				if (diff1 < 0.0)
-					diff1 = -diff1;
-				diff2 = lengths2[i]/tl2;
-				if (diff2 < 0.0)
-					diff2 = -diff2;
-				(*d2) += diff1;
-				(*d3) += diff2;
-				}
+		    /* no match */
+            (*d1) += 2.0;
 			}
 		}
 
@@ -928,8 +473,6 @@ void CalculateTreeToTreeDistance (int *lst[2], MrBFlt *lngs[2], int nnds, int ha
 		printf ("%4d -- %4d (%lf) %4d (%lf)\n", i, list1[i], lengths1[i], list2[i], lengths2[i]);
 		}
 #	endif
-						
-	free (identifiedParts);
 
 }
 
@@ -937,325 +480,255 @@ void CalculateTreeToTreeDistance (int *lst[2], MrBFlt *lngs[2], int nnds, int ha
 
 
 
-int CheckSumtSpecies (void)
+MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
 
 {
 
-	int 			i, nNodes, whichTaxon, numNotFound;
-	SumtNode		**downPass, *q;
+    int         i, nEvents;
+    MrBFlt      ancRate, branchRate, *rate, *pos;
+    PolyNode    *q;
 
-	/* allocate memory for downpass */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
-		goto errorExit;
-		}
-		
-	/* get the downpass sequence */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-	
-	/* find which taxa are in the tree */
-	for (i=0; i<nNodes; i++)
-		{
-		q = downPass[i];
-		if ((q->left == NULL && q->right == NULL) || (q->anc == NULL && isSumtTreeRooted == NO))
-			{
-			if (CheckString (q->label, taxaNames, &whichTaxon) == ERROR)
-				{
-				MrBayesPrint ("%s   Could not find taxon %s in original list of taxa\n", spacer, q->label);
-				goto errorExit;
-				}
-			whichTaxon--;
-			sumTaxaFound[whichTaxon] = YES;
-			}
-		}
+    nEvents = t->nEvents[eSet][p->index];
+    pos = t->position[eSet][p->index];
+    rate = t->rateMult[eSet][p->index];
 
-	/* now, print out which taxa are not in list */
-	numNotFound = 0;
-	for (i=0; i<numTaxa; i++)
-		if (sumTaxaFound[i] == NO)
-			absentTaxa[i] = YES;
-		
-	/* clean up on way out of function */
-	free (downPass);
+    /* note that event positions are from top of branch (more recent, descendant tip) */
+    ancRate = 1.0;
+    if (t->eType[eSet] == CPPm)
+        {
+        for (q=p; q->anc != NULL; q=q->anc)
+            {
+            for (i=0; i<t->nEvents[eSet][p->index]; i++)
+                ancRate *= t->rateMult[eSet][p->index][i];
+            }
+        if (nEvents > 0)
+            {
+            branchRate = rate[0] * pos[0];
+	        for (i=1; i<nEvents; i++)
+                {
+                branchRate += (pos[i] - pos[i-1]);
+                branchRate *= rate[i];
+                }
+            branchRate += 1.0 - pos[nEvents-1];
+            branchRate *= ancRate;
+            }
+        else
+            branchRate = ancRate;
+        }
+    else if (t->eType[eSet] == CPPi)
+        {
+        for (q=p; q->anc != NULL; q=q->anc)
+            {
+            if (t->nEvents[eSet][p->index]>0)
+                {
+                ancRate = t->rateMult[eSet][p->index][0];
+                break;
+                }
+            }
+        if (nEvents > 0)
+            {
+            branchRate = ancRate * (1.0 - pos[nEvents-1]);
+            for (i=nEvents-2; i>=0; i--)
+                {
+                branchRate += (rate[i+1] * (pos[i+1] - pos[i]));
+                }
+            branchRate += (rate[0] * pos[0]);
+            }
+        else
+            branchRate = ancRate;
+        }
 
-	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		return(ERROR);
-
+    return branchRate;
 }
 
 
 
 
 
-int ConTree (void)
-
+/* ConTree: Construct consensus tree */
+int ConTree (PartCtr **treeParts, int numTreeParts)
 {
-
-	int			i, j, targetNode, nBits, nextConNode, isCompat, localOutgroupNum, numTerminalsEncountered;
-	safeLong		x, *mask = NULL, *partition = NULL, *ingroupPartition = NULL, *outgroupPartition = NULL;
+	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
+	safeLong	x, *partition = NULL;
 	MrBFlt		freq;
-	char		tempName[100];
-	PolyNode	*cp, *q, *r, *ql, *rl, *pl, **downPass = NULL;
+    PolyTree    *t;
+	PolyNode	*p, *q, *r, *ql, *pl;
+    PartCtr     *part;
+    Stat        theStats;
 	
 	/* check that we have at least three species */
-	j = 0;
-	for (i=0; i<numTaxa; i++)
-		if (sumTaxaFound[i] == YES)
-			j++;
-	if (j < 3)
+    if (sumtParams.numTaxa < 3)
 		{
 		MrBayesPrint ("%s   Too few taxa included to show consensus trees\n", spacer);
-		goto errorExit;
-		}
-	
-	/* Set the outgroup. Remember that the outgroup number goes from 0 to numTaxa-1.
-	   The outgroup may have been deleted, so we should probably set localOutgroupNum
-	   to reflect this. */
-	j = 0;
-	localOutgroupNum = 0;
-	for (i=0; i<numTaxa; i++)
-		{
-		if (sumTaxaFound[i] == YES)
-			{
-			if (i == outGroupNum)
-				{
-				localOutgroupNum = j;
-				break;
-				}
-			j++;
-			}
+		return ERROR;
 		}
 	
 	/* now, make a consensus tree */
-	
-	/* note that numIncludedTaxa is initialized in ReorderParts */
 
-	/* first allocate some stuff for the consensus tree */
-	if (memAllocs[ALLOC_CONNODES] == YES)
+	/* first allocate and initialize consensus tree */
+	t = AllocatePolyTree(sumtParams.numTaxa);
+	if (!t)
 		{
-		MrBayesPrint ("%s   conNodes is already allocated\n", spacer);
-		goto errorExit;
+		MrBayesPrint ("%s   Could not allocate consensus tree\n", spacer);
+		return(ERROR);
 		}
-	conNodes = (PolyNode *)SafeMalloc((size_t) (2 * numTaxa * sizeof(PolyNode)));
-	if (!conNodes)
-		{
-		MrBayesPrint ("%s   Could not allocate conNodes\n", spacer);
-		goto errorExit;
-		}
-	memAllocs[ALLOC_CONNODES] = YES;
-	for (i=0; i<2*numTaxa; i++)
-		{
-		conNodes[i].left = conNodes[i].sib = conNodes[i].anc = NULL;
-		conNodes[i].x = conNodes[i].y = conNodes[i].index = conNodes[i].mark = 0;
-		conNodes[i].length = conNodes[i].support = conNodes[i].f = 0.0;
-		}
-	if (memAllocs[ALLOC_OUTPART] == YES)
-		{
-		MrBayesPrint ("%s   outgroupPartition is already allocated\n", spacer);
-		goto errorExit;
-		}
-	outgroupPartition = (safeLong *) calloc (3 * taxonLongsNeeded, sizeof(safeLong));
-	if (!outgroupPartition)
-		{
-		MrBayesPrint ("%s   Could not allocate outgroupPartition\n", spacer);
-		goto errorExit;
-		}
-	ingroupPartition = outgroupPartition + taxonLongsNeeded;
-	mask = ingroupPartition + taxonLongsNeeded;
-	memAllocs[ALLOC_OUTPART] = YES;
+    t->isRooted = sumtParams.isRooted;
+    t->isClock = sumtParams.isClock;
+    t->isRelaxed = sumtParams.isRelaxed;
 
 	/* initialize terminal consensus nodes */
 	j = 0;
 	for (i=0; i<numTaxa; i++)
 		{
-		if (sumTaxaFound[i] == YES)
+		if (taxaInfo[i].isDeleted == NO && sumtParams.absentTaxa[i] == NO)
 			{
-			if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-				{
-				MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-				return (ERROR);
-				}
-			conNodes[j].left = NULL;
-			conNodes[j].sib = NULL;
-			conNodes[j].index = j;
-			strcpy(conNodes[j].label,tempName);
+			t->nodes[j].left = NULL;
+			t->nodes[j].sib = NULL;
+			t->nodes[j].index = j;
+            t->nodes[j].partitionIndex = -1;     /* partition ID */
+			strcpy(t->nodes[j].label,taxaNames[i]);
 			j++;
 			}
 		}
-	for (i=numIncludedTaxa; i<2*numIncludedTaxa; i++)
+	for (; j<t->memNodes; j++)
 		{
-		conNodes[j].left = NULL;
-		conNodes[j].sib = NULL;
-		conNodes[j].index = j;
-		strcpy (conNodes[j].label, "");
-		j++;
+		t->nodes[j].left = NULL;
+		t->nodes[j].sib = NULL;
+		t->nodes[j].index = j;
+        t->nodes[j].partitionIndex = -1;     /* partition ID */
+		strcpy (t->nodes[j].label, "");
 		}
-		
-	/* Set mask - needed to trim last bits in the partition bit field.
-	   This could be done when a new matrix is read in
-	   and adjusted when taxa are deleted or restored. */
-	for (i=0; i<numIncludedTaxa; i++)
-		SetBit (i, mask);
 
-#	if defined (DEBUG_CONTREE)
-	for (i=0; i<taxonLongsNeeded; i++)
-		ShowBits (&mask[i], nBitsInALong);
-	MrBayesPrint (" <- lastMask \n");
-#	endif
-
-	/* Set ingroup and outgroup partitions.
-	   This could be done when a new matrix is read in
-	   and adjusted when an outgroup command is issued.
-	   This mechanism allows multiple taxa in outgroup 
-	   but only one outgroup taxon is used here. */
-	x = 1;
-	x <<= (localOutgroupNum) % nBitsInALong;
-	i = (localOutgroupNum) / nBitsInALong;
-	outgroupPartition[i] = x;
-	for (i = 0; i < taxonLongsNeeded; i++)
-		ingroupPartition[i] = outgroupPartition[i];
-	FlipBits (ingroupPartition, taxonLongsNeeded, mask);
-#	if defined (DEBUG_CONTREE)
-	ShowBits (&outgroupPartition[0], numIncludedTaxa);
-	MrBayesPrint (" <- outgroupPartition \n");
-	ShowBits (&ingroupPartition[0], numIncludedTaxa);
-	MrBayesPrint (" <- ingroupPartition \n");
-	MrBayesPrint ("%s   Hold: ", spacer);
-	fgets (tempName, 100, stdin);
-#	endif
-	
 	/* create bush 
 	   ->x counts number of subtended terminals 
-	   make sure conRoot->left is in outgroup */
-	conRoot = &conNodes[numIncludedTaxa];
-	conRoot->anc = conRoot->sib = NULL;
-	conRoot->x = numIncludedTaxa;
-	j = FirstTaxonInPartition (outgroupPartition, taxonLongsNeeded);
-	conRoot->left = cp = &conNodes[j];
-	cp->anc = conRoot;
-	cp->x = 1;
-	for (i=0; i<numIncludedTaxa; i++)
+	   make sure t->root->left is in outgroup */
+	p = t->root = &t->nodes[sumtParams.numTaxa];
+	p->anc = p->sib = NULL;
+	p->x = sumtParams.numTaxa;
+    j = localOutGroup;
+    q = &t->nodes[j];
+	p->left = q;
+	q->anc = p;
+	q->x = 1;
+	for (i=0; i<sumtParams.numTaxa; i++)
 		{
 		if (i != j)
 			{
-			cp->sib = &conNodes[i];
-			cp = cp->sib;
-			cp->anc = conRoot;
-			cp->x = 1;
+			q->sib = &t->nodes[i];
+			q = q->sib;
+			q->anc = p;
+			q->x = 1;
 			}
 		}
-	cp->sib = NULL;
+	q->sib = NULL;
 
 	/* Resolve bush according to partitions.
 	   Partitions may include incompatible ones.
-	   Partitions should be sorted from most frequent to least frequent 
-	   for quit test to work when a 50% majority rule tree is requested. */
-	nextConNode = numIncludedTaxa + 1;
-	if (isSumtTreeRooted == YES)
-		targetNode = 2 * numIncludedTaxa - 2;
+	   Partitions must be sorted from most frequent to least frequent 
+	   for quit test to work when a 50% majority rule tree is requested
+       and in general for consensus tree to be correct. */
+	t->nNodes = sumtParams.numTaxa + 1;
+    t->nIntNodes = 1;
+	if (sumtParams.isRooted == YES)
+		targetNode = 2 * sumtParams.numTaxa - 2;
 	else
-		targetNode = 2 * numIncludedTaxa - 3;
+		targetNode = 2 * sumtParams.numTaxa - 3;
 
 	numTerminalsEncountered = 0;
-	for (i=0; i<numTreePartsFound; i++)
+	for (i=0; i<numUniqueSplitsFound; i++)
 		{
-		/* calculate frequency and test if time to quit */
-		if (nextConNode > targetNode && numTerminalsEncountered == numIncludedTaxa)
+        /* get partition */
+        part = treeParts[i];
+
+        /* calculate frequency and test if time to quit */
+		if (t->nNodes > targetNode && numTerminalsEncountered == sumtParams.numTaxa)
 			break;
-		freq = (MrBFlt)numFoundOfThisPart[i]/ (MrBFlt)(sumtParams.numRuns * numSumTreesSampled);
+		freq = (MrBFlt)(part->totCount) / (MrBFlt)(sumtParams.numTreesSampled);
 		if (freq < 0.50 && !strcmp(sumtParams.sumtConType, "Halfcompat"))
 			break;
 		
 		/* get partition */
-		partition = &treePartsFound[i*taxonLongsNeeded];
+		partition = part->partition;
 
-		/* flip bits if necessary */
-		/* This code is needed if single outgroup is indexed incorrectly or if the partition
-		   defines a clade in a multispecies outgroup but the indexing is reversed. Note that
-		   bits should not be flipped for rooted trees. */
-		if (isSumtTreeRooted == NO)
-			{
-			if (!IsPartNested(partition, ingroupPartition, taxonLongsNeeded) && !IsPartCompatible(partition, ingroupPartition, taxonLongsNeeded))
-				FlipBits(partition, taxonLongsNeeded, mask);
-			}
-		
 		/* count bits in this partition */
-		for (j=nBits=0; j<taxonLongsNeeded; j++)
+		for (j=nBits=0; j<sumtParams.safeLongsNeeded; j++)
 			{
 			x = partition[j];
 			for (x = partition[j]; x != 0; x &= (x - 1))
 				nBits++;
 			}
 			
-		/* flip this partition if it leaves single outgroup outside and tree is unrooted */
-		if (nBits == numIncludedTaxa - 1  && isSumtTreeRooted == NO)
-			{
-			nBits = 1;
-			FlipBits(partition, taxonLongsNeeded, mask);
-			}
-
 		/* find out if this is an informative partition */
-		if (nBits == numIncludedTaxa)
+		if (nBits == sumtParams.numTaxa)
 			{
-			/* this is the root (for seeting age of root node when nodeDepthConTree == YES */
-			q = conRoot;
-			q->age = aBrlens[i];
-			q->support = freq * 100.0;
+			/* this is the root (for setting age of root node when tree is dated) */
+			q = t->root;
+			q->partitionIndex = i;
+            if (sumtParams.isClock == YES)
+                {
+                GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->depth = theStats.mean;
+                }
+            if (sumtParams.isCalibrated == YES)
+                {
+                GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->age = theStats.mean;
+                }
 			}
 		else if (nBits > 1)
 			{
 			/* this is an informative partition */
 			/* find anc of partition */
-			j = FirstTaxonInPartition (partition, taxonLongsNeeded);
-			for (cp = &conNodes[j]; cp!=NULL; cp = cp->anc)
-				if (cp->x > nBits)
+			j = FirstTaxonInPartition (partition, sumtParams.safeLongsNeeded);
+			for (p = &t->nodes[j]; p!=NULL; p = p->anc)
+				if (p->x > nBits)
 					break;
 					
 			/* do not include if incompatible with ancestor or any of descendants
 			   do not check terminals or root because it is
-			   redundant and partitions have not been set for those */
+			   redundant and partitions have not necessarily been set for those */
 			isCompat = YES;
-			if (cp->anc != NULL && !IsPartCompatible(partition, cp->partition, taxonLongsNeeded))
+			if (p->anc != NULL && IsPartNested(partition, p->partition, sumtParams.safeLongsNeeded)==NO)
 				isCompat = NO;
-			for (q=cp->left; q!=NULL; q=q->sib)
-				{
-				if (q->x > 1 && !IsPartCompatible(q->partition, partition, taxonLongsNeeded))
-					isCompat = NO;
-				if (isCompat == NO)
-					break;
+			else 
+                {
+                for (q=p->left; q!=NULL; q=q->sib)
+				    {
+				    if (q->x > 1 && IsPartCompatible(q->partition, partition, sumtParams.safeLongsNeeded)==NO)
+					    break;
+                    }
+                if (q!=NULL)
+                    isCompat = NO;
 				}
 			if (isCompat == NO)
 				continue;
 
 			/* set new node */
-			q = &conNodes[nextConNode++];
-			if (sumtBrlensDef == YES)
-				{
-				if (nodeDepthConTree == YES)
-					q->age = aBrlens[i];
-				else
-					q->length = aBrlens[i];
-				}
-			else
-				q->length = 0.0;
-			q->support = freq * 100;
+			q = &t->nodes[t->nNodes++];
+            t->nIntNodes++;
+            q->partitionIndex = i;
 			q->x = nBits;
-			q->partition = partition;
+            q->partition = partition;
+            GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+            q->support = freq;
+            q->length = theStats.mean;
+            if (sumtParams.isClock == YES)
+                {
+                GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->depth = theStats.mean;
+                }
+            if (sumtParams.isCalibrated == YES)
+                {
+                GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->age = theStats.mean;
+                }
 
 			/* go through descendants of anc */
 			ql = pl = NULL;
-			for (r=cp->left; r!=NULL; r=r ->sib)
+			for (r=p->left; r!=NULL; r=r ->sib)
 				{
 				/* test if r is in the new partition or not */
-				if ((r->x > 1 && IsPartNested(r->partition, partition, taxonLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
+				if ((r->x > 1 && IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
 					{
 					/* r is in the partition */
 					if (ql == NULL)
@@ -1269,7 +742,7 @@ int ConTree (void)
 					{
 					/* r is not in the partition */
 					if (pl == NULL)
-						cp->left = r;
+						p->left = r;
 					else
 						pl->sib = r;
 					pl = r;
@@ -1280,460 +753,91 @@ int ConTree (void)
 			/* new node is last in old sib-node chain */
 			pl->sib = q;
 			q->sib = NULL;
-			q->anc = cp;
+			q->anc = p;
 			}
 		else
 			/* singleton partition */
 			{
-			j = FirstTaxonInPartition(partition, taxonLongsNeeded);
-			q = &conNodes[j];
-			if (sumtBrlensDef == YES)
-				{
-				if (nodeDepthConTree == YES)
-					q->age = aBrlens[i];
-				else
-					q->length = aBrlens[i];
-				}
-			else
-				q->length = 0.0;
-			q->support = freq * 100;
+			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded);
+			q = &t->nodes[j];
+            q->partitionIndex = i;
+            q->partition = partition;
 			numTerminalsEncountered++;
+            GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+            q->length = theStats.mean;
+            if (sumtParams.isClock == YES)
+                {
+                GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->depth = theStats.mean;
+                }
+            if (sumtParams.isCalibrated == YES)
+                {
+                GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+                q->age = theStats.mean;
+                }
 			}
 		}
 
-	if (sumtParams.orderTaxa == YES)
-		{
-		/* rearrange tree so that terminals are in order */
-		/* first allocate space for downPass */
-		downPass = (PolyNode **) calloc (nextConNode, sizeof (PolyNode *));	
-		if (!downPass)
-			return ERROR;
-		i = 0;
-		GetConDownPass (downPass, conRoot, &i);
+    /* get downpass arrays */
+    GetPolyDownPass(t);
 
-		/* label by minimum index */
-		for (i=0; i<nextConNode; i++)
-			{
-			cp = downPass[i];
-			if (cp->left == NULL)
-				{
-				if (cp->index == localOutgroupNum)
-					cp->x = -1;
-				else
-					cp->x = cp->index;
-				}
-			else
-				{
-				j = nextConNode;
-				for (q=cp->left; q!=NULL; q=q->sib)
-					{
-					if (q->x < j)
-						j = q->x;
-					}
-				cp->x = j;
-				}
-			}
-		/* and rearrange */
-		for (i=0; i<nextConNode; i++)
-			{
-			cp = downPass[i];
-			if (cp->left == NULL || cp->anc == NULL)
-				continue;
-			for (ql=NULL, q=cp->left; q->sib!=NULL; ql=q, q=q->sib)
-				{
-				for (rl=q, r=q->sib; r!=NULL; rl=r, r=r->sib)
-					{
-					if (r->x < q->x)
-						{
-						if (ql == NULL)
-							cp->left = r;
-						if (r == q->sib) /* swap adjacent q and r */
-							{
-							if (ql != NULL)
-								ql->sib = r;
-							pl = r->sib;
-							r->sib = q;
-							q->sib = pl;
-							}
-						else	/* swap separated q and r */
-							{
-							if (ql != NULL)
-								ql->sib = r;
-							pl = r->sib;
-							r->sib = q->sib;
-							rl->sib = q;
-							q->sib = pl;
-							}
-						pl = q;
-						q = r;
-						r = pl;
-						}
-					}
-				}
-			}
-		}
-
-	/* take care of phylogram based on node depths */
-	if (nodeDepthConTree == YES)
-		{
-		for (i=0; i<nextConNode; i++)
-			{
-			cp = downPass[i];
-			if (cp->anc == NULL)
-				cp->length = 0.0;
-			else
-				cp->length = cp->anc->age - cp->age;
-			}
-		}
+    /* order tips */
+    if (sumtParams.orderTaxa == YES)
+        OrderTips (t);
 		
 	/* draw tree to stdout and fp */
 	MrBayesPrint ("\n%s   Clade credibility values:\n\n", spacer);
-	ShowConTree (stdout, nextConNode, conRoot, 80, YES);
+	ShowConTree (stdout, t, 80, YES);
 	if (logToFile == YES)
-		ShowConTree (logFileFp, nextConNode, conRoot, 80, YES);
-	if (sumtBrlensDef == YES)
+		ShowConTree (logFileFp, t, 80, YES);
+	if (sumtParams.brlensDef == YES)
 		{
 		MrBayesPrint ("\n");
-		if (nodeDepthConTree == YES)
+		if (sumtParams.isClock == YES)
 			MrBayesPrint ("%s   Phylogram (based on average node depths):\n\n", spacer);
 		else
 			MrBayesPrint ("%s   Phylogram (based on average branch lengths):\n\n", spacer);
-		if (nodeDepthConTree == YES && AreDoublesEqual(clockRate[0], 1.0, 0.000001) == NO)
-			ShowConPhylogram (stdout, nextConNode, conRoot, 80, YES);
-		else
-			ShowConPhylogram (stdout, nextConNode, conRoot, 80, NO);
+	    ShowConPhylogram (stdout, t, 80);
 		if (logToFile == YES)
-			{
-			if (nodeDepthConTree == YES && AreDoublesEqual (clockRate[0], 1.0, 0.000001) == NO)
-				ShowConPhylogram (stdout, nextConNode, conRoot, 80, YES);
-			else
-				ShowConPhylogram (stdout, nextConNode, conRoot, 80, NO);
-			}
+			ShowConPhylogram (stdout, t, 80);
 		}
 
     /* print taxa block */
     MrBayesPrintf (fpCon, "begin taxa;\n");
-    MrBayesPrintf (fpCon, "\tdimensions ntax=%d;\n", numSumtTaxa);
-    MrBayesPrintf (fpCon, "\ttaxlabels\n", numSumtTaxa);
-    for (i=0; i<nextConNode; i++)
+    MrBayesPrintf (fpCon, "\tdimensions ntax=%d;\n", sumtParams.numTaxa);
+    MrBayesPrintf (fpCon, "\ttaxlabels\n", sumtParams.numTaxa);
+    for (i=0; i<sumtParams.numTaxa; i++)
         {
-        if (conNodes[i].left == NULL)
-            MrBayesPrintf (fpCon, "\t\t%s\n", conNodes[i].label);
+        for (j=0; j<t->nNodes; j++)
+            if (t->nodes[j].index == i)
+                break;
+        MrBayesPrintf (fpCon, "\t\t%s\n", t->nodes[j].label);
         }
-    MrBayesPrintf (fpCon, "\t\t;end;\n");
+    MrBayesPrintf (fpCon, "\t\t;\nend;\n");
     
 	MrBayesPrintf (fpCon, "begin trees;\n");
     MrBayesPrintf (fpCon, "\ttranslate\n");
-    for (i=0; i<numSumtTaxa; i++)
+    for (i=0; i<sumtParams.numTaxa; i++)
         {
-        for (j=0; j<nextConNode; j++)
-            if (conNodes[j].index == i) break;
-        if (i == numSumtTaxa-1)
-            MrBayesPrintf (fpCon, "\t\t%d\t%s\n", conNodes[i].index+1, conNodes[i].label);
+        for (j=0; j<t->nNodes; j++)
+            if (t->nodes[j].index == i)
+                break;
+        if (i == sumtParams.numTaxa-1)
+            MrBayesPrintf (fpCon, "\t\t%d\t%s\n", t->nodes[i].index+1, t->nodes[i].label);
         else
-            MrBayesPrintf (fpCon, "\t\t%d\t%s,\n", conNodes[i].index+1, conNodes[i].label);
+            MrBayesPrintf (fpCon, "\t\t%d\t%s,\n", t->nodes[i].index+1, t->nodes[i].label);
         }
     MrBayesPrintf (fpCon, "\t\t;\n");
-
-    MrBayesPrintf (fpCon, "   [Note: This tree contains information on the topology, \n");
-	MrBayesPrintf (fpCon, "          branch lengths (if present), and the probability\n");
-	MrBayesPrintf (fpCon, "          of the partition indicated by the branch.]\n");
-	if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
-		MrBayesPrintf (fpCon, "   tree con_50_majrule = ");
-	else
-		MrBayesPrintf (fpCon, "   tree con_all_compat = ");
-	WriteConTree (conRoot, fpCon, YES);
-	MrBayesPrintf (fpCon, ";\n");
-	if (sumtBrlensDef == YES)
-		{
-		MrBayesPrintf (fpCon, "\n");
-		MrBayesPrintf (fpCon, "   [Note: This tree contains information only on the topology\n");
-		MrBayesPrintf (fpCon, "          and branch lengths (mean of the posterior probability density).]\n");
-		if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
-			MrBayesPrintf (fpCon, "   tree con_50_majrule = ");
-		else
-			MrBayesPrintf (fpCon, "   tree con_all_compat = ");
-		WriteConTree (conRoot, fpCon, NO);
-		MrBayesPrintf (fpCon, ";\n");
-		}
+    if (sumtParams.consensusFormat == SIMPLE)
+        PrintConTree(fpCon, t);
+    else if (sumtParams.consensusFormat == RICH)
+        PrintRichConTree(fpCon, t, treeParts);
 	MrBayesPrintf (fpCon, "end;\n");
-	
-	/* free memory and file pointers */
-	if (memAllocs[ALLOC_CONNODES] == YES)
-		{
-		free (conNodes);
-		memAllocs[ALLOC_CONNODES] = NO;
-		}
-	if (memAllocs[ALLOC_OUTPART] == YES)
-		{
-		free (outgroupPartition);
-		memAllocs[ALLOC_OUTPART] = NO;
-		}
-		
-	if (downPass)
-		free (downPass);
-
-	return (NO_ERROR);
-	
-	errorExit:
-		if (memAllocs[ALLOC_CONNODES] == YES)
-			{
-			free (conNodes);
-			memAllocs[ALLOC_CONNODES] = NO;
-			}
-		if (memAllocs[ALLOC_OUTPART] == YES)
-			{
-			free (outgroupPartition);
-			memAllocs[ALLOC_OUTPART] = NO;
-			}
-		if (downPass)
-			free (downPass);
-
-		return (ERROR);
-}
-
-
-
-
-
-int DerootSumtTree (SumtNode *p, int n, int outGrp)
-
-{
-
-	int 			i, nNodes, isMarked, *localTaxaFound=NULL, sumtOut;
-	MrBFlt			tempBrLen;
-	SumtNode		**downPass=NULL, *lft, *m1, *m2, *um1, *um2, *out;
-
-#	if 0
-	ShowTree (sumtRoot, YES, n);
-#	endif
-
-	/* check that we are not already unrooted */
-	if (isSumtTreeRooted == NO)
-		{
-		MrBayesPrint ("%s   Tree is already unrooted\n", spacer);
-		goto errorExit;
-		}
-	
-	/* Find the outgroup number (0, 1, ..., n-1) and the number of nodes on the tree. The
-	   number of nodes may change later, if the user deleted taxa. */
-	sumtOut = outGrp;
-	nNodes = 2 * n;
-
-	/* allocate space for derooting tree */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
-		goto errorExit;
-		}
-	localTaxaFound = (int *)SafeMalloc((size_t) (numTaxa * sizeof(int)));
-	if (!localTaxaFound)
-		{
-		MrBayesPrint ("%s   Could not allocate localTaxaFound\n", spacer);
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa; i++)
-		localTaxaFound[i] = NO;
-		
-	/* get the downpass sequence for the tree */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-
-	/* bring the outgroup around to the first right position */
-
-	/* first, mark the outgroup tip and the path from the outgroup to the root */
-	isMarked = NO;
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		p->marked = NO;
-		if (p->left == NULL && p->right == NULL && p->anc != NULL)
-			{
-			localTaxaFound[p->index] = YES;
-			if (p->index == sumtOut)
-				{
-				p->marked = YES;
-				isMarked = YES;
-				}
-			}
-		}	
-	
-	/* If we don't find the outgroup, it was deleted by the user. Instead, we
-	   will use the first undeleted taxon in the matrix that is found in the
-	   tree. */
-	if (isMarked == NO)
-		{
-		/* here we find the first undeleted taxon and designate it as the outgroup */
-		for (i=0; i<numTaxa; i++)
-			{
-			if (localTaxaFound[i] == YES)
-				{
-				sumtOut = i;
-				break;
-				}
-			}
-		/* and then mark it */
-		isMarked = NO;
-		for (i=0; i<nNodes; i++)
-			{
-			p = downPass[i];
-			p->marked = NO;
-			if (p->left == NULL && p->right == NULL && p->anc != NULL)
-				{
-				if (p->index == sumtOut)
-					{
-					p->marked = YES;
-					isMarked = YES;
-					}
-				}
-			}	
-		/* if we still have not marked an outgroup, we have trouble */
-		if (isMarked == NO)
-			{
-			MrBayesPrint ("%s   Could not find outgroup taxon\n", spacer);
-			goto errorExit;
-			}
-		}
-		
-	/* now we mark the path from the outgroup tip to the root */
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		if (p->left != NULL && p->right != NULL)
-			if (p->left->marked == YES || p->right->marked == YES)
-				p->marked = YES;
-		}	
-		
-	/* now we rotate the tree until the outgroup is to the left or to the right of the root */
-	lft = sumtRoot->left;
-	while (lft->left->index != sumtOut && lft->right->index != sumtOut)
-		{
-		if (lft->left->marked == YES && lft->right->marked == NO)
-			{
-			m1 = lft->left;
-			um1 = lft->right;
-			if (m1->left != NULL && m1->right != NULL)
-				{
-				if (m1->left->marked == YES)
-					{
-					m2 = m1->left;
-					um2 = m1->right;
-					}
-				else
-					{
-					m2 = m1->right;
-					um2 = m1->left;
-					}
-				lft->left = m2;
-				lft->right = m1;
-				m2->anc = m1->anc = lft;
-				m1->left = um2;
-				m1->right = um1;
-				um1->anc = um2->anc = m1;
-				m1->marked = NO;
-				um1->length += m1->length;
-				m2->length *= 0.5;
-				m1->length = m2->length;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Rooting routine is lost (1)\n", spacer);
-				goto errorExit;
-				}
-			}
-		else if (lft->left->marked == NO && lft->right->marked == YES)
-			{
-			m1 = lft->right;
-			um1 = lft->left;
-			if (m1->left != NULL && m1->right != NULL)
-				{
-				if (m1->left->marked == YES)
-					{
-					m2 = m1->left;
-					um2 = m1->right;
-					}
-				else
-					{
-					m2 = m1->right;
-					um2 = m1->left;
-					}
-				lft->left = m1;
-				lft->right = m2;
-				m2->anc = m1->anc = lft;
-				m1->left = um1;
-				m1->right = um2;
-				um1->anc = um2->anc = m1;
-				m1->marked = NO;
-				um1->length += m1->length;
-				m2->length *= 0.5;
-				m1->length = m2->length;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Rooting routine is lost (2)\n", spacer);
-				goto errorExit;
-				}
-			}
-		else
-			{
-			MrBayesPrint ("%s   Rooting routine is lost (3)\n", spacer);
-			goto errorExit;
-			}
-		}
-
-	/* make certain outgroup is to the right of the root */
-	if (sumtRoot->left->left->index == sumtOut)
-		{
-		m1 = sumtRoot->left->left;
-		m2 = sumtRoot->left->right;
-		lft = sumtRoot->left;
-		lft->left = m2;
-		lft->right = m1;
-		}
-		
-	/* now, take outgroup and make it point down */
-	m1 = sumtRoot;
-	m2 = sumtRoot->left;
-	lft = sumtRoot->left->left;
-	out = sumtRoot->left->right;
-	tempBrLen = out->length;
-	if (tempBrLen < 0.0)
-		tempBrLen = 0.0;
-	lft->anc = out;
-	out->left = lft;
-	out->right = out->anc = NULL;
-	lft->length += tempBrLen;
-	m1->left = m1->right = m1->anc = NULL;
-	m2->left = m2->right = m2->anc = NULL;
-	sumtRoot = out;
-	
-	/* the tree is now unrooted */
-	isSumtTreeRooted = NO;
-
-	/* reindex internal nodes of tree */
-	i = numTaxa;
-	FinishSumtTree (sumtRoot, &i, NO);
-
-#	if 0
-	ShowNodes (sumtRoot, 3, isSumtTreeRooted);
-	ShowTree (sumtRoot, isSumtTreeRooted, n);
-#	endif
 
 	/* free memory */
-	free (downPass);
-	free (localTaxaFound);
+	FreePolyTree (t);
 
 	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		if (localTaxaFound)
-			free (localTaxaFound);
-		return(ERROR);
-
 }
 
 
@@ -1744,257 +848,107 @@ int DoCompareTree (void)
 
 {
 
-
-	int			i, j, k, n, lineTerm, longestLineLength, tokenType, foundBegin, inTreeBlock, lineNum, 
-				numTreesInBlock, numTreeBlocks, lastTreeBlockBegin, lastTreeBlockEnd,
-				lineWidth, blockErrors, inSumtComment, numExcludedTaxa,
-				longestLineLength1, longestLineLength2, xaxis, yaxis, starHolder[80], *treePartList[2], minNumTrees,
-				screenWidth, screenHeigth, numY[60], nSamples, nCompPartitions, numIncludedTaxa1, numIncludedTaxa2,
-				oldSumtBrlensDef, brlensDef;
-	safeLong	temporarySeed, len;
-	safeLong		*x;
-	MrBFlt		xProb, yProb, xInc, yInc, xUpper, xLower, yUpper, yLower, *treeLengthList[2], *dT1=NULL, *dT2=NULL, *dT3=NULL, d1, d2, d3, 
-				meanY[60], xVal, yVal, minX, minY, maxX, maxY, sums[3];
-	char		*s=NULL, tempStr[100], tempName[100], prCh;
-	FILE		*fp[2];
-	time_t		curTime;
+	int			    i, j, k, n, longestLineLength, brlensDef[2], numTreesInLastBlock[2],
+                    lastTreeBlockBegin[2], lastTreeBlockEnd[2], xaxis, yaxis, starHolder[80],
+                    minNumTrees, screenWidth, screenHeigth, numY[60], nSamples;
+	safeLong	    temporarySeed;
+	PartCtr	        *x;
+	MrBFlt		    xProb, yProb, xInc, yInc, xUpper, xLower, yUpper, yLower, *dT1=NULL, *dT2=NULL, *dT3=NULL, d1, d2, d3, 
+				    meanY[60], xVal, yVal, minX, minY, maxX, maxY, sums[3];
+	char		    *s=NULL, prCh, treeName[2][100];
+	FILE		    *fp;
+	time_t		    curTime;
+    PartCtr         **treeParts=NULL;
+    Tree            *tree1=NULL, *tree2=NULL;
+    SumtFileInfo    sumtFileInfo;
 	
 #	if defined (MPI_ENABLED)
 	if (proc_id == 0)
 		{
 #	endif
 
-    /* Make sure we read trees using sumt code instead of with the user tree code */
+    /* Make sure we read trees using DoSumtTree() code instead of with the user tree code */
     inComparetreeCommand = YES;
 
-    /* Are we comparing two files, or using sumt? */
-	comparingFiles = YES;
-	fileNum = 0;
-	oldSumtBrlensDef = sumtBrlensDef;
-	
-	/* we do not want to print brlens to file */
-	printingBrlens = NO;
-	
-	/* set file pointers to NULL */
-	fp[0] = fp[1] = NULL;
+	/* set file pointer to NULL */
+	fp = NULL;
 
 	/* Check that a data set has been read in. We check taxon names against
 	   those read in. */
-	if (defMatrix == NO)
+	if (isTaxsetDef == NO)
 		{
-		MrBayesPrint ("%s   A matrix must be specified before comparetree can be used\n", spacer);
+		MrBayesPrint ("%s   A matrix or set of taxon labels must be specified before comparetree can be used\n", spacer);
 		goto errorExit;
 		}
 
-	/* open binary file */
-	if ((fp[0] = OpenBinaryFileR(comptreeParams.comptFileName1)) == NULL)
-		goto errorExit;
-	if ((fp[1] = OpenBinaryFileR(comptreeParams.comptFileName2)) == NULL)
-		goto errorExit;
-		
-	/* find out what type of line termination is used for file 1 */
-	lineTerm = LineTermType (fp[0]);
-	if (lineTerm == LINETERM_MAC)
-		MrBayesPrint ("%s   Macintosh line termination for file 1\n", spacer);
-	else if (lineTerm == LINETERM_DOS)
-		MrBayesPrint ("%s   DOS line termination for file 1\n", spacer);
-	else if (lineTerm == LINETERM_UNIX)
-		MrBayesPrint ("%s   UNIX line termination for file 1\n", spacer);
-	else
-		{
-		MrBayesPrint ("%s   Unknown line termination for file 1\n", spacer);
-		goto errorExit;
-		}
+	MrBayesPrint ("%s   Examining files ...\n", spacer);
 
-	/* find out what type of line termination is used for file 2 */
-	lineTerm = LineTermType (fp[1]);
-	if (lineTerm == LINETERM_MAC)
-		MrBayesPrint ("%s   Macintosh line termination for file 2\n", spacer);
-	else if (lineTerm == LINETERM_DOS)
-		MrBayesPrint ("%s   DOS line termination for file 2\n", spacer);
-	else if (lineTerm == LINETERM_UNIX)
-		MrBayesPrint ("%s   UNIX line termination for file 2\n", spacer);
-	else
-		{
-		MrBayesPrint ("%s   Unknown line termination for file 2\n", spacer);
-		goto errorExit;
-		}
+    /* Examine first file */
+    if (ExamineSumtFile(comptreeParams.comptFileName1, &sumtFileInfo, treeName[0], &(brlensDef[0])) == ERROR)
+        return ERROR;
 
-	/* find length of longest line in either file */
-	longestLineLength1 = LongestLine (fp[0]);
-	longestLineLength2 = LongestLine (fp[1]);
-	if (longestLineLength1 > longestLineLength2)
-		longestLineLength = longestLineLength1;
-	else
-		longestLineLength = longestLineLength2;
-	MrBayesPrint ("%s   Longest line length = %d\n", spacer, longestLineLength);
-	longestLineLength += 10;
-	
-	/* allocate a string long enough to hold a line */
-	if (memAllocs[ALLOC_SUMTSTRING] == YES)
-		{
-		MrBayesPrint ("%s   Comparetree string is already allocated\n", spacer);
-		goto errorExit;
-		}
+    /* Capture info */
+    longestLineLength      = sumtFileInfo.longestLineLength;
+    numTreesInLastBlock[0] = sumtFileInfo.numTreesInLastBlock;
+    lastTreeBlockBegin[0]  = sumtFileInfo.lastTreeBlockBegin;
+    lastTreeBlockEnd[0]    = sumtFileInfo.lastTreeBlockEnd;
+
+	/* Examine second file */
+    if (ExamineSumtFile(comptreeParams.comptFileName2, &sumtFileInfo, treeName[1], &brlensDef[1]) == ERROR)
+        return ERROR;
+
+    /* Capture info */
+    if (longestLineLength < sumtFileInfo.longestLineLength)
+        longestLineLength = sumtFileInfo.longestLineLength;
+    numTreesInLastBlock[1] = sumtFileInfo.numTreesInLastBlock;
+    lastTreeBlockBegin[1]  = sumtFileInfo.lastTreeBlockBegin;
+    lastTreeBlockEnd[1]    = sumtFileInfo.lastTreeBlockEnd;
+
+    /* Check whether we should work with brlens */
+    if (brlensDef[0] == YES && brlensDef[1] == YES)
+        sumtParams.brlensDef = YES;
+    else
+        sumtParams.brlensDef = NO;
+    
+    /* Allocate space for command string */
+    longestLineLength += 10;
 	s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
 	if (!s)
 		{
-		MrBayesPrint ("%s   Problem allocating string for reading comparetree file\n", spacer);
+		MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
 		goto errorExit;
 		}
-	memAllocs[ALLOC_SUMTSTRING] = YES;
-		
-	/* close binary file */
-	SafeFclose (&fp[0]);
-	SafeFclose (&fp[1]);
-	
-	/* read in data file 1 ***************************************************************************/
 
-	/* tell user we are ready to go */
-	MrBayesPrint ("%s   Summarizing trees in file %s\n", spacer, comptreeParams.comptFileName1);
+    /* Allocate space for packed trees */
+    if (comptreeParams.relativeBurnin == YES)
+        {
+        numPackedTrees[0] = numTreesInLastBlock[0] - (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[0]);
+        numPackedTrees[1] = numTreesInLastBlock[1] - (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[1]);
+        }
+    else
+        {
+        numPackedTrees[0] = numTreesInLastBlock[0] - comptreeParams.comptBurnIn;
+        numPackedTrees[1] = numTreesInLastBlock[1] - comptreeParams.comptBurnIn;
+        }
+	if (memAllocs[ALLOC_PACKEDTREES] == YES)
+		{
+		MrBayesPrint ("%s   packedTreeList is already allocated\n", spacer);
+		goto errorExit;
+		}
+	packedTreeList[0] = (PackedTree *) calloc(numPackedTrees[0]+numPackedTrees[1], sizeof(PackedTree));
+	packedTreeList[1] = packedTreeList[0] + numPackedTrees[0];
+	if (!packedTreeList[0])
+		{
+		MrBayesPrint ("%s   Problem allocating packed tree list\n", spacer);
+		goto errorExit;
+		}
+    memAllocs[ALLOC_PACKEDTREES] = YES;
+
+    /* Tell user we are ready to go */
+	MrBayesPrint ("%s   Summarizing trees in files \"%s\" and \"%s\"\n", spacer,
+        comptreeParams.comptFileName1,
+        comptreeParams.comptFileName2);
 	
-	/* open text file */
-	if ((fp[0] = OpenTextFileR(comptreeParams.comptFileName1)) == NULL)
-		goto errorExit;
-	
-	/* Check file for appropriate blocks. We want to find the last tree block
-	   in the file and start from there. */
-	foundBegin = inTreeBlock = blockErrors = inSumtComment = NO;
-	lineNum = numTreesInBlock = lastTreeBlockBegin = lastTreeBlockEnd = numTreeBlocks = numTreesInLastBlock = 0;
-	while (fgets (s, longestLineLength, fp[0]) != NULL)
-		{
-		sumtTokenP = &s[0];
-		do
-			{
-			GetSumtToken (&tokenType);
-			if (IsSame("[", sumtToken) == SAME)
-				inSumtComment = YES;
-			if (IsSame("]", sumtToken) == SAME)
-				inSumtComment = NO;
-				
-			if (inSumtComment == NO)
-				{
-				if (foundBegin == YES)
-					{
-					if (IsSame("Trees", sumtToken) == SAME)
-						{
-						numTreesInBlock = 0;
-						inTreeBlock = YES;
-						foundBegin = NO;
-						lastTreeBlockBegin = lineNum;
-						}
-					}
-				else
-					{
-					if (IsSame("Begin", sumtToken) == SAME)
-						{
-						if (foundBegin == YES)
-							{
-							MrBayesPrint ("%s   Found inappropriate \"Begin\" statement in file\n", spacer);
-							blockErrors = YES;
-							}
-						foundBegin = YES;
-						}
-					else if (IsSame("End", sumtToken) == SAME)
-						{
-						if (inTreeBlock == YES)
-							{
-							numTreeBlocks++;
-							inTreeBlock = NO;
-							lastTreeBlockEnd = lineNum;
-							}
-						else
-							{
-							MrBayesPrint ("%s   Found inappropriate \"End\" statement in file\n", spacer);
-							blockErrors = YES;
-							}
-						numTreesInLastBlock = numTreesInBlock;
-						}
-					else if (IsSame("Tree", sumtToken) == SAME)
-						{
-						if (inTreeBlock == YES)
-							{
-							brlensDef = NO;
-							for (j=0; s[j]!='\0'; j++)
-								{
-								if (s[j] == ':')
-									{
-									brlensDef = YES;
-									break;
-									}
-								else if (s[j] == ',')
-									break;
-								}
-							sumtBrlensDef = brlensDef;
-							numTreesInBlock++;
-							}
-						else
-							{
-							MrBayesPrint ("%s   Found a \"Tree\" statement that is not in a tree block\n", spacer);
-							blockErrors = YES;
-							}
-						}
-					}
-				}
-				
-			} while (*sumtToken);
-		lineNum++;
-		}
-		
-	/* Now, check some aspects of the tree file, such as the number of tree blocks and whether they are properly terminated. */
-	if (inTreeBlock == YES)
-		{
-		MrBayesPrint ("%s   Unterminated tree block in file %s. You probably need to\n", spacer, comptreeParams.comptFileName1);
-		MrBayesPrint ("%s   add a new line to the end of the file with \"End;\" on it.\n", spacer);
-		goto errorExit;
-		}
-	if (inSumtComment == YES)
-		{
-		MrBayesPrint ("%s   Unterminated comment in file %s\n", spacer, comptreeParams.comptFileName1);
-		goto errorExit;
-		}
-	if (blockErrors == YES)
-		{
-		MrBayesPrint ("%s   Found formatting errors in file %s\n", spacer, comptreeParams.comptFileName1);
-		goto errorExit;
-		}
-	if (lastTreeBlockEnd < lastTreeBlockBegin)
-		{
-		MrBayesPrint ("%s   Problem reading tree file %s\n", spacer, comptreeParams.comptFileName1);
-		goto errorExit;
-		}
-	if (numTreesInLastBlock <= 0)
-		{
-		MrBayesPrint ("%s   No trees were found in last tree block of file %s\n", spacer, comptreeParams.comptFileName1);
-		goto errorExit;
-		}
-    if (sumtParams.relativeBurnin == NO && sumtParams.sumtBurnIn > numTreesInLastBlock)
-		{
-		MrBayesPrint ("%s   No trees are sampled as the burnin exceeds the number of trees in last block\n", spacer);
-		MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, numTreesInLastBlock);
-		goto errorExit;
-		}
-		
-	/* tell the user that everything is fine */
-	if (numTreeBlocks == 1)
-		MrBayesPrint ("%s   Found one tree block in file \"%s\" with %d trees in last block\n", spacer, comptreeParams.comptFileName1, numTreesInLastBlock);
-	else
-		{
-		MrBayesPrint ("%s   Found %d tree blocks in file \"%s\" with %d trees in last block\n", spacer, numTreeBlocks, comptreeParams.comptFileName1, numTreesInLastBlock);
-		MrBayesPrint ("%s   Only the %d trees in last tree block will be summarized\n", spacer, numTreesInLastBlock);
-		}
-		
-	/* Now we read the file for real. First, rewind file pointer to beginning of file... */
-	(void)fseek(fp[0], 0L, 0);	
-	
-	/* ...and fast forward to beginning of last tree block. */
-	for (i=0; i<lastTreeBlockBegin+1; i++)
-		fgets (s, longestLineLength, fp[0]);
-		
-	/* Allocate things we will need for trees... */
-	if (AllocBits (numTaxa) == ERROR)
-		goto errorExit;
-		
 	/* Set up cheap status bar. */
 	MrBayesPrint ("\n%s   Tree reading status:\n\n", spacer);
 	MrBayesPrint ("%s   0      10      20      30      40      50      60      70      80      90     100\n", spacer);
@@ -2002,434 +956,128 @@ int DoCompareTree (void)
 	MrBayesPrint ("%s   *", spacer);
 	numAsterices = 0;
 		
-	/* ...and parse file, tree-by-tree. We are only parsing lines between the "begin trees" and "end" statements.
-	   We don't actually get those lines, however, but rather the lines between those statements. */
+    /* Read file 1 for real */
+    if ((fp = OpenTextFileR(comptreeParams.comptFileName1)) == NULL)
+		goto errorExit;
+		
+	/* ...and fast forward to beginning of last tree block (skipping begin trees). */
+	for (i=0; i<lastTreeBlockBegin[0] + 1; i++)
+		fgets (s, longestLineLength, fp);
+		
+    /* Calculate burnin */
+    if (comptreeParams.relativeBurnin == YES)
+        comptreeParams.burnin = (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[0]);
+    else
+        comptreeParams.burnin = comptreeParams.comptBurnIn;
+
+    /* Initialize sumtParams struct */
+    sumtParams.runId = 0;
+    strcpy(sumtParams.curFileName, comptreeParams.comptFileName1);
+    sumtParams.tree = AllocatePolyTree (numTaxa);
+    AllocatePolyTreePartitions (sumtParams.tree);
+    sumtParams.numTreesEncountered = sumtParams.numTreesSampled = 0;
+    sumtParams.numFileTrees = (int *) calloc (2*2+2*numTaxa, sizeof(int));
+    sumtParams.numFileTreesSampled = sumtParams.numFileTrees + sumtParams.numRuns;
+    sumtParams.order = sumtParams.numFileTrees + 2*sumtParams.numRuns;
+    sumtParams.absentTaxa = sumtParams.numFileTrees + 2*sumtParams.numRuns + numTaxa;
+    sumtParams.numTreesInLastBlock = numTreesInLastBlock[0];
+    if (!sumtParams.numFileTrees)
+        {
+        MrBayesPrint ("%s   Problems allocating sumtParams.numFileTrees in DoSumt()\n", spacer);
+        goto errorExit;
+        }
+    else
+        memAllocs[ALLOC_SUMTPARAMS] = YES;
+
+    /* ... and parse the file */
 	expecting = Expecting(COMMAND);
-	numSumtTrees = numSumTreesSampled = 0;
-	numCompTrees[0] = numCompTreesSampled[0] = 0;
-	numFullCompTreesFound[0] = 0;
-	inTreesBlock = YES;
+    inTreesBlock = YES;
     ResetTranslateTable();
-	for (i=0; i<lastTreeBlockEnd - lastTreeBlockBegin - 1; i++)
+	for (i=0; i<lastTreeBlockEnd[0] - lastTreeBlockBegin[0] - 1; i++)
 		{
-		fgets (s, longestLineLength, fp[0]);
+		fgets (s, longestLineLength, fp);
 		/*MrBayesPrint ("%s", s);*/
 		if (ParseCommand (s) == ERROR)
 			goto errorExit;
 		}
 	inTreesBlock = NO;
-	
-	/* Finish cheap status bar. */
-	if (numAsterices < 80)
-		for (i=0; i<80 - numAsterices; i++)
-			MrBayesPrint ("*");
-	MrBayesPrint ("\n\n");
-	
-	/* how many taxa were included */
-	numIncludedTaxa1 = 0;
-	for (i=0; i<numTaxa; i++)
-		if (absentTaxa[i] == NO && prunedTaxa[i] == NO)
-			numIncludedTaxa1++;
-			
-	/* print out information on absent taxa */
-	numExcludedTaxa = 0;
-	for (i=0; i<numTaxa; i++)
-		if (absentTaxa[i] == YES)
-			numExcludedTaxa++;
-	if (numExcludedTaxa > 0)
-		{
-		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was absent from trees:\n", spacer);
-		else
-			MrBayesPrint ("%s   The following %d species were absent from trees:\n", spacer, numExcludedTaxa);
-		MrBayesPrint ("%s      ", spacer);
-		j = lineWidth = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (absentTaxa[i] == YES)
-				{
-				j++;
-				if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-					return (ERROR);
-					}
-				len = (int) strlen(tempStr);
-				lineWidth += len+2;
-				if (lineWidth > 60)
-					{
-					MrBayesPrint ("\n%s      ", spacer);
-					lineWidth = 0;
-					}
-				if (numExcludedTaxa == 1)
-					MrBayesPrint ("%s\n", tempStr);
-				else if (numExcludedTaxa == 2 && j == 1)
-					MrBayesPrint ("%s ", tempStr);
-				else if (j == numExcludedTaxa)
-					MrBayesPrint ("and %s\n", tempStr);
-				else
-					MrBayesPrint ("%s, ", tempStr);
-				}
-			}
-		MrBayesPrint ("\n");
-		}
 
-	/* print out information on pruned taxa */
-	numExcludedTaxa = 0;
-	for (i=0; i<numTaxa; i++)
-		if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-			numExcludedTaxa++;
-	
-	if (numExcludedTaxa > 0)
-		{
-		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was pruned from trees:\n", spacer);
-		else
-			MrBayesPrint ("%s   The following %d species were pruned from trees:\n", spacer, numExcludedTaxa);
-		MrBayesPrint ("%s      ", spacer);
-		j = lineWidth = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-				{
-				j++;
-				if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-					return (ERROR);
-					}
-				len = (int) strlen(tempStr);
-				lineWidth += len+2;
-				if (lineWidth > 60)
-					{
-					MrBayesPrint ("\n%s      ", spacer);
-					lineWidth = 0;
-					}
-				if (numExcludedTaxa == 1)
-					MrBayesPrint ("%s\n", tempStr);
-				else if (numExcludedTaxa == 2 && j == 1)
-					MrBayesPrint ("%s ", tempStr);
-				else if (j == numExcludedTaxa)
-					MrBayesPrint ("and %s\n", tempStr);
-				else
-					MrBayesPrint ("%s, ", tempStr);
-				}
-			}
-		MrBayesPrint ("\n");
-		}
-	
-	/* tell user how many trees were successfully read */
-	MrBayesPrint ("%s   Read %d trees from last tree block (sampling %d of them)\n", spacer, numSumtTrees, numSumTreesSampled);
-	
 	/* Check that at least one tree was read in. */
-	if (numSumTreesSampled <= 0)
+    if (sumtParams.numFileTreesSampled[0] <= 0)
 		{
 		MrBayesPrint ("%s   No trees read in\n", spacer);
 		goto errorExit;
 		}
 		
-		
-	/* read in data file 2 ***************************************************************************/
+    /* ... and close file */
+    SafeFclose (&fp);
 
-	fileNum = 1;
-
-	/* tell user we are ready to go */
-	MrBayesPrint ("%s   Summarizing trees in file %s\n", spacer, comptreeParams.comptFileName2);
+    /* Read file 2 for real */
+    if ((fp = OpenTextFileR(comptreeParams.comptFileName2)) == NULL)
+		return ERROR;
 		
-	/* open text file */
-	if ((fp[1] = OpenTextFileR(comptreeParams.comptFileName2)) == NULL)
-		goto errorExit;
-	
-	/* Check file for appropriate blocks. We want to find the last tree block
-	   in the file and start from there. */
-	foundBegin = inTreeBlock = blockErrors = inSumtComment = NO;
-	lineNum = numTreesInBlock = lastTreeBlockBegin = lastTreeBlockEnd = numTreeBlocks = numTreesInLastBlock = 0;
-	while (fgets (s, longestLineLength, fp[1]) != NULL)
-		{
-		sumtTokenP = &s[0];
-		do
-			{
-			GetSumtToken (&tokenType);
-			if (IsSame("[", sumtToken) == SAME)
-				inSumtComment = YES;
-			if (IsSame("]", sumtToken) == SAME)
-				inSumtComment = NO;
-				
-			if (inSumtComment == NO)
-				{
-				if (foundBegin == YES)
-					{
-					if (IsSame("Trees", sumtToken) == SAME)
-						{
-						numTreesInBlock = 0;
-						inTreeBlock = YES;
-						foundBegin = NO;
-						lastTreeBlockBegin = lineNum;
-						}
-					}
-				else
-					{
-					if (IsSame("Begin", sumtToken) == SAME)
-						{
-						if (foundBegin == YES)
-							{
-							MrBayesPrint ("%s   Found inappropriate \"Begin\" statement in file\n", spacer);
-							blockErrors = YES;
-							}
-						foundBegin = YES;
-						}
-					else if (IsSame("End", sumtToken) == SAME)
-						{
-						if (inTreeBlock == YES)
-							{
-							numTreeBlocks++;
-							inTreeBlock = NO;
-							lastTreeBlockEnd = lineNum;
-							}
-						else
-							{
-							MrBayesPrint ("%s   Found inappropriate \"End\" statement in file\n", spacer);
-							blockErrors = YES;
-							}
-						numTreesInLastBlock = numTreesInBlock;
-						}
-					else if (IsSame("Tree", sumtToken) == SAME)
-						{
-						if (inTreeBlock == YES)
-							numTreesInBlock++;
-						else
-							{
-							MrBayesPrint ("%s   Found a \"Tree\" statement that is not in a tree block\n", spacer);
-							blockErrors = YES;
-							}
-						}
-					}
-				}
-				
-			} while (*sumtToken);
-		lineNum++;
-		}
-		
-	/* Now, check some aspects of the tree file, such as the number of tree blocks and whether they are properly terminated. */
-	if (inTreeBlock == YES)
-		{
-		MrBayesPrint ("%s   Unterminated tree block in file %s. You probably need to\n", spacer, comptreeParams.comptFileName2);
-		MrBayesPrint ("%s   add a new line to the end of the file with \"End;\" on it.\n", spacer);
-		goto errorExit;
-		}
-	if (inSumtComment == YES)
-		{
-		MrBayesPrint ("%s   Unterminated comment in file %s\n", spacer, comptreeParams.comptFileName2);
-		goto errorExit;
-		}
-	if (blockErrors == YES)
-		{
-		MrBayesPrint ("%s   Found formatting errors in file %s\n", spacer, comptreeParams.comptFileName2);
-		goto errorExit;
-		}
-	if (lastTreeBlockEnd < lastTreeBlockBegin)
-		{
-		MrBayesPrint ("%s   Problem reading tree file %s\n", spacer, comptreeParams.comptFileName2);
-		goto errorExit;
-		}
-	if (numTreesInLastBlock <= 0)
-		{
-		MrBayesPrint ("%s   No trees were found in last tree block of file %s\n", spacer, comptreeParams.comptFileName2);
-		goto errorExit;
-		}
-    if (sumtParams.relativeBurnin == NO && sumtParams.sumtBurnIn > numTreesInLastBlock)
-		{
-		MrBayesPrint ("%s   No trees are sampled as the burnin exceeds the number of trees in last block\n", spacer);
-		MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, numTreesInLastBlock);
-		goto errorExit;
-		}
-		
-	/* tell the user that everything is fine */
-	if (numTreeBlocks == 1)
-		MrBayesPrint ("%s   Found one tree block in file \"%s\" with %d trees in last block\n", spacer, comptreeParams.comptFileName2, numTreesInLastBlock);
-	else
-		{
-		MrBayesPrint ("%s   Found %d tree blocks in file \"%s\" with %d trees in last block\n", spacer, numTreeBlocks, comptreeParams.comptFileName2, numTreesInLastBlock);
-		MrBayesPrint ("%s   Only the %d trees in last tree block will be summarized\n", spacer, numTreesInLastBlock);
-		}
-		
-	/* Now we read the file for real. First, rewind file pointer to beginning of file... */
-	(void)fseek(fp[1], 0L, 0);	
-	
 	/* ...and fast forward to beginning of last tree block. */
-	for (i=0; i<lastTreeBlockBegin+1; i++)
-		fgets (s, longestLineLength, fp[1]);
+	for (i=0; i<lastTreeBlockBegin[1] + 1; i++)
+		fgets (s, longestLineLength, fp);
 		
-	/* Set up cheap status bar. */
-	MrBayesPrint ("\n%s   Tree reading status:\n\n", spacer);
-	MrBayesPrint ("%s   0      10      20      30      40      50      60      70      80      90     100\n", spacer);
-	MrBayesPrint ("%s   v-------v-------v-------v-------v-------v-------v-------v-------v-------v-------v\n", spacer);
-	MrBayesPrint ("%s   *", spacer);
-	numAsterices = 0;
-		
-	/* ...and parse file, tree-by-tree. We are only parsing lines between the "begin trees" and "end" statements.
-	   We don't actually get those lines, however, but rather the lines between those statements. */
+    /* Renitialize sumtParams struct */
+    sumtParams.runId = 1;
+    strcpy (sumtParams.curFileName, comptreeParams.comptFileName2);
+
+    /* Calculate burnin */
+    if (comptreeParams.relativeBurnin == YES)
+        comptreeParams.burnin = (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[1]);
+    else
+        comptreeParams.burnin = comptreeParams.comptBurnIn;
+
+    /* ... and parse the file */
 	expecting = Expecting(COMMAND);
-	/*numSumtTrees = numSumTreesSampled = 0;*/
-	numCompTrees[1] = numCompTreesSampled[1] = 0;
-	numFullCompTreesFound[1] = 0;
-	inTreesBlock = YES;
+    inTreesBlock = YES;
     ResetTranslateTable();
-	for (i=0; i<lastTreeBlockEnd - lastTreeBlockBegin - 1; i++)
+	for (i=0; i<lastTreeBlockEnd[1] - lastTreeBlockBegin[1] - 1; i++)
 		{
-		fgets (s, longestLineLength, fp[1]);
+		fgets (s, longestLineLength, fp);
 		/*MrBayesPrint ("%s", s);*/
 		if (ParseCommand (s) == ERROR)
 			goto errorExit;
 		}
 	inTreesBlock = NO;
-	
-	/* Finish cheap status bar. */
-	if (numAsterices < 80)
-		for (i=0; i<80 - numAsterices; i++)
-			MrBayesPrint ("*");
-	MrBayesPrint ("\n\n");
-	
-	/* how many taxa were included */
-	numIncludedTaxa2 = 0;
-	for (i=0; i<numTaxa; i++)
-		if (absentTaxa[i] == NO && prunedTaxa[i] == NO)
-			numIncludedTaxa2++;
-
-	/* print out information on absent taxa */
-	numExcludedTaxa = 0;
-	for (i=0; i<numTaxa; i++)
-		if (absentTaxa[i] == YES)
-			numExcludedTaxa++;
-	if (numExcludedTaxa > 0)
-		{
-		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was absent from trees:\n", spacer);
-		else
-			MrBayesPrint ("%s   The following %d species were absent from trees:\n", spacer, numExcludedTaxa);
-		MrBayesPrint ("%s      ", spacer);
-		j = lineWidth = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (absentTaxa[i] == YES)
-				{
-				j++;
-				if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-					return (ERROR);
-					}
-				len = (int) strlen(tempStr);
-				lineWidth += len+2;
-				if (lineWidth > 60)
-					{
-					MrBayesPrint ("\n%s      ", spacer);
-					lineWidth = 0;
-					}
-				if (numExcludedTaxa == 1)
-					MrBayesPrint ("%s\n", tempStr);
-				else if (numExcludedTaxa == 2 && j == 1)
-					MrBayesPrint ("%s ", tempStr);
-				else if (j == numExcludedTaxa)
-					MrBayesPrint ("and %s\n", tempStr);
-				else
-					MrBayesPrint ("%s, ", tempStr);
-				}
-			}
-		MrBayesPrint ("\n");
-		}
-
-	/* print out information on pruned taxa */
-	numExcludedTaxa = 0;
-	for (i=0; i<numTaxa; i++)
-		if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-			numExcludedTaxa++;
-	
-	if (numExcludedTaxa > 0)
-		{
-		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was pruned from trees:\n", spacer);
-		else
-			MrBayesPrint ("%s   The following %d species were pruned from trees:\n", spacer, numExcludedTaxa);
-		MrBayesPrint ("%s      ", spacer);
-		j = lineWidth = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-				{
-				j++;
-				if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-					return (ERROR);
-					}
-				len = (int) strlen(tempStr);
-				lineWidth += len+2;
-				if (lineWidth > 60)
-					{
-					MrBayesPrint ("\n%s      ", spacer);
-					lineWidth = 0;
-					}
-				if (numExcludedTaxa == 1)
-					MrBayesPrint ("%s\n", tempStr);
-				else if (numExcludedTaxa == 2 && j == 1)
-					MrBayesPrint ("%s ", tempStr);
-				else if (j == numExcludedTaxa)
-					MrBayesPrint ("and %s\n", tempStr);
-				else
-					MrBayesPrint ("%s, ", tempStr);
-				}
-			}
-		MrBayesPrint ("\n");
-		}
-	
-	/* tell user how many trees were successfully read */
-	MrBayesPrint ("%s   Read %d trees from last tree block (sampling %d of them)\n", spacer, numCompTrees[1], numCompTreesSampled[1]);
-	
-	/* summarize information ***************************************************************************/
-	
-	if (numIncludedTaxa1 != numIncludedTaxa2)
-		{
-		MrBayesPrint ("%s   The number of taxa to be compared in each file is not the same\n", spacer);
-		goto errorExit;
-		}
-	
-	/* how many taxon bipartitions are there for each tree */
-	if (isSumtTreeRooted == YES)
-		nCompPartitions = 2 * numIncludedTaxa1 - 2;
-	else
-		nCompPartitions = 2 * numIncludedTaxa1 - 3;
 
 	/* Check that at least one tree was read in. */
-	if (numSumTreesSampled <= 0)
+    if (sumtParams.numFileTreesSampled[1] <= 0)
 		{
 		MrBayesPrint ("%s   No trees read in\n", spacer);
 		goto errorExit;
 		}
 		
-	/* Sort partitions... */
-	if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-		{
-		MrBayesPrint ("%s   numFoundOfThisPart not free in AllocBits\n", spacer);
-		goto errorExit;
-		}
-	partOrigOrder = (int *)SafeMalloc((size_t) (numTreePartsFound * sizeof(int)));
-	if (!partOrigOrder)
-		{
-		MrBayesPrint ("%s   Problem allocating partOrigOrder (%d)\n", spacer, numTreePartsFound * sizeof(int));
-		goto errorExit;
-		}
-	memAllocs[ALLOC_PARTORIGORDER] = YES;
-	for (i=0; i<numTreePartsFound; i++)
-		partOrigOrder[i] = i;
-	if (SortParts (numFoundOfThisPart, numTreePartsFound) == ERROR)
-		goto errorExit;
+    /* ... and close file */
+    SafeFclose (&fp);
+
+    /* Now finish cheap status bar. */
+	if (numAsterices < 80)
+		for (i=0; i<80 - numAsterices; i++)
+			MrBayesPrint ("*");
+	MrBayesPrint ("\n\n");
 	
-	/* ...and reorder bits if some taxa were not included. */
-	numIncludedTaxa = numTaxa;
-	if (ReorderParts () == ERROR)
-		goto errorExit;
-		
+	/* tell user how many trees were successfully read */
+	/* tell user how many trees were successfully read */
+	MrBayesPrint ("%s   Read %d trees from last tree block of file \"%s\" (sampling %d of them)\n", spacer,
+        sumtParams.numFileTrees[0],
+        comptreeParams.comptFileName1,
+        sumtParams.numFileTreesSampled[0]);
+    MrBayesPrint ("%s   Read %d trees from last tree block of file \"%s\" (sampling %d of them)\n", spacer,
+        sumtParams.numFileTrees[1],
+        comptreeParams.comptFileName2,
+        sumtParams.numFileTreesSampled[1]);
+	
+	/* Extract partition counter pointers */
+    treeParts = (PartCtr **) calloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
+    i = 0;
+    PartCtrUppass(partCtrRoot, treeParts, &i);
+
+    /* Sort taxon partitions (clades, splits) ... */
+	SortPartCtr (treeParts, 0, numUniqueSplitsFound-1);
+
 	/* open output files for summary information (two files) */
 	if (OpenComptFiles () == ERROR)
 		goto errorExit;
@@ -2438,12 +1086,20 @@ int DoCompareTree (void)
     MrBayesPrint ("                                                                                   \n");
 	MrBayesPrint ("%s   General explanation:                                                          \n", spacer);
     MrBayesPrint ("                                                                                   \n");
-    MrBayesPrint ("%s   A taxon bibartition is specified by removing a branch, thereby divid-         \n", spacer);
-    MrBayesPrint ("%s   ing the species into those to the left and those to the right of the          \n", spacer);
-    MrBayesPrint ("%s   branch. Here, taxa to one side of the removed branch are denoted \".\"        \n", spacer);
-    MrBayesPrint ("%s   and those to the other side are denoted \"*\". The output includes the        \n", spacer);
-    MrBayesPrint ("%s   bipartition number (sorted from highest to lowest probability), bi-           \n", spacer);
-    MrBayesPrint ("%s   partition (e.g., ...**..), number of times the bipartition was ob-            \n", spacer);
+    MrBayesPrint ("%s   In an unrooted tree, a taxon bipartition (split) is specified by removing a   \n", spacer);
+    MrBayesPrint ("%s   branch, thereby dividing the species into those to the left and those to the  \n", spacer);
+    MrBayesPrint ("%s   right of the branch. Here, taxa to one side of the removed branch are denoted \n", spacer);
+    MrBayesPrint ("%s   '.' and those to the other side are denoted '*'. Specifically, the '.' symbol \n", spacer);
+    MrBayesPrint ("%s   is used for the taxa on the same side as the outgroup.                        \n", spacer);
+    MrBayesPrint ("                                                                                   \n");
+    MrBayesPrint ("%s   In a rooted or clock tree, the '*' symbol is simply used to denote the taxa   \n", spacer);
+    MrBayesPrint ("%s   that are included in a particular group (clade), that is, all the descendants \n", spacer);
+    MrBayesPrint ("%s   of a particular branch in the tree.  Taxa that are not included are denoted   \n", spacer);
+    MrBayesPrint ("%s   using the '.' symbol.                                                         \n", spacer);
+    MrBayesPrint ("                                                                                   \n");
+    MrBayesPrint ("%s   The output includes the ID of the encountered clades or splits (sorted from   \n", spacer);
+    MrBayesPrint ("%s   highest to lowest probability), the bipartition or clade in '.*' format, \n", spacer);
+    MrBayesPrint ("%s   number of times the bipartition or clade was observed in the first tree file  \n", spacer);
     MrBayesPrint ("%s   served in the first tree file, the number of times the bipartition was,       \n", spacer);
     MrBayesPrint ("%s   observed in the second tree file, the proportion of the time the bipartition  \n", spacer);
     MrBayesPrint ("%s   was found in the first tree file, and the proportion of the time the bi-      \n", spacer);
@@ -2454,38 +1110,32 @@ int DoCompareTree (void)
 	j = 1;
 	for (k=0; k<numTaxa; k++)
 		{
-		if (GetNameFromString (taxaNames, tempName, k+1) == ERROR)
+		if (sumtParams.absentTaxa[k] == NO && taxaInfo[k].isDeleted == NO)
 			{
-			MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-			return (ERROR);
-			}
-		if (sumTaxaFound[k] == YES)
-			{
-			MrBayesPrint ("%s   %4d -- %s\n", spacer, j++, tempName);
+			MrBayesPrint ("%s   %4d -- %s\n", spacer, j++, taxaNames[k]);
 			}
 		}
     MrBayesPrint ("                                                                                   \n");
 	MrBayesPrint ("%s   List of taxon bipartitions found in tree file:                                \n\n", spacer);
 
-	x = &treePartsFound[0];
-	for (i=0; i<numTreePartsFound; i++)
+	for (i=0; i<numUniqueSplitsFound; i++)
 		{
-		if ((MrBFlt)numFoundOfThisPart[i]/numSumTreesSampled >= sumtParams.freqDisplay)
+        x = treeParts[i];
+        if ((MrBFlt)x->totCount/(MrBFlt)sumtParams.numTreesSampled >= comptreeParams.minPartFreq)
 			{
 			MrBayesPrint ("%s   %4d -- ", spacer, i+1);
-			ShowParts (stdout, &x[0], numIncludedTaxa);
+			ShowParts (stdout, x->partition, sumtParams.numTaxa);
 
 			MrBayesPrint ("   %4d %4d %1.3lf %1.3lf\n", 
-			numFoundOfThisPart1[i], numFoundOfThisPart2[i], 
-			(MrBFlt)numFoundOfThisPart1[i]/numCompTreesSampled[0], 
-			(MrBFlt)numFoundOfThisPart2[i]/numCompTreesSampled[1]);
+			x->count[0], x->count[1],
+			(MrBFlt)x->count[0]/(MrBFlt)sumtParams.numFileTreesSampled[0], 
+			(MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1]);
 			
-			MrBayesPrintf (fpCompParts, "%d\t%d\t%d\t%1.3lf\t%1.3lf\n", 
-			i+1, numFoundOfThisPart1[i], numFoundOfThisPart2[i], 
-			(MrBFlt)numFoundOfThisPart1[i]/numCompTreesSampled[0], 
-			(MrBFlt)numFoundOfThisPart2[i]/numCompTreesSampled[1]);
+			MrBayesPrintf (fpParts, "%d\t%d\t%d\t%1.3lf\t%1.3lf\n", 
+			i+1, x->count[0], x->count[1], 
+			(MrBFlt)x->count[0]/(MrBFlt)sumtParams.numFileTreesSampled[0], 
+			(MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1]);
 			}
-		x += taxonLongsNeeded;
 		}
 		
 	/* make a nifty graph plotting frequencies of clades found in the two tree files */
@@ -2506,10 +1156,11 @@ int DoCompareTree (void)
 		for (xaxis=0; xaxis<80; xaxis++)
 			{
 			starHolder[xaxis] = 0;
-			for (i=0; i<numTreePartsFound; i++)
+			for (i=0; i<numUniqueSplitsFound; i++)
 				{
-				xProb = (MrBFlt)numFoundOfThisPart1[i]/numCompTreesSampled[0];
-				yProb = (MrBFlt)numFoundOfThisPart2[i]/numCompTreesSampled[1];
+                x = treeParts[i];
+				xProb = (MrBFlt)x->count[0]/(MrBFlt)sumtParams.numFileTreesSampled[0];
+				yProb = (MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1];
 				if (xProb > xLower && xProb <= xUpper && yProb > yLower && yProb <= yUpper)
 					starHolder[xaxis] = 1;
 				}
@@ -2547,42 +1198,45 @@ int DoCompareTree (void)
 	MrBayesPrint ("   ^                                                                              ^\n");
 	MrBayesPrint ("  0.00                                                                          1.00\n");
 		
-	/* get tree-to-tree distances */
-	minNumTrees = numFullCompTreesFound[0];
-	if (numFullCompTreesFound[1] < minNumTrees)
-		minNumTrees = numFullCompTreesFound[1];
-	if (memAllocs[ALLOC_TOPO_DISTANCES] == YES)
-		{
-		MrBayesPrint ("%s   Topological distances all ready allocated\n", spacer);
-		goto errorExit;
-		}
-	dT1 = (MrBFlt *)SafeMalloc((size_t) (minNumTrees * sizeof(MrBFlt)));
-	if (!dT1)
+    /* get tree-to-tree distances: first allocate some space */
+    minNumTrees = sumtParams.numFileTreesSampled[0];
+	if (sumtParams.numFileTreesSampled[1] < minNumTrees)
+		minNumTrees = sumtParams.numFileTreesSampled[1];
+	dT1 = (MrBFlt *)SafeMalloc((size_t) (3 * minNumTrees * sizeof(MrBFlt)));
+    tree1 = AllocateFixedTree (sumtParams.numTaxa, sumtParams.isRooted);
+    tree2 = AllocateFixedTree (sumtParams.numTaxa, sumtParams.isRooted);
+	if (!dT1 || !tree1 || !tree2)
 		{
 		MrBayesPrint ("%s   Problem allocating topological distances\n", spacer);
 		goto errorExit;
 		}
-	dT2 = (MrBFlt *)SafeMalloc((size_t) (minNumTrees * sizeof(MrBFlt)));
-	if (!dT2)
-		{
-		MrBayesPrint ("%s   Problem allocating topological distances\n", spacer);
-		goto errorExit;
-		}
-	dT3 = (MrBFlt *)SafeMalloc((size_t) (minNumTrees * sizeof(MrBFlt)));
-	if (!dT3)
-		{
-		MrBayesPrint ("%s   Problem allocating topological distances\n", spacer);
-		goto errorExit;
-		}
-	memAllocs[ALLOC_TOPO_DISTANCES] = YES;
-		
+	dT2 = dT1 + minNumTrees;
+	dT3 = dT2 + minNumTrees;
+	
 	for (i=0; i<minNumTrees; i++)
 		{
-		treePartList[0] = &fullCompTreePartIds1[i * 2 * numTaxa];
-		treeLengthList[0] = &fullCompTreePartLengths1[i * 2 * numTaxa];
-		treePartList[1] = &fullCompTreePartIds2[i * 2 * numTaxa];
-		treeLengthList[1] = &fullCompTreePartLengths2[i * 2 * numTaxa];
-		CalculateTreeToTreeDistance (treePartList, treeLengthList, nCompPartitions, sumtBrlensDef, &d1, &d2, &d3);
+		if (sumtParams.isRooted == NO)
+            {
+            RetrieveUTree (tree1, packedTreeList[0][i].order, packedTreeList[0][i].brlens);
+            RetrieveUTree (tree2, packedTreeList[1][i].order, packedTreeList[1][i].brlens);
+            }
+        else
+            {
+            RetrieveRTree (tree1, packedTreeList[0][i].order, packedTreeList[0][i].brlens);
+            RetrieveRTree (tree2, packedTreeList[1][i].order, packedTreeList[1][i].brlens);
+            }
+        /* Allocate and set partitions now that we have a tree */
+        if (i == 0)
+            {
+            AllocateTreePartitions(tree1);
+            AllocateTreePartitions(tree2);
+            }
+        else
+            {
+            ResetTreePartitions(tree1);
+            ResetTreePartitions(tree2);
+            }
+        CalculateTreeToTreeDistance (tree1, tree2, &d1, &d2, &d3);
 		dT1[i] = d1;
 		dT2[i] = d2;
 		dT3[i] = d3;
@@ -2591,10 +1245,10 @@ int DoCompareTree (void)
 	for (i=0; i<minNumTrees; i++)
 		{
 		/*MrBayesPrint ("%s   %4d -- %lf %lf %lf\n", spacer, i+1, dT1[i], dT2[i], dT3[i]);*/	
-		if (sumtBrlensDef == YES)
-			MrBayesPrintf (fpCompDists, "%d\t%lf\t%lf\t%lf\n", i+1, dT1[i], dT2[i], dT3[i]);	
+		if (sumtParams.brlensDef == YES)
+			MrBayesPrintf (fpDists, "%d\t%lf\t%lf\t%lf\n", i+1, dT1[i], dT2[i], dT3[i]);	
 		else
-			MrBayesPrintf (fpCompDists, "%d\t%lf\n", i+1, dT1[i]);	
+			MrBayesPrintf (fpDists, "%d\t%lf\n", i+1, dT1[i]);	
 		}
 		
 	/* print x-y plot of log likelihood vs. generation */
@@ -2677,7 +1331,7 @@ int DoCompareTree (void)
 		MrBayesPrint (" ");
 	MrBayesPrint ("%1.0lf\n\n", maxX);
 
-	if (sumtBrlensDef == YES)
+	if (sumtParams.brlensDef == YES)
 		{
 		for (n=0; n<2; n++)
 			{
@@ -2693,7 +1347,7 @@ int DoCompareTree (void)
 			maxX = maxY = -1000000000.0;
 			for (i=0; i<minNumTrees; i++)
 				{
-				xVal = (MrBFlt) (i + comptreeParams.comptBurnIn);
+				xVal = (MrBFlt) (i + comptreeParams.burnin);
 				if (n == 0)
 					yVal = dT2[i];
 				else
@@ -2714,7 +1368,7 @@ int DoCompareTree (void)
 				}
 			for (i=0; i<minNumTrees; i++)
 				{
-				xVal = (MrBFlt) (i + comptreeParams.comptBurnIn);
+				xVal = (MrBFlt) (i + comptreeParams.burnin);
 				if (n == 0)
 					yVal = dT2[i];
 				else
@@ -2779,91 +1433,90 @@ int DoCompareTree (void)
 		{
 		i = (int) RandomNumber(&temporarySeed) * minNumTrees;
 		j = (int) RandomNumber(&temporarySeed) * minNumTrees;
-		treePartList[0] = &fullCompTreePartIds1[i * 2 * numTaxa];
-		treeLengthList[0] = &fullCompTreePartLengths1[i * 2 * numTaxa];
-		treePartList[1] = &fullCompTreePartIds2[j * 2 * numTaxa];
-		treeLengthList[1] = &fullCompTreePartLengths2[j * 2 * numTaxa];
-		CalculateTreeToTreeDistance (treePartList, treeLengthList, nCompPartitions, sumtBrlensDef, &d1, &d2, &d3);
+        if (sumtParams.isRooted == NO)
+            {
+            RetrieveUTree (tree1, packedTreeList[0][i].order, packedTreeList[0][i].brlens);
+            RetrieveUTree (tree2, packedTreeList[1][j].order, packedTreeList[1][j].brlens);
+            }
+        else /* if (sumtParams.isRooted == YES) */
+            {
+            RetrieveRTree (tree1, packedTreeList[0][i].order, packedTreeList[0][i].brlens);
+            RetrieveRTree (tree2, packedTreeList[1][j].order, packedTreeList[1][j].brlens);
+            }
+		CalculateTreeToTreeDistance (tree1, tree2, &d1, &d2, &d3);
 		sums[0] += d1;
 		sums[1] += d2;
 		sums[2] += d3;
 		}
 	MrBayesPrint ("%s   Mean tree-to-tree distances, based on %d trees randomly sampled from both files:\n\n", spacer, nSamples);
 	MrBayesPrint ("%s                                 Mean(Robinson-Foulds) = %1.3lf\n", spacer, sums[0]/nSamples);
-	if (sumtBrlensDef == YES)
+    if (sumtParams.brlensDef == YES)
 		{
 		MrBayesPrint ("%s             Mean(Robinson-Foulds with branch lengths) = %1.3lf\n", spacer, sums[1]/nSamples);
 		MrBayesPrint ("%s      Mean(Robinson-Foulds with scaled branch lengths) = %1.3lf\n", spacer, sums[2]/nSamples);
 		}
 
 	/* free memory and file pointers */
-	if (memAllocs[ALLOC_SUMTSTRING] == YES)
-		{
-		free (s);
-		memAllocs[ALLOC_SUMTSTRING] = NO;
+    free(s);
+	free (dT1);
+	FreeTree (tree1);
+	FreeTree (tree2);
+    if (memAllocs[ALLOC_PACKEDTREES] == YES)
+	    {
+        for (i=0; i<numPackedTrees[0]+numPackedTrees[1]; i++)
+            {
+            free(packedTreeList[0][i].order);
+            free(packedTreeList[0][i].brlens);
+            }
+        free(packedTreeList[0]);
+		memAllocs[ALLOC_PACKEDTREES] = NO;
 		}
-	if (memAllocs[ALLOC_TOPO_DISTANCES] == YES)
-		{
-		free (dT1);
-		free (dT2);
-		free (dT3);
-		memAllocs[ALLOC_TOPO_DISTANCES] = NO;
-		}
-	if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-		{
-		free (partOrigOrder);
-		memAllocs[ALLOC_PARTORIGORDER] = NO;
-		}
-	FreeBits ();
-	sumtBrlensDef = oldSumtBrlensDef;
-	expecting = Expecting(COMMAND);
 
 	/* close files */
-	SafeFclose (&fp[0]);
-	SafeFclose (&fp[1]);
-	SafeFclose (&fpCompParts);
-	SafeFclose (&fpCompDists);
+	SafeFclose (&fp);
+	SafeFclose (&fpParts);
+	SafeFclose (&fpDists);
 	
+    /* reset taxon set */
+    ResetTaxonSet();
+
 #	if defined (MPI_ENABLED)
 		}
 #	endif
 
+	expecting = Expecting(COMMAND);
     inComparetreeCommand = NO;
 	return (NO_ERROR);
 	
 	/* error exit */			
 	errorExit:
-		sumtBrlensDef = oldSumtBrlensDef;
-		expecting = Expecting(COMMAND);
-		if (memAllocs[ALLOC_SUMTSTRING] == YES)
-			{
-			free (s);
-			memAllocs[ALLOC_SUMTSTRING] = NO;
-			}
-		if (memAllocs[ALLOC_TOPO_DISTANCES] == YES)
-			{
-			free (dT1);
-			free (dT2);
-			free (dT3);
-			memAllocs[ALLOC_TOPO_DISTANCES] = NO;
-			}
-		if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-			{
-			free (partOrigOrder);
-			memAllocs[ALLOC_PARTORIGORDER] = NO;
-			}
-		FreeBits ();
-		SafeFclose (&fp[0]);
-		SafeFclose (&fp[1]);
-		SafeFclose (&fpCompParts);
-		SafeFclose (&fpCompDists);
+        free (s);
+		free (dT1);
+	    FreeTree (tree1);
+	    FreeTree (tree2);
+        if (memAllocs[ALLOC_PACKEDTREES] == YES)
+	        {
+            for (i=0; i<numPackedTrees[0]+numPackedTrees[1]; i++)
+                {
+                free(packedTreeList[0][i].order);
+                free(packedTreeList[0][i].brlens);
+                }
+            free(packedTreeList[0]);
+		    memAllocs[ALLOC_PACKEDTREES] = NO;
+		    }
+
+        /* reset taxon set */
+        ResetTaxonSet();
+
+        SafeFclose (&fp);
+		SafeFclose (&fpParts);
+		SafeFclose (&fpDists);
 		strcpy (spacer, "");
-		strcpy (sumtToken, "Comparetree");
-		i = 0;
-		if (FindValidCommand (sumtToken, &i) == ERROR)
-			MrBayesPrint ("%s   Could not find comparetree\n", spacer);
+
+		expecting = Expecting(COMMAND);
         inComparetreeCommand = NO;
-		return (ERROR);	
+
+        return (ERROR);	
 	
 }
 
@@ -2876,12 +1529,8 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 {
 
 	int			tempI;
-
-	if (defMatrix == NO)
-		{
-		MrBayesPrint ("%s   A matrix must be specified before comparetree can be used\n", spacer);
-		return (ERROR);
-		}
+    MrBFlt      tempD;
+    char        tempStr[100];
 
 	if (expecting == Expecting(PARAMETER))
 		{
@@ -2945,6 +1594,38 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+		/* set Relburnin (comptreeParams.relativeBurnin) ********************************************************/
+		else if (!strcmp(parmName, "Relburnin"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						comptreeParams.relativeBurnin = YES;
+					else
+						comptreeParams.relativeBurnin = NO;
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				if (comptreeParams.relativeBurnin == YES)
+					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
+				else
+					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				{
+				free (tempStr);
+				return (ERROR);
+				}
+			}
 		/* set Burnin (comptreeParams.comptBurnIn) *******************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
@@ -2959,6 +1640,36 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				}
 			else
 				return (ERROR);
+			}
+		/* set Burninfrac (comptreeParams.comptBurnInFrac) ************************************************************/
+		else if (!strcmp(parmName, "Burninfrac"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%lf", &tempD);
+				if (tempD < 0.01)
+					{
+					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				if (tempD > 0.50)
+					{
+					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+                comptreeParams.comptBurnInFrac = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, comptreeParams.comptBurnInFrac);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				free(tempStr);
+				return (ERROR);
+				}
 			}
 		else
 			return (ERROR);
@@ -2976,19 +1687,19 @@ int DoSumt (void)
 
 {
 
+    int		        i, j=0, k, n, longestLineLength=0, len, longestName, treeNo, numTreePartsToPrint,
+                    maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
+			        longestHeader;
+	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
+                    maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s, max_s, numPSRFSamples=0;
+	PartCtr 	    *x;
+	char		    *s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], divString[100];
+	FILE		    *fp=NULL;
+    PartCtr         **treeParts=NULL;
+    SumtFileInfo    sumtFileInfo;
+    Stat            theStats;
 
-	int		i, j=0, k, n, lineTerm=0, longestLineLength=0, tokenType, foundBegin, inTreeBlock, lineNum, 
-			numTreesInBlock, numTreeBlocks, lastTreeBlockBegin=0, lastTreeBlockEnd=0,
-			len, lineWidth, longestName, blockErrors, inSumtComment, numExcludedTaxa, treeNo,
-			runNo, firstFileNumTrees=0, firstFileNumSumTreesSampled=0, numTreePartsToPrint, maxWidthID,
-			maxWidthNumberPartitions, tableWidth=0, unreliable, oneUnreliable, firstSumtBrlensDef=0,
-			numTotalTreesSampled, precision, nSummarySamples=0, nPSRFSamples=0, includeInStat=NO;
-	MrBFlt		var=0.0, f, var_s, sum_s, stddev_s=0.0, sumsq_s, varB=0.0, varW=0.0, sqrt_R=0.0,
-                sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0, maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0;
-	safeLong		*x;
-	char		*s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], rateName[100], clockFile[100],
-				*tempStringP;
-	FILE		*fp, *fpParam;
+#define SCREEN_WIDTH 80
 	
 #	if defined (MPI_ENABLED)
 	if (proc_id == 0)
@@ -2998,50 +1709,55 @@ int DoSumt (void)
 	/* Ensure that we read trees with sumt code and not user tree code */
     inSumtCommand = YES;
 
-	/* Are we comparing two files, or using sumt? */
-	comparingFiles = NO;
-
-	/* Initially, we do not want to print brlens to file */
-	printingBrlens = NO;
-
-	/* Are we focusing on brlens or node depths ? */
-	if (!strcmp(sumtParams.phylogramType, "Nodedepths"))
-		nodeDepthConTree = YES;
-	else
-		nodeDepthConTree = NO;
-	
 	/* set file pointers to NULL */
-	fp = fpParam = fpParts = fpCon = fpTrees = fpBrlens = NULL;
+	fp = fpParts = fpTstat = fpVstat = fpCon = fpTrees = NULL;
 
-	/* Check that a data set has been read in. We check taxon names against
-	   those read in. */
-	if (defMatrix == NO)
-		{
-		MrBayesPrint ("%s   A matrix must be specified before sumt can be used\n", spacer);
-		goto errorExit;
-		}
-
-	/* Check that if there is anything to do */
+	/* Check if there is anything to do */
     if (sumtParams.table == NO && sumtParams.summary == NO && sumtParams.showConsensus == NO)
 		{
 		MrBayesPrint ("%s   Nothing to do, all output parameters (Table, Summary, Consensus) set to 'NO'\n", spacer);
 		goto errorExit;
 		}
 
+    /* Initialize sumtParams struct */
+    sumtParams.numTaxa = 0;
+    sumtParams.safeLongsNeeded = 0;
+    sumtParams.tree = AllocatePolyTree (numTaxa);
+    AllocatePolyTreePartitions (sumtParams.tree);
+    sumtParams.numFileTrees = (int *) calloc (2*sumtParams.numRuns+2*numTaxa, sizeof(int));
+    sumtParams.numFileTreesSampled = sumtParams.numFileTrees + sumtParams.numRuns;
+    sumtParams.order = sumtParams.numFileTrees + 2*sumtParams.numRuns;
+    sumtParams.absentTaxa = sumtParams.numFileTrees + 2*sumtParams.numRuns + numTaxa;
+    if (!sumtParams.numFileTrees)
+        {
+        MrBayesPrint ("%s   Problems allocating sumtParams.numFileTrees in DoSumt()\n", spacer);
+        goto errorExit;
+        }
+    else
+        memAllocs[ALLOC_SUMTPARAMS] = YES;
+
     for (treeNo = 0; treeNo < sumtParams.numTrees; treeNo++)
 		{
-		/* initialize across-file tree counter */
-		numTotalTreesSampled = 0;
+		/* initialize across-file tree and partition counters */
+        sumtParams.numTreesSampled = sumtParams.numTreesEncountered = 0;
+        numUniqueSplitsFound = numUniqueTreesFound = 0;
 
 		/* initialize oneUnreliable && unreliable */
 		oneUnreliable = unreliable = NO;
-		
+
+        /* initialize summary statistics */
+        sumStdDev = 0.0;
+        sumPSRF = 0.0;
+        numPSRFSamples = 0;
+        maxStdDev = 0.0;
+        maxPSRF = 0.0;
+
 		/* tell user we are ready to go */
 		if (sumtParams.numTrees > 1)
 			sprintf (fileName,"%s.tree%d", sumtParams.sumtFileName, treeNo+1);
 		else
 			strcpy (fileName, sumtParams.sumtFileName);
-			
+
 		if (sumtParams.numRuns == 1)
 			MrBayesPrint ("%s   Summarizing trees in file \"%s.t\"\n", spacer, fileName);
 		else if (sumtParams.numRuns == 2)
@@ -3049,289 +1765,109 @@ int DoSumt (void)
 		else if (sumtParams.numRuns > 2)
 			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\", \"%s.run2.t\", etc\n", spacer, fileName, fileName);
 
-		for (runNo=0; runNo < sumtParams.numRuns; runNo++)
+		for (sumtParams.runId=0; sumtParams.runId < sumtParams.numRuns; sumtParams.runId++)
 			{
 			/* initialize tree counters */
-			numSumtTrees = numSumTreesSampled = 0;
+			sumtParams.numFileTrees[sumtParams.runId] = sumtParams.numFileTreesSampled[sumtParams.runId] = 0;
 
 			/* open binary file */
 			if (sumtParams.numRuns == 1)
 				sprintf (tempName, "%s.t", fileName);
 			else
-				sprintf (tempName, "%s.run%d.t", fileName, runNo+1);
+				sprintf (tempName, "%s.run%d.t", fileName, sumtParams.runId+1);
+            strcpy(sumtParams.curFileName, tempName);
 
-			if ((fp = OpenBinaryFileR(tempName)) == NULL)
+			/* tell user we are examining files if for the first run */
+			if (sumtParams.runId == 0)
 				{
-				if (strcmp (fileName+strlen(fileName)-2, ".t") == 0)
-					{
-					MrBayesPrint ("%s   You probably need to remove '.t' from 'Filename'\n", spacer);
-					MrBayesPrint ("%s   Also make sure that 'Nruns' and 'Ntrees' are set correctly\n", spacer);
-					}
-				else
-					MrBayesPrint ("%s   Make sure that 'Nruns' and 'Ntrees' are set correctly\n", spacer);
-				goto errorExit;
-				}
-		
-			/* find out what type of line termination is used */
-			if (runNo == 0 && treeNo == 0)
-				{
-				lineTerm = LineTermType (fp);
-				if (lineTerm == LINETERM_MAC)
-					MrBayesPrint ("%s   Macintosh line termination\n", spacer);
-				else if (lineTerm == LINETERM_DOS)
-					MrBayesPrint ("%s   DOS line termination\n", spacer);
-				else if (lineTerm == LINETERM_UNIX)
-					MrBayesPrint ("%s   UNIX line termination\n", spacer);
-				else
-					{
-					MrBayesPrint ("%s   Unknown line termination\n", spacer);
-					goto errorExit;
-					}
-				if (sumtParams.numRuns > 1)
+				if (sumtParams.numRuns > 1 && sumtParams.numTrees > 1)
+					MrBayesPrint ("%s   Examining first file for tree %d ...\n", spacer, treeNo);
+				else if (sumtParams.numRuns > 1 && sumtParams.numTrees == 1)
 					MrBayesPrint ("%s   Examining first file ...\n", spacer);
+				else if (sumtParams.numRuns == 1 && sumtParams.numTrees > 1)
+					MrBayesPrint ("%s   Examining file for tree %d ...\n", spacer, treeNo);
 				else
 					MrBayesPrint ("%s   Examining file ...\n", spacer);
 				}
-			else if (LineTermType (fp) != lineTerm)
-				{
-				MrBayesPrint ("%s   Inconsistent line termination for file %d\n", spacer, runNo + 1);
-				goto errorExit;
-				}
 
-			/* find length of longest line */
-			longestLineLength = LongestLine (fp);
-			longestLineLength += 10;
-	
-			/* allocate a string long enough to hold a line */
-			if (runNo == 0 && treeNo == 0)
+            /* examine file */
+            if (ExamineSumtFile(tempName, &sumtFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+                goto errorExit;
+
+            /* capture values */
+            if (sumtParams.runId == 0)
+
+            /* catch lack of sampled trees */
+            if (sumtParams.relativeBurnin == NO && sumtParams.sumtBurnIn > sumtFileInfo.numTreesInLastBlock)
+		        {
+		        MrBayesPrint ("%s   No trees are sampled as the burnin exceeds the number of trees in last block\n", spacer);
+		        MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, sumtFileInfo.numTreesInLastBlock);
+		        goto errorExit;
+		        }
+        		
+			/* tell the user that everything is fine */
+			if (sumtParams.runId == 0)
 				{
-				if (memAllocs[ALLOC_SUMTSTRING] == YES)
+				if (sumtFileInfo.numTreeBlocks == 1)
+					MrBayesPrint ("%s   Found one tree block in file \"%s\" with %d trees in last block\n",
+                        spacer, tempName, sumtFileInfo.numTreesInLastBlock);
+				else
 					{
-					MrBayesPrint ("%s   Sumt string is already allocated\n", spacer);
+					MrBayesPrint ("%s   Found %d tree blocks in file \"%s\" with %d trees in last block\n",
+                        spacer, sumtFileInfo.numTreeBlocks, tempName, sumtFileInfo.numTreesInLastBlock);
+					MrBayesPrint ("%s   Only the %d trees in last tree block will be summarized\n", spacer, sumtFileInfo.numTreesInLastBlock);
+					}
+                sumtParams.numTreesInLastBlock = sumtFileInfo.numTreesInLastBlock;
+                if (sumtParams.numRuns > 1)
+					MrBayesPrint ("%s   Expecting the same number of trees in the last tree block of all files\n", spacer);
+                if (sumtParams.relativeBurnin == NO)
+                    sumtParams.burnin = sumtParams.sumtBurnIn;
+                else
+                    sumtParams.burnin = (int) (sumtFileInfo.numTreesInLastBlock * sumtParams.sumtBurnInFraction);
+				}
+			else
+				{
+				if (sumtFileInfo.numTreesInLastBlock != sumtParams.numFileTrees[0])
+					{
+					MrBayesPrint ("%s   Found %d trees in first file but %d trees in file \"%s\"\n", spacer,
+                        sumtParams.numFileTrees[0],
+                        sumtFileInfo.numTreesInLastBlock,
+                        tempName);
 					goto errorExit;
 					}
-				s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
+				}
+		
+			/* Now we read the file for real. First, allocate a string for reading the file... */
+			if (sumtParams.runId == 0 && treeNo == 0)
+				{
+				s = (char *)SafeMalloc((size_t) (sumtFileInfo.longestLineLength * sizeof(char)));
 				if (!s)
 					{
 					MrBayesPrint ("%s   Problem allocating string for reading sumt file\n", spacer);
 					goto errorExit;
 					}
-				memAllocs[ALLOC_SUMTSTRING] = YES;
 				}
 			else
 				{
 				free (s);
-				s = (char *) SafeMalloc (sizeof (char) * longestLineLength);
+				s = (char *) SafeMalloc (sizeof (char) * sumtFileInfo.longestLineLength);
+				if (!s)
+					{
+					MrBayesPrint ("%s   Problem reallocating string for reading sumt file\n", spacer);
+					goto errorExit;
+					}
 				}
 		
-			/* close binary file */
-			SafeFclose (&fp);
-	
-			/* open text file */
+			/* ... open the file ... */
 			if ((fp = OpenTextFileR(tempName)) == NULL)
 				goto errorExit;
 	
-			/* Check file for appropriate blocks. We want to find the last tree block
-			   in the file and start from there. */
-			foundBegin = inTreeBlock = blockErrors = inSumtComment = NO;
-			lineNum = numTreesInBlock = lastTreeBlockBegin = lastTreeBlockEnd = numTreeBlocks = numTreesInLastBlock = 0;
-			while (fgets (s, longestLineLength, fp) != NULL)
-				{
-				sumtTokenP = &s[0];
-				do
-					{
-					GetSumtToken (&tokenType);
-					if (IsSame("[", sumtToken) == SAME)
-						inSumtComment = YES;
-					if (IsSame("]", sumtToken) == SAME)
-						inSumtComment = NO;
-						
-					if (inSumtComment == YES)
-						{
-						if (IsSame ("Param", sumtToken) == SAME)
-							{
-							/* extract the tree name */
-							GetSumtToken (&tokenType);	/* get the colon */
-							GetSumtToken (&tokenType);	/* get the tree name */
-							strcpy (treeName, sumtToken);
-							GetSumtToken (&tokenType);
-							while (IsSame("]", sumtToken) != SAME)
-								{
-								strcat (treeName, sumtToken);
-								GetSumtToken (&tokenType);
-								}
-							inSumtComment = NO;
-							}
-						}
-					else /* if (inSumtComment == NO) */
-						{
-						if (foundBegin == YES)
-							{
-							if (IsSame("Trees", sumtToken) == SAME)
-								{
-								numTreesInBlock = 0;
-								inTreeBlock = YES;
-								foundBegin = NO;
-								lastTreeBlockBegin = lineNum;
-								}
-							}
-						else
-							{
-							if (IsSame("Begin", sumtToken) == SAME)
-								{
-								if (foundBegin == YES)
-									{
-									MrBayesPrint ("%s   Found inappropriate \"Begin\" statement in file\n", spacer);
-									blockErrors = YES;
-									}
-								foundBegin = YES;
-								}
-							else if (IsSame("End", sumtToken) == SAME)
-								{
-								if (inTreeBlock == YES)
-									{
-									numTreeBlocks++;
-									inTreeBlock = NO;
-									lastTreeBlockEnd = lineNum;
-									}
-								else
-									{
-									MrBayesPrint ("%s   Found inappropriate \"End\" statement in file\n", spacer);
-									blockErrors = YES;
-									}
-								numTreesInLastBlock = numTreesInBlock;
-								}
-							else if (IsSame("Tree", sumtToken) == SAME)
-								{
-								if (inTreeBlock == YES)
-									{
-									numTreesInBlock++;
-									if (numTreesInBlock == 1)
-										{
-										sumtBrlensDef = NO;
-										for (i=0; s[i]!='\0'; i++)
-											{
-											if (s[i] == ':')
-												{
-												sumtBrlensDef = YES;
-												break;
-												}
-											}
-										}
-									}
-								else
-									{
-									MrBayesPrint ("%s   Found a \"Tree\" statement that is not in a tree block\n", spacer);
-									blockErrors = YES;
-									}
-								}
-							}
-						}
-						
-					} while (*sumtToken);
-				lineNum++;
-				}
-
-			if (runNo == 0)
-				firstSumtBrlensDef = sumtBrlensDef;
-			else if (firstSumtBrlensDef != sumtBrlensDef)
-				{
-				MrBayesPrint ("%s   Tree files with and without brlens mixed\n");
-				goto errorExit;
-				}
-				
-			/* Now, check some aspects of the tree file, such as the number of tree blocks and whether they are properly terminated. */
-			if (inTreeBlock == YES)
-				{
-				MrBayesPrint ("%s   Unterminated tree block in file %s. You probably need to\n", spacer, tempName);
-				MrBayesPrint ("%s   add a new line to the end of the file with \"End;\" on it.\n", spacer);
-				goto errorExit;
-				}
-			if (inSumtComment == YES)
-				{
-				MrBayesPrint ("%s   Unterminated comment in file %s\n", spacer, tempName);
-				goto errorExit;
-				}
-			if (blockErrors == YES)
-				{
-				MrBayesPrint ("%s   Found formatting errors in file %s\n", spacer, tempName);
-				goto errorExit;
-				}
-			if (lastTreeBlockEnd < lastTreeBlockBegin)
-				{
-				MrBayesPrint ("%s   Problem reading tree file %s\n", spacer, tempName);
-				goto errorExit;
-				}
-			if (numTreesInLastBlock <= 0)
-				{
-				MrBayesPrint ("%s   No trees were found in last tree block of file %s\n", spacer, tempName);
-				goto errorExit;
-				}
-            if (sumtParams.relativeBurnin == NO && sumtParams.sumtBurnIn > numTreesInLastBlock)
-				{
-				MrBayesPrint ("%s   No trees are sampled as the burnin exceeds the number of trees in last block\n", spacer);
-				MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, numTreesInLastBlock);
-				goto errorExit;
-				}
-				
-			/* tell the user that everything is fine */
-			if (runNo == 0)
-				{
-				if (numTreeBlocks == 1)
-					MrBayesPrint ("%s   Found one tree block in file \"%s\" with %d trees in last block\n", spacer, tempName, numTreesInLastBlock);
-				else
-					{
-					MrBayesPrint ("%s   Found %d tree blocks in file \"%s\" with %d trees in last block\n", spacer, numTreeBlocks, tempName, numTreesInLastBlock);
-					MrBayesPrint ("%s   Only the %d trees in last tree block will be summarized\n", spacer, numTreesInLastBlock);
-					}
-				if (sumtParams.numRuns > 1)
-					MrBayesPrint ("%s   Expecting the same number of trees in the last tree block of all files\n", spacer);
-				firstFileNumTrees = numTreesInLastBlock;
-				}
-			else
-				{
-				if (numTreesInLastBlock != firstFileNumTrees)
-					{
-					MrBayesPrint ("%s   Found %d trees in first file but %d trees in file \"%s\"\n", spacer, firstFileNumTrees, numTreesInLastBlock, tempName);
-					goto errorExit;
-					}
-				}
-		
-			/* get the tree clock rates if we are focusing on node depths */
-			if (nodeDepthConTree == YES)
-				{
-				strcpy (clockFile, tempName);
-				clockFile[strlen(clockFile)-1] = 'p';
-				tempStringP = treeName;
-				for (tempStringP=treeName; (*tempStringP)!='\0'; tempStringP++)
-					if (*tempStringP == '{')
-						break;
-				strcpy (rateName, "clockRate");
-				strcat (rateName, tempStringP);
-				if (GetClockRates (rateName, clockFile) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not get clock rates for the tree\n", spacer);
-					goto errorExit;
-					}
-				treeIndex = 0;	/* reset treeIndex before reading trees */
-				}
-
-			/* Now we read the file for real. First, rewind file pointer to beginning of file... */
-			(void)fseek(fp, 0L, 0);	
-	
 			/* ...and fast forward to beginning of last tree block. */
-			for (i=0; i<lastTreeBlockBegin+1; i++)
-				fgets (s, longestLineLength, fp);
-
-			/* Allocate things we will need for trees... */
-			if (treeNo == 0 && runNo == 0)
-				{
-				if (AllocBits (numTaxa) == ERROR)
-					goto errorExit;
-				}
+			for (i=0; i<sumtFileInfo.lastTreeBlockBegin+1; i++)
+				fgets (s, sumtFileInfo.longestLineLength-2, fp);
 
 			/* Set up cheap status bar. */
-			if (runNo == 0)
+			if (sumtParams.runId == 0)
 				{
 				if (sumtParams.numTrees > 1)
 					MrBayesPrint ("\n%s   Tree reading status for tree %d:\n\n", spacer, treeNo+1);
@@ -3346,20 +1882,20 @@ int DoSumt (void)
 			/* ...and parse file, tree-by-tree. We are only parsing lines between the "begin trees" and "end" statements.
 			We don't actually get those lines, however, but rather the lines between those statements. */
 			expecting = Expecting(COMMAND);
-			inTreesBlock = YES;
+            /* We skip the begin trees statement so we need to set up some variables here */
+            inTreesBlock = YES;
             ResetTranslateTable();
-			for (i=0; i<lastTreeBlockEnd - lastTreeBlockBegin - 1; i++)
+			for (i=0; i<sumtFileInfo.lastTreeBlockEnd - sumtFileInfo.lastTreeBlockBegin - 1; i++)
 				{
-				fgets (s, longestLineLength, fp);
+				fgets (s, sumtFileInfo.longestLineLength-2, fp);
 				/*MrBayesPrint ("%s", s);*/
-				runIndex = runNo;	/* not an elegant solution to use a global (for this file), but we need the run number in DoTree */
 				if (ParseCommand (s) == ERROR)
 					goto errorExit;
 				}
 			inTreesBlock = NO;
 	
 			/* Finish cheap status bar. */
-			if (runNo == sumtParams.numRuns - 1)
+			if (sumtParams.runId == sumtParams.numRuns - 1)
 				{
 				if (numAsterices < 80)
 					{
@@ -3369,154 +1905,40 @@ int DoSumt (void)
 				MrBayesPrint ("\n\n");
 				}
 	
-			/* check or print out information on absent and pruned taxa */
-			if (runNo == 0 && treeNo == 0 && sumtParams.numRuns > 1)
-				{
-				for (i=0; i<numTaxa; i++)
-					{
-					firstPrunedTaxa[i] = prunedTaxa[i];
-					firstAbsentTaxa[i] = absentTaxa[i];
-					}
-				}
-			else if (runNo != sumtParams.numRuns - 1 || treeNo != 0)
-				{
-				for (i=0; i<numTaxa; i++)
-					{
-					if (prunedTaxa[i] != firstPrunedTaxa[i])
-						break;
-					if (absentTaxa[i] != firstAbsentTaxa[i])
-						break;
-					}
-				if (i != numTaxa)
-					{
-					if (runNo != sumtParams.numRuns - 1) 
-						MrBayesPrint ("\n\n%s   Mismatch in the absent or pruned taxa\n", spacer);
-					else
-						MrBayesPrint ("\n\n%s   Mismatch in the absent or pruned taxa\n", spacer);
-					goto errorExit;
-					}
-				}
-			else
-				{
-				/* print out information on absent taxa */
-				numExcludedTaxa = 0;
-				for (i=0; i<numTaxa; i++)
-					if (absentTaxa[i] == YES)
-						numExcludedTaxa++;
-				if (numExcludedTaxa > 0)
-					{
-					if (numExcludedTaxa == 1)
-						MrBayesPrint ("%s   The following species was absent from trees:\n", spacer);
-					else
-						MrBayesPrint ("%s   The following %d species were absent from trees:\n", spacer, numExcludedTaxa);
-					MrBayesPrint ("%s      ", spacer);
-					j = lineWidth = 0;
-					for (i=0; i<numTaxa; i++)
-						{
-						if (absentTaxa[i] == YES)
-							{
-							j++;
-							if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-								{
-								MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-								return (ERROR);
-								}
-							len = (int) strlen(tempStr);
-							lineWidth += len+2;
-							if (lineWidth > 60)
-								{
-								MrBayesPrint ("\n%s      ", spacer);
-								lineWidth = 0;
-								}
-							if (numExcludedTaxa == 1)
-								MrBayesPrint ("%s\n", tempStr);
-							else if (numExcludedTaxa == 2 && j == 1)
-								MrBayesPrint ("%s ", tempStr);
-							else if (j == numExcludedTaxa)
-								MrBayesPrint ("and %s\n", tempStr);
-							else
-								MrBayesPrint ("%s, ", tempStr);
-							}
-						}
-					MrBayesPrint ("\n");
-					}
-
-				/* print out information on pruned taxa */
-				numExcludedTaxa = 0;
-				for (i=0; i<numTaxa; i++)
-					if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-						numExcludedTaxa++;
-				
-				if (numExcludedTaxa > 0)
-					{
-					if (numExcludedTaxa == 1)
-						MrBayesPrint ("%s   The following species was pruned from trees:\n", spacer);
-					else
-						MrBayesPrint ("%s   The following %d species were pruned from trees:\n", spacer, numExcludedTaxa);
-					MrBayesPrint ("%s      ", spacer);
-					j = lineWidth = 0;
-					for (i=0; i<numTaxa; i++)
-						{
-						if (prunedTaxa[i] == YES && absentTaxa[i] == NO)
-							{
-							j++;
-							if (GetNameFromString (taxaNames, tempStr, i+1) == ERROR)
-								{
-								MrBayesPrint ("%s   Could not find taxon %d\n", spacer, i+1);
-								return (ERROR);
-								}
-							len = (int) strlen(tempStr);
-							lineWidth += len+2;
-							if (lineWidth > 60)
-								{
-								MrBayesPrint ("\n%s      ", spacer);
-								lineWidth = 0;
-								}
-							if (numExcludedTaxa == 1)
-								MrBayesPrint ("%s\n", tempStr);
-							else if (numExcludedTaxa == 2 && j == 1)
-								MrBayesPrint ("%s ", tempStr);
-							else if (j == numExcludedTaxa)
-								MrBayesPrint ("and %s\n", tempStr);
-							else
-								MrBayesPrint ("%s, ", tempStr);
-							}
-						}
-					MrBayesPrint ("\n");
-					}
-				}
-
-			/* Update total number of sampled trees */
-			numTotalTreesSampled += numSumTreesSampled;
+			/* print out information on absent and pruned taxa */
+			if (sumtParams.runId == sumtParams.numRuns - 1 && treeNo == 0)
+                PrintSumtTaxaInfo ();
 
 			/* tell user how many trees were successfully read */
 			if (sumtParams.numRuns == 1)
-				MrBayesPrint ("%s   Read %d trees from last tree block (sampling %d of them)\n", spacer, numSumtTrees, numSumTreesSampled);
+				MrBayesPrint ("%s   Read %d trees from last tree block (sampling %d of them)\n", spacer,
+                    sumtParams.numTreesEncountered, sumtParams.numTreesSampled);
 			else if (sumtParams.numRuns > 1)
 				{
-				if (runNo == 0)
-					firstFileNumSumTreesSampled = numSumTreesSampled;
-				else if (numSumTreesSampled != firstFileNumSumTreesSampled)
+				if (sumtParams.runId != 0 && sumtParams.numFileTreesSampled[sumtParams.runId]!=sumtParams.numFileTreesSampled[0])
 					{
-					if (runNo != sumtParams.numRuns - 1)
-						MrBayesPrint ("%s   Found %d post-burnin trees in the first file but %d post-burnin trees in file %d\n", spacer,
-							firstFileNumSumTreesSampled, numSumTreesSampled, runNo+1);
-					else
-						MrBayesPrint ("\n\n%s   Found %d post-burnin trees in the first file but %d post-burnin trees in file %d\n", spacer,
-							firstFileNumSumTreesSampled, numSumTreesSampled, runNo+1);
+					if (sumtParams.runId == sumtParams.numRuns - 1)
+						MrBayesPrint ("\n\n");
+					MrBayesPrint ("%s   Found %d post-burnin trees in the first file but %d post-burnin trees in file %d\n",
+                            spacer,
+							sumtParams.numFileTreesSampled[0],
+                            sumtParams.numFileTreesSampled[sumtParams.runId],
+                            sumtParams.runId+1);
 					goto errorExit;
 					}
-				if (runNo == sumtParams.numRuns - 1)
+				if (sumtParams.runId == sumtParams.numRuns - 1)
 					{
-					MrBayesPrint ("%s   Read a total of %d trees in %d files (sampling %d of them)\n", spacer, sumtParams.numRuns * numSumtTrees,
-						sumtParams.numRuns, numTotalTreesSampled);
-					MrBayesPrint ("%s      (Each file contained %d trees of which %d were sampled)\n", spacer, numSumtTrees,
-						numSumTreesSampled);
+					MrBayesPrint ("%s   Read a total of %d trees in %d files (sampling %d of them)\n", spacer,
+                        sumtParams.numTreesEncountered,
+						sumtParams.numRuns, sumtParams.numTreesSampled);
+					MrBayesPrint ("%s      (Each file contained %d trees of which %d were sampled)\n", spacer,
+                        sumtParams.numFileTrees[0],
+                        sumtParams.numFileTreesSampled[0]);
 					}
 				}
 
 			/* Check that at least one tree was read in. */
-			if (numSumTreesSampled <= 0)
+			if (sumtParams.numTreesSampled <= 0)
 				{
 				MrBayesPrint ("%s   No trees read in\n", spacer);
 				goto errorExit;
@@ -3525,46 +1947,20 @@ int DoSumt (void)
 			SafeFclose (&fp);
 			}	/* next run for this tree */
 				
-		/* Sort partitions... */
-		if (treeNo == 0)
-			{
-			if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-				{
-				MrBayesPrint ("%s   partOrigOrder not free in DoSumt\n", spacer);
-				goto errorExit;
-				}
-			partOrigOrder = (int *)SafeMalloc((size_t) (numTreePartsFound * sizeof(int)));
-			if (!partOrigOrder)
-				{
-				MrBayesPrint ("%s   Problem allocating partOrigOrder (%d)\n", spacer, numTreePartsFound * sizeof(int));
-				goto errorExit;
-				}
-			memAllocs[ALLOC_PARTORIGORDER] = YES;
-			}
-		else
-			{
-			free (partOrigOrder);
-			partOrigOrder = (int *)SafeMalloc((size_t) (numTreePartsFound * sizeof(int)));
-			if (!partOrigOrder)
-				{
-				MrBayesPrint ("%s   Problem allocating partOrigOrder (%d)\n", spacer, numTreePartsFound * sizeof(int));
-				goto errorExit;
-				}
-			}
+		/* Extract partition counter pointers */
+        treeParts = (PartCtr **) calloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
+        i = 0;
+        PartCtrUppass(partCtrRoot, treeParts, &i);
 
-		for (i=0; i<numTreePartsFound; i++)
-			partOrigOrder[i] = i;
-		if (SortParts (numFoundOfThisPart, numTreePartsFound) == ERROR)
-			goto errorExit;
+        /* Sort taxon partitions (clades, splits) ... */
+		SortPartCtr (treeParts, 0, numUniqueSplitsFound-1);
 
-		/* ...and reorder bits if some taxa were not included. */
-		numIncludedTaxa = numTaxa;
-		if (ReorderParts () == ERROR)
-			goto errorExit;
-		
+        /* Sort root and tips among those splits always present */
+        SortTerminalPartCtr (treeParts, numUniqueSplitsFound);
+
 		/* open output files for summary information (three files) */
 		if (OpenSumtFiles (treeNo) == ERROR)
-			goto errorExit;
+            goto errorExit;
 
         /* Print partitions to screen. */
 		if (treeNo == 0)
@@ -3572,12 +1968,9 @@ int DoSumt (void)
 			longestName = 0;
 			for (k=0; k<numTaxa; k++)
 				{
-				if (GetNameFromString (taxaNames, tempName, k+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-					return (ERROR);
-					}
-				len = (int) strlen (tempName);
+                if (taxaInfo[k].isDeleted == NO && sumtParams.absentTaxa[k] == NO)
+                    continue;
+				len = (int) strlen (taxaNames[k]);
 				if (len > longestName)
 					longestName = len;
 				}
@@ -3586,49 +1979,51 @@ int DoSumt (void)
                 MrBayesPrint ("                                                                                   \n");
 			    MrBayesPrint ("%s   General explanation:                                                          \n", spacer);
 			    MrBayesPrint ("                                                                                   \n");
-			    MrBayesPrint ("%s   A taxon bibartition is specified by removing a branch, thereby dividing the   \n", spacer);
-			    MrBayesPrint ("%s   species into those to the left and those to the right of the branch. Here,    \n", spacer);
-			    MrBayesPrint ("%s   taxa to one side of the removed branch are denoted \".\" and those to the     \n", spacer);
-			    MrBayesPrint ("%s   other side are denoted \"*\". The output includes the bipartition number      \n", spacer);
-			    MrBayesPrint ("%s   (ID; sorted from highest to lowest probability), bipartition (e.g., ...**..), \n", spacer);
-			    MrBayesPrint ("%s   number of times the bipartition was observed (#obs), the posterior probabil-  \n", spacer);
-			    MrBayesPrint ("%s   ity of the bipartition, and, if branch lengths were recorded on the trees in  \n", spacer);
-			    MrBayesPrint ("%s   the file, either the average (Mean(v)) and variance (Var(v) of the lengths    \n", spacer);
-			    MrBayesPrint ("%s   (if the 'phylogramtype' option is set to 'brlens'), or the average (Mean(d))  \n", spacer);
-			    MrBayesPrint ("%s   and variance (Var(d)) of the node depths (if the 'phylogramtype' option is    \n", spacer);
-			    MrBayesPrint ("%s   set to 'nodedepths'). The latter option is preferable for clock trees and     \n", spacer);
-			    MrBayesPrint ("%s   will take calibration points into account, if available.                      \n", spacer);	
-			    MrBayesPrint ("\n");
-			    MrBayesPrint ("%s   Each \".\" or \"*\" in the bipartition represents a taxon that is to the left \n", spacer);
-			    MrBayesPrint ("%s   or right of the removed branch. A list of the taxa in the bipartition is given\n", spacer);
-			    MrBayesPrint ("%s   before the list of bipartitions. If you summarize several independent analy-  \n", spacer);
-			    MrBayesPrint ("%s   ses, convergence diagnostics are presented for both the posterior probabil-   \n", spacer);
-			    MrBayesPrint ("%s   ities of bipartitions (bipartition or split frequencies) and branch lengths or\n", spacer);
-			    MrBayesPrint ("%s   node depths (if recorded on the trees in the files). In the former case, the  \n", spacer);
-			    MrBayesPrint ("%s   diagnostic is the standard deviation of the partition frequencies (Stdev(s)), \n", spacer);
-			    MrBayesPrint ("%s   in the second case it is the potential scale reduction factor (PSRF) of Gelman\n", spacer);
-			    MrBayesPrint ("%s   and Rubin (1992). Stdev(s) is expected to approach 0 and PSRF is expected to  \n", spacer);
-			    MrBayesPrint ("%s   approach 1 as runs converge onto the posterior probability distribution. Note \n", spacer);
-			    MrBayesPrint ("%s   that these values may be unreliable if the partition is not present in all    \n", spacer);
-			    MrBayesPrint ("%s   runs (the last column indicates the number of runs that sampled the partition \n", spacer);
-			    MrBayesPrint ("%s   if more than one run is summarized). The PSRF is also sensitive to small      \n", spacer);
+			    MrBayesPrint ("%s   In an unrooted tree, a taxon bipartition (split) is specified by removing a   \n", spacer);
+			    MrBayesPrint ("%s   branch, thereby dividing the species into those to the left and those to the  \n", spacer);
+			    MrBayesPrint ("%s   right of the branch. Here, taxa to one side of the removed branch are denoted \n", spacer);
+			    MrBayesPrint ("%s   '.' and those to the other side are denoted '*'. Specifically, the '.' symbol \n", spacer);
+			    MrBayesPrint ("%s   is used for the taxa on the same side as the outgroup.                        \n", spacer);
+			    MrBayesPrint ("                                                                                   \n");
+			    MrBayesPrint ("%s   In a rooted or clock tree, the tree is rooted using the model and not by      \n", spacer);
+                MrBayesPrint ("%s   reference to an outgroup. Each bipartition therefore corresponds to a clade,  \n", spacer);
+			    MrBayesPrint ("%s   that is, a group that includes all the descendants of a particular branch in  \n", spacer);
+			    MrBayesPrint ("%s   the tree.  Taxa that are included in each clade are denoted using '*', and    \n", spacer);
+			    MrBayesPrint ("%s   taxa that are not included are denoted using the '.' symbol.                  \n", spacer);
+			    MrBayesPrint ("                                                                                   \n");
+                MrBayesPrint ("%s   The output first includes a key to all the bipartitions. This is followed by  \n", spacer);
+			    MrBayesPrint ("%s   a table with statistics for the informative bipartitions (those including at  \n", spacer);
+                MrBayesPrint ("%s   least two taxa), sorted from highest to lowest probability. For each biparti- \n", spacer);
+                MrBayesPrint ("%s   tion, the table gives the number of times the partition or split was observed \n", spacer);
+			    MrBayesPrint ("%s   (#obs) and the posterior probability of the bipartition (Probab.), which is   \n", spacer);
+                MrBayesPrint ("%s   the same as the split frequency. If several runs are summarized, this is fol- \n", spacer);
+			    MrBayesPrint ("%s   lowed by the minimum split frequency (Min(s)), the maximum frequency (Max(s)),\n", spacer);
+			    MrBayesPrint ("%s   and the standard deviation of frequencies (Stddev(s)) across runs. The latter \n", spacer);
+			    MrBayesPrint ("%s   value should approach 0 for all bipartitions as MCMC runs converge.           \n", spacer);
+			    MrBayesPrint ("                                                                                   \n");
+                MrBayesPrint ("%s   This is followed by a table summarizing branch lengths, node heights (if a    \n", spacer);
+			    MrBayesPrint ("%s   clock model was used) and relaxed clock parameters (if a relaxed clock model  \n", spacer);
+			    MrBayesPrint ("%s   was used). The mean, variance, and 95 %% credible interval are given for each \n", spacer);
+			    MrBayesPrint ("%s   of these parameters. If several runs are summarized, the potential scale      \n", spacer);
+			    MrBayesPrint ("%s   reduction factor (PSRF) is also given; it should approach 1 as runs converge. \n", spacer);
+			    MrBayesPrint ("%s   Node heights will take calibration points into account, if such points were   \n", spacer);
+                MrBayesPrint ("%s   used in the analysis.                                                         \n", spacer);
+			    MrBayesPrint ("%s                                                                                 \n", spacer);
+			    MrBayesPrint ("%s   Note that Stddev and PSRF may be unreliable if the partition is not present in\n", spacer);
+			    MrBayesPrint ("%s   all runs (the last column indicates the number of runs that sampled the parti-\n", spacer);
+			    MrBayesPrint ("%s   tion if more than one run is summarized). The PSRF is also sensitive to small \n", spacer);
 			    MrBayesPrint ("%s   sample sizes and it should only be considered a rough guide to convergence    \n", spacer);
 			    MrBayesPrint ("%s   since some of the assumptions allowing one to interpret it as a true potential\n", spacer);
-			    MrBayesPrint ("%s   scale reduction factor are violated in the phylogenetic context.              \n", spacer);
+			    MrBayesPrint ("%s   scale reduction factor are violated in MrBayes.                               \n", spacer);
 			    MrBayesPrint ("%s                                                                                 \n", spacer);
 			    MrBayesPrint ("%s   List of taxa in bipartitions:                                                 \n", spacer);
 			    MrBayesPrint ("                                                                                   \n");
 			    j = 1;
 			    for (k=0; k<numTaxa; k++)
 				    {
-				    if (GetNameFromString (taxaNames, tempName, k+1) == ERROR)
+				    if (taxaInfo[k].isDeleted == NO && sumtParams.absentTaxa[k] == NO)
 					    {
-					    MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-					    return (ERROR);
-					    }
-				    if (sumTaxaFound[k] == YES)
-					    {
-					    MrBayesPrint ("%s   %4d -- %s\n", spacer, j++, tempName);
+					    MrBayesPrint ("%s   %4d -- %s\n", spacer, j++, taxaNames[k]);
 					    }
 				    }
                 }
@@ -3640,169 +2035,184 @@ int DoSumt (void)
 			MrBayesPrint ("%s   ==========================\n\n", spacer);
 			}
 
+        /* First print key to taxon bipartitions */
 		if (sumtParams.table == YES)
             {
-            MrBayesPrint ("                                                                                   \n");
-		    MrBayesPrint ("%s   Summary statistics for taxon bipartitions:                                \n\n", spacer);
-            }
-
-		/* print header with legend to .parts file */
-		if (treeNo == 0 && sumtParams.table == YES)
-            {
-            MrBayesPrintf (fpParts, "[   ID        = Partition ID number]\n");
-		    MrBayesPrintf (fpParts, "[   Partition = Description of partition in .* format]\n");
-            MrBayesPrintf (fpParts, "[   #obs      = Number of trees sampled with the partition]\n");
-		    MrBayesPrintf (fpParts, "[   Probab.   = Posterior probability of the partition]\n");
-		    if (sumtParams.numRuns > 1)
-		    	{
-			    MrBayesPrintf (fpParts, "[   Stddev(s) = Standard deviation of partition probabilities across partitions]\n");
-			    }
-		    if (sumtBrlensDef == YES)
-			    {
-                if (nodeDepthConTree == YES)
-                    {
-			        MrBayesPrintf (fpParts, "[   Mean(v)   = Mean branch length]\n");
-			        MrBayesPrintf (fpParts, "[   Var(v)    = Variance of branch length]\n");
-			        if (sumtParams.numRuns > 1)
-				        {
-				        MrBayesPrintf (fpParts, "[   PSRF   = Potential scale reduction factor of branch length]\n");
-				        }
-                    }
-                else
-                    {
-			        MrBayesPrintf (fpParts, "[   Mean(d)   = Mean node depth]\n");
-			        MrBayesPrintf (fpParts, "[   Var(d)    = Variance of node depth]\n");
-			        if (sumtParams.numRuns > 1)
-				        {
-				        MrBayesPrintf (fpParts, "[   PSRF   = Potential scale reduction factor of node depth]\n");
-				        }
-                    }
-			    }
-		    if (sumtParams.numRuns > 1)
-			    {
-			    MrBayesPrintf (fpParts, "[   Nruns  = Number of runs with this partition]\n");
-			    }
-            MrBayesPrintf (fpParts, "\n\n");
+            MrBayesPrint ("\n");
+		    if (sumtParams.numTrees == 1)
+                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.parts\"):\n\n", spacer, sumtParams.sumtOutfile);
+            else
+                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer, treeNo+1, sumtParams.sumtOutfile);
             }
 
 		/* calculate a couple of numbers that are handy to have */
 		numTreePartsToPrint = 0;
-		for (i=0; i<numTreePartsFound; i++)
+		for (i=0; i<numUniqueSplitsFound; i++)
 			{
-			if ((MrBFlt)numFoundOfThisPart[i]/(MrBFlt)numTotalTreesSampled >= sumtParams.freqDisplay)
+            if ((MrBFlt)treeParts[i]->totCount/(MrBFlt)sumtParams.numTreesSampled >= sumtParams.minPartFreq)
 				numTreePartsToPrint++;
 			}
 		maxWidthID = (int) (log10 (numTreePartsToPrint)) + 1;
 		if (maxWidthID < 2)
 			maxWidthID = 2;
-		maxWidthNumberPartitions = (int) (log10 (numFoundOfThisPart[0])) + 1;
+        maxNumTaxa = SCREEN_WIDTH - 9;
+
+        /* print header to screen and to parts file simultaneously */
+		if (sumtParams.table == YES)
+            {
+            /* first print header to screen */
+            MrBayesPrint ("%s   ", spacer);
+		    MrBayesPrint ("%*s -- Partition\n", maxWidthID, "ID");
+		    tableWidth = maxWidthID + 4 + sumtParams.numTaxa;
+            if (tableWidth > SCREEN_WIDTH)
+                tableWidth = SCREEN_WIDTH;
+		    MrBayesPrint ("%s   ", spacer);
+		    for (i=0; i<tableWidth; i++)
+			    MrBayesPrint ("-");
+		    MrBayesPrint ("\n");
+
+		    /* now print header to file */
+		    MrBayesPrintf (fpParts, "ID\tPartition\n");
+            }
+
+        /* now, show partitions that were found on screen; print to .parts file simultaneously */
+		for (i=0; i<numTreePartsToPrint; i++)
+			{
+			x = treeParts[i];
+
+            if (sumtParams.table == YES)
+                {
+                MrBayesPrint ("%s   %*d -- ", spacer, maxWidthID, i);
+			    if (sumtParams.numTaxa <= maxNumTaxa)
+                    ShowParts (stdout, x->partition, sumtParams.numTaxa);
+                else
+                    {
+                    for (j=0; j<sumtParams.numTaxa; j+=maxNumTaxa)
+                        {
+                        if (sumtParams.numTaxa - j > maxNumTaxa)
+                            ShowSomeParts (stdout, x->partition, j, maxNumTaxa);
+                        else
+                            ShowSomeParts (stdout, x->partition, j, sumtParams.numTaxa - j);
+                        }
+                    }
+			    fflush(stdout);
+                MrBayesPrint ("\n");
+
+                MrBayesPrintf (fpParts, "%d\t", i);
+                ShowParts (fpParts, x->partition, sumtParams.numTaxa);
+                MrBayesPrintf (fpParts, "\n");
+                }
+			}
+
+        /* finish screen table */
+        if (sumtParams.table == YES)
+            {
+            MrBayesPrint ("%s   ", spacer);
+	        for (i=0; i<tableWidth; i++)
+                {
+		        MrBayesPrint ("-");
+                }
+	        MrBayesPrint ("\n");
+	        if (oneUnreliable == YES)
+                {
+		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n\n", spacer);
+                }
+		    else
+                {
+			    MrBayesPrint ("\n");
+                }
+            }
+
+        /* Second, print statitistics for taxon bipartitions */
+        if (sumtParams.table == YES)
+            {
+            MrBayesPrint ("\n");
+		    if (sumtParams.isRooted == NO)
+                MrBayesPrint ("%s   Summary statistics for informative taxon bipartitions\n", spacer);
+            else
+                MrBayesPrint ("%s   Summary statistics for informative taxon bipartitions (clades)\n", spacer);
+            MrBayesPrint ("%s      (saved to file \"%s.tstat\"):\n\n", spacer, sumtParams.sumtOutfile);
+            }
+
+		/* calculate a couple of numbers that are handy to have */
+		numTreePartsToPrint = 0;
+		for (i=0; i<numUniqueSplitsFound; i++)
+			{
+            if ((MrBFlt)treeParts[i]->totCount/(MrBFlt)sumtParams.numTreesSampled >= sumtParams.minPartFreq)
+				numTreePartsToPrint++;
+			}
+		maxWidthID = (int) (log10 (numTreePartsToPrint)) + 1;
+		if (maxWidthID < 2)
+			maxWidthID = 2;
+        maxWidthNumberPartitions = (int) (log10 (treeParts[0]->totCount)) + 1;
 		if (maxWidthNumberPartitions < 4)
 			maxWidthNumberPartitions = 4;
 
 		/* print header to screen and to parts file simultaneously */
 		if (sumtParams.table == YES)
             {
+            /* first print header to screen */
             MrBayesPrint ("%s   ", spacer);
-		    MrBayesPrintf (fpParts, "%s   ", spacer);
-		    MrBayesPrint ("%*s -- Partition", maxWidthID, "ID");
-		    MrBayesPrintf (fpParts, "%*s -- Partition", maxWidthID, "ID");
-		    tableWidth = maxWidthID + 13;
-		    for (i=9; i<numIncludedTaxa; i++)
-			    {
-			    MrBayesPrint (" ");
-			    MrBayesPrintf (fpParts, " ");
-			    tableWidth++;
-			    }
-		    MrBayesPrint ("  #obs");
-		    MrBayesPrintf (fpParts, "  #obs");
-		    tableWidth += 6;
+		    MrBayesPrint ("%*s   ", maxWidthID, "ID");
+		    tableWidth = maxWidthID + 3;
+		    MrBayesPrint ("#obs");
+		    tableWidth += 4;
 		    for (i=4; i<maxWidthNumberPartitions; i++)
 			    {
 			    MrBayesPrint (" ");
-			    MrBayesPrintf (fpParts, " ");
 			    tableWidth++;
 			    }
-		    MrBayesPrint ("   Probab.");
-		    MrBayesPrintf (fpParts, "   Probab.");
-		    tableWidth += 10;
+		    MrBayesPrint ("    Probab.");
+		    tableWidth += 11;
 		    if (sumtParams.numRuns > 1)
 			    {
-			    MrBayesPrint (" Stddev(s)");
-			    MrBayesPrintf (fpParts, " Stddev(s)");
-			    tableWidth += 10;
-			    }
-		    if (sumtBrlensDef == YES)
-			    {
-			    if (nodeDepthConTree == YES)
-                    {
-				    MrBayesPrint ("   Mean(d)   Var(d) ");
-				    MrBayesPrintf (fpParts, "   Mean(d)   Var(d) ");
-                    }
-			    else
-                    {
-				    MrBayesPrint ("   Mean(v)   Var(v) ");
-				    MrBayesPrintf (fpParts, "   Mean(v)   Var(v) ");
-                    }
-			    tableWidth += 20;
-			    if (sumtParams.numRuns > 1)
-				    {
-				    MrBayesPrint ("   PSRF");
-				    MrBayesPrintf (fpParts, "   PSRF");
-				    tableWidth += 7;
-				    }
-			    }
-		    if (sumtParams.numRuns > 1)
-			    {
-			    MrBayesPrint ("  Nruns");
-			    MrBayesPrintf (fpParts, "  Nruns");
-			    tableWidth += 7;
+			    MrBayesPrint ("     Sd(s)+ ");
+			    MrBayesPrint ("     Min(s)      Max(s) ");
+			    tableWidth += 36;
+			    MrBayesPrint ("  Nruns ");
+			    tableWidth += 8;
 			    }
 		    MrBayesPrint ("\n%s   ", spacer);
-		    MrBayesPrintf (fpParts, "\n%s   ", spacer);
 		    for (i=0; i<tableWidth; i++)
                 {
 			    MrBayesPrint ("-");
-			    MrBayesPrintf (fpParts, "-");
                 }
 		    MrBayesPrint ("\n");
-		    MrBayesPrintf (fpParts, "\n");
+
+		    /* now print header to file */
+		    MrBayesPrintf (fpTstat, "ID\t#obs\tProbability(=s)\tStddev(s)\tMin(s)\tMax(s)\tNruns\n");
             }
 
-        /* now, show partitions that were found on screen; print to .parts file simultaneously */
-		x = &treePartsFound[0];
+        /* now, show informative partitions that were found on screen; print to .tstat file simultaneously */
 		for (i=0; i<numTreePartsToPrint; i++)
 			{
-			if (sumtParams.table == YES)
+			x = treeParts[i];
+            if (NumBits(x->partition, sumtParams.safeLongsNeeded) == 1 || NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+                continue;
+
+            if (sumtParams.table == YES)
                 {
-                MrBayesPrint ("%s   %*d -- ", spacer, maxWidthID, i+1);
-			    MrBayesPrintf (fpParts, "%s   %*d -- ", spacer, maxWidthID, i+1);
-			    ShowParts (stdout, &x[0], numIncludedTaxa);
+                MrBayesPrint ("%s   %*d", spacer, maxWidthID, i);
 			    fflush(stdout);
-                ShowParts (fpParts, &x[0], numIncludedTaxa);
-			    for (j=numIncludedTaxa; j<9; j++)
-                    {
-				    MrBayesPrint (" ");
-				    MrBayesPrintf (fpParts, " ");
-                    }
+                MrBayesPrintf (fpTstat, "%d\t", i);
                 }
-			if (sumtBrlensDef == YES)
-				{
-				if (numFoundOfThisPart[i] == 1)
-					var = 0.0;
-				else
-					var = sBrlens[i] / (numFoundOfThisPart[i]-1);
-				}
 			if (sumtParams.numRuns > 1)
 				{
 				sum_s = 0.0;
 				sumsq_s = 0.0;
+                min_s = 1.0;
+                max_s = 0.0;
 				for (n=j=0; n<sumtParams.numRuns; n++)
 					{
-					if (numFoundInRunOfPart[n][i] > 0)
+					if (x->count[n] > 0)
 						j++;
-					f = (MrBFlt) numFoundInRunOfPart[n][i] / (MrBFlt) firstFileNumSumTreesSampled;
+					f = (MrBFlt) x->count[n] / (MrBFlt) sumtParams.numFileTreesSampled[n];
                     sum_s += f;
 					sumsq_s += f * f;
+                    if (f < min_s)
+                        min_s = f;
+                    if (f  > max_s)
+                        max_s = f;
 					}
 				var_s = sumsq_s - sum_s * sum_s / (MrBFlt) sumtParams.numRuns;
 				var_s /= (sumtParams.numRuns - 1);
@@ -3810,22 +2220,6 @@ int DoSumt (void)
 					stddev_s = sqrt (var_s);
 				else
 					stddev_s = 0.0;
-				if (sumtBrlensDef == YES)
-					{
-					if (numFoundOfThisPart[i] - j == 0)
-						varW = 0.0;
-					else
-						varW = sWithinBrlens[i] / (MrBFlt) (numFoundOfThisPart[i] - j);
-					if (j == 1)
-						varB = 0.0;
-					else
-						varB = (sumsqB[i] - sumB[i]*sumB[i]/(MrBFlt) j) / (MrBFlt) (j - 1);
-					if (varW > 0.0)
-						sqrt_R = sqrt ((MrBFlt)(firstFileNumSumTreesSampled - 1) / (MrBFlt) (firstFileNumSumTreesSampled)
-							+ ((MrBFlt) (j + 1) / (MrBFlt) (j)) * (varB / varW));
-                    else
-                        sqrt_R = -1.0;      /* we are not going to write this value anyway but avoid math errors */
-					}
 				if (j == sumtParams.numRuns)
 					unreliable = NO;
 				else
@@ -3834,257 +2228,375 @@ int DoSumt (void)
 					oneUnreliable = YES;
 					}
 				}
-			f = (MrBFlt) numFoundOfThisPart[i] / (MrBFlt) numTotalTreesSampled;
 			if (sumtParams.table == YES)
                 {
-                MrBayesPrint ("  %*d  %1.6lf", maxWidthNumberPartitions, numFoundOfThisPart[i], f);
-			    MrBayesPrintf (fpParts, "  %*d  %1.6lf", maxWidthNumberPartitions, numFoundOfThisPart[i], f);
+    			f = (MrBFlt) x->totCount / (MrBFlt) sumtParams.numTreesSampled;
+                MrBayesPrint ("  %*d    %1.6lf", maxWidthNumberPartitions, x->totCount, f);
+			    MrBayesPrintf (fpTstat, "\t%d\t%s", x->totCount, MbPrintNum(f));
 			    if (sumtParams.numRuns > 1)
                     {
-				    MrBayesPrint ("  %1.6lf", stddev_s);
-				    MrBayesPrintf (fpParts, "  %1.6lf", stddev_s);
-                    }
-			    if (sumtBrlensDef == YES)
-				    {
-				    if (nodeDepthConTree == YES)
-					    {
-					    precision = 6 - (int) log10 (sumtRoot->left->age);
-					    if (precision < 0)
-						    precision = 0;
-					    else if (precision > 3)
-						    precision = 3;
-					    MrBayesPrint ("  %8.*lf  %8.*lf", precision, aBrlens[i], precision, var);
-					    MrBayesPrintf (fpParts, "  %8.*lf  %8.*lf", precision, aBrlens[i], precision, var);
-					    }
-				    else
-                        {
-					    MrBayesPrint ("  %1.6lf  %1.6lf", aBrlens[i], var);
-					    MrBayesPrintf (fpParts, "  %1.6lf  %1.6lf", aBrlens[i], var);
-                        }
-				    if (sumtParams.numRuns > 1)
-					    {
-					    if (varW <= 0.0 && varB > 0.0)
-                            {
-						    MrBayesPrint ("  > 2.0");
-						    MrBayesPrintf (fpParts, "  > 2.0");
-                            }
-					    else if ((varW <= 0.0 && varB <= 0.0) || j == 1)
-                            {
-						    MrBayesPrint ("   N/A ");
-						    MrBayesPrintf (fpParts, "   N/A ");
-                            }
-					    else
-                            {
-						    MrBayesPrint ("  %1.3lf", sqrt_R);
-						    MrBayesPrintf (fpParts, "  %1.3lf", sqrt_R);
-                            }
-					    }
-				    }
-			    if (sumtParams.numRuns > 1)
-				    {
+				    MrBayesPrint ("    %1.6lf    %1.6lf    %1.6lf", stddev_s, min_s, max_s);
 				    MrBayesPrint ("  %3d", j);
-				    MrBayesPrintf (fpParts, "  %3d", j);
+				    MrBayesPrintf (fpTstat, "\t%s", MbPrintNum(stddev_s));
+				    MrBayesPrintf (fpTstat, "\t%s", MbPrintNum(min_s));
+				    MrBayesPrintf (fpTstat, "\t%s", MbPrintNum(max_s));
+ 				    MrBayesPrintf (fpTstat, "\t%d", j);
 			    	}
-			    if (unreliable == YES)
-                    {
+			    MrBayesPrintf (fpTstat, "\n");
+                if (unreliable == YES)
 				    MrBayesPrint (" *\n");
-				    MrBayesPrintf (fpParts, " *\n");
-                    }
 			    else
-                    {
 				    MrBayesPrint ("\n");
-				    MrBayesPrintf (fpParts, "\n");
-                    }
+                sumStdDev += stddev_s;
+                if (stddev_s > maxStdDev)
+                    maxStdDev = stddev_s;
                 }
-			x += taxonLongsNeeded;
 			}
-	    if (sumtParams.table == YES)
+
+        /* finish screen table */
+        if (sumtParams.table == YES)
             {
             MrBayesPrint ("%s   ", spacer);
-	        MrBayesPrintf (fpParts, "%s   ", spacer);
 	        for (i=0; i<tableWidth; i++)
                 {
 		        MrBayesPrint ("-");
-		        MrBayesPrintf (fpParts, "-");
                 }
 	        MrBayesPrint ("\n");
-	        MrBayesPrintf (fpParts, "\n");
 	        if (oneUnreliable == YES)
-                {
-		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n\n", spacer);
-		        MrBayesPrintf (fpParts, "%s   * The partition was not found in all runs so the values are unreliable\n\n", spacer);
-                }
-		    else
-                {
-			    MrBayesPrint ("\n");
-			    MrBayesPrintf (fpParts, "\n");
-                }
+		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n", spacer);
+            MrBayesPrint ("%s   + Convergence diagnostic (standard deviation of split frequencies)\n", spacer);
+            MrBayesPrint ("%s     should approach 0.0 as runs converge.\n\n", spacer);
             }
 
-		/* calculate summary statistics */
-		if (sumtParams.summary == YES && sumtParams.numRuns > 1)
+        /* Third, print statitistics for branch and node parameters */
+        if (sumtParams.table == YES)
             {
-            x = &treePartsFound[0];
-		    nSummarySamples = 0;
-            sumStdDev = 0.0;
-            maxStdDev = 0.0;
-            sumPSRF = 0.0;
-            maxPSRF = 0.0;
-            for (i=0; i<numTreePartsFound; i++)
-                {
-				sum_s = 0.0;
-				sumsq_s = 0.0;
-				includeInStat = NO;
-                for (n=j=0; n<sumtParams.numRuns; n++)
-					{
-					if (numFoundInRunOfPart[n][i] > 0)
-						j++;
-					f = (MrBFlt) numFoundInRunOfPart[n][i] / (MrBFlt) firstFileNumSumTreesSampled;
-                    if (f > sumtParams.minPartFreq)
-                        includeInStat = YES;
-                    sum_s += f;
-					sumsq_s += f * f;
-					}
-				var_s = sumsq_s - sum_s * sum_s / (MrBFlt) sumtParams.numRuns;
-				var_s /= (sumtParams.numRuns - 1);
-				if (var_s > 0.0)
-					stddev_s = sqrt (var_s);
-				else
-					stddev_s = 0.0;
-                if (includeInStat == YES)
-                    {
-                    nSummarySamples++;
-                    sumStdDev += stddev_s;
-                    if (stddev_s > maxStdDev)
-                        maxStdDev = stddev_s;
-				    if (sumtBrlensDef == YES)
-					    {
-					    if (numFoundOfThisPart[i] - j == 0)
-						    varW = 0.0;
-					    else
-						    varW = sWithinBrlens[i] / (MrBFlt) (numFoundOfThisPart[i] - j);
-					    if (j == 1)
-						    varB = 0.0;
-					    else
-						    varB = (sumsqB[i] - sumB[i]*sumB[i]/(MrBFlt) j) / (MrBFlt) (j - 1);
-					    if (varW > 0.0)
-						    sqrt_R = sqrt ((MrBFlt)(firstFileNumSumTreesSampled - 1) / (MrBFlt) (firstFileNumSumTreesSampled)
-							    + ((MrBFlt) (j + 1) / (MrBFlt) (j)) * (varB / varW));
-					    else
-						    sqrt_R = -1.0;
-                        if (sqrt_R > maxPSRF && j > 1)
-                            maxPSRF = sqrt_R;
-                        if (sqrt_R > 0.0 && j > 1)
-                            {
-                            sumPSRF += sqrt_R;
-                            nPSRFSamples++;
-                            }
-					    }
-                    }
-                x += taxonLongsNeeded;
-                }
-            
-            /* Exclude trivial splits when calculating average standard deviation of split frequencies.
-               Note that when node depths are requested, the depth of the entire tree is also a trivial
-               split included in the table. */
-            if (nodeDepthConTree == YES)
-                avgStdDev = sumStdDev / (nSummarySamples-numIncludedTaxa-1);
+            MrBayesPrint ("\n");
+            MrBayesPrint ("%s   Summary statistics for branch and node parameters\n", spacer);
+            MrBayesPrint ("%s      (saved to file \"%s.vstat\"):\n\n", spacer, sumtParams.sumtOutfile);
+            }
+        
+        if (sumtParams.table == YES)
+            {
+	        /* calculate longest header */
+	        longestHeader = 9;	/* length of 'parameter' */
+            i = (int)(log10(numTreePartsToPrint)) + 3;   /* length of partition specifier including [] */
+            len = i + (int)(strlen(treeName)) + 2;   /* length of length{m}[n] or height{m}[n] */
+            if (len > longestHeader)
+                longestHeader = len;
+	        for (j=0; j<sumtParams.nBSets; j++)
+		        {
+                len = (int) strlen(sumtParams.tree->bSetName[i]) + i;
+		        if (len > longestHeader)
+			        longestHeader = len;
+		        }
+	        for (j=0; j<sumtParams.nESets; j++)
+		        {
+                len = (int) strlen(sumtParams.tree->eSetName[i]) + i;
+		        if (len > longestHeader)
+			        longestHeader = len;
+		        }
+	
+	        /* print the header rows */
+            MrBayesPrint ("\n");
+	        if (sumtParams.HPD == NO)
+                MrBayesPrint ("%s   %*c                              95%% Cred. Interval\n", spacer, longestHeader, ' ');
             else
-                avgStdDev = sumStdDev / (nSummarySamples-numIncludedTaxa);
-            avgPSRF   = sumPSRF / nPSRFSamples;
+    	        MrBayesPrint ("%s   %*c                              95%% HPD Interval\n", spacer, longestHeader, ' ');
+	        MrBayesPrint ("%s   %*c                            --------------------\n", spacer, longestHeader, ' ');
 
-            MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-            MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
-            MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
-            if (sumtBrlensDef == YES)
+            MrBayesPrint ("%s   Parameter%*c     Mean       Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+            tableWidth = 68 + longestHeader - 9;
+            if (sumtParams.HPD == YES)
+                MrBayesPrintf (fpVstat, "Parameter\tMean\tVariance\tCredInt_Lower\tCredInt_Upper\tMedian", spacer, longestHeader-9, ' ');
+            else
+                MrBayesPrintf (fpVstat, "Parameter\tMean\tVariance\tHPD_Lower\tHPD_Upper\tMedian", spacer, longestHeader-9, ' ');
+            if (sumtParams.numRuns > 1)
                 {
-                MrBayesPrint ("%s       Average potential scale reduction factor = %1.3lf\n", spacer, avgPSRF);
-                MrBayesPrint ("%s       Maximum potential scale reduction factor = %1.3lf\n", spacer, maxPSRF);
+                    MrBayesPrint ("     PSRF*  Nruns");
+                tableWidth += 17;
+		        MrBayesPrintf (fpVstat, "\tPSRF\tNruns");
+                }
+	        MrBayesPrint ("\n");
+	        MrBayesPrintf (fpVstat, "\n");
+
+        	MrBayesPrint ("%s   ", spacer);
+	        for (j=0; j<tableWidth; j++)
+                {
+                MrBayesPrint ("-");
                 }
             MrBayesPrint ("\n");
 
-            MrBayesPrintf (fpParts, "%s   Summary statistics for partitions with frequency > %1.3lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-            MrBayesPrintf (fpParts, "%s       Average standard deviation of split frequencies = %1.3lf\n", spacer, avgStdDev);
-            MrBayesPrintf (fpParts, "%s       Maximum standard deviation of split frequencies = %1.3lf\n", spacer, maxStdDev);
-            if (sumtBrlensDef == YES)
+            /* print lengths (do not print for root) */
+            if (sumtParams.isClock == NO)
                 {
-                MrBayesPrintf (fpParts, "%s       Average potential scale reduction factor = %1.3lf\n", spacer, avgPSRF);
-                MrBayesPrintf (fpParts, "%s       Maximum potential scale reduction factor = %1.3lf\n", spacer, maxPSRF);
+                strcpy (divString, treeName+4);
+                for (i=1; i<numTreePartsToPrint; i++)
+		            {
+                    x = treeParts[i];
+
+		            sprintf (tempStr, "length%s[%d]", divString, i);
+                    len = (int) strlen(tempStr);
+
+                    GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+                    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+
+                    MrBayesPrintf (fpVstat, "%s", tempStr);
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
+                    if (sumtParams.numRuns > 1)
+			            {
+                        for (j=k=0; j<sumtParams.numRuns; j++)
+                            if (x->count[j] > 0)
+                                k++;
+			            if (theStats.PSRF < 0.0)
+                            {
+				            MrBayesPrint ("        NA   %3d", k);
+				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
+                            }
+			            else
+                            {
+				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
+				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
+                            sumPSRF += theStats.PSRF;
+                            numPSRFSamples++;
+                            if (theStats.PSRF > maxPSRF)
+                                maxPSRF = theStats.PSRF;
+                            }
+
+			            MrBayesPrintf (fpVstat, "\n");
+                        if (k != sumtParams.numRuns)
+				            MrBayesPrint (" *\n");
+			            else
+				            MrBayesPrint ("\n");
+                        }
+		            }
                 }
+
+            /* print heights */
+            if (sumtParams.isClock == YES)
+                {
+                strcpy (divString, treeName+4);
+                for (i=0; i<numTreePartsToPrint; i++)
+		            {
+                    x = treeParts[i];
+
+                    sprintf (tempStr, "height%s[%d]", divString, i);
+                    len = (int) strlen(tempStr);
+
+                    GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+                    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+
+                    MrBayesPrintf (fpVstat, "%s", tempStr);
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
+
+                    if (sumtParams.numRuns > 1)
+			            {
+                        for (j=k=0; j<sumtParams.numRuns; j++)
+                            if (x->count[j] > 0)
+                                k++;
+			            if (theStats.PSRF < 0.0)
+                            {
+				            MrBayesPrint ("        NA   %3d", k);
+				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
+                            }
+			            else
+                            {
+				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
+				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
+                            sumPSRF += theStats.PSRF;
+                            numPSRFSamples++;
+                            if (theStats.PSRF > maxPSRF)
+                                maxPSRF = theStats.PSRF;
+                            }
+                        }
+
+		            MrBayesPrintf (fpVstat, "\n");
+                    if (k != sumtParams.numRuns)
+			            MrBayesPrint (" *\n");
+		            else
+			            MrBayesPrint ("\n");
+                    }
+                }
+
+            /* print ages */
+            if (sumtParams.isCalibrated == YES)
+                {
+                strcpy (divString, treeName+4);
+                for (i=0; i<numTreePartsToPrint; i++)
+		            {
+                    x = treeParts[i];
+
+		            sprintf (tempStr, "age%s[%d]", divString, i);
+                    len = (int) strlen(tempStr);
+
+                    GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+                    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+
+                    MrBayesPrintf (fpVstat, "%s", tempStr);
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
+                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
+
+                    if (sumtParams.numRuns > 1)
+			            {
+                        for (j=k=0; j<sumtParams.numRuns; j++)
+                            if (x->count[j] > 0)
+                                k++;
+			            if (theStats.PSRF < 0.0)
+                            {
+				            MrBayesPrint ("        NA   %3d", k);
+				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
+                            }
+			            else
+                            {
+				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
+				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
+                            sumPSRF += theStats.PSRF;
+                            numPSRFSamples++;
+                            if (theStats.PSRF > maxPSRF)
+                                maxPSRF = theStats.PSRF;
+                            }
+                        }
+
+		            MrBayesPrintf (fpVstat, "\n");
+                    if (k != sumtParams.numRuns)
+			            MrBayesPrint (" *\n");
+		            else
+			            MrBayesPrint ("\n");
+                    }
+                }
+
+            /* finish table */
+            MrBayesPrint ("%s   ", spacer);
+            for (j=0; j<tableWidth; j++)
+                MrBayesPrint ("-");
+    	    MrBayesPrint ("\n");
+
+            if (sumtParams.numRuns > 1)
+		        {
+                MrBayesPrint ("%s   * Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+		        MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge.\n", spacer);
+                }
+
+            if (oneUnreliable == YES)
+                {
+		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n", spacer);
+                }
+            MrBayesPrint ("\n\n");
             }
-            MrBayesPrintf (fpParts, "\n");
+            
+            /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
+            avgStdDev = sumStdDev / (numUniqueSplitsFound-sumtParams.numTaxa-1);
+            avgPSRF   = sumPSRF / numPSRFSamples;
 
-        /* get branch lengths and print to file if appropriate */
-		if (sumtBrlensDef == YES && sumtParams.printBrlensToFile == YES)
-			{
-			if (BrlensVals (treeNo, s, longestLineLength, lastTreeBlockBegin, lastTreeBlockEnd) == ERROR)
-				goto errorExit;
-			}
-
-		/* make the majority rule consensus tree */
-        if (sumtParams.showConsensus == YES && ConTree () == ERROR)
+            if (sumtParams.numRuns > 1)
+                MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
+            else
+                MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf:\n", spacer, sumtParams.minPartFreq);
+            MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+            MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
+            if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1)
+                {
+                MrBayesPrint ("%s       Average potential scale reduction factor for branch lengths = %1.3lf\n", spacer, avgPSRF);
+                MrBayesPrint ("%s       Maximum potential scale reduction factor for branch lengths = %1.3lf\n", spacer, maxPSRF);
+                }
+            MrBayesPrint ("\n");
+            
+        /* make the majority rule consensus tree */
+        if (sumtParams.showConsensus == YES && ConTree (treeParts, numUniqueSplitsFound) == ERROR)
 			goto errorExit;
 			
 		/* get probabilities of individual trees */
 		if (TreeProb () == ERROR)
-			goto errorExit;
+            goto errorExit;
 		
-		SafeFclose (&fpParts);
+		/* print brlens */
+        if (sumtParams.printBrlensToFile == YES && PrintBrlensToFile (treeParts, numUniqueSplitsFound, treeNo) == ERROR)
+            goto errorExit;
+
+        /* close files */
+        SafeFclose (&fpParts);
+        SafeFclose (&fpTstat);
+        SafeFclose (&fpVstat);
 		SafeFclose (&fpCon);
 		SafeFclose (&fpTrees);
-		SafeFclose (&fpBrlens);
+
+        /* free pointer array to partitions */
+        free (treeParts);
+        treeParts = NULL;
+        FreePartCtr (partCtrRoot);
+        partCtrRoot = NULL;
+        FreeTreeCtr (treeCtrRoot);
+        treeCtrRoot = NULL;
 		} /* next tree */
 
 	/* free memory and file pointers */
-	if (memAllocs[ALLOC_SUMTSTRING] == YES)
-		{
-		free (s);
-		memAllocs[ALLOC_SUMTSTRING] = NO;
-		}
-	if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-		{
-		free (partOrigOrder);
-		memAllocs[ALLOC_PARTORIGORDER] = NO;
-		}
-	FreeBits ();
-	expecting = Expecting(COMMAND);
-	nodeDepthConTree = NO;
+    if (s) free(s);
+    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
+    sumtParams.numFileTrees = NULL;
+    FreePolyTree (sumtParams.tree);
+    sumtParams.tree = NULL;
+    memAllocs[ALLOC_SUMTPARAMS] = NO;
+
+    /* reset numLocalTaxa and localOutGroup */
+    ResetTaxonSet();
 
 #	if defined (MPI_ENABLED)
 		}
 #	endif
 
+    expecting = Expecting(COMMAND);
 	inSumtCommand = NO;
-	return (NO_ERROR);
+
+    return (NO_ERROR);
 	
-	/* error exit */			
+	/* error exit */
 	errorExit:
-		expecting = Expecting(COMMAND);
-		if (memAllocs[ALLOC_SUMTSTRING] == YES)
-			{
-			free (s);
-			memAllocs[ALLOC_SUMTSTRING] = NO;
-			}
-		if (memAllocs[ALLOC_PARTORIGORDER] == YES)
-			{
-			free (partOrigOrder);
-			memAllocs[ALLOC_PARTORIGORDER] = NO;
-			}
-		FreeBits ();
-		SafeFclose (&fp);
+	    if (s) free(s);
+	    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
+        sumtParams.numFileTrees = NULL;
+        FreePolyTree (sumtParams.tree);
+        sumtParams.tree = NULL;
+        memAllocs[ALLOC_SUMTPARAMS] = NO;
+        
+		/* close files in case they are open*/
+        SafeFclose (&fp);
 		SafeFclose (&fpParts);
+        SafeFclose (&fpTstat);
+        SafeFclose (&fpVstat);
 		SafeFclose (&fpCon);
 		SafeFclose (&fpTrees);
-		SafeFclose (&fpBrlens);
-		strcpy (spacer, "");
-		strcpy (sumtToken, "Sumt");
-		i = 0;
-		if (FindValidCommand (sumtToken, &i) == ERROR)
-			MrBayesPrint ("%s   Could not find sumt\n", spacer);
-		nodeDepthConTree = NO;
+
+        /* free pointer array to partitions, part and tree counters */
+        free (treeParts);
+        FreePartCtr (partCtrRoot);
+        FreeTreeCtr (treeCtrRoot);
+        partCtrRoot = NULL;
+        treeCtrRoot = NULL;
+
+        /* reset taxon set */
+        ResetTaxonSet();
+
+		expecting = Expecting(COMMAND);
 		inSumtCommand = NO;
-		return (ERROR);	
-	
+
+        return (ERROR);
 }
 
 
@@ -4128,38 +2640,6 @@ int DoSumtParm (char *parmName, char *tkn)
 				{
 				strcpy (sumtParams.sumtFileName, tkn);
 				MrBayesPrint ("%s   Setting sumt filename to %s\n", spacer, sumtParams.sumtFileName);
-				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-				}
-			else
-				return (ERROR);
-			}
-		/* set Pfile (sumtParams.pFile) ***************************************************/
-		else if (!strcmp(parmName, "Pfile"))
-			{
-			if (expecting == Expecting(EQUALSIGN))
-				{
-				expecting = Expecting(ALPHA);
-				readWord = YES;
-				}
-			else if (expecting == Expecting(ALPHA))
-				{
-				strcpy (sumtParams.pFile, tkn);
-				MrBayesPrint ("%s   Setting sumt pfile to %s\n", spacer, sumtParams.pFile);
-				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-				}
-			else
-				return (ERROR);
-			}
-		/* set Displaygeq (sumtParams.freqDisplay) *******************************************************/
-		else if (!strcmp(parmName, "Displaygeq"))
-			{
-			if (expecting == Expecting(EQUALSIGN))
-				expecting = Expecting(NUMBER);
-			else if (expecting == Expecting(NUMBER))
-				{
-				sscanf (tkn, "%lf", &tempD);
-				sumtParams.freqDisplay = tempD;
-				MrBayesPrint ("%s   Showing partitions with probability greater than or equal to %lf\n", spacer, sumtParams.freqDisplay);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -4302,23 +2782,6 @@ int DoSumtParm (char *parmName, char *tkn)
 					{
 					strcpy (sumtParams.sumtConType, tempStr);
 					MrBayesPrint ("%s   Setting sumt contype to %s\n", spacer, sumtParams.sumtConType);
-					}
-				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-				}
-			else
-				return (ERROR);
-			}
-		/* set Phylogramtype (sumtParams.phylogramType) **************************************************/
-		else if (!strcmp(parmName, "Phylogramtype"))
-			{
-			if (expecting == Expecting(EQUALSIGN))
-				expecting = Expecting(ALPHA);
-			else if (expecting == Expecting(ALPHA))
-				{
-				if (IsArgValid(tkn, tempStr) == NO_ERROR)
-					{
-					strcpy (sumtParams.phylogramType, tempStr);
-					MrBayesPrint ("%s   Setting sumt phylogramtype to '%s'\n", spacer, sumtParams.phylogramType);
 					}
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
@@ -4581,264 +3044,25 @@ int DoSumtParm (char *parmName, char *tkn)
 
 
 
-int DoTranslate (void)
-
-{
-
-	if (inTreesBlock == NO)
-		{
-		MrBayesPrint ("%s   You must be in a trees block to read a translate command\n", spacer);
-		return (ERROR);
-		}
-	numTranslates++;
-	isTranslateDef = YES;
-		
-#	if 0
-	MrBayesPrint ("%s   Defining a translation table\n", spacer);
-	
-	/* print out translate table */
-	{
-	int		i, j, len, longestLen;
-	char		tempName[100];
-	/*MrBayesPrint ("%s\n", transFrom);
-	MrBayesPrint ("%s\n", transTo);*/
-	longestLen = 0;
-	for (i=0; i<numTranslates; i++)
-		{
-		if (GetNameFromString (transFrom, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting translate names \n", spacer);
-			return (ERROR);
-			}
-		len = strlen(tempName);
-		if (len > longestLen)
-			longestLen = len;
-		}	
-	
-	for (i=0; i<numTranslates; i++)
-		{
-		if (GetNameFromString (transFrom, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting translate names \n", spacer);
-			return (ERROR);
-			}
-		len = strlen(tempName);		
-		MrBayesPrint ("%s      %s", spacer, tempName);
-		for (j=0; j<longestLen - len; j++)
-			MrBayesPrint (" ");
-		MrBayesPrint (" is translated to ");
-		if (GetNameFromString (transTo, tempName, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting translate names \n", spacer);
-			return (ERROR);
-			}
-		MrBayesPrint ("%s\n", tempName);
-		}
-	}
-#	endif
-
-	return (NO_ERROR);
-
-}
-
-
-
-
-
-int DoTranslateParm (char *parmName, char *tkn)
-
-{
-
-	int			howMany;
-
-	if (defMatrix == NO)
-		{
-		MrBayesPrint ("%s   A matrix must be specified before a translate command can be used\n", spacer);
-		return (ERROR);
-		}
-	if (inTreesBlock == NO)
-		{
-		MrBayesPrint ("%s   You must be in a trees block to read a translate command\n", spacer);
-		return (ERROR);
-		}
-	if (isTranslateDef == YES)
-		{
-		MrBayesPrint ("%s   A translation has already been defined for this tree block\n", spacer);
-		return (ERROR);
-		}
-		
-	if (expecting == Expecting(ALPHA))
-		{
-		if (numTranslates == numTaxa)
-			{
-			MrBayesPrint ("%s   Too many entries in translation table\n", spacer);
-			return (ERROR);
-			}
-		if (whichTranslate == 0)
-			{
-			if (CheckString (tkn, transTo, &howMany) == ERROR)
-				{
-				if (AddToString (tkn, transTo, &howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				if (howMany - 1 != numTranslates)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				}
-			else
-				{
-				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
-				return (ERROR);
-				}			
-			whichTranslate++;
-			expecting = Expecting(ALPHA);
-			expecting |= Expecting(NUMBER);
-			}
-		else 
-			{
-			if (CheckString (tkn, transFrom, &howMany) == ERROR)
-				{
-				if (AddToString (tkn, transFrom, &howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				if (howMany - 1 != numTranslates)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				}
-			else
-				{
-				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
-				return (ERROR);
-				}			
-			whichTranslate = 0;
-			expecting = Expecting(COMMA);
-			expecting |= Expecting(SEMICOLON);
-			}
-		}
-	else if (expecting == Expecting(NUMBER))
-		{
-		if (numTranslates == numTaxa)
-			{
-			MrBayesPrint ("%s   Too many entries in translation table\n", spacer);
-			return (ERROR);
-			}
-		if (whichTranslate == 0)
-			{
-			if (CheckString (tkn, transTo, &howMany) == ERROR)
-				{
-				if (AddToString (tkn, transTo, &howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				if (howMany - 1 != numTranslates)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				}
-			else
-				{
-				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
-				return (ERROR);
-				}			
-			whichTranslate++;
-			expecting = Expecting(ALPHA);
-			expecting |= Expecting(NUMBER);
-			}
-		else 
-			{
-			if (CheckString (tkn, transFrom, &howMany) == ERROR)
-				{
-				if (AddToString (tkn, transFrom, &howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				if (howMany - 1 != numTranslates)
-					{
-					MrBayesPrint ("%s   Problem adding taxon %s to list\n", spacer, tkn);
-					return (ERROR);
-					}
-				}
-			else
-				{
-				MrBayesPrint ("%s   Already found name (%s) in list\n", spacer, tkn);
-				return (ERROR);
-				}			
-			whichTranslate = 0;
-			expecting = Expecting(COMMA);
-			expecting |= Expecting(SEMICOLON);
-			}
-		}
-	else if (expecting == Expecting(COMMA))
-		{
-		numTranslates++;
-		expecting = Expecting(ALPHA);
-		expecting |= Expecting(NUMBER);
-		}
-
-	return (NO_ERROR);
-	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-	MrBayesPrint ("%s", tkn); 
-
-}
-
-
-
-
-
 int DoSumtTree (void)
 
 {
 
-	int			i, z, printEvery, nAstPerPrint, numTreesInThisFile, burnin;
-	MrBFlt		x, y;
-	
-	/* check that we are in a trees block */
-	if (inTreesBlock == NO)
-		{
-		MrBayesPrint ("%s   You must be in a trees block to read a tree\n", spacer);
-		goto errorExit;
-		}
-		
-	/* check that the tree is not too big */
-	if (numSumtTaxa > numTaxa)
-		{
-		MrBayesPrint ("%s   Too many taxa in tree\n", spacer);
-		goto errorExit;
-		}
-	
-	/* check that the tree is rooted if we calculate dated consensus tree */
-	if (nodeDepthConTree == YES && isSumtTreeRooted == NO)
-		{
-		MrBayesPrint ("%s   Tree is not rooted\n", spacer);
-		return (ERROR);
-		}
+	int			    i, z, printEvery, nAstPerPrint, burnin;
+	MrBFlt		    x, y;
+    PolyTree        *t;
+    PolyNode        *p;
 
-	/* Increment number of trees read in. */
-	numSumtTrees++;
-	if (comparingFiles == YES)
-		numCompTrees[fileNum]++;
+    /* increment number of trees read in */
+	sumtParams.numFileTrees[sumtParams.runId]++;
+    sumtParams.numTreesEncountered++;
 
-	/*  update status bar */
-	if (comparingFiles == YES)
-		numTreesInThisFile = numCompTrees[fileNum];
-	else
-		numTreesInThisFile = numSumtTrees;
-	if (numTreesInLastBlock * sumtParams.numRuns < 80)
+    /*  update status bar */
+	if (sumtParams.numTreesInLastBlock * sumtParams.numRuns < 80)
 		{
 		printEvery = 1;
-		nAstPerPrint = 80 / (numTreesInLastBlock * sumtParams.numRuns);
-		if (numSumtTrees % printEvery == 0)
+		nAstPerPrint = 80 / (sumtParams.numTreesInLastBlock * sumtParams.numRuns);
+		if (sumtParams.numTreesEncountered % printEvery == 0)
 			{
 			for (i=0; i<nAstPerPrint; i++)
 				{
@@ -4849,8 +3073,8 @@ int DoSumtTree (void)
 		}
 	else
 		{
-		x = (MrBFlt)(numTreesInLastBlock * sumtParams.numRuns) / (MrBFlt) (80);
-		y = (MrBFlt)(numTreesInThisFile + numTreesInLastBlock * runIndex) / x;
+		x = (MrBFlt)(sumtParams.numTreesInLastBlock * sumtParams.numRuns) / (MrBFlt) (80);
+		y = (MrBFlt)(sumtParams.numFileTrees[sumtParams.runId] + sumtParams.numTreesInLastBlock * sumtParams.runId) / x;
 		z = (int)y;
 		if (numAsterices < z)
 			{
@@ -4859,1560 +3083,447 @@ int DoSumtTree (void)
 			}
 		}
 	
-	/* prepare tree */
-    if (sumtParams.relativeBurnin == NO)
-        burnin = sumtParams.sumtBurnIn;
+	/* get burnin */
+    if (inComparetreeCommand == YES)
+        burnin = comptreeParams.burnin;
     else
-        burnin = (int) (numTreesInLastBlock * sumtParams.sumtBurnInFraction);
+        burnin = sumtParams.burnin;
 
-	if ((comparingFiles == NO && numSumtTrees > burnin) || (comparingFiles == YES && numCompTrees[fileNum] > comptreeParams.comptBurnIn))
+	if (sumtParams.numFileTrees[sumtParams.runId] > burnin)
 		{
-		/* Increment the number of trees sampled. */
-		numSumTreesSampled++;
-		if (comparingFiles == YES)
-			numCompTreesSampled[fileNum]++;
+        /* increment the number of trees sampled */
+		sumtParams.numFileTreesSampled[sumtParams.runId]++;
+        sumtParams.numTreesSampled++;
 
-		/* Add a node to the root of the tree if
-		   this is a rooted tree. */
-		if (isSumtTreeRooted == YES)
-			{
-			if (pSumtPtr->anc == NULL)
-				{
-				qSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				nextAvailableSumtNode++;
-				qSumtPtr->left = pSumtPtr;
-				pSumtPtr->anc = qSumtPtr;
-				pSumtPtr = qSumtPtr;
-				sumtRoot = pSumtPtr;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Tree is not rooted correctly\n", spacer);
-				goto errorExit;
-				}
-			}
-			
-		/* Check to see if all of the species in the character matrix (already
-		   read in) are present in the trees. We only do this for the first
-		   tree read in. */
-		if (numSumTreesSampled == 1)
-			{
-			if (CheckSumtSpecies () == ERROR)
-				goto errorExit;
-			}
-			
-		/* Prune deleted taxa from list of trees, if necessary */
-		if (PruneSumt () == ERROR)
-			goto errorExit;
-		if (numSumTreesSampled == 1)
-			{
-			for (i=0; i<numTaxa; i++)
-				{
-				if (taxaInfo[i].isDeleted == YES)
-					{
-					sumTaxaFound[i] = NO;
-					}
-				}
-			}		
+        /* get the tree we just read in */
+        t = sumtParams.tree;
+    	
+        /* check taxon set and outgroup */
+        if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
+            {
+            for (i=0; i<numTaxa; i++)
+                sumtParams.absentTaxa[i] = YES;
+            for (i=0; i<t->nNodes; i++)
+                {
+                p = t->allDownPass[i];
+                if (p->left == NULL)
+                    sumtParams.absentTaxa[p->index] = NO;
+                }
+            sumtParams.numTaxa = 0;
+            localOutGroup = 0;
+            for (i=0; i<numTaxa; i++)
+                {
+                if (sumtParams.absentTaxa[i] == NO && taxaInfo[i].isDeleted == NO)
+                    {
+                    if (i == outGroupNum)
+                        localOutGroup = sumtParams.numTaxa;
+                    sumtParams.numTaxa++;
+                    }
+                }
+            numLocalTaxa = sumtParams.numTaxa;
+            sumtParams.safeLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
+            if (t->isRooted == YES)
+                sumtParams.orderLen = numLocalTaxa - 2;
+            else
+                sumtParams.orderLen = numLocalTaxa - 3;
+            }
+        else
+            {
+            for (i=0; i<t->nNodes; i++)
+                {
+                p = t->allDownPass[i];
+                if (p->left == NULL && taxaInfo[p->index].isDeleted == NO && sumtParams.absentTaxa[p->index] == YES)
+                    {
+					MrBayesPrint ("%s   Taxon %d should not be in sampled tree\n", spacer, p->index + 1);
+                    return (ERROR);
+                    }
+                }
+            }
 
-		/* Reroot tree, if necessary, on the outgroup or on 
-		   the first undeleted taxon. We only do this if the
-		   tree is unrooted. If the tree is rooted, then we
-		   assume that the root is OK. This seems like extra
-		   work, but it is very convenient if all of the trees
-		   that are read in are consistently rooted. */
-		if (isSumtTreeRooted == NO)
-			{
-			if (RootSumtTree (sumtRoot, numSumtTaxa, outGroupNum) == ERROR)
-				goto errorExit;
-			if (DerootSumtTree (sumtRoot, numSumtTaxa, outGroupNum) == ERROR)
-				goto errorExit;
-			}	
-			
-		/* Relabel some interior nodes */	
-		i = numTaxa;
-		if (isSumtTreeRooted == YES)
-			FinishSumtTree (sumtRoot, &i, YES);
-		else
-			FinishSumtTree (sumtRoot, &i, NO);
-		
-		/* reset brlens if printing brlen vals to file */
-		if (printingBrlens == YES)
-			{
-			for (i=0; i<numBrlens; i++)
-				brlens[i] = -1.0;
-			}
+        /* prune tree based on taxaInfo[].isDeleted */
+        PrunePolyTree (t);
+        if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
+            {
+			MrBayesPrint ("%s   Expected %d nondeleted taxa in tree, only found %d taxa\n",
+                spacer, numLocalTaxa, t->nNodes - t->nIntNodes);
+            return (ERROR);
+            }
 
-		/* get partitions for tree */
-		if (GetPartitions () == ERROR)
-			goto errorExit;
-			
-		/* find the partitions in the table and increment
-		   the appropriate ones */
-		if (FindParts (nodeDepthConTree) == ERROR)
-			goto errorExit;
-			
-		/* print brlens to file and bail out if appropriate */
-		if (printingBrlens == YES)
-			{
-			if (PrintBrlensToFile () == ERROR)
-				return ERROR;
-			else
-				return NO_ERROR;
-			}
+        /* move calculation root for nonrooted trees if necessary */
+        MovePolyCalculationRoot (t, localOutGroup);
+        
+        /* check that all taxa are included */
+        if (sumtParams.numTreesSampled == 0)
+            sumtParams.numTaxa = t->nNodes - t->nIntNodes;
+        else if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
+	        {
+	        MrBayesPrint ("%s   Expecting %d taxa but tree '%s' in file '%s' has %d taxa\n",
+                spacer, sumtParams.numTaxa, t->name, sumtParams.curFileName, t->nNodes-t->nIntNodes);
+	        return ERROR;
+	        }
 
-		/* find the tree in the list of trees */
-		if (FindTree () == ERROR)
-			goto errorExit;
-			
-		/* add the tree to the list of trees */
-		if (comparingFiles == YES)
-			{
-			if (AddTreeToList (fileNum) == ERROR)
-				goto errorExit;
-			}
+        /* check that tree agrees with template */
+	    if (sumtParams.numTreesSampled == 1)
+            {
+            sumtParams.brlensDef = t->brlensDef;
+            sumtParams.isRooted = t->isRooted;
+            sumtParams.isClock = t->isClock;
+            sumtParams.isCalibrated = t->isCalibrated;
+            sumtParams.isRelaxed = t->isRelaxed;
+            }
+        else /* if (sumtParams.numTreesSampled > 1) */
+            {
+            if (sumtParams.brlensDef != t->brlensDef)
+                {
+                MrBayesPrint ("%s   Trees with and without branch lengths mixed\n", spacer);
+	            return ERROR;
+                }
+            if (sumtParams.isRooted != t->isRooted)
+                {
+	            if (sumtParams.isRooted == YES)
+                    MrBayesPrint ("%s   Expected rooted tree but tree '%s' in file '%s' is not rooted\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            else if (sumtParams.isRooted == NO)
+                    MrBayesPrint ("%s   Expected unrooted tree but tree '%s' in file '%s' is rooted\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            return ERROR;
+                }
+            if (sumtParams.isClock != t->isClock)
+                {
+	            if (sumtParams.isClock == YES)
+                    MrBayesPrint ("%s   Expected clock tree but tree '%s' in file '%s' is not clock\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            else if (sumtParams.isClock == NO)
+                    MrBayesPrint ("%s   Expected nonclock tree but tree '%s' in file '%s' is clock\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            return ERROR;
+                }
+            if (sumtParams.isCalibrated != t->isCalibrated)
+                {
+	            if (sumtParams.isCalibrated == YES)
+                    MrBayesPrint ("%s   Expected calibrated (dated) tree but tree '%s' in file '%s' is not calibrated\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            else if (sumtParams.isCalibrated == NO)
+                    MrBayesPrint ("%s   Expected noncalibrated tree but tree '%s' in file '%s' is calibrated\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            return ERROR;
+                }
+            if (inComparetreeCommand == NO && sumtParams.isRelaxed != t->isRelaxed)
+                {
+	            if (sumtParams.isRelaxed == YES)
+                    MrBayesPrint ("%s   Expected relaxed clock tree but tree '%s' in file '%s' is not relaxed\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            else if (sumtParams.isRelaxed == NO)
+                    MrBayesPrint ("%s   Expected unrooted tree but tree '%s' in file '%s' is rooted\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            return ERROR;
+                }
+            if (inComparetreeCommand == NO && sumtParams.nESets != t->nESets || sumtParams.nBSets != t->nBSets)
+                {
+                MrBayesPrint ("%s   Tree '%s' in file '%s' does not have the expected relaxed clock parameters\n",
+                        spacer, t->name, sumtParams.curFileName);
+	            return ERROR;
+                }
+            }
 
-		/* Display the tree nodes. */
+        /* set partitions for tree */
+		ResetPolyTreePartitions(t);
+
+		/* get depths if relevant */
+        if (t->isClock)
+            GetPolyDepths (t);
+
+        /* get ages if relevant */
+        if (t->isCalibrated)
+            GetPolyAges (t);
+        
+        /* add partitions to counters */
+		for (i=0; i<t->nNodes; i++)
+            {
+            p = t->allDownPass[i];
+            partCtrRoot = AddSumtPartition (partCtrRoot, t, p, sumtParams.runId);
+            }
+			
+		/* add the tree to relevant tree list */
+        if (inSumtCommand == YES)
+            {
+            if (t->isRooted == YES)
+                StoreRPolyTopology (t, sumtParams.order);
+            else /* if (sumtParams.isRooted == NO) */
+                StoreUPolyTopology (t, sumtParams.order);
+     		treeCtrRoot = AddSumtTree (treeCtrRoot, sumtParams.order);
+            }
+        else
+            {
+            i = sumtParams.numFileTreesSampled[sumtParams.runId] - 1;
+            if (StoreSumtTree (packedTreeList[sumtParams.runId], i, t) == ERROR)
+                return (ERROR);
+            }
+
+        /* Display the tree nodes. */
 #		if 0
-		if (isSumtTreeRooted == YES)
-			MrBayesPrint ("%s   Rooted tree %d:\n", spacer, numSumtTrees);
-		else
-			MrBayesPrint ("%s   Unrooted tree %d:\n", spacer, numSumtTrees);
-		ShowSumtNodes (sumtRoot, 3, isSumtTreeRooted);
+        ShowPolyNodes(t->root, 0 , t->isRooted);
 #		endif
 		}
 	
-	return (NO_ERROR);
-
-	errorExit:
-		return (ERROR);
-	
+	return (NO_ERROR);	
 }
 
 
 
 
 
-int DoSumtTreeParm (char *parmName, char *tkn)
-
+int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef)
 {
+    int     i, foundBegin, lineTerm, inTreeBlock, blockErrors, inSumtComment, lineNum, numTreesInBlock,
+            tokenType;
+    char    sumtToken[100], *s, *sumtTokenP;
+    FILE    *fp;
 
-	int			i, tempInt, howMany;
-	MrBFlt		tempD;
-	char		tempName[100];
-	
-	if (defMatrix == NO)
-		{
-		MrBayesPrint ("%s   A matrix must be specified before a tree can be read in\n", spacer);
-		goto errorExit;
-		}
-	if (inTreesBlock == NO)
-		{
-		MrBayesPrint ("%s   You must be in a trees block to read a tree\n", spacer);
-		goto errorExit;
-		}
-	
-	if (expecting == Expecting(PARAMETER))
-		{
-		/* this should be the name of the tree, but we don't need to do anything with it */
-		expecting = Expecting(EQUALSIGN);
-		}
-	else if (expecting == Expecting(EQUALSIGN))
-		{
-		for (i=0; i<2*numTaxa; i++)
-			{
-			sumtNodes[i].left = sumtNodes[i].right = sumtNodes[i].anc = NULL;
-			sumtNodes[i].memoryIndex = i;
-			sumtNodes[i].length = 0.0;
-			sumtNodes[i].marked = NO;
-			sumtNodes[i].index = 0;
-			sumtNodes[i].taxonName = NO;
-			}
-		sumtRoot = NULL;
-		isSumtTreeDefined = NO;
-		isFirstSumtNode = YES;
-		pSumtPtr = qSumtPtr = &sumtNodes[0];
-		nextAvailableSumtNode = 0;
-		numSumtTaxa = 0;
-		foundSumtColon = NO;
-		isSumtTreeRooted = YES;
-		for (i=0; i<numTaxa; i++)
-			tempSet[i] = NO;
-		expecting  = Expecting(LEFTPAR);
-		}
-	else if (expecting == Expecting(LEFTPAR))
-		{
-		if (isFirstSumtNode == YES)
-			{
-			pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-			nextAvailableSumtNode++;
-			isFirstSumtNode = NO;
-			sumtRoot = pSumtPtr;
-			}
-		else
-			{
-			if (nextAvailableSumtNode+1 >= 2*numTaxa)
-				{
-				MrBayesPrint ("%s   Too many nodes on sumt tree\n", spacer);
-				goto errorExit;
-				}
-			if (pSumtPtr->left == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				nextAvailableSumtNode++;
-				qSumtPtr->left = pSumtPtr;
-				pSumtPtr->anc = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				}
-			else if (pSumtPtr->right == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				nextAvailableSumtNode++;
-				qSumtPtr->right = pSumtPtr;
-				pSumtPtr->anc = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				}
-			else if (pSumtPtr->anc == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				nextAvailableSumtNode++;
-				qSumtPtr->anc = pSumtPtr;
-				pSumtPtr->left = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				sumtRoot = pSumtPtr;
-				pSumtPtr->marked = YES;
-				isSumtTreeRooted = NO;
-				}
-			else
-				{
-				MrBayesPrint ("\n   ERROR: Tree is not bifurcating\n");
-				goto errorExit;
-				}
-			}
-		expecting  = Expecting(ALPHA);
-		expecting |= Expecting(NUMBER);
-		expecting |= Expecting(LEFTPAR);
-		}
-	else if (expecting == Expecting(ALPHA))
-		{
-		if (nextAvailableSumtNode+1 >= 2*numTaxa)
-			{
-			MrBayesPrint ("%s   Too many nodes on sumt tree\n", spacer);
-			return (ERROR);
-			}
-			
-		if (isTranslateDef == YES)
-			{
-			/* we are using the translation table */
-			if (CheckString (tkn, transTo, &howMany) == ERROR)
-				{
-				MrBayesPrint ("%s   Could not find taxon %s in list of translation taxa\n", spacer, tkn);
-				goto errorExit;
-				}
-			else
-				{
-				if (GetNameFromString (transFrom, tempName, howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-					goto errorExit;
-					}
-				else
-					{
-					if (CheckString (tempName, taxaNames, &howMany) == ERROR)
-						{
-						MrBayesPrint ("%s   Could not find taxon %s in list of taxa\n", spacer, tkn);
-						goto errorExit;
-						}
-					if (tempSet[howMany-1] == YES)
-						{
-						MrBayesPrint ("%s   Taxon name %s already used in tree\n", spacer, tkn);
-						goto errorExit;
-						}
-					else
-						tempSet[howMany-1] = YES;
-					}
-				}
-			}
-		else
-			{
-			/* Check to see if the name is in the list of taxon names. */
-			if (CheckString (tkn, taxaNames, &howMany) == ERROR)
-				{
-				MrBayesPrint ("%s   Could not find taxon %s in list of taxa\n", spacer, tkn);
-				goto errorExit;
-				}
-			if (tempSet[howMany-1] == YES)
-				{
-				MrBayesPrint ("%s   Taxon name %s already used in tree\n", spacer, tkn);
-				goto errorExit;
-				}
-			else
-				tempSet[howMany-1] = YES;
-			}
-		if (pSumtPtr->left == NULL)
-			{
-			pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-			strcpy (pSumtPtr->label, tkn);
-			pSumtPtr->taxonName = YES;
-			pSumtPtr->index = howMany - 1;
-			nextAvailableSumtNode++;
-			qSumtPtr->left = pSumtPtr;
-			pSumtPtr->anc = qSumtPtr;
-			qSumtPtr = pSumtPtr;
-			}
-		else if (pSumtPtr->right == NULL)
-			{
-			pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-			strcpy (pSumtPtr->label, tkn);
-			pSumtPtr->taxonName = YES;
-			pSumtPtr->index = howMany - 1;
-			nextAvailableSumtNode++;
-			qSumtPtr->right = pSumtPtr;
-			pSumtPtr->anc = qSumtPtr;
-			qSumtPtr = pSumtPtr;
-			}
-		else if (pSumtPtr->anc == NULL)
-			{
-			pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-			strcpy (pSumtPtr->label, tkn);
-			pSumtPtr->taxonName = YES;
-			pSumtPtr->index = howMany - 1;
-			nextAvailableSumtNode++;
-			qSumtPtr->anc = pSumtPtr;
-			pSumtPtr->left = qSumtPtr;
-			qSumtPtr = pSumtPtr;
-			sumtRoot = pSumtPtr;
-			pSumtPtr->marked = YES;
-			isSumtTreeRooted = NO;
-			}
-		else
-			{
-			MrBayesPrint ("%s   Tree is not bifurcating\n", spacer);
-			goto errorExit;
-			}
-		numSumtTaxa++;
-		expecting  = Expecting(COMMA);
-		if (sumtBrlensDef == YES)
-			expecting |= Expecting(COLON);
-		expecting |= Expecting(RIGHTPAR);
-		}
-	else if (expecting == Expecting(RIGHTPAR))
-		{
-		if (pSumtPtr->marked == NO)
-			{
-			if (pSumtPtr->anc != NULL)
-				{
-				pSumtPtr = pSumtPtr->anc;
-				qSumtPtr = pSumtPtr;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Cannot go down\n", spacer);
-				goto errorExit;
-				}
-			}
-		else
-			{
-			if (pSumtPtr->left != NULL)
-				{
-				pSumtPtr = pSumtPtr->left;
-				qSumtPtr = pSumtPtr;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Cannot go down\n", spacer);
-				goto errorExit;
-				}
-			}
-		expecting  = Expecting(COMMA);
-		if (sumtBrlensDef == YES)
-			expecting |= Expecting(COLON);
-		expecting |= Expecting(RIGHTPAR);
-		expecting |= Expecting(SEMICOLON);
-		}
-	else if (expecting == Expecting(COLON))
-		{
-		foundSumtColon = YES;
-		expecting  = Expecting(NUMBER);
-		}
-	else if (expecting == Expecting(COMMA))
-		{
-		if (pSumtPtr->marked == NO)
-			{
-			if (pSumtPtr->anc != NULL)
-				{
-				pSumtPtr = pSumtPtr->anc;
-				qSumtPtr = pSumtPtr;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Cannot go down\n", spacer);
-				goto errorExit;
-				}
-			}
-		else
-			{
-			if (pSumtPtr->left != NULL)
-				{
-				pSumtPtr = pSumtPtr->left;
-				qSumtPtr = pSumtPtr;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Cannot go down\n", spacer);
-				goto errorExit;
-				}
-			}
-		expecting  = Expecting(ALPHA);
-		expecting |= Expecting(NUMBER);
-		expecting |= Expecting(LEFTPAR);
-		}
-	else if (expecting == Expecting(NUMBER))
-		{
-		if (foundSumtColon == YES)
-			{
-			/* branch length */
-			sscanf (tkn, "%lf", &tempD);
-			if (pSumtPtr->marked == NO)
-				pSumtPtr->length = tempD;
-			else
-				{
-				if (pSumtPtr->left != NULL)
-					pSumtPtr->left->length = tempD;
-				else
-					{
-					MrBayesPrint ("%s   Cannot assign branch length to left node\n", spacer);
-					goto errorExit;
-					}
-				}
-			foundSumtColon = NO;
-			expecting  = Expecting(COMMA);
-			expecting |= Expecting(RIGHTPAR);
-			}
-		else
-			{
-			if (isTranslateDef == YES)
-				{
-				/* we are using the translation table */
-				if (CheckString (tkn, transTo, &howMany) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %s in list of translation taxa\n", spacer, tkn);
-					goto errorExit;
-					}
-				else
-					{
-					if (GetNameFromString (transFrom, tempName, howMany) == ERROR)
-						{
-						MrBayesPrint ("%s   Error getting partition names \n", spacer);
-						goto errorExit;
-						}
-					else
-						{
-						if (CheckString (tempName, taxaNames, &howMany) == ERROR)
-							{
-							MrBayesPrint ("%s   Could not find taxon %s in list of taxa\n", spacer, tkn);
-							goto errorExit;
-							}
-						if (tempSet[howMany-1] == YES)
-							{
-							MrBayesPrint ("%s   Taxon name %s already used in tree\n", spacer, tkn);
-							goto errorExit;
-							}
-						else
-							tempSet[howMany-1] = YES;
-						}
-					}
-				tempInt = howMany - 1;
-				}
-			else
-				{
-				/* simply use taxon number */
-				sscanf (tkn, "%d", &tempInt);
-
-				if (nextAvailableSumtNode+1 >= 2 * numTaxa)
-					{
-					MrBayesPrint ("%s   Too many nodes on sumt tree\n", spacer);
-					goto errorExit;
-					}
-				/* Check to see if the name is in the list of taxon names. */
-				if (CheckString (tkn, taxaNames, &howMany) == ERROR)
-					{
-					/* The number could not be found as a taxon name in the list of taxon names. We will
-					   assume that the user has then input taxa as numbers and not the names. */
-					if (tempSet[tempInt-1] == YES)
-						{
-						MrBayesPrint ("%s   Taxon name %d has already been used in tree\n", spacer, tempInt);
-						goto errorExit;
-						}
-					else
-						tempSet[tempInt-1] = YES;
-					tempInt--;
-					}
-				else
-					{
-					/* The taxon name is in the list of taxon names */
-					howMany--;
-					if (howMany < 0 || howMany >= numTaxa)
-						{
-						MrBayesPrint ("%s   Taxon number is out of range\n", spacer);
-						goto errorExit;
-						}
-					if (tempSet[howMany] == YES)
-						{
-						MrBayesPrint ("%s   Taxon %d has already been used in tree\n", spacer, howMany+1);
-						goto errorExit;
-						}
-					else
-						tempSet[howMany] = YES;
-					tempInt = howMany;
-					}
-							
-				if (GetNameFromString (taxaNames, tempName, tempInt+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Error getting partition names \n", spacer);
-					goto errorExit;
-					}
-				}
-						
-			if (pSumtPtr->left == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				strcpy (pSumtPtr->label, tempName);
-				pSumtPtr->taxonName = YES;
-				pSumtPtr->index = tempInt;
-				nextAvailableSumtNode++;
-				qSumtPtr->left = pSumtPtr;
-				pSumtPtr->anc = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				}
-			else if (pSumtPtr->right == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				strcpy (pSumtPtr->label, tempName);
-				pSumtPtr->taxonName = YES;
-				pSumtPtr->index = tempInt;
-				nextAvailableSumtNode++;
-				qSumtPtr->right = pSumtPtr;
-				pSumtPtr->anc = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				}
-			else if (pSumtPtr->anc == NULL)
-				{
-				pSumtPtr = &sumtNodes[nextAvailableSumtNode];
-				strcpy (pSumtPtr->label, tempName);
-				pSumtPtr->taxonName = YES;
-				pSumtPtr->index = tempInt;
-				nextAvailableSumtNode++;
-				qSumtPtr->anc = pSumtPtr;
-				pSumtPtr->left = qSumtPtr;
-				qSumtPtr = pSumtPtr;
-				sumtRoot = pSumtPtr;
-				pSumtPtr->marked = YES;
-				isSumtTreeRooted = NO;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Tree is not bifurcating\n", spacer);
-				return (ERROR);
-				}
-			numSumtTaxa++;
-			expecting  = Expecting(COMMA);
-			expecting |= Expecting(COLON);
-			expecting |= Expecting(RIGHTPAR);
-			}
-		}
-
-	return (NO_ERROR);
-	
-	errorExit:
-		inTreesBlock = NO;
-		return (ERROR);
-	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
-}
-
-
-
-
-
-int FindParts (int nodeDepthConTree)
-
-
-{
-
-	int				i, j, nNodes, partNum;
-	MrBFlt			bl, rate, x, y;
-	SumtNode		**downPass, *p;
-
-	/* allocate memory for downpass */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
-		goto errorExit;
-		}
-				
-	/* get the downpass sequence */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
+	/* open binary file */
+	if ((fp = OpenBinaryFileR(fileName)) == NULL)
+		return ERROR;
 		
-	/* calculate the node ages (depths) if appropriate */
-	if (nodeDepthConTree == YES)
+	/* find out what type of line termination is used for file 1 */
+	lineTerm = LineTermType (fp);
+	if (lineTerm != LINETERM_MAC && lineTerm != LINETERM_DOS && lineTerm != LINETERM_UNIX)
 		{
-		if (treeIndex >= numClockRates)
-			{
-			MrBayesPrint ("%s   More trees than clock rate samples\n", spacer);
-			return (ERROR);
-			}
-		rate = clockRate[treeIndex++];
-		for (i=0; i<nNodes-1; i++)
-			{
-			p = downPass[i];
-			if (p->left == NULL && p->right == NULL)
-				p->age = 0.0;
-			else
-				{
-				x = p->left->age + p->left->length / rate;
-				y = p->right->age + p->right->length / rate;
-				if (x > y)
-					p->age = x;
-				else
-					p->age = y;
-				}
-			}
-		for (i=nNodes-3; i>=0; i--)
-			{
-			p = downPass[i];
-			p->age = p->anc->age - p->length / rate;
-			}
+		MrBayesPrint ("%s   Unknown line termination for file  \"%s\"\n", spacer, fileName);
+		return ERROR;
 		}
 
-	j = 0;
-	for (i=0; i<nNodes; i++)
+	/* find length of longest line in either file */
+	sumtFileInfo->longestLineLength = LongestLine (fp);
+	sumtFileInfo->longestLineLength += 10;
+	
+	/* allocate a string long enough to hold a line */
+	s = (char *)SafeMalloc((size_t) (sumtFileInfo->longestLineLength * sizeof(char)));
+	if (!s)
 		{
-		p = downPass[i];
-		if (p->anc != NULL)
-			{
-			if (sumtBrlensDef == YES)
-				{
-				if (nodeDepthConTree == YES)
-                    {
-					bl = p->age;
-                    /* correct age of terminals that are likely to be extant */
-                    if (p->left == NULL && bl < (downPass[nNodes-2]->age/(100.0*nNodes)))
-                        bl = 0.0;
-                    }
-				else
-					bl = p->length;
-				}
-			else
-				bl = -1.0;
-			if (p->anc->anc != NULL || (p->anc->anc == NULL && nodeDepthConTree == YES))
-				{
-				if (PartFinder (&treeBits[(p->index) * taxonLongsNeeded], bl, &partNum) == ERROR)
-					goto errorExit;
-				treePartNums[j] = partNum;
-				treePartLengths[j] = bl;
-				j++;
-				}
-			else if (p->anc->anc == NULL && isSumtTreeRooted == NO)
-				{
-				if (PartFinder (&treeBits[(p->index) * taxonLongsNeeded], bl, &partNum) == ERROR)
-					goto errorExit;
-				treePartNums[j] = partNum;
-				treePartLengths[j] = bl;
-				j++;
-				}
-			}
-		}	
-		
-	/* count and sort all of the tree partitions IDs */		
-	numTreeParts = j;
-	SortIndParts (&treePartNums[0], &treePartLengths[0], numTreeParts, YES);
-
-	free (downPass);
-	
-#	if 0
-	MrBayesPrint ("Partition IDs (%d): \n", numTreeParts);
-	for (i=0; i<numTreeParts; i++)
-		MrBayesPrint ("      %3d %lf\n", treePartNums[i], treePartLengths[i]);
-#	endif
-
-	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		return (ERROR);
-	
-}
-
-
-
-
-
-int FindTree (void)
-
-{
-
-	int			i, n, foundTree, nDiff, whichTree, *x;
-	
-	if (numTreeParts == 0)
-		{
-		MrBayesPrint ("%s   Too few tree partitions\n", spacer);
+		MrBayesPrint ("%s   Problem allocating string for examining file \"%s\"\n", spacer, fileName);
 		return (ERROR);
 		}
 		
-	if (numFullTreesFound == 0)
-		{
-		x = &fullTreePartIds[0];
-		for (i=0; i<numTreeParts; i++)
-			x[i] = treePartNums[i];
-		numOfThisFullTree[0] = 1;
-		numFullTreesFound++;
-		whichTree = 0;
-		}
-	else
-		{
-		foundTree = NO;
-		x = &fullTreePartIds[0];
-		for (n=0; n<numFullTreesFound; n++)
-			{
-			nDiff = 0;
-			for (i=0; i<numTreeParts; i++)
-				{
-				if (x[i] != treePartNums[i])
-					{
-					nDiff++;
-					break;
-					}
-				}
-			if (nDiff == 0)
-				{
-				foundTree = YES;
-				break;
-				}
-			x += (2 * numTaxa);
-			}
-		
-		if (foundTree == YES)
-			{
-			numOfThisFullTree[n]++;
-			whichTree = n;
-			}
-		else
-			{
-			if (numFullTreesFound+1 > numFullTreesAllocated)
-				{
-				numFullTreesAllocated += 500;
-				if (ReallocateFullTrees () == ERROR)
-					return (ERROR);
-				}
-			
-			x = &fullTreePartIds[numFullTreesFound * 2 * numTaxa];
-			for (i=0; i<numTreeParts; i++)
-				x[i] = treePartNums[i];
-			numOfThisFullTree[numFullTreesFound] = 1;
-			whichTree = numFullTreesFound;
-			numFullTreesFound++;
-			}
-		}
-
-	return (NO_ERROR);
-	
-}
-
-
-
-
-
-void FinishSumtTree (SumtNode *p, int *i, int isThisTreeRooted)
-
-{
-
-	/* We only reindex the internal nodes of the tree. We
-	   assume that the tip nodes have already been indexed
-	   0, 1, 2, ..., numTaxa-1. */
-	   
-	if (p != NULL)
-		{
-		FinishSumtTree (p->left,  i, isThisTreeRooted);
-		FinishSumtTree (p->right, i, isThisTreeRooted);
-		p->marked = NO;
-		if (p->left == NULL && p->right == NULL && p->anc != NULL)
-			{
-			}
-		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
-			{
-			if (isThisTreeRooted == YES)
-				p->index = (*i)++;
-			}
-		else
-			{
-			p->index = (*i)++;
-			}
-		}
-		
-}
-
-
-
-
-
-int FirstTaxonInPartition (safeLong *partition, int length)
-
-{
-
-	int				i, j, nBits, taxon;
-	safeLong			x;
-
-	nBits = sizeof(safeLong) * 8;
-
-	for (i=taxon=0; i<length; i++)
-		{
-		x = 1;
-		for (j=0; j<nBits; j++)
-			{
-			if (partition[i] & x)
-				return taxon;
-			taxon++;
-			x <<= 1;
-			}
-		}
-
-	return taxon;
-
-}
-
-
-
-
-
-
-int FreeBits (void)
-
-{
-	int		i;
-
-	if (memAllocs[ALLOC_TREEBITS] == YES)
-		{
-		free (treeBits);
-		free (treePartNums);
-		free (treePartLengths);
-		memAllocs[ALLOC_TREEBITS] = NO;
-		}
-	if (memAllocs[ALLOC_TREEPARTS] == YES)
-		{
-		free (treePartsFound);
-		memAllocs[ALLOC_TREEPARTS] = NO;
-		}
-	if (memAllocs[ALLOC_NUMOFPART] == YES)
-		{
-		free (numFoundOfThisPart);
-		if (comparingFiles == YES)
-			{
-			free (numFoundOfThisPart1);
-			free (numFoundOfThisPart2);
-			}
-		memAllocs[ALLOC_NUMOFPART] = NO;
-		}
-	if (memAllocs[ALLOC_NUMINRUNOFPART] == YES)
-		{
-		for (i=0; i<sumtParams.numRuns; i++)
-			{
-			if (numFoundInRunOfPart[i])
-				free (numFoundInRunOfPart[i]);
-			}
-		free (numFoundInRunOfPart);
-		memAllocs[ALLOC_NUMINRUNOFPART] = NO;
-		}
-	if (memAllocs[ALLOC_ABRLENS] == YES)
-		{
-		free (aBrlens);
-		memAllocs[ALLOC_ABRLENS] = NO;
-		}
-	if (memAllocs[ALLOC_SBRLENS] == YES)
-		{
-		free (sBrlens);
-		memAllocs[ALLOC_SBRLENS] = NO;
-		}
-	if (memAllocs[ALLOC_A_WITHIN_BRLENS] == YES)
-		{
-		free (aWithinBrlens);
-		memAllocs[ALLOC_A_WITHIN_BRLENS] = NO;
-		}
-	if (memAllocs[ALLOC_S_WITHIN_BRLENS] == YES)
-		{
-		free (sWithinBrlens);
-		memAllocs[ALLOC_S_WITHIN_BRLENS] = NO;
-		}
-	if (memAllocs[ALLOC_SUMB] == YES)
-		{
-		free (sumB);
-		memAllocs[ALLOC_SUMB] = NO;
-		}
-	if (memAllocs[ALLOC_SUMSQB] == YES)
-		{
-		free (sumsqB);
-		memAllocs[ALLOC_SUMSQB] = NO;
-		}
-	if (memAllocs[ALLOC_TAXONMASK] == YES)
-		{
-		free (taxonMask);
-		memAllocs[ALLOC_TAXONMASK] = NO;
-		}
-	if (memAllocs[ALLOC_TAXAFOUND] == YES)
-		{
-		free (sumTaxaFound);
-		memAllocs[ALLOC_TAXAFOUND] = NO;
-		}
-	if (memAllocs[ALLOC_SUMTTREE] == YES)
-		{
-		free (sumtNodes);
-		memAllocs[ALLOC_SUMTTREE] = NO;
-		}
-	if (memAllocs[ALLOC_FULLTREEINFO] == YES)
-		{
-		free (fullTreePartIds);
-		free (numOfThisFullTree);
-		memAllocs[ALLOC_FULLTREEINFO] = NO;
-		}
-	if (memAllocs[ALLOC_PRUNEINFO] == YES)
-		{
-		free (prunedTaxa);
-		absentTaxa = NULL;
-		memAllocs[ALLOC_PRUNEINFO] = NO;
-		}
-	if (memAllocs[ALLOC_FULLCOMPTREEINFO] == YES)
-		{
-		free (fullCompTreePartIds1);
-		free (fullCompTreePartIds2);
-		free (fullCompTreePartLengths1);
-		free (fullCompTreePartLengths2);
-		memAllocs[ALLOC_FULLCOMPTREEINFO] = NO;
-		}
-	if (memAllocs[ALLOC_CLOCKRATE] == YES)
-		{
-		free (clockRate);
-		numClockRates = 0;
-		memAllocs[ALLOC_CLOCKRATE] = NO;
-		}
-	return (NO_ERROR);
-
-}
-
-
-
-
-
-/* GetClockRates: Extract clock rates from .p file name 'fileName' */
-int GetClockRates (char *rateName, char *fileName)
-
-{
-
-	int		i, j, index, lineLength, inSumpComment=NO, lineNum, lastNonDigitLine, numParamLines,
-			nHeaders, allDigitLine, lastTokenWasDash, nNumbersOnThisLine, tokenType, nLines,
-			numColumns, numLinesToRead, numLinesRead, burnin;
-	FILE		*fp;
-	char		*inputLine, *headerLine, temp[100];
-	MrBFlt		tempD;
-
-	if ((fp = OpenBinaryFileR (fileName)) == NULL)
-		{
-		MrBayesPrint ("%s   Could not open file '%s' to read clock rates\n", spacer, fileName);
-		return (ERROR);
-		}
-	
-	lineLength = LongestLine (fp) + 10;
-	
 	/* close binary file */
 	SafeFclose (&fp);
 	
-	inputLine = (char *) calloc (3 * (lineLength), sizeof (char));
-	if (inputLine == NULL)
-		{
-		MrBayesPrint ("%s   Could not allocate inputLine in GetClockRates\n", spacer);
-		return (ERROR);
-		}
-	headerLine = inputLine + lineLength;
-	headerNames = headerLine + lineLength;
-	headerLine[0] = '\0';
-	for (i=0; i<lineLength-1; i++)
-		headerNames[i] = ' ';
-	headerNames[i] = '\0';
+    foundBegin = inTreeBlock = blockErrors = inSumtComment = NO;
+	lineNum = numTreesInBlock = 0;
+    sumtFileInfo->numTreeBlocks = 0;
+    sumtFileInfo->lastTreeBlockBegin = 0;
+    sumtFileInfo->lastTreeBlockEnd = 0;
+    sumtFileInfo->numTreesInLastBlock = 0;
 
-	if ((fp = OpenTextFileR(fileName)) == NULL)
+    /* open text file */
+    if ((fp = OpenTextFileR(fileName))==NULL)
 		{
-		MrBayesPrint ("%s   Could not open text file in GetClockRates\n", spacer);
-		free (inputLine);
+		MrBayesPrint ("%s   Could not read file \"%s\" in text mode \n", spacer, fileName);
 		return (ERROR);
 		}
 
-	/* find last block */
-	inComment = NO;
-	lineNum = lastNonDigitLine = numParamLines = 0;
-	while (fgets (inputLine, lineLength, fp) != NULL)
+    /* read file */
+    while (fgets (s, sumtFileInfo->longestLineLength-2, fp) != NULL)
 		{
-		sumpTokenP = inputLine;
-		allDigitLine = YES;
-		lastTokenWasDash = NO;
-		nNumbersOnThisLine = 0;
+		sumtTokenP = &s[0];
 		do
 			{
-			GetSumpToken (&tokenType, &sumpTokenP, sumpToken);
-			/*printf ("%s (%d)\n", sumpToken, tokenType);*/
-			if (IsSame("[", sumpToken) == SAME)
-				inSumpComment = YES;
-			if (IsSame("]", sumpToken) == SAME)
-				inSumpComment = NO;
-					
-			if (inSumpComment == NO)
+			GetToken (sumtToken, &tokenType, &sumtTokenP);
+			if (IsSame("[", sumtToken) == SAME)
+				inSumtComment = YES;
+			if (IsSame("]", sumtToken) == SAME)
+				inSumtComment = NO;
+            
+			if (inSumtComment == YES)
 				{
-				if (tokenType == NUMBER)
+				if (IsSame ("Param", sumtToken) == SAME)
 					{
-					sscanf (sumpToken, "%lf", &tempD);
-					if (lastTokenWasDash == YES)
-						tempD *= -1.0;
-					nNumbersOnThisLine++;
-					lastTokenWasDash = NO;
-					}
-				else if (tokenType == DASH)
-					{
-					lastTokenWasDash = YES;
-					}
-				else if (tokenType != UNKNOWN_TOKEN_TYPE)
-					{
-					allDigitLine = NO;
-					lastTokenWasDash = NO;
-					}				
-				}					
-			} while (*sumpToken);
-		lineNum++;
-		
-		if (allDigitLine == NO)
-			{
-			lastNonDigitLine = lineNum;
-			numParamLines = 0;
-			strcpy (headerLine, inputLine);
-			}
-		else
-			{
-			if (nNumbersOnThisLine > 0)
-				numParamLines++;
-			}
-		}
-		
-	/* Now, check some aspects of the file. */
-	if (inSumpComment == YES)
-		{
-		MrBayesPrint ("%s   Unterminated comment in file '%s'\n", spacer, fileName);
-		free (inputLine);
-		SafeFclose (&fp);
-		return (ERROR);
-		}
-	if (numParamLines <= 0)
-		{
-		MrBayesPrint ("%s   No parameters were found in file '%s'\n", spacer, fileName);
-		free (inputLine);
-		SafeFclose (&fp);
-		return (ERROR);
-		}
-
-    if (sumtParams.relativeBurnin == NO)
-        burnin = sumtParams.sumtBurnIn;
-    else
-        burnin = (int) (numParamLines * sumtParams.sumtBurnInFraction);
-
-    if (burnin > numParamLines)
-		{
-		MrBayesPrint ("%s   No clock rates retrieved as there are too few samples in last block of file '%s'\n", spacer, fileName);
-		MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, numParamLines);
-		SafeFclose (&fp);
-		free (inputLine);
-		return (ERROR);
-		}
-
-	/* Fast forward to last block */
-	(void)fseek(fp, 0L, 0);	
-	for (lineNum=0; lineNum<lastNonDigitLine+burnin; lineNum++)
-		fgets (inputLine, lineLength, fp);
-
-	/* Count number of rows and check number of columns */
-	inSumpComment = NO;
-	nLines = 0;
-	numColumns = 0;
-	while (fgets (inputLine, lineLength, fp) != NULL)
-		{
-		sumpTokenP = inputLine;
-		allDigitLine = YES;
-		lastTokenWasDash = NO;
-		nNumbersOnThisLine = 0;
-		do
-			{
-			GetSumpToken (&tokenType, &sumpTokenP, sumpToken);
-			if (IsSame("[", sumpToken) == SAME)
-				inSumpComment = YES;
-			if (IsSame("]", sumpToken) == SAME)
-				inSumpComment = NO;
-			if (inSumpComment == NO)
-				{
-				if (tokenType == NUMBER)
-					{
-					nNumbersOnThisLine++;
-					lastTokenWasDash = NO;
-					}
-				else if (tokenType == DASH)
-					{
-					lastTokenWasDash = YES;
-					}
-				else if (tokenType != UNKNOWN_TOKEN_TYPE)
-					{
-					allDigitLine = NO;
-					lastTokenWasDash = NO;
+					/* extract the tree name */
+					GetToken (sumtToken, &tokenType, &sumtTokenP);	/* get the colon */
+					GetToken (sumtToken, &tokenType, &sumtTokenP);	/* get the tree name */
+					strcpy (treeName, sumtToken);
+					GetToken (sumtToken, &tokenType, &sumtTokenP);
+					while (IsSame("]", sumtToken) != SAME)
+						{
+						strcat (treeName, sumtToken);
+						GetToken (sumtToken, &tokenType, &sumtTokenP);
+						}
+					inSumtComment = NO;
 					}
 				}
-			} while (*sumpToken);
-		lineNum++;
-		if (allDigitLine == NO)
-			{
-			MrBayesPrint ("%s   Found a line with non-digit characters (line %d)\n", spacer, lineNum);
-			free (inputLine);
-			SafeFclose (&fp);
-			return (ERROR);
-			}
-		else
-			{
-			if (nNumbersOnThisLine > 0)
+            else /* if (inSumtComment == NO) */
 				{
-				nLines++;
-				if (nLines == 1)
-					numColumns = nNumbersOnThisLine;
+				if (foundBegin == YES)
+					{
+					if (IsSame("Trees", sumtToken) == SAME)
+						{
+						numTreesInBlock = 0;
+						inTreeBlock = YES;
+						foundBegin = NO;
+						sumtFileInfo->lastTreeBlockBegin = lineNum;
+						}
+					}
 				else
 					{
-					if (nNumbersOnThisLine != numColumns)
+					if (IsSame("Begin", sumtToken) == SAME)
 						{
-						MrBayesPrint ("%s   Number of columns is not even (%d in first line and %d in %d line of file '%s')\n", spacer, numColumns, nNumbersOnThisLine, lineNum, fileName);
-						free (inputLine);
-						SafeFclose (&fp);
-						return (ERROR);
+						if (foundBegin == YES)
+							{
+							MrBayesPrint ("%s   Found inappropriate \"Begin\" statement in file\n", spacer);
+							blockErrors = YES;
+							}
+						foundBegin = YES;
+						}
+					else if (IsSame("End", sumtToken) == SAME)
+						{
+						if (inTreeBlock == YES)
+							{
+							sumtFileInfo->numTreeBlocks++;
+							inTreeBlock = NO;
+							sumtFileInfo->lastTreeBlockEnd = lineNum;
+							}
+						else
+							{
+							MrBayesPrint ("%s   Found inappropriate \"End\" statement in file\n", spacer);
+							blockErrors = YES;
+							}
+						sumtFileInfo->numTreesInLastBlock = numTreesInBlock;
+						}
+					else if (IsSame("Tree", sumtToken) == SAME)
+						{
+						if (inTreeBlock == YES)
+							{
+							numTreesInBlock++;
+							if (numTreesInBlock == 1)
+								{
+								*brlensDef = NO;
+								for (i=0; s[i]!='\0'; i++)
+									{
+									if (s[i] == ':')
+										{
+										*brlensDef = YES;
+										break;
+										}
+									}
+								}
+							}
+						else
+							{
+							MrBayesPrint ("%s   Found a \"Tree\" statement that is not in a tree block\n", spacer);
+							blockErrors = YES;
+							}
 						}
 					}
 				}
-			}
-		}
-	numRows = numClockRates = nLines;
-	if (numClockRates == 0 || numColumns == 0)
+				
+			} while (*sumtToken);
+		lineNum++;
+		}		
+
+	/* Now, check some aspects of the tree file, such as the number of tree blocks and whether they are properly terminated. */
+	if (inTreeBlock == YES)
 		{
-		MrBayesPrint ("%s   No postburnin rows or no columns in file '%s'\n", spacer, fileName);
-		free (inputLine);
-		SafeFclose (&fp);
-		return (ERROR);
-		}
-
-	/* allocate space to hold clock rates */
-	if (memAllocs[ALLOC_CLOCKRATE] == YES)
-		{
-		free (clockRate);
-		memAllocs[ALLOC_CLOCKRATE] = NO;
-		}
-	clockRate = (MrBFlt *) calloc (numClockRates, sizeof (MrBFlt));
-	if (!clockRate)
-		{
-		MrBayesPrint ("%s   Could not allocate clockRate '%s'\n", spacer);
-		free (inputLine);
-		SafeFclose (&fp);
-		return (ERROR);
-		}
-	memAllocs[ALLOC_CLOCKRATE] = YES;
-	for (i=0; i<numClockRates; i++)
-		clockRate[i] = 1.0;
-
-	/* separate header line into titles for each column */
-	if (GetHeaders (headerLine, &nHeaders) == ERROR)
-		{
-		free (inputLine);
-		SafeFclose (&fp);
-		return (ERROR);
-		}
-
-	/* find index of column with clock rates for the tree */
-	index = -1;
-	for (i=0; i<nHeaders; i++)
-		{
-		if (GetNameFromString (headerNames, temp, i+1) == ERROR)
-			{
-			free (inputLine);
-			SafeFclose (&fp);
-			return (ERROR);
-			}
-		if (strcmp (temp,rateName) == 0)
-			index = i;
-		}
-
-	if (index != -1)
-		{
-		/* Only read clock rates if they have been recorded, otherwise assume 1.0 */
-		/* First, rewind file pointer to beginning of file... */
-		(void)fseek(fp, 0L, 0);	
-		
-		/* ...and fast forward to beginning of last unburned parameter line. */
-		for (lineNum=0; lineNum<lastNonDigitLine+burnin; lineNum++)
-			if(fgets (inputLine, lineLength, fp)==0) 
-
-		/* ...and parse file, line-by-line. We are only parsing lines that have digits that should be read. */
-		inSumpComment = NO;
-		numLinesToRead = numParamLines - burnin;
-		numLinesRead = j = 0;
-		while (fgets (inputLine, lineLength, fp) != NULL)
-			{
-			sumpTokenP = inputLine;
-			allDigitLine = YES;
-			lastTokenWasDash = NO;
-			nNumbersOnThisLine = 0;
-			do
-				{
-				GetSumpToken (&tokenType, &sumpTokenP, sumpToken);
-				if (IsSame("[", sumpToken) == SAME)
-					inSumpComment = YES;
-				if (IsSame("]", sumpToken) == SAME)
-					inSumpComment = NO;
-				if (inSumpComment == NO)
-					{
-					if (tokenType == NUMBER)
-						{
-						/* read the information from this line */
-						if (j >= numRows * numColumns)
-							{
-							MrBayesPrint ("%s   Too many parameter values read in (%d)\n", spacer, j);
-							free (inputLine);
-							SafeFclose (&fp);
-							return (ERROR);
-							}
-						sscanf (sumpToken, "%lf", &tempD);
-						if (lastTokenWasDash == YES)
-							tempD *= -1.0;
-						if (nNumbersOnThisLine == index)
-							clockRate[numLinesRead] = tempD;
-						j++;
-						nNumbersOnThisLine++;
-						lastTokenWasDash = NO;
-						}
-					else if (tokenType == DASH)
-						{
-						lastTokenWasDash = YES;
-						}
-					else if (tokenType != UNKNOWN_TOKEN_TYPE)
-						{
-						/* we have a problem */
-						MrBayesPrint ("%s   Found a line with non-digit characters (line %d) in file '%s'\n", spacer, lineNum, fileNum);
-						free (inputLine);
-						SafeFclose (&fp);
-						return (ERROR);
-						}
-					}
-				} while (*sumpToken);
-			lineNum++;
-			if (nNumbersOnThisLine > 0)
-				numLinesRead++;
-			}
-		/* Check how many parameter line was read in. */
-		if (numLinesRead != numParamLines - burnin)
-			{
-			MrBayesPrint ("%s   Unable to read all lines that should contain clock rates\n", spacer);
-			SafeFclose (&fp);
-			free (inputLine);
-			return (ERROR);
-			}
-		}
-
-	SafeFclose (&fp);
-	free (inputLine);
-
-	return (NO_ERROR);
-}
-
-
-
-
-
-void GetConDownPass (PolyNode **downPass, PolyNode *p, int *i)
-
-{
-
-	PolyNode	*q;
-	
-	if (p->left != NULL)
-		{
-		for (q=p->left; q!=NULL; q=q->sib)
-			GetConDownPass(downPass, q, i);
-		}
-
-	downPass[(*i)++] = p;
-
-}
-
-
-
-
-
-/* get the actual down pass sequences */
-void GetSumtDownPass (SumtNode *p, SumtNode **dp, int *i)
-
-{
-	
-	if (p != NULL )
-		{
-		GetSumtDownPass (p->left,  dp, i);
-		GetSumtDownPass (p->right, dp, i);
-		if (p->left != NULL && p->right != NULL && p->anc != NULL)
-			{
-			dp[(*i)++] = p;
-			}
-		else if (p->left == NULL && p->right == NULL && p->anc != NULL)
-			{
-			dp[(*i)++] = p;
-			}
-		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
-			{
-			dp[(*i)++] = p;
-			}
-		}
-		
-}
-
-
-
-
-
-int GetPartitions (void)
-
-{
-
-	int				i, nNodes;
-	SumtNode		**downPass, *p;
-
-	/* allocate memory for downpass */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
+		MrBayesPrint ("%s   Unterminated tree block in file %s. You probably need to\n", spacer, fileName);
+		MrBayesPrint ("%s   add a new line to the end of the file with \"End;\" on it.\n", spacer);
 		goto errorExit;
 		}
-		
-	/* set all partitions to 0 */
-	for (i=0; i<2*numTaxa*taxonLongsNeeded; i++)
-		treeBits[i] = 0;
-		
-	/* get the downpass sequence */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-		
-	/* find which taxa are in the tree */
-	for (i=0; i<nNodes; i++)
+	if (inSumtComment == YES)
 		{
-		p = downPass[i];
-		if (p->left == NULL && p->right == NULL)
-			{
-			AssignTipPart (p->index, &treeBits[(p->index) * taxonLongsNeeded]);
-			}
-		else if (p->anc != NULL)
-			{
-			AssignIntPart (&treeBits[(p->left->index) * taxonLongsNeeded], &treeBits[(p->right->index) * taxonLongsNeeded], &treeBits[(p->index) * taxonLongsNeeded]);
-			}
+		MrBayesPrint ("%s   Unterminated comment in file %s\n", spacer, fileName);
+		goto errorExit;
 		}
-				
-#	if 0
-	MrBayesPrint ("Partitions:\n");
-	for (i=0; i<nNodes; i++)
+	if (blockErrors == YES)
 		{
-		p = downPass[i];
-		if (p->left == NULL && p->right == NULL)
-			{
-			ShowParts (stdout, &treeBits[(p->index) * taxonLongsNeeded], numTaxa);
-			MrBayesPrint ("\n");
-			}
-		else if (p->anc != NULL)
-			{
-			if (p->anc->anc != NULL)
-				{
-				ShowParts (stdout, &treeBits[(p->index) * taxonLongsNeeded], numTaxa);
-				MrBayesPrint ("\n");
-				}
-			else if (p->anc->anc == NULL && isSumtTreeRooted == NO)
-				{
-				ShowParts (stdout, &treeBits[(p->index) * taxonLongsNeeded], numTaxa);
-				MrBayesPrint ("\n");
-				}
-			}
+		MrBayesPrint ("%s   Found formatting errors in file %s\n", spacer, fileName);
+		goto errorExit;
 		}
-#	endif
+	if (sumtFileInfo->lastTreeBlockEnd < sumtFileInfo->lastTreeBlockBegin)
+		{
+		MrBayesPrint ("%s   Problem reading tree file %s\n", spacer, fileName);
+		goto errorExit;
+		}
+	if (sumtFileInfo->numTreesInLastBlock <= 0)
+		{
+		MrBayesPrint ("%s   No trees were found in last tree block of file %s\n", spacer, fileName);
+		goto errorExit;
+		}
+    free (s);
+    return (NO_ERROR);
 
-	free (downPass);
-
-	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		return (ERROR);
-	
+errorExit:
+    free (s);
+    return (ERROR);
 }
 
 
 
 
 
-void GetSumtToken (int *tokenType)
+/* FreePartCtr: Recursively free partition counter nodes */
+void FreePartCtr (PartCtr *r)
 
 {
-		
-	int				allNumbers, foundExp, foundExpSign;
-	register char	*temp;
-	
-	(*tokenType) = 0;
-	temp = sumtToken;
-	
-	while (IsWhite(*sumtTokenP) == 1 || IsWhite(*sumtTokenP) == 2)
-		{
-		if (IsWhite(*sumtTokenP) == 2)
-			{
-			*tokenType = RETURNSYMBOL;
-			foundNewLine = YES;
-			/* MrBayesPrint ("RETURN\n"); */
-			}
-		++sumtTokenP;
-		}
-	
-	*tokenType = UNKNOWN_TOKEN_TYPE;
-	if (IsIn(*sumtTokenP,"="))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = EQUALSIGN;
-		}
-	else if (IsIn(*sumtTokenP,";"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = SEMICOLON;
-		}
-	else if (IsIn(*sumtTokenP,":"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = COLON;
-		}
-	else if (IsIn(*sumtTokenP,","))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = COMMA;
-		}
-	else if (IsIn(*sumtTokenP,"#"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = POUNDSIGN;
-		}
-	else if (IsIn(*sumtTokenP,"("))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = LEFTPAR;
-		}
-	else if (IsIn(*sumtTokenP,")"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = RIGHTPAR;
-		}
-	else if (IsIn(*sumtTokenP,"{"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = LEFTCURL;
-		}
-	else if (IsIn(*sumtTokenP,"}"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = RIGHTCURL;
-		}
-	else if (IsIn(*sumtTokenP,"["))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = LEFTCOMMENT;
-		}
-	else if (IsIn(*sumtTokenP,"]"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = RIGHTCOMMENT;
-		}
-	else if (IsIn(*sumtTokenP,"?"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = QUESTIONMARK;
-		}
-	else if (IsIn(*sumtTokenP,"-"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = DASH;
-		}
-	else if (IsIn(*sumtTokenP,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789."))
-		{
-		allNumbers = TRUE;
-		if (!IsIn(*sumtTokenP,"0123456789."))
-			allNumbers = FALSE;
-        foundExp = foundExpSign = FALSE;
-		*temp++ = *sumtTokenP++;
-		while(IsIn(*sumtTokenP,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
-			{
-			if(allNumbers == TRUE && !IsIn(sumtTokenP[-1],"Ee") && *sumtTokenP=='-')
-                break;
-            else if (allNumbers == TRUE && IsIn(*sumtTokenP,"Ee") && foundExp == NO)
-                foundExp = TRUE;
-            else if (allNumbers == TRUE && IsIn(*sumtTokenP,"+-") && IsIn(sumtTokenP[-1],"Ee"))
-                foundExpSign = TRUE;
-            else if (!IsIn(*sumtTokenP,"0123456789."))
-				allNumbers = FALSE;
-            *temp++ = *sumtTokenP++;
-			}
-		if (allNumbers == TRUE)
-			*tokenType = NUMBER;
-		else
-			*tokenType = ALPHA;
-		}
-	else if (IsIn(*sumtTokenP,"*"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = ASTERISK;
-		}
-	else if (IsIn(*sumtTokenP,"/"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = FORWARDSLASH;
-		}
-	else if (IsIn(*sumtTokenP,"'\\'"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = BACKSLASH;
-		}
-	else if (IsIn(*sumtTokenP,"!"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = EXCLAMATIONMARK;
-		}
-	else if (IsIn(*sumtTokenP,"%"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = PERCENT;
-		}
-	else if (IsIn(*sumtTokenP,"\""))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = QUOTATIONMARK;
-		}
-	else if (IsIn(*sumtTokenP,"&~+^$@|{}`><"))
-		{
-		*temp++ = *sumtTokenP++;
-		*tokenType = WEIRD;
-		}
+    int     i, j;
 
-	*temp = '\0';
-	
+    if (r==NULL)
+        return;
+    
+    FreePartCtr (r->left);
+    FreePartCtr (r->right);
+
+    /* free relaxed clock parameters: eRate, nEvents, bRate */
+    if (sumtParams.nESets > 0)
+        {
+        for (i=0; i<sumtParams.numRuns; i++)
+            {
+            for (j=0; j<sumtParams.nESets; j++)
+                {
+                free (r->nEvents[i][j]);
+                free (r->eRate[i][j]);
+                }
+            free (r->nEvents[i]);
+            free (r->eRate[i]);
+            }
+        free (r->nEvents);
+        free (r->eRate);
+        }
+    if (sumtParams.nBSets > 0)
+        {
+        for (i=0; i<sumtParams.numRuns; i++)
+            {
+            for (j=0; j<sumtParams.nBSets; j++)
+                free (r->bRate[i][j]);
+            free (r->bRate[i]);
+            }
+        free (r->bRate);
+        }
+
+    /* free basic parameters */
+    for (i=0; i<sumtParams.numRuns; i++)
+        free (r->length[i]);
+
+    free (r->length);
+    free (r->count);
+    free (r->partition);
+    free (r);
+}
+
+
+
+
+
+/* FreeTreeCtr: Recursively free tree counter nodes */
+void FreeTreeCtr (TreeCtr *r)
+
+{
+
+    if (r==NULL)
+        return;
+    
+    FreeTreeCtr (r->left);
+    FreeTreeCtr (r->right);
+
+    free (r->order);
+    free (r);
 }
 
 
@@ -6480,82 +3591,80 @@ int Label (PolyNode *p, int addIndex, char *label, int maxLength)
 
 
 
-int OpenBrlensFile (int treeNo)
-
-{
-
-	int			i, len;
-	char		fileName[100];
-
-	/* set file name */
-	if (sumtParams.numTrees > 1)
-		sprintf (fileName, "%s.tree%d.brlens", sumtParams.sumtFileName, treeNo+1);
-	else
-		sprintf (fileName, "%s.brlens", sumtParams.sumtFileName);
-
-	/* open file checking for over-write as appropriate */
-	if ((fpBrlens = OpenNewMBPrintFile(fileName)) == NULL)
-		return ERROR;
-
-	/* print unique identifier to the file */
-	len = (int) strlen (stamp);
-	if (len <= 1)
-		{
-		MrBayesPrintf (fpBrlens, "[ID: None Available]\n");
-		}
-	else
-		{
-		MrBayesPrintf (fpBrlens, "[ID: %s]\n", stamp);
-		}
-
-	/* print header */
-	for (i=0; i<numBrlens; i++)
-		{
-		if (i == numBrlens - 1)	
-			MrBayesPrintf (fpBrlens, "v%d\n", i+1);
-		else
-			MrBayesPrintf (fpBrlens, "v%d\t", i+1);
-		}
-
-	return (NO_ERROR);
-}
-
-
-
-
-
 int OpenComptFiles (void)
 
 {
 
-	int			len;
-	char		pFilename[100], dFilename[100];
+	int			len, previousFiles, oldNoWarn, oldAutoOverwrite;
+    char		pFilename[100], dFilename[100];
+    FILE        *fpTemp;
 
-	/* set file names */
+    oldNoWarn = noWarn;
+    oldAutoOverwrite = autoOverwrite;
+
+    /* set file names */
 	strcpy (pFilename, comptreeParams.comptOutfile);
 	strcpy (dFilename, comptreeParams.comptOutfile);
 	strcat (pFilename, ".parts");
 	strcat (dFilename, ".dists");
 
-	/* Check to see if files are present. We don't want to
-	   inadvertantly over-write files unless the user specifies
-	   that we do so. */
-	if ((fpCompParts = OpenNewMBPrintFile (pFilename)) == NULL)
+    /* one overwrite check for both files */
+    if (noWarn == NO)
+        {
+        if ((fpTemp = fopen(pFilename, "r")) != NULL)
+            {
+	        previousFiles = YES;
+            fclose(fpTemp);
+            }
+        if ((fpTemp = fopen(dFilename, "r")) != NULL)
+            {
+	        previousFiles = YES;
+            fclose(fpTemp);
+            }
+        if (previousFiles == YES)
+            {
+            MrBayesPrint("\n");
+            MrBayesPrint("%s   There are previous compare results saved using the same filenames.\n", spacer);
+            if (WantTo("Do you want to overwrite these results") == YES)
+                {
+                MrBayesPrint("\n");
+                noWarn = YES;
+                autoOverwrite = YES;
+                }
+            else
+                {
+                MrBayesPrint("\n");
+                MrBayesPrint("%s   Please specify a different output file name before running the comparetree command.\n", spacer);
+                MrBayesPrint("%s      You can do that using 'comparetree outputfile=<name>'. You can also move or\n", spacer);
+                MrBayesPrint("%s      rename the old result files.\n", spacer);
+                return ERROR;
+                }
+            }
+        }
+
+	if ((fpParts = OpenNewMBPrintFile (pFilename)) == NULL)
+        {
+        noWarn = oldNoWarn;
+        autoOverwrite = oldAutoOverwrite;
 		return ERROR;
-	if ((fpCompDists = OpenNewMBPrintFile (dFilename)) == NULL)
+        }
+	if ((fpDists = OpenNewMBPrintFile (dFilename)) == NULL)
+        {
+        noWarn = oldNoWarn;
+        autoOverwrite = oldAutoOverwrite;
 		return ERROR;
+        }
 		
-	/* print unique identifiers to each file */
+    /* Reset file flags */
+    noWarn = oldNoWarn;
+    autoOverwrite = oldAutoOverwrite;
+
+    /* print unique identifiers to each file */
 	len = (int) strlen (stamp);
-	if (len <= 1)
+	if (len > 1)
 		{
-		fprintf (fpCompParts, "[ID: None Available]\n");
-		fprintf (fpCompDists, "[ID: None Available]\n");
-		}
-	else
-		{
-		fprintf (fpCompParts, "[ID: %s]\n", stamp);
-		fprintf (fpCompDists, "[ID: %s]\n", stamp);
+		fprintf (fpParts, "[ID: %s]\n", stamp);
+		fprintf (fpDists, "[ID: %s]\n", stamp);
 		}
 
 	return (NO_ERROR);
@@ -6569,29 +3678,119 @@ int OpenSumtFiles (int treeNo)
 
 {
 
-	int			len;
-	char		pFilename[100], cFilename[100], tFilename[100];
+	int			i, len,  oldNoWarn, oldAutoOverwrite, previousFiles;
+	char		pFilename[100], sFilename[100], vFilename[100], cFilename[100], tFilename[100];
+    FILE        *fpTemp;
 
-	/* set file names */
+    oldNoWarn = noWarn;
+    oldAutoOverwrite = autoOverwrite;
+
+    /* one overwrite check for all files */
+    if (noWarn == NO && treeNo == 0)
+        {
+        previousFiles = NO;
+        for (i=0; i<sumtParams.numTrees; i++)
+            {
+	        if (sumtParams.numTrees > 1)
+		        {
+                sprintf (pFilename, "%s.tree%d.parts", sumtParams.sumtOutfile, i+1);
+                sprintf (sFilename, "%s.tree%d.tstat", sumtParams.sumtOutfile, i+1);
+                sprintf (vFilename, "%s.tree%d.vstat", sumtParams.sumtOutfile, i+1);
+		        sprintf (cFilename, "%s.tree%d.con", sumtParams.sumtOutfile, i+1);
+		        sprintf (tFilename, "%s.tree%d.trprobs", sumtParams.sumtOutfile, i+1);
+		        }
+	        else
+		        {
+		        sprintf (pFilename, "%s.parts", sumtParams.sumtOutfile);
+                sprintf (sFilename, "%s.tstat", sumtParams.sumtOutfile);
+                sprintf (vFilename, "%s.vstat", sumtParams.sumtOutfile);
+		        sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
+		        sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
+		        }
+	        if ((fpTemp = fopen(pFilename, "r")) != NULL)
+                {
+		        previousFiles = YES;
+                fclose(fpTemp);
+                }
+	        if ((fpTemp = fopen(sFilename, "r")) != NULL)
+                {
+		        previousFiles = YES;
+                fclose(fpTemp);
+                }
+	        if ((fpTemp = fopen(vFilename, "r")) != NULL)
+                {
+		        previousFiles = YES;
+                fclose(fpTemp);
+                }
+	        if ((fpTemp = fopen(cFilename, "r")) != NULL)
+                {
+		        previousFiles = YES;
+                fclose(fpTemp);
+                }
+	        if ((fpTemp = fopen(tFilename, "r")) != NULL)
+                {
+		        previousFiles = YES;
+                fclose(fpTemp);
+                }
+            if (previousFiles == YES)
+                {
+                MrBayesPrint("\n");
+                MrBayesPrint("%s   There are previous tree sample summaries saved using the same filenames.\n", spacer);
+                if (WantTo("Do you want to overwrite these results") == YES)
+                    {
+                    MrBayesPrint("\n");
+                    noWarn = YES;
+                    autoOverwrite = YES;
+                    }
+                else
+                    {
+                    MrBayesPrint("\n");
+                    MrBayesPrint("%s   Please specify a different output file name before running the sumt command.\n", spacer);
+                    MrBayesPrint("%s      You can do that using 'sumt outputfile=<name>'. You can also move or\n", spacer);
+                    MrBayesPrint("%s      rename the old result files.\n", spacer);
+                    return ABORT;
+                    }
+                }
+            }
+        }
+
+    /* set file names */
 	if (sumtParams.numTrees > 1)
 		{
         sprintf (pFilename, "%s.tree%d.parts", sumtParams.sumtOutfile, treeNo+1);
+        sprintf (sFilename, "%s.tree%d.tstat", sumtParams.sumtOutfile, treeNo+1);
+        sprintf (vFilename, "%s.tree%d.vstat", sumtParams.sumtOutfile, treeNo+1);
 		sprintf (cFilename, "%s.tree%d.con", sumtParams.sumtOutfile, treeNo+1);
 		sprintf (tFilename, "%s.tree%d.trprobs", sumtParams.sumtOutfile, treeNo+1);
 		}
 	else
 		{
-		sprintf (pFilename, "%s.parts", sumtParams.sumtFileName);
-		sprintf (cFilename, "%s.con", sumtParams.sumtFileName);
-		sprintf (tFilename, "%s.trprobs", sumtParams.sumtFileName);
+		sprintf (pFilename, "%s.parts", sumtParams.sumtOutfile);
+        sprintf (sFilename, "%s.tstat", sumtParams.sumtOutfile);
+        sprintf (vFilename, "%s.vstat", sumtParams.sumtOutfile);
+		sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
+		sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
 		}
 	
-	/* Open files checking for over-write as appropriate */
+    /* open files checking for over-write as appropriate */
 	if ((fpParts = OpenNewMBPrintFile(pFilename)) == NULL)
 		return ERROR;
+	if ((fpTstat = OpenNewMBPrintFile(sFilename)) == NULL)
+        {
+        SafeFclose (&fpParts);
+		return ERROR;
+        }
+	if ((fpVstat = OpenNewMBPrintFile(vFilename)) == NULL)
+        {
+        SafeFclose (&fpParts);
+		SafeFclose (&fpTstat);
+		return ERROR;
+        }
 	if ((fpCon = OpenNewMBPrintFile(cFilename)) == NULL)
 		{
-		SafeFclose (&fpParts);
+        SafeFclose (&fpParts);
+		SafeFclose (&fpTstat);
+		SafeFclose (&fpVstat);
 		return ERROR;
 		}
 	if (sumtParams.calcTrprobs == YES)
@@ -6599,6 +3798,8 @@ int OpenSumtFiles (int treeNo)
 		if ((fpTrees = OpenNewMBPrintFile(tFilename)) == NULL)
 			{
 			SafeFclose (&fpParts);
+		    SafeFclose (&fpTstat);
+		    SafeFclose (&fpVstat);
 			SafeFclose (&fpCon);
 			return ERROR;
 			}
@@ -6611,20 +3812,22 @@ int OpenSumtFiles (int treeNo)
 
 	/* print unique identifiers to each file */
 	len = (int) strlen (stamp);
-	if (len <= 1)
+	if (len > 1)
 		{
-		if (sumtParams.calcTrprobs == YES)
-			fprintf (fpParts, "[ID: None Available]\n");
-		fprintf (fpCon,   "[ID: None Available]\n");
-		fprintf (fpTrees, "[ID: None Available]\n");
-		}
-	else
-		{
-		if (sumtParams.calcTrprobs == YES)
-			fprintf (fpParts, "[ID: %s]\n", stamp);
+		fprintf (fpParts, "[ID: %s]\n", stamp);
+		fprintf (fpTstat, "[ID: %s]\n", stamp);
+		fprintf (fpVstat, "[ID: %s]\n", stamp);
 		fprintf (fpCon,   "[ID: %s]\n", stamp);
-		fprintf (fpTrees, "[ID: %s]\n", stamp);
+		if (sumtParams.calcTrprobs == YES)
+    		fprintf (fpTrees, "[ID: %s]\n", stamp);
 		}
+
+    /* Reset noWarn and autoOverwrite */
+    if (treeNo == sumtParams.numTrees - 1)
+        {
+        noWarn = oldNoWarn;
+        autoOverwrite = oldAutoOverwrite;
+        }
 
 	return (NO_ERROR);		
 }
@@ -6633,166 +3836,73 @@ int OpenSumtFiles (int treeNo)
 
 
 
-int PartFinder (safeLong *p, MrBFlt bl, int *partID)
+void PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index)
 
 {
-			
-	int			i, n, foundPart, nDiff, whichPart;
-	safeLong		*x;
-	MrBFlt		f;
-	
-	if (printingBrlens == YES)
-		{
-		foundPart = NO;
-		x = &treePartsFound[0];
-		for (n=0; n<numBrlens; n++)
-			{
-			for (i=0; i<taxonLongsNeeded; i++)
-				if (x[i] != p[i])
-					break;
-			if (i == taxonLongsNeeded)
-				{
-				foundPart = YES;
-				break;
-				}
-			x += taxonLongsNeeded;
-			}
-		
-		if (foundPart == YES)
-			{
-			brlens[n] = bl;
-			}
-		return (NO_ERROR);
+    if (r != NULL)
+        {
+        uppass[(*index)++] = r;
 
-		}
-
-	foundPart = NO;
-	x = &treePartsFound[0];
-	for (n=0; n<numTreePartsFound; n++)
-		{
-		nDiff = 0;
-		for (i=0; i<taxonLongsNeeded; i++)
-			if (x[i] != p[i])
-				nDiff++;
-		if (nDiff == 0)
-			{
-			foundPart = YES;
-			break;
-			}
-		x += taxonLongsNeeded;
-		}
-	
-	if (foundPart == YES)
-		{
-		numFoundOfThisPart[n]++;
-		if (sumtParams.numRuns > 1)
-			numFoundInRunOfPart[runIndex][n]++;
-		if (comparingFiles == YES)
-			{
-			if (fileNum == 0)
-				numFoundOfThisPart1[n]++;
-			else
-				numFoundOfThisPart2[n]++;
-			}
-		whichPart = n;
-		}
-	else
-		{
-		if (numTreePartsFound+1 > numPartsAllocated)
-			{
-			numPartsAllocated += 500;
-			if (ReallocateBits () == ERROR)
-				return (ERROR);
-			}
-		
-		x = &treePartsFound[numTreePartsFound * taxonLongsNeeded];
-		for (i=0; i<taxonLongsNeeded; i++)
-			x[i] = p[i];
-		numFoundOfThisPart[numTreePartsFound] = 1;
-		if (sumtParams.numRuns > 1)
-			{
-			for (i=0; i<sumtParams.numRuns; i++)
-				numFoundInRunOfPart[i][numTreePartsFound] = 0;
-			numFoundInRunOfPart[runIndex][numTreePartsFound] = 1;
-			}
-		if (comparingFiles == YES)
-			{
-			if (fileNum == 0)
-				numFoundOfThisPart1[numTreePartsFound] = 1;
-			else
-				numFoundOfThisPart2[numTreePartsFound] = 1;
-			}
-		whichPart = numTreePartsFound;
-		numTreePartsFound++;
-		}
-
-	(*partID) = whichPart;
-
-	if (bl >= 0.0)
-		{
-		if (numFoundOfThisPart[whichPart] == 1)
-			{
-			aBrlens[whichPart] = bl;
-			sBrlens[whichPart] = 0.0;
-			}
-		else
-			{
-			f = aBrlens[whichPart];
-			aBrlens[whichPart] += (bl - aBrlens[whichPart]) / (MrBFlt) (numFoundOfThisPart[whichPart]);
-			sBrlens[whichPart] += (bl - aBrlens[whichPart]) * (bl - f);
-			}
-		if (sumtParams.numRuns > 1)
-			{
-			if (numFoundOfThisPart[whichPart] == 1)
-				{
-				aWithinBrlens[whichPart] = bl;
-				sWithinBrlens[whichPart] = 0.0;
-				sumB[whichPart] = bl;
-				sumsqB[whichPart] = bl * bl;
-				}
-			else if (numFoundInRunOfPart[runIndex][whichPart] == 1)
-				{
-				aWithinBrlens[whichPart] = bl;
-				sumB[whichPart] += bl;
-				sumsqB[whichPart] += bl * bl;
-				}
-			else
-				{
-				f = aWithinBrlens[whichPart];
-				aWithinBrlens[whichPart] += (bl - aWithinBrlens[whichPart]) / (MrBFlt) (numFoundInRunOfPart[runIndex][whichPart]);
-				sWithinBrlens[whichPart] += (bl - aWithinBrlens[whichPart]) * (bl - f);
-				sumB[whichPart] += (aWithinBrlens[whichPart] - f);
-				sumsqB[whichPart] += ((aWithinBrlens[whichPart] * aWithinBrlens[whichPart]) - (f * f));
-				}
-			}
-		}
-	
-	return (NO_ERROR);
-
+        PartCtrUppass (r->left, uppass, index);
+        PartCtrUppass (r->right, uppass, index);
+        }
 }
 
 
 
 
 
-int PrintBrlensToFile (void)
+/* PrintBrlensToFile: Print brlens to file */
+int PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo)
 
 {
-	int		i;
+	int		i, j, runNo, numBrlens;
+    char    filename[100];
+    PartCtr *x;
+    FILE    *fp;
 
-	/* print header */
-	for (i=0; i<numBrlens; i++)
-		{
-		if (brlens[i] < 0.0)
-			MrBayesPrintf (fpBrlens, "N/A");
-		else
-			MrBayesPrintf (fpBrlens, "%.6f", brlens[i]);
+    /* set file name */
+    if (sumtParams.numTrees > 1)
+        sprintf (filename, "%s.tree%d.brlens", sumtParams.sumtOutfile, treeNo+1);
+    else
+	    sprintf (filename, "%s.brlens", sumtParams.sumtOutfile);
 
-		if (i == numBrlens - 1)
-			MrBayesPrintf (fpBrlens, "\n");
-		else
-			MrBayesPrintf (fpBrlens, "\t");
-		}
+	/* Open file checking for over-write as appropriate */
+    if ((fp = OpenNewMBPrintFile(filename)) == NULL)
+	    return ERROR;
+
+    /* count number of brlens to print */
+    for (i=0; i<numTreeParts; i++)
+        {
+        if (treeParts[i]->totCount < sumtParams.brlensFreqDisplay)
+            break;
+        }
+    numBrlens = i;
+
+    /* print header */
+    for (i=0; i<numBrlens; i++)
+        {
+        MrBayesPrintf (fp, "v[%d]", i+1);
+        if (i==numBrlens-1)
+            MrBayesPrintf (fp, "\n");
+        else
+            MrBayesPrintf (fp, "\t");
+        }
+
+    /* print values */
+    for (i=0; i<numBrlens; i++)
+        {
+        x = treeParts[numBrlens];
+        for (runNo=0; runNo<sumtParams.numRuns; runNo++)
+            {
+            MrBayesPrintf (fp, "%s", MbPrintNum (x->length[runNo][0]));
+            for (j=1; j<x->count[i]; j++)
+                {
+                MrBayesPrintf (fp, "\t%s", MbPrintNum (x->length[runNo][j]));
+                }
+            }
+        MrBayesPrintf (fp, "\n");
+        }
 
 	return NO_ERROR;
 }
@@ -6801,759 +3911,309 @@ int PrintBrlensToFile (void)
 
 
 
-void PrintParts (FILE *fp, safeLong *p, int nTaxaToShow)
-
+/* PrintConTree: Print consensus tree in standard format readable by TreeView, Paup etc */
+void PrintConTree (FILE *fp, PolyTree *t)
 {
-
-	int			i, flipBits;
-	safeLong		x, y;
-	
-	flipBits = NO;
-	if (isSumtTreeRooted == NO)
+    MrBayesPrintf (fp, "   [Note: This tree contains information on the topology, \n");
+	MrBayesPrintf (fp, "          branch lengths (if present), and the probability\n");
+	MrBayesPrintf (fp, "          of the partition indicated by the branch.]\n");
+	if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
+		MrBayesPrintf (fp, "   tree con_50_majrule = ");
+	else
+		MrBayesPrintf (fp, "   tree con_all_compat = ");
+	WriteConTree (t->root, fp, YES);
+	MrBayesPrintf (fp, ";\n");
+	if (sumtParams.brlensDef == YES)
 		{
-		y = p[0];
-		x = 1 << (0 % nBitsInALong);
-		if (x & y)
-			flipBits = YES;
-		}
-
-	for (i=0; i<nTaxaToShow; i++)
-		{
-		x = 0;
-		y = p[i / nBitsInALong];
-		x = 1 << (i % nBitsInALong);
-		if (flipBits == NO)
-			{
-			if ((x & y) == 0)
-				MrBayesPrintf (fp, ".");
-			else
-				MrBayesPrintf (fp, "*");
-			}
+		MrBayesPrintf (fp, "\n");
+		MrBayesPrintf (fp, "   [Note: This tree contains information only on the topology\n");
+		MrBayesPrintf (fp, "          and branch lengths (mean of the posterior probability density).]\n");
+		if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
+			MrBayesPrintf (fp, "   tree con_50_majrule = ");
 		else
-			{
-			if ((x & y) == 0)
-				MrBayesPrintf (fp, "*");
-			else
-				MrBayesPrintf (fp, ".");
-			}
+			MrBayesPrintf (fp, "   tree con_all_compat = ");
+		WriteConTree (t->root, fp, NO);
+		MrBayesPrintf (fp, ";\n");
 		}
-
 }
 
 
 
 
 
-int PruneSumt (void)
-
+/* PrintRichConTree: Print consensus tree in rich format, e.g. for FigTree */
+void PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
 {
-
-	int 			i, nNodes, wasDerooted, whichTaxon, deletedOne;
-	SumtNode		**downPass, *p, *q, *sis, *qAnc;
-
-	/* allocate memory for downpass */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
-		goto errorExit;
-		}
-		
-	/* root tree, if it was previously unrooted */
-	wasDerooted = NO;
-	if (isSumtTreeRooted == NO)
-		{
-		if (RootSumtTree (sumtRoot, numSumtTaxa, outGroupNum) == ERROR)
-			goto errorExit;
-		wasDerooted = YES;
-		}
-	
-	/* get the downpass sequence */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-	
-	/* find which taxa are in the tree */
-	do
-		{
-		deletedOne = NO;
-		for (i=0; i<nNodes; i++)
-			{
-			p = downPass[i];
-			if (p->left == NULL && p->right == NULL)
-				{
-				if (CheckString (p->label, taxaNames, &whichTaxon) == ERROR)
-					{
-					MrBayesPrint ("%s   Could not find taxon %s in original list of taxa\n", spacer, p->label);
-					goto errorExit;
-					}
-				whichTaxon--;
-				if (taxaInfo[whichTaxon].isDeleted == YES)
-					{
-					prunedTaxa[whichTaxon] = YES;
-					q = p->anc;
-					if (q->left == p)
-						sis = q->right;
-					else
-						sis = q->left;
-					sis->length += q->length;
-					if (q->anc == NULL)
-						{
-						MrBayesPrint ("%s   Could not find root of tree\n", spacer);
-						goto errorExit;
-						}
-					else
-						qAnc = q->anc;
-					if (qAnc->left == q)
-						{
-						qAnc->left = sis;
-						sis->anc = qAnc;
-						}
-					else
-						{
-						qAnc->right = sis;
-						sis->anc = qAnc;
-						}
-					p->left = p->right = p->anc = NULL;
-					q->left = q->right = q->anc = NULL;
-					numSumtTaxa--;
-					deletedOne = YES;
-					break;
-					}
-				}
-			}
-		if (deletedOne == YES)
-			{
-			i = 0;
-			GetSumtDownPass (sumtRoot, downPass, &i);
-			nNodes = i;
-			}
-		} while (deletedOne == YES);
-		
-	/* clean up on way out of function */
-	free (downPass);
-	
-	/* deroot tree, if we rooted it earlier */
-	if (wasDerooted == YES)
-		{
-		if (DerootSumtTree (sumtRoot, numSumtTaxa, outGroupNum) == ERROR)
-			goto errorExit;
-		}
-
-#	if 0
-	if (isSumtTreeRooted == YES)
-		MrBayesPrint ("%s   Rooted tree %d:\n", spacer, numSumtTrees);
+	if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
+		MrBayesPrintf (fp, "   tree con_50_majrule = ");
 	else
-		MrBayesPrint ("%s   Unrooted tree %d:\n", spacer, numSumtTrees);
-	ShowNodes (sumtRoot, 3, isSumtTreeRooted);
-#	endif
+		MrBayesPrintf (fp, "   tree con_all_compat = ");
+    if (t->isRooted == YES)
+		MrBayesPrintf (fp, "[&R] ");
+    else
+		MrBayesPrintf (fp, "[&U] ");
 
-	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		return(ERROR);
-
+	WriteRichConTree (t->root, fp, treeParts);
+	MrBayesPrintf (fp, ";\n");
 }
 
 
 
 
 
-int ReallocateBits (void)
+void PrintRichNodeInfo (FILE *fp, PartCtr *x)
 
 {
-	int		i;
+    int     i;
+    MrBFlt  *support, mean, var, min, max;
+    Stat    theStats;
 
-	numPartsAllocated += 100;
-	
-	if (memAllocs[ALLOC_TREEPARTS] == NO)
-		goto errorExit;
-	treePartsFound = (safeLong *)realloc((void *)treePartsFound, (size_t) (taxonLongsNeeded * numPartsAllocated * sizeof(safeLong)));
-	if (!treePartsFound)
-		{
-		MrBayesPrint ("%s   Problem reallocating treePartsFound (%d)\n", spacer, taxonLongsNeeded * numPartsAllocated * sizeof(safeLong));
-		goto errorExit;
-		}
-		
-	if (memAllocs[ALLOC_NUMOFPART] == NO)
-		goto errorExit;
-	numFoundOfThisPart = (int *)realloc((void *)numFoundOfThisPart, (size_t) (numPartsAllocated * sizeof(int)));
-	if (!numFoundOfThisPart)
-		{
-		MrBayesPrint ("%s   Problem reallocating numFoundOfThisPart (%d)\n", spacer, numPartsAllocated * sizeof(int));
-		goto errorExit;
-		}
+    support = calloc (sumtParams.numRuns, sizeof(MrBFlt));
+    for (i=0; i<sumtParams.numRuns; i++)
+        {
+        support[i] = (MrBFlt) x->count[i] / (MrBFlt) x->totCount;
+        }
+    if (sumtParams.numRuns > 1)
+        {
+        MeanVariance (support, sumtParams.numRuns, &mean, &var);
+        Range (support, sumtParams.numRuns, &min, &max);
+        fprintf (fp, "[&prob=%lf,prob_stddev=,prob_range={%lf,%lf}", mean, sqrt(var), min, max);
+        }
+    else
+        fprintf (fp, "[&prob=%lf", support[0]);
+    if (sumtParams.brlensDef == YES)
+        {
+        GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+        if (sumtParams.HPD == YES)
+            fprintf (fp, ",length_mean=%lf,length_median=%lf,length_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        else
+            fprintf (fp, ",length_mean=%lf,length_median=%lf,length_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        }
+    if (sumtParams.isClock == YES)
+        {
+        GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+        if (sumtParams.HPD == YES)
+            fprintf (fp, ",height_mean=%lf,height_median=%lf,height_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        else
+            fprintf (fp, ",height_mean=%lf,height_median=%lf,height_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        }
+    if (sumtParams.isCalibrated == YES)
+        {
+        GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+        if (sumtParams.HPD == YES)
+            fprintf (fp, ",age_mean=%lf,age_median=%lf,age_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        else
+            fprintf (fp, ",age_mean=%lf,age_median=%lf,age_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        }
+    if (sumtParams.isClock == YES && sumtParams.isRelaxed == YES)
+        {
+        for (i=0; i<sumtParams.nBSets; i++)
+            {
+            GetSummary (x->bRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+            if (sumtParams.HPD == YES)
+                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%HPD={%lf,%lf}",
+                    sumtParams.tree->bSetName[i], theStats.mean,
+                    sumtParams.tree->bSetName[i], theStats.median,
+                    sumtParams.tree->bSetName[i], theStats.lower,
+                    sumtParams.tree->bSetName[i], theStats.upper);
+            else
+                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%CredInt={%lf,%lf}",
+                    sumtParams.tree->bSetName[i], theStats.mean,
+                    sumtParams.tree->bSetName[i], theStats.median,
+                    sumtParams.tree->bSetName[i], theStats.lower,
+                    sumtParams.tree->bSetName[i], theStats.upper);
+            }
+        for (i=0; i<sumtParams.nESets; i++)
+            {
+            GetSummary (x->eRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+            if (sumtParams.HPD == YES)
+                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%HPD={%lf,%lf}",
+                    sumtParams.tree->eSetName[i], theStats.mean,
+                    sumtParams.tree->eSetName[i], theStats.median,
+                    sumtParams.tree->eSetName[i], theStats.lower,
+                    sumtParams.tree->eSetName[i], theStats.upper);
+            else
+                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%CredInt={%lf,%lf}",
+                    sumtParams.tree->eSetName[i], theStats.mean,
+                    sumtParams.tree->eSetName[i], theStats.median,
+                    sumtParams.tree->eSetName[i], theStats.lower,
+                    sumtParams.tree->eSetName[i], theStats.upper);
+            GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+            if (sumtParams.HPD == YES)
+                fprintf (fp, ",nEvents%s_mean=%lf,nEvents%s_median=%lf,nEvents%s_95%%HPD={%lf,%lf}",
+                    sumtParams.tree->eSetName[i], theStats.mean,
+                    sumtParams.tree->eSetName[i], theStats.median,
+                    sumtParams.tree->eSetName[i], theStats.lower,
+                    sumtParams.tree->eSetName[i], theStats.upper);
+            else
+                fprintf (fp, ",nEvents%s_mean=%lf,nEvents%s_median=%lf,nEvents%s_95%%CredInt={%lf,%lf}",
+                    sumtParams.tree->eSetName[i], theStats.mean,
+                    sumtParams.tree->eSetName[i], theStats.median,
+                    sumtParams.tree->eSetName[i], theStats.lower,
+                    sumtParams.tree->eSetName[i], theStats.upper);
+            }
+        }
+    fprintf (fp, "]");
 
-	if (sumtParams.numRuns > 1)
-		{
-		if (memAllocs[ALLOC_NUMINRUNOFPART] == NO)
-			goto errorExit;
-		for (i=0; i<sumtParams.numRuns; i++) {
-			numFoundInRunOfPart[i] = (int *)realloc((void *)numFoundInRunOfPart[i], (size_t) (numPartsAllocated * sizeof(int)));
-			if (!numFoundInRunOfPart[i])
-				{
-				MrBayesPrint ("%s   Problem reallocating numFoundInRunOfPart (%d)\n", spacer, numPartsAllocated * sizeof(int));
-				goto errorExit;
-				}
-			}
-		}
-	if (comparingFiles == YES)
-		{
-		numFoundOfThisPart1 = (int *)realloc((void *)numFoundOfThisPart1, (size_t) (numPartsAllocated * sizeof(int)));
-		if (!numFoundOfThisPart1)
-			{
-			MrBayesPrint ("%s   Problem reallocating numFoundOfThisPart1 (%d)\n", spacer, numPartsAllocated * sizeof(int));
-			goto errorExit;
-			}
-		numFoundOfThisPart2 = (int *)realloc((void *)numFoundOfThisPart2, (size_t) (numPartsAllocated * sizeof(int)));
-		if (!numFoundOfThisPart)
-			{
-			MrBayesPrint ("%s   Problem reallocating numFoundOfThisPart2 (%d)\n", spacer, numPartsAllocated * sizeof(int));
-			goto errorExit;
-			}
-		}
-		
-	if (sumtBrlensDef == YES)
-		{
-		if (memAllocs[ALLOC_ABRLENS] == NO)
-			goto errorExit;
-		aBrlens = (MrBFlt *)realloc((void *)aBrlens, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!aBrlens)
-			{
-			MrBayesPrint ("%s   Problem reallocating aBrlens (%d)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}
-			
-		if (memAllocs[ALLOC_SBRLENS] == NO)
-			goto errorExit;
-		sBrlens = (MrBFlt *)realloc((void *)sBrlens, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!sBrlens)
-			{
-			MrBayesPrint ("%s   Problem reallocating sBrlens (%d)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		}
-		
-	if (sumtParams.numRuns > 1 && sumtBrlensDef == YES)
-		{
-		if (memAllocs[ALLOC_A_WITHIN_BRLENS] == NO)
-			goto errorExit;
-		aWithinBrlens = (MrBFlt *)realloc((void *)aWithinBrlens, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!aWithinBrlens)
-			{
-			MrBayesPrint ("%s   Problem reallocating aWithinBrlens (%d bytes)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		
-		if (memAllocs[ALLOC_S_WITHIN_BRLENS] == NO)
-			goto errorExit;
-		sWithinBrlens = (MrBFlt *)realloc((void *)sWithinBrlens, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!sWithinBrlens)
-			{
-			MrBayesPrint ("%s   Problem reallocating sWithinBrlens (%d bytes)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}
-
-		if (memAllocs[ALLOC_SUMB] == NO)
-			goto errorExit;
-		sumB = (MrBFlt *)realloc((void *)sumB, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!sumB)
-			{
-			MrBayesPrint ("%s   Problem reallocating sumB (%d bytes)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}
-
-		if (memAllocs[ALLOC_SUMSQB] == NO)
-			goto errorExit;
-		sumsqB = (MrBFlt *)realloc((void *)sumsqB, (size_t) (numPartsAllocated * sizeof(MrBFlt)));
-		if (!sumsqB)
-			{
-			MrBayesPrint ("%s   Problem reallocating sumsqB (%d bytes)\n", spacer, numPartsAllocated * sizeof(MrBFlt));
-			goto errorExit;
-			}			
-		}
-
-	return (NO_ERROR);
-	
-	errorExit:
-		FreeBits();
-		return (ERROR);
-	
+    free (support);
 }
 
 
 
 
 
-int ReallocateFullCompTrees (int whichList)
-
+/* PrintSumtTaxaInfo: Print information on pruned and absent taxa */
+void PrintSumtTaxaInfo (void)
 {
+    int     i, j, lineWidth, numExcludedTaxa, len;
+    char    tempStr[100];
 
-	numFullCompTreesAllocated[whichList] += 100;
-	
-	if (memAllocs[ALLOC_FULLCOMPTREEINFO] == NO)
-		goto errorExit;
-		
-	if (whichList == 0)
-		{
-		fullCompTreePartIds1 = (int *)realloc((void *)fullCompTreePartIds1, (size_t) (2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(int)));
-		if (!fullCompTreePartIds1)
-			{
-			MrBayesPrint ("%s   Problem reallocating fullCompTreePartIds1 (%d)\n", spacer, 2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(int));
-			goto errorExit;
-			}
-		fullCompTreePartLengths1 = (MrBFlt *)realloc((void *)fullCompTreePartLengths1, (size_t) (2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(MrBFlt)));
-		if (!fullCompTreePartLengths1)
-			{
-			MrBayesPrint ("%s   Problem reallocating fullCompTreePartLengths1 (%d)\n", spacer, 2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		}
-	else
-		{
-		fullCompTreePartIds2 = (int *)realloc((void *)fullCompTreePartIds2, (size_t) (2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(int)));
-		if (!fullCompTreePartIds2)
-			{
-			MrBayesPrint ("%s   Problem reallocating fullCompTreePartIds2 (%d)\n", spacer, 2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(int));
-			goto errorExit;
-			}
-		fullCompTreePartLengths2 = (MrBFlt *)realloc((void *)fullCompTreePartLengths2, (size_t) (2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(MrBFlt)));
-		if (!fullCompTreePartLengths2)
-			{
-			MrBayesPrint ("%s   Problem reallocating fullCompTreePartLengths2 (%d)\n", spacer, 2 * numTaxa * numFullCompTreesAllocated[whichList] * sizeof(MrBFlt));
-			goto errorExit;
-			}
-		}
-
-	return (NO_ERROR);
-	
-	errorExit:
-		FreeBits();
-		return (ERROR);
-	
-}
-
-
-
-
-
-int ReallocateFullTrees (void)
-
-{
-
-
-	numFullTreesAllocated += 100;
-	
-	if (memAllocs[ALLOC_FULLTREEINFO] == NO)
-		goto errorExit;
-		
-	numOfThisFullTree = (int *)realloc((void *)numOfThisFullTree, (size_t) (numFullTreesAllocated * sizeof(int)));
-	if (!numOfThisFullTree)
-		{
-		MrBayesPrint ("%s   Problem reallocating numOfThisFullTree (%d)\n", spacer, numFullTreesAllocated * sizeof(int));
-		goto errorExit;
-		}
-		
-	fullTreePartIds = (int *)realloc((void *)fullTreePartIds, (size_t) (2 * numTaxa * numFullTreesAllocated * sizeof(int)));
-	if (!fullTreePartIds)
-		{
-		MrBayesPrint ("%s   Problem reallocating fullTreePartIds (%d)\n", spacer, 2 * numTaxa * numFullTreesAllocated * sizeof(int));
-		goto errorExit;
-		}
-
-	return (NO_ERROR);
-	
-	errorExit:
-		FreeBits();
-		return (ERROR);
-	
-}
-
-
-
-
-
-int ReorderParts (void)
-
-{
-
-	int			n, i, j;
-	safeLong		*x, y, z, *newBits;
-
-	newBits = (safeLong *)SafeMalloc((size_t) (taxonLongsNeeded * sizeof(safeLong)));
-	if (!newBits)
-		{
-		MrBayesPrint ("%s   Could not allocate newBits\n", spacer);
-		return (ERROR);
-		}
-		
-	numIncludedTaxa = 0;
+    /* print out information on absent taxa */
+	numExcludedTaxa = 0;
 	for (i=0; i<numTaxa; i++)
-		if (sumTaxaFound[i] == YES)
-			numIncludedTaxa++;
+		if (sumtParams.absentTaxa[i] == YES)
+			numExcludedTaxa++;
 
-	x = &treePartsFound[0];
-	for (n=0; n<numTreePartsFound; n++)
+	if (numExcludedTaxa > 0)
 		{
-		for (i=0; i<taxonLongsNeeded; i++)
-			newBits[i] = 0;
-
-		j = 0;
+		if (numExcludedTaxa == 1)
+			MrBayesPrint ("%s   The following species was absent from trees:\n", spacer);
+		else
+			MrBayesPrint ("%s   The following %d species were absent from trees:\n", spacer, numExcludedTaxa);
+		MrBayesPrint ("%s      ", spacer);
+		j = lineWidth = 0;
 		for (i=0; i<numTaxa; i++)
 			{
-			if (sumTaxaFound[i] == YES)
+			if (sumtParams.absentTaxa[i] == YES)
 				{
-				y = x[i / nBitsInALong];
-				z = 1 << (i % nBitsInALong);
-				if (y & z)
-					{
-					z = 1 << (j % nBitsInALong);
-					newBits[j/nBitsInALong] |= z;
-					}
 				j++;
+                strcpy (tempStr, taxaNames[i]);
+				len = (int) strlen(tempStr);
+				lineWidth += len+2;
+				if (lineWidth > 60)
+					{
+					MrBayesPrint ("\n%s      ", spacer);
+					lineWidth = 0;
+					}
+				if (numExcludedTaxa == 1)
+					MrBayesPrint ("%s\n", tempStr);
+				else if (numExcludedTaxa == 2 && j == 1)
+					MrBayesPrint ("%s ", tempStr);
+				else if (j == numExcludedTaxa)
+					MrBayesPrint ("and %s\n", tempStr);
+				else
+					MrBayesPrint ("%s, ", tempStr);
 				}
 			}
-			
-		for (i=0; i<taxonLongsNeeded; i++)
-			x[i] = newBits[i];
-		x += taxonLongsNeeded;
+		MrBayesPrint ("\n");
 		}
-		
-	free (newBits);
-		
-	return (NO_ERROR);
-		
+
+	/* print out information on pruned taxa */
+	numExcludedTaxa = 0;
+	for (i=0; i<numTaxa; i++)
+		if (taxaInfo[i].isDeleted == YES && sumtParams.absentTaxa[i] == NO)
+			numExcludedTaxa++;
+	
+	if (numExcludedTaxa > 0)
+		{
+		if (numExcludedTaxa == 1)
+			MrBayesPrint ("%s   The following species was pruned from trees:\n", spacer);
+		else
+			MrBayesPrint ("%s   The following %d species were pruned from trees:\n", spacer, numExcludedTaxa);
+		MrBayesPrint ("%s      ", spacer);
+		j = lineWidth = 0;
+		for (i=0; i<numTaxa; i++)
+			{
+			if (taxaInfo[i].isDeleted == YES && sumtParams.absentTaxa[i] == NO)
+				{
+				j++;
+				strcpy (tempStr, taxaNames[i]);
+				len = (int) strlen(tempStr);
+				lineWidth += len+2;
+				if (lineWidth > 60)
+					{
+					MrBayesPrint ("\n%s      ", spacer);
+					lineWidth = 0;
+					}
+				if (numExcludedTaxa == 1)
+					MrBayesPrint ("%s\n", tempStr);
+				else if (numExcludedTaxa == 2 && j == 1)
+					MrBayesPrint ("%s ", tempStr);
+				else if (j == numExcludedTaxa)
+					MrBayesPrint ("and %s\n", tempStr);
+				else
+					MrBayesPrint ("%s, ", tempStr);
+				}
+            }
+		MrBayesPrint ("\n");
+		}
 }
 
 
 
 
 
-void ResetTranslateTable (void) {
+/* Range: Determine range for a vector of MrBFlt values */
+void Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max)
 
+{    
+    SortMrBFlt (vals, 0, nVals-1);
+    
+    *min  = vals[0];
+    *max  = vals[nVals-1];
+
+}
+
+
+
+
+
+/* ResetTaxonSet: Reset included taxa and local outgroup number */
+void ResetTaxonSet (void)
+{
+    int     i, j;
+
+    /* reset numLocalTaxa and localOutGroup */
+    localOutGroup = 0;
+    numLocalTaxa = 0;
+    for (i=j=0; i<numTaxa; i++)
+        {
+        if (taxaInfo[i].isDeleted == NO)
+            {
+            if (i == outGroupNum)
+                localOutGroup = numLocalTaxa;
+            numLocalTaxa++;
+            }
+        }
+
+}
+
+
+
+
+
+void ResetTranslateTable (void)
+{
     int i;
 
+	for (i=0; i<numTranslates; i++)
+        {
+        SafeFree (&transFrom[i]);
+        SafeFree (&transTo[i]);
+        }
+	SafeFree ((void **) &transFrom);
+	SafeFree ((void **) &transTo);
+    transFrom = NULL;
+    transTo = NULL;
+	numTranslates = 0;
     isTranslateDef = NO;
-	numTranslates = whichTranslate = 0;
-	for (i=0; i<numTaxa*100; i++)
-		{
-		transFrom[i] = ' ';
-		transTo[i] = ' ';
-		if (i == numTaxa*100 - 1)
-			{
-			transFrom[i] = '\0';
-			transTo[i] = '\0';
-			}
-		}
-
 }
 
 
 
 
 
-int RootSumtTree (SumtNode *p, int n, int out)
-
-{
-
-	int 			i, j, nNodes, *usedMemIndex=NULL, availableMemIndex[2], isMarked, sumtOut=0, 
-					*localTaxaFound=NULL, localOutgroupNum;
-	MrBFlt			tempBrLen;
-	SumtNode		**downPass=NULL, *first, *second, *lft, *rht, *m1, *m2, *um1, *um2;
-
-	/* get down pass sequence */
-	if (isSumtTreeRooted == YES)
-		{
-		MrBayesPrint ("%s   Tree is already rooted\n", spacer);
-		goto errorExit;
-		}
-	else
-		{
-		nNodes = 2 * n - 2;
-		}
-		
-	/* allocate memory */
-	downPass = (SumtNode **)SafeMalloc((size_t) (2 * numTaxa * sizeof(SumtNode *)));
-	if (!downPass)
-		{
-		MrBayesPrint ("%s   Could not allocate downPass\n", spacer);
-		goto errorExit;
-		}
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-	localTaxaFound = (int *)SafeMalloc((size_t) (numTaxa * sizeof(int)));
-	if (!localTaxaFound)
-		{
-		MrBayesPrint ("%s   Could not allocate localTaxaFound\n", spacer);
-		goto errorExit;
-		}
-	for (i=0; i<numTaxa; i++)
-		localTaxaFound[i] = NO;
-	usedMemIndex = (int *)SafeMalloc((size_t) (2 * numTaxa * sizeof(int)));
-	if (!usedMemIndex)
-		{
-		MrBayesPrint ("%s   Could not allocate usedMemIndex\n", spacer);
-		goto errorExit;
-		}
-	for (i=0; i<2*numTaxa; i++)
-		usedMemIndex[i] = NO;
-
-	/* set local outgroup number */
-	localOutgroupNum = outGroupNum;
-
-	/* find available nodes */
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		usedMemIndex[p->memoryIndex] = YES;
-		}	
-	j = 0;
-	for (i=0; i<2*numTaxa; i++)
-		{
-		if (usedMemIndex[i] == NO)
-			{
-			if (j <= 1)
-				{
-				availableMemIndex[j] = i;
-				j++;
-				}
-			else
-				{
-				/* some taxa are not included in the trees */
-				}
-			}
-		}
-	
-	first  = &sumtNodes[availableMemIndex[0]];
-	second = &sumtNodes[availableMemIndex[1]];
-	
-	/* root tree with previously down taxon as first right */
-	lft = sumtRoot->left;
-	rht = sumtRoot;
-	tempBrLen = lft->length;
-	if (tempBrLen <= 0.0)
-		tempBrLen = 0.0;
-	lft->anc = rht->anc = first;
-	rht->left = rht->right = NULL;
-	first->left = lft;
-	first->right = rht;
-	first->anc = second;
-	second->left = first;
-	second->right = second->anc = NULL;
-	lft->length = rht->length = tempBrLen * (MrBFlt) 0.5;
-	first->length = second->length = 0.0;
-	sumtRoot = second;
-	isSumtTreeRooted = YES;
-	
-	/* update downpass sequence */
-	i = 0;
-	GetSumtDownPass (sumtRoot, downPass, &i);
-	nNodes = i;
-	
-	/* now, bring the outgroup around to the first right position */
-	isMarked = NO;
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		if (p->left == NULL && p->right == NULL)
-			{
-			localTaxaFound[p->index] = YES;
-			if (p->index == out)
-				{
-				p->marked = YES;
-				isMarked = YES;
-				}
-			else	
-				p->marked = NO;
-			}
-		}	
-
-	if (isMarked == NO)
-		{
-		/* We will arbitrarily root it by the first taxon in the matrix
-		   that was actually found on the tree */
-		for (i=0; i<numTaxa; i++)
-			{
-			if (localTaxaFound[i] == YES)
-				{
-				sumtOut = i;
-				break;
-				}
-			}
-		isMarked = NO;
-		for (i=0; i<2*n; i++)
-			{
-			p = downPass[i];
-			if (p->left == NULL && p->right == NULL)
-				{
-				localTaxaFound[p->index] = YES;
-				if (p->index == sumtOut)
-					{
-					p->marked = YES;
-					isMarked = YES;
-					}
-				else	
-					p->marked = NO;
-				}
-			}	
-		if (isMarked == NO)
-			{
-			MrBayesPrint ("%s   Could not find outgroup taxon\n", spacer);
-			goto errorExit;
-			}
-		localOutgroupNum = sumtOut;
-		}
-
-	for (i=0; i<nNodes; i++)
-		{
-		p = downPass[i];
-		if (p->left != NULL && p->right != NULL)
-			if (p->left->marked == YES || p->right->marked == YES)
-				p->marked = YES;
-		}	
-
-	lft = sumtRoot->left;
-	while (lft->left->index != localOutgroupNum && lft->right->index != localOutgroupNum)
-		{
-		if (lft->left->marked == YES && lft->right->marked == NO)
-			{
-			m1 = lft->left;
-			um1 = lft->right;
-			if (m1->left != NULL && m1->right != NULL)
-				{
-				if (m1->left->marked == YES)
-					{
-					m2 = m1->left;
-					um2 = m1->right;
-					}
-				else
-					{
-					m2 = m1->right;
-					um2 = m1->left;
-					}
-				lft->left = m2;
-				lft->right = m1;
-				m2->anc = m1->anc = lft;
-				m1->left = um2;
-				m1->right = um1;
-				um1->anc = um2->anc = m1;
-				m1->marked = NO;
-				um1->length += m1->length;
-				m2->length *= 0.5;
-				m1->length = m2->length;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Rooting routine is lost (4)\n", spacer);
-				goto errorExit;
-				}
-			}
-		else if (lft->left->marked == NO && lft->right->marked == YES)
-			{
-			m1 = lft->right;
-			um1 = lft->left;
-			if (m1->left != NULL && m1->right != NULL)
-				{
-				if (m1->left->marked == YES)
-					{
-					m2 = m1->left;
-					um2 = m1->right;
-					}
-				else
-					{
-					m2 = m1->right;
-					um2 = m1->left;
-					}
-				lft->left = m1;
-				lft->right = m2;
-				m2->anc = m1->anc = lft;
-				m1->left = um1;
-				m1->right = um2;
-				um1->anc = um2->anc = m1;
-				m1->marked = NO;
-				um1->length += m1->length;
-				m2->length *= 0.5;
-				m1->length = m2->length;
-				}
-			else
-				{
-				MrBayesPrint ("%s   Rooting routine is lost (5)\n", spacer);
-				goto errorExit;
-				}
-			}
-		else
-			{
-			MrBayesPrint ("%s   Rooting routine is lost (6)\n", spacer);
-			goto errorExit;
-			}
-		}
-
-	/* make certain outgroup is to the right of the root */
-	if (sumtRoot->left->left->index == localOutgroupNum)
-		{
-		m1 = sumtRoot->left->left;
-		m2 = sumtRoot->left->right;
-		lft = sumtRoot->left;
-		lft->left = m2;
-		lft->right = m1;
-		}
-
-	/* reindex internal nodes of tree */
-	i = numTaxa;
-	FinishSumtTree (sumtRoot, &i, YES);
-
-	/* free memory */
-	free (downPass);
-	free (usedMemIndex);
-	free (localTaxaFound);
-	
-	return (NO_ERROR);
-	
-	errorExit:
-		if (downPass)
-			free (downPass);
-		if (usedMemIndex)
-			free (usedMemIndex);
-		if (localTaxaFound)
-			free (localTaxaFound);
-
-		return (ERROR);
-
-}
-
-
-
-
-
-void ShowBits (safeLong *p, int nBitsToShow)
-
-{
-
-	int			i;
-	safeLong		x, y;
-	
-	for (i=0; i<nBitsToShow; i++)
-		{
-		x = 0;
-		y = p[i / nBitsInALong];
-		x = 1 << (i % nBitsInALong);
-		if ((x & y) == 0)
-			MrBayesPrint ("0");
-		else
-			MrBayesPrint ("1");
-		if ((i+1) % nBitsInALong == 0)
-			MrBayesPrint (" ");
-		}
-
-}
-
-
-
-
-int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int isCalibrated)
+int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
 
 {
 
@@ -7561,7 +4221,7 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
                     precision, width, newPos, curPos, nTimes, numSpaces, maxLabelLength;
 	char			*printLine, *markLine, temp[30], *label;
 	MrBFlt			scale, f, scaleBar;
-	PolyNode		*p, *q, **allDownPass;
+	PolyNode		*p, *q;
 
     /* set max label length */
     maxLabelLength = 20;
@@ -7573,25 +4233,19 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 		return ERROR;
 	markLine = printLine + screenWidth + 1;
 
-	/* allocate allDownPass */
-	allDownPass = (PolyNode **) SafeMalloc (nNodes * sizeof(PolyNode *));
-	if (!allDownPass)
-		{
-		free (printLine);
-		return ERROR;
-		}
-
-	/* get fresh downpass sequence */
-	i = 0;
-	GetConDownPass(allDownPass, root, &i);
-	
 	/* calculate scale */
 	scale = 0.0;
-	root->f = 0.0;
-	for (i=nNodes-2; i>=0; i--)
+	t->root->f = 0.0;
+	for (i=t->nNodes-2; i>=0; i--)
 		{
-		p = allDownPass[i];
-		p->f = p->anc->f + p->length;
+		p = t->allDownPass[i];
+        /* find distance to root in relevant units */
+        if (sumtParams.isClock == YES && sumtParams.isCalibrated == NO)
+    		p->f = t->root->depth - p->depth;
+        else if (sumtParams.isClock == YES && sumtParams.isCalibrated == YES)
+            p->f = t->root->age - p->age;
+        else
+    		p->f = p->anc->f + p->length;
 		if (p->left == NULL)
 			{
 			f = p->f / (screenWidth - Label(p,YES,NULL,maxLabelLength) - 2);
@@ -7604,16 +4258,16 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 		}
 	
 	/* calculate x coordinates */
-	for (i=0; i<nNodes; i++)
+	for (i=0; i<t->nNodes; i++)
 		{
-		p = allDownPass[i];
+		p = t->allDownPass[i];
 		p->x = (int) (0.5 + (p->f / scale));
 		}
 
 	/* calculate y coordinates and lines to print */
-	for (i=nLines=0; i<nNodes; i++)
+	for (i=nLines=0; i<t->nNodes; i++)
 		{
-		p = allDownPass[i];
+		p = t->allDownPass[i];
 		if (p->left != NULL)
 			{
 			/* internal node */
@@ -7640,9 +4294,9 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 			}	
 		printLine[j]='\0';
 
-		for (j=0; j<nNodes; j++)
+		for (j=0; j<t->nNodes; j++)
 			{
-			p = allDownPass[j];
+			p = t->allDownPass[j];
 			if (p->y != i)
 				continue;
 
@@ -7721,7 +4375,7 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 		scaleBar /= 2.0;
 		}
 
-	if (nodeDepthConTree == YES)
+	if (t->isClock == YES)
 		{
 		MrBayesPrint ("%s   ", spacer);
 		for (i=0; i<treeWidth; i++)
@@ -7776,7 +4430,7 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 
 		MrBayesPrint ("%s\n", printLine);
 			
-		if (isCalibrated == YES)
+		if (sumtParams.isCalibrated == YES)
 			MrBayesPrint ("\n%s   [User-defined time units]\n\n", spacer);
 		else
 			MrBayesPrint ("\n%s   [Expected changes per site]\n\n", spacer);
@@ -7789,7 +4443,6 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 		MrBayesPrintf (fp, "| %1.3lf expected changes per site\n\n", scaleBar);
 		}
 
-	free (allDownPass);
 	free (printLine);
 
 	return NO_ERROR;
@@ -7797,54 +4450,10 @@ int ShowConPhylogram (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int
 }
 
 
-
-
-
-void ShowConNodes (int nNodes, PolyNode *root)
-
-{
-
-	int 			i;
-	PolyNode		*p;
-
-	/* this is the tree, on a node-by-node basis */
-	printf ("root = %d\n", root->index);
-	for (i=0; i<2*numTaxa; i++)
-		{
-		p = &conNodes[i];
-		if (!(p->left == NULL && p->sib == NULL && p->anc == NULL))
-			{
-			printf ("%4d -- %2d ", i, p->index);
-			if (p->sib != NULL)
-				printf ("(%2d ", p->sib->index);
-			else
-				printf ("(-- ");
-				
-			if (p->left != NULL)
-				printf ("%2d ", p->left->index);
-			else
-				printf ("-- ");
-
-			if (p->anc != NULL)
-				printf ("%2d)", p->anc->index);
-			else
-				printf ("--)");
-			
-			if (p->left == NULL && p->anc != NULL)
-				printf ("  %s (%d)\n", p->label, p->x);
-			else
-				printf (" (%d)\n", p->x);
-			}
-		}
-
-	return;
-}
-
 		
 		
 		
-		
-int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int showSupport)
+int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 
 {
 
@@ -7852,7 +4461,7 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 					printWidth, nLines, nodesToBePrinted, from, to, maxLabelLength,
                     maxLength;
 	char			*printLine, *markLine, temp[20], *label;
-	PolyNode		*p=NULL, *q, **allDownPass;
+	PolyNode		*p=NULL, *q;
 
     maxLength = 20;         /* max length of label */
 	minBranchLength = 5;    /* min length of branch in tree */
@@ -7865,32 +4474,19 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 	markLine = printLine + screenWidth + 1;
     label = markLine + screenWidth + 1;
 
-	/* allocate allDownPass */
-	allDownPass = (PolyNode **) SafeMalloc (nNodes * sizeof(PolyNode *));
-	if (!allDownPass)
+	/* get fresh internal node indices */
+	k = t->nNodes - t->nIntNodes;
+    for (i=0; i<t->nIntNodes; i++)
 		{
-		free (printLine);
-		return ERROR;
-		}
-
-	/* get fresh downpass sequence and internal node indices */
-	i = 0;
-	GetConDownPass(allDownPass, root, &i);
-	for (i=k=0; i<nNodes; i++)
-		if (allDownPass[i]->left == NULL)
-			k++;
-	for (i=0; i<nNodes; i++)
-		{
-		p = allDownPass[i];
-		if (p->left != NULL)
-			p->index = k++;
+		p = t->intDownPass[i];
+		p->index = k++;
 		}
 	
 	/* calculate max length of labels including taxon index number */
     maxLabelLength = 0;
-    for (i=0; i<nNodes; i++)
+    for (i=0; i<t->nNodes; i++)
 		{
-		p = allDownPass[i];
+		p = t->allDownPass[i];
 		if (p->left == NULL)
             {
             j = Label(p,YES,NULL,maxLength);
@@ -7900,7 +4496,7 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
         }
 
     /* make sure label can hold an interior node index number */
-    j = (int) (3.0 + log10((MrBFlt)nNodes)); 
+    j = (int) (3.0 + log10((MrBFlt)t->nNodes)); 
     maxLabelLength = (maxLabelLength > j ? maxLabelLength : j);
 
 	/* calculate remaining screen width for tree
@@ -7909,16 +4505,16 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 	maxWidth = treeWidth / minBranchLength;
 	
 	/* unmark whole tree */
-	for (i=0; i<nNodes; i++)
-		allDownPass[i]->mark = 0;
-	nodesToBePrinted = nNodes;
+	for (i=0; i<t->nNodes; i++)
+		t->allDownPass[i]->mark = 0;
+	nodesToBePrinted = t->nNodes;
 
 	while (nodesToBePrinted > 0)
 		{
 		/* count depth of nodes in unprinted tree */
-		for (i=0; i<nNodes; i++)
+		for (i=0; i<t->nNodes; i++)
 			{
-			p = allDownPass[i];
+			p = t->allDownPass[i];
 			if (p->mark == 0)   /* the node has not been printed yet */
 				{
 				p->x = 0;
@@ -7961,9 +4557,9 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 			printWidth = p->x + 1;
 		p->mark = 1;
 		p->x = (int) (treeWidth - 0.5 - ((treeWidth - 1) * (p->x / (MrBFlt) printWidth)));
-		for (i=nNodes-2; i>=0; i--)
+		for (i=t->nNodes-2; i>=0; i--)
 			{
-			p = allDownPass[i];
+			p = t->allDownPass[i];
 			if (p->mark == 0 && p->anc->mark == 1)
 				{	
 				p->mark = 1;
@@ -7972,9 +4568,9 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 			}
 
 		/* calculate y coordinates of nodes to be printed and lines to print */
-		for (i=nLines=0; i<nNodes; i++)
+		for (i=nLines=0; i<t->nNodes; i++)
 			{
-			p = allDownPass[i];
+			p = t->allDownPass[i];
 			if (p->mark == 1)
 				{
 				if (p->left != NULL && p->left->mark == 1)
@@ -8004,9 +4600,9 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 				}	
 			printLine[j]='\0';
 
-			for (j=0; j<nNodes; j++)
+			for (j=0; j<t->nNodes; j++)
 				{
-				p = allDownPass[j];
+				p = t->allDownPass[j];
 				if (p->mark != 1 || p->y != i)
 					continue;
 
@@ -8038,7 +4634,7 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 						printLine[k] = '-';
 					printLine[to] = '+';
 					if (showSupport == YES)
-						sprintf(temp, "%d", (int) (p->support + 0.5));
+						sprintf(temp, "%d", (int) (p->support*100.0 + 0.5));
 					else
 						*temp='\0';
 					from = (int)(from + 1.5 + ((to - from - 1 - strlen(temp)) / 2.0));
@@ -8066,7 +4662,7 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 						{
 						printLine[to] = '+';
 						if (showSupport == YES)
-							sprintf(temp, "%d", (int) (p->support + 0.5));
+							sprintf(temp, "%d", (int) (p->support*100.0 + 0.5));
 						else
 							*temp='\0';
 						from = (int)(from + 1.5 + ((to - from - 1 - strlen(temp)) / 2.0));
@@ -8088,9 +4684,9 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 			}
 
 		/* mark printed branches */
-		for (i=0; i<nNodes; i++)
+		for (i=0; i<t->nNodes; i++)
 			{
-			p = allDownPass[i];
+			p = t->allDownPass[i];
 			if (p->mark == 1)
 				{
 				if (p->anc == NULL)
@@ -8104,7 +4700,6 @@ int ShowConTree (FILE *fp, int nNodes, PolyNode *root, int screenWidth, int show
 
 		}	/* next subtree */
 	
-	free (allDownPass);
 	free (printLine);
 
 	return NO_ERROR;
@@ -8119,37 +4714,17 @@ void ShowParts (FILE *fp, safeLong *p, int nTaxaToShow)
 
 {
 
-	int			i, flipBits;
-	safeLong		x, y;
+    int         i;
+	safeLong    x, y;
 	
-	flipBits = NO;
-//	if (isSumtTreeRooted == NO)
-//		{
-//		y = p[0];
-//		x = 1 << (0 % nBitsInALong);
-//		if (x & y)
-//			flipBits = YES;
-//		}
-
 	for (i=0; i<nTaxaToShow; i++)
 		{
-		x = 0;
 		y = p[i / nBitsInALong];
 		x = 1 << (i % nBitsInALong);
-		if (flipBits == NO)
-			{
-			if ((x & y) == 0)
-				MrBayesPrintf (fp, ".");
-			else
-				MrBayesPrintf (fp, "*");
-			}
+		if ((x & y) == 0)
+			MrBayesPrintf (fp, ".");
 		else
-			{
-			if ((x & y) == 0)
-				MrBayesPrintf (fp, "*");
-			else
-				MrBayesPrintf (fp, ".");
-			}
+			MrBayesPrintf (fp, "*");
 		}
 
 }
@@ -8158,386 +4733,189 @@ void ShowParts (FILE *fp, safeLong *p, int nTaxaToShow)
 
 
 
-void ShowSumtNodes (SumtNode *p, int indent, int isThisTreeRooted)
+void ShowSomeParts (FILE *fp, safeLong *p, int offset, int nTaxaToShow)
 
 {
 
-	if (p != NULL)
+	int         i;
+	safeLong    x, y;
+	
+	for (i=offset; i<nTaxaToShow; i++)
 		{
-		MrBayesPrint ("   ");
-		if (p->left == NULL && p->right == NULL && p->anc != NULL)
-			{
-			MrBayesPrint("%*cN %d (l=%d r=%d a=%d) %lf (%s) ", 
-			indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc), p->length, p->label);
-			}
-		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
-			{
-			if (isThisTreeRooted == NO)
-				{
-				if (p->label[0] == '\0' || p->label[0] == '\n' || p->label[0] == ' ')
-					MrBayesPrint("%*cN %d (l=%d r=%d a=%d) (---) ", 
-					indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc));
-				else
-					MrBayesPrint("%*cN %d (l=%d r=%d a=%d) (%s) ", 
-					indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc), p->label);
-				}
-			else
-				{
-				MrBayesPrint("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ", 
-				indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc));
-				}
-			}
+		y = p[i / nBitsInALong];
+		x = 1 << (i % nBitsInALong);
+		if ((x & y) == 0)
+			MrBayesPrintf (fp, ".");
 		else
-			{
-			if (p->anc != NULL)
-				{
-				if (p->anc->anc == NULL && isThisTreeRooted == YES)
-					MrBayesPrint("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ", 
-					indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc));
-				else	
-					MrBayesPrint("%*cN %d (l=%d r=%d a=%d) %lf ", 
-					indent, ' ', SumtDex(p), SumtDex(p->left), SumtDex(p->right), SumtDex(p->anc), p->length);
-				}
-			}
-		MrBayesPrint ("\n");
-		ShowSumtNodes (p->left,  indent + 2, isThisTreeRooted);
-		ShowSumtNodes (p->right, indent + 2, isThisTreeRooted);
+			MrBayesPrintf (fp, "*");
 		}
-   
 }
 
 
 
 
 
-void SortInts (int *item, int *assoc, int count, int descendingOrder)
+void SortPartCtr (PartCtr **item, int left, int right)
 
 {
 
-	SortInts2 (item, assoc, 0, count-1, descendingOrder);
-
-}
-
-
-
-
-
-void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
-
-{
-
-	register int	i, j, x, y;
-
-	if (descendingOrder == YES)
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] > x && i < right)
-				i++;
-			while (x > item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = item[i];
-				item[i] = item[j];
-				item[j] = y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortInts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortInts2 (item, assoc, i, right, descendingOrder);
-		}
-	else
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] < x && i < right)
-				i++;
-			while (x < item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = item[i];
-				item[i] = item[j];
-				item[j] = y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortInts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortInts2 (item, assoc, i, right, descendingOrder);
-		}
-
-}
-
-
-
-
-
-void SortIndParts (int *item, MrBFlt *assoc, int count, int descendingOrder)
-
-{
-
-	SortIndParts2 (item, assoc, 0, count-1, descendingOrder);
-
-}
-
-
-
-
-
-void SortIndParts2 (int *item, MrBFlt *assoc, int left, int right, int descendingOrder)
-
-{
-
-	register int	i, j, x;
-	MrBFlt			y;
-
-	if (descendingOrder == YES)
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] > x && i < right)
-				i++;
-			while (x > item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = (MrBFlt) item[i];
-				item[i] = item[j];
-				item[j] = (int) y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortIndParts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortIndParts2 (item, assoc, i, right, descendingOrder);
-		}
-	else
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] < x && i < right)
-				i++;
-			while (x < item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = (MrBFlt) item[i];
-				item[i] = item[j];
-				item[j] = (int) y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortIndParts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortIndParts2 (item, assoc, i, right, descendingOrder);
-		}
-
-}
-
-
-
-
-
-int SortParts (int *item, int count)
-
-{
-
-	int				i, *tempVect;
-	
-	SortParts2 (item, 0, count-1);
-		
-	tempVect = (int *)SafeMalloc((size_t) (numTreePartsFound * sizeof(int)));
-	if (!tempVect)
-		{
-		MrBayesPrint ("%s   Problem allocating tempVect (%d)\n", spacer, numTreePartsFound * sizeof(int));
-		goto errorExit;
-		}
-		
-	for (i=0; i<numTreePartsFound; i++)
-		{
-		tempVect[i] = partOrigOrder[i];
-		partOrigOrder[i] = 0;
-		}
-
-	for (i=0; i<numTreePartsFound; i++)
-		partOrigOrder[tempVect[i]] = i;
-		
-	/*for (i=0; i<numTreePartsFound; i++)
-		printf ("%d -> %d\n", partOrigOrder[i], i);*/
-
-	free (tempVect);
-	
-	return (NO_ERROR);
-	
-	errorExit:
-		if (tempVect)
-			free (tempVect);
-		return (ERROR);
-
-}
-
-
-
-
-
-void SortParts2 (int *item, int left, int right)
-
-{
-
-	register int	i, j, k;
-	int				yI;
-	safeLong			yL;
-	MrBFlt			x, y;
+	register int	i, j;
+	PartCtr			*tempPartCtr;
+	int			    x;
 
 	i = left;
 	j = right;
-	x = (MrBFlt) item[(left+right)/2];
+	x = item[(left+right)/2]->totCount;
 	do 
 		{
-		while (item[i] > x && i < right)
+		while (item[i]->totCount > x && i < right)
 			i++;
-		while (x > item[j] && j > left)
+		while (x > item[j]->totCount && j > left)
 			j--;
 		if (i <= j)
 			{
-			yI = item[i];
+			tempPartCtr = item[i];
 			item[i] = item[j];
-			item[j] = yI;
-			
-			yI = partOrigOrder[i];
-			partOrigOrder[i] = partOrigOrder[j];
-			partOrigOrder[j] = yI;
-			
-			if (sumtBrlensDef == YES)
-				{
-				y = aBrlens[i];
-				aBrlens[i] = aBrlens[j];
-				aBrlens[j] = y;
-				
-				y = sBrlens[i];
-				sBrlens[i] = sBrlens[j];
-				sBrlens[j] = y;
-				}
-
-			if (sumtParams.numRuns > 1 && sumtBrlensDef == YES)
-				{
-				y = aWithinBrlens[i];
-				aWithinBrlens[i] = aWithinBrlens[j];
-				aWithinBrlens[j] = y;
-				
-				y = sWithinBrlens[i];
-				sWithinBrlens[i] = sWithinBrlens[j];
-				sWithinBrlens[j] = y;
-
-				y = sumB[i];
-				sumB[i] = sumB[j];
-				sumB[j] = y;
-
-				y = sumsqB[i];
-				sumsqB[i] = sumsqB[j];
-				sumsqB[j] = y;
-				}
-
-			for (k = 0; k<taxonLongsNeeded; k++)
-				{
-				yL = treePartsFound[i*taxonLongsNeeded + k];
-				treePartsFound[i*taxonLongsNeeded + k] = treePartsFound[j*taxonLongsNeeded + k];
-				treePartsFound[j*taxonLongsNeeded + k] = yL;
-				}
-				
-			if (comparingFiles == YES)
-				{
-				yI = numFoundOfThisPart1[i];
-				numFoundOfThisPart1[i] = numFoundOfThisPart1[j];
-				numFoundOfThisPart1[j] = yI;
-				
-				yI = numFoundOfThisPart2[i];
-				numFoundOfThisPart2[i] = numFoundOfThisPart2[j];
-				numFoundOfThisPart2[j] = yI;
-				}
-
-			if (sumtParams.numRuns > 1)
-				{
-				for (k=0; k<sumtParams.numRuns; k++)
-					{
-					yI = numFoundInRunOfPart[k][i];
-					numFoundInRunOfPart[k][i] = numFoundInRunOfPart[k][j];
-					numFoundInRunOfPart[k][j] = yI;
-					}
-				}
+			item[j] = tempPartCtr;
 				
 			i++;
 			j--;
 			}
 		} while (i <= j);
 	if (left < j)
-		SortParts2 (item, left, j);
+		SortPartCtr (item, left, j);
 	if (i < right)
-		SortParts2 (item, i, right);
-
+		SortPartCtr (item, i, right);
 }
 
 
 
 
 
-int SumtDex (SumtNode *p)
+void SortTerminalPartCtr (PartCtr **item, int len)
 
 {
 
-	return (p == NULL) ? -1 : p->index;
+	register int	i, j, maxCount;
+	PartCtr			*temp;
 
+	maxCount = item[0]->totCount;
+    
+    /* put root first */
+    for (i=0; item[i]->totCount == maxCount; i++)
+        if (NumBits(item[i]->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+            break;
+
+    if (i!=0)
+        {
+        temp = item[0];
+        item[0] = item[i];
+        item[i] = temp;
+        }
+
+    /* then find terminals in index order */
+    for (i=1; i<=sumtParams.numTaxa; i++)
+        {
+        for (j=i; item[j]->totCount == maxCount && j<len; j++)
+            if (NumBits(item[j]->partition, sumtParams.safeLongsNeeded) == 1 && 
+                FirstTaxonInPartition(item[j]->partition, sumtParams.safeLongsNeeded) == i-1)
+                break;
+
+        if (j!=i)
+            {
+            temp = item[i];
+            item[i] = item[j];
+            item[j] = temp;
+            }
+        }
+}
+
+
+
+
+
+void SortTreeCtr (TreeCtr **item, int left, int right)
+
+{
+
+	register int	i, j;
+	TreeCtr			*tempTreeCtr;
+	int			    x;
+
+	i = left;
+	j = right;
+	x = item[(left+right)/2]->count;
+	do 
+		{
+		while (item[i]->count > x && i < right)
+			i++;
+		while (x > item[j]->count && j > left)
+			j--;
+		if (i <= j)
+			{
+			tempTreeCtr = item[i];
+			item[i] = item[j];
+			item[j] = tempTreeCtr;
+				
+			i++;
+			j--;
+			}
+		} while (i <= j);
+	if (left < j)
+		SortTreeCtr (item, left, j);
+	if (i < right)
+		SortTreeCtr (item, i, right);
+}
+
+
+
+
+
+/* StoreSumtTree: Store tree in treeList in packed format */
+int StoreSumtTree (PackedTree *treeList, int index, PolyTree *t)
+{
+    int orderLen, numBrlens;
+
+    assert(treeList[index].brlens == NULL);
+    assert(treeList[index].order == NULL);
+
+    /* get tree dimensions */
+    numBrlens = t->nNodes - 1;
+    orderLen = t->nIntNodes - 1;
+
+    /* allocate space */
+    treeList[index].brlens = (MrBFlt *) calloc (numBrlens, sizeof(MrBFlt));
+    treeList[index].order  = (int *) calloc (orderLen, sizeof(MrBFlt));
+    if (!treeList[index].order || !treeList[index].brlens)
+        {
+        MrBayesPrint ("%s   Could not store packed representation of tree '%s'\n", spacer, t->name);
+        return (ERROR);
+        }
+
+    /* store tree */
+    if (t->isRooted == YES)
+        StoreRPolyTree (t, treeList[index].order, treeList[index].brlens);
+    else
+        StoreUPolyTree (t, treeList[index].order, treeList[index].brlens);
+
+    return (NO_ERROR);
+}
+
+
+
+
+
+/* TreeCtrUppass: extract TreeCtr nodes in uppass sequence */
+void TreeCtrUppass (TreeCtr *r, TreeCtr **uppass, int *index)
+
+{
+    if (r != NULL)
+        {
+        uppass[(*index)++] = r;
+
+        TreeCtrUppass (r->left, uppass, index);
+        TreeCtrUppass (r->right, uppass, index);
+        }
 }
 
 
@@ -8548,13 +4926,10 @@ int TreeProb (void)
 
 {
 
-	int			i, j, n, num, targetNode, nBits, nextConNode, isCompat, 
-				localOutgroupNum, origPartNum, reorderedPartNum, *tempTreeNum=NULL, *tempNumOfTree=NULL,
-				nInSets[5];
-	safeLong		x, *mask, *partition, *ingroupPartition, *outgroupPartition=NULL;
+	int			i, j, num, nInSets[5];
 	MrBFlt		treeProb, cumTreeProb;
-	char		tempName[100];
-	PolyNode	*cp, *q, *r, *ql, *pl;
+    TreeCtr     **trees;
+    Tree        *theTree;
 	
 	/* check if we need to do this */
 	if (sumtParams.calcTrprobs == NO)
@@ -8562,298 +4937,42 @@ int TreeProb (void)
 
 	MrBayesPrint ("%s   Calculating tree probabilities...\n\n", spacer);
 
-	/* check that we have at least three species */
-	j = 0;
-	for (i=0; i<numTaxa; i++)
-		if (sumTaxaFound[i] == YES)
-			j++;
-	if (j < 3)
+    /* allocate space for tree counters and trees */
+	trees = (TreeCtr **) calloc ((size_t)numUniqueTreesFound, sizeof(TreeCtr *));
+    theTree = AllocateTree (sumtParams.numTaxa);
+    if (!trees || !theTree)
 		{
-		MrBayesPrint ("%s   Too few taxa included to show tree probabilities\n", spacer);
-		goto errorExit;
+		MrBayesPrint ("%s   Problem allocating trees or theTree in TreeProb\n", spacer);
+		return (ERROR);
 		}
-		
-	/* sort trees, from most probable to least probable */
-	tempTreeNum = (int *)SafeMalloc((size_t) (numFullTreesFound * sizeof(int)));
-	if (!tempTreeNum)
-		{
-		MrBayesPrint ("%s   Problem allocating tempTreeNum (%d)\n", spacer, numFullTreesFound * sizeof(int));
-		goto errorExit;
-		}
-	tempNumOfTree = (int *)SafeMalloc((size_t) (numFullTreesFound * sizeof(int)));
-	if (!tempNumOfTree)
-		{
-		MrBayesPrint ("%s   Problem allocating tempNumOfTree (%d)\n", spacer, numFullTreesFound * sizeof(int));
-		goto errorExit;
-		}
-	for (i=0; i<numFullTreesFound; i++)
-		{
-		tempTreeNum[i] = i;
-		tempNumOfTree[i] = numOfThisFullTree[i];
-		}
-	SortInts (tempNumOfTree, tempTreeNum, numFullTreesFound, YES);
+    
+    /* extract trees */
+    i = 0;
+    TreeCtrUppass (treeCtrRoot, trees, &i);
+
+	/* sort trees */
+    SortTreeCtr (trees, 0, numUniqueTreesFound-1);
 	
-	/* Set the outgroup. Remember that the outgroup number goes from 0 to numTaxa-1.
-	   The outgroup may have been deleted, so we should probably set localOutgroupNum
-	   to reflect this. */
-	j = 0;
-	localOutgroupNum = 0;
-	for (i=0; i<numTaxa; i++)
-		{
-		if (sumTaxaFound[i] == YES)
-			{
-			if (i == outGroupNum)
-				{
-				localOutgroupNum = j;
-				break;
-				}
-			j++;
-			}
-		}
-	
-	/* note that numIncludedTaxa is initialized in ReorderParts */
+    /* set basic params in receiving tree */
+    theTree->isRooted = sumtParams.isRooted;
+    if (theTree->isRooted)
+        {
+        theTree->nNodes = 2 * sumtParams.numTaxa;
+        theTree->nIntNodes = sumtParams.numTaxa - 1;
+        }
+    else
+        {
+        theTree->nNodes = 2 * sumtParams.numTaxa - 2;
+        theTree->nIntNodes = sumtParams.numTaxa - 2;
+        }
 
-	/* First allocate some stuff for the trees. We use the same routines that
-	   we used when making consensus trees. However, all of the trees should
-	   be strictly bifurcating. */
-	if (memAllocs[ALLOC_CONNODES] == YES)
-		{
-		MrBayesPrint ("%s   conNodes is already allocated\n", spacer);
-		goto errorExit;
-		}
-	conNodes = (PolyNode *)SafeMalloc((size_t) (2 * numTaxa * sizeof(PolyNode)));
-	if (!conNodes)
-		{
-		MrBayesPrint ("%s   Could not allocate conNodes\n", spacer);
-		goto errorExit;
-		}
-	memAllocs[ALLOC_CONNODES] = YES;
-	for (i=0; i<2*numTaxa; i++)
-		{
-		conNodes[i].left = conNodes[i].sib = conNodes[i].anc = NULL;
-		conNodes[i].x = conNodes[i].y = conNodes[i].index = conNodes[i].mark = 0;
-		conNodes[i].length = conNodes[i].support = conNodes[i].f = 0.0;
-		}
-
-	if (memAllocs[ALLOC_OUTPART] == YES)
-		{
-		MrBayesPrint ("%s   outgroupPartition is already allocated\n", spacer);
-		goto errorExit;
-		}
-	outgroupPartition = (safeLong *) calloc (3 * taxonLongsNeeded, sizeof(safeLong));
-	if (!outgroupPartition)
-		{
-		MrBayesPrint ("%s   Could not allocate outgroupPartition\n", spacer);
-		goto errorExit;
-		}
-	ingroupPartition = outgroupPartition + taxonLongsNeeded;
-	mask = ingroupPartition + taxonLongsNeeded;
-	memAllocs[ALLOC_OUTPART] = YES;
-
-	/* Set mask - needed to trim last element in partition.
-	   This could be done when a new matrix is read in
-	   and adjusted when taxa are deleted or restored. */
-	for (i=0; i<numIncludedTaxa; i++)
-		SetBit (i, mask);
-
-	/* Set ingroup and outgroup partitions.
-	   This could be done when a new matrix is read in
-	   and adjusted when an outgroup command is issued.
-	   This mechanism allows multiple taxa in outgroup. */
-	x = 1;
-	x <<= (localOutgroupNum) % nBitsInALong;
-	i = (localOutgroupNum) / nBitsInALong;
-	outgroupPartition[i] = x;
-	for (i = 0; i < taxonLongsNeeded; i++)
-		ingroupPartition[i] = outgroupPartition[i];
-	FlipBits (ingroupPartition, taxonLongsNeeded, mask);	
-	/*ShowBits (&outgroupPartition[0], numIncludedTaxa);
-	MrBayesPrint (" <- outgroupPartition\n");
-	ShowBits (&ingroupPartition[0], numIncludedTaxa);
-	MrBayesPrint (" <- ingroupPartition\n");*/
-	
-	/* now, resolve each tree in the list of trees */
+    /* show tree data */
 	cumTreeProb = 0.0;
-	nInSets[0] = nInSets[1] = nInSets[2] = nInSets[3] = nInSets[4] = 0;
-	for (num=0; num<numFullTreesFound; num++)   /* loop over all of the trees that were found */
+    nInSets[0] = nInSets[1] = nInSets[2] = nInSets[3] = nInSets[4] = 0;
+	for (num=0; num<numUniqueTreesFound; num++)   /* loop over all of the trees that were found */
 		{
-		
-		/* figure out which tree we want */
-		n = tempTreeNum[num];
-
-		/* initialize terminal consensus nodes */
-		j = 0;
-		for (i=0; i<numTaxa; i++)
-			{
-			if (sumTaxaFound[i] == YES)
-				{
-				if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-					{
-					MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-					return (ERROR);
-					}
-				conNodes[j].left = NULL;
-				conNodes[j].sib = NULL;
-				conNodes[j].index = j;
-				strcpy (conNodes[j].label, tempName);
-				j++;
-				}
-			}
-		for (i=numIncludedTaxa; i<2*numIncludedTaxa; i++)
-			{
-			conNodes[j].left = NULL;
-			conNodes[j].sib = NULL;
-			conNodes[j].index = j;
-			j++;
-			}
-			
-		/* create bush 
-		   ->x counts number of subtended terminals 
-		   make sure conRoot->left is in outgroup */
-		conRoot = &conNodes[numIncludedTaxa];
-		conRoot->anc = conRoot->sib = NULL;
-		conRoot->x = numIncludedTaxa;
-		j = FirstTaxonInPartition(outgroupPartition, taxonLongsNeeded);
-		conRoot->left = cp = &conNodes[j];
-		cp->anc = conRoot;
-		cp->x = 1;
-		for (i=0; i<numIncludedTaxa; i++)
-			{
-			if (i != j)
-				{
-				cp->sib = &conNodes[i];
-				cp = cp->sib;
-				cp->anc = conRoot;
-				cp->x = 1;
-				}
-			}
-		cp->sib = NULL;
-
-		/* Resolve bush according to partitions.
-		   Partitions may include incompatible ones. */
-		nextConNode = numIncludedTaxa + 1;
-		if (isSumtTreeRooted == YES)
-			targetNode = 2 * numIncludedTaxa - 2;
-		else
-			targetNode = 2 * numIncludedTaxa - 3;
-			
-		for (i=0; i<numTreeParts; i++) /* loop over partitions for this tree */
-			{
-			/* get partition */
-			origPartNum = fullTreePartIds[n * 2 * numTaxa + i];
-			reorderedPartNum = partOrigOrder[origPartNum];
-			partition = &treePartsFound[reorderedPartNum*taxonLongsNeeded];
-
-			/* flip bits if necessary */
-			if (isSumtTreeRooted == NO)
-				{
-				if (!IsPartNested(partition, ingroupPartition, taxonLongsNeeded) && !IsPartCompatible(partition, ingroupPartition, taxonLongsNeeded))
-					FlipBits(partition, taxonLongsNeeded, mask);
-				}
-			
-			/* count bits in this partition */
-			for (j=nBits=0; j<taxonLongsNeeded; j++)
-				{
-				x = partition[j];
-				for (x = partition[j]; x != 0; x &= (x - 1))
-					nBits++;
-				}
-				
-			/* flip this partition if it leaves single outgroup outside */
-			if (nBits == numIncludedTaxa - 1  && isSumtTreeRooted == NO)
-				{
-				nBits = 1;
-				FlipBits(partition, taxonLongsNeeded, mask);
-				}
-
-			/*ShowBits (&partition[0], numIncludedTaxa);
-			MrBayesPrint (" <- partition (%d)\n", nBits);*/
-
-			if (nBits > 1 && nBits < numIncludedTaxa)  /* this is an informative partition */
-				{
-				/* find anc of partition */
-				j = FirstTaxonInPartition (partition, taxonLongsNeeded);
-				for (cp = &conNodes[j]; cp!=NULL; cp = cp->anc)
-					if (cp->x > nBits)
-						break;
-
-				/* Do not include if incompatible with ancestor
-				   or any of descendants.
-				   Do not check terminals or root because it is
-				   redundant and partitions have not been set for those. */
-				isCompat = YES;
-				if (cp->anc != NULL && !IsPartCompatible(partition, cp->partition, taxonLongsNeeded))
-					isCompat = NO;
-				for (q=cp->left; q!=NULL; q=q->sib)
-					{
-					if (q->x > 1 && !IsPartCompatible(q->partition, partition, taxonLongsNeeded))
-						isCompat = NO;
-					if (isCompat == NO)
-						{
-						MrBayesPrint ("%s   Found an incompatible partition in the tree (1 %d %d)\n", spacer, num, n);
-						goto errorExit;
-						}
-					}
-				if (isCompat == NO)
-					{
-					MrBayesPrint ("%s   Found an incompatible partition in the tree (2)\n", spacer);
-					goto errorExit;
-					}
-
-				/* check for number of nodes in tree */
-				if (nextConNode > targetNode)
-					{
-					MrBayesPrint ("%s   Too many nodes in tree\n", spacer);
-					goto errorExit;
-					}
-			
-				/* set new node */
-				q = &conNodes[nextConNode++];
-				q->x = nBits;
-				q->partition = partition;
-
-				/* go through descendants of anc */
-				ql = pl = NULL;
-				for (r=cp->left; r!=NULL; r=r ->sib)
-					{
-					/* test if r is in the new partition or not */
-					if ((r->x > 1 && IsPartNested(r->partition, partition, taxonLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
-						{
-						/* r is in the partition */
-						if (ql == NULL)
-							q->left = r;
-						else
-							ql->sib = r;
-						ql = r;
-						r->anc = q;
-						}
-					else
-						{
-						/* r is not in the partition */
-						if (pl == NULL)
-							cp->left = r;
-						else
-							pl->sib = r;
-						pl = r;
-						}
-					}
-				/* terminate new sib-node chain */
-				ql->sib = NULL;
-				/* new node is last in old sib-node chain */
-				pl->sib = q;
-				q->sib = NULL;
-				q->anc = cp;
-				}
-			else
-				/* singleton partition */
-				{
-				j = FirstTaxonInPartition(partition, taxonLongsNeeded);
-				q = &conNodes[j];
-				}
-			}
-
 		/* get probability of tree */
-		treeProb = (MrBFlt)tempNumOfTree[num] / (MrBFlt) (sumtParams.numRuns * numSumTreesSampled);
+        treeProb = (MrBFlt)trees[num]->count / (MrBFlt)sumtParams.numTreesSampled;
 		cumTreeProb += treeProb;
 		if (cumTreeProb >= 0.0 && cumTreeProb < 0.5)
 			nInSets[0]++;
@@ -8867,10 +4986,14 @@ int TreeProb (void)
 			nInSets[4]++;
 		
 		/* draw tree to stdout */
-		if (sumtParams.showSumtTrees == YES)
+        if (theTree->isRooted == YES)
+		    RetrieveRTopology (theTree, trees[num]->order);
+        else
+            RetrieveUTopology (theTree, trees[num]->order);
+        if (sumtParams.showSumtTrees == YES)
 			{
 			MrBayesPrint ("\n%s   Tree %d (p = %1.3lf, P = %1.3lf):\n\n", spacer, num+1, treeProb, cumTreeProb);
-			ShowConTree (stdout, nextConNode, conRoot, 80, NO);
+			ShowTree (theTree);
 			}
 
 		/* draw tree to file */
@@ -8885,29 +5008,22 @@ int TreeProb (void)
 			j = 0;
 			for (i=0; i<numTaxa; i++)
 				{
-				if (sumTaxaFound[i] == YES)
+				if (taxaInfo[i].isDeleted == NO && sumtParams.absentTaxa[i] == NO)
 					{
-					if (GetNameFromString (taxaNames, tempName, i+1) == ERROR)
-						{
-						MrBayesPrint ("%s   Error getting taxon names \n", spacer);
-						return (ERROR);
-						}
-					if (j+1 == numIncludedTaxa)
-						MrBayesPrintf (fpTrees, "   %2d %s;\n", j+1, tempName);
+					if (j+1 == sumtParams.numTaxa)
+						MrBayesPrintf (fpTrees, "   %2d %s;\n", j+1, taxaNames[i]);
 					else
-						MrBayesPrintf (fpTrees, "   %2d %s,\n", j+1, tempName);
+						MrBayesPrintf (fpTrees, "   %2d %s,\n", j+1, taxaNames[i]);
 					j++;
 					}
 				}
-			
 			}
 		MrBayesPrintf (fpTrees, "   tree tree_%d [p = %1.3lf, P = %1.3lf] = [&W %1.6lf] ", num+1, treeProb, cumTreeProb, treeProb);
-		WriteTree (conRoot, fpTrees);
+		WriteTopologyToFile (fpTrees, theTree->root->left, theTree->isRooted);
 		MrBayesPrintf (fpTrees, ";\n");
-		if (num == numFullTreesFound - 1)
-			MrBayesPrintf (fpTrees, "end;\n");
-	
-		}	
+		if (num == numUniqueTreesFound - 1)
+			MrBayesPrintf (fpTrees, "end;\n");	
+		}
 		
 	/* print out general information on credible sets of trees */
 	MrBayesPrint ("%s   Credible sets of trees (%d trees sampled):\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + nInSets[4]);
@@ -8917,42 +5033,12 @@ int TreeProb (void)
 		MrBayesPrint ("%s      90 %% credible set contains %d trees\n", spacer, nInSets[0] + nInSets[1] + 1);
 	if (nInSets[0] + nInSets[1] + nInSets[2] != 0)
 		MrBayesPrint ("%s      95 %% credible set contains %d trees\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + 1);
-	MrBayesPrint ("%s      99 %% credible set contains %d trees\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + 1);
-
+	MrBayesPrint ("%s      99 %% credible set contains %d trees\n\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + 1);
 	
-	/* free memory and file pointers */
-	if (memAllocs[ALLOC_CONNODES] == YES)
-		{
-		free (conNodes);
-		memAllocs[ALLOC_CONNODES] = NO;
-		}
-	if (memAllocs[ALLOC_OUTPART] == YES)
-		{
-		free (outgroupPartition);
-		memAllocs[ALLOC_OUTPART] = NO;
-		}
-	free (tempTreeNum);
-	free (tempNumOfTree);
+	/* free memory */
+	free (trees);
 		
-	return (NO_ERROR);
-	
-	errorExit:
-		if (memAllocs[ALLOC_CONNODES] == YES)
-			{
-			free (conNodes);
-			memAllocs[ALLOC_CONNODES] = NO;
-			}
-		if (memAllocs[ALLOC_OUTPART] == YES)
-			{
-			free (outgroupPartition);
-			memAllocs[ALLOC_OUTPART] = NO;
-			}
-		if (tempTreeNum)
-			free (tempTreeNum);
-		if (tempNumOfTree)
-			free (tempNumOfTree);
-		return (ERROR);
-	
+	return (NO_ERROR);	
 }
 
 
@@ -8977,7 +5063,7 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 		}
 	if (p->left == NULL)
 		{
-		if (sumtBrlensDef == YES)
+		if (sumtParams.brlensDef == YES)
 			fprintf (fp, "%d:%lf", p->index+1, p->length);
 		else
 			fprintf (fp, "%d", p->index+1);
@@ -8987,49 +5073,58 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 		{
 		if (p->anc->anc != NULL)
 			{
-			if (sumtBrlensDef == YES && showSupport == NO)
+			if (sumtParams.brlensDef == YES && showSupport == NO)
 				fprintf (fp, "):%lf", p->anc->length); 
-			else if (sumtBrlensDef == NO && showSupport == YES)
-				fprintf (fp, ")%1.2lf", p->anc->support/100.0); 
-			else if (sumtBrlensDef == YES && showSupport == YES)
-				fprintf (fp, ")%1.2lf:%lf", p->anc->support/100.0, p->anc->length);
+			else if (sumtParams.brlensDef == NO && showSupport == YES)
+				fprintf (fp, ")%1.3lf", p->anc->support); 
+			else if (sumtParams.brlensDef == YES && showSupport == YES)
+				fprintf (fp, ")%1.3lf:%lf", p->anc->support, p->anc->length);
 			else
 				fprintf (fp, ")");
 			}
 		else
 			fprintf (fp, ")");
 		}
-
 }
 
 
 
 
 
-void WriteTree (PolyNode *p, FILE *fp)
+/* WriteRichConTree: Include rich information for each node in a consensus tree */
+void WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
 
 {
 
 	PolyNode		*q;
 
-	if (p->anc != NULL)
-		if (p->anc->left == p)
+	if (p->anc == NULL || p->anc->left == p)
 			fprintf (fp, "(");
 
 	for (q = p->left; q != NULL; q = q->sib)
 		{
 		if (q->anc->left != q)  /* Note that q->anc always exists (it is p) */
 			fprintf (fp, ",");
-		WriteTree (q, fp);
+		WriteRichConTree (q, fp, treeParts);
 		}
 	if (p->left == NULL)
 		{
-		fprintf (fp, "%d", p->index+1);
+        fprintf (fp, "%d", p->index+1);
+        PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
+        fprintf (fp, ":%lf", p->length);
 		}
 		
-	if (p->sib == NULL && p->anc != NULL)
+	if (p->sib == NULL)
 		{
-		fprintf (fp, ")");
+        if (p->anc != NULL)
+            {
+            fprintf (fp, ")");
+            PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
+            fprintf (fp, ":%lf", p->length);
+            }
+        else
+            fprintf (fp, ")");
 		}
 
 }
+

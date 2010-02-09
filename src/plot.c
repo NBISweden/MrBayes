@@ -66,358 +66,62 @@ int DoPlot (void)
 {
 
 
-	int			i, j, k, n, lineTerm, longestLineLength, tokenType, lineNum, lastTokenWasDash,
-				inPlotComment, allDigitLine, nNumbersOnThisLine, lastNonDigitLine,
-				numParamLines, numLinesToRead, numLinesRead, firstNumCols=0, nLines,
-				nHeaders, len, longestHeader, whichIsX, whichIsY, screenWidth, screenHeigth, numY[60],
-				numPlotted;
-	MrBFlt		tempD, minX, minY, maxX, maxY,
-				meanY[60], x, y, diff;
-	char		*s=NULL, *headerLine=NULL, temp[100];
-	FILE		*fp;
+	int			    i, n, nHeaders, burnin, len, longestHeader, whichIsX, whichIsY, numPlotted;
+	char		    *s=NULL, *headerLine=NULL, temp[100], **headerNames = NULL;
+    SumpFileInfo    fileInfo;
+    ParameterSample *parameterSamples;
 	
 #	if defined (MPI_ENABLED)
-	if (proc_id == 0)
-		{
+	if (proc_id != 0)
+		return NO_ERROR;
 #	endif
 
-	/* set file pointer to NULL */
-	fp = NULL;
+    /* initialize values */
+    headerNames = NULL;
+    nHeaders = 0;
+    parameterSamples = NULL;
 
-	/* tell user we are ready to go */
-	MrBayesPrint ("%s   Plotting parameters in file %s\n", spacer, plotParams.plotFileName);
+    /* tell user we are ready to go */
+	MrBayesPrint ("%s   Plotting parameters in file %s ...\n", spacer, plotParams.plotFileName);
 	
-	/* open binary file */
-	if ((fp = OpenBinaryFileR(plotParams.plotFileName)) == NULL)
-		goto errorExit;
+	/* examine plot file */
+	if (ExamineSumpFile (plotParams.plotFileName, &fileInfo, &headerNames, &nHeaders) == ERROR)
+		return ERROR;
 		
-	/* find out what type of line termination is used */
-	lineTerm = LineTermType (fp);
-	if (lineTerm == LINETERM_MAC)
-		MrBayesPrint ("%s   Macintosh line termination\n", spacer);
-	else if (lineTerm == LINETERM_DOS)
-		MrBayesPrint ("%s   DOS line termination\n", spacer);
-	else if (lineTerm == LINETERM_UNIX)
-		MrBayesPrint ("%s   UNIX line termination\n", spacer);
-	else
-		{
-		MrBayesPrint ("%s   Unknown line termination\n", spacer);
-		goto errorExit;
-		}
-		
-	/* find length of longest line */
-	longestLineLength = LongestLine (fp);
-	MrBayesPrint ("%s   Longest line length = %d\n", spacer, longestLineLength);
-	longestLineLength += 10;
-	
-	/* allocate a string long enough to hold a line */
-	if (memAllocs[ALLOC_SUMPSTRING] == YES)
-		{
-		MrBayesPrint ("%s   Plot string is already allocated\n", spacer);
-		goto errorExit;
-		}
-	s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
-	if (!s)
-		{
-		MrBayesPrint ("%s   Problem allocating string for reading plot file\n", spacer);
-		goto errorExit;
-		}
-	headerLine = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
-	if (!headerLine)
-		{
-		MrBayesPrint ("%s   Problem allocating headerLine for reading plot file\n", spacer);
-		goto errorExit;
-		}
-	headerNames = (char *)SafeMalloc((size_t) ((longestLineLength+40) * sizeof(char)));
-	if (!headerNames)
-		{
-		MrBayesPrint ("%s   Problem allocating headerNames for reading plot file\n", spacer);
-		goto errorExit;
-		}
-	for (i=0; i<longestLineLength+40; i++)
-		headerNames[i] = ' ';
-	headerNames[longestLineLength+40-1] = '\0';
-	memAllocs[ALLOC_SUMPSTRING] = YES;
-		
-	/* close binary file */
-	SafeFclose (&fp);
-	
-	/* open text file */
-	if ((fp = OpenTextFileR(plotParams.plotFileName)) == NULL)
-		goto errorExit;
-	
-	/* Check file for appropriate blocks. We want to find the last block
-	   in the file and start from there. */
-	inPlotComment = NO;
-	lineNum = lastNonDigitLine = numParamLines = 0;
-	while (fgets (s, longestLineLength, fp) != NULL)
-		{
-		plotTokenP = &s[0];
-		allDigitLine = YES;
-		lastTokenWasDash = NO;
-		nNumbersOnThisLine = 0;
-		do
-			{
-			GetSumpToken (&tokenType, &plotTokenP, plotToken);
-			/*printf ("%s (%d)\n", plotToken, tokenType);*/
-			if (IsSame("[", plotToken) == SAME)
-				inPlotComment = YES;
-			if (IsSame("]", plotToken) == SAME)
-				inPlotComment = NO;
-				
-			if (inPlotComment == NO)
-				{
-				if (tokenType == NUMBER)
-					{
-					sscanf (plotToken, "%lf", &tempD);
-					if (lastTokenWasDash == YES)
-						tempD *= -1.0;
-					nNumbersOnThisLine++;
-					lastTokenWasDash = NO;
-					}
-				else if (tokenType == DASH)
-					{
-					lastTokenWasDash = YES;
-					}
-				else if (tokenType != UNKNOWN_TOKEN_TYPE)
-					{
-					allDigitLine = NO;
-					lastTokenWasDash = NO;
-					}
-				
-				}
-				
-			} while (*plotToken);
-		lineNum++;
-		
-		if (allDigitLine == NO)
-			{
-			lastNonDigitLine = lineNum;
-			numParamLines = 0;
-			strcpy (headerLine, s);
-			}
-		else
-			{
-			if (nNumbersOnThisLine > 0)
-				numParamLines++;
-			}
-		
-		}
-		
-	/* Now, check some aspects of the .p file. */
-	if (inPlotComment == YES)
-		{
-		MrBayesPrint ("%s   Unterminated comment in file %s\n", spacer, plotParams.plotFileName);
-		goto errorExit;
-		}
-	if (numParamLines <= 0)
-		{
-		MrBayesPrint ("%s   No parameters were found in file %s\n", spacer, plotParams.plotFileName);
-		goto errorExit;
-		}
-	if (plotParams.plotBurnIn > numParamLines)
-		{
-		MrBayesPrint ("%s   No parameters are sampled as the burnin exceeds the number of lines in last block\n", spacer);
-		MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, numParamLines);
-		goto errorExit;
-		}
+    /* Calculate burn in */
+    burnin = fileInfo.firstParamLine - fileInfo.headerLine - 1;
 		
 	/* tell the user that everything is fine */
-	MrBayesPrint ("%s   Found %d parameter lines in file \"%s\"\n", spacer, numParamLines, plotParams.plotFileName);
-	if (plotParams.plotBurnIn > 0)
-		MrBayesPrint ("%s   Of the %d lines, %d of them will be summarized (starting at line %d)\n", spacer, numParamLines, numParamLines - plotParams.plotBurnIn, lastNonDigitLine + plotParams.plotBurnIn + 1);
+	MrBayesPrint ("%s   Found %d parameter lines in file \"%s\"\n", spacer, fileInfo.numRows + burnin, plotParams.plotFileName);
+	if (burnin > 0)
+		MrBayesPrint ("%s   Of the %d lines, %d of them will be summarized (starting at line %d)\n", spacer, fileInfo.numRows+burnin, fileInfo.numRows, fileInfo.firstParamLine);
 	else
-		MrBayesPrint ("%s   All %d lines will be summarized (starting at line %d)\n", spacer, numParamLines, lastNonDigitLine+1);
+		MrBayesPrint ("%s   All %d lines will be summarized (starting at line %d)\n", spacer, fileInfo.numRows, fileInfo.firstParamLine);
 	MrBayesPrint ("%s   (Only the last set of lines will be read, in case multiple\n", spacer);
 	MrBayesPrint ("%s   parameter blocks are present in the same file.)\n", spacer);
-	
-	/* Calculate and check the number of columns and rows for the file */
-	(void)fseek(fp, 0L, 0);	
-	for (lineNum=0; lineNum<lastNonDigitLine+plotParams.plotBurnIn; lineNum++)
-		fgets (s, longestLineLength, fp);
-	inPlotComment = NO;
-	nLines = 0;
-	numRows = numColumns = 0;
-	while (fgets (s, longestLineLength, fp) != NULL)
-		{
-		plotTokenP = &s[0];
-		allDigitLine = YES;
-		lastTokenWasDash = NO;
-		nNumbersOnThisLine = 0;
-		do
-			{
-			GetSumpToken (&tokenType, &plotTokenP, plotToken);
-			if (IsSame("[", plotToken) == SAME)
-				inPlotComment = YES;
-			if (IsSame("]", plotToken) == SAME)
-				inPlotComment = NO;
-			if (inPlotComment == NO)
-				{
-				if (tokenType == NUMBER)
-					{
-					nNumbersOnThisLine++;
-					lastTokenWasDash = NO;
-					}
-				else if (tokenType == DASH)
-					{
-					lastTokenWasDash = YES;
-					}
-				else if (tokenType != UNKNOWN_TOKEN_TYPE)
-					{
-					allDigitLine = NO;
-					lastTokenWasDash = NO;
-					}
-				}
-			} while (*plotToken);
-		lineNum++;
-		if (allDigitLine == NO)
-			{
-			MrBayesPrint ("%s   Found a line with non-digit characters (line %d)\n", spacer, lineNum);
-			goto errorExit;
-			}
-		else
-			{
-			if (nNumbersOnThisLine > 0)
-				{
-				nLines++;
-				if (nLines == 1)
-					firstNumCols = nNumbersOnThisLine;
-				else
-					{
-					if (nNumbersOnThisLine != firstNumCols)
-						{
-						MrBayesPrint ("%s   Number of lines is not even (%d in first line and %d in %d line)\n", spacer, firstNumCols, nNumbersOnThisLine, lineNum);
-						goto errorExit;
-						}
-					}
-				}
-			}
-		}
-	numRows = nLines;
-	numColumns = firstNumCols;
-	MrBayesPrint ("%s   %d rows and %d columns in each row\n", spacer, numRows, numColumns);
-	
+		
 	/* allocate space to hold parameter information */
-	if (numRows == 0 || numColumns == 0)
-		{
-		MrBayesPrint ("%s   The number of rows or columns is equal to zero\n", spacer);
-		goto errorExit;
-		}
-	if (memAllocs[ALLOC_SUMPINFO] == YES)
-		{
-		MrBayesPrint ("%s   Plot string is already allocated\n", spacer);
-		goto errorExit;
-		}
-	parameterValues = (MrBFlt *)SafeMalloc((size_t) (numRows * numColumns * sizeof(MrBFlt)));
-	if (!parameterValues)
-		{
-		MrBayesPrint ("%s   Problem allocating parameterValues\n", spacer);
-		goto errorExit;
-		}
-	memAllocs[ALLOC_SUMPINFO] = YES;
-	for (i=0; i<numRows*numColumns; i++)
-		parameterValues[i] = 0.0;
+	if (AllocateParameterSamples (&parameterSamples, 1, fileInfo.numRows, fileInfo.numColumns) == ERROR)
+        goto errorExit;
 
 	/* Now we read the file for real. First, rewind file pointer to beginning of file... */
-	(void)fseek(fp, 0L, 0);	
-	
-	/* ...and fast forward to beginning of last unburned parameter line. */
-	for (lineNum=0; lineNum<lastNonDigitLine+plotParams.plotBurnIn; lineNum++)
-		fgets (s, longestLineLength, fp);
-		
-	/* ...and parse file, line-by-line. We are only parsing lines that have digits that should be read. */
-	inPlotComment = NO;
-	numLinesToRead = numParamLines - plotParams.plotBurnIn;
-	numLinesRead = j = 0;
-	while (fgets (s, longestLineLength, fp) != NULL)
-		{
-		plotTokenP = &s[0];
-		allDigitLine = YES;
-		lastTokenWasDash = NO;
-		nNumbersOnThisLine = 0;
-		do
-			{
-			GetSumpToken (&tokenType, &plotTokenP, plotToken);
-			if (IsSame("[", plotToken) == SAME)
-				inPlotComment = YES;
-			if (IsSame("]", plotToken) == SAME)
-				inPlotComment = NO;
-			if (inPlotComment == NO)
-				{
-				if (tokenType == NUMBER)
-					{
-					/* read the information from this line */
-					if (j >= numRows * numColumns)
-						{
-						MrBayesPrint ("%s   Too many parameter values read in (%d)\n", spacer, j);
-						goto errorExit;
-						}
-					sscanf (plotToken, "%lf", &tempD);
-					if (lastTokenWasDash == YES)
-						tempD *= -1.0;
-					parameterValues[numLinesRead * numColumns + nNumbersOnThisLine] = tempD;
-					j++;
-					nNumbersOnThisLine++;
-					lastTokenWasDash = NO;
-					}
-				else if (tokenType == DASH)
-					{
-					lastTokenWasDash = YES;
-					}
-				else if (tokenType != UNKNOWN_TOKEN_TYPE)
-					{
-					/* we have a problem */
-					MrBayesPrint ("%s   Found a line with non-digit characters (line %d)\n", spacer, lineNum);
-					goto errorExit;
-					}
-				}
-			} while (*plotToken);
-		lineNum++;
-		if (nNumbersOnThisLine > 0)
-			numLinesRead++;
-		}
-	
-	/* tell user how many lines were successfully read */
-	MrBayesPrint ("%s   Successfully read %d lines from last parameter block\n", spacer, numLinesRead);
-	
-	/* Check that at least one parameter line was read in. */
-	if (numLinesRead <= 0)
-		{
-		MrBayesPrint ("%s   No parameters read in\n", spacer);
-		goto errorExit;
-		}
-				
-	/* separate header line into titles for each column */
-	if (GetHeaders (headerLine, &nHeaders) == ERROR)
-		goto errorExit;
-		
+    if (ReadParamSamples (plotParams.plotFileName, &fileInfo, parameterSamples, 0) == ERROR)
+        goto errorExit;
+					
 	/* get length of longest header */
 	longestHeader = 9; /* 9 is the length of the word "parameter" (for printing table) */
 	for (i=0; i<nHeaders; i++)
 		{
-		if (GetNameFromString (headerNames, temp, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting header names \n", spacer);
-			goto errorExit;
-			}
-		len = (int) strlen(temp);
+		len = (int) strlen(headerNames[i]);
 		if (len > longestHeader)
 			longestHeader = len;
 		}
 		
 	/* print x-y plot of parameter vs. generation */
-	screenWidth = 60; /* don't change this without changing numY and meanY, declared above */
-	screenHeigth = 15;
 	whichIsX = -1;
 	for (i=0; i<nHeaders; i++)
 		{
-		if (GetNameFromString (headerNames, temp, i+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting header names \n", spacer);
-			goto errorExit;
-			}
-		len = (int) strlen(temp);
-		if (IsSame (temp, "Gen") == SAME)
+		if (IsSame (headerNames[i], "Gen") == SAME)
 			whichIsX = i;
 		}		
 		
@@ -430,12 +134,8 @@ int DoPlot (void)
 	numPlotted = 0;
 	for (n=0; n<nHeaders; n++)
 		{
-		if (GetNameFromString (headerNames, temp, n+1) == ERROR)
-			{
-			MrBayesPrint ("%s   Error getting header names \n", spacer);
-			goto errorExit;
-			}
-		whichIsY = -1;
+		strcpy (temp, headerNames[n]);
+        whichIsY = -1;
 		if (!strcmp(plotParams.match, "Perfect"))
 			{
 			if (IsSame (temp, plotParams.parameter) == SAME)
@@ -452,94 +152,12 @@ int DoPlot (void)
 			}
 			
 		if (whichIsY >= 0 && whichIsX != whichIsY)
-			{			
-			minX = minY = 1000000000.0;
-			maxX = maxY = -1000000000.0;
-			for (i=0; i<numRows; i++)
-				{
-				x = parameterValues[i * numColumns + whichIsX];
-				y = parameterValues[i * numColumns + whichIsY];
-				if (x < minX)
-					minX = x;
-				if (y < minY)
-					minY = y;
-				if (x > maxX)
-					maxX = x;
-				if (y > maxY)
-					maxY = y;
-				}
-			for (i=0; i<screenWidth; i++)
-				{
-				numY[i] = 0;
-				meanY[i] = 0.0;
-				}
-			for (i=0; i<numRows; i++)
-				{
-				x = parameterValues[i * numColumns + whichIsX];
-				y = parameterValues[i * numColumns + whichIsY];
-				k = (int)(((x - minX) / (maxX - minX)) * screenWidth);
-				if (k >= screenWidth)
-					k = screenWidth - 1;
-				meanY[k] += y;
-				numY[k]++;
-				}
-			if (maxY - minY < 0.000001)
-				{
-				maxY = meanY[0]/numY[0] + (MrBFlt) 0.1;
-				minY = meanY[0]/numY[0] - (MrBFlt) 0.1;
-				} 
-			else
-				{
-				diff = maxY - minY;
-				maxY += diff * (MrBFlt) 0.025;
-				minY -= diff * (MrBFlt) 0.025;
-				}
-			MrBayesPrint ("\n");
-			MrBayesPrint ("%s   Rough plot of parameter %s \n", spacer, temp);
-				
-			MrBayesPrint ("\n   +");
-			for (i=0; i<screenWidth; i++)
-				MrBayesPrint ("-");
-			MrBayesPrint ("+ %1.2lf\n", maxY);
-			for (j=screenHeigth-1; j>=0; j--)
-				{
-				MrBayesPrint ("   |");
-				for (i=0; i<screenWidth; i++)
-					{
-					if (numY[i] > 0)
-						{
-						if (meanY[i] / numY[i] > (((maxY - minY)/screenHeigth)*j)+minY && meanY[i] / numY[i] <= (((maxY - minY)/screenHeigth)*(j+1))+minY)
-							MrBayesPrint ("*");
-						else
-							MrBayesPrint (" ");
-						}
-					else
-						{
-						MrBayesPrint (" ");
-						}
-					}
-				MrBayesPrint ("|\n");
-				}
-			MrBayesPrint ("   +");
-			for (i=0; i<screenWidth; i++)
-				{
-				if (i % (screenWidth/10) == 0 && i != 0)
-					MrBayesPrint ("+");
-				else
-					MrBayesPrint ("-");
-				}
-			MrBayesPrint ("+ %1.2lf\n", minY);
-			MrBayesPrint ("   ^");
-			for (i=0; i<screenWidth; i++)
-				MrBayesPrint (" ");
-			MrBayesPrint ("^\n");
-			MrBayesPrint ("   %1.0lf", minX);
-			for (i=0; i<screenWidth; i++)
-				MrBayesPrint (" ");
-			MrBayesPrint ("%1.0lf\n\n", maxX);
-			numPlotted++;
-			}
-				
+            {
+            MrBayesPrint ("\n%s   Rough trace plot of parameter %s:\n", spacer, headerNames[whichIsY]);
+            if (PrintPlot (parameterSamples[whichIsX].values[0], parameterSamples[whichIsY].values[0], fileInfo.numRows) == ERROR)
+                goto errorExit;
+            numPlotted++;
+            }
 		}
 		
 	if (numPlotted == 0)
@@ -547,53 +165,27 @@ int DoPlot (void)
 		MrBayesPrint ("%s   Did not find any parameters matching \"%s\" to plot\n", spacer, plotParams.parameter);
 		}
 			
-	/* free memory and file pointers */
-	if (memAllocs[ALLOC_SUMPSTRING] == YES)
-		{
-		free (s);
-		free (headerLine);
-		free (headerNames);
-		memAllocs[ALLOC_SUMPSTRING] = NO;
-		}
-	if (memAllocs[ALLOC_SUMPINFO] == YES)
-		{
-		free (parameterValues);
-		memAllocs[ALLOC_SUMPINFO] = NO;
-		}
-	SafeFclose (&fp);
+	/* free memory */
+	for (i=0; i<nHeaders; i++)
+        free (headerNames[i]);
+    free(headerNames);
+    FreeParameterSamples(parameterSamples);
+
 	expecting = Expecting(COMMAND);
-	
-#	if defined (MPI_ENABLED)
-		}
-#	endif
 
 	return (NO_ERROR);
 	
-	errorExit:
-		expecting = Expecting(COMMAND);
-		if (memAllocs[ALLOC_SUMPSTRING] == YES)
-			{
-			if (s)
-				free (s);
-			if (headerLine)
-				free (headerLine);
-			if (headerNames)
-				free (headerNames);
-			memAllocs[ALLOC_SUMPSTRING] = NO;
-			}
-		if (memAllocs[ALLOC_SUMPINFO] == YES)
-			{
-			free (parameterValues);
-			memAllocs[ALLOC_SUMPINFO] = NO;
-			}
-		SafeFclose (&fp);
-		strcpy (spacer, "");
-		strcpy (plotToken, "Plot");
-		i = 0;
-		if (FindValidCommand (plotToken, &i) == ERROR)
-			MrBayesPrint ("%s   Could not find plot\n", spacer);
-		return (ERROR);	
-	
+errorExit:
+
+	/* free memory */
+	for (i=0; i<nHeaders; i++)
+        free (headerNames[i]);
+    free(headerNames);
+    FreeParameterSamples(parameterSamples);
+
+    expecting = Expecting(COMMAND);
+
+    return (ERROR);
 }
 
 
@@ -605,6 +197,7 @@ int DoPlotParm (char *parmName, char *tkn)
 {
 
 	int			tempI;
+    MrBFlt      tempD;
 	char		tempStr[100];
 
 	if (defMatrix == NO)
@@ -641,6 +234,38 @@ int DoPlotParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+		/* set Relburnin (plotParams.relativeBurnin) ********************************************************/
+		else if (!strcmp(parmName, "Relburnin"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						plotParams.relativeBurnin = YES;
+					else
+						plotParams.relativeBurnin = NO;
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				if (plotParams.relativeBurnin == YES)
+					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
+				else
+					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				{
+				free (tempStr);
+				return (ERROR);
+				}
+			}
 		/* set Burnin (plotParams.plotBurnIn) *******************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
@@ -655,6 +280,36 @@ int DoPlotParm (char *parmName, char *tkn)
 				}
 			else
 				return (ERROR);
+			}
+		/* set Burninfrac (plotParams.plotBurnInFrac) ************************************************************/
+		else if (!strcmp(parmName, "Burninfrac"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%lf", &tempD);
+				if (tempD < 0.01)
+					{
+					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				if (tempD > 0.50)
+					{
+					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+                plotParams.plotBurnInFrac = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, plotParams.plotBurnInFrac);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				free(tempStr);
+				return (ERROR);
+				}
 			}
 		/* set Parameter (plotParams.parameter) *******************************************************/
 		else if (!strcmp(parmName, "Parameter"))

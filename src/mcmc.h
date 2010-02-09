@@ -77,4 +77,3 @@ int     Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 int     Move_UnrootedSlider (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 FILE	*OpenNewMBPrintFile (char *fileName);
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);
-void	SetBit (int i, safeLong *bits);

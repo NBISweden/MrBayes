@@ -32,7 +32,7 @@
  *
  */
 /* id-string for ident, do not edit: cvs will update this string */
-const char treeID[]="$Id: tree.c,v 3.33 2009/08/07 05:53:45 ronquist Exp $";
+const char treeID[]="$Id: tree.c,v 3.32 2009/02/03 15:11:31 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,12 +53,16 @@ const char treeID[]="$Id: tree.c,v 3.33 2009/08/07 05:53:45 ronquist Exp $";
 /* local prototypes */
 void    DatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths, int *index);
 void    DatedNodes (TreeNode *p, TreeNode **datedTips, int *index);
-void	InitTreeNode (TreeNode *p);
 void    MarkDatedSubtreeNodes (TreeNode *p);
 int     NConstrainedTips (TreeNode *p);
 int     NDatedTips (TreeNode *p);
 void	PrintNode (char **s, int *len, TreeNode *p, int isRooted);
+void    ResetPolyNode (PolyNode *p);
+void	ResetTreeNode (TreeNode *p);
 void    SetNodeDepths (Tree *t);
+
+/* local global variable */
+char    noLabel[] = "";
 
 
 /* AddToTreeList: Add tree at end of tree list */
@@ -105,7 +109,7 @@ PolyTree *AllocatePolyTree (int numTaxa)
 	if (!pt)
 		return (NULL);
 
-	pt->nNodes = 2*numTaxa;
+	pt->memNodes = 2*numTaxa;  
 	pt->nodes = (PolyNode *) calloc (2*numTaxa, sizeof(PolyNode));
 	pt->allDownPass = (PolyNode **) calloc (3*numTaxa, sizeof (PolyNode *));
 	pt->intDownPass = pt->allDownPass + 2*numTaxa;
@@ -117,17 +121,40 @@ PolyTree *AllocatePolyTree (int numTaxa)
 		return (NULL);
 		}
 
-	/* set index and memoryIndex as well as pointers */
-	for (i=0; i<pt->nNodes; i++)
+	/* initialize nodes and set index and memoryIndex */
+	for (i=0; i<2*numTaxa; i++)
 		{
-		pt->nodes[i].memoryIndex = i;
-		pt->nodes[i].index = i;
-		pt->nodes[i].left = NULL;
-		pt->nodes[i].anc = NULL;
-		pt->nodes[i].sib = NULL;
-		pt->nodes[i].length = 0.0;
+		ResetPolyNode(&pt->nodes[i]);
+        pt->nodes[i].memoryIndex = i;
+        pt->nodes[i].index = i;
 		}
-	
+
+    /* initialize tree properties */
+    pt->nNodes = pt->nIntNodes = 0;
+    pt->root = NULL;
+    pt->brlensDef = NO;
+    pt->isRooted = NO;
+    pt->isClock = NO;
+    pt->isCalibrated = NO;
+    pt->isRelaxed = NO;
+    pt->clockRate = 0.0;
+    strcpy(pt->name,"");
+
+    /* initialize bitsets */
+    pt->bitsets = NULL;
+    
+    /* initialize relaxed clock parameters */
+    pt->nESets = 0;
+    pt->nEvents = NULL;
+    pt->position = NULL;
+    pt->rateMult = NULL;
+    pt->eType = NULL;
+    pt->eSetName = NULL;
+
+    pt->nBSets = 0;
+    pt->branchRate = NULL;
+    pt->bSetName = NULL;
+
 	return (pt);
 }
 
@@ -135,38 +162,76 @@ PolyTree *AllocatePolyTree (int numTaxa)
 
 
 
-/* AllocatePolyTreePartitions: Allocate space for and sete partitions for polytomous tree */
+/* AllocatePolyTreeRelClockParams: Allocate space for relaxed clock parameters */
+int AllocatePolyTreeRelClockParams (PolyTree *pt, int nBSets, int nESets)
+{
+    int     i;
+
+    /* free previous clock params if any */
+    FreePolyTreeRelClockParams (pt);
+
+    /* set number of sets */
+    pt->nBSets = nBSets;
+    pt->nESets = nESets;
+
+    /* we do not allocate space for the actual names here; these will be NULL pointers */
+
+    /* take care of branch params */
+    if (pt->nBSets > 0)
+		{
+		pt->bSetName = (char **) calloc (pt->nBSets, sizeof (char *));
+        pt->branchRate = (MrBFlt **) calloc (pt->nBSets, sizeof (MrBFlt *));
+		for (i=0; i<pt->nBSets; i++)
+    		pt->branchRate[i] = (MrBFlt *) calloc (pt->memNodes, sizeof(MrBFlt));
+		}
+	
+    /* take care of breakpoint params */
+    if (pt->nESets > 0)
+		{
+		pt->eSetName = (char **) calloc (pt->nESets, sizeof(char *));
+        pt->eType = (int *) calloc (pt->nESets, sizeof(int));
+		pt->nEvents = (int **) calloc (pt->nESets, sizeof(int *));
+        pt->position = (MrBFlt ***) calloc (pt->nESets, sizeof(MrBFlt **));
+        pt->rateMult = (MrBFlt ***) calloc (pt->nESets, sizeof(MrBFlt **));
+		for (i=0; i<pt->nESets; i++)
+			{
+            pt->eType[i] = 0;
+    		pt->nEvents[i] = (int *) calloc (pt->memNodes, sizeof(int));
+            pt->position[i] = (MrBFlt **) calloc (pt->memNodes, sizeof(MrBFlt *));
+            pt->rateMult[i] = (MrBFlt **) calloc (pt->memNodes, sizeof(MrBFlt *));
+		    }
+        }
+
+    return (NO_ERROR);
+}
+
+
+
+
+
+/* AllocatePolyTreePartitions: Allocate space for and set partitions for polytomous tree */
 int AllocatePolyTreePartitions (PolyTree *pt)
 {
-	int			i, j, nLongsNeeded, numTaxa;
-	PolyNode	*pp;
+	int			i, nLongsNeeded, numTaxa;
 
-	numTaxa = pt->nNodes - pt->nIntNodes;
+    /* get some handy numbers */
+    numTaxa = pt->memNodes/2;
 	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
-	pt->bitsets = (safeLong *) realloc ((void *)pt->bitsets, 2*numLocalTaxa*nLongsNeeded*sizeof(safeLong));
+
+    /* allocate space */
+    pt->bitsets = (safeLong *) realloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(safeLong));
 	if (pt->bitsets == NULL)
 		return (ERROR);
+    for (i=0; i<pt->memNodes*nLongsNeeded; i++)
+        pt->bitsets[i] = 0;
 	
-	for (i=0; i<2*numTaxa; i++)
-		{
+    /* set node partition pointers */
+    for (i=0; i<pt->memNodes; i++)
 		pt->nodes[i].partition = pt->bitsets + i*nLongsNeeded;
-		for (j=0; j<nLongsNeeded; j++)
-			pt->nodes[i].partition[j] = 0;
-		}
 
-	/* set partitions */
-	for (i=0; i<pt->nNodes; i++)
-		{
-		pp = pt->allDownPass[i];
-		if (pp->left == NULL)
-			SetBit (pp->index, pp->partition);
-		if (pp->anc != NULL)
-			{
-			for (j=0; j<nLongsNeeded; j++)
-				pp->anc->partition[j] |= pp->partition[j];
-			}
-		}
-
+	/* clear and set partitions; if the tree is empty, nothing is set */
+	ResetPolyTreePartitions(pt);
+    
 	return (NO_ERROR);
 }
 
@@ -175,7 +240,7 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 
 
 /* AllocateTree: Allocate memory space for a tree (unrooted or rooted) */
-Tree *AllocateTree (int numTaxa, int isTreeRooted)
+Tree *AllocateTree (int numTaxa)
 {
 	int		i;
 	Tree	*t;
@@ -184,29 +249,108 @@ Tree *AllocateTree (int numTaxa, int isTreeRooted)
 	if (t == NULL)
 		return NULL;
 
-	/* just in case ... */
+	/* initialize basic tree properties */
+    t->memNodes = 2*numTaxa;
+	strcpy (t->name, "");
+    
+    t->isRooted = NO;
+    t->isClock = NO;
+    t->clockRate = 0.0;
+
+    t->checkConstraints = NO;
+    t->nConstraints = 0;
+    t->nLocks = 0;
+    t->isCalibrated = NO;
+    t->nNodes = t->nIntNodes = 0;
+    t->nRelParts = 0;
+    t->relParts = NULL;
+
+    /* initialize pointers */
 	t->bitsets = NULL;
 	t->flags = NULL;
+    t->constraints = NULL;
 
-	t->isRooted = isTreeRooted;
-	strcpy (t->name, "");
-	if (isTreeRooted == NO)
-		{
-		t->nIntNodes = numTaxa - 2;
-		t->nNodes = numTaxa + t->nIntNodes;
-		}
-	else
-		{
-		t->nIntNodes = numTaxa - 1;
-		t->nNodes = numTaxa + t->nIntNodes + 1;	/* add one for the root node */
-		}
-
-	if ((t->nodes = (TreeNode *) calloc (t->nNodes, sizeof (TreeNode))) == NULL)
+    /* allocate and initialize nodes and node arrays (enough for both rooted and unrooted trees) */
+    t->nNodes = 0;
+    t->nIntNodes = 0;
+    if ((t->nodes = (TreeNode *) calloc (2*numTaxa, sizeof (TreeNode))) == NULL)
 		{
 		free (t);
 		return NULL;
 		}
+	if ((t->allDownPass = (TreeNode **) calloc (3*numTaxa, sizeof (TreeNode *))) == NULL)
+		{
+		free (t->nodes);
+		free (t);
+		return NULL;
+		}
+	t->intDownPass = t->allDownPass + t->memNodes;
+	
+	/* initialize nodes and set index and memoryIndex */
+	for (i=0; i<t->memNodes; i++)
+		{
+		ResetTreeNode(&t->nodes[i]);
+		t->nodes[i].memoryIndex = i;
+		t->nodes[i].index = i;
+        }
 
+	return t;
+}
+
+
+
+
+
+/* AllocateFixedTree: Allocate memory space for a fixed unrooted or rooted tree */
+Tree *AllocateFixedTree (int numTaxa, int isRooted)
+{
+	int		i;
+	Tree	*t;
+	
+	t = (Tree *) calloc (1, sizeof (Tree));
+	if (t == NULL)
+		return NULL;
+
+	/* initialize basic tree properties */
+    if (isRooted == YES)
+        t->memNodes = 2*numTaxa;
+    else
+        t->memNodes = 2*numTaxa - 2;
+	strcpy (t->name, "");
+    
+    t->isRooted = isRooted;
+    t->isClock = NO;
+    t->clockRate = 0.0;
+
+    t->checkConstraints = NO;
+    t->nConstraints = 0;
+    t->nLocks = 0;
+    t->isCalibrated = NO;
+    t->nNodes = t->nIntNodes = 0;
+    t->nRelParts = 0;
+    t->relParts = NULL;
+
+    /* initialize pointers */
+	t->bitsets = NULL;
+	t->flags = NULL;
+    t->constraints = NULL;
+
+    /* allocate and initialize nodes and node arrays (enough for both rooted and unrooted trees) */
+    if (t->isRooted)
+        {
+        t->nNodes = 2*numTaxa;
+        t->nIntNodes = numTaxa - 1;
+        }
+    else
+        {
+        t->nNodes = 2*numTaxa - 2;
+        t->nIntNodes = numTaxa - 2;
+        }
+    if ((t->nodes = (TreeNode *) calloc (t->nNodes, sizeof (TreeNode))) == NULL)
+		{
+		free (t);
+		return NULL;
+		}
 	if ((t->allDownPass = (TreeNode **) calloc (t->nNodes + t->nIntNodes, sizeof (TreeNode *))) == NULL)
 		{
 		free (t->nodes);
@@ -215,16 +359,13 @@ Tree *AllocateTree (int numTaxa, int isTreeRooted)
 		}
 	t->intDownPass = t->allDownPass + t->nNodes;
 	
-	/* set memoryIndex */
-	for (i=0; i<t->nNodes; i++)
-		t->nodes[i].memoryIndex = i;
-
-	/* initialize nodes */
-	for (i=0; i<t->nNodes; i++)
+	/* initialize nodes and set index and memoryIndex */
+	for (i=0; i<t->memNodes; i++)
 		{
-		InitTreeNode(&t->nodes[i]);
+		ResetTreeNode(&t->nodes[i]);
+		t->nodes[i].memoryIndex = i;
 		t->nodes[i].index = i;
-		}
+        }
 
 	return t;
 }
@@ -241,13 +382,13 @@ int AllocateTreeFlags (Tree *t)
 	
 	nLongsNeeded = (numCurrentDivisions / nBitsInALong) + 1;
 
-	t->flags = (safeLong *) realloc ((void *)t->flags, 3*t->nNodes*nLongsNeeded*sizeof(safeLong));
+	t->flags = (safeLong *) realloc ((void *)t->flags, 3*t->memNodes*nLongsNeeded*sizeof(safeLong));
 	if (t->flags == NULL)
 		return (ERROR);
-	for (i=0; i<3*t->nNodes*nLongsNeeded; i++)
+	for (i=0; i<3*t->memNodes*nLongsNeeded; i++)
 		t->flags[i] = 0;
 	
-	for (i=0; i<t->nNodes; i++)
+	for (i=0; i<t->memNodes; i++)
 		{
 		p = &t->nodes[i];
 		p->clSpace = t->flags + 3*i*nLongsNeeded;
@@ -265,48 +406,35 @@ int AllocateTreeFlags (Tree *t)
 /* AllocateTreePartitions: Allocate space for and set partitions for tree */
 int AllocateTreePartitions (Tree *t)
 {
-	int			i, j, nLongsNeeded, numTaxa;
+	int			i, nLongsNeeded, numTaxa;
 	TreeNode	*p;
 	
+    /* get some handy numbers */
 	if (t->isRooted == YES)
 		numTaxa = t->nNodes - t->nIntNodes - 1;
 	else
 		numTaxa = t->nNodes - t->nIntNodes;
-	
 	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
 
-	if (t->bitsets != NULL)
-		return (NO_ERROR);
-	t->bitsets = (safeLong *) calloc (t->nNodes*nLongsNeeded, sizeof(safeLong));
-	if (t->bitsets == NULL)
+	/* reallocate space */
+    t->bitsets = (safeLong *) realloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(safeLong)));
+    if (!t->bitsets)
 		return (ERROR);
 	
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
+    /* clear bit fields */
+    for (i=0; i<t->nNodes*nLongsNeeded; i++)
+		t->bitsets[0] = 0;
+        
+    /* set node pointers to bit fields */
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
 		p->partition = t->bitsets + i*nLongsNeeded;
-		for (j=0; j<nLongsNeeded; j++)
-			p->partition[j] = 0;
 		}
 
 	/* set partition specifiers for terminals */
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		if (p->left == NULL || p->right == NULL)
-			SetBit(p->index, p->partition);
-		if (p->anc == NULL && t->isRooted == NO)
-			SetBit(p->index, p->partition);
-		}
-
-	/* set partition specifiers for interior nodes */
-	for (i=0; i<t->nIntNodes; i++)
-		{
-		p = t->intDownPass[i];
-		for (j=0; j<nLongsNeeded; j++)
-			p->partition[j] = p->left->partition[j] | p->right->partition[j];
-		}
-
+	ResetTreePartitions(t);
+    
 	return (NO_ERROR);
 }
 
@@ -510,11 +638,11 @@ int AreTreesSame (Tree *t1, Tree *t2)
 |      included taxa.
 |
 ----------------------------------------------------------------*/
-int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
+int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 
 {
 
-	int				i, j, k, k1, nLongsNeeded, nextNode, nextActiveConstraint;
+	int				i, k, constraintId, nLongsNeeded, nextNode;
 	safeLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
     char            constrName[100];
@@ -581,7 +709,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
 		{
 		pp = pt->allDownPass[i];
 		if (pp->index < numLocalTaxa)
-			GetNameFromString (localTaxonNames, pp->label, pp->index + 1);
+			strcpy (pp->label, localTaxonNames[pp->index]);
 		}
 
 	/* resolve the bush according to constraints */
@@ -592,64 +720,33 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
 	   approximately this is to use sequential addition, with probabilities in each step determined
 	   by the parsimony or compatibility score of the different possibilities. */ 
 	nextNode = numLocalTaxa + 1;
-	nextActiveConstraint = 0;
-	for (i=0; i<numDefinedConstraints; i++)
+	for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
 		{
-		if (t->constraints[i] == NO)
+		if (t->constraints[constraintId] == NO)
 			continue;
 
-		if (GetNameFromString(constraintNames, constrName, i+1)==ERROR)
-            return (ERROR);
-
         /* initialize bits in partition to add */
-		for (j=0; j<nLongsNeeded; j++)
-			constraintPartition[j] = 0;
-		
-		/* set bits in partition to add */
-		for (j=k=k1=0; j<numTaxa; j++)
-			{
-			if (taxaInfo[j].isDeleted == YES)
-				continue;
-			if (taxaInfo[j].constraints[i] == 1)
-				{
-				SetBit(k,constraintPartition);
-				k1++;
-				}
-			k++;
-			}
-		
+		for (i=0; i<nLongsNeeded; i++)
+			constraintPartition[i] = definedConstraint[constraintId][i];
+				
 		/* make sure outgroup is outside constrained partition if the tree is unrooted */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
-            {
 			FlipBits(constraintPartition, nLongsNeeded, mask);
-            k1 = numLocalTaxa - k1;
-            }
 
 		/* check that partition should be included */
-        if (k1 == 1 || (k1 == numLocalTaxa && t->isRooted == NO))
+        k = NumBits(constraintPartition, numLocalTaxa);
+        if (k == 1 || k == numLocalTaxa)
 			{
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a tip or the whole tree and will be disregarded\n", spacer, constrName);
 			t->constraints[i] = NO;
-			nextActiveConstraint++;	/* do not use this index */
 			continue;
-            }
-        else if ((k1 == numLocalTaxa && t->isRooted == YES) ||
-                 (k1 == numLocalTaxa-1 && t->isRooted == NO))
-            {
-    		pt->root->isLocked = YES;
-    		pt->root->lockID = nextActiveConstraint;
-            nextActiveConstraint++;
-  		    if (t->isRooted == YES && constraintCalibration[nextActiveConstraint].prior != unconstrained)
-			    MrBayesPrint ("%s   WARNING: Calibration of root constraint '%s' ignored. Use 'prset treeagepr' instead.\n", spacer, constrName);
-            continue;
             }
 
 		/* find first included terminal */
-		for (k=0; !IsBitSet(k,constraintPartition); k++)
+		k = FirstTaxonInPartition (constraintPartition, nLongsNeeded);
+		for (i=0; pt->nodes[i].index != k; i++)
 			;
-		for (j=0; pt->nodes[j].index != k; j++)
-			;
-		pp = &pt->nodes[j];
+		pp = &pt->nodes[i];
 
 		/* go down until node is not included in constraint */
 		do {
@@ -658,12 +755,12 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
 		} while (IsPartNested(pp->partition, constraintPartition, nLongsNeeded));	
 
 		/* check that the node has not yet been included */
-		for (j=0; j<nLongsNeeded; j++)
+		for (i=0; i<nLongsNeeded; i++)
 			{
-			if (qq->partition[j] != constraintPartition[j])
+			if (qq->partition[i] != constraintPartition[i])
 				break;
 			}
-		if (j==nLongsNeeded)
+		if (i==nLongsNeeded)
 			{
 			MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint and will be ignored\n", spacer, constrName);
 			t->constraints[i] = NO;
@@ -674,12 +771,11 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
 		tt = &pt->nodes[nextNode++];
 		tt->anc = pp;
 		tt->isLocked = YES;
-		tt->lockID = nextActiveConstraint;
-		for (j=0; j<nLongsNeeded; j++)
-			tt->partition[j] = constraintPartition[j];
+		tt->lockID = constraintId;
+		for (i=0; i<nLongsNeeded; i++)
+			tt->partition[i] = constraintPartition[i];
 		pt->nIntNodes++;
 		pt->nNodes++;
-		nextActiveConstraint++;
 
 		/* sort descendant nodes in two connected groups: included and excluded */
 		/* if there is a descendant that overlaps (incompatible) then return error */
@@ -717,7 +813,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char *localTaxonNames)
 	/* relabel interior nodes */
 	GetPolyDownPass(pt);
 	for (i=0; i<pt->nIntNodes; i++)
-		pt->intDownPass[i]->index = i + numTaxa;
+		pt->intDownPass[i]->index = i + numLocalTaxa;
 
 	/* exit */
 	free (constraintPartition);
@@ -882,10 +978,9 @@ int CheckConstraints (Tree *t)
 
 {
 
-	int				a, b, i, j, k, nLongsNeeded;
+	int				a, i, j, nLongsNeeded;
 	safeLong		*constraintPartition, *mask;
 	TreeNode		*p=NULL;
-    char            tempName[100];
 	   	
 	if (t->checkConstraints == NO)
 		return (NO_ERROR);
@@ -909,23 +1004,14 @@ int CheckConstraints (Tree *t)
 		return (ERROR);
 		}
 
-	for (a=b=0; a<numDefinedConstraints; a++)
+	for (a=0; a<numDefinedConstraints; a++)
 		{
-		if (t->constraints[a] == NO)
+		if (modelParams[t->relParts[0]].activeConstraints[a] == NO)
 			continue;
 
-		/* set bits in partition to add */
+		/* set bits in partition to check */
 		for (j=0; j<nLongsNeeded; j++)
-			constraintPartition[j] = 0;
-
-		for (j=k=0; j<numTaxa; j++)
-			{
-			if (taxaInfo[j].isDeleted == YES)
-				continue;
-			if (taxaInfo[j].constraints[a] == 1)
-				SetBit(k,constraintPartition);
-			k++;
-			}
+			constraintPartition[j] = definedConstraint[a][j];
 
 		/* make sure outgroup is outside constrained partition if unrooted tree */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
@@ -934,7 +1020,7 @@ int CheckConstraints (Tree *t)
 		/* find the locked node */
 		for (i=j=0; i<t->nNodes; i++)
 			{
-			if (t->allDownPass[i]->isLocked == YES && t->allDownPass[i]->lockID == b)
+			if (t->allDownPass[i]->isLocked == YES && t->allDownPass[i]->lockID == a)
 				{
 				p = t->allDownPass[i];
 				j++;
@@ -943,8 +1029,7 @@ int CheckConstraints (Tree *t)
 	
 		if (j != 1)
 			{
-			GetNameFromString(constraintNames,tempName,a+1);
-            MrBayesPrint ("%s   Tree has %d locks with id %d identifying constraint '%s'\n", spacer, j, b, tempName);
+            MrBayesPrint ("%s   Tree has %d locks with id %d identifying constraint '%s'\n", spacer, j, a, constraintNames[a]);
 			free (constraintPartition);
 			FreeTreePartitions(t);
             return (ERROR);
@@ -955,14 +1040,12 @@ int CheckConstraints (Tree *t)
 			{
 			if (p->partition[i] != constraintPartition[i]) 
 				{
-				MrBayesPrint ("%s   Lock %d is set for the wrong node [this is a bug]\n", spacer, b);
+				MrBayesPrint ("%s   Lock %d is set for the wrong node [this is a bug]\n", spacer, a);
 				free (constraintPartition);
 				FreeTreePartitions(t);
                 return (ERROR);
 				}
 			}
-
-		b++;	/* increment active constraint index */
 		}
 	
 	FreeTreePartitions (t);
@@ -982,10 +1065,9 @@ int CheckSetConstraints (Tree *t)
 
 {
 
-	int				a, b, i, j, k, nTaxa, nLongsNeeded, foundIt, nextActiveConstraint;
+	int				a, i, j, nTaxa, nLongsNeeded, foundIt;
 	safeLong		*constraintPartition, *mask;
 	TreeNode		*p;
-    char            tempName[100];
 	   	
     if (t->checkConstraints == NO)
 	return (ERROR);
@@ -1024,23 +1106,14 @@ int CheckSetConstraints (Tree *t)
 	for (i=0; i<numLocalTaxa; i++)
 		SetBit (i, mask);
 	
-	nextActiveConstraint = 0;
-	for (a=b=0; a<numDefinedConstraints; a++)
+	for (a=0; a<numDefinedConstraints; a++)
 		{
 		if (modelParams[t->relParts[0]].activeConstraints[a] == NO)
 			continue;
 
 		/* set bits in partition to add */
 		for (j=0; j<nLongsNeeded; j++)
-			constraintPartition[j] = 0;
-		for (j=k=0; j<numTaxa; j++)
-			{
-			if (taxaInfo[j].isDeleted == YES)
-				continue;
-			if (taxaInfo[j].constraints[a] == 1)
-				SetBit(k, constraintPartition);
-			k++;
-			}
+			constraintPartition[j] = definedConstraint[a][j];
 
 		/* make sure outgroup is outside constrained partition (marked 0) */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
@@ -1061,21 +1134,20 @@ int CheckSetConstraints (Tree *t)
 				{
 				foundIt = YES;
                 p->isLocked = YES;
-				p->lockID = b;
-				if (t->isCalibrated == YES)
+				p->lockID = a;
+				if (nodeCalibration[a].prior != unconstrained)
 					{
 					p->isDated = YES;
-					p->calibration = &constraintCalibration[b];
+					p->calibration = &nodeCalibration[a];
 					}
-				b++;
+                t->nLocks++;
 				break;
 				}				
 			}
 	
 		if (foundIt == NO)
 			{
-			GetNameFromString(constraintNames,tempName,a+1);
-            MrBayesPrint ("%s   Tree breaks constraint '%s'\n", spacer, tempName);
+            MrBayesPrint ("%s   Tree breaks constraint '%s'\n", spacer, constraintNames[a]);
 			FreeTreePartitions (t);
 			free (constraintPartition);
 			return (ERROR);
@@ -1087,6 +1159,7 @@ int CheckSetConstraints (Tree *t)
 	free (constraintPartition);
 	return (NO_ERROR);
 }
+
 
 
 
@@ -1114,9 +1187,9 @@ void ColorClusters (TreeNode *p, int *index)
 
 
 
+/* CopyPolyNodes: Copies everything except pointers and memoryIndex */
 void CopyPolyNodes (PolyNode *p, PolyNode *q)
 {
-	/* copies everything except pointers and memoryIndex */
 	p->index                  = q->index; 
 	p->mark                   = q->mark;
 	p->length                 = q->length;
@@ -1220,11 +1293,12 @@ void CopySubtreeToTree (Tree *subtree, Tree *t)
 |
 -----------------------------------------------------------------*/
 int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
-
 {
-
-	int			i, j;
+	int			i, j, k;
 	PolyNode	*p, *q;
+
+    /* check we have enough memory */
+    assert (to->memNodes >= from->nNodes);
 
 	/* copy nodes */
 	for (i=0; i<from->nNodes; i++)
@@ -1236,7 +1310,10 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 		if (p->anc != NULL)
 			q->anc = to->nodes + p->anc->memoryIndex;
 		else
+            {
 			q->anc = NULL;
+            to->root = q;
+            }
 
 		if (p->left != NULL)
 			q->left = to->nodes + p->left->memoryIndex;
@@ -1248,102 +1325,65 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 		else
 			q->sib = NULL;
 
-		CopyPolyNodes (q, p);
+		/* Copy everything else except memoryIndex */
+        CopyPolyNodes (q, p);
 		}
 
-	for (i=0; i<from->nIntNodes; i++)
-		{
-		to->intDownPass[i] = to->nodes + from->intDownPass[i]->memoryIndex;
-		}
-	for (i=0; i<from->nNodes; i++)
-		{
-		to->allDownPass[i] = to->nodes + from->allDownPass[i]->memoryIndex;
-		}
-	
-	to->nNodes = from->nNodes;
+	/* fill node arrays */
+    GetPolyDownPass (to);
+
+	/* copy tree properties */
+    to->nNodes = from->nNodes;
 	to->nIntNodes = from->nIntNodes;
-
-	to->root = to->nodes + from->root->memoryIndex;
+    to->isRooted = from->isRooted;
+    to->isClock = from->isClock;
+    to->isRelaxed = from->isRelaxed;
+    to->clockRate = from->clockRate;
 	strcpy (to->name, from->name);
 
-	if (from->bitsets)
+	/* copy partitions */
+    if (from->bitsets)
 		{
-		if (to->bitsets)
-			{
-			FreePolyTreePartitions (to);
-			AllocatePolyTreePartitions (to);
-			}
+		if (!to->bitsets)
+            AllocatePolyTreePartitions(to);
+        else
+            ResetPolyTreePartitions(to);
 		}
 
-	if (to->nBSets > 0)
+	/* copy relaxed clock parameters */
+    FreePolyTreeRelClockParams (to);
+	
+    if (from->nBSets + from->nESets > 0)
+        AllocatePolyTreeRelClockParams (to, from->nBSets, from->nESets);
+
+	for (i=0; i<to->nBSets; i++)
 		{
-		for (i=0; i<to->nBSets; i++)
-			free (to->bSetName[i]);
-		free (to->bSetName);
-		free (to->branchRate);
-		to->branchRate = NULL;
-		to->bSetName = NULL;
-		to->nBSets = 0;
+		to->bSetName[i] = (char *) calloc (strlen(from->bSetName[i])+2, sizeof(char));
+		strcpy (to->bSetName[i], from->bSetName[i]);
+        for (j=0; j<from->nNodes; j++)
+            to->branchRate[i][j] = from->branchRate[i][j];
 		}
-	if (to->nESets > 0)
+	
+	for (i=0; i<to->nESets; i++)
 		{
-		for (i=0; i<to->nESets; i++)
-			free (to->eSetName[i]);
-		to->eSetName = NULL;
-		for (i=0; i<to->nESets*2*numTaxa; i++)
-			{
-			free(to->position[i]);
-			free(to->rateMult[i]);
-			}
-		free(to->position);
-		to->position = NULL;
-		free(to->rateMult);
-		to->rateMult = NULL;
-		free (to->nEvents);
-		to->nEvents = NULL;
-		to->nESets = 0;
-		}
-	if (from->nBSets > 0)
-		{
-		to->nBSets = from->nBSets;
-		to->bSetName = (char **) calloc (to->nBSets, sizeof (char *));
-		for (i=0; i<to->nBSets; i++)
-			{
-			to->bSetName[i] = (char *) calloc (strlen(from->bSetName[i])+2, sizeof(char));
-			strcpy (to->bSetName[i], from->bSetName[i]);
-			}
-		to->branchRate = (MrBFlt *) calloc (2*numTaxa*to->nBSets, sizeof(MrBFlt));
-		for (i=0; i<2*numTaxa*to->nBSets; i++)
-			to->branchRate[i] = from->branchRate[i];		
-		}
-	if (from->nESets > 0)
-		{
-		to->nESets = from->nESets;
-		to->eSetName = (char **) calloc (to->nESets, sizeof (char *));
-		for (i=0; i<to->nESets; i++)
-			{
-			to->eSetName[i] = (char *) calloc (strlen(from->eSetName[i])+2, sizeof(char));
-			strcpy (to->eSetName[i], from->eSetName[i]);
-			}
-		to->nEvents = (int *) calloc (2*numTaxa*to->nESets, sizeof(int));
-		for (i=0; i<2*numTaxa*to->nESets; i++)
-			to->nEvents[i] = from->nEvents[i];
-		to->position = (MrBFlt **) calloc (2*numTaxa*to->nESets, sizeof(MrBFlt));
-		to->rateMult = (MrBFlt **) calloc (2*numTaxa*to->nESets, sizeof(MrBFlt));
-		for (i=0; i<2*numTaxa*to->nESets; i++)
-			{
-			if (to->nEvents[i] > 0)
-				{
-				to->position[i] = (MrBFlt *) calloc (to->nEvents[i], sizeof(MrBFlt));
-				to->rateMult[i] = (MrBFlt *) calloc (from->nEvents[i], sizeof(MrBFlt));
-				for (j=0; j<to->nEvents[i]; j++)
-					{
-					to->position[i][j] = from->position[i][j];
-					to->rateMult[i][j] = from->rateMult[i][j];
-					}
-				}
-			}
-		}
+		to->eSetName[i] = (char *) calloc (strlen(from->eSetName[i])+2, sizeof(char));
+		strcpy (to->eSetName[i], from->eSetName[i]);
+        to->eType[i] = from->eType[i];
+        for (j=0; j<from->nNodes; j++)
+            {
+            to->nEvents[i][j] = from->nEvents[i][j];
+            if (to->nEvents[i][j] > 0)
+                {
+                to->position[i][j] = (MrBFlt *) calloc (to->nEvents[i][j], sizeof (MrBFlt));
+                to->rateMult[i][j] = (MrBFlt *) calloc (to->nEvents[i][j], sizeof (MrBFlt));
+                for (k=0; k<to->nEvents[i][j]; k++)
+                    {
+                    to->position[i][j][k] = from->position[i][j][k];
+                    to->rateMult[i][j][k] = from->rateMult[i][j][k];
+                    }
+                }
+            }
+        }
 	
 	return (NO_ERROR);
 
@@ -1356,56 +1396,85 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 /*-----------------------------------------------------------------
 |
 |	CopyToTreeFromPolyTree: copies second tree (polytomous) to first
-|		tree (used to initialize constrained starting trees)
-|		An unrooted tree will be rooted on outgroup
-|		A rooted tree will be randomly rooted on a node below all
-|			defined constraints
+|		tree (used to initialize constrained starting trees, e.g.).
+|		An unrooted source tree will be rooted on outgroup
+|		An unrooted source tree that needs to be copied to
+|       a rooted target tree will be randomly rooted on a node below
+|       all defined constraints. The to tree needs to be allocated
+|       enough space first to hold the resulting tree.
 |
 -----------------------------------------------------------------*/
 int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 
 {
 
-	int			i;
+	int			i, j, nNodesNeeded;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
 
-	if (to->isRooted == YES)
-		to->nNodes    = from->nNodes + 1;
-	else
-		to->nNodes    = from->nNodes;
-	to->nIntNodes = from->nIntNodes;
 
-	if (to->isRooted == NO && from->root->left->sib->sib == NULL)
+    /* refuse to arbitrarily root an input tree */
+    assert (!(from->isRooted == NO && to->isRooted == YES));
+    if (from->isRooted = NO && to->isRooted == YES)
+        return (ERROR);
+
+    /* calculate space needed */
+    if (from->isRooted == YES && to->isRooted == YES)
+		nNodesNeeded    = from->nNodes + 1;
+	else if (from->isRooted = YES && to->isRooted == NO)
+        nNodesNeeded    = from->nNodes;
+    else /* if (from->isRooted = NO && to->isRooted == NO) */
+		nNodesNeeded    = from->nNodes;
+
+    /* make sure assumptions are in order */
+    assert (to->memNodes >= nNodesNeeded);
+    assert (localOutGroup >= 0 && localOutGroup < numLocalTaxa);
+    assert (numLocalTaxa == from->nNodes - from->nIntNodes);
+    assert (!(from->isRooted == YES && from->nNodes != 2*from->nIntNodes + 1));
+    assert (!(from->isRooted == NO  && from->nNodes != 2*from->nIntNodes + 2));
+    
+    /* make sure indices are set correctly for from nodes */
+    for (i=0; i<from->nNodes; i++)
+        {
+        for (j=0; j<from->nNodes; j++)
+            {
+            p = from->allDownPass[j];
+            if (p->index == i)
+                break;
+            }
+        assert (j != from->nNodes);
+        assert (!(p->left == NULL && p->index >= numLocalTaxa));
+        if (j == from->nNodes)
+            return (ERROR);
+        }
+                
+	/* deal with root */
+    if (to->isRooted == NO && from->isRooted == YES)
         Deroot(from);
 
-    /* first deal with root */
-	if (to->isRooted == NO && MovePolyCalculationRoot (from, localOutGroup) == ERROR)
+    /* make sure calculation root is set correctly */
+    if (to->isRooted == NO && MovePolyCalculationRoot (from, localOutGroup) == ERROR)
         return ERROR;
-
-	/* sort to nodes after index */
-	for (i=0; i<to->nNodes; i++)
-		to->allDownPass[to->nodes[i].index] = &to->nodes[i];
 
     /* copy nodes */
 	for (i=0; i<from->nNodes; i++)
 		{
 		/* copy pointers */
-		p  = from->nodes + i;
-		q  = to->allDownPass[p->index];
+		p  = from->allDownPass[i];
+		q  = to->nodes + p->index;
 
 		if (p->anc != NULL)
-			q->anc = to->allDownPass[ p->anc->index];
+			q->anc = to->nodes + p->anc->index;
 		else
 			q->anc = NULL;
 
 		if (p->left != NULL)	
-			q->left = to->allDownPass[p->left->index];
+			q->left = to->nodes + p->left->index;
 		else
 			q->left = NULL;
 
 		if (p->left != NULL)
-			q->right = to->allDownPass[p->left->sib->index];
+			q->right = to->nodes + p->left->sib->index;
 		else
 			q->right = NULL;
 
@@ -1415,14 +1484,18 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 		q->calibration			  = p->calibration;
 		q->age					  = p->age;
 		q->length                 = p->length;
-		strcpy(q->label, p->label);
+        q->index                  = p->index;
+        if (q->index < numLocalTaxa)
+            q->label = localTaxonNames[q->index];
+        else
+            q->label = noLabel;
 		}
 
 	/* fix root */
 	if (to->isRooted == NO)
 		{
 		p = from->root;
-		q = to->allDownPass[p->index];
+		q = to->nodes + p->index;
 		q->anc = to->root = to->allDownPass[p->left->sib->sib->index];
 		q->length = to->root->length;
 		to->root->length = 0.0;
@@ -1432,9 +1505,10 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 	else
 		{
 		p = from->root;
-		q = to->allDownPass[p->index];
-		q1 = to->allDownPass[from->nNodes];      /* get the 'extra' root node that polytomous trees do not use */
+		q = to->nodes + p->index;
+		q1 = to->nodes + from->nNodes;      /* get the 'extra' root node that polytomous trees do not use */
 		q->anc = q1;
+        q1->index = from->nNodes;
 		q1->left = q;
 		q1->right = q1->anc = NULL;
 		q1->isLocked = NO;
@@ -1448,13 +1522,15 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 	/* get downpass */
 	GetDownPass (to);
 	
-    /* reset interior indices because they will be weird in the polytomous tree */
-	for (i=0; i<to->nIntNodes; i++)
-		to->intDownPass[i]->index = i + numLocalTaxa;
-
 	/* set node depths */
     if (to->isRooted == YES)
 	SetNodeDepths(to);
+
+    /* set partitions */
+    if (to->bitsets)
+        ResetTreePartitions(to);
+
+    /* relaxed clock parameters are not stored in binary trees but in separate parameters */
 
     return (NO_ERROR);		
 }
@@ -1476,22 +1552,18 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 	int			i;
 	TreeNode	*p, *q;
 
-	/* sort to nodes after index, since we rely on index for identity of node */
-	for (i=0; i<to->nNodes; i++)
-		{
-		p = to->nodes + i;
-		to->allDownPass[p->index] = p;
-		}
-
-	/* copy nodes */
+	/* check that there is enough memory */
+    assert (to->memNodes >= from->nNodes);
+    
+    /* copy nodes (use index of p as memoryIndex for q) */
 	for (i=0; i<from->nNodes; i++)
 		{
 		/* copy pointers */
 		p  = from->nodes + i;
-		q  = to->allDownPass[p->index];
+		q  = to->nodes + p->index;
 
 		if (p->anc != NULL)
-			q->anc = to->allDownPass[p->anc->index];
+			q->anc = to->nodes + p->anc->index;
 		else
 			{
 			q->anc = NULL;
@@ -1499,24 +1571,44 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 			}
 
 		if (p->left != NULL)
-			q->left = to->allDownPass[p->left->index];
+			q->left = to->nodes + p->left->index;
 		else
 			q->left = NULL;
 
 		if (p->right != NULL)
- 			q->right = to->allDownPass[p->right->index];
+ 			q->right = to->nodes + p->right->index;
 		else
 			q->right = NULL;
 
 		CopyTreeNodes (q, p);
 		}
 
-	GetDownPass(to);
+	/* create new node arrays */
+    to->nNodes = from->nNodes;
+	to->nIntNodes = from->nIntNodes;
+    GetDownPass(to);
 
-	to->clockRate = from->clockRate;
+	/* copy tree properties (these should be constant most of them) */
 	strcpy (to->name, from->name);
+    to->isRooted = from->isRooted;
+    to->isClock = from->isClock;
+    to->clockRate = from->clockRate;
+    to->isCalibrated = from->isCalibrated;
+    to->checkConstraints = from->checkConstraints;
+    to->nConstraints = from->nConstraints;
+    to->constraints = from->constraints;
+    to->nLocks = from->nLocks;
+    to->nRelParts = from->nRelParts;
+    to->relParts = from->relParts;
 
-	/* rest of tree info is constant and need not be copied */
+	/* copy partitions */
+    if (from->bitsets)
+		{
+		if (!to->bitsets)
+            AllocateTreePartitions(to);
+        else
+            ResetTreePartitions(to);
+		}
 
 	return (NO_ERROR);
 
@@ -1551,9 +1643,9 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q)
 	p->age					  = q->age;
 	p->isLocked				  = q->isLocked;
 	p->lockID				  = q->lockID;
-	strcpy (p->label, q->label);
 	p->d					  = q->d;
 	p->partition			  = q->partition;
+    p->label                  = q->label;
 }
 
 
@@ -1756,26 +1848,14 @@ void EraseTreeList (TreeList *treeList)
 
 /* FreePolyTree: Free memory space for a polytomous tree (unrooted or rooted) */
 void FreePolyTree (PolyTree *pt)
-{
-    int		i;
-	
+{	
 	if (pt != NULL)
 		{
-		free (pt->nodes);
+        FreePolyTreePartitions(pt);
+        FreePolyTreeRelClockParams(pt);
 		free (pt->allDownPass);
-		free (pt->bitsets);
-		free (pt->nEvents);
-		for (i=0; i<pt->nESets; i++)
-			free (pt->eSetName[i]);
-		for (i=0; i<pt->nESets*2*numTaxa; i++)
-			{
-			free (pt->position[i]);
-			free (pt->rateMult[i]);
-			}
-		for (i=0; i<pt->nBSets; i++)
-			free (pt->bSetName[i]);
-		free (pt->branchRate);
-		free (pt);
+		free (pt->nodes);
+        free (pt);
 		}
 }
 
@@ -1786,11 +1866,61 @@ void FreePolyTree (PolyTree *pt)
 /* FreePolyTreePartitions: Free memory space for polytomous tree partitions */
 void FreePolyTreePartitions (PolyTree *pt)
 {
+    int i;
 	if (pt != NULL && pt->bitsets != NULL)
 		{
+        for (i=0; i<pt->memNodes; i++)
+            pt->nodes[i].partition = NULL;
 		free (pt->bitsets);
 		pt->bitsets = NULL;
 		}
+}
+
+
+
+
+/* FreePolyTreeRelClockParams: Free relaxed clock parameters of polytree */
+void FreePolyTreeRelClockParams (PolyTree *pt)
+{
+    int i, j;
+
+    /* free breakpoint clock parameters */
+    for (i=0; i<pt->nESets; i++)
+        {
+        for (j=0; j<pt->memNodes; j++)
+            {
+            if (pt->nEvents[i][j] > 0)
+                {
+                free (pt->position[i][j]);
+                free (pt->rateMult[i][j]);
+                }
+            }
+		free (pt->eSetName[i]);
+        free (pt->nEvents[i]);
+        free (pt->position[i]);
+        free (pt->rateMult[i]);
+        }
+    free (pt->nEvents);
+    free (pt->position);
+    free (pt->rateMult);
+    free (pt->eType);
+    free (pt->eSetName);
+    pt->nEvents = NULL;
+    pt->position = NULL;
+    pt->rateMult = NULL;
+    pt->eType = NULL;
+    pt->eSetName = NULL;
+
+    /* free branch clock parameters */
+	for (i=0; i<pt->nBSets; i++)
+        {
+		free (pt->bSetName[i]);
+        free (pt->branchRate[i]);
+        }
+	free (pt->branchRate);
+    free (pt->bSetName);
+    pt->branchRate = NULL;
+    pt->bSetName = NULL;
 }
 
 
@@ -1802,10 +1932,10 @@ void FreeTree (Tree *t)
 {
 	if (t != NULL)
 		{
-		free (t->nodes);
-		free (t->allDownPass);
 		free (t->bitsets);
 		free (t->flags);
+		free (t->allDownPass);
+		free (t->nodes);
 		free (t);
 		}
 }
@@ -1817,13 +1947,15 @@ void FreeTree (Tree *t)
 /* FreeTreePartitions: Free memory space for tree partitions */
 void FreeTreePartitions (Tree *t)
 {
+    int     i;
 
 	if (t != NULL && t->bitsets != NULL)
 		{
 		free (t->bitsets);
 		t->bitsets = NULL;
+        for (i=0; i<t->memNodes; i++)
+            t->nodes[i].partition = NULL;
 		}
-
 }
 
 
@@ -1881,7 +2013,7 @@ void GetDownPass (Tree *t)
 
 	int i, j;
 
-	i = j = 0;
+    i = j = 0;
 	GetNodeDownPass (t, t->root, &i, &j);
 		
 }
@@ -1914,6 +2046,53 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
 			}
 		}
 		
+}
+
+
+
+
+
+/* GetPolyAges: Get PolyTree node ages */
+void GetPolyAges (PolyTree *t)
+{
+    int         i;
+    PolyNode    *p;
+
+    GetPolyDepths (t); /* just to make sure... */
+    
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        p->age = t->clockRate * p->depth;
+        }
+}
+
+
+
+
+
+/* GetPolyDepths: Get PolyTree node depths */
+void GetPolyDepths (PolyTree *t)
+{
+    int         i;
+    MrBFlt      maxDepth;
+    PolyNode    *p;
+
+    maxDepth = t->root->depth = 0.0;
+
+    for (i=t->nNodes-2; i>=0; i--)
+        {
+        p = t->allDownPass[i];
+        p->depth = p->anc->depth + p->length;
+        if (p->depth > maxDepth)
+            maxDepth = p->depth;
+        }
+
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        p->depth = maxDepth - p->depth;
+        }
 }
 
 
@@ -2067,11 +2246,11 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 				else
 					{
 					if (p->calibration->prior == fixed)
-						p->nodeDepth = p->age = localTaxonCalibration[p->index]->age;
+						p->nodeDepth = p->age = p->calibration->age;
 					else if (p->calibration->prior == uniform)
-						p->nodeDepth = p->age = localTaxonCalibration[p->index]->min;
+						p->nodeDepth = p->age = p->calibration->min;
 					else /* if (p->calibration->prior == offsetExponential) */
-						p->nodeDepth = p->age = localTaxonCalibration[p->index]->offset;
+						p->nodeDepth = p->age = p->calibration->offset;
 					}
 				}
 			else
@@ -2264,21 +2443,6 @@ int InitClockBrlens (Tree *t)
 			p->nodeDepth = 0.0;
 		}
 		
-    /* adjust root height if birth-death or uniform prior with fixed tree heigt */
-    if (!strcmp(modelParams[t->relParts[0]].treeHeightPr,"Fixed") &&
-        (!strcmp(modelParams[t->relParts[0]].clockPr,"Uniform") ||
-         !strcmp(modelParams[t->relParts[0]].clockPr,"Birthdeath")))
-        {
-        if (!strcmp(modelParams[t->relParts[0]].treeHeightPr,"Fixed"))
-            {
-            for (i=0; i<t->nNodes-1; i++)
-                {
-                p = t->allDownPass[i];
-                p->nodeDepth *= modelParams[t->relParts[0]].treeHeightFix;
-                }
-            }
-        }
-
 	/* calculate branch lengths */
 	for (i=0; i<t->nNodes; i++)
 		{
@@ -2292,38 +2456,10 @@ int InitClockBrlens (Tree *t)
 			}
 		}
 
+    t->clockRate = 1.0;
+
 	return (NO_ERROR);
 	
-}
-
-
-
-
-
-void InitTreeNode (TreeNode *p)
-{
-	/* do not change memoryIndex; that is set once and for all when tree is allocated */
-	p->index                  = 0; 
-	p->scalerNode			  = NO;			
-	p->upDateCl               = NO;
-	p->upDateTi				  = NO;
-	p->clSpace                = NULL;
-	p->tiSpace                = NULL;
-	p->scalersSet             = NULL;
-	p->marked                 = NO;
-	p->length                 = 0.0;
-	p->nodeDepth              = 0.0;
-	p->x                      = 0;
-	p->y                      = 0;
-	p->index				  = 0;
-	p->isDated				  = NO;
-	p->calibration			  = NULL;
-	p->age					  = -1.0;
-	p->isLocked				  = NO;
-	p->lockID				  = -1;
-	strcpy (p->label, "");
-	p->d					  = 0.0;
-	p->partition			  = NULL;
 }
 
 
@@ -2720,40 +2856,40 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
 
 
 /* LabelTree: Label tree; remove previous labels if any */
-int LabelTree (Tree *t, char *taxonNames)
+int LabelTree (Tree *t, char **taxonNames)
 {
-	int			i, j, localTaxonIndex;
+	int			i;
 	TreeNode	*p = NULL;
 
 	/* erase previous labels, if any */
 	for (i=0; i<t->nNodes; i++)
-		strcpy(t->nodes[i].label,"");
-	
+        {
+        p = t->allDownPass[i];
+        p->marked = NO;
+		t->nodes[i].label = noLabel;
+        }
+
 	/* add labels */
-	localTaxonIndex = 0;
-	for (i=0; i<numTaxa; i++)
-		{
-		if (taxaInfo[i].isDeleted == NO)
-			{
-			for (j=0; j<t->nNodes; j++)
-				{
-				p = &t->nodes[j];
-				if (p->index == localTaxonIndex)
-					break;
-				}
-			if (!((p->left == NULL && p->right == NULL && p->anc != NULL) || (t->isRooted == NO && p->left != NULL && p->right == NULL && p->anc == NULL)))
-				{
-				MrBayesPrint ("%s   A terminal taxon index is set for a non-terminal node\n", spacer);
-				return (ERROR);
-				}
-			if (GetNameFromString (localTaxonNames, p->label, p->index + 1) == ERROR)
-				{
-				MrBayesPrint ("%s   Error getting taxon names during tree labeling\n", spacer);
-				return (ERROR);
-				}
-			localTaxonIndex++;
-			}
-		}
+	for (i=0; i<t->nNodes; i++)
+        {
+		p = &t->nodes[i];
+		if (p->left == NULL || (t->isRooted == NO && p->anc == NULL))
+            {
+            if (p->marked == YES || p->index < 0 || p->index >= numLocalTaxa)
+                {
+                MrBayesPrint ("%s   Taxon node index repeated or out of range\n", spacer);
+                return (ERROR);
+                }
+            else
+                p->label = localTaxonNames[p->index];
+            p->marked = YES;
+            }
+        else if (p->index > 0 && p->index < numLocalTaxa)
+            {
+            MrBayesPrint ("%s   Terminal taxon index set for interior node\n", spacer);
+            return (ERROR);
+            }
+        }
 
 	return (NO_ERROR);
 }
@@ -3115,6 +3251,80 @@ int NDatedTips (TreeNode *p)
 
 
 
+/* OrderTips: Order tips in a polytomous tree */
+void OrderTips (PolyTree *t)
+{
+    int         i, j;
+    PolyNode    *p, *q, *r, *pl, *ql, *rl;
+
+	/* label by minimum index */
+	for (i=0; i<t->nNodes; i++)
+		{
+	    p = t->allDownPass[i];
+		if (p->left == NULL)
+			{
+			if (t->isRooted == NO && p->index == localOutGroup)
+				p->x = -1;
+			else
+				p->x = p->index;
+			}
+		else
+			{
+			j = t->nNodes;
+			for (q=p->left; q!=NULL; q=q->sib)
+				{
+				if (q->x < j)
+					j = q->x;
+				}
+			p->x = j;
+			}
+		}
+
+    /* and rearrange */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL || p->anc == NULL)
+			continue;
+		for (ql=NULL, q=p->left; q->sib!=NULL; ql=q, q=q->sib)
+			{
+			for (rl=q, r=q->sib; r!=NULL; rl=r, r=r->sib)
+				{
+				if (r->x < q->x)
+					{
+					if (ql == NULL)
+						p->left = r;
+					if (r == q->sib) /* swap adjacent q and r */
+						{
+						if (ql != NULL)
+							ql->sib = r;
+						pl = r->sib;
+						r->sib = q;
+						q->sib = pl;
+						}
+					else	/* swap separated q and r */
+						{
+						if (ql != NULL)
+							ql->sib = r;
+						pl = r->sib;
+						r->sib = q->sib;
+						rl->sib = q;
+						q->sib = pl;
+						}
+					pl = q;
+					q = r;
+					r = pl;
+					}
+				}
+			}
+		}
+    GetPolyDownPass(t);
+}
+
+
+
+
+
 /* PrintNodes: Print a list of tree nodes, pointers and length */
 void PrintNodes (Tree *t)
 {
@@ -3133,10 +3343,31 @@ void PrintNodes (Tree *t)
 			p->length,
 			p->nodeDepth);
 		}
-	if (t->root == NULL)
+
+    if (t->root == NULL)
         MrBayesPrint ("root: NULL\n");
     else
-        MrBayesPrint ("root: %d\n", t->root->index); 
+        MrBayesPrint ("root: %d\n", t->root->index);
+
+    MrBayesPrint ("allDownPass:");
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p!=NULL)
+            MrBayesPrint ("  %d", p->index);
+        else
+            MrBayesPrint ("  NULL");
+        }
+    MrBayesPrint ("\nintDownPass:  ");
+    for (i=0; i<t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        if (p!=NULL)
+            MrBayesPrint ("  %d\t", p->index);
+        else
+            MrBayesPrint ("  NULL\t");
+        }
+    MrBayesPrint ("\n");
 }
 
 
@@ -3187,11 +3418,11 @@ void PrintPolyNodes (PolyTree *pt)
                 {
                 if (pt->nEvents[i*pt->nNodes+j] > 0)
                     {
-                    printf ("\tNode %d -- %d:(", j, pt->nEvents[i*pt->nNodes+j]);
-                    for (k=0; k<pt->nEvents[i*pt->nNodes+j]; k++)
+                    printf ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
+                    for (k=0; k<pt->nEvents[i][j]; k++)
                         {
-                        printf ("%f %f", pt->position[i*pt->nNodes+j][k], pt->rateMult[i*pt->nNodes+j][k]);
-                        if (k != pt->nEvents[i*pt->nNodes+j]-1)
+                        printf ("%f %f", pt->position[i][j][k], pt->rateMult[i][j][k]);
+                        if (k != pt->nEvents[i][j]-1)
                             printf (", ");
                         }
                     printf (")\n");
@@ -3541,55 +3772,137 @@ int RandResolve (PolyTree *t, safeLong *seed, int destinationIsRooted)
 
 
 
-/*----------------------------------------------
-|
-|   ResetRootHeight: Reset node heights in a clock
-|      tree to fit a new root height. Assumes
-|      node depths and lengths set correctly.
-|
------------------------------------------------*/
-int ResetRootHeight (Tree *t, MrBFlt rootHeight)
+/* ResetTreeNode: Reset tree node except for memory index */
+void ResetTreeNode (TreeNode *p)
 {
-	int         i;
-    TreeNode	*p;
-    MrBFlt      factor, x, y;
+	/* do not change memoryIndex; that is set once and for all when tree is allocated */
+	p->index                  = 0; 
+	p->scalerNode			  = NO;			
+	p->upDateCl               = NO;
+	p->upDateTi				  = NO;
+	p->clSpace                = NULL;
+	p->tiSpace                = NULL;
+	p->scalersSet             = NULL;
+	p->marked                 = NO;
+	p->length                 = 0.0;
+	p->nodeDepth              = 0.0;
+	p->x                      = 0;
+	p->y                      = 0;
+	p->index				  = 0;
+	p->isDated				  = NO;
+	p->calibration			  = NULL;
+	p->age					  = -1.0;
+	p->isLocked				  = NO;
+	p->lockID				  = -1;
+	p->label                  = noLabel;
+	p->d					  = 0.0;
+	p->partition			  = NULL;
+}
 
-    if (t->isClock == NO)
-        return ERROR;
+
+
+
+
+/* ResetPolyNode: Reset all values of one node in a polytree */
+void ResetPolyNode (PolyNode *p)
+{
+    /* we reset everything here except memoryIndex, which should be immutable */
+    p->length = 0.0;
+    p->depth = 0.0;
+    p->age = 0.0;
+    p->anc = p->left = p->sib = NULL;
+    p->calibration = NULL;
+    p->f = 0.0;
+    p->index = 0;
+    p->isDated = NO;
+    p->isLocked = NO;
+    strcpy (p->label,"");
+    p->lockID = 0;
+    p->partition = NULL;
+    p->partitionIndex = 0;
+    p->support = 0.0;
+    p->x = p->y = 0;
+}
+
+
+
+
+
+/* ResetPolyTree: Reset polytomous tree to pristine state but keep relevant memory. */
+void ResetPolyTree (PolyTree *pt)
+{
+	int	    i, maxTaxa, nLongsNeeded;
+
+	/* clear nodes */
+	for (i=0; i<pt->memNodes; i++)
+		ResetPolyNode (&pt->nodes[i]);
+
+    /* empty node arrays and tree properties but keep space */
+    for (i=0; i<pt->nNodes; i++)
+        pt->allDownPass[i] = NULL;
+    for (i=0; i<pt->nIntNodes; i++)
+        pt->intDownPass[i] = NULL;
+    pt->nNodes = 0;
+    pt->nIntNodes = 0;
+    pt->root = NULL;
+    pt->brlensDef = NO;
+    pt->isRooted = NO;
+    pt->isClock = NO;
+    pt->isRelaxed = NO;
+    pt->clockRate = 0.0;
+
+    /* empty bitsets but keep space and pointers */
+    if (pt->bitsets)
+        {
+        maxTaxa = pt->memNodes / 2;
+        nLongsNeeded = (maxTaxa / nBitsInALong) + 1;
+        for (i=0; i<pt->memNodes*nLongsNeeded; i++)
+            pt->bitsets[i] = 0;
+        for (i=0; i<pt->memNodes; i++)
+            pt->nodes[i].partition = pt->bitsets + i*nLongsNeeded;
+        }
+
+    /* empty relaxed clock parameters */
+    FreePolyTreeRelClockParams (pt);
+}
+
+
+
+
+
+/* ResetPolyTreePartitions: Reset and set bit patterns describing partitions */
+void ResetPolyTreePartitions (PolyTree *pt)
+{
+    int         i, j, numTaxa, nLongsNeeded;
+    PolyNode    *pp;
+
+    /* get some handy numbers */
+    numTaxa = pt->nNodes - pt->nIntNodes;
+    nLongsNeeded = (numTaxa / nBitsInALong) + 1;
     
-    /* make sure node depths are set */
-    for (i=0; i<t->nNodes-1; i++)
-        {
-        p = t->allDownPass[i];
-        if (p->left == NULL)
-            p->nodeDepth = 0.0;
-        else
+    /* reset bits describing partitions */
+    for (i=0; i<pt->memNodes*nLongsNeeded; i++)
+		{
+        pt->bitsets[i] = 0;
+        }
+
+    /* set bits describing partitions */
+    for (i=0; i<pt->nNodes; i++)
+		{
+		assert (pt->allDownPass != NULL && pt->allDownPass[i] != NULL);
+        assert (pt->allDownPass[i]->partition != NULL);
+        
+        pp = pt->allDownPass[i];
+		if (pp->left == NULL)
             {
-            x = p->left->nodeDepth + p->left->length;
-            y = p->right->nodeDepth + p->right->length;
-            if (x > y)
-                p->nodeDepth = x;
-            else
-                p->nodeDepth = y;
+			SetBit (pp->index, pp->partition);
             }
-        }
-    for (i=t->nNodes-3; i>=0; i--)
-        {
-        p = t->allDownPass[i];
-        p->nodeDepth = p->anc->nodeDepth - p->length;
-        }
-
-    /* now reset node depths and branch lengths */
-    factor = rootHeight / t->root->left->nodeDepth;
-    t->root->left->nodeDepth = rootHeight;
-    for (i=t->nNodes-2; i>=0; i--)
-        {
-        p = t->allDownPass[i];
-        p->nodeDepth *= factor;
-        p->length *= factor;
-        }
-
-    return NO_ERROR;
+		if (pp->anc != NULL)
+			{
+			for (j=0; j<nLongsNeeded; j++)
+				pp->anc->partition[j] |= pp->partition[j];
+			}
+		}
 }
 
 
@@ -3610,7 +3923,7 @@ int ResetTopology (Tree *t, char *s)
 	char		temp[30];
 	
     /* set all pointers to NULL */
-	for (i=0; i<t->nNodes; i++)
+	for (i=0; i<t->memNodes; i++)
 		{
 		p = &t->nodes[i];
 		p->anc = p->right = p->left = NULL;
@@ -3618,6 +3931,8 @@ int ResetTopology (Tree *t, char *s)
 		}
 	p = &t->nodes[0];
 
+    /* start out assuming that the tree is rooted; we will detect below if it is not */
+    t->isRooted = YES;
 	inLength = NO;
 	for (i=0, j=1; *s!='\0'; s++)
 		{
@@ -3655,6 +3970,7 @@ int ResetTopology (Tree *t, char *s)
 				p = &t->nodes[j++];
 				q->anc = p;
 				p->left = q;
+                t->isRooted = NO;
 				}
 			}
 		else if (*s == ')')
@@ -3675,12 +3991,17 @@ int ResetTopology (Tree *t, char *s)
 	if (t->isRooted == YES)
 		{
 		p = &t->nodes[0];
-		q = &t->nodes[j];
+		q = &t->nodes[j++];
 		q->left = p;
 		p->anc = q;
 		}
 
-	j = numLocalTaxa;
+    /* relabel interior nodes, find number of nodes and root */
+    t->nNodes = j;
+    t->nIntNodes = t->nNodes - numLocalTaxa;
+	if (t->isRooted)
+        t->nIntNodes--;
+    j = numLocalTaxa;
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = &t->nodes[i];
@@ -3783,8 +4104,10 @@ int ResetTopologyFromTree (Tree *tree, Tree *top)
 	int			i, j, k;
 	TreeNode	*p, *q, *r, *p1;
 
-    if (tree->isRooted != top->isRooted)
-		return (ERROR);
+    /* adopt rooting */
+    tree->isRooted = top->isRooted;
+    tree->nNodes = top->nNodes;
+    tree->nIntNodes = top->nIntNodes;
 	
     /* set all pointers to NULL */
 	for (i=0; i<tree->nNodes; i++)
@@ -3847,6 +4170,148 @@ int ResetTopologyFromTree (Tree *tree, Tree *top)
 
 
 
+/* ResetTopologyFromPolyTree: use polytree top to set topology in tree */
+int ResetTopologyFromPolyTree (Tree *tree, PolyTree *top)
+{
+	int			i, j, k;
+	TreeNode	*p, *q, *r;
+    PolyNode    *p1;
+
+    if (tree->isRooted != top->isRooted)
+		return (ERROR);
+	
+    /* set all pointers to NULL */
+	for (i=0; i<tree->nNodes; i++)
+		{
+		p = &tree->nodes[i];
+		p->anc = p->right = p->left = NULL;
+        }
+
+    /* now copy topology */
+    for (i=0; i<top->nIntNodes; i++)
+		{
+		p1 = top->intDownPass[i];
+		
+		k = p1->index;
+		for (j=0; j<tree->nNodes; j++)
+			if (tree->nodes[j].index == k)
+				break;
+		p = &tree->nodes[j];
+
+		k = p1->left->index;
+		for (j=0; j<tree->nNodes; j++)
+			if (tree->nodes[j].index == k)
+				break;
+		q = &tree->nodes[j];
+
+		k = p1->left->sib->index;
+		for (j=0; j<tree->nNodes; j++)
+			if (tree->nodes[j].index == k)
+				break;
+		r = &tree->nodes[j];
+
+		p->left = q;
+		p->right= r;
+		q->anc = r->anc = p;
+		}
+
+	/* arrange the root */
+	if (top->isRooted == YES)
+        {
+        k = top->root->index;
+	    for (j=0; j<tree->nNodes; j++)
+		    if (tree->nodes[j].index == k)
+			    break;
+	    p = &tree->nodes[j];
+
+	    k = top->nNodes;
+	    for (j=0; j<tree->nNodes; j++)
+		    if (tree->nodes[j].index == k)
+			    break;
+	    q = &tree->nodes[j];
+
+        q->left = p;
+	    q->anc = NULL;
+        q->right = NULL;
+	    tree->root = q;
+        }
+    else /* if (top->isRooted == NO) */
+    {
+        k = top->root->index;
+	    for (j=0; j<tree->nNodes; j++)
+		    if (tree->nodes[j].index == k)
+			    break;
+	    p = &tree->nodes[j];
+
+        k = localOutGroup;
+        for (p1=top->root->left; p1!=NULL; p1=p1->sib)
+            if (p1->index == k)
+                break;
+
+        assert (p1 != NULL);
+        if (p1 == NULL)
+            return (ERROR);
+
+        q = &tree->nodes[p1->index];
+        k = p1->anc->left->sib->sib->index;     /* index of missing child */
+        if (p->left == q)
+            p->left = &tree->nodes[k];
+        else if (p->right == q)
+            p->right = &tree->nodes[k];
+
+        q->anc = q->right = NULL;
+        p->anc = q;
+        q->left = p;
+    }
+
+	GetDownPass(tree);
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/* ResetTreePartitions: Reset bitsets describing tree partitions */
+void ResetTreePartitions (Tree *t)
+{
+    int         i, j, numTaxa, nLongsNeeded;
+    TreeNode    *p;
+
+    /* get some handy numbers */
+    numTaxa = t->nNodes - t->nIntNodes - (t->isRooted == YES ? 1 : 0);
+    nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+    
+    /* reset bits describing partitions */
+    for (i=0; i<t->nNodes; i++)
+		{
+		assert (t->allDownPass != NULL && t->allDownPass[i] != NULL);
+        assert (t->allDownPass[i]->partition != NULL);
+        
+        p = t->allDownPass[i];
+        for (j=0; j<nLongsNeeded; j++)
+            p->partition[j] = 0;
+        }
+
+    /* set bits describing partitions */
+    for (i=0; i<t->nNodes; i++)
+		{
+        p = t->allDownPass[i];
+		if (p->left == NULL || (p->anc == NULL && t->isRooted == NO))
+			SetBit (p->index, p->partition);
+        else if (p->anc != NULL)
+			{
+			for (j=0; j<nLongsNeeded; j++)
+				p->partition[j] = p->left->partition[j] | p->right->partition[j];
+			}
+		}
+}
+
+
+
+
+
 /*-------------------------------------------------------
 |
 |   RetrieveRTopology: This routine will rebuild a rooted
@@ -3873,7 +4338,7 @@ int RetrieveRTopology (Tree *t, int *order)
 	q->anc = q->right = NULL;
 	t->root = q;
 
-	/* connect the first three tips */
+	/* connect the first two tips */
 	p = t->allDownPass[numTaxa];
 	p->anc = q;
 	q->left = p;
@@ -3941,7 +4406,7 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 	p = t->allDownPass[numTaxa];
 	p->anc = q;
 	q->left = p;
-	p->length = *(brlens++);
+	p->length = 0.0;
 	q = t->allDownPass[0];
 	r = t->allDownPass[1];
 	p->left = q;
@@ -4160,7 +4625,8 @@ void SetNodeDepths (Tree *t)
 
 
 
-int ShowMCMCTree (Tree *t)
+/* ShowTree: Show tree on screen */
+int ShowTree (Tree *t)
 
 {
 
@@ -4197,7 +4663,7 @@ int ShowMCMCTree (Tree *t)
 			}
 		} 
 
-	/* print tree out, line-by-line */
+    /* print tree out, line-by-line */
 	levelDepth = SCREENWIDTH / t->root->left->y;
 	nLevels = t->root->left->y;
 	for (j=0; j<=nLines-2; j++)
@@ -4213,10 +4679,6 @@ int ShowMCMCTree (Tree *t)
 					}
 				}
 			}
-			
-		for (i=0; i<SCREENWIDTH-1; i++)
-			treeLine[i] = ' ';
-		treeLine[SCREENWIDTH-1] = '\0';
 		for (i=0; i<t->nNodes; i++)
 			{
 			p = t->allDownPass[i];
@@ -4326,6 +4788,210 @@ int ShowMCMCTree (Tree *t)
 
 	return (NO_ERROR);
 	   
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
+|   StoreRPolyTopology: Same as StoreRTopology but for
+|   binary polytree source trees.
+|
+--------------------------------------------------------*/
+int StoreRPolyTopology (PolyTree *t, int *order)
+
+{
+	int			i, numTaxa;
+	PolyNode	*p, *q;
+	
+	/* find number of taxa */
+	numTaxa = t->nNodes - t->nIntNodes;
+
+	/* first get the terminal taxon positions and store
+	   them in the order array. */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		/* we do not need to worry about the first two taxa */
+		if (p->index > 1 && p->index < numTaxa)
+			order[p->index-2] = i;
+		}
+
+	/* label the interior nodes with the correct index */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL)
+			p->x = p->y = p->index;
+		else
+			{
+			if (p->left->y < p->left->sib->y)
+				{
+				p->y = p->left->y;
+				p->x = p->left->sib->y + numTaxa - 1;
+				}
+			else
+				{
+				p->y = p->left->sib->y;
+				p->x = p->left->y + numTaxa - 1;
+				}
+			}
+		}
+
+	/* break the tree into pieces */
+	for (i=0; i<numTaxa-2; i++)
+		{
+		/* find the next node to remove */
+		p = t->allDownPass[order[numTaxa-3-i]];
+		q = p->anc;
+		if (q->left == p)
+			{
+			order[numTaxa-3-i] = q->left->sib->x;
+			p->sib->anc = q->anc;
+            if (q->anc == NULL)
+                {
+                p->sib->left->sib->sib = p->sib->sib;
+                p->sib->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left->sib;
+                p->sib->sib = q->sib;
+                }
+			else
+				q->anc->left->sib = q->left->sib;
+			}
+		else
+			{
+			order[numTaxa-3-i] = q->left->x;
+			q->left->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                q->left->left->sib->sib = p->sib;
+                q->left->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left;
+                q->anc->left->sib = q->sib;
+                }
+			else
+                {
+				q->anc->left->sib = q->left;
+                q->left->sib = NULL;
+                }
+			}
+		}
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
+|   StoreRPolyTree: Same as StoreRTree but for
+|      binary rooted polytree source trees.
+|
+--------------------------------------------------------*/
+int StoreRPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
+
+{
+	int			i, j, numTaxa;
+	PolyNode	*p, *q;
+	
+	/* find number of taxa */
+	numTaxa = t->nNodes - t->nIntNodes;
+
+	/* first get the terminal taxon positions and store
+	   them in the order array. */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		/* we do not need to worry about the first two taxa */
+		if (p->index > 1 && p->index < numTaxa)
+			order[p->index-2] = i;
+		}
+
+	/* label the interior nodes with the correct index */
+    for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL)
+			p->x = p->y = p->index;
+		else
+			{
+			if (p->left->y < p->left->sib->y)
+				{
+				p->y = p->left->y;
+				p->x = p->left->sib->y + numTaxa - 1;
+				}
+			else
+				{
+				p->y = p->left->sib->y;
+				p->x = p->left->y + numTaxa - 1;
+				}
+			}
+		}
+
+	/* break the tree into pieces */
+    j = t->nNodes - 2;     /* index of first branch length */
+	for (i=0; i<numTaxa-2; i++)
+		{
+		/* find the next node to remove */
+		p = t->allDownPass[order[numTaxa-3-i]];
+		q = p->anc;
+        brlens[j--] = p->length;
+        brlens[j--] = q->length;
+		if (q->left == p)
+			{
+			order[numTaxa-3-i] = q->left->sib->x;
+			p->sib->anc = q->anc;
+            if (q->anc == NULL)
+                {
+                p->sib->left->sib->sib = p->sib->sib;
+                p->sib->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left->sib;
+                p->sib->sib = q->sib;
+                }
+			else
+				q->anc->left->sib = q->left->sib;
+			}
+		else
+			{
+			order[numTaxa-3-i] = q->left->x;
+			q->left->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                q->left->left->sib->sib = p->sib;
+                q->left->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left;
+                q->anc->left->sib = q->sib;
+                }
+			else
+                {
+				q->anc->left->sib = q->left;
+                q->left->sib = NULL;
+                }
+			}
+		}
+
+    /* store the last two lengths; index 0 and 1 */
+    p = t->root;
+    brlens[p->left->index] = p->left->length;
+    brlens[p->left->sib->index] = p->left->sib->length;
+
+	return (NO_ERROR);
 }
 
 
@@ -4467,7 +5133,7 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 		}
 
 	/* break the tree into pieces */
-	j = 2 * numTaxa - 2;
+	j = 2 * numTaxa - 3;
 	for (i=0; i<numTaxa-2; i++)
 		{
 		/* find the next node to remove */
@@ -4495,19 +5161,221 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 			}
 		}
 
-    /* store the final three branch lengths in the right order */
+    /* store the final two branch lengths in the right order; they have indices 0 and 1 */
     p = t->root->left;
-    if (p->left->index == 1)
-        {
-        brlens[j--] = p->left->length;
-        brlens[j--] = p->right->length;
-        }
-    else
-        {
-        brlens[j--] = p->right->length;
-        brlens[j--] = p->left->length;
-        }
-    brlens[j--] = p->length;
+    brlens[p->left->index] = p->left->length;
+    brlens[p->right->index] = p->right->length;
+
+    return (NO_ERROR);
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
+|   StoreUPolyTopology: Same as StoreUTopology but for
+|      binary polytree source.
+|
+--------------------------------------------------------*/
+int StoreUPolyTopology (PolyTree *t, int *order)
+
+{
+	int			i, numTips;
+	PolyNode	*p, *q;
+
+    /* check if the tree is rooted on taxon 0 */
+    if (t->root->left->sib->sib->index != 0)
+		MovePolyCalculationRoot (t, 0);
+
+	/* find number of tips */
+	numTips = t->nNodes - t->nIntNodes;
+
+	/* first get the terminal taxon positions and store
+	   them in the order array. */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		/* we do not need to worry about the first three taxa */
+		if (p->index > 2 && p->index < numTips)
+			order[p->index-3] = i;
+		}
+
+	/* label the interior nodes with the correct index */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL)
+			p->x = p->y = p->index;
+		else
+			{
+			if (p->left->y < p->left->sib->y)
+				{
+				p->y = p->left->y;
+				p->x = p->left->sib->y + numTips - 2;
+				}
+			else
+				{
+				p->y = p->left->sib->y;
+				p->x = p->left->y + numTips - 2;
+				}
+			}
+		}
+
+	/* break the tree into pieces */
+	for (i=0; i<numTips-3; i++)
+		{
+		/* find the next node to remove */
+		p = t->allDownPass[order[numTips-4-i]];
+		q = p->anc;
+		if (q->left == p)
+			{
+			order[numTips-4-i] = q->left->sib->x;
+			p->sib->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                p->sib->left->sib->sib = p->sib->sib;
+                p->sib->sib = NULL;
+                }
+            else if (q->anc->left == q)
+                {
+				q->anc->left = q->left->sib;
+                p->sib->sib = q->sib;
+                }
+			else
+				q->anc->left->sib = q->left->sib;
+			}
+		else
+			{
+			order[numTips-4-i] = q->left->x;
+			q->left->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                q->left->left->sib->sib = p->sib;
+                q->left->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left;
+                q->anc->left->sib = q->sib;
+                }
+			else
+                {
+				q->anc->left->sib = q->left;
+                q->left->sib = NULL;
+                }
+			}
+		}
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
+|   StoreUPolyTree: Same as StoreUTopology but for
+|      binary polytree source.
+|
+--------------------------------------------------------*/
+int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
+
+{
+	int			i, j, numTips;
+	PolyNode	*p, *q;
+
+    /* check if the tree is rooted on taxon 0 */
+    if (t->root->left->sib->sib->index != 0)
+		MovePolyCalculationRoot (t, 0);
+
+	/* find number of tips */
+	numTips = t->nNodes - t->nIntNodes;
+
+	/* first get the terminal taxon positions and store
+	   them in the order array. */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		/* we do not need to worry about the first three taxa */
+		if (p->index > 2 && p->index < numTips)
+			order[p->index-3] = i;
+		}
+
+	/* label the interior nodes with the correct index */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL)
+			p->x = p->y = p->index;
+		else
+			{
+			if (p->left->y < p->left->sib->y)
+				{
+				p->y = p->left->y;
+				p->x = p->left->sib->y + numTips - 2;
+				}
+			else
+				{
+				p->y = p->left->sib->y;
+				p->x = p->left->y + numTips - 2;
+				}
+			}
+		}
+
+	/* break the tree into pieces */
+    j = 2*numTips - 4;
+	for (i=0; i<numTips-3; i++)
+		{
+		/* find the next node to remove */
+		p = t->allDownPass[order[numTips-4-i]];
+		q = p->anc;
+        brlens[j--] = p->length;
+        brlens[j--] = q->length;
+		if (q->left == p)
+			{
+			order[numTips-4-i] = q->left->sib->x;
+			p->sib->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                p->sib->left->sib->sib = p->sib->sib;
+                p->sib->sib = NULL;
+                }
+            else if (q->anc->left == q)
+                {
+				q->anc->left = q->left->sib;
+                p->sib->sib = q->sib;
+                }
+			else
+				q->anc->left->sib = q->left->sib;
+			}
+		else
+			{
+			order[numTips-4-i] = q->left->x;
+			q->left->anc = q->anc;
+			if (q->anc == NULL)
+                {
+                q->left->left->sib->sib = p->sib;
+                q->left->sib = NULL;
+                }
+			else if (q->anc->left == q)
+                {
+				q->anc->left = q->left;
+                q->anc->left->sib = q->sib;
+                }
+			else
+                {
+				q->anc->left->sib = q->left;
+                q->left->sib = NULL;
+                }
+			}
+		}
+
+    /* store last three branch lengths, index 0, 1, 2 */
+    for (q=t->root->left; q!=NULL; q=q->sib)
+        brlens[q->index] = q->length;
 
     return (NO_ERROR);
 }
@@ -4708,6 +5576,27 @@ int StoreUTree (Tree *t, int *order, MrBFlt *brlens)
 
 
 
+/* TreeLength: Calculate tree length */
+MrBFlt TreeLen (Tree *t)
+{
+    int     i, numLenNodes;
+    MrBFlt  len = 0.0;
+
+    if (t->isRooted == NO)
+        numLenNodes = t->nNodes - 1;
+    else
+        numLenNodes = t->nNodes - 2;
+
+    for (i=0; i<numLenNodes; i++)
+        len += t->allDownPass[i]->length;
+
+    return len;
+}
+
+
+
+
+
 /*-------------------------------------------------------------------------------------------
 |
 |   Unmark: This routine will unmark a subtree rooted at p
@@ -4737,7 +5626,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 		{
 		if (p->left == NULL && p->right == NULL)
 			{
-			printf ("%d:%le", p->index + 1, p->length);
+			printf ("%d:%s", p->index + 1, MbPrintNum(p->length));
             if (param->paramType == P_CPPEVENTS)
 				{
 				nEvents = param->nEvents[2*chain+state[chain]][p->index];
@@ -4748,7 +5637,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 					rateMult = param->rateMult[2*chain+state[chain]][p->index];
 					for (j=0; j<nEvents; j++)
 						{
-						printf ("%le %le", position[j], rateMult[j]);
+						printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
 						if (j != nEvents-1)
 							printf (", ");
 						}
@@ -4758,7 +5647,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 			else if (param->paramType == P_BMBRANCHRATES)
 				{
 				rate = GetParamVals (param, chain, state[chain])[p->index];
-				printf ("[&B %s %le]", param->name, rate);
+				printf ("[&B %s %s]", param->name, MbPrintNum(rate));
 				}
 			}
 		else
@@ -4772,7 +5661,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 				{				
 				if (p->anc->anc != NULL)
 					{
-					printf ("):%le", p->length);
+					printf ("):%s", MbPrintNum(p->length));
                     if (param->paramType == P_CPPEVENTS)
 				        {
 				        nEvents = param->nEvents[2*chain+state[chain]][p->index];
@@ -4783,7 +5672,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 					        rateMult = param->rateMult[2*chain+state[chain]][p->index];
 					        for (j=0; j<nEvents; j++)
 						        {
-						        printf ("%le %le", position[j], rateMult[j]);
+						        printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
 						        if (j != nEvents-1)
 							        printf (", ");
 						        }
@@ -4793,7 +5682,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 			        else if (param->paramType == P_BMBRANCHRATES)
 				        {
 				        rate = GetParamVals (param, chain, state[chain])[p->index];
-				        printf ("[&B %s %le]", param->name, rate);
+				        printf ("[&B %s %s]", param->name, MbPrintNum(rate));
 				        }
 					}
 				else
@@ -4822,10 +5711,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 		{
 		if (p->left == NULL && p->right == NULL)
 			{
-            if (chainParams.scientific == YES)
-    			SafeSprintf (&tempStr, &tempStrSize, "%d:%le", p->index + 1, p->length);
-            else
-    			SafeSprintf (&tempStr, &tempStrSize, "%d:%lf", p->index + 1, p->length);
+			SafeSprintf (&tempStr, &tempStrSize, "%d:%s", p->index + 1, MbPrintNum(p->length));
 			AddToPrintString (tempStr);
 			for (i=0; i<param->nSubParams; i++)
 				{
@@ -4842,10 +5728,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 						rateMult = param->subParams[i]->rateMult[2*chain+state[chain]][p->index];
 						for (j=0; j<nEvents; j++)
 							{
-                            if (chainParams.scientific == YES)
-							    SafeSprintf (&tempStr, &tempStrSize, "%le %le", position[j], rateMult[j]);
-                            else
-                                SafeSprintf (&tempStr, &tempStrSize, "%lf %lf", position[j], rateMult[j]);
+						    SafeSprintf (&tempStr, &tempStrSize, "%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
 							AddToPrintString (tempStr);
 							if (j != nEvents-1)
 								AddToPrintString (", ");
@@ -4856,10 +5739,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 				else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHRATES)
 					{
 					rate = GetParamVals (param->subParams[i], chain, state[chain])[p->index];
-                    if (chainParams.scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "[&B %s %le]", param->subParams[i]->name, rate);
-                    else
-                        SafeSprintf (&tempStr, &tempStrSize, "[&B %s %lf]", param->subParams[i]->name, rate);
+					SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(rate));
 					AddToPrintString (tempStr);
 					}
 				}
@@ -4875,10 +5755,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 				{				
 				if (p->anc->anc != NULL)
 					{
-					if (chainParams.scientific == YES)
-                        SafeSprintf (&tempStr, &tempStrSize, "):%le", p->length);
-                    else
-                        SafeSprintf (&tempStr, &tempStrSize, "):%lf", p->length);
+                    SafeSprintf (&tempStr, &tempStrSize, "):%s", MbPrintNum(p->length));
 					AddToPrintString (tempStr);
 					for (i=0; i<param->nSubParams; i++)
 						{
@@ -4895,10 +5772,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 								rateMult = param->subParams[i]->rateMult[2*chain+state[chain]][p->index];
 								for (j=0; j<nEvents; j++)
 									{
-									if (chainParams.scientific == YES)
-                                        SafeSprintf (&tempStr, &tempStrSize, "%le %le", position[j], rateMult[j]);
-                                    else
-                                        SafeSprintf (&tempStr, &tempStrSize, "%lf %lf", position[j], rateMult[j]);
+                                    SafeSprintf (&tempStr, &tempStrSize, "%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
 									AddToPrintString (tempStr);
 									if (j != nEvents-1)
 										AddToPrintString (",");
@@ -4909,10 +5783,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 						else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHRATES)
 							{
 							rate = GetParamVals (param->subParams[i], chain, state[chain])[p->index];
-							if (chainParams.scientific == YES)
-                                SafeSprintf (&tempStr, &tempStrSize, "[&B %s %le]", param->subParams[i]->name, rate);
-                            else
-                                SafeSprintf (&tempStr, &tempStrSize, "[&B %s %lf]", param->subParams[i]->name, rate);
+                            SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(rate));
                             AddToPrintString (tempStr);
 							}
 						}
@@ -4939,7 +5810,7 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
 		length = GetParamSubVals(param, chain, state[chain]);
         if (p->left == NULL && p->right == NULL)
 			{
-			printf ("%d:%lf", p->index + 1, length[p->index]);
+			printf ("%d:%s", p->index + 1, MbPrintNum(length[p->index]));
 			}
 		else
 			{
@@ -4951,7 +5822,7 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
 			if (p->anc != NULL)
 				{				
 				if (p->anc->anc != NULL)
-					printf ("):%lf", length[p->index]);
+					printf ("):%s", MbPrintNum(length[p->index]));
 				else
 					printf(")");
 				}
@@ -4980,10 +5851,7 @@ void WriteTreeToPrintString (TreeNode *p, int showBrlens, int isRooted)
 			{
 			if (showBrlens == YES)
                 {
-                if (chainParams.scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%d:%le", p->index + 1, p->length);
-                else
-    				SafeSprintf (&tempStr, &tempStrSize, "%d:%lf", p->index + 1, p->length);
+				SafeSprintf (&tempStr, &tempStrSize, "%d:%s", p->index + 1, MbPrintNum(p->length));
                 }
 			else
 				SafeSprintf (&tempStr, &tempStrSize, "%d", p->index + 1);
@@ -5002,24 +5870,14 @@ void WriteTreeToPrintString (TreeNode *p, int showBrlens, int isRooted)
 				if (p->anc->anc == NULL && isRooted == NO)
 					{
 					if (showBrlens == YES)
-                        {
-                        if (chainParams.scientific == YES)
-    				        SafeSprintf (&tempStr, &tempStrSize, ",%d:%le", p->anc->index + 1, p->length);
-                        else
-    				        SafeSprintf (&tempStr, &tempStrSize, ",%d:%lf", p->anc->index + 1, p->length);
-                        }
+				        SafeSprintf (&tempStr, &tempStrSize, ",%d:%s", p->anc->index + 1, MbPrintNum(p->length));
 					else
 						SafeSprintf (&tempStr, &tempStrSize, ",%d", p->anc->index + 1);
 					AddToPrintString (tempStr);
 					}
 				
 				if (showBrlens == YES && p->anc->anc != NULL)
-                    {
-                    if (chainParams.scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "):%le", p->length);
-                    else
-    					SafeSprintf (&tempStr, &tempStrSize, "):%lf", p->length);
-                    }
+					SafeSprintf (&tempStr, &tempStrSize, "):%s", MbPrintNum(p->length));
 				else
 					SafeSprintf (&tempStr, &tempStrSize, ")");
 				AddToPrintString (tempStr);					
@@ -5027,4 +5885,34 @@ void WriteTreeToPrintString (TreeNode *p, int showBrlens, int isRooted)
 			}
 		}
 	free (tempStr);
+}
+
+
+
+
+
+/* WriteTopologyToFile: Simply write topology to file */
+void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
+
+{
+	if (p != NULL)
+		{
+		if (p->left == NULL && p->right == NULL)
+			fprintf (fp, "%d", p->index + 1);
+		else
+			{
+			if (p->anc != NULL)
+				fprintf (fp, "(");
+			WriteTopologyToFile (fp, p->left, isRooted);
+			if (p->anc != NULL)
+				fprintf (fp, ",");
+			WriteTopologyToFile (fp, p->right, isRooted);	
+			if (p->anc != NULL)
+				{
+				if (p->anc->anc == NULL && isRooted == NO)
+                    fprintf (fp, ",%d", p->anc->index + 1);
+			    fprintf (fp, ")");
+				}
+			}
+		}
 }

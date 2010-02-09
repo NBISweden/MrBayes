@@ -33,7 +33,7 @@
  */
 
 /* id-string for ident, do not edit: cvs will update this string */
-const char bayesID[]="$Id: bayes.c,v 3.72 2009/08/07 05:53:30 ronquist Exp $";
+const char bayesID[]="$Id: bayes.c,v 3.71 2009/01/05 14:15:20 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,14 +82,15 @@ void PrintHeader (void);
 /* global variables, declared in this file */
 ModelParams defaultModel;                /* Default model; values set in InitializeMrBayes */
 int			defTaxa;                     /* flag for whether number of taxa is known      */
-int			defChars;                    /* flag for whether number of characters is known*/
+int			defChars;                    /* flag for whether number of chars is known     */
 int			defMatrix;                   /* flag for whether matrix is successfull read   */
 int			defPartition;                /* flag for whether character partition is read  */
-int			defConstraints;              /* flag for whether constraints on tree are read */
 int			defPairs;                    /* flag for whether pairs are read               */
 Doublet		doublet[16];                 /* holds information on states for doublets      */
 int			fileNameChanged;			 /* has file name been changed ?                  */
 safeLong	globalSeed;                  /* seed that is initialized at start up          */
+char        **modelIndicatorParams;      /* model indicator params                        */
+char        ***modelElementNames;        /* names for component models                    */
 int			nBitsInALong;                /* number of bits in a safeLong                  */
 int			nPThreads;					 /* number of pthreads to use                     */
 int			numUserTrees;			     /* number of defined user trees		    	  */
@@ -513,6 +514,7 @@ int InitializeMrBayes (void)
 	numComments = 0;								 /* no comments encountered yet                   */
 	mode = INTERACTIVE;								 /* set default mode							  */
 	numOpenExeFiles = 0;							 /* no execute files open yet   				  */
+	precision = 10;                                  /* set default precision                         */
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
 
 	/* set the proposal information */
@@ -684,7 +686,6 @@ int InitializeMrBayes (void)
 	defaultModel.treeHeightGamma[0] = 1.0;
 	defaultModel.treeHeightGamma[1] = 1.0;
 	defaultModel.treeHeightExp = 1.0;
-	defaultModel.treeHeightFix = 1.0;
 	strcpy(defaultModel.speciationPr, "Uniform");   /* prior on speciation rate                     */
 	defaultModel.speciationFix = 1.0;
 	defaultModel.speciationUni[0] = 0.0;
@@ -749,12 +750,36 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.inferSiteOmegas, "No");		/* do not infer site omega vals			      */
 	strcpy(defaultModel.inferSiteRates, "No");		/* do not infer site rates					  */
 
-	/* initialize user trees */
+    /* Allocate and initialize model indicator parameter names */
+    modelIndicatorParams = (char **) SafeCalloc (2, sizeof (char *));
+    modelIndicatorParams[0] = "Aamodel";
+    modelIndicatorParams[1] = "";
+
+    /* Aamodel */
+    modelElementNames = (char ***) SafeCalloc (2, sizeof (char **));
+    modelElementNames[0] = (char **) SafeCalloc (11, sizeof (char *));
+    modelElementNames[0][0]  = "Poisson";
+    modelElementNames[0][1]  = "Jones";
+    modelElementNames[0][2]  = "Dayhoff";
+    modelElementNames[0][3]  = "Mtrev";
+    modelElementNames[0][4]  = "Mtmam";
+    modelElementNames[0][5]  = "Wag";
+    modelElementNames[0][6]  = "Rtrev";
+    modelElementNames[0][7]  = "Cprev";
+    modelElementNames[0][8]  = "Vt";
+    modelElementNames[0][9]  = "Blosum";
+    modelElementNames[0][10] = "";
+
+    /* Termination */
+    modelElementNames[1]    = (char **) SafeCalloc (1, sizeof(char *));
+    modelElementNames[1][0] = "";
+
+    /* initialize user trees */
 	for (i=0; i<MAX_NUM_USERTREES; i++)
 		userTree[i] = NULL;
     numUserTrees = 0;
-    
-	/* finally reset everything dependent on a matrix being defined */
+
+    /* finally reset everything dependent on a matrix being defined */
 	return (ReinitializeMrBayes ());
 	
 }
@@ -881,29 +906,33 @@ int ReinitializeMrBayes (void)
 	
 	int				i;
 	
-	/* reset all matrix flags */
+	/* reset all taxa flags */
 	defTaxa              = NO;                       /* flag for whether number of taxa is known      */
+    isTaxsetDef          = NO;                       /* is a taxlabels set defined                    */
     isTranslateDef       = NO;                       /* is a translate block defined                  */
-	defChars             = NO;                       /* flag for whether number of characters is known*/
-	defMatrix            = NO;                       /* flag for whether matrix is successfull read   */
-	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms     */
-    isInAmbig			 = NO;						 /* flag for whether the parser is within ()      */
-	isInPoly			 = NO;						 /* flag for whether the parser is within {}      */
-	defPartition         = NO;                       /* flag for whether character partition is read  */
-	defConstraints       = NO;                       /* flag for whether constraints on tree are read */
-	defPairs             = NO;                       /* flag indicating whether pairs have been defnd */
-	numDefinedPartitions = 0;                        /* number of defined partitions                  */
-	partitionNum         = 1;                        /* partition number currently enforced           */
-	numCurrentDivisions  = 0;                        /* number of partitions of data                  */
-	numCharSets          = 0;          			     /* holds number of character sets                */
-	numPartitions		 = 1;          			     /* holds number of partitions                    */
 	numDefinedConstraints= 0;          			     /* holds number of defined constraints           */
 	outGroupNum			 = 0;            			 /* default outgroup                              */
-	isMixed			     = NO;          			 /* are data mixed ?                              */
-	dataType             = NONE;          			 /* holds datatype                                */
-	matchId = gapId = missingId = 'z';
-	missingId = '?';                                 /* allow default '?' for missing characters      */
-	strcpy (spacer, "");                             /* holds blanks for indentation                  */
+	numTaxaSets          = 0;          			     /* holds number of taxa sets                     */
+
+	/* reset all characters flags */
+    defChars             = NO;                       /* flag for whether number of characters is known  */
+	defMatrix            = NO;                       /* flag for whether matrix is successfull read     */
+	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms       */
+    isInAmbig			 = NO;						 /* flag for whether the parser is within ()        */
+	isInPoly			 = NO;						 /* flag for whether the parser is within {}        */
+	defPartition         = NO;                       /* flag for whether character partition is read    */
+	defPairs             = NO;                       /* flag indicating whether pairs have been defnd   */
+	numDefinedPartitions = 0;                        /* number of defined partitions, including default */
+	numDivisions		 = 1;          			     /* number of currently defined divisions (parser)  */
+	partitionNum         = 0;                        /* partition number currently enforced             */
+	numCurrentDivisions  = 0;                        /* number of partitions of data                    */
+	numCharSets          = 0;          			     /* holds number of character sets                  */
+	isMixed			     = NO;          			 /* are data mixed ?                                */
+	dataType             = NONE;          			 /* holds datatype                                  */
+	matchId              = '.';                      /* allow default '.' for match character           */
+	gapId                = '-';                      /* allow default '-' for gap character             */
+	missingId            = '?';                      /* allow default '?' for missing characters        */
+	strcpy (spacer, "");                             /* holds blanks for indentation                    */
 
 	/* chain parameters */
 	chainParams.numGen = 1000000;                    /* number of MCMC cycles                         */
@@ -955,7 +984,6 @@ int ReinitializeMrBayes (void)
 	chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
 	chainParams.checkFreq = 100000;			         /* check-pointing frequency                      */
 	chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */
-	chainParams.scientific = YES;                    /* scientific format for sampled values ?        */
 
 	/* sumt parameters */
 	strcpy(sumtParams.sumtFileName, "temp.t");       /* input name for sumt command                   */
@@ -963,12 +991,10 @@ int ReinitializeMrBayes (void)
     sumtParams.sumtBurnInFraction = 0.25;            /* relative burnin fraction for sumt command     */
     sumtParams.sumtBurnIn = 0;                       /* absolute burnin for sumt command              */
 	strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
-	strcpy(sumtParams.phylogramType, "Brlens");      /* type of phylogram output                      */
 	sumtParams.calcTrprobs = YES;                    /* should individual tree probs be calculated    */
 	sumtParams.showSumtTrees = NO;                   /* should the individual tree probs be shown     */
-	sumtParams.freqDisplay = 0.05;                   /* threshold for printing partitions to screen   */
 	sumtParams.printBrlensToFile = NO;               /* should brlens be printed to file              */
-	sumtParams.brlensFreqDisplay = 0.20;             /* threshold for printing brlens to file         */
+	sumtParams.brlensFreqDisplay = 0.50;             /* threshold for printing brlens to file         */
 	sumtParams.numTrees = 1;                         /* number of trees to summarize                  */
 	sumtParams.numRuns = 2;                          /* number of analyses to summarize               */
 	sumtParams.orderTaxa = YES;						 /* order taxa in trees ?                         */
@@ -976,29 +1002,31 @@ int ReinitializeMrBayes (void)
     sumtParams.table = YES;                          /* display table of part. freq.?                 */
     sumtParams.summary = YES;                        /* display overall diagnostics?                  */
     sumtParams.showConsensus = YES;                  /* display consensus tree(s)?                    */
+    sumtParams.consensusFormat = RICH;               /* format of consensus tree                      */
 	strcpy (sumtParams.sumtOutfile, "temp.t.stat");  /* output name for sumt command                  */
+	sumtParams.HPD = YES;                            /* use Highest Posterior Density?                */
 
 	/* sump parameters */
 	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
 	sumpParams.sumpBurnIn = 0;                       /* burnin for sump command                       */
-	sumpParams.margLike = YES;					     /* print marginal likelihood                     */
-	sumpParams.plot = YES;                           /* print likelihood plot                         */
-	sumpParams.table = YES;                          /* print parameter table                         */
-	sumpParams.printToFile = NO;                     /* do not print output to file                   */
-	strcpy (sumpParams.sumpOutfile, "temp.p.stat");  /* output name for sump command                  */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
+	sumpParams.HPD = NO;                             /* use Highest Posterior Density?                */
 
 	/* comparetree parameters */
 	strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptOutfile, "temp.comp");/* input name for comparetree command            */
+	comptreeParams.relativeBurnin = NO;              /* use relative burnin for comparetree command ? */
 	comptreeParams.comptBurnIn = 0;                  /* burnin for comparetree command                */
+	comptreeParams.comptBurnInFrac = 0.25;           /* burnin fraction for comparetree command       */
 
 	/* plot parameters */
 	strcpy(plotParams.plotFileName, "temp.p");       /* input name for plot command                   */
 	strcpy(plotParams.parameter, "lnL");             /* plotted parameter plot command                */
 	strcpy(plotParams.match, "Perfect");             /* matching for plot command                     */
+	plotParams.relativeBurnin = NO;                  /* use relative burnin for plot command ? */
 	plotParams.plotBurnIn = 0;                       /* burnin for plot command                       */
+	plotParams.plotBurnInFrac = 0.25;                /* burnin fraction for plot command       */
 	
     return (NO_ERROR);
 
@@ -1036,6 +1064,13 @@ int DoQuit (void)
 				}
 			}
 		}
+
+    /* free modelIndicatorParams and modelElementNames */
+    free (modelIndicatorParams);
+    for (i=0; modelElementNames[i][0]!=""; i++)
+        free (modelElementNames[i]);
+    free (modelElementNames[i]);
+    free (modelElementNames);
 
 	MrBayesPrint ("   Quitting program\n\n");
 
