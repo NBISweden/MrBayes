@@ -892,6 +892,7 @@ typedef struct model
 	char		treeHeightPr[100];    /* prior on tree height for clock models        */
 	MrBFlt		treeHeightGamma[2];
 	MrBFlt		treeHeightExp;
+	MrBFlt		treeHeightFix;
 	Calibration treeAgeCalibration;   /* prior on tree age for calibrated clock models */
 	char		thetaPr[100];         /* prior on coalescence                         */
 	MrBFlt		thetaFix;

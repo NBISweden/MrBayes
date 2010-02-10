@@ -33,7 +33,7 @@
  */
 
 /* id-string for ident, do not edit: cvs will update this string */
-const char mcmcID[]="$Id: mcmc.c,v 3.174 2009/02/03 15:11:31 ronquist Exp $";
+const char mcmcID[]="$Id: mcmc.c,v 3.177 2009/08/07 15:17:05 hoehna Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -257,10 +257,14 @@ MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
+int     LnBDProbRannala1997 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
+int     LnBDProbGernhard2008 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int     LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t);
+MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
-MrBFlt  LnVt (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
+MrBFlt  LnBDGernhardNominator (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
+MrBFlt  LnBDGernhardDenominator (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 void    MarkClsBelow (TreeNode *p);
 MrBFlt  MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt  MinimumValue (MrBFlt x, MrBFlt y);
@@ -12078,7 +12082,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 		if (!strcmp(mp->treeHeightPr,"Exponential"))
 			/* exponential prior on tree height */
 			(*lnPriorRatio) += mp->treeHeightExp * (oldHeight - newHeight);
-		else
+		else if (!strcmp(mp->treeHeightPr,"Gamma"))
 			/* gamma prior on tree height */
 			(*lnPriorRatio) += (mp->treeHeightGamma[1] - 1.0) * (log(newHeight) - log(oldHeight)) - mp->treeHeightGamma[0] * (newHeight - oldHeight);
 		}
@@ -12514,7 +12518,7 @@ MrBFlt LogPrior (int chain)
                     /* tree height */
                     if (!strcmp(mp->treeHeightPr, "Exponential"))
 						lnPrior += log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-					else
+					else if (!strcmp(mp->treeHeightPr, "Gamma"))
 						lnPrior += mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
                     
                     lnPrior += LnUniformPriorPr(t);
@@ -12546,7 +12550,7 @@ MrBFlt LogPrior (int chain)
 					lnPrior += x;
 					if (!strcmp(mp->treeHeightPr, "Exponential"))
 						lnPrior += log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-					else
+                    else if (!strcmp(mp->treeHeightPr, "Gamma"))
 						lnPrior += mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
 					}
                 if (t->isCalibrated == YES)
@@ -12753,6 +12757,77 @@ MrBFlt LogPrior (int chain)
 
 int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 
+{	
+	// use the BD prob from Rannala&Yang1996
+	return LnBDProbRannala1997(t,prob,sR,eR,sF);
+	
+	// use the BD prob from Gernhard2008
+	//return LnBDProbGernhard2008(t,prob,sR,eR,sF);
+		
+}
+
+
+/*---------------------------------------------------------------------------------
+|
+|   LnBDProbRannala1996
+|
+|   See:
+|   Rannala and Yang (1996),
+|   Probability Distribution of Molecular Evolutionary Trees: A New Method of Phylogenetic Inference
+|   Journal of Molecular Biology
+|
+|   and
+|
+|   Rannala and Yang (1997),
+|   Bayesian Phylogenetic Inference Using DNA Sequences: A Markov Chain Monte Carlo Approach
+|   Journal of Molecular Biology and Evolution
+|
+|   The formula was corrected by Sebastian Hoehna:
+|
+|                  (s-2)     (s-2)     s-1  
+|   p(t) = [p0(t_1)]     * mu       * prod p1(t_i)
+|                                      i=2
+|   with
+|
+|            f*mu + (b(1.0-f)-mu)e(t)
+|   p0(t) = -------------------------
+|             f*b + (b(1.0-f)-mu)e(t)
+|
+|           1   (        f(b-d)         ) 2
+|   p1(t) = - * (-----------------------)   * e(t)
+|           f   (f*b + (b(1.0-f)-mu)e(t))
+|
+|
+|                  -(b-d)*t
+|   where e(t) = e
+|
+|   This function calculates the probability of a tree under the neutral
+|   birth death prior with constant birth and death rates.
+|   We assume a rooted tree that satisfies the molecular clock constraint. The
+|   Tree is labelled as follows:
+|
+|                                      t_4  
+|     \         \         \        /            
+|      \         \         \      /              
+|       \         \         \    /         
+|        \         \         \  /          
+|         \         \         \/       t_3 
+|          \         \        /            
+|           \         \      /             
+|            \         \    /              
+|             \         \  /               
+|              \         \/            t_2  
+|               \        /                 
+|                \      /                  
+|                 \    /                        
+|                  \  /                         
+|                   \/                 t_1 
+|    
+|
+---------------------------------------------------------------------------------*/
+
+int LnBDProbRannala1997 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
+
 {
 
 	int				i, j, nNodes;
@@ -12778,23 +12853,27 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 		}
 	nNodes = j;
 
+	// should work without rescaling
 	/* rescale all of the node times on the tree */
-	for (i=0; i<nNodes; i++)
-		nt[i] /= rootTime;
+	//for (i=0; i<nNodes; i++)
+	//	nt[i] /= rootTime;
 		
-	/* I think this is correct. It looks as if Yang and Rannala (1997)
-	   have the root time constrained to be 1.0. */
-	rootTime = 1.0;
+	// set the time of the root to 1.0 because we are using a scaled tree
+	//rootTime = 1.0;
 							
 	/* calculate probabilities of tree */
 	if (AreDoublesEqual(sR,eR,ETA)==NO)
 		{
-		(*prob) = (numLocalTaxa - 2.0) * log(sR);
+		// birth rate != death rate
+		// d^(s-2) * p0(t_root)^s-2
+		(*prob) = (numLocalTaxa - 2.0) * (log(eR) - LnP0(rootTime, sR, eR, sF));
 		for (i=0; i<nNodes; i++)
-			(*prob) += LnP1 (nt[i], sR, eR, sF) - LnVt (rootTime, sR, eR, sF);
+			// p1(t_i)
+			(*prob) += LnP1 (nt[i], sR, eR, sF);
 		}
 	else
 		{
+		// birth rate == death rate -> the critical branching process
 		(*prob) = 0.0;
 		for (i=0; i<nNodes; i++)
 			(*prob) += log (1.0 + sF * eR) - (2.0 * log(1.0 + sF * eR * nt[i]));
@@ -12807,7 +12886,100 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 		
 }
 
+/*---------------------------------------------------------------------------------
+|
+|   LnBDProbGernhard2008
+|
+|   See:
+|   Tanja Gernhard (2008)
+|   The conditioned reconstructed process
+|   Journal of Theoretical Biology
+|
+|
+|                (n-1)         (2n-1)           (e(t_1))^2             n-1          e(t_i)
+|   p(t|n) = (f*b)     * [f(b-d)]     * --------------------------- * prod  ------------------------ 2
+|                                        (f*b-(b*(1-f)-d)*e(t_1))^3    i=2   (f*b-(b*(1-f)-d)*e(t_i))
+|
+|
+|                  -(b-d)*t
+|   where e(t) = e
+|
+|   This function calculates the probability of a tree under the neutral
+|   birth death prior with constant birth and death rates.
+|   We assume a rooted tree that satisfies the molecular clock constraint. The
+|   Tree is labelled as follows:
+|
+|                                      t_4  
+|     \         \         \        /            
+|      \         \         \      /              
+|       \         \         \    /         
+|        \         \         \  /          
+|         \         \         \/       t_3 
+|          \         \        /            
+|           \         \      /             
+|            \         \    /              
+|             \         \  /               
+|              \         \/            t_2  
+|               \        /                 
+|                \      /                  
+|                 \    /                        
+|                  \  /                         
+|                   \/                 t_1 
+|    
+|
+---------------------------------------------------------------------------------*/
 
+int LnBDProbGernhard2008 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
+
+{
+
+	int				i, j, nNodes;
+	MrBFlt			rootTime=0.0, *nt;
+	TreeNode		*p;
+
+	/* allocate space for the scaled speciation times */
+	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+	if (!nt)
+		{
+		printf ("\n   ERROR: Problem allocating nt\n");
+		return (ERROR);
+		}
+
+	/* get the node times and put them into a vector */
+	for (i=j=0; i<t->nIntNodes; i++)
+		{
+		p = t->intDownPass[i];
+		if (p->anc->anc != NULL)
+			nt[j++] = p->nodeDepth;
+		else
+			rootTime = p->nodeDepth;
+		}
+	nNodes = j;
+							
+	/* calculate probabilities of tree */
+	if (AreDoublesEqual(sR,eR,ETA)==NO)
+		{
+		// birth rate != death rate
+		// d^(s-2) * p0(t_root)^s-2
+		(*prob) = (numLocalTaxa - 1.0) * log(sF*sR);
+		(*prob) += (2*numLocalTaxa - 1.0) * log(sF*(sR-eR));
+		(*prob) += 2*LnBDGernhardNominator(rootTime, sR, eR, sF) - 3*LnBDGernhardDenominator(rootTime, sR, eR, sF);
+
+		for (i=0; i<nNodes; i++)
+			(*prob) += LnBDGernhardNominator(nt[i], sR, eR, sF) - 2*LnBDGernhardDenominator(nt[i], sR, eR, sF);
+		}
+	else
+		{
+		// birth rate == death rate -> the critical branching process
+		// not implemented yet!!!
+		}
+		
+	/* free memory */
+	free (nt);
+	
+	return (NO_ERROR);
+		
+}
 
 
 
@@ -13101,34 +13273,99 @@ MrBFlt LnUniformPriorPr (Tree *t)
 
 
 
-
-MrBFlt LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r)
-
-{
-
-	MrBFlt		p0t;
-	
-	p0t = r*(l-m) / (r*l + (l*(1.0-r)-m)*exp((m-l)*t) );
-	
-	return (log(1.0/r) + 2.0*log(p0t) + (m-l)*t);
-
-}
-
-
-
-
-
-MrBFlt LnVt (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r)
+/*
+|
+| The probability of having one lineage remaining after time t.
+|
+| param: t - speciation time
+| param: b - birth rate
+| param: d - death rate
+| param: f - sample frequency
+| return: log probability of one remaining lineage
+|
+*/
+MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 
 {
 
 	MrBFlt		p0t;
 	
-	p0t = r*(l-m) / (r*l + (l*(1.0-r)-m)*exp((m-l)*t) );
+	p0t = f*(b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t) );
 	
-	return (log(1.0 - (1.0/r) * p0t * exp((m-l)*t)));
+	return (log(1.0/f) + 2.0*log(p0t) + (d-b)*t);
 
 }
+
+/*
+|
+| The probability of having zero lineage remaining after time t (going extinct).
+|
+| param: t - speciation time
+| param: b - birth rate
+| param: d - death rate
+| param: f - sample frequency
+| return: log probability of zero remaining lineage
+|
+*/
+MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+
+{
+
+	MrBFlt		p0t;
+	
+	p0t = (f*d + (b*(1.0-f) - d)*exp((d-b)*t)) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+	
+	return (log(p0t));
+
+}
+
+/*
+|
+| The nominator of the birth death probability from Gernhard 2008
+|
+| param: t - speciation time
+| param: b - birth rate
+| param: d - death rate
+| param: f - sample frequency
+| return: log probability of zero remaining lineage
+|
+*/
+MrBFlt LnBDGernhardNominator (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+
+{
+
+	MrBFlt		p0t;
+	
+	p0t = (d-b)*t;
+	
+	return (p0t);
+
+}
+
+
+/*
+|
+| The denominator of the birth death probability from Gernhard 2008
+|
+| param: t - speciation time
+| param: b - birth rate
+| param: d - death rate
+| param: f - sample frequency
+| return: log probability of zero remaining lineage
+|
+*/
+MrBFlt LnBDGernhardDenominator (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+
+{
+
+	MrBFlt		p0t;
+	
+	p0t = (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+	
+	return (log(p0t));
+
+}
+
 
 
 
@@ -31915,11 +32152,11 @@ int PrintCheckPoint (int gen)
                     }
                 }
             if (t->isRooted == YES && t->isClock == NO)
-    	        SafeSprintf (&tempString, &tempStrSize, " = [&R] ");
+    	        SafeSprintf (&tempString, &tempStrSize, " = ");
             else if (t->isRooted == YES && t->isClock == YES)
     	        SafeSprintf (&tempString, &tempStrSize, " = [&R] [&clockrate = %s] ", MbPrintNum(t->clockRate));
             else /* if (t->isRooted == NO) */
-    	        SafeSprintf (&tempString, &tempStrSize, " = [&U] ");
+    	        SafeSprintf (&tempString, &tempStrSize, " = ");
             if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
             /* write the tree in (extended) Newick format */
 			if (nErrors == 0)
@@ -34960,11 +35197,11 @@ int PrintTree (int curGen, Tree *tree, int showBrlens)
 	
 	/* write the tree in Newick format */
     if (tree->isRooted == YES && tree->isClock == NO)
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] ", curGen);
+    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
     else if (tree->isRooted == YES && tree->isClock == YES)
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] [&clockrate = %lf] ", curGen, tree->clockRate);
+    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
     else /* if (tree->isRooted == NO) */
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&U] ", curGen);
+    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
     if (AddToPrintString (tempStr) == ERROR) return(ERROR);
    	WriteTreeToPrintString (tree->root->left, showBrlens, tree->isRooted);
    	SafeSprintf (&tempStr, &tempStrSize, ";\n");
@@ -37249,20 +37486,20 @@ int RunChain (safeLong *seed)
 		if (chn % chainParams.numChains == 0)
 			{
 			if (chainParams.numRuns == 1)
-				MrBayesPrint ("%s   Initial log likelihoods:\n", spacer);
+				MrBayesPrint ("%s   Initial log likelihoods and log prior probs:\n", spacer);
 			else
-				MrBayesPrint ("%s   Initial log likelihoods for run %d:\n", spacer, chn / chainParams.numChains + 1);
+				MrBayesPrint ("%s   Initial log likelihoods and log prior probs for run %d:\n", spacer, chn / chainParams.numChains + 1);
 			}
 		TouchAllTrees (chn);
 		TouchAllCijks (chn);
 		curLnL[chn] = LogLike(chn);
+		curLnPr[chn] = LogPrior(chn);
 		for (i=0; i<numCurrentDivisions; i++)
 			{
 			if (modelSettings[i].gibbsGamma == YES)
 				curLnL[chn] += GibbsSampleGamma (chn, i, seed);
 			}
-		MrBayesPrint ("%s      Chain %d -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, curLnL[chn]);
-		curLnPr[chn] = LogPrior(chn);
+		MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, curLnL[chn], curLnPr[chn]);
 		}
 #if defined (MPI_ENABLED)
 	if (num_procs > 2)

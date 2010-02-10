@@ -33,7 +33,7 @@
  */
 
 /* id-string for ident, do not edit: cvs will update this string */
-const char commandID[]="$Id: command.c,v 3.93 2009/02/03 15:11:30 ronquist Exp $";
+const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12485,7 +12485,7 @@ void SetUpParms (void)
 	PARAM   (130, "Burnin",         DoCompareTreeParm, "\0");
 	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|\0");
 	PARAM   (132, "Swapadjacent",   DoMcmcParm,        "Yes|No|\0");
-	PARAM   (133, "Treeheightpr",   DoPrsetParm,       "Gamma|Exponential|\0");
+	PARAM   (133, "Treeheightpr",   DoPrsetParm,       "Gamma|Exponential|Fixed|\0");
 	PARAM   (134, "Ancstates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (135, "Siterates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (136, "Possel",         DoReportParm,      "Yes|No|\0");

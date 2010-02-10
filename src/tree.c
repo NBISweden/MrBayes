@@ -3911,6 +3911,60 @@ void ResetPolyTreePartitions (PolyTree *pt)
 
 /*----------------------------------------------
 |
+|   ResetRootHeight: Reset node heights in a clock
+|      tree to fit a new root height. Assumes
+|      node depths and lengths set correctly.
+|
+-----------------------------------------------*/
+int ResetRootHeight (Tree *t, MrBFlt rootHeight)
+{
+	int         i;
+    TreeNode	*p;
+    MrBFlt      factor, x, y;
+
+    if (t->isClock == NO)
+        return ERROR;
+    
+    /* make sure node depths are set */
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL)
+            p->nodeDepth = 0.0;
+        else
+            {
+            x = p->left->nodeDepth + p->left->length;
+            y = p->right->nodeDepth + p->right->length;
+            if (x > y)
+                p->nodeDepth = x;
+            else
+                p->nodeDepth = y;
+            }
+        }
+    for (i=t->nNodes-3; i>=0; i--)
+        {
+        p = t->allDownPass[i];
+        p->nodeDepth = p->anc->nodeDepth - p->length;
+        }
+
+    /* now reset node depths and branch lengths */
+    factor = rootHeight / t->root->left->nodeDepth;
+    t->root->left->nodeDepth = rootHeight;
+    for (i=t->nNodes-2; i>=0; i--)
+        {
+        p = t->allDownPass[i];
+        p->nodeDepth *= factor;
+        p->length *= factor;
+        }
+
+    return NO_ERROR;
+}
+
+
+
+
+/*----------------------------------------------
+|
 |   ResetTopology: rebuild the tree t to fit the 
 |      Newick string s. Everyting except topology
 |      is left in the same state in t.

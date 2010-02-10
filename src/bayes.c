@@ -33,7 +33,7 @@
  */
 
 /* id-string for ident, do not edit: cvs will update this string */
-const char bayesID[]="$Id: bayes.c,v 3.71 2009/01/05 14:15:20 ronquist Exp $";
+const char bayesID[]="$Id: bayes.c,v 3.72 2009/08/07 05:53:30 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -686,6 +686,7 @@ int InitializeMrBayes (void)
 	defaultModel.treeHeightGamma[0] = 1.0;
 	defaultModel.treeHeightGamma[1] = 1.0;
 	defaultModel.treeHeightExp = 1.0;
+	defaultModel.treeHeightFix = 1.0;
 	strcpy(defaultModel.speciationPr, "Uniform");   /* prior on speciation rate                     */
 	defaultModel.speciationFix = 1.0;
 	defaultModel.speciationUni[0] = 0.0;

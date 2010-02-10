@@ -29,7 +29,7 @@
  *
  */
 /* id-string for ident, do not edit: cvs will update this string */
-const char modelID[]="$Id: model.c,v 3.72 2009/02/04 15:51:52 ronquist Exp $";
+const char modelID[]="$Id: model.c,v 3.73 2009/08/07 05:53:41 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -5699,6 +5699,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 								MrBayesPrint ("%s   Setting Treeheightpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].treeHeightExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
+						else if (!strcmp(modelParams[i].treeHeightPr,"Fixed"))
+							{
+							sscanf (tkn, "%lf", &tempD);
+							modelParams[i].treeHeightFix = tempD;
+							if (nApplied == 0 && numCurrentDivisions == 1)
+								MrBayesPrint ("%s   Setting Treeheightpr to Fixed(%1.2lf)\n", spacer, modelParams[i].treeHeightFix);
+							else
+								MrBayesPrint ("%s   Setting Treeheightpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].treeHeightFix, i+1);
+							expecting  = Expecting(RIGHTPAR);
+							}
 						}
 					}
 				}
@@ -7558,6 +7568,11 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
 							return (ERROR);
 							}
+                        if (theTree->isClock == YES && !strcmp(modelParams[theTree->relParts[0]].treeHeightPr,"Fixed"))
+                            {
+                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") || !strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform"))
+                                ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeHeightFix);
+                            }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (theTree,0.001) == NO)
 							{
@@ -8686,7 +8701,7 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 
 	tree = GetTree (param, chn, state);
 	
-	for (i=1; i<param->nSubParams; i++)
+    for (i=1; i<param->nSubParams; i++)
 		{
 		q = param->subParams[i];
 		tree1 = GetTree (q, chn, state);
@@ -10559,6 +10574,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						{
 						if (strcmp(modelParams[part1].treeHeightPr,modelParams[part2].treeHeightPr) != 0)
 							isSame = NO;
+						else if (!strcmp(modelParams[part1].treeHeightPr,"Fixed"))
+							{
+							if (AreDoublesEqual (modelParams[part1].treeHeightFix, modelParams[part2].treeHeightFix, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							}
 						else if (!strcmp(modelParams[part1].treeHeightPr,"Exponential"))
 							{
 							if (AreDoublesEqual (modelParams[part1].treeHeightExp, modelParams[part2].treeHeightExp, (MrBFlt) 0.00001) == NO)
@@ -18140,7 +18160,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					{
 					if (numPrinted == 0)
 						MrBayesPrint ("%s            Not used   = %s", spacer, mv->moveType->shortName);
-					else if (numPrinted % 3 != 0)
+					else if (numPrinted % 10 != 0)
 						MrBayesPrint (", %s", mv->moveType->shortName);
 					else
 					  MrBayesPrint (",\n%s                         %s", spacer, mv->moveType->shortName);
