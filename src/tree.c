@@ -5277,7 +5277,7 @@ int StoreUPolyTopology (PolyTree *t, int *order)
 			}
 		}
 
-	/* break the tree into pieces */
+    /* break the tree into pieces */
 	for (i=0; i<numTips-3; i++)
 		{
 		/* find the next node to remove */
@@ -5287,37 +5287,30 @@ int StoreUPolyTopology (PolyTree *t, int *order)
 			{
 			order[numTips-4-i] = q->left->sib->x;
 			p->sib->anc = q->anc;
-			if (q->anc == NULL)
+            if (q->anc->left == q)
                 {
-                p->sib->left->sib->sib = p->sib->sib;
-                p->sib->sib = NULL;
-                }
-            else if (q->anc->left == q)
-                {
-				q->anc->left = q->left->sib;
+                q->anc->left = p->sib;
                 p->sib->sib = q->sib;
                 }
-			else
-				q->anc->left->sib = q->left->sib;
+            else
+                {
+                q->anc->left->sib = p->sib;
+                p->sib->sib = q->sib;
+                }
 			}
 		else
 			{
 			order[numTips-4-i] = q->left->x;
 			q->left->anc = q->anc;
-			if (q->anc == NULL)
+            if (q->anc->left == q)
                 {
-                q->left->left->sib->sib = p->sib;
-                q->left->sib = NULL;
+                q->anc->left = q->left;
+                q->left->sib = q->sib;
                 }
-			else if (q->anc->left == q)
+            else
                 {
-				q->anc->left = q->left;
-                q->anc->left->sib = q->sib;
-                }
-			else
-                {
-				q->anc->left->sib = q->left;
-                q->left->sib = NULL;
+                q->anc->left->sib = q->left;
+                q->left->sib = q->sib;
                 }
 			}
 		}
@@ -5345,7 +5338,7 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
     if (t->root->left->sib->sib->index != 0)
 		MovePolyCalculationRoot (t, 0);
 
-	/* find number of tips */
+    /* find number of tips */
 	numTips = t->nNodes - t->nIntNodes;
 
 	/* first get the terminal taxon positions and store
@@ -5385,6 +5378,8 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 		{
 		/* find the next node to remove */
 		p = t->allDownPass[order[numTips-4-i]];
+        assert (p->index > 2 && p->index < numTips);
+        assert (p->anc->anc != NULL);
 		q = p->anc;
         brlens[j--] = p->length;
         brlens[j--] = q->length;
@@ -5392,37 +5387,30 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 			{
 			order[numTips-4-i] = q->left->sib->x;
 			p->sib->anc = q->anc;
-			if (q->anc == NULL)
+            if (q->anc->left == q)
                 {
-                p->sib->left->sib->sib = p->sib->sib;
-                p->sib->sib = NULL;
-                }
-            else if (q->anc->left == q)
-                {
-				q->anc->left = q->left->sib;
+                q->anc->left = p->sib;
                 p->sib->sib = q->sib;
                 }
-			else
-				q->anc->left->sib = q->left->sib;
+            else
+                {
+                q->anc->left->sib = p->sib;
+                p->sib->sib = q->sib;
+                }
 			}
 		else
 			{
 			order[numTips-4-i] = q->left->x;
 			q->left->anc = q->anc;
-			if (q->anc == NULL)
+            if (q->anc->left == q)
                 {
-                q->left->left->sib->sib = p->sib;
-                q->left->sib = NULL;
+                q->anc->left = q->left;
+                q->left->sib = q->sib;
                 }
-			else if (q->anc->left == q)
+            else
                 {
-				q->anc->left = q->left;
-                q->anc->left->sib = q->sib;
-                }
-			else
-                {
-				q->anc->left->sib = q->left;
-                q->left->sib = NULL;
+                q->anc->left->sib = q->left;
+                q->left->sib = q->sib;
                 }
 			}
 		}

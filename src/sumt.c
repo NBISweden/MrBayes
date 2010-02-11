@@ -867,6 +867,7 @@ int DoCompareTree (void)
 		{
 #	endif
 
+
     /* Make sure we read trees using DoSumtTree() code instead of with the user tree code */
     inComparetreeCommand = YES;
 
@@ -881,7 +882,11 @@ int DoCompareTree (void)
 		goto errorExit;
 		}
 
-	MrBayesPrint ("%s   Examining files ...\n", spacer);
+	/* open output files for summary information (two files); check if we want to overwrite previous results */
+	if (OpenComptFiles () == ERROR)
+		goto errorExit;
+
+    MrBayesPrint ("%s   Examining files ...\n", spacer);
 
     /* Examine first file */
     if (ExamineSumtFile(comptreeParams.comptFileName1, &sumtFileInfo, treeName[0], &(brlensDef[0])) == ERROR)
@@ -971,6 +976,7 @@ int DoCompareTree (void)
         comptreeParams.burnin = comptreeParams.comptBurnIn;
 
     /* Initialize sumtParams struct */
+    numUniqueSplitsFound = numUniqueTreesFound = 0;
     sumtParams.runId = 0;
     strcpy(sumtParams.curFileName, comptreeParams.comptFileName1);
     sumtParams.tree = AllocatePolyTree (numTaxa);
@@ -1077,10 +1083,6 @@ int DoCompareTree (void)
 
     /* Sort taxon partitions (clades, splits) ... */
 	SortPartCtr (treeParts, 0, numUniqueSplitsFound-1);
-
-	/* open output files for summary information (two files) */
-	if (OpenComptFiles () == ERROR)
-		goto errorExit;
 		
 	/* print to screen */
     MrBayesPrint ("                                                                                   \n");
@@ -1457,8 +1459,8 @@ int DoCompareTree (void)
 		}
 
 	/* free memory and file pointers */
-    free(s);
-	free (dT1);
+    free(s);    
+    free (dT1);
 	FreeTree (tree1);
 	FreeTree (tree2);
     if (memAllocs[ALLOC_PACKEDTREES] == YES)
@@ -1472,11 +1474,25 @@ int DoCompareTree (void)
 		memAllocs[ALLOC_PACKEDTREES] = NO;
 		}
 
-	/* close files */
+    /* free sumtParams */
+    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
+    sumtParams.numFileTrees = NULL;
+    FreePolyTree (sumtParams.tree);
+    sumtParams.tree = NULL;
+    memAllocs[ALLOC_SUMTPARAMS] = NO;
+
+    /* close files */
 	SafeFclose (&fp);
 	SafeFclose (&fpParts);
 	SafeFclose (&fpDists);
 	
+    /* free pointer array to partitions, part and tree counters */
+    free (treeParts);
+    FreePartCtr (partCtrRoot);
+    FreeTreeCtr (treeCtrRoot);
+    partCtrRoot = NULL;
+    treeCtrRoot = NULL;
+
     /* reset taxon set */
     ResetTaxonSet();
 
@@ -1490,7 +1506,15 @@ int DoCompareTree (void)
 	
 	/* error exit */			
 	errorExit:
-        free (s);
+	    if (s) free(s);
+
+        /* free sumtParams */
+        if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
+        sumtParams.numFileTrees = NULL;
+        FreePolyTree (sumtParams.tree);
+        sumtParams.tree = NULL;
+        memAllocs[ALLOC_SUMTPARAMS] = NO;
+
 		free (dT1);
 	    FreeTree (tree1);
 	    FreeTree (tree2);
@@ -1507,6 +1531,13 @@ int DoCompareTree (void)
 
         /* reset taxon set */
         ResetTaxonSet();
+
+        /* free pointer array to partitions, part and tree counters */
+        free (treeParts);
+        FreePartCtr (partCtrRoot);
+        FreeTreeCtr (treeCtrRoot);
+        partCtrRoot = NULL;
+        treeCtrRoot = NULL;
 
         SafeFclose (&fp);
 		SafeFclose (&fpParts);
@@ -1670,6 +1701,21 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				free(tempStr);
 				return (ERROR);
 				}
+			}
+		/* set Minpartfreq (comptreeParams.minPartFreq) *******************************************************/
+		else if (!strcmp(parmName, "Minpartfreq"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%lf", &tempD);
+                comptreeParams.minPartFreq = tempD;
+                MrBayesPrint ("%s   Including partitions with probability greater than or equal to %lf in summary statistics\n", spacer, comptreeParams.minPartFreq);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
 			}
 		else
 			return (ERROR);
@@ -2568,6 +2614,7 @@ int DoSumt (void)
 	
 	/* error exit */
 	errorExit:
+        /* free sumtParams */
 	    if (s) free(s);
 	    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
         sumtParams.numFileTrees = NULL;
@@ -3505,6 +3552,8 @@ void FreePartCtr (PartCtr *r)
     free (r->count);
     free (r->partition);
     free (r);
+    numUniqueSplitsFound--;
+    r = NULL;
 }
 
 
@@ -3524,6 +3573,8 @@ void FreeTreeCtr (TreeCtr *r)
 
     free (r->order);
     free (r);
+    numUniqueTreesFound--;
+    r = NULL;
 }
 
 
@@ -3605,7 +3656,7 @@ int OpenComptFiles (void)
     /* set file names */
 	strcpy (pFilename, comptreeParams.comptOutfile);
 	strcpy (dFilename, comptreeParams.comptOutfile);
-	strcat (pFilename, ".parts");
+	strcat (pFilename, ".pairs");
 	strcat (dFilename, ".dists");
 
     /* one overwrite check for both files */
@@ -3623,7 +3674,6 @@ int OpenComptFiles (void)
             }
         if (previousFiles == YES)
             {
-            MrBayesPrint("\n");
             MrBayesPrint("%s   There are previous compare results saved using the same filenames.\n", spacer);
             if (WantTo("Do you want to overwrite these results") == YES)
                 {
@@ -3748,7 +3798,7 @@ int OpenSumtFiles (int treeNo)
                     MrBayesPrint("%s   Please specify a different output file name before running the sumt command.\n", spacer);
                     MrBayesPrint("%s      You can do that using 'sumt outputfile=<name>'. You can also move or\n", spacer);
                     MrBayesPrint("%s      rename the old result files.\n", spacer);
-                    return ABORT;
+                    return ERROR;
                     }
                 }
             }
@@ -4763,7 +4813,10 @@ void SortPartCtr (PartCtr **item, int left, int right)
 	PartCtr			*tempPartCtr;
 	int			    x;
 
-	i = left;
+    assert (left >= 0);
+    assert (right >= 0);
+
+    i = left;
 	j = right;
 	x = item[(left+right)/2]->totCount;
 	do 

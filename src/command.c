@@ -913,18 +913,20 @@ int DoAbout (void)
 	MrBayesPrint ("   ension). You can summarize the results in the \".t\" and \".p\" files         \n");
 	MrBayesPrint ("   using the \"sumt\" and \"sump\" commands, respectively.                       \n");
     MrBayesPrint ("                                                                                 \n");
-	MrBayesPrint ("   MrBayes is cowritten by John Huelsenbeck and Fredrik Ronquist. It is          \n");
-	MrBayesPrint ("   rather unusual to find a program of this sort that has multiple authors.      \n");
-	MrBayesPrint ("   However, each author brings unique strengths to the development of the        \n");
-	MrBayesPrint ("   program. Originally, the program was started by JH in August of               \n");
-	MrBayesPrint ("   2000 and was intended to be distributed to a small number of people.          \n");
-	MrBayesPrint ("   In March of 2001, Fredrik started making contributions to the program.        \n");
-	MrBayesPrint ("   The contributions were of such a significant nature that he was made          \n");
-	MrBayesPrint ("   a coauthor of the program. In particular, FR improved the speed of the        \n");
-	MrBayesPrint ("   likelihood functions of the program and included new proposal mechanisms      \n");
-	MrBayesPrint ("   for changing trees. The newest version of the program, v%s, is a              \n", VERSION_NUMBER);
-	MrBayesPrint ("   completely rewritten version of the earlier program, and has more             \n");
-	MrBayesPrint ("   integrally included FR\'s contributions.	                                    \n");
+	MrBayesPrint ("   MrBayes was originally written by John Huelsenbeck in August of 2000 and was  \n");
+	MrBayesPrint ("   intended to be distributed to a small number of people. In March of 2001,     \n");
+	MrBayesPrint ("   Fredrik Ronquist started making contributions to the program. The contribu-   \n");
+	MrBayesPrint ("   tions were of such a significant nature that he was made a coauthor of the    \n");
+	MrBayesPrint ("   program. Several others have contributed to the MrBayes code since then,      \n");
+	MrBayesPrint ("   most notably Paul van der Mark and Maxim Teslenko, both postdocs/programmers  \n");
+	MrBayesPrint ("   in Fredrik's lab. A large number of users and students, too many to list      \n");
+	MrBayesPrint ("   here, have also contributed importantly to the project (type 'Acknowledgments'\n");
+	MrBayesPrint ("   for a list of some of them).                                                  \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("   Since 2003, MrBayes has been distributed from SourceForge. Bugs can be repor- \n");
+	MrBayesPrint ("   ted to the MrBayes site on SourceForge or by contacting Maxim Teslenko        \n");
+	MrBayesPrint ("   (maxim.teslenko@nrm.se) directly. From 2010, the MrBayes code is considered   \n");
+	MrBayesPrint ("   mature and no further major additions are planned.                            \n");
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
 	return (NO_ERROR);
@@ -938,19 +940,6 @@ int DoAbout (void)
 int DoAcknowledgments (void)
 
 {
-    /*
- * html help Smithsonian ?
- * Paul 20070501:
- * Applied a pach from Julian Catchen <catchen@cs.uoregon.edu> for a bug
- * concerning non-matching headers.
- * "I tracked down the problem and fixed it in the attached patch. It was a
- * simple problem where a string parsing variable (headerNames) would be
- * reallocated when reading the second (or any subsequent file) file that
- * had lines longer than those in the first file. Problem was, it would
- * reallocate the variable and then clear it, causing any further header
- * comparisons to fail with the above message."
-    
-    */
 
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 	MrBayesPrint ("   Acknowledgments                                                               \n");
@@ -959,7 +948,12 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   Bollback, Barry Hall, Jimmy McGuire, Rasmus Nielsen, David Swofford,          \n");
     MrBayesPrint ("   Johan Nylander, Mikael Thollesson, and Derrick Zwickl for help during the     \n");
     MrBayesPrint ("   development of this program. Gautam Altekar, especially, was instrumental     \n");
-    MrBayesPrint ("   in getting the parallel version of the program working.                       \n");
+    MrBayesPrint ("   in getting the parallel version of the program working. Important bugfixes    \n");
+    MrBayesPrint ("   and additional functionality was contributed by Clemens Lakner, Sebastian     \n");
+    MrBayesPrint ("   Hoehna, Paul Lewis, Mark Holder, Julian Catchen, and many others.             \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   Bug fixes and user support was provided by Paul van der Mark (2005-2007) and  \n");
+    MrBayesPrint ("   from 2010 by Maxim Teslenko (maxim.teslenko@nrm.se).                          \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Our wives -- Edna Huelsenbeck and Eva Ronquist -- showed extraordinary        \n");
     MrBayesPrint ("   patience with us while we spent many late nights programming.                 \n");
@@ -8317,44 +8311,41 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		MrBayesPrint ("   Plot                                                                          \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   This command plots specified parameters in the .p file created by the         \n");
-		MrBayesPrint ("   program. The program prints two files during a MCMC analysis: a tree file     \n");
-		MrBayesPrint ("   and a parameter file. The parameter file has the extension \".p\".            \n");
-		MrBayesPrint ("   This command, plot, makes an x-y graph of the parameter over the course       \n");
-		MrBayesPrint ("   of the chain. The command can be useful for visually diagnosing convergence   \n");
-		MrBayesPrint ("   for many of the parameters of the phylogenetic model. The parameter to be     \n");
-		MrBayesPrint ("   plotted is specified by the \"parameter\" option. Several parameters can be   \n");
-		MrBayesPrint ("   plotted at once by using the \"match\" option, which has a default value of   \n");
-		MrBayesPrint ("   \"perfect\". For example, if you were to set \"parameter = pi\" and           \n");
-		MrBayesPrint ("   \"match = consistentwith\", then all of the state frequency parameters would  \n");
-		MrBayesPrint ("   be plotted. You can also set \"match=all\", in which case all of the          \n");
+		MrBayesPrint ("   This command plots specified parameters in the .p file or one of the .p files \n");
+		MrBayesPrint ("   created during an MCMC analysis. An x-y graph of the parameter over the course\n");
+		MrBayesPrint ("   of the chain is created. The command can be useful for visually diagnosing    \n");
+		MrBayesPrint ("   convergence for many of the parameters of the phylogenetic model. The para-   \n");
+		MrBayesPrint ("   meter to be plotted is specified by the \"parameter\" option. Several para-   \n");
+		MrBayesPrint ("   meters can be plotted at once by using the \"match\" option, which has a      \n");
+		MrBayesPrint ("   default value of \"perfect\". For example, if you were to set \"parameter = pi\"\n");
+		MrBayesPrint ("   and \"match = consistentwith\", then all of the state frequency parameters    \n");
+		MrBayesPrint ("   would be plotted. You can also set \"match=all\", in which case all of the    \n");
 		MrBayesPrint ("   parameters are plotted.                                                       \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Note that the \"Sump\" command provides a different set of convergence diag-  \n");
+		MrBayesPrint ("   nostics tools that you may also want to explore. Unlike \"Plot\", \"Sump\" can\n");
+		MrBayesPrint ("   compare two or more parameter samples and will calculate convergence diagnos- \n");
+		MrBayesPrint ("   tics as wel as parameter summaries for the pooled sample.                     \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
+		MrBayesPrint ("   Relburnin     -- If this option is set to 'Yes', then a proportion of the     \n");
 		MrBayesPrint ("                    samples will be discarded as burnin when creating the plot.  \n");
         MrBayesPrint ("                    The proportion to be discarded is set with Burninfrac (see   \n");
-		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
-		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
-		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
+		MrBayesPrint ("                    Burninfrac below). When the Relburnin option is set to 'No', \n");
+		MrBayesPrint ("                    then a specific number of samples is discarded instead. This \n");
+		MrBayesPrint ("                    number is set by Burnin (see below). Note that the burnin is \n");
+		MrBayesPrint ("                    set separately for the 'comparetree', 'sump' and 'sumt'      \n");
+		MrBayesPrint ("                    commands.                                                    \n");
 		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
 		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
 		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
-		MrBayesPrint ("                    to NO.                                                       \n");
+		MrBayesPrint ("                    to 'No'.                                                     \n");
 		MrBayesPrint ("   Burninfrac    -- Determines the fraction of samples that will be discarded    \n");
 		MrBayesPrint ("                    when creating a plot. The value of this parameter is only    \n");
-        MrBayesPrint ("                    relevant when Relburnin is set to YES. Example: A value of   \n");
+        MrBayesPrint ("                    relevant when Relburnin is set to 'Yes'. Example: A value of \n");
 		MrBayesPrint ("                    this option of 0.25 means that 25 % of the samples will be   \n");
 		MrBayesPrint ("                    discarded.                                                   \n");
-		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
-		MrBayesPrint ("                    samples will be discarded as burnin when calculating summary \n");
-        MrBayesPrint ("                    statistics. The proportion to be discarded is set with       \n");
-		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
-		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
-		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
 		MrBayesPrint ("   Filename      -- The name of the file to plot.                                \n");
 		MrBayesPrint ("   Parameter     -- Specification of parameters to be plotted. See above for     \n");
 		MrBayesPrint ("                    details.                                                     \n");
@@ -10601,10 +10592,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Disclaimer                                                                    \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   This command shows the disclaimer for the program. In short, the disclaimer   \n");
-	    MrBayesPrint ("   states that the authors (John Huelsenbeck and Fredrik Ronquist) are not       \n");
-	    MrBayesPrint ("   responsible for any silly things you may do to your computer or any           \n");
-	    MrBayesPrint ("   unforseen but possibly nasty things the computer program may inadvertently    \n");
-	    MrBayesPrint ("   do to you.                                                                    \n");
+	    MrBayesPrint ("   states that the authors are not responsible for any silly things you may do   \n");
+	    MrBayesPrint ("   to your computer or any unforseen but possibly nasty things the computer      \n");
+	    MrBayesPrint ("   program may inadvertently do to you.                                          \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Unlink"))
@@ -10842,30 +10832,32 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   as well as plots of the tree distance as a function of the generation. The    \n");
 		MrBayesPrint ("   plots can be used to get a quick indication of whether two runs have con-     \n");
 		MrBayesPrint ("   verged onto the same set of trees. The \"Comparetree\" command will also      \n");
-		MrBayesPrint ("   produce a \".parts\" file and a \".dists\" file (these file endings are added \n");
-		MrBayesPrint ("   to the end of the \"Outputname\"). The \".parts\" file contains the paired    \n");
+		MrBayesPrint ("   produce a \".pairs\" file and a \".dists\" file (these file endings are added \n");
+		MrBayesPrint ("   to the end of the \"Outputname\"). The \".pairs\" file contains the paired    \n");
 		MrBayesPrint ("   split frequencies from the two tree samples; the \".dists\" file contains the \n");
-		MrBayesPrint ("   tree distance values. Note that the \"Sumt\" command provides a different     \n");
-		MrBayesPrint ("   set of convergence diagnostics tools that you may also want to explore. Un-   \n");
-		MrBayesPrint ("   like \"Comparetree\", \"Sumt\" can compare more than two tree samples and     \n");
-		MrBayesPrint ("   will calculate consensus trees and split frequencies from the pooled samples. \n");
+		MrBayesPrint ("   tree distance values.                                                         \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Note that the \"Sumt\" command provides a different set of convergence diag-  \n");
+		MrBayesPrint ("   nostics tools that you may also want to explore. Unlike \"Comparetree\", \"Sumt\"\n");
+		MrBayesPrint ("   can compare more than two tree samples and will calculate consensus trees and \n");
+		MrBayesPrint ("   split frequencies from the pooled samples.                                    \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
+		MrBayesPrint ("   Relburnin     -- If this option is set to 'Yes', then a proportion of the     \n");
 		MrBayesPrint ("                    samples will be discarded as burnin when calculating summary \n");
         MrBayesPrint ("                    statistics. The proportion to be discarded is set with       \n");
 		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
-		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
+		MrBayesPrint ("                    'No', then a specific number of samples is discarded instead.\n");
 		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
 		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
 		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
 		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
 		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
-		MrBayesPrint ("                    to NO.                                                       \n");
+		MrBayesPrint ("                    to 'No'.                                                     \n");
 		MrBayesPrint ("   BurninFrac    -- Determines the fraction of samples that will be discarded    \n");
 		MrBayesPrint ("                    when summary statistics are calculated. The value of this    \n");
-		MrBayesPrint ("                    option is only relevant when Relburnin is set to YES.        \n");
+		MrBayesPrint ("                    option is only relevant when Relburnin is set to 'Yes'.      \n");
 		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25 % of  \n");
 		MrBayesPrint ("                    the samples will be discarded.                               \n");
 		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");

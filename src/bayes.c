@@ -804,34 +804,7 @@ void PrintHeader (void)
 		printf ("                             (Parallel version)\n");
 		printf ("                         (%d processors available)\n\n", num_procs);
 #		endif
-		srand ((unsigned int)time(NULL));
-		if (rand() % 2)
-			{
-			printf ("                                     by\n\n");
-			printf ("         John P. Huelsenbeck, Fredrik Ronquist, and Paul van der Mark\n\n");
-			printf ("                 Section of Ecology, Behavior and Evolution\n");
-			printf ("                       Division of Biological Sciences\n");
-			printf ("                     University of California, San Diego\n");
-			printf ("                           johnh@biomail.ucsd.edu\n\n");
-			printf ("                       School of Computational Science\n");
-			printf ("                           Florida State University\n");
-			printf ("                             ronquist@scs.fsu.edu \n");
-			printf ("                              paulvdm@scs.fsu.edu \n\n");
-			}
-		else
-			{
-			printf ("                                     by\n\n");
-			printf ("         Fredrik Ronquist, John P. Huelsenbeck, and Paul van der Mark\n\n");
-			printf ("                       School of Computational Science\n");
-			printf ("                           Florida State University\n");
-			printf ("                             ronquist@scs.fsu.edu \n");
-			printf ("                              paulvdm@scs.fsu.edu \n\n");
-			printf ("                 Section of Ecology, Behavior and Evolution\n");
-			printf ("                       Division of Biological Sciences\n");
-			printf ("                     University of California, San Diego\n");
-			printf ("                           johnh@biomail.ucsd.edu\n\n");
-			}
-		printf ("              Distributed under the GNU General Public License\n\n");
+		printf ("              Distributed under the GNU General Public License\n\n\n");
 
 #		if defined (MPI_ENABLED)
 		if (proc_id == 0)
@@ -847,7 +820,9 @@ void PrintHeader (void)
 			}
 #		else
 		printf ("               Type \"help\" or \"help <command>\" for information\n");
-		printf ("                     on the commands that are available.\n\n\n");
+		printf ("                     on the commands that are available.\n\n");
+		printf ("                      Type \"about\" for authorship and general\n");
+        printf ("                       information about the program\n\n\n");
 #		endif
 
 #	else       
@@ -861,36 +836,11 @@ void PrintHeader (void)
 		MrBayesPrint ("                             (Parallel version)\n");
 		MrBayesPrint ("                         (%d processors available)\n\n", num_procs);
 #		endif
-		srand((unsigned int) time (NULL));
-		if (rand() % 2)
-			{
-			MrBayesPrint ("                                     by\n\n");
-			MrBayesPrint ("         John P. Huelsenbeck, Fredrik Ronquist, and Paul van der Mark\n\n");
-			MrBayesPrint ("                 Section of Ecology, Behavior and Evolution\n");
-			MrBayesPrint ("                       Division of Biological Sciences\n");
-			MrBayesPrint ("                     University of California, San Diego\n");
-			MrBayesPrint ("                           johnh@biomail.ucsd.edu\n\n");
-			MrBayesPrint ("                       School of Computational Science\n");
-			MrBayesPrint ("                           Florida State University\n");
-			MrBayesPrint ("                             ronquist@scs.fsu.edu \n");
-			MrBayesPrint ("                              paulvdm@scs.fsu.edu \n\n");
-			}
-		else
-			{
-			MrBayesPrint ("                                     by\n\n");
-			MrBayesPrint ("         Fredrik Ronquist, John P. Huelsenbeck, and Paul van der Mark\n\n");
-			MrBayesPrint ("                       School of Computational Science\n");
-			MrBayesPrint ("                           Florida State University\n");
-			MrBayesPrint ("                             ronquist@scs.fsu.edu \n");
-			MrBayesPrint ("                              paulvdm@scs.fsu.edu \n\n");
-			MrBayesPrint ("                 Section of Ecology, Behavior and Evolution\n");
-			MrBayesPrint ("                       Division of Biological Sciences\n");
-			MrBayesPrint ("                     University of California, San Diego\n");
-			MrBayesPrint ("                           johnh@biomail.ucsd.edu\n\n");
-			}
-		MrBayesPrint ("              Distributed under the GNU General Public License\n\n");
+		MrBayesPrint ("              Distributed under the GNU General Public License\n\n\n");
 		MrBayesPrint ("               Type \"help\" or \"help <command>\" for information\n");
-		MrBayesPrint ("                     on the commands that are available.\n\n\n");	
+		MrBayesPrint ("                     on the commands that are available.\n\n");	
+		MrBayesPrint ("                   Type \"about\" for authorship and general\n");
+        MrBayesPrint ("                       information about the program.\n\n\n");
 #	endif
 	
 }
@@ -1011,7 +961,7 @@ int ReinitializeMrBayes (void)
 	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
 	sumpParams.sumpBurnIn = 0;                       /* burnin for sump command                       */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
-	sumpParams.HPD = NO;                             /* use Highest Posterior Density?                */
+	sumpParams.HPD = YES;                            /* use Highest Posterior Density?                */
 
 	/* comparetree parameters */
 	strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
@@ -1020,6 +970,8 @@ int ReinitializeMrBayes (void)
 	comptreeParams.relativeBurnin = NO;              /* use relative burnin for comparetree command ? */
 	comptreeParams.comptBurnIn = 0;                  /* burnin for comparetree command                */
 	comptreeParams.comptBurnInFrac = 0.25;           /* burnin fraction for comparetree command       */
+	comptreeParams.comptBurnInFrac = 0.25;           /* burnin fraction for comparetree command       */
+    comptreeParams.minPartFreq = 0.0;                /* minimum frequency of partitions to include    */
 
 	/* plot parameters */
 	strcpy(plotParams.plotFileName, "temp.p");       /* input name for plot command                   */
