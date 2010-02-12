@@ -98,6 +98,7 @@ int       ResetBrlensFromTree (Tree *tree, Tree *vTree);
 void      ResetPolyTree (PolyTree *t);
 void      ResetPolyTreePartitions (PolyTree *pt);
 void      ResetPolyTreeRelClockParams (PolyTree *pt);
+int       ResetRootHeight (Tree *t, MrBFlt rootHeight);
 int       ResetTopology (Tree *t, char *s);
 int       ResetTopologyFromTree (Tree *tree, Tree *top);
 int       ResetTopologyFromPolyTree (Tree *tree, PolyTree *top);

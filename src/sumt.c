@@ -4021,13 +4021,13 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
     support = calloc (sumtParams.numRuns, sizeof(MrBFlt));
     for (i=0; i<sumtParams.numRuns; i++)
         {
-        support[i] = (MrBFlt) x->count[i] / (MrBFlt) x->totCount;
+        support[i] = (MrBFlt) x->count[i] / (MrBFlt) sumtParams.numFileTreesSampled[i];
         }
     if (sumtParams.numRuns > 1)
         {
         MeanVariance (support, sumtParams.numRuns, &mean, &var);
         Range (support, sumtParams.numRuns, &min, &max);
-        fprintf (fp, "[&prob=%lf,prob_stddev=,prob_range={%lf,%lf}", mean, sqrt(var), min, max);
+        fprintf (fp, "[&prob=%.15le,prob_stddev=%.15le,prob_range={%.15le,%.15le}", mean, sqrt(var), min, max);
         }
     else
         fprintf (fp, "[&prob=%lf", support[0]);
@@ -4035,25 +4035,25 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
         {
         GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, ",length_mean=%lf,length_median=%lf,length_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",length_mean=%.15le,length_median=%.15le,length_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, ",length_mean=%lf,length_median=%lf,length_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",length_mean=%.15le,length_median=%.15le,length_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     if (sumtParams.isClock == YES)
         {
         GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, ",height_mean=%lf,height_median=%lf,height_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",height_mean=%.15le,height_median=%.15le,height_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, ",height_mean=%lf,height_median=%lf,height_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",height_mean=%.15le,height_median=%.15le,height_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     if (sumtParams.isCalibrated == YES)
         {
         GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, ",age_mean=%lf,age_median=%lf,age_95%%HPD={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",age_mean=%.15le,age_median=%.15le,age_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, ",age_mean=%lf,age_median=%lf,age_95%%CredInt={%lf,%lf}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",age_mean=%.15le,age_median=%.15le,age_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     if (sumtParams.isClock == YES && sumtParams.isRelaxed == YES)
         {

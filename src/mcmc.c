@@ -35197,11 +35197,11 @@ int PrintTree (int curGen, Tree *tree, int showBrlens)
 	
 	/* write the tree in Newick format */
     if (tree->isRooted == YES && tree->isClock == NO)
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
+    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] ", curGen);
     else if (tree->isRooted == YES && tree->isClock == YES)
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
+        SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] [&clockrate=%s] ", curGen, MbPrintNum(tree->clockRate));
     else /* if (tree->isRooted == NO) */
-    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = ", curGen);
+    	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&U] ", curGen);
     if (AddToPrintString (tempStr) == ERROR) return(ERROR);
    	WriteTreeToPrintString (tree->root->left, showBrlens, tree->isRooted);
    	SafeSprintf (&tempStr, &tempStrSize, ";\n");

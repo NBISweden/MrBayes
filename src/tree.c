@@ -5243,6 +5243,14 @@ int StoreUPolyTopology (PolyTree *t, int *order)
     if (t->root->left->sib->sib->index != 0)
 		MovePolyCalculationRoot (t, 0);
 
+    /* rearrange the root */
+    t->root->anc = t->root->left->sib->sib;
+    t->root->left->sib->sib = NULL;
+    t->root->anc->left = t->root;
+    t->root->anc->sib = NULL;
+    t->root->anc->anc = NULL;
+    t->root = t->root->anc;
+
 	/* find number of tips */
 	numTips = t->nNodes - t->nIntNodes;
 
@@ -5260,7 +5268,7 @@ int StoreUPolyTopology (PolyTree *t, int *order)
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
-		if (p->left == NULL)
+		if (p->left == NULL || p->anc == NULL)
 			p->x = p->y = p->index;
 		else
 			{
@@ -5338,6 +5346,14 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
     if (t->root->left->sib->sib->index != 0)
 		MovePolyCalculationRoot (t, 0);
 
+    /* rearrange the root */
+    t->root->anc = t->root->left->sib->sib;
+    t->root->left->sib->sib = NULL;
+    t->root->anc->left = t->root;
+    t->root->anc->sib = NULL;
+    t->root->anc->anc = NULL;
+    t->root = t->root->anc;
+
     /* find number of tips */
 	numTips = t->nNodes - t->nIntNodes;
 
@@ -5355,7 +5371,7 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
-		if (p->left == NULL)
+		if (p->left == NULL || p->anc == NULL)
 			p->x = p->y = p->index;
 		else
 			{
@@ -5416,8 +5432,15 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 		}
 
     /* store last three branch lengths, index 0, 1, 2 */
-    for (q=t->root->left; q!=NULL; q=q->sib)
-        brlens[q->index] = q->length;
+    q = t->root;
+    assert (q->index == 0);
+    brlens[q->index] = q->length;
+    q = q->left->left;
+    assert (q->index == 1 || q->index == 2);
+    brlens[q->index] = q->length;
+    q = q->sib;
+    assert (q->index == 1 || q->index == 2);
+    brlens[q->index] = q->length;
 
     return (NO_ERROR);
 }
