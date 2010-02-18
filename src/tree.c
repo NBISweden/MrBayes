@@ -1421,7 +1421,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
     /* calculate space needed */
     if (from->isRooted == YES && to->isRooted == YES)
 		nNodesNeeded    = from->nNodes + 1;
-	else if (from->isRooted = YES && to->isRooted == NO)
+	else if (from->isRooted == YES && to->isRooted == NO)
         nNodesNeeded    = from->nNodes;
     else /* if (from->isRooted = NO && to->isRooted == NO) */
 		nNodesNeeded    = from->nNodes;
@@ -1496,7 +1496,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 		{
 		p = from->root;
 		q = to->nodes + p->index;
-		q->anc = to->root = to->allDownPass[p->left->sib->sib->index];
+		q->anc = to->root = to->nodes + p->left->sib->sib->index;
 		q->length = to->root->length;
 		to->root->length = 0.0;
 		to->root->left = q;

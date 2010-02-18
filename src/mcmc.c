@@ -31287,7 +31287,6 @@ int PreparePrintFiles (void)
 		}
 	for (i=1; i<n; i++)
 		fpTree[i] = fpTree[0] + i*numTrees;
-	memAllocs[ALLOC_FILEPOINTERS] = YES;
 
 	/* Get root of local file name */
 	strcpy (localFileName, chainParams.chainFileName);
@@ -37115,7 +37114,6 @@ int ReusePreviousResults (int *numSamples)
 		}
 	for (i=1; i<n; i++)
 		fpTree[i] = fpTree[0] + i*numTrees;
-	memAllocs[ALLOC_FILEPOINTERS] = YES;
 
 	/* Get root of local file name */
 	strcpy (localFileName, chainParams.chainFileName);
@@ -37583,24 +37581,26 @@ int RunChain (safeLong *seed)
                     }
                 }
             }
-        }
 #if defined (MPI_ENABLED)
-    MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (sumErrors > 0)
-	    {
-	    MrBayesPrint ("%s    Error appending to previous run\n", spacer);
-	    return ERROR;
-	    }
+        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        if (sumErrors > 0)
+	        {
+	        MrBayesPrint ("%s    Error appending to previous run\n", spacer);
+	        return ERROR;
+	        }
 #	else
-    if (nErrors == 1)
-	    {
-	    MrBayesPrint ("%s    Error appending to previous run\n", spacer);
-	    return ERROR;
-	    }
+        if (nErrors == 1)
+	        {
+	        MrBayesPrint ("%s    Error appending to previous run\n", spacer);
+	        return ERROR;
+	        }
 #	endif
-
-    if (PreparePrintFiles() == ERROR)
-		nErrors++;
+        }
+    else
+        {
+        if (PreparePrintFiles() == ERROR)
+		    nErrors++;
+        }
 
 #	if defined (MPI_ENABLED)
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -38044,7 +38044,31 @@ int RunChain (safeLong *seed)
 
 	CloseMBPrintFiles (); /* redundant because files closed in FreeChainMemory but kept here as a safeguard in case of future changes */
 
-	/* Make sure current state is reset and values copied back to state 0.
+#ifndef NDEBUG 
+	ResetScalers ();
+	TouchAllPartitions ();
+	for (chn=0; chn<numLocalChains; chn++)
+		{
+		if (chn % chainParams.numChains == 0)
+			{
+			if (chainParams.numRuns == 1)
+				MrBayesPrint ("%s   Final log likelihoods and log prior probs (stored and calculated):\n", spacer);
+			else
+				MrBayesPrint ("%s   Final log likelihoods and log prior probs for run %d (stored and calculated):\n", spacer, chn / chainParams.numChains + 1);
+			}
+		TouchAllTrees (chn);
+		TouchAllCijks (chn);
+		for (i=0; i<numCurrentDivisions; i++)
+			{
+			if (modelSettings[i].gibbsGamma == YES)
+				curLnL[chn] += GibbsSampleGamma (chn, i, seed);
+			}
+		MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, curLnL[chn], curLnPr[chn]);
+		MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, LogLike(chn), LogPrior(chn));
+		}
+#endif
+
+    /* Make sure current state is reset and values copied back to state 0.
 	   Note that this can be tricky for Metropolis-coupled chains because
 	   the chain ids may necessitate some swapping of values among chains. */
     ResetChainIds ();

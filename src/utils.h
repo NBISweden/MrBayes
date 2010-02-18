@@ -49,7 +49,7 @@ typedef struct
 	Stat;
 
 
-int      AddBitfield (safeLong **list, int listLen, int *set, int setLen);
+int      AddBitfield (safeLong ***list, int listLen, int *set, int setLen);
 void     ClearBits (safeLong *bits, int nLongs);
 int      CopyResults (FILE *toFile, char *fromFileName, int lastGen);
 int      CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *treeNum);

@@ -50,25 +50,24 @@ const char utilsID[]="$Id: utils.c,v 1.7 2009/01/05 14:09:49 ronquist Exp $";
 
 
 /* AddBitfield: Add bitfield to list of bitfields */
-int AddBitfield (safeLong **list, int listLen, int *set, int setLen)
+int AddBitfield (safeLong ***list, int listLen, int *set, int setLen)
 {
     int     i, nLongsNeeded;
 
-    nLongsNeeded = setLen / nBitsInALong;
+    nLongsNeeded = (setLen / nBitsInALong) + 1;
 
-    list = (safeLong **) SafeRealloc ((void *)(list), (size_t)((listLen+1)*sizeof(safeLong *)));
-    if (!list)
+    (*list) = (safeLong **) SafeRealloc ((void *)(*list), (size_t)((listLen+1)*sizeof(safeLong *)));
+    if (!(*list))
         return ERROR;
     
-    list[0] = (safeLong *) SafeRealloc ((void *)(list[0]), (size_t)(nLongsNeeded*(listLen+1)*sizeof(safeLong)));
-    if (!list[0])
+    (*list)[listLen] = (safeLong *) SafeMalloc ((size_t)(nLongsNeeded*sizeof(safeLong)));
+    if (!(*list)[listLen])
         return ERROR;
 
-    list[listLen] = list[0] + nLongsNeeded * listLen;
-    ClearBits (list[listLen], nLongsNeeded);
+    ClearBits ((*list)[listLen], nLongsNeeded);
     for (i=0; i<setLen; i++)
         if (set[i] == YES)
-            SetBit(i, list[listLen]);
+            SetBit(i, (*list)[listLen]);
 
     return NO_ERROR;
 }
@@ -1002,7 +1001,13 @@ void *SafeMalloc(size_t s) {
 /* SafeRealloc: Print error if out of memory */
 void *SafeRealloc(void *ptr, size_t s) {
 
-    ptr = realloc (ptr, s);
+    if (ptr == NULL)
+        {
+        ptr = malloc (s);
+        memset(ptr, 0, s);
+        }
+    else
+        ptr = realloc (ptr, s);
 
     if(ptr==NULL)
         {

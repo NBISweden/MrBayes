@@ -1416,8 +1416,8 @@ int DoCharset (void)
 		}
 
 	/* store charset */
-	AddBitfield (charSet, numCharSets, tempSet, numChar);
-	
+	AddBitfield (&charSet, numCharSets, tempSet, numChar);
+
 	/* increment number of char sets */
 	numCharSets++;
 
@@ -2131,7 +2131,7 @@ int DoConstraints (void)
 		}
 
 	/* store tempSet */
-	AddBitfield (definedConstraint, numDefinedConstraints, tempSet, numTaxa);
+	AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
 	
     /* add a default node calibration */
     nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
@@ -5474,7 +5474,7 @@ int DoPartition (void)
     /* increment number of defined partitions */
 	numDefinedPartitions++;
 	
-	return (NO_ERROR);
+    return (NO_ERROR);
 
 }
 
@@ -5488,7 +5488,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 
 	int		i, index, tempInt;
 	
-	if (defMatrix == NO)
+    if (defMatrix == NO)
 		{
 		MrBayesPrint ("%s   A matrix must be specified before partitions can be defined\n", spacer);
 		return (ERROR);
@@ -5502,7 +5502,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 			/* check size of partition name */
 			if (strlen(tkn) > 99)
 				{
-				MrBayesPrint ("%s   Partition name is too long\n", spacer);
+				MrBayesPrint ("%s   Partition name is too long. Max 100 characters\n", spacer);
 				return (ERROR);
 				}
 				
@@ -6500,7 +6500,7 @@ int DoTaxaset (void)
 		}
 
 	/* merge tempSet with taxaSet */
-	AddBitfield (taxaSet, numTaxaSets, tempSet, numTaxa);
+	AddBitfield (&taxaSet, numTaxaSets, tempSet, numTaxa);
 	
 	/* increment number of char sets */
 	numTaxaSets++;
@@ -7838,13 +7838,12 @@ int FreeCharacters (void)
 	if (memAllocs[ALLOC_CHARSETS] == YES)
 		{
 		for (i=0; i<numCharSets; i++)
-            SafeFree (&charSetNames[i]);
-        SafeFree ((void **) &charSetNames);
-        if (charSet)
             {
-            SafeFree (&charSet[0]);
-            SafeFree ((void **) &charSet);
+            SafeFree (&charSetNames[i]);
+            SafeFree (&charSet[i]);
             }
+        SafeFree ((void **) &charSetNames);
+        SafeFree ((void **) &charSet);
         numCharSets = 0;
 		memAllocs[ALLOC_CHARSETS] = NO;
 		memoryLetFree = YES;
@@ -7947,10 +7946,11 @@ int FreeTaxa (void)
 	if (memAllocs[ALLOC_TAXASETS] == YES)
 		{
 		for (i=0; i<numTaxaSets; i++)
+            {
             SafeFree (&taxaSetNames[i]);
+            SafeFree ((void **) &taxaSet[i]);
+            }
         SafeFree ((void **) &taxaSetNames);
-        if (taxaSet)
-            SafeFree ((void **) &taxaSet[0]);
         SafeFree ((void **) &taxaSet);
         numTaxaSets = 0;
 		memAllocs[ALLOC_TAXASETS] = NO;
@@ -7958,12 +7958,13 @@ int FreeTaxa (void)
 		}
 	if (memAllocs[ALLOC_CONSTRAINTS] == YES)
 		{
-		for (i=0; i<numTaxaSets; i++)
+        for (i=0; i<numDefinedConstraints; i++)
+            {
+            SafeFree(&definedConstraint[i]);
             SafeFree (&constraintNames[i]);
-		SafeFree ((void **) &constraintNames);
-        if (definedConstraint)
-            SafeFree ((void **) &definedConstraint[0]);
+            }
         SafeFree ((void **) &definedConstraint);
+		SafeFree ((void **) &constraintNames);
         SafeFree ((void **) &nodeCalibration);
         numDefinedConstraints = 0;
 		memAllocs[ALLOC_CONSTRAINTS] = NO;
