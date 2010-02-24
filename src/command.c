@@ -2767,6 +2767,7 @@ int DoDelete (void)
 		}
 
     SetLocalTaxa ();
+    SetUpAnalysis(&globalSeed);
 
 	/* show tempSet (for debugging) */
 #	if 0

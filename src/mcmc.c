@@ -32088,7 +32088,16 @@ int PrintCheckPoint (int gen)
         remove (oldBkupFileName);
 
         /* write file header */
-        MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n\nbegin trees;\n", stamp, gen);
+        MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n\nbegin trees;\n\ttranslate\n", stamp, gen);
+
+        /* write translate block */
+		for (i=0; i<numLocalTaxa; i++)
+			{
+			if (i == numLocalTaxa - 1)
+				MrBayesPrintf (fp, "      %2d %s;\n", i+1, localTaxonNames[i]);
+			else
+				MrBayesPrintf (fp, "      %2d %s,\n", i+1, localTaxonNames[i]);
+			}
         }
 #if defined (MPI_ENABLED)
         }

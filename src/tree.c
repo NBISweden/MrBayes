@@ -1385,7 +1385,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
             }
         }
 	
-	return (NO_ERROR);
+    return (NO_ERROR);
 
 }
 
@@ -1411,7 +1411,6 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 	int			i, j, nNodesNeeded;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
-
 
     /* refuse to arbitrarily root an input tree */
     assert (!(from->isRooted == NO && to->isRooted == YES));
@@ -3380,16 +3379,17 @@ void PrintPolyNodes (PolyTree *pt)
 	int			i, j, k;
 	PolyNode	*p;
 
-	printf ("Node\tleft\tsib\tanc\tlength\n");
+	printf ("Node\tleft\tsib\tanc\tlength\tlabel\n");
 	for (i=0; i<pt->nNodes; i++)
 		{
 		p = &pt->nodes[i];
-		MrBayesPrint ("%d\t%d\t%d\t%d\t%f\n",
+		MrBayesPrint ("%d\t%d\t%d\t%d\t%f\t%s\n",
 			p->index,
 			p->left == NULL ? -1 : p->left->index,
 			p->sib == NULL ? -1 : p->sib->index,
 			p->anc == NULL ? -1 : p->anc->index,
-			p->length);
+			p->length,
+            p->label);
 		}
 	MrBayesPrint ("root: %d\n", pt->root->index); 
 	fflush(stdout);
@@ -3462,7 +3462,7 @@ int PrunePolyTree (PolyTree *pt)
 			numDeleted++;
 		}
 		
-	if (numDeleted == 0 && pt->nNodes-pt->nIntNodes == numTaxa)
+    if (numDeleted == 0 && pt->nNodes-pt->nIntNodes == numTaxa)
 		{
 		/* nothing to do */
 		return (NO_ERROR);
@@ -4722,6 +4722,9 @@ int ShowTree (Tree *t)
 	nLevels = t->root->left->y;
 	for (j=0; j<=nLines-2; j++)
 		{
+        for (i=0; i<SCREENWIDTH2-2; i++)
+            treeLine[i] = ' ';
+        treeLine[SCREENWIDTH-1] = '\n';
 		if (j % 2 == 0)
 			{
 			for (i=0; i<t->nNodes; i++)
