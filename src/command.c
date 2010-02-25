@@ -8192,7 +8192,7 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 		}
 	else if (IsIn(**sourceH,"!"))
 		{
-		*temp++ = *(*sourceH++);
+		*temp++ = *(*sourceH)++;
 		*tokenType = EXCLAMATIONMARK;
 		}
 	else if (IsIn(**sourceH,"%"))
