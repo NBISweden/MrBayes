@@ -334,8 +334,8 @@ int					inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRead, isFirstIn
 					isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
 					pairId, firstPair, inTaxaBlock, inCharactersBlock;
 char				gapId, missingId, matchId, tempSetName[100];
-CmdType 			*commandPtr;
-ParmInfoPtr			paramPtr;
+CmdType 			*commandPtr; /*Points to the commands array entery which corresponds to currently processed command*/
+ParmInfoPtr			paramPtr;	 /*Points to paramTable table array entery which corresponds to currently processed parameter of current command*/
 TreeNode			*pPtr, *qPtr;
 
 
@@ -572,7 +572,7 @@ int AllocTaxa (void)
         {
         goto errorExit;
         }
-    tipCalibration = (Calibration *)SafeMalloc((size_t) (numTaxa * sizeof(TaxaInformation)));
+    tipCalibration = (Calibration *)SafeMalloc((size_t) (numTaxa * sizeof(Calibration)));
     if (!tipCalibration)
         {
         SafeFree ((void **)&taxaInfo);
@@ -3120,8 +3120,17 @@ int DoEndBlock (void)
 }
 
 
+int delete_me(){
+	int i;
+	puts("hi");
+	    for (i=0; i<numChar; i++) {
+        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
+        if (!partitionId[i])
+            return ERROR;
+    	}
+		return 0;
 
-
+}
 
 int DoExecute (void)
 
@@ -3274,6 +3283,13 @@ int DoExecute (void)
 		foundNewLine = YES;
 		cmdLine++;
 
+		if(cmdLine>15){
+	    for (i=0; i<numChar; i++) {
+        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
+        if (!partitionId[i])
+            return ERROR;
+    	}
+		}
 		/* process string if not empty */
 		if (strlen(s) > 1)
 			{
@@ -5393,7 +5409,7 @@ int DoPartition (void)
 {
 
 	int		i, *partTypes;
-	
+		
 	/* add set to tempSet */
 	if (fromI >= 0)
 		if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
@@ -5409,35 +5425,36 @@ int DoPartition (void)
 			}
 		/*MrBayesPrint ("%4d %4d \n", i, tempSet[i]);*/
         }
-		
-	/* make certain that the partition labels go from 1 - numDivisions, inclusive */
-	for (i=0; i<numDivisions; i++)
-		numVars[i] = NO;
-	for (i=0; i<numChar; i++)
-		numVars[tempSet[i] - 1] = YES;
-	for (i=0; i<numDivisions; i++)
-		{
-		if (numVars[i] == NO)
-			{
-			MrBayesPrint ("%s   Could not find a single character for division %d\n", spacer, i+1);
-			return (ERROR);
-			}
-		}
-		
+
+			
 	/* check how many partitions were found against how many were expected */
 	if (whichPartition != numDivisions - 1)
 		{
 		MrBayesPrint ("%s   Did not find correct number of partitions (expecting %d, found %d)\n", spacer, numDivisions, whichPartition + 1);
 		return (ERROR);
 		}
-		
-	/* check if partition overruns data types */
-    partTypes = (int *) SafeCalloc (numDivisions, sizeof(int));
+
+	partTypes = (int *) SafeCalloc (numDivisions, sizeof(int));
     if (!partTypes)
         return ERROR;
+	
+	/* make certain that the partition labels go from 1 - numDivisions, inclusive */
+	for (i=0; i<numChar; i++)
+		partTypes[tempSet[i] - 1] = -1; //partTypes is temporary used here not as an indicator of partition type 
+	for (i=0; i<numDivisions; i++)
+		{
+		if (partTypes[i] == 0)
+			{
+			MrBayesPrint ("%s   Could not find a single character for division %d\n", spacer, i+1);
+			return (ERROR);
+			}
+		}
 
-    for (i=0; i<numDivisions; i++)
+	/* check if partition overruns data types */
+    /* partTypes[i] = -1 is already set in previouse loop
+	  for (i=0; i<numDivisions; i++)
 		partTypes[i] = -1;
+	*/
 	for (i=0; i<numChar; i++)
 		{
 		if (partTypes[ tempSet[i]-1 ] == -1)
@@ -6546,7 +6563,7 @@ int DoTaxasetParm (char *parmName, char *tkn)
 			/* check to see if the name has already been used as a taxset */
 			if (numTaxaSets > 0)
 				{
-				if (CheckString (taxaSetNames, numTaxa, tkn, &index) == ERROR)
+				if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
 					{
 					/* if the taxset name has not been used, then we should have an ERROR returned */
 					/* we _want_ to be here */
@@ -12288,6 +12305,7 @@ void SetPartition (int part)
     /* Set model partition */
 	partitionNum = part;
 	numCurrentDivisions = 0;
+	/*Set numCurrentDivisions to maximum devision a charecter belongs to in patiotion part*/
 	for (i=0; i<numChar; i++)
 		{
 		j = partitionId[i][part];
