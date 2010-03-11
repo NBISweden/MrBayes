@@ -734,12 +734,20 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			FlipBits(constraintPartition, nLongsNeeded, mask);
 
 		/* check that partition should be included */
-        k = NumBits(constraintPartition, numLocalTaxa);
+        k = NumBits(constraintPartition, nLongsNeeded);
         if (k == 1 || k == numLocalTaxa)
 			{
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a tip or the whole tree and will be disregarded\n", spacer, constrName);
 			t->constraints[i] = NO;
 			continue;
+            }
+
+		/* check if interior root in unrooted tree */
+        if (k == numLocalTaxa - 1 && t->isRooted == NO)
+            {
+            pt->root->isLocked = YES;
+            pt->root->lockID = constraintId;
+            continue;
             }
 
 		/* find first included terminal */
@@ -767,7 +775,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			continue;
 			}
 
-		/* create a new node */
+        /* create a new node */
 		tt = &pt->nodes[nextNode++];
 		tt->anc = pp;
 		tt->isLocked = YES;
