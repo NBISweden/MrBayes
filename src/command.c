@@ -3120,17 +3120,8 @@ int DoEndBlock (void)
 }
 
 
-int delete_me(){
-	int i;
-	puts("hi");
-	    for (i=0; i<numChar; i++) {
-        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
-        if (!partitionId[i])
-            return ERROR;
-    	}
-		return 0;
 
-}
+
 
 int DoExecute (void)
 
@@ -8078,10 +8069,18 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 	
 	if (readWord == YES && **sourceH != '"')
 		{
-		while (isgraph(**sourceH) && **sourceH!=';')
-			*temp++ = *(*sourceH)++;
+		if (**sourceH==';')
+            {
+            *temp++ = ';';
+            *tokenType = SEMICOLON;
+            }
+        else
+            {
+            while (isgraph(**sourceH) && **sourceH!=';')
+			    *temp++ = *(*sourceH)++;
+    		*tokenType = ALPHA;
+            }
 		*temp = '\0';
-		*tokenType = ALPHA;
 		readWord = NO;
 		return;
 		}
@@ -8166,6 +8165,7 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 			}
 		*tokenType = ALPHA;
 		*(*sourceH)++;
+        readWord = NO;
 		}
 	else if (IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789."))
 		{
@@ -12321,7 +12321,7 @@ void SetPartition (int part)
 
     activeParams[0] = (int *) SafeRealloc ((void *) (activeParams[0]), (size_t)(NUM_LINKED * numCurrentDivisions * sizeof(int)));
     for (i=1; i<NUM_LINKED; i++)
-        activeParams[i] = activeParams[0] + i*numDivisions;
+        activeParams[i] = activeParams[0] + i*numCurrentDivisions;
  
     linkTable[0] = (int *) SafeRealloc ((void *) (linkTable[0]), (size_t)(3 * NUM_LINKED * numCurrentDivisions * sizeof(int)));
     tempLinkUnlink[0] = linkTable[0] + NUM_LINKED*numCurrentDivisions;
