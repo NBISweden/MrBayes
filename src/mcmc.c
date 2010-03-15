@@ -34548,7 +34548,6 @@ int PrintStatesToFiles (int curGen)
 							}
 						}
 					}
-				}
 				free(printString);
 				}
 			}
@@ -37422,7 +37421,7 @@ int RunChain (safeLong *seed)
 				nErrors++;
 				}
 			else
-				memAllocs[ALLOC_DIAGNUTREE] = YES;
+				memAllocs[ALLOC_DIAGNTREE] = YES;
 
             if (chainParams.allComps == YES)
 				{
