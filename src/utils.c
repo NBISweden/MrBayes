@@ -360,7 +360,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
 
 	reliable = YES;
 	
-	scaler = vals[0];
+	scaler = vals[nVals-1];
 	a = aOld = n = 0.0;
 	for (i=0; i<nVals; i++)
 		{
@@ -387,7 +387,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
 	/* arithmetic mean */
 	(*mean) = (MrBFlt) log(a) + scaler;
 	
-	scaler = (MrBFlt) (0.0 - vals[0]);
+	scaler = (MrBFlt) (0.0 - vals[nVals-1]);
 	a = aOld = n = 0.0;
 	for (i=0; i<nVals; i++)
 		{

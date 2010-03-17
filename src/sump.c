@@ -226,7 +226,7 @@ int DoSump (void)
 	for (n=0; n<sumpParams.numRuns; n++)
 		{
 		unreliable = NO;
-		if (HarmonicArithmeticMeanOnLogs (parameterSamples[whichIsX].values[n], numRows, &mean, &harm_mean) == ERROR)
+		if (HarmonicArithmeticMeanOnLogs (parameterSamples[whichIsY].values[n], numRows, &mean, &harm_mean) == ERROR)
 			{
 			unreliable = YES;
 			oneUnreliable = YES;
@@ -269,7 +269,7 @@ int DoSump (void)
 		}
 	else
 		{
-		if (HarmonicArithmeticMeanOnLogs (parameterSamples[whichIsX].values[0], numRows, &mean, &harm_mean) == ERROR)
+		if (HarmonicArithmeticMeanOnLogs (parameterSamples[whichIsY].values[0], sumpParams.numRuns*numRows, &mean, &harm_mean) == ERROR)
 			{
 			unreliable = YES;
 			oneUnreliable = YES;
@@ -294,7 +294,7 @@ int DoSump (void)
 		}
 
     /* Calculate burnin */
-    burnin = fileInfo.firstParamLine - fileInfo.headerLine - 1;
+    burnin = fileInfo.firstParamLine - fileInfo.headerLine;
 
     /* Print parameter information to screen and to file. */
 	if (sumpParams.numRuns > 1 && sumpParams.allRuns == YES)
