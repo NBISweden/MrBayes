@@ -3128,7 +3128,7 @@ int DoExecute (void)
 {
 
 	int			c, i, rc, cmdLine, lineTerm, longestLineLength, nErrors;
-	char		*s;
+	char		*s, exeFileName[100];
 	FILE		*fp;
 #				if defined (MPI_ENABLED)
 	int			sumErrors;
@@ -3138,6 +3138,7 @@ int DoExecute (void)
 	cmdLine = 0;
 	numOpenExeFiles++;
 	s = NULL;
+    strncpy(exeFileName, inputFileName, 98);
 	
 	if (numOpenExeFiles > 1)
 		MrBayesPrint ("\n%s   Executing file \"%s\"...\n\n", spacer, inputFileName);
@@ -3386,7 +3387,7 @@ int DoExecute (void)
 		if (fp)
 			{
 			MrBayesPrint ("%s   The error occurred when reading char. %d on line %d\n", spacer, tokenP-cmdStr-strlen(token)+1, cmdLine);
-			MrBayesPrint ("%s      in the file '%s'\n", spacer, inputFileName);
+			MrBayesPrint ("%s      in the file '%s'\n", spacer, exeFileName);
 			}
 		if (s)
 			free (s);

@@ -607,7 +607,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 	   in the file and start from there. */
 	inSumpComment = NO;
 	lineNum = lastNonDigitLine = numParamLines = 0;
-	while (fgets (s, fileInfo->longestLineLength, fp) != NULL)
+	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
         {
 		sumpTokenP = &s[0];
 		allDigitLine = YES;
@@ -691,17 +691,17 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
     /* Calculate and check the number of columns and rows for the file; get header line at the same time */
 	(void)fseek(fp, 0L, 0);
 	for (lineNum=0; lineNum<lastNonDigitLine; lineNum++)
-	    if(fgets (s, fileInfo->longestLineLength, fp)==NULL)
+	    if(fgets (s, fileInfo->longestLineLength + 1, fp)==NULL)
             goto errorExit;
     strcpy(headerLine, s);
     for (; lineNum < lastNonDigitLine+burnin; lineNum++)
-	    if(fgets (s, fileInfo->longestLineLength, fp)==NULL)
+	    if(fgets (s, fileInfo->longestLineLength + 1, fp)==NULL)
             goto errorExit;
 
 	inSumpComment = NO;
 	nLines = 0;
 	numRows = numColumns = 0;
-	while (fgets (s, fileInfo->longestLineLength, fp) != NULL)
+	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
         {
 		sumpTokenP = &s[0];
 		allDigitLine = YES;
@@ -1276,9 +1276,9 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
     /* print the header rows */
     MrBayesPrint("\n");
 	if (sumpParams.HPD == YES)
-        MrBayesPrint ("%s   %*c                            95%% HPD Interval\n", spacer, longestHeader, ' ');
+        MrBayesPrint ("%s   %*c                             95%% HPD Interval\n", spacer, longestHeader, ' ');
     else
-        MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
+        MrBayesPrint ("%s   %*c                             95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
 	MrBayesPrint ("%s   Parameter%*c    Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
@@ -1544,7 +1544,7 @@ int ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *p
 	inSumpComment = NO;
 	numLinesToRead = fileInfo->numRows;
 	numLinesRead = 0;
-	while (fgets (s, fileInfo->longestLineLength + 5, fp) != NULL)
+	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
 		{
 		lastTokenWasDash = NO;
         column = 0;
