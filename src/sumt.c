@@ -537,6 +537,11 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
         else
             branchRate = ancRate;
         }
+    else
+		{
+    	branchRate = 0.0;
+    	printf("%s line %d: branchRate was not properly evaluated and is set to 0.0", __FILE__, __LINE__);
+		}
 
     return branchRate;
 }
@@ -2359,7 +2364,7 @@ int DoSumt (void)
                 MrBayesPrintf (fpVstat, "Parameter\tMean\tVariance\tHPD_Lower\tHPD_Upper\tMedian", spacer, longestHeader-9, ' ');
             if (sumtParams.numRuns > 1)
                 {
-                    MrBayesPrint ("     PSRF*  Nruns");
+                    MrBayesPrint ("     PSRF+  Nruns");
                 tableWidth += 17;
 		        MrBayesPrintf (fpVstat, "\tPSRF\tNruns");
                 }
@@ -2402,7 +2407,7 @@ int DoSumt (void)
                                 k++;
 			            if (theStats.PSRF < 0.0)
                             {
-				            MrBayesPrint ("        NA   %3d", k);
+				            MrBayesPrint ("       NA  %3d", k);
 				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
                             }
 			            else
@@ -2415,12 +2420,20 @@ int DoSumt (void)
                                 maxPSRF = theStats.PSRF;
                             }
 
+			            if (k != sumtParams.numRuns)
+	                    	MrBayesPrint (" *");
+			            }
+
+                    MrBayesPrintf (fpVstat, "\n");
+                    MrBayesPrint ("\n");
+                    /*
 			            MrBayesPrintf (fpVstat, "\n");
                         if (k != sumtParams.numRuns)
 				            MrBayesPrint (" *\n");
 			            else
 				            MrBayesPrint ("\n");
                         }
+                */
 		            }
                 }
 
@@ -2454,7 +2467,7 @@ int DoSumt (void)
                                 k++;
 			            if (theStats.PSRF < 0.0)
                             {
-				            MrBayesPrint ("        NA   %3d", k);
+			            	MrBayesPrint ("     NA  %3d", k);
 				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
                             }
 			            else
@@ -2466,13 +2479,19 @@ int DoSumt (void)
                             if (theStats.PSRF > maxPSRF)
                                 maxPSRF = theStats.PSRF;
                             }
-                        }
 
-		            MrBayesPrintf (fpVstat, "\n");
+			            if (k != sumtParams.numRuns)
+	                    	MrBayesPrint (" *");
+			            }
+
+                    MrBayesPrintf (fpVstat, "\n");
+                    MrBayesPrint ("\n");
+                    /*
                     if (k != sumtParams.numRuns)
-			            MrBayesPrint (" *\n");
-		            else
-			            MrBayesPrint ("\n");
+                    	MrBayesPrint (" +\n");
+					else
+						MrBayesPrint ("\n");
+			        */
                     }
                 }
 
@@ -2506,7 +2525,7 @@ int DoSumt (void)
                                 k++;
 			            if (theStats.PSRF < 0.0)
                             {
-				            MrBayesPrint ("        NA   %3d", k);
+			            	MrBayesPrint ("     NA  %3d", k);
 				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
                             }
 			            else
@@ -2536,7 +2555,7 @@ int DoSumt (void)
 
             if (sumtParams.numRuns > 1)
 		        {
-                MrBayesPrint ("%s   * Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+                MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
 		        MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge.\n", spacer);
                 }
 

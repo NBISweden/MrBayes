@@ -1283,7 +1283,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
 	MrBayesPrint ("%s   Parameter%*c    Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
-		MrBayesPrint ("     PSRF* ");
+		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
 
 	MrBayesPrint ("%s   ", spacer);
@@ -1346,7 +1346,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	MrBayesPrint ("\n");
 	if (nRuns > 1)
 		{
-		MrBayesPrint ("%s   * Convergence diagnostic (PSRF = Potential scale reduction factor; Gelman\n", spacer);
+		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential scale reduction factor; Gelman\n", spacer);
 		MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge.\n", spacer);
 		}
 
