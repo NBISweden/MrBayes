@@ -6084,7 +6084,7 @@ int DoSetParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Scientific\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (chainParams.orderTaxa == YES)
@@ -6095,7 +6095,7 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -6143,7 +6143,7 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -6166,7 +6166,7 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -6213,12 +6213,12 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
 					return (ERROR);
 					}
-				strcpy (tempStr, partitionNames[index]);
+				//strcpy (tempStr, partitionNames[index]);
 				SetPartition (index);
 				if (numCurrentDivisions == 1)
-					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, tempStr); 
+					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, partitionNames[index]);
 				else
-					MrBayesPrint ("%s   Setting %s as the partition, dividing characters into %d parts.\n", spacer, tempStr, numCurrentDivisions); 
+					MrBayesPrint ("%s   Setting %s as the partition, dividing characters into %d parts.\n", spacer, partitionNames[index], numCurrentDivisions);
 				if (SetModelDefaults () == ERROR)
 					return (ERROR);
 				if (SetUpAnalysis (&globalSeed) == ERROR)
@@ -6242,7 +6242,7 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -6260,7 +6260,7 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -7834,14 +7834,14 @@ int FreeCharacters (void)
         }
     if (memAllocs[ALLOC_MATRIX] == YES)
 		{
-		SafeFree (&matrix);
+		SafeFree ((void **) &matrix);
         defMatrix = NO;
 		memAllocs[ALLOC_MATRIX] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_CHARINFO] == YES)
 		{
-		SafeFree (&charInfo);
+		SafeFree ((void **) &charInfo);
 		memAllocs[ALLOC_CHARINFO] = NO;
 		memoryLetFree = YES;
 		}
@@ -7849,8 +7849,8 @@ int FreeCharacters (void)
 		{
 		for (i=0; i<numCharSets; i++)
             {
-            SafeFree (&charSetNames[i]);
-            SafeFree (&charSet[i]);
+            SafeFree ((void **) &charSetNames[i]);
+            SafeFree ((void **) &charSet[i]);
             }
         SafeFree ((void **) &charSetNames);
         SafeFree ((void **) &charSet);
@@ -7861,10 +7861,10 @@ int FreeCharacters (void)
 	if (memAllocs[ALLOC_PARTITIONS] == YES)
 		{
         for (i=0; i<numDefinedPartitions; i++)
-            SafeFree (&partitionNames[i]);
+            SafeFree ((void **) &partitionNames[i]);
         SafeFree ((void **)&partitionNames);
         for (i=0; i<numChar; i++)
-            SafeFree (&(partitionId[i]));
+            SafeFree ((void **) &(partitionId[i]));
         SafeFree ((void**)(&partitionId));
         numDefinedPartitions = 0;
 		memAllocs[ALLOC_PARTITIONS] = NO;
@@ -7872,10 +7872,10 @@ int FreeCharacters (void)
 		}
     if (memAllocs[ALLOC_PARTITIONVARS] == YES)
         {
-        SafeFree (&numVars);
-        SafeFree (&tempNum);
-        SafeFree (&activeParams[0]);
-        SafeFree (&linkTable[0]);
+        SafeFree ((void **) &numVars);
+        SafeFree ((void **) &tempNum);
+        SafeFree ((void **) &activeParams[0]);
+        SafeFree ((void **) &linkTable[0]);
         tempLinkUnlinkVec = NULL;
         activeParts = NULL;
         tempLinkUnlinkVec = NULL;
@@ -7939,17 +7939,17 @@ int FreeTaxa (void)
 	if (memAllocs[ALLOC_TAXA] == YES)
 		{
 		for (i=0; i<numTaxa; i++)
-            SafeFree (&taxaNames[i]);
+            SafeFree ((void **) &taxaNames[i]);
         SafeFree ((void **) &taxaNames);
-		SafeFree (&taxaInfo);
-        SafeFree (&tipCalibration);
+		SafeFree ((void **) &taxaInfo);
+        SafeFree ((void **) &tipCalibration);
         numTaxa = 0;
 		memAllocs[ALLOC_TAXA] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_TMPSET] == YES)
 		{
-		SafeFree (&tempSet);
+		SafeFree ((void **) &tempSet);
 		memAllocs[ALLOC_TMPSET] = NO;
 		memoryLetFree = YES;
 		}
@@ -7957,7 +7957,7 @@ int FreeTaxa (void)
 		{
 		for (i=0; i<numTaxaSets; i++)
             {
-            SafeFree (&taxaSetNames[i]);
+            SafeFree ((void **) &taxaSetNames[i]);
             SafeFree ((void **) &taxaSet[i]);
             }
         SafeFree ((void **) &taxaSetNames);
@@ -7970,8 +7970,8 @@ int FreeTaxa (void)
 		{
         for (i=0; i<numDefinedConstraints; i++)
             {
-            SafeFree(&definedConstraint[i]);
-            SafeFree (&constraintNames[i]);
+            SafeFree((void **) &definedConstraint[i]);
+            SafeFree ((void **) &constraintNames[i]);
             }
         SafeFree ((void **) &definedConstraint);
 		SafeFree ((void **) &constraintNames);
@@ -8165,7 +8165,7 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 			*temp++ = *(*sourceH)++;
 			}
 		*tokenType = ALPHA;
-		*(*sourceH)++;
+		(*sourceH)++;
         readWord = NO;
 		}
 	else if (IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789."))

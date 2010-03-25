@@ -1647,7 +1647,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (comptreeParams.relativeBurnin == YES)
@@ -1658,7 +1658,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -1688,13 +1688,13 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
                 comptreeParams.comptBurnInFrac = tempD;
@@ -1703,7 +1703,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -1738,7 +1738,7 @@ int DoSumt (void)
 
 {
 
-    int		        i, j=0, k, n, longestLineLength=0, len, longestName, treeNo, numTreePartsToPrint,
+    int		        i, j=0, k, n, len, longestName, treeNo, numTreePartsToPrint,
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
 			        longestHeader;
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
@@ -2728,7 +2728,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (sumtParams.relativeBurnin == YES)
@@ -2739,7 +2739,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -2757,7 +2757,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -2772,13 +2772,13 @@ int DoSumtParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
                 sumtParams.sumtBurnInFraction = tempD;
@@ -2787,7 +2787,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -3284,7 +3284,7 @@ int DoSumtTree (void)
                         spacer, t->name, sumtParams.curFileName);
 	            return ERROR;
                 }
-            if (inComparetreeCommand == NO && sumtParams.nESets != t->nESets || sumtParams.nBSets != t->nBSets)
+            if (inComparetreeCommand == NO && (sumtParams.nESets != t->nESets || sumtParams.nBSets != t->nBSets) )
                 {
                 MrBayesPrint ("%s   Tree '%s' in file '%s' does not have the expected relaxed clock parameters\n",
                         spacer, t->name, sumtParams.curFileName);
@@ -4084,13 +4084,13 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,
-                    sumtParams.tree->bSetName[i], theStats.upper);
+                    theStats.upper);
             else
                 fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%CredInt={%lf,%lf}",
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,
-                    sumtParams.tree->bSetName[i], theStats.upper);
+                    theStats.upper);
             }
         for (i=0; i<sumtParams.nESets; i++)
             {
@@ -4100,26 +4100,26 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
                     sumtParams.tree->eSetName[i], theStats.mean,
                     sumtParams.tree->eSetName[i], theStats.median,
                     sumtParams.tree->eSetName[i], theStats.lower,
-                    sumtParams.tree->eSetName[i], theStats.upper);
+                    theStats.upper);
             else
                 fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%CredInt={%lf,%lf}",
                     sumtParams.tree->eSetName[i], theStats.mean,
                     sumtParams.tree->eSetName[i], theStats.median,
                     sumtParams.tree->eSetName[i], theStats.lower,
-                    sumtParams.tree->eSetName[i], theStats.upper);
+                    theStats.upper);
             GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
             if (sumtParams.HPD == YES)
                 fprintf (fp, ",nEvents%s_mean=%lf,nEvents%s_median=%lf,nEvents%s_95%%HPD={%lf,%lf}",
                     sumtParams.tree->eSetName[i], theStats.mean,
                     sumtParams.tree->eSetName[i], theStats.median,
                     sumtParams.tree->eSetName[i], theStats.lower,
-                    sumtParams.tree->eSetName[i], theStats.upper);
+                    theStats.upper);
             else
                 fprintf (fp, ",nEvents%s_mean=%lf,nEvents%s_median=%lf,nEvents%s_95%%CredInt={%lf,%lf}",
                     sumtParams.tree->eSetName[i], theStats.mean,
                     sumtParams.tree->eSetName[i], theStats.median,
                     sumtParams.tree->eSetName[i], theStats.lower,
-                    sumtParams.tree->eSetName[i], theStats.upper);
+                    theStats.upper);
             }
         }
     fprintf (fp, "]");
@@ -4267,8 +4267,8 @@ void ResetTranslateTable (void)
 
 	for (i=0; i<numTranslates; i++)
         {
-        SafeFree (&transFrom[i]);
-        SafeFree (&transTo[i]);
+        SafeFree ((void **) &transFrom[i]);
+        SafeFree ((void **) &transTo[i]);
         }
 	SafeFree ((void **) &transFrom);
 	SafeFree ((void **) &transTo);

@@ -67,7 +67,7 @@ int DoPlot (void)
 
 
 	int			    i, n, nHeaders, burnin, len, longestHeader, whichIsX, whichIsY, numPlotted;
-	char		    *s=NULL, *headerLine=NULL, temp[100], **headerNames = NULL;
+	char		    temp[100], **headerNames = NULL;
     SumpFileInfo    fileInfo;
     ParameterSample *parameterSamples;
 	
@@ -251,7 +251,7 @@ int DoPlotParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (plotParams.relativeBurnin == YES)
@@ -262,7 +262,7 @@ int DoPlotParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -292,13 +292,13 @@ int DoPlotParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
                 plotParams.plotBurnInFrac = tempD;
@@ -307,7 +307,7 @@ int DoPlotParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}

@@ -1422,7 +1422,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 
     /* refuse to arbitrarily root an input tree */
     assert (!(from->isRooted == NO && to->isRooted == YES));
-    if (from->isRooted = NO && to->isRooted == YES)
+    if ( (from->isRooted = NO) && (to->isRooted == YES) )
         return (ERROR);
 
     /* calculate space needed */
@@ -3409,7 +3409,7 @@ void PrintPolyNodes (PolyTree *pt)
             printf ("Branch multiplier set '%s'\n", pt->bSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
-                printf ("%d:%f", j, pt->branchRate[i*pt->nNodes+j]);
+                printf ("%d:%f", j, pt->branchRate[pt->nBSets][j]);
                 if (j != pt->nNodes-1)
                     printf (", ");
                 }

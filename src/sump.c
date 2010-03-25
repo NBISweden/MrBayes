@@ -100,7 +100,7 @@ int DoSump (void)
 	int			    i, n, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
 				    unreliable, oneUnreliable, burnin, longestHeader, len;
 	MrBFlt		    mean, harm_mean;
-	char		    *s=NULL, **headerNames=NULL, temp[100];
+	char		    **headerNames=NULL, temp[100];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
 
@@ -421,7 +421,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (sumpParams.relativeBurnin == YES)
@@ -432,7 +432,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free (tempStr);
+				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -450,7 +450,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -465,13 +465,13 @@ int DoSumpParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					free(tempStr);
+					//free(tempStr);
 					return (ERROR);
 					}
                 sumpParams.sumpBurnInFraction = tempD;
@@ -480,7 +480,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				free(tempStr);
+				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -766,7 +766,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             {
 			MrBayesPrint ("%s   Expected %d headers but found %d headers\n", spacer, fileInfo->numColumns, *nHeaders);
             for (i=0; i<*nHeaders; i++)
-                SafeFree (&((*headerNames)[i]));
+                SafeFree ((void **) &((*headerNames)[i]));
             SafeFree ((void **) &(*headerNames));
             goto errorExit;
             }
@@ -900,20 +900,20 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	char	temp[100];
     FILE    *fp;
 
-    /* convenient synonym for number of column headers */ 
-    nHeaders;
+    /* nHeaders - is a convenient synonym for number of column headers */
+
 
     /* check if we have any model indicator variables and also check for longest header */
     k = 0;
     longestName = 0;
     for (i=0; i<nHeaders; i++)
         {
-        for (j=0; modelIndicatorParams[j]!=""; j++)
+        for (j=0; strcmp(modelIndicatorParams[j],"")!=0; j++)
             {
             if (IsSame (headerNames[i], modelIndicatorParams[j]) != DIFFERENT)
                 {
                 k++;
-                for (j1=0; modelElementNames[j][j1]!=""; j1++)
+                for (j1=0; strcmp(modelElementNames[j][j1],"")!=0; j1++)
                     {
                     j2 = (int)(strlen(headerNames[i]) + 2 + strlen(modelElementNames[j][j1]));
                     if (j2 > longestName)
@@ -959,13 +959,13 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
     /* calculate and print values */
     for (i=0; i<nHeaders; i++)
 		{
-        for (j=0; modelIndicatorParams[j]!=""; j++)
+        for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (headerNames[i], modelIndicatorParams[j]) != DIFFERENT)
                 break;
-        if (modelIndicatorParams[j] == "")
+        if (modelIndicatorParams[j][0] == '\0')
             continue;
 
-        for (nElements=0; modelElementNames[j][nElements]!=""; nElements++)
+        for (nElements=0; modelElementNames[j][nElements][0]!='\0'; nElements++)
             ;
         
         modelCounts = (int *) SafeCalloc (nElements, sizeof(int));
@@ -1036,8 +1036,8 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
             MrBayesPrintf (fp, "\n");
             }
 
-        SafeFree (&modelCounts);
-        SafeFree (&prob);
+        SafeFree ((void **) &modelCounts);
+        SafeFree ((void **) &prob);
 		}
 
 	/* print footer */
@@ -1239,10 +1239,10 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		{
         strcpy (temp, headerNames[i]);
 		len = (int) strlen(temp);
-        for (j=0; modelIndicatorParams[j]!=""; j++)
+        for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
-        if (modelIndicatorParams[j]!="")
+        if (modelIndicatorParams[j][0]!='\0')
             continue;
 		if (!strcmp (temp, "Gen"))
 			continue;
@@ -1303,7 +1303,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		{
         strcpy (temp, headerNames[i]);
 		len = (int) strlen(temp);
-        for (j=0; modelIndicatorParams[j]!=""; j++)
+        for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
 		if (IsSame (temp, "Gen") == SAME)

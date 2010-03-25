@@ -993,7 +993,7 @@ int DoQuit (void)
 
 {
 
-	int			i;
+	int			i,j;
 	char		tempName[100];
 		
 	/* free information for model and matrix */
@@ -1019,11 +1019,14 @@ int DoQuit (void)
 		}
 
     /* free modelIndicatorParams and modelElementNames */
-    free (modelIndicatorParams);
-    for (i=0; modelElementNames[i][0]!=""; i++)
-        free (modelElementNames[i]);
+    for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
+		{
+    	for (i=0; modelElementNames[j][i][0]!='\0'; i++)
+    		free (modelElementNames[j][i]);
+		}
     free (modelElementNames[i]);
     free (modelElementNames);
+    free (modelIndicatorParams);
 
 	MrBayesPrint ("   Quitting program\n\n");
 
