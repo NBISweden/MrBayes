@@ -8190,7 +8190,10 @@ int ExtendChainQuery ()
 			else
 				MrBayesPrint ("%s      Additional number of generations: ", spacer);
 
-			fgets (s, 20, stdin);
+			if( fgets (s, 20, stdin) == NULL )
+				{
+					printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+				}
 			sscanf (s, "%d", &additionalCycles);
 
 			} while (additionalCycles < 0);
@@ -19310,6 +19313,10 @@ int Move_ExtTBR3 (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio,
 	Tree		*t;
 	ModelParams *mp;
 
+
+	brlenNode[2] = NULL;
+	brlenNode[6] = NULL;
+
 	/* these parameters should be possible to set by user */
 	extensionProb = mvp[0];	/* extension probability */
 	tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
@@ -25775,6 +25782,7 @@ int Move_RanSPR1 (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio,
 	TreeNode	*p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *q;
 	Tree		*t;
 	ModelParams *mp;
+
 
 	/* these parameters should be possible to set by user */
 	extensionProb = mvp[0];	/* extension probability */
@@ -36817,7 +36825,10 @@ int ConfirmAbortRun(void)
     requestAbortRun = NO;
 
     MrBayesPrint("   Do you really want to stop the run (y/n)?");
-    fgets(line,98,stdin);
+	if( fgets (line,98,stdin) == NULL )
+		{
+		printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+		}
     for (i=0; (c=line[i])!='\0' && !isgraph(c); i++)
         ;
     if (c == 'y' || c == 'Y')

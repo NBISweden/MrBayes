@@ -121,6 +121,9 @@ int DoSump (void)
 		}
 	MrBayesPrint ("%s   Writing summary statistics to file %s.pstat\n", spacer, sumpParams.sumpFileName);
 
+	/* Initialize to silence warning. */
+	firstFileInfo.numRows = 0;
+	firstFileInfo.numColumns = 0;
 	/* examine input file(s) */
     for (i=0; i<sumpParams.numRuns; i++)
         {
@@ -700,7 +703,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 
 	inSumpComment = NO;
 	nLines = 0;
-	numRows = numColumns = 0;
+	numRows = numColumns = firstNumCols = 0;
 	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
         {
 		sumpTokenP = &s[0];
@@ -819,7 +822,7 @@ errorExit:
 ----------------------------------------------------*/
 int FindHeader (char *token, char **headerNames, int nHeaders, int *index)
 {
-    int         i, match, nMatches;
+    int         i, match=0, nMatches;
 
     *index = -1;
     nMatches = 0;
@@ -836,7 +839,7 @@ int FindHeader (char *token, char **headerNames, int nHeaders, int *index)
         return (ERROR);
 
     *index = match;
-	return (NO_ERROR);	
+    return (NO_ERROR);
 }
 
 

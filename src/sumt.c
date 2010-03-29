@@ -972,7 +972,12 @@ int DoCompareTree (void)
 		
 	/* ...and fast forward to beginning of last tree block (skipping begin trees). */
 	for (i=0; i<lastTreeBlockBegin[0] + 1; i++)
-		fgets (s, longestLineLength, fp);
+		{
+		if( fgets (s, longestLineLength, fp) == NULL )
+			{
+				printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+			}
+		}
 		
     /* Calculate burnin */
     if (comptreeParams.relativeBurnin == YES)
@@ -1006,7 +1011,10 @@ int DoCompareTree (void)
     ResetTranslateTable();
 	for (i=0; i<lastTreeBlockEnd[0] - lastTreeBlockBegin[0] - 1; i++)
 		{
-		fgets (s, longestLineLength, fp);
+		if( fgets (s, longestLineLength, fp) == NULL )
+			{
+				printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+			}
 		/*MrBayesPrint ("%s", s);*/
 		if (ParseCommand (s) == ERROR)
 			goto errorExit;
@@ -1029,7 +1037,12 @@ int DoCompareTree (void)
 		
 	/* ...and fast forward to beginning of last tree block. */
 	for (i=0; i<lastTreeBlockBegin[1] + 1; i++)
-		fgets (s, longestLineLength, fp);
+		{
+		if( fgets (s, longestLineLength, fp) == NULL )
+			{
+				printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+			}
+		}
 		
     /* Renitialize sumtParams struct */
     sumtParams.runId = 1;
@@ -1047,7 +1060,10 @@ int DoCompareTree (void)
     ResetTranslateTable();
 	for (i=0; i<lastTreeBlockEnd[1] - lastTreeBlockBegin[1] - 1; i++)
 		{
-		fgets (s, longestLineLength, fp);
+		if( fgets (s, longestLineLength, fp) == NULL )
+			{
+				printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+			}
 		/*MrBayesPrint ("%s", s);*/
 		if (ParseCommand (s) == ERROR)
 			goto errorExit;
@@ -1742,7 +1758,7 @@ int DoSumt (void)
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
 			        longestHeader;
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
-                    maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s, max_s, numPSRFSamples=0;
+                    maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0;
 	PartCtr 	    *x;
 	char		    *s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], divString[100];
 	FILE		    *fp=NULL;
@@ -1915,7 +1931,13 @@ int DoSumt (void)
 	
 			/* ...and fast forward to beginning of last tree block. */
 			for (i=0; i<sumtFileInfo.lastTreeBlockBegin+1; i++)
-				fgets (s, sumtFileInfo.longestLineLength-2, fp);
+				{
+				if( fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL )
+					{
+					printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+					}
+				}
+
 
 			/* Set up cheap status bar. */
 			if (sumtParams.runId == 0)
@@ -1938,7 +1960,10 @@ int DoSumt (void)
             ResetTranslateTable();
 			for (i=0; i<sumtFileInfo.lastTreeBlockEnd - sumtFileInfo.lastTreeBlockBegin - 1; i++)
 				{
-				fgets (s, sumtFileInfo.longestLineLength-2, fp);
+				if( fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL )
+					{
+					printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+					}
 				/*MrBayesPrint ("%s", s);*/
 				if (ParseCommand (s) == ERROR)
 					goto errorExit;
@@ -2537,13 +2562,21 @@ int DoSumt (void)
                             if (theStats.PSRF > maxPSRF)
                                 maxPSRF = theStats.PSRF;
                             }
-                        }
 
+			            if (k != sumtParams.numRuns)
+	                    	MrBayesPrint (" *");
+			            }
+
+                    MrBayesPrintf (fpVstat, "\n");
+                    MrBayesPrint ("\n");
+
+			         /*
 		            MrBayesPrintf (fpVstat, "\n");
                     if (k != sumtParams.numRuns)
 			            MrBayesPrint (" *\n");
 		            else
 			            MrBayesPrint ("\n");
+			            */
                     }
                 }
 

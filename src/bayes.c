@@ -1013,7 +1013,10 @@ int DoQuit (void)
 				{
 				MrBayesPrint ("%s   Hit return key to continue  ", spacer);
 				fflush (stdin);
-				fgets (tempName, 100, stdin);
+				if( fgets (tempName, 100, stdin) == NULL )
+					{
+						printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+					}
 				}
 			}
 		}
