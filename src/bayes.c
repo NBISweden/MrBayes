@@ -993,7 +993,7 @@ int DoQuit (void)
 
 {
 
-	int			i,j;
+	int			i;
 	char		tempName[100];
 		
 	/* free information for model and matrix */
@@ -1022,11 +1022,8 @@ int DoQuit (void)
 		}
 
     /* free modelIndicatorParams and modelElementNames */
-    for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
-		{
-    	for (i=0; modelElementNames[j][i][0]!='\0'; i++)
-    		free (modelElementNames[j][i]);
-		}
+	for (i=0; modelElementNames[i][0][0]!='\0'; i++)
+		free (modelElementNames[i]);
     free (modelElementNames[i]);
     free (modelElementNames);
     free (modelIndicatorParams);
