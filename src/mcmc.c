@@ -37203,7 +37203,7 @@ int RunChain (safeLong *seed)
 	
 	int			i, j, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
 	int			lastDiagnostics;    // the sample no. when last diagnostic was performed
-	int         removeFrom, removeTo;
+	int         removeFrom, removeTo=0;
 	int 		stopChain, nErrors;
 	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f, CPUTime;
 	MCMCMove	*theMove, *mv;
@@ -37916,11 +37916,11 @@ int RunChain (safeLong *seed)
 				/* the following function returns immediately in MPI if proc_id != 0 */
 				if (chainParams.relativeBurnin == YES)
 					{
-					removeFrom = (int)(chainParams.burninFraction * lastDiagnostics);
-					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq)+1);
+					removeFrom = removeTo;
+					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq))+1; /* +1 because we always remove the tree with which we start mcmc */
 					if( removeFrom < removeTo )
 						{
-						if ( RemoveTreeSamples (removeFrom + 1, removeTo ) == ERROR)
+						if ( RemoveTreeSamples (removeFrom+1, removeTo ) == ERROR)
 							{
                      	  	 MrBayesPrint("%s   Problem removing tree samples\n");
 #				      		  if defined (MPI_ENABLED)
@@ -37942,7 +37942,9 @@ int RunChain (safeLong *seed)
 
 				lastDiagnostics = (n/chainParams.sampleFreq)+1;
 				if (chainParams.relativeBurnin == YES)
-					i = lastDiagnostics - (int) (lastDiagnostics * chainParams.burninFraction);
+					{
+					i = lastDiagnostics - removeTo;
+					}
 				else
 					i = lastDiagnostics - chainParams.chainBurnIn;
 #				if defined (MPI_ENABLED)

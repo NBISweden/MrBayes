@@ -1422,7 +1422,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 
     /* refuse to arbitrarily root an input tree */
     assert (!(from->isRooted == NO && to->isRooted == YES));
-    if ( (from->isRooted = NO) && (to->isRooted == YES) )
+    if ( (from->isRooted == NO) && (to->isRooted == YES) )
         return (ERROR);
 
     /* calculate space needed */
