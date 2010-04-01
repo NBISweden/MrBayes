@@ -576,7 +576,7 @@ int LineTermType (FILE *fp)
 
 
 
-
+/*The longest line in a file including line terminating characters present in binary mode.*/
 int LongestLine (FILE *fp)
 
 {
@@ -585,8 +585,37 @@ int LongestLine (FILE *fp)
 	
 	longest = 0;
 	lineLength = 0;
-	while ((ch = fgetc(fp)) != EOF)
+	ch = fgetc(fp);
+	while ( ch != EOF)
 		{
+		if((ch != '\n') && (ch != '\r'))
+			{
+			ch = fgetc(fp);
+			lineLength++;
+			continue;
+			}
+		if (ch == '\r')
+			{
+			if( (ch = fgetc(fp)) == '\n' )
+				{
+				/* windows \r\n */
+				lineLength++;
+				ch = fgetc(fp);
+				}
+			else
+				{
+				/* old mac \r */
+				}
+			}
+		else  /*unix, linux,new mac or text mode read \n*/
+			{
+				ch = fgetc(fp);
+			}
+
+		if (lineLength > longest)
+				longest = lineLength;
+			lineLength = 0;
+		/*
 		if ((ch == '\n') || (ch == '\r'))
 			{
 			if (lineLength > longest)
@@ -595,10 +624,11 @@ int LongestLine (FILE *fp)
 			}
 		else
 			lineLength++;
+			*/
 		}
 	rewind (fp);		/* rewind */
 	
-	return (longest);
+	return (longest+1); /*+1 to accommodate last character*/
 
 }
 

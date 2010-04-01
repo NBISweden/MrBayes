@@ -328,6 +328,7 @@ int DoSump (void)
 		MrBayesPrint ("%s   Model parameter summaries over all %d runs sampled in files\n", spacer, sumpParams.numRuns);
 		MrBayesPrint ("%s      \"%s.run1.p\", \"%s.run2.p\" etc:\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
 		}
+
 	if (sumpParams.numRuns == 1)
 		MrBayesPrint ("%s      Based on a total of %d samples out of a total of %d samples from this analysis.\n\n", spacer, numRows, numRows + burnin);
 	else
@@ -948,14 +949,14 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
         {
         MrBayesPrint ("%s        %*c        Posterior\n", spacer, longestName-5, ' ');
         MrBayesPrint ("%s   Model%*c       Probability\n", spacer, longestName-5, ' ');
-        MrBayesPrint ("%s   -----%*c------------------\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----%-*c------------------\n", spacer, longestName-5, '-');
         MrBayesPrintf (fp, "Model\tProbability\n");
         }
     else
         {
 		MrBayesPrint ("%s        %*c        Posterior      Standard         Min.           Max.   \n", spacer, longestName-5, ' ');
 		MrBayesPrint ("%s   Model%*c       Probability     Deviation     Probability    Probability\n", spacer, longestName-5, ' ');
-        MrBayesPrint ("%s   -----%*c---------------------------------------------------------------\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----%-*c---------------------------------------------------------------\n", spacer, longestName-5, '-');
         MrBayesPrintf (fp, "Model\tProbability\tStd_dev\tMin_prob\tMax_prob\n");
         }
 
@@ -992,6 +993,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
         for (j1=0; j1<nElements; j1++)
             min[j1] = 1.0;
+
         for (j1=0; j1<nRuns; j1++)
             {
             for (j2=0; j2<nElements; j2++)
@@ -1000,7 +1002,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 modelCounts[(int)(parameterSamples[i].values[j1][j2] + 0.1)]++;
             for (j2=0; j2<nElements; j2++)
                 {
-                f = (MrBFlt) modelCounts[j2] / (MrBFlt) nRuns;
+				f = (MrBFlt) modelCounts[j2] / (MrBFlt) nSamples;
                 sum[j2] += f;
                 ssq[j2] += f*f;
                 if (f<min[j2])
@@ -1009,35 +1011,39 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
                     max[j2] = f;
                 }
             }
+
 		for (j1=0; j1<nElements; j1++)
 			{
             prob[j1] = sum[j1] / (MrBFlt) nRuns;
-			f = ssq[j] - (sum[j] * sum[j] / (MrBFlt) nRuns);
+			f = ssq[j1] - (sum[j1] * sum[j1] / (MrBFlt) nRuns);
 			f /= (nRuns - 1);
 			if (f <= 0.0)
-				stddev[j] = 0.0;
+				stddev[j1] = 0.0;
 			else
-				stddev[j] = sqrt (f);
+				stddev[j1] = sqrt (f);
 			}
 
-        if (nRuns == 1)
-            {
-            sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[i][j]);
-			MrBayesPrint ("%s   %.*s          %1.3lf\n", spacer, longestName, temp, prob[i]);
-            MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[i])); 
-            }
-        else /* if (nRuns > 1) */
-            {
-            sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[i][j]);
-			MrBayesPrint ("%s   %.*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
-                spacer, longestName, temp, prob[i], stddev[i], min[i], max[i]);
-            MrBayesPrintf (fp, "%s", temp);
-            MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[i]));
-            MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[i]));
-            MrBayesPrintf (fp, "\t%s", MbPrintNum(min[i]));
-            MrBayesPrintf (fp, "\t%s", MbPrintNum(max[i]));
-            MrBayesPrintf (fp, "\n");
-            }
+		for (j1=0; j1<nElements; j1++)
+			{
+        	if (nRuns == 1)
+            	{
+            	sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
+				MrBayesPrint ("%s   %-*s          %1.3lf\n", spacer, longestName, temp, prob[j1]);
+            	MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[j1])); 
+            	}
+        	else /* if (nRuns > 1) */
+            	{
+            	sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
+				MrBayesPrint ("%s   %-*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
+                	spacer, longestName, temp, prob[j1], stddev[j1], min[j1], max[j1]);
+            	MrBayesPrintf (fp, "%s", temp);
+            	MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[j1]));
+            	MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[j1]));
+            	MrBayesPrintf (fp, "\t%s", MbPrintNum(min[j1]));
+            	MrBayesPrintf (fp, "\t%s", MbPrintNum(max[j1]));
+            	MrBayesPrintf (fp, "\n");
+            	}
+			}
 
         SafeFree ((void **) &modelCounts);
         SafeFree ((void **) &prob);
@@ -1046,11 +1052,11 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	/* print footer */
     if (nRuns == 1)
         {
-        MrBayesPrint ("%s   -----%*c------------------\n\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----%-*c------------------\n\n", spacer, longestName-5, '-');
         }
     else
         {
-        MrBayesPrint ("%s   -----%*c---------------------------------------------------------------\n\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----%-*c---------------------------------------------------------------\n\n", spacer, longestName-5, '-');
         }
 
     /* close output file */
