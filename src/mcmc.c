@@ -8164,7 +8164,10 @@ int ExtendChainQuery ()
 				else
 					MrBayesPrint ("%s      Additional number of generations: ", spacer);
 
-				fgets (s, 100, stdin);
+				if( fgets (s, 100, stdin) == NULL )
+					{
+						printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+					}
 				sscanf (s, "%d", &additionalCycles);
 
 				} while (additionalCycles < 0);
