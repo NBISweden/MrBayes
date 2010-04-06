@@ -13035,6 +13035,14 @@ int LnBDProbGernhard2008 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF
 |   Below, ct holds the n - 1 coalescence times (t_i, above) sorted from the
 |   smallest to the largest. Remember that t_4 < t_3 < t_2, etc. 
 |
+|   2010-03-23
+|   The original function (described above) was incorrect in that it used theta = 2 * N * mu
+|   in one part of the equation and theta = 4 * N * mu in another. It is now corrected to
+|   consistently use theta = 4 * N * mu, which is the standard for diploid populations
+|   and theta = 2 * N * mu for haploid populations. The calculations are the same for the
+|   diploid and haploid cases, only the interpretation is different. See, e.g., Felsenstein
+|   (2004; Inferring Phylogenies). -- Fredrik.
+|
 ---------------------------------------------------------------------------------*/
 int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 
@@ -13083,7 +13091,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 			tempD += - (k * (k-1) * intervalLength) / (theta);
 			k--;
 			}
-		(*prob) = (numLocalTaxa - 1) * log(1.0 / theta) + tempD;
+		(*prob) = (numLocalTaxa - 1) * log(2.0 / theta) + tempD;
 		}
 	else
 		{
@@ -13097,7 +13105,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 			lastCoalescenceTime = ct[i];
 			k--;
 			}
-		(*prob) = (numLocalTaxa - 1) * log(1.0 / theta) + tempD;
+		(*prob) = (numLocalTaxa - 1) * log(2.0 / theta) + tempD;
 		}
 
 	/*printf ("coal pr = %lf theta = %lf, nNodes = %d, nt = %d tempD = %lf\n", *prob, theta, nNodes, numLocalTaxa, tempD);*/
@@ -13106,7 +13114,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 	free (ct);
 	
 	return (NO_ERROR);
-		
+
 }
 
 

@@ -590,6 +590,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		
 	/* find length of longest line */
 	fileInfo->longestLineLength = LongestLine (fp);
+	fileInfo->longestLineLength += 10;      /* better safe than sorry; if you fgets with raw longestLineLength, you run into problems */
 
 	/* allocate string long enough to hold a line */
 	s = (char *)SafeMalloc((size_t) (2*(fileInfo->longestLineLength + 10) * sizeof(char)));
@@ -611,7 +612,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 	   in the file and start from there. */
 	inSumpComment = NO;
 	lineNum = lastNonDigitLine = numParamLines = 0;
-	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
+	while (fgets (s, fileInfo->longestLineLength + 2, fp) != NULL)
         {
 		sumpTokenP = &s[0];
 		allDigitLine = YES;
@@ -695,17 +696,17 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
     /* Calculate and check the number of columns and rows for the file; get header line at the same time */
 	(void)fseek(fp, 0L, 0);
 	for (lineNum=0; lineNum<lastNonDigitLine; lineNum++)
-	    if(fgets (s, fileInfo->longestLineLength + 1, fp)==NULL)
+	    if(fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
             goto errorExit;
     strcpy(headerLine, s);
     for (; lineNum < lastNonDigitLine+burnin; lineNum++)
-	    if(fgets (s, fileInfo->longestLineLength + 1, fp)==NULL)
+	    if(fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
             goto errorExit;
 
 	inSumpComment = NO;
 	nLines = 0;
 	numRows = numColumns = firstNumCols = 0;
-	while (fgets (s, fileInfo->longestLineLength + 1, fp) != NULL)
+	while (fgets (s, fileInfo->longestLineLength + 2, fp) != NULL)
         {
 		sumpTokenP = &s[0];
 		allDigitLine = YES;
@@ -1380,8 +1381,8 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 	screenHeight = 15;
 
 	/* find minX and maxX */
-	minX = 1E10;
-	maxX = -1E10;
+	minX = xVals[0];
+	maxX = xVals[0];
 	for (i=0; i<numVals; i++)
 		{
 		x = xVals[i];
@@ -1411,8 +1412,7 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 		}
 
 	/* find minY and maxY */
-	minY = 1E10;
-	maxY = -1E10;
+	minY = maxY = meanY[0] / numY[0];
 	for (i=0; i<screenWidth; i++)
 		{
 		meanY[i] /= numY[i];
@@ -1422,19 +1422,8 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 			maxY = meanY[i];
 		}
 
-    /* make some adjustments for graph to look good */
+    /* find difference */
     diff = maxY - minY;
-	if (diff < 1E-6)
-		{
-		maxY = meanY[0]/numY[0] + (MrBFlt) 0.1;
-		minY = meanY[0]/numY[0] - (MrBFlt) 0.1;
-		} 
-	else
-		{
-		diff = maxY - minY;
-		maxY += diff * (MrBFlt) 0.025;
-		minY -= diff * (MrBFlt) 0.025;
-		}
 
     /* print plot */
 	MrBayesPrint ("\n   +");
@@ -1448,7 +1437,8 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 			{
 			if (numY[i] > 0)
 				{
-				if (meanY[i] / numY[i] > (((maxY - minY)/screenHeight)*j)+minY && meanY[i] / numY[i] <= (((maxY - minY)/screenHeight)*(j+1))+minY)
+				if ((meanY[i] > ((diff/screenHeight)*j)+minY && meanY[i] <= ((diff/screenHeight)*(j+1))+minY) ||
+                    (j == 0 && meanY[i] <= minY))
 					MrBayesPrint ("*");
 				else
 					MrBayesPrint (" ");
