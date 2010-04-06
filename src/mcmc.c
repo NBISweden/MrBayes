@@ -8370,27 +8370,18 @@ int FillNumSitesOfPat (void)
 
 
 
-/* FindBestNode> Recursive function for finding best attachment point */
+/* FindBestNode: Recursive function for finding best attachment point */
 TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, int *minLength, int chain) {
 
     int         c, n, division, length;
-    TreeNode    *q=NULL, *r;
+    TreeNode    *q=NULL, *r=NULL;
     safeLong    *pA, *pP, *pX;
     CLFlt       *nSitesOfPat, fpLength;
     ModelInfo   *m;
 
-    if (p->left != NULL) {
-        q = FindBestNode(t, p->left,  addNode, minLength, chain);
-        r = FindBestNode(t, p->right, addNode, &length,   chain);
-        if (length < *minLength) {
-            *minLength = length;
-            q = r;
-        }
-    }
-
 	/* Calculate length, looping over divisions */
 	fpLength = 0;
-    for (n=0; n<t->nRelParts; n++)		
+    for (n=0; n<t->nRelParts; n++)
 		{
 		division = t->relParts[n];
 
@@ -8412,12 +8403,31 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, int *minLength,
 			}
 		}
 
-    if (p->left != NULL && *minLength < length) {
-        return q;
+    /* If tip, this is the best node and its length is the min length */
+    if (p->left == NULL)
+        {
+        *minLength = fpLength;
+        return p;
+        }
+
+    /* Find best node and min length above this node */
+    if (p->left != NULL) {
+        q = FindBestNode(t, p->left,  addNode, minLength, chain);
+        r = FindBestNode(t, p->right, addNode, &length,   chain);
+        if (length < *minLength) {
+            *minLength = length;
+            q = r;
+        }
     }
-    
-    *minLength = length;
-    return p;
+
+    /* Return best node and min length */
+    if (*minLength < fpLength)
+        return q;
+    else /* This node is the best */
+        {
+        *minLength = fpLength;
+        return p;
+        }
 }
 
 

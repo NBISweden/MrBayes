@@ -3712,6 +3712,7 @@ int OpenComptFiles (void)
 	strcat (dFilename, ".dists");
 
     /* one overwrite check for both files */
+    previousFiles = NO;
     if (noWarn == NO)
         {
         if ((fpTemp = fopen(pFilename, "r")) != NULL)
