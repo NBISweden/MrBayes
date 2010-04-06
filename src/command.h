@@ -12,6 +12,8 @@ int         IsIn (char ch, char *s);
 int         IsSame (char *s1, char *s2);
 int         IsWhite (char c);
 int         ParseCommand (char *s);
+void        ResetCharacterFlags(void);
+void        ResetTaxaFlags(void);
 int         RootUserTree (TreeNode *p);
 void        SetUpParms (void);
 void     	ShowNodes (TreeNode *p, int indent, int isThisTreeRooted);

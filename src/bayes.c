@@ -857,33 +857,14 @@ int ReinitializeMrBayes (void)
 	
 	int				i;
 	
-	/* reset all taxa flags */
-	defTaxa              = NO;                       /* flag for whether number of taxa is known      */
-    isTaxsetDef          = NO;                       /* is a taxlabels set defined                    */
-    isTranslateDef       = NO;                       /* is a translate block defined                  */
-	numDefinedConstraints= 0;          			     /* holds number of defined constraints           */
-	outGroupNum			 = 0;            			 /* default outgroup                              */
-	numTaxaSets          = 0;          			     /* holds number of taxa sets                     */
+    /* reinitialize indentation */
+    strcpy (spacer, "");                             /* holds blanks for indentation                    */
+
+    /* reset all taxa flags */
+    ResetTaxaFlags();
 
 	/* reset all characters flags */
-    defChars             = NO;                       /* flag for whether number of characters is known  */
-	defMatrix            = NO;                       /* flag for whether matrix is successfull read     */
-	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms       */
-    isInAmbig			 = NO;						 /* flag for whether the parser is within ()        */
-	isInPoly			 = NO;						 /* flag for whether the parser is within {}        */
-	defPartition         = NO;                       /* flag for whether character partition is read    */
-	defPairs             = NO;                       /* flag indicating whether pairs have been defnd   */
-	numDefinedPartitions = 0;                        /* number of defined partitions, including default */
-	numDivisions		 = 1;          			     /* number of currently defined divisions (parser)  */
-	partitionNum         = 0;                        /* partition number currently enforced             */
-	numCurrentDivisions  = 0;                        /* number of partitions of data                    */
-	numCharSets          = 0;          			     /* holds number of character sets                  */
-	isMixed			     = NO;          			 /* are data mixed ?                                */
-	dataType             = NONE;          			 /* holds datatype                                  */
-	matchId              = '.';                      /* allow default '.' for match character           */
-	gapId                = '-';                      /* allow default '-' for gap character             */
-	missingId            = '?';                      /* allow default '?' for missing characters        */
-	strcpy (spacer, "");                             /* holds blanks for indentation                    */
+    ResetCharacterFlags();
 
 	/* chain parameters */
 	chainParams.numGen = 1000000;                    /* number of MCMC cycles                         */

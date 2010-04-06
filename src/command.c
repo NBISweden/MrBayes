@@ -7891,25 +7891,7 @@ int FreeCharacters (void)
         memoryLetFree = YES;
         }
 
-	/* reset all characters flags */
-    numChar              = 0;                        /* number of defined characters                  */
-    defChars             = NO;                       /* flag for whether number of characters is known*/
-	defMatrix            = NO;                       /* flag for whether matrix is successfull read   */
-	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms     */
-    isInAmbig			 = NO;						 /* flag for whether the parser is within ()      */
-	isInPoly			 = NO;						 /* flag for whether the parser is within {}      */
-	defPartition         = NO;                       /* flag for whether character partition is read  */
-	defPairs             = NO;                       /* flag indicating whether pairs have been defnd */
-	numDefinedPartitions = 0;                        /* number of defined partitions                  */
-	partitionNum         = 0;                        /* partition number currently enforced           */
-	numCurrentDivisions  = 0;                        /* number of partitions of data                  */
-	numCharSets          = 0;          			     /* holds number of character sets                */
-	numDivisions		 = 1;          			     /* holds number of partitions                    */
-	isMixed			     = NO;          			 /* are data mixed ?                              */
-	dataType             = NONE;          			 /* holds datatype                                */
-	matchId              = '.';                      /* allow default '.' for match character         */
-	gapId                = '-';                      /* allow default '-' for gap character           */
-	missingId            = '?';                      /* allow default '?' for missing characters      */
+    ResetCharacterFlags();
 
 	return (NO_ERROR);
 }
@@ -8000,14 +7982,7 @@ int FreeTaxa (void)
 		MrBayesPrint ("%s   Deleting previously defined taxon set\n", spacer);
 
     /* reinitialize taxa variables */
-	numTaxa              = 0;          			     /* number of taxa                                */
-	numNamedTaxa         = 0;          			     /* number of named taxa                          */
-	defTaxa              = NO;                       /* flag for whether number of taxa is known      */
-    isTaxsetDef          = NO;                       /* is a taxlabels set defined                    */
-    isTranslateDef       = NO;                       /* is a translate block defined                  */
-	numDefinedConstraints = 0;       			     /* number of defined constraints                 */
-	outGroupNum			 = 0;            			 /* default outgroup                              */
-	numTaxaSets          = 0;          			     /* number of taxa sets                           */
+    ResetTaxaFlags();
 
     return NO_ERROR;
 }
@@ -12300,6 +12275,51 @@ int MBResID (char nuc)
 
 
 
+/* Reset character flags */
+void ResetCharacterFlags (void)
+{
+    /* reset all characters flags */
+    numChar              = 0;                        /* number of defined characters                  */
+    defChars             = NO;                       /* flag for whether number of characters is known*/
+	defMatrix            = NO;                       /* flag for whether matrix is successfull read   */
+	matrixHasPoly		 = NO;                       /* flag for whether matrix has polymorphisms     */
+    isInAmbig			 = NO;						 /* flag for whether the parser is within ()      */
+	isInPoly			 = NO;						 /* flag for whether the parser is within {}      */
+	defPartition         = NO;                       /* flag for whether character partition is read  */
+	defPairs             = NO;                       /* flag indicating whether pairs have been defnd */
+	numDefinedPartitions = 0;                        /* number of defined partitions                  */
+	partitionNum         = 0;                        /* partition number currently enforced           */
+	numCurrentDivisions  = 0;                        /* number of partitions of data                  */
+	numCharSets          = 0;          			     /* holds number of character sets                */
+	numDivisions		 = 1;          			     /* holds number of partitions                    */
+	isMixed			     = NO;          			 /* are data mixed ?                              */
+	dataType             = NONE;          			 /* holds datatype                                */
+	matchId              = 'z';                      /* no default for match character                */
+	gapId                = 'z';                      /* no default for gap character                  */
+	missingId            = 'z';                      /* no default for missing characters             */
+}
+
+
+
+
+
+/* Reset taxa flags */
+void ResetTaxaFlags (void)
+{
+	numTaxa                 = 0;          			     /* number of taxa                                */
+	numNamedTaxa            = 0;          			     /* number of named taxa                          */
+    defTaxa                 = NO;                       /* flag for whether number of taxa is known      */
+    isTaxsetDef             = NO;                       /* is a taxlabels set defined                    */
+    isTranslateDef          = NO;                       /* is a translate block defined                  */
+	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
+	outGroupNum			    = 0;            			 /* default outgroup                              */
+	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
+}
+
+
+
+
+    
 /* SetPartition: Set model partition */
 void SetPartition (int part)
 
