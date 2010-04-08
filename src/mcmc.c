@@ -102,8 +102,8 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define RESCALE_FREQ				5			/* node cond like rescaling frequency */
-#define	SCALER_REFRESH_FREQ			20			/* generations between refreshing scaler nodes */
+#define RESCALE_FREQ				1			/* node cond like rescaling frequency */
+#define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ			100			/* generations between gibbs sampling of gamma cats */
 #define MAX_SMALL_JUMP				10			/* threshold for precalculating trans probs of adgamma model */
 #define BIG_JUMP					100			/* threshold for using stationary approximation */
@@ -123,7 +123,7 @@ typedef void (*sighandler_t)(int);
 #undef	DEBUG_INITCHAINCONDLIKES
 #undef	DEBUG_SETCHAINPARAMS
 #undef	DEBUG_RUNCHAIN
-#undef	DEBUG_NOSHORTCUTS
+#define	DEBUG_NOSHORTCUTS
 #undef	DEBUG_NOSCALING
 #undef	DEBUG_LOCAL
 #undef	DEBUG_SPRCLOCK
@@ -12178,7 +12178,7 @@ MrBFlt LogLike (int chain)
 							}
 						}
 
-					if (p->upDateCl == YES)
+					if (p->upDateCl == YES || 1)
 						{
 						if (tree->isRooted == NO)
 							{
@@ -37977,7 +37977,11 @@ int RunChain (safeLong *seed)
 				/* output statistics */
 				if (numTopologies == 1)
 					{
-					if (chainParams.diagnStat == AVGSTDDEV)
+                    if (chainParams.stat[0].numPartitions == 0)
+                        {
+    					MrBayesPrint ("%s   Average standard deviation of split frequencies: N/A (no splits above min. frequency)\n", spacer);
+                        }
+					else if (chainParams.diagnStat == AVGSTDDEV)
                         {
 						f = chainParams.stat[0].avgStdDev;
     					MrBayesPrint ("%s   Average standard deviation of split frequencies: %.6f\n", spacer, f);
@@ -37987,7 +37991,7 @@ int RunChain (safeLong *seed)
 						f = chainParams.stat[0].max;
     					MrBayesPrint ("%s   Max standard deviation of split frequencies: %.6f\n", spacer, f);
                         }
-					if (f <= chainParams.stopVal)
+					if (chainParams.stat[0].numPartitions > 0 && f <= chainParams.stopVal)
 						stopChain = YES;
 					if (n < chainParams.numGen - chainParams.printFreq && (chainParams.stopRule == NO || stopChain == NO))
 						MrBayesPrint ("\n");
@@ -37997,7 +38001,11 @@ int RunChain (safeLong *seed)
 					stopChain = YES;
 					for (i=0; i<numTopologies; i++)
 						{
-						if (chainParams.diagnStat == AVGSTDDEV)
+                        if (chainParams.stat[i].numPartitions == 0)
+                            {
+    					    MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: N/A (no splits above min. frequency)\n", spacer, i+1);
+                            }
+						else if (chainParams.diagnStat == AVGSTDDEV)
                             {
 							f = chainParams.stat[i].avgStdDev;
     						MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
@@ -38007,7 +38015,7 @@ int RunChain (safeLong *seed)
 							f = chainParams.stat[i].max;
     						MrBayesPrint ("%s   Max standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
                             }
-                        if (f > chainParams.stopVal)
+                        if (chainParams.stat[i].numPartitions == 0 && f > chainParams.stopVal)
 							stopChain = NO;
 						}
 					if (n < chainParams.numGen - chainParams.printFreq && (chainParams.stopRule == NO || stopChain == NO))

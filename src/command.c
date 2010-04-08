@@ -3333,7 +3333,7 @@ int DoExecute (void)
 			}
 		} while (c != EOF); 
 	
-        MrBayesPrint ("%sReached end of file\n", spacer);
+        MrBayesPrint ("%s   Reached end of file\n", spacer);
 
 	if (inComment == YES)
 		nErrors++;
@@ -12294,9 +12294,9 @@ void ResetCharacterFlags (void)
 	numDivisions		 = 1;          			     /* holds number of partitions                    */
 	isMixed			     = NO;          			 /* are data mixed ?                              */
 	dataType             = NONE;          			 /* holds datatype                                */
-	matchId              = 'z';                      /* no default for match character                */
-	gapId                = 'z';                      /* no default for gap character                  */
-	missingId            = 'z';                      /* no default for missing characters             */
+	matchId              = '\0';                     /* no default for match character                */
+	gapId                = '\0';                     /* no default for gap character                  */
+	missingId            = '\0';                     /* no default for missing characters             */
 }
 
 
