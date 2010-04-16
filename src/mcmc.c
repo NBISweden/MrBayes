@@ -123,7 +123,7 @@ typedef void (*sighandler_t)(int);
 #undef	DEBUG_INITCHAINCONDLIKES
 #undef	DEBUG_SETCHAINPARAMS
 #undef	DEBUG_RUNCHAIN
-#define	DEBUG_NOSHORTCUTS
+#undef	DEBUG_NOSHORTCUTS
 #undef	DEBUG_NOSCALING
 #undef	DEBUG_LOCAL
 #undef	DEBUG_SPRCLOCK
@@ -219,7 +219,7 @@ int     DoesProcHaveColdChain (void);
 int     ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo);
 int     ExtendChainQuery (void);
 int     FillNumSitesOfPat (void);
-TNODE  *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, int *minLength, int chain);
+TNODE  *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLength, int chain);
 void    FreeChainMemory (void);
 void    GetParsDP (Tree *t, TreeNode *p, int chain);
 void    GetParsFP (Tree *t, TreeNode *p, int chain);
@@ -1784,8 +1784,9 @@ int BuildParsTrees (safeLong *seed)
 /* build (starting) topology stepwise */
 int BuildStepwiseTree (Tree *t, int chain, safeLong *seed) {
 
-    int         i, j, nTips, length;
+    int         i, j, nTips;
     TreeNode    *p, *q, *r;
+	CLFlt 		 length;
 
     // Allocate parsimony matrix if not done already
 
@@ -2828,10 +2829,13 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
 
 {
 
-	int				a, b, c, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, catStart,
+	int				a, b, c, h, i, k, j, shortCut, *lState=NULL, *rState=NULL,
 					nObsStates, nStates, nStatesSquared, preLikeJump;
 	CLFlt			likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	catStart;
+#endif
 	
 	/* find model settings for this division and nStates, nStatesSquared */
 	m = &modelSettings[division];
@@ -3012,11 +3016,14 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 
 {
 
-	int				a, b, c, i, j, k, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
-					catStart, nObsStates, nStates, nStatesSquared, preLikeJump,
+	int				a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
+					nObsStates, nStates, nStatesSquared, preLikeJump,
 					nGammaCats;
 	CLFlt			likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	k, catStart;
+#endif
 	
 	/* find model settings for this division and nStates, nStatesSquared */
 	m = &modelSettings[division];
@@ -3375,10 +3382,13 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
 int CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
 {
-	int				c, h, i, j, k, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
+	int				c, h, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
 					nGammaCats;
 	CLFlt			*clL, *clR, *clP, *pL, *pR, *tiPL, *tiPR;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	k;
+#endif
 	
 	m = &modelSettings[division];
 
@@ -3918,10 +3928,13 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
 {
 
 	int				a, b, c, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
-					catStart, nObsStates, nStates, nStatesSquared, preLikeJump;
+					nObsStates, nStates, nStatesSquared, preLikeJump;
 	CLFlt			likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
 					*tiPL, *tiPR, *tiPA;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	catStart;
+#endif
 	
 	/* find model settings for this division and nStates, nStatesSquared */
 	m = &modelSettings[division];
@@ -4154,12 +4167,15 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 
 {
 
-	int				a, b, c, i, j, k, r, *rateCat, shortCut, *lState=NULL,
-					*rState=NULL, *aState=NULL, catStart, nObsStates, nStates,
+	int				a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL,
+					*rState=NULL, *aState=NULL, nObsStates, nStates,
 					nStatesSquared, preLikeJump, nGammaCats;
 	CLFlt			likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
 					*tiPL, *tiPR, *tiPA;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	k, catStart;
+#endif
 	
 	/* find model settings for this division and nStates, nStatesSquared */
 	m = &modelSettings[division];
@@ -4626,10 +4642,13 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
 {
-	int				c, h, i, j, k, r, *rateCat, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
+	int				c, h, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
 					nGammaCats;
 	CLFlt			*clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
 	ModelInfo		*m;
+#	if !defined (DEBUG_NOSHORTCUTS)
+	int	k;
+#endif
 	
 	m = &modelSettings[division];
 
@@ -8371,12 +8390,12 @@ int FillNumSitesOfPat (void)
 
 
 /* FindBestNode: Recursive function for finding best attachment point */
-TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, int *minLength, int chain) {
+TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLength, int chain) {
 
-    int         c, n, division, length;
+    int         c, n, division;
     TreeNode    *q=NULL, *r=NULL;
     safeLong    *pA, *pP, *pX;
-    CLFlt       *nSitesOfPat, fpLength;
+    CLFlt       *nSitesOfPat, fpLength, length;
     ModelInfo   *m;
 
 	/* Calculate length, looping over divisions */
@@ -37226,7 +37245,7 @@ int RunChain (safeLong *seed)
 	int			lastDiagnostics;    // the sample no. when last diagnostic was performed
 	int         removeFrom, removeTo=0;
 	int 		stopChain, nErrors;
-	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f, CPUTime;
+	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f=0.0, CPUTime;
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
@@ -37938,7 +37957,7 @@ int RunChain (safeLong *seed)
 				if (chainParams.relativeBurnin == YES)
 					{
 					removeFrom = removeTo;
-					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq))+1; /* +1 because we always remove the tree with which we start mcmc */
+					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq+1)); /* (n/chainParams.sampleFreq+1) is the current number of samples */
 					if( removeFrom < removeTo )
 						{
 						if ( RemoveTreeSamples (removeFrom+1, removeTo ) == ERROR)
@@ -37961,7 +37980,7 @@ int RunChain (safeLong *seed)
 #			        endif
 					}
 
-				lastDiagnostics = (n/chainParams.sampleFreq)+1;
+				lastDiagnostics = (n/chainParams.sampleFreq)+1; /* +1 because we always have start tree sampled*/
 				if (chainParams.relativeBurnin == YES)
 					{
 					i = lastDiagnostics - removeTo;
