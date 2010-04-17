@@ -1,0 +1,6 @@
+#NEXUS
+
+begin mrbayes;
+	set autoclose=yes nowarn=yes seed=1 swapseed=1 dir="../../test/";
+	execute model_test.nex;
+end;
