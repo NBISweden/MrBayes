@@ -307,7 +307,7 @@ CmdType			commands[] =
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet, 11,                                                          {13,14,94,145,170,171,179,181,182,216},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 12,                                                       {13,14,94,145,170,171,179,181,182,216,229},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -4544,18 +4544,16 @@ int DoLog (void)
 		SafeFclose (&logFileFp);
 		if (replaceLogFile == YES)
 			{
-			if ((logFileFp = fopen (logFileName, "w")) == NULL)  
+			if ((logFileFp = OpenTextFileW (logFileName)) == NULL)  
 				{
-				MrBayesPrint ("%s   Could not open log file \"%s\"\n", spacer, logFileName);
 				logToFile = NO;
 				return (ERROR);
 				}
 			}
 		else
 			{
-			if ((logFileFp = fopen (logFileName, "a")) == NULL)  
+			if ((logFileFp = OpenTextFileA (logFileName)) == NULL)  
 				{
-				MrBayesPrint ("%s   Could not open log file \"%s\"\n", spacer, logFileName);
 				logToFile = NO;
 				return (ERROR);
 				}
@@ -4653,7 +4651,7 @@ int DoManual (void)
 	CmdType	*p;
 	
 	/* try to open file, return error if present */
-	if ((fp = fopen(manFileName,"r")) != NULL)
+	if ((fp = OpenTextFileR(manFileName)) != NULL)
 		{
 		MrBayesPrint ("%s   File \"%s\" already exists \n", spacer, manFileName);
 		SafeFclose(&fp);
@@ -4661,11 +4659,8 @@ int DoManual (void)
 		}
 
 	/* try to open file for writing, return error if not possible */
-	if ((fp = fopen(manFileName,"w")) == NULL)
-		{
-		MrBayesPrint ("%s   Could not open file for writing\n", spacer, manFileName);
+	if ((fp = OpenTextFileW(manFileName)) == NULL)
 		return (ERROR);
-		}
 
 	/* print message */
 	MrBayesPrint ("%s   Producing command reference file \"%s\"\n", spacer, manFileName);
@@ -6087,7 +6082,6 @@ int DoSetParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Scientific\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
 				if (chainParams.orderTaxa == YES)
@@ -6097,10 +6091,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
-				{
-				//free(tempStr);
 				return (ERROR);
-				}
 			}
 		/* set Userlevel (userLevel) **********************************************************/
 		else if (!strcmp(parmName, "Userlevel"))
@@ -6145,10 +6136,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
-				{
-				//free (tempStr);
 				return (ERROR);
-				}
 			}
 		/* set Precision (number of decimals) ****************************************************/
 		else if (!strcmp(parmName, "Precision"))
@@ -6168,10 +6156,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
-				{
-				//free (tempStr);
 				return (ERROR);
-				}
 			}
 		/* set Partition (partitionNum) *******************************************************/
 		else if (!strcmp(parmName, "Partition"))
@@ -6216,7 +6201,6 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
 					return (ERROR);
 					}
-				//strcpy (tempStr, partitionNames[index]);
 				SetPartition (index);
 				if (numCurrentDivisions == 1)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, partitionNames[index]);
@@ -6244,10 +6228,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
-				{
-				//free (tempStr);
 				return (ERROR);
-				}
 			}
 		/* set Swapseed (global variable swapSeed) ***************************************************************/
 		else if (!strcmp(parmName, "Swapseed"))
@@ -6262,10 +6243,32 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
-				{
-				//free (tempStr);
 				return (ERROR);
+			}
+		/* set Dir (global variable workingDir) ***************************************************************/
+		else if (!strcmp(parmName, "Dir"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				{
+				expecting = Expecting(ALPHA);
+				readWord = YES;
 				}
+			else if (expecting == Expecting(ALPHA))
+				{
+				strcpy (workingDir, tkn);
+                /* Reformat to Unix with trailing '/' */
+                for (index=0; index<(int)strlen(workingDir); index++)
+                    {
+                    if (workingDir[index] == ':' || workingDir[index] == '\\')
+                        workingDir[index] = '/';
+                    }
+                if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '/')
+                    strcat(workingDir,"/");
+				MrBayesPrint ("%s   Setting working directory to \"%s\"\n", spacer, workingDir);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
 			}
 		else
 			return (ERROR);
@@ -8138,9 +8141,10 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 	else if (IsIn(**sourceH,"\"") && readWord == YES)
 		{
 		(*sourceH)++;
+        *temp='\0'; /* Allow empty word */
 		while(**sourceH != '"' && **sourceH != '\0')
 			{
-			*temp++ = *(*sourceH)++;
+			*temp++ = *((*sourceH)++);
 			}
 		*tokenType = ALPHA;
 		(*sourceH)++;
@@ -10260,6 +10264,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Available options:                                                            \n");
 		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Dir          -- The working directory. Specifies the absolute or relative path\n");
+		MrBayesPrint ("                   to the working directory. If left empty, the working directory\n");
+		MrBayesPrint ("                   is the current directory.                                     \n");
 		MrBayesPrint ("   Partition    -- Set this option to a valid partition id, either the number or \n");
 		MrBayesPrint ("                   name of a defined partition, to enforce a specific partition- \n");
 		MrBayesPrint ("                   ing of the data. When a data matrix is read in, a partition   \n");
@@ -10301,7 +10308,11 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
+        MrBayesPrint ("   Dir             <name>                   %s\n", workingDir);
+        if (defMatrix == YES)
+            MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
+        else
+            MrBayesPrint ("   Partition       <name>                   \"\"\n");
         MrBayesPrint ("   Autoclose       Yes/No                   %s                                   \n", autoClose == YES ? "Yes" : "No");
         MrBayesPrint ("   Nowarnings      Yes/No                   %s                                   \n", noWarn == YES ? "Yes" : "No");
         MrBayesPrint ("   Autoreplace     Yes/No                   %s                                   \n", autoOverwrite == YES ? "Yes" : "No");
@@ -11807,7 +11818,7 @@ int ParseCommand (char *s)
 		{
 		/* Get the next token. A token is a valid word in a line. Token type is defined in "globals.h". */
 		GetToken (token, &tokenType, &tokenP);
-		if (strlen(token) > 0)
+		if (strlen(token) > 0 || tokenType == ALPHA)
 			{
 #			if defined (SHOW_TOKENS)
 			MrBayesPrint ("%s\n", token);
@@ -12416,7 +12427,7 @@ void SetUpParms (void)
 	PARAM   ( 25, "Starttree",      DoMcmcParm,        "Random|Current|User|Parsimony|NJ|\0");
 	PARAM   ( 26, "Nperts",         DoMcmcParm,        "\0");
 	PARAM   ( 27, "Savebrlens",     DoMcmcParm,        "Yes|No|\0");
-	PARAM   ( 28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Aa|\0");
+	PARAM   ( 28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Protein|\0");
 	PARAM   ( 29, "Nst",            DoLsetParm,        "1|2|6|Mixed|\0");
 	PARAM   ( 30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|\0");
 	PARAM   ( 31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
@@ -12617,6 +12628,8 @@ void SetUpParms (void)
     PARAM   (226, "Taxa",           DoBeginParm,       "\0");
     PARAM   (227, "Xxxxxxxxxx",     DoBeginParm,       "\0");
 	PARAM   (228, "Xxxxxxxxxx",     DoTaxlabelsParm,   "\0");
+	PARAM   (229, "Dir",            DoSetParm,         "\0");
+
 
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary 

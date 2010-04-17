@@ -102,7 +102,7 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define RESCALE_FREQ				1			/* node cond like rescaling frequency */
+#define RESCALE_FREQ				5			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ			100			/* generations between gibbs sampling of gamma cats */
 #define MAX_SMALL_JUMP				10			/* threshold for precalculating trans probs of adgamma model */
@@ -6721,7 +6721,7 @@ int DoMcmc (void)
 		MrBayesPrint ("%s   Getting values from previous run\n", spacer);
         strcpy(inputFileName,chainParams.chainFileName);
         strcat(inputFileName,".ckp");
-        if (fopen(inputFileName,"r") == NULL)
+        if (OpenTextFileR(inputFileName) == NULL)
             {
             MrBayesPrint ("%s   Could not find the checkpoint file '%s'.\n", spacer, inputFileName);
             MrBayesPrint ("%s   Make sure it is in the working directory.\n", spacer);
@@ -6737,7 +6737,7 @@ int DoMcmc (void)
 #if defined (MPI_ENABLED)
         if (proc_id == 0) {
 #endif
-        tempFile = fopen (inputFileName,"rb");
+        tempFile = OpenBinaryFileR (inputFileName);
         do { c = fgetc(tempFile);
             } while (c!=':' && c!=EOF);
         if (c!=EOF)
@@ -12197,7 +12197,7 @@ MrBFlt LogLike (int chain)
 							}
 						}
 
-					if (p->upDateCl == YES || 1)
+					if (p->upDateCl == YES)
 						{
 						if (tree->isRooted == NO)
 							{
@@ -31098,7 +31098,7 @@ FILE *OpenNewMBPrintFile (char *fileName)
 	if (noWarn == YES)
 		{
 		/* overwrite or append file, if already present */		
-		if ((fp = fopen(fileName, "r")) != NULL)
+		if ((fp = TestOpenTextFileR(fileName)) != NULL)
 			{
 			SafeFclose (&fp);
 			if (autoOverwrite == NO) 
@@ -31114,7 +31114,7 @@ FILE *OpenNewMBPrintFile (char *fileName)
 	else
 		{
 		/* prompt user if file is already present */
-		if ((fp = fopen(fileName,"r")) != NULL)
+		if ((fp = OpenTextFileR(fileName)) != NULL)
 			{
 			SafeFclose (&fp);
 			MrBayesPrint ("\n");
@@ -31346,7 +31346,7 @@ int PreparePrintFiles (void)
         if (chainParams.mcmcDiagn == YES)
     		{
 		    sprintf (fileName, "%s.mcmc", localFileName);
-		    if ((tempFile = fopen(fileName, "r")) != NULL)
+		    if ((tempFile = OpenTextFileR(fileName)) != NULL)
                 {
                 fclose(tempFile);
     			previousResults = YES;
@@ -31360,7 +31360,7 @@ int PreparePrintFiles (void)
 			    sprintf (fileName, "%s.p", localFileName);
 		    else
 			    sprintf (fileName, "%s.run%d.p", localFileName, n+1);
-		    if ((tempFile = fopen(fileName, "r")) != NULL)
+		    if ((tempFile = OpenTextFileR(fileName)) != NULL)
                 {
                 fclose(tempFile);
     			previousResults = YES;
@@ -31376,7 +31376,7 @@ int PreparePrintFiles (void)
 	    			sprintf (fileName, "%s.run%d.t", localFileName, n+1);
 		    	else
 			    	sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
-    			if ((tempFile = fopen(fileName, "r")) != NULL)
+    			if ((tempFile = OpenTextFileR(fileName)) != NULL)
                     {
                     fclose(tempFile);
     			    previousResults = YES;
@@ -37131,7 +37131,7 @@ int ReusePreviousResults (int *numSamples)
 
 {
 
-	int			i, k, n;
+	int			i, j, k, n;
 	char		localFileName[100], fileName[100], bkupName[100];
 
     (*numSamples) = 0;
@@ -37183,36 +37183,48 @@ int ReusePreviousResults (int *numSamples)
 		k = n;
 
 		if (chainParams.numRuns == 1)
-			sprintf (fileName, "%s.p", localFileName);
+			sprintf (fileName, "%s%s.p", workingDir, localFileName);
 		else
-			sprintf (fileName, "%s.run%d.p", localFileName, n+1);
+			sprintf (fileName, "%s%s.run%d.p", workingDir, localFileName, n+1);
 		strcpy(bkupName,fileName);
         strcat(bkupName,"~");
         remove(bkupName);
-        rename(fileName,bkupName);
+        for (j=0; j<100000000; j++)
+            ;
+        if (rename(fileName,bkupName) != 0)
+            {
+            MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
+            return ERROR;
+            }
 
-        if ((fpParm[k] = OpenNewMBPrintFile (fileName)) == NULL)
+        if ((fpParm[k] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
 			return (ERROR);
-        else if (CopyResults(fpParm[k],bkupName,numPreviousGen) == ERROR)
+        else if (CopyResults(fpParm[k],bkupName+strlen(workingDir),numPreviousGen) == ERROR)
             return (ERROR);
 
         for (i=0; i<numTrees; i++)
 			{
 			if (numTrees == 1 && chainParams.numRuns == 1)
-				sprintf (fileName, "%s.t", localFileName);
+				sprintf (fileName, "%s%s.t", workingDir, localFileName);
 			else if (numTrees > 1 && chainParams.numRuns == 1)
-				sprintf (fileName, "%s.tree%d.t", localFileName, i+1);
+				sprintf (fileName, "%s%s.tree%d.t", workingDir, localFileName, i+1);
 			else if (numTrees == 1 && chainParams.numRuns > 1)
-				sprintf (fileName, "%s.run%d.t", localFileName, n+1);
+				sprintf (fileName, "%s%s.run%d.t", workingDir, localFileName, n+1);
 			else
-				sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
+				sprintf (fileName, "%s%s.tree%d.run%d.t", workingDir, localFileName, i+1, n+1);
 		    strcpy(bkupName,fileName);
             strcat(bkupName,"~");
             remove(bkupName);
-            rename(fileName,bkupName);
-			if ((fpTree[k][i] = OpenNewMBPrintFile (fileName)) == NULL)
+            for (j=0; j<100000000; j++)
+                ;
+            if (rename(fileName,bkupName) != 0)
+                {
+                MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
+                return ERROR;
+                }
+			if ((fpTree[k][i] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
 				return (ERROR);
-            else if (CopyTreeResults(fpTree[k][i],bkupName,numPreviousGen,numSamples) == ERROR)
+            else if (CopyTreeResults(fpTree[k][i],bkupName+strlen(workingDir),numPreviousGen,numSamples) == ERROR)
                 return (ERROR);
 			}
 		}
@@ -37220,14 +37232,20 @@ int ReusePreviousResults (int *numSamples)
     /* Store old and prepare new .mcmc file */
 	if (chainParams.mcmcDiagn == YES)
 		{
-		sprintf (fileName, "%s.mcmc", chainParams.chainFileName);
+		sprintf (fileName, "%s%s.mcmc", workingDir, chainParams.chainFileName);
 		strcpy(bkupName,fileName);
         strcat(bkupName,"~");
         remove(bkupName);
-        rename(fileName,bkupName);
-		if ((fpMcmc = OpenNewMBPrintFile (fileName)) == NULL)
+        for (j=0; j<100000000; j++)
+            ;
+        if (rename(fileName,bkupName) != 0)
+            {
+            MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
+            return ERROR;
+            }
+		if ((fpMcmc = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
 			return (ERROR);
-        else if (CopyResults(fpMcmc,bkupName,numPreviousGen)==ERROR)
+        else if (CopyResults(fpMcmc,bkupName+strlen(workingDir),numPreviousGen)==ERROR)
             return (ERROR);
 		}
 

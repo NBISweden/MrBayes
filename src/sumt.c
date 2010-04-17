@@ -3715,12 +3715,12 @@ int OpenComptFiles (void)
     previousFiles = NO;
     if (noWarn == NO)
         {
-        if ((fpTemp = fopen(pFilename, "r")) != NULL)
+        if ((fpTemp = OpenTextFileR(pFilename)) != NULL)
             {
 	        previousFiles = YES;
             fclose(fpTemp);
             }
-        if ((fpTemp = fopen(dFilename, "r")) != NULL)
+        if ((fpTemp = OpenTextFileR(dFilename)) != NULL)
             {
 	        previousFiles = YES;
             fclose(fpTemp);
@@ -3810,27 +3810,27 @@ int OpenSumtFiles (int treeNo)
 		        sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
 		        sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
 		        }
-	        if ((fpTemp = fopen(pFilename, "r")) != NULL)
+	        if ((fpTemp = OpenTextFileR(pFilename)) != NULL)
                 {
 		        previousFiles = YES;
                 fclose(fpTemp);
                 }
-	        if ((fpTemp = fopen(sFilename, "r")) != NULL)
+	        if ((fpTemp = OpenTextFileR(sFilename)) != NULL)
                 {
 		        previousFiles = YES;
                 fclose(fpTemp);
                 }
-	        if ((fpTemp = fopen(vFilename, "r")) != NULL)
+	        if ((fpTemp = OpenTextFileR(vFilename)) != NULL)
                 {
 		        previousFiles = YES;
                 fclose(fpTemp);
                 }
-	        if ((fpTemp = fopen(cFilename, "r")) != NULL)
+	        if ((fpTemp = OpenTextFileR(cFilename)) != NULL)
                 {
 		        previousFiles = YES;
                 fclose(fpTemp);
                 }
-	        if ((fpTemp = fopen(tFilename, "r")) != NULL)
+	        if ((fpTemp = OpenTextFileR(tFilename)) != NULL)
                 {
 		        previousFiles = YES;
                 fclose(fpTemp);

@@ -841,8 +841,12 @@ FILE *OpenBinaryFileR (char *name)
 {
 
 	FILE		*fp;
+    char        fileName[100];
 
-	if ((fp = fopen (name, "rb")) == NULL)  
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+    if ((fp = fopen (fileName, "rb")) == NULL)  
 		{   
 		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
 		return (NULL);
@@ -861,8 +865,12 @@ FILE *OpenTextFileR (char *name)
 {
 
 	FILE		*fp;
+    char        fileName[100];
 
-	if ((fp = fopen (name, "r")) == NULL)  
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+    if ((fp = fopen (fileName, "r")) == NULL)  
 		{   
 		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
 		return (NULL);
@@ -881,8 +889,12 @@ FILE *OpenTextFileA (char *name)
 {
 
 	FILE		*fp;
+    char        fileName[100];
 
-	if ((fp = fopen (name, "a+")) == NULL)  
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+    if ((fp = fopen (fileName, "a+")) == NULL)  
 		{   
 		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
 		return (NULL);
@@ -901,8 +913,12 @@ FILE *OpenTextFileW (char *name)
 {
 
 	FILE		*fp;
+    char        fileName[100];
 
-	if ((fp = fopen (name, "w+")) == NULL)  
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+	if ((fp = fopen (fileName, "w+")) == NULL)  
 		{   
 		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
 		return (NULL);
@@ -1264,6 +1280,21 @@ void StripComments (char *s)
 			}
  		}
     *t = '\0';
+}
+
+
+
+
+
+FILE *TestOpenTextFileR (char *name)
+
+{
+    char        fileName[100];
+
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+    return fopen (fileName, "r");	
 }
 
 

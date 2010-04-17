@@ -4790,6 +4790,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						MrBayesPrint ("%s   Invalid Statefreqpr argument\n", spacer);
 						return (ERROR);
 						}
+                    // TODO: Here we set flat dirichlet parameters
 					expecting  = Expecting(LEFTPAR);
 					}
 				else

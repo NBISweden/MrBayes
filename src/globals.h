@@ -129,6 +129,7 @@ extern char				**transTo;                              /* translation block info
 extern int				userBrlensDef;                          /* are the branch lengths on user tree defined   */
 extern int              userLevel;                              /* the level of the user                         */ 	
 extern PolyTree			*userTree[];						    /* array of user trees							 */
+extern char			    workingDir[100];                         /* working directory                             */
 
 /* Aamodel parameters */
 extern MrBFlt			aaJones[20][20];	         /* rates for Jones model                        */

@@ -100,7 +100,7 @@ safeLong	runIDSeed;                   /* seed used only for determining run ID [
 safeLong	swapSeed;                    /* seed used only for determining which to swap  */
 int         userLevel;                   /* user level                                    */
 PolyTree	*userTree[MAX_NUM_USERTREES];/* array of user trees							  */
-
+char        workingDir[100];             /* working directory                             */
 
 #			if defined (MPI_ENABLED)
 int 		proc_id;                     /* process ID (0, 1, ..., num_procs-1)                        */
@@ -514,8 +514,10 @@ int InitializeMrBayes (void)
 	numComments = 0;								 /* no comments encountered yet                   */
 	mode = INTERACTIVE;								 /* set default mode							  */
 	numOpenExeFiles = 0;							 /* no execute files open yet   				  */
-	precision = 10;                                  /* set default precision                         */
+    scientific = YES;                                /* print to file using scientific format?        */
+    precision = 15;                                  /* set default precision                         */
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
+	strcpy(workingDir,"");				             /* working directory		                      */
 
 	/* set the proposal information */
 	SetUpMoveTypes ();

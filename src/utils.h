@@ -92,4 +92,5 @@ void     SortInts2(int *item, int *assoc, int left, int right, int descendingOrd
 void     SortMrBFlt (MrBFlt *item, int left, int right);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
+FILE    *TestOpenTextFileR (char *name);
 int      WantTo (const char *msg);
