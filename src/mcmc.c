@@ -102,7 +102,7 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define RESCALE_FREQ				5			/* node cond like rescaling frequency */
+#define RESCALE_FREQ				1			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ			100			/* generations between gibbs sampling of gamma cats */
 #define MAX_SMALL_JUMP				10			/* threshold for precalculating trans probs of adgamma model */
@@ -7892,9 +7892,25 @@ int DoMcmcParm (char *parmName, char *tkn)
 		/* set Savebrlens (saveBrlens) ********************************************************/
 		else if (!strcmp(parmName, "Savebrlens"))
 			{
-			MrBayesPrint ("%s   The 'Savebrlens' option has been deprecated. Use 'Report tree=brlens' instead.\n", spacer);
-			MrBayesPrint ("%s   Note that branch lengths are saved by default since version 3.0 of MrBayes.\n", spacer);
-			return (ERROR);
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						; /* This is the only option in version 3.2 */
+					else
+						MrBayesPrint ("%s   WARNING: Ignoring savebrlens setting; since version 3.2, branch lengths are always saved\n", spacer);
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for savebrlens\n", spacer);
+					free(tempStr);
+					return (ERROR);
+					}
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
 			}
 		/* set Redirect (redirect) ********************************************************/
 		else if (!strcmp(parmName, "Redirect"))
@@ -37131,7 +37147,7 @@ int ReusePreviousResults (int *numSamples)
 
 {
 
-	int			i, j, k, n;
+	int			i, k, n;
 	char		localFileName[100], fileName[100], bkupName[100];
 
     (*numSamples) = 0;
@@ -37189,8 +37205,6 @@ int ReusePreviousResults (int *numSamples)
 		strcpy(bkupName,fileName);
         strcat(bkupName,"~");
         remove(bkupName);
-        for (j=0; j<100000000; j++)
-            ;
         if (rename(fileName,bkupName) != 0)
             {
             MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
@@ -37215,8 +37229,6 @@ int ReusePreviousResults (int *numSamples)
 		    strcpy(bkupName,fileName);
             strcat(bkupName,"~");
             remove(bkupName);
-            for (j=0; j<100000000; j++)
-                ;
             if (rename(fileName,bkupName) != 0)
                 {
                 MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
@@ -37236,8 +37248,6 @@ int ReusePreviousResults (int *numSamples)
 		strcpy(bkupName,fileName);
         strcat(bkupName,"~");
         remove(bkupName);
-        for (j=0; j<100000000; j++)
-            ;
         if (rename(fileName,bkupName) != 0)
             {
             MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
