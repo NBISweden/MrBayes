@@ -31114,7 +31114,7 @@ FILE *OpenNewMBPrintFile (char *fileName)
 	else
 		{
 		/* prompt user if file is already present */
-		if ((fp = OpenTextFileR(fileName)) != NULL)
+		if ((fp = TestOpenTextFileR(fileName)) != NULL)
 			{
 			SafeFclose (&fp);
 			MrBayesPrint ("\n");
@@ -31346,7 +31346,7 @@ int PreparePrintFiles (void)
         if (chainParams.mcmcDiagn == YES)
     		{
 		    sprintf (fileName, "%s.mcmc", localFileName);
-		    if ((tempFile = OpenTextFileR(fileName)) != NULL)
+		    if ((tempFile = TestOpenTextFileR(fileName)) != NULL)
                 {
                 fclose(tempFile);
     			previousResults = YES;
@@ -31360,7 +31360,7 @@ int PreparePrintFiles (void)
 			    sprintf (fileName, "%s.p", localFileName);
 		    else
 			    sprintf (fileName, "%s.run%d.p", localFileName, n+1);
-		    if ((tempFile = OpenTextFileR(fileName)) != NULL)
+		    if ((tempFile = TestOpenTextFileR(fileName)) != NULL)
                 {
                 fclose(tempFile);
     			previousResults = YES;
@@ -31376,7 +31376,7 @@ int PreparePrintFiles (void)
 	    			sprintf (fileName, "%s.run%d.t", localFileName, n+1);
 		    	else
 			    	sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
-    			if ((tempFile = OpenTextFileR(fileName)) != NULL)
+    			if ((tempFile = TestOpenTextFileR(fileName)) != NULL)
                     {
                     fclose(tempFile);
     			    previousResults = YES;

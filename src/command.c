@@ -3333,7 +3333,7 @@ int DoExecute (void)
 			}
 		} while (c != EOF); 
 	
-        MrBayesPrint ("%s   Reached end of file\n", spacer);
+    MrBayesPrint ("%sReached end of file\n", spacer);
 
 	if (inComment == YES)
 		nErrors++;
