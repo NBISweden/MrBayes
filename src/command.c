@@ -67,6 +67,7 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 #define	HIDE							0
 #define	SHOW							1
 #undef	SHOW_TOKENS
+#define ECHO_PROCESSED_COMMANDS
 
 int      AddToSet (int i, int j, int k, int id);
 int      AllocCharacters (void);
@@ -11812,6 +11813,10 @@ int ParseCommand (char *s)
 
 	cmdStr = s;
 	tokenP = &s[0];
+
+#	if defined (ECHO_PROCESSED_COMMANDS)
+		MrBayesPrint ("Currently processing command: %s\n", s);
+#	endif
 	
 	inError = skipCmd = NO;
 	do
