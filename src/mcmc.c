@@ -32361,13 +32361,13 @@ int PrintCheckPoint (int gen)
 				value = GetParamVals (p, j, state[j]);
 				nValues = p->nValues;
 				}
-			if (nErrors == 0 && SafeSprintf (&tempString, &tempStrSize, "\t\t%s(%d,%d)=(%lf", p->name, run, chn, value[0]) == ERROR)
+			if (nErrors == 0 && SafeSprintf (&tempString, &tempStrSize, "\t\t%s(%d,%d)=(%.15le", p->name, run, chn, value[0]) == ERROR)
 				nErrors++;
             if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
 				nErrors++;
 			for (k=1; k<nValues; k++)
 				{
-				if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%lf", value[k]) == ERROR)
+				if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%.15le", value[k]) == ERROR)
 					nErrors++;
 				if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
 					nErrors++;
@@ -32379,7 +32379,7 @@ int PrintCheckPoint (int gen)
 				nValues = 3;
 			    for (k=0; k<nValues; k++)
 				    {
-				    if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%lf", value[k]) == ERROR)
+				    if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%.15le", value[k]) == ERROR)
 					    nErrors++;
 				    if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
 					    nErrors++;
@@ -32420,7 +32420,7 @@ int PrintCheckPoint (int gen)
 			run = (chainId[j] / chainParams.numChains) + 1;
 			chn = (chainId[j] % chainParams.numChains) + 1;
 			/* format is:   <move_name>$<tuning_param_name>(<run>,<chain>)=<number> */
-			if (nErrors == 0 && SafeSprintf (&tempString, &tempStrSize, "\t\t%s$%s(%d,%d)=%lf\n",
+			if (nErrors == 0 && SafeSprintf (&tempString, &tempStrSize, "\t\t%s$%s(%d,%d)=%.15le\n",
                 mv->name, mv->moveType->shortTuningName[0], run, chn, mv->tuningParam[chainId[j]][0]) == ERROR)
 				nErrors++;
             if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
