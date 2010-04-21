@@ -12182,8 +12182,7 @@ MrBFlt LogLike (int chain)
 		if (m->upDateCl == YES)
 			{
 			tree = GetTree(m->brlens, chain, state[chain]);
-
-			if (m->parsModelId == NO)
+            if (m->parsModelId == NO)
 				{
 				for (i=0; i<tree->nIntNodes; i++)
 					{

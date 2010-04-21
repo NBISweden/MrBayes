@@ -66,9 +66,12 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 										p++;
 #define	HIDE							0
 #define	SHOW							1
-#undef	SHOW_TOKENS
-#define ECHO_PROCESSED_COMMANDS
 
+/* Debugging options */
+#undef SHOW_TOKENS
+#undef ECHO_PROCESSED_COMMANDS
+
+/* Local function prototypes */
 int      AddToSet (int i, int j, int k, int id);
 int      AllocCharacters (void);
 int      AllocMatrix (void);

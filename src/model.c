@@ -7438,7 +7438,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	PolyTree			*thePolyTree;
 	static Param	    *param = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
-	static int			useSubvalues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName;
+	static int			useSubvalues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
 	static char			tempName[100];
 
 	if (defMatrix == NO)
@@ -7476,7 +7476,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			param = NULL;
 			runIndex = chainIndex = -1;
 			useSubvalues = NO;
-			foundComma = foundEqual = foundName = NO;
+			foundComma = foundEqual = foundName = foundDash = NO;
 			expecting = Expecting(LEFTCURL) | Expecting(LEFTPAR) | 	Expecting(EQUALSIGN);
 			}
 		else
@@ -7644,8 +7644,16 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			expecting = Expecting(NUMBER) | Expecting(COMMA);
 			}
 		else
+            {
 			expecting = Expecting(NUMBER);
+            expecting |= Expecting(DASH);
+            }
 		}
+    else if (expecting == Expecting(DASH))
+        {
+        foundDash = YES;
+        expecting = Expecting(NUMBER);
+        }
 	else if (expecting == Expecting(NUMBER))
 		{
 		if (foundName == NO)
@@ -7681,6 +7689,11 @@ int DoStartvalsParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			sscanf (tkn, "%lf", &tempFloat);
+            if (foundDash == YES)
+                {
+                tempFloat = -tempFloat;
+                foundDash = NO;
+                }
 			if (tempFloat < theValueMin || tempFloat > theValueMax)
 				{
 				MrBayesPrint ("%s   The value is out of range (min = %lf; max = %lf)\n", spacer, theValueMin, theValueMax);
@@ -7775,12 +7788,12 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         value = GetParamVals(param,i*chainParams.numChains+j,0);
                         subValue = GetParamSubVals(param,i*chainParams.numChains+j,0);
 					    if (param->paramType == P_SHAPE)
-						{
-			                        if (DiscreteGamma (subValue, value[0], value[0], param->nSubValues, 0) == ERROR)
-            						return (ERROR);
-						}
+						    {
+			                if (DiscreteGamma (subValue, value[0], value[0], param->nSubValues, 0) == ERROR)
+                				return (ERROR);
+						    }
 						else if (param->paramType == P_CORREL)
-                            AutodGamma (subValue, value[0], param->nSubValues);
+                            AutodGamma (subValue, value[0], (int)(sqrt(param->nSubValues) + 0.5));
                         }
                     }
 				}
@@ -7791,9 +7804,6 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		{
 		foundEqual = YES;
 		foundName = YES;
-		/*! Fredrik, why do we use all these tolower operations while we can use a case-insensitive 
-		  comparison with strcasecmp ? --Paul
-          Because strcasecmp is not ANSI standard. -- Fredrik */
 
 		/* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
 		for (i=0; i<(int)strlen(tempName); i++)
