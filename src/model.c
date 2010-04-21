@@ -7519,6 +7519,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                     thePolyTree = AllocatePolyTree (numTaxa);
 					CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
 					PrunePolyTree (thePolyTree);
+                    ResetTipIndices(thePolyTree);
 					RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
 					CopyToTreeFromPolyTree (usrTree, thePolyTree);
 					FreePolyTree (thePolyTree);

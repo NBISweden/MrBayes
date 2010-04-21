@@ -2,5 +2,6 @@
 
 begin mrbayes;
 	set autoclose=yes nowarn=yes seed=1 swapseed=1 dir="../../test/";
-	execute model_test.nex;
+	execute primates.nex;
+	sumt fi=crap.nex nr=1;
 end;

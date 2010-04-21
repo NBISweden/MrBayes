@@ -655,15 +655,15 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 		/* get partition */
 		partition = part->partition;
 
-		/* count bits in this partition */
+        /* count bits in this partition */
 		for (j=nBits=0; j<sumtParams.safeLongsNeeded; j++)
 			{
 			x = partition[j];
 			for (x = partition[j]; x != 0; x &= (x - 1))
 				nBits++;
 			}
-			
-		/* find out if this is an informative partition */
+
+        /* find out if this is an informative partition */
 		if (nBits == sumtParams.numTaxa)
 			{
 			/* this is the root (for setting age of root node when tree is dated) */
@@ -680,7 +680,7 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
                 q->age = theStats.mean;
                 }
 			}
-		else if (nBits > 1)
+		else if (nBits > 1 && !(nBits == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO))
 			{
 			/* this is an informative partition */
 			/* find anc of partition */
@@ -763,7 +763,10 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 		else
 			/* singleton partition */
 			{
-			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded);
+            if (nBits == sumtParams.numTaxa - 1)
+                j = localOutGroup;
+            else
+    			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded);
 			q = &t->nodes[j];
             q->partitionIndex = i;
             q->partition = partition;
@@ -856,7 +859,7 @@ int DoCompareTree (void)
 	int			    i, j, k, n, longestLineLength, brlensDef[2], numTreesInLastBlock[2],
                     lastTreeBlockBegin[2], lastTreeBlockEnd[2], xaxis, yaxis, starHolder[80],
                     minNumTrees, screenWidth, screenHeigth, numY[60], nSamples;
-	safeLong	    temporarySeed;
+	safeLong	    temporarySeed, *mask;
 	PartCtr	        *x;
 	MrBFlt		    xProb, yProb, xInc, yInc, xUpper, xLower, yUpper, yLower, *dT1=NULL, *dT2=NULL, *dT3=NULL, d1, d2, d3, 
 				    meanY[60], xVal, yVal, minX, minY, maxX, maxY, sums[3];
@@ -1141,9 +1144,14 @@ int DoCompareTree (void)
     MrBayesPrint ("                                                                                   \n");
 	MrBayesPrint ("%s   List of taxon bipartitions found in tree file:                                \n\n", spacer);
 
-	for (i=0; i<numUniqueSplitsFound; i++)
+    mask = calloc (sumtParams.safeLongsNeeded, sizeof(safeLong));
+    for (i=0; i<sumtParams.numTaxa; i++)
+        SetBit (i, mask);
+    for (i=0; i<numUniqueSplitsFound; i++)
 		{
         x = treeParts[i];
+        if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
+            FlipBits(x->partition, sumtParams.safeLongsNeeded, mask);
         if ((MrBFlt)x->totCount/(MrBFlt)sumtParams.numTreesSampled >= comptreeParams.minPartFreq)
 			{
 			MrBayesPrint ("%s   %4d -- ", spacer, i+1);
@@ -1160,7 +1168,8 @@ int DoCompareTree (void)
 			(MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1]);
 			}
 		}
-		
+	free (mask);
+
 	/* make a nifty graph plotting frequencies of clades found in the two tree files */
     MrBayesPrint ("                                                                                   \n");
 	MrBayesPrint ("%s   Bivariate plot of clade probabilities:                                        \n", spacer);
@@ -1765,6 +1774,7 @@ int DoSumt (void)
     PartCtr         **treeParts=NULL;
     SumtFileInfo    sumtFileInfo;
     Stat            theStats;
+    safeLong        *mask;
 
 #define SCREEN_WIDTH 80
 	
@@ -2152,9 +2162,17 @@ int DoSumt (void)
             }
 
         /* now, show partitions that were found on screen; print to .parts file simultaneously */
-		for (i=0; i<numTreePartsToPrint; i++)
+		mask = calloc (sumtParams.safeLongsNeeded, sizeof(safeLong));
+        for (i=0; i<sumtParams.numTaxa; i++)
+            SetBit (i, mask);
+        for (i=0; i<numTreePartsToPrint; i++)
 			{
 			x = treeParts[i];
+            if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
+                FlipBits(x->partition, sumtParams.safeLongsNeeded, mask);
+
+            if ((NumBits(x->partition, sumtParams.safeLongsNeeded) == numLocalTaxa || NumBits(x->partition, sumtParams.safeLongsNeeded) == 0) && sumtParams.isClock == NO)
+                continue;
 
             if (sumtParams.table == YES)
                 {
@@ -2179,6 +2197,7 @@ int DoSumt (void)
                 MrBayesPrintf (fpParts, "\n");
                 }
 			}
+        free (mask);
 
         /* finish screen table */
         if (sumtParams.table == YES)
@@ -2202,7 +2221,6 @@ int DoSumt (void)
         /* Second, print statitistics for taxon bipartitions */
         if (sumtParams.table == YES)
             {
-            MrBayesPrint ("\n");
 		    if (sumtParams.isRooted == NO)
                 MrBayesPrint ("%s   Summary statistics for informative taxon bipartitions\n", spacer);
             else
@@ -2263,7 +2281,11 @@ int DoSumt (void)
 		for (i=0; i<numTreePartsToPrint; i++)
 			{
 			x = treeParts[i];
-            if (NumBits(x->partition, sumtParams.safeLongsNeeded) == 1 || NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+
+            /* skip uninformative partitions */
+            if (NumBits(x->partition, sumtParams.safeLongsNeeded) <= 1 || NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+                continue;
+            if (NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO)
                 continue;
 
             if (sumtParams.table == YES)
@@ -2338,10 +2360,13 @@ int DoSumt (void)
 		        MrBayesPrint ("-");
                 }
 	        MrBayesPrint ("\n");
+            if (sumtParams.numRuns > 1)
+                {
+                MrBayesPrint ("%s   + Convergence diagnostic (standard deviation of split frequencies)\n", spacer);
+                MrBayesPrint ("%s     should approach 0.0 as runs converge.\n\n", spacer);
+                }
 	        if (oneUnreliable == YES)
 		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n", spacer);
-            MrBayesPrint ("%s   + Convergence diagnostic (standard deviation of split frequencies)\n", spacer);
-            MrBayesPrint ("%s     should approach 0.0 as runs converge.\n\n", spacer);
             }
 
         /* Third, print statitistics for branch and node parameters */
@@ -2349,7 +2374,7 @@ int DoSumt (void)
             {
             MrBayesPrint ("\n");
             MrBayesPrint ("%s   Summary statistics for branch and node parameters\n", spacer);
-            MrBayesPrint ("%s      (saved to file \"%s.vstat\"):\n\n", spacer, sumtParams.sumtOutfile);
+            MrBayesPrint ("%s      (saved to file \"%s.vstat\"):\n", spacer, sumtParams.sumtOutfile);
             }
         
         if (sumtParams.table == YES)
@@ -2604,11 +2629,11 @@ int DoSumt (void)
             avgPSRF   = sumPSRF / numPSRFSamples;
 
             if (sumtParams.numRuns > 1)
+                {
                 MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-            else
-                MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf:\n", spacer, sumtParams.minPartFreq);
-            MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
-            MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
+                MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+                MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
+                }
             if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1)
                 {
                 MrBayesPrint ("%s       Average potential scale reduction factor for branch lengths = %1.3lf\n", spacer, avgPSRF);
@@ -3248,13 +3273,14 @@ int DoSumtTree (void)
             return (ERROR);
             }
 
+        /* reset tip indices in case some taxa deleted */
+        ResetTipIndices (t);
+
         /* move calculation root for nonrooted trees if necessary */
         MovePolyCalculationRoot (t, localOutGroup);
         
         /* check that all taxa are included */
-        if (sumtParams.numTreesSampled == 0)
-            sumtParams.numTaxa = t->nNodes - t->nIntNodes;
-        else if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
+        if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
 	        {
 	        MrBayesPrint ("%s   Expecting %d taxa but tree '%s' in file '%s' has %d taxa\n",
                 spacer, sumtParams.numTaxa, t->name, sumtParams.curFileName, t->nNodes-t->nIntNodes);
@@ -4180,9 +4206,9 @@ void PrintSumtTaxaInfo (void)
 	if (numExcludedTaxa > 0)
 		{
 		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was absent from trees:\n", spacer);
+			MrBayesPrint ("%s   The following taxon was absent from trees:\n", spacer);
 		else
-			MrBayesPrint ("%s   The following %d species were absent from trees:\n", spacer, numExcludedTaxa);
+			MrBayesPrint ("%s   The following %d taxa were absent from trees:\n", spacer, numExcludedTaxa);
 		MrBayesPrint ("%s      ", spacer);
 		j = lineWidth = 0;
 		for (i=0; i<numTaxa; i++)
@@ -4220,9 +4246,9 @@ void PrintSumtTaxaInfo (void)
 	if (numExcludedTaxa > 0)
 		{
 		if (numExcludedTaxa == 1)
-			MrBayesPrint ("%s   The following species was pruned from trees:\n", spacer);
+			MrBayesPrint ("%s   The following taxon was pruned from trees:\n", spacer);
 		else
-			MrBayesPrint ("%s   The following %d species were pruned from trees:\n", spacer, numExcludedTaxa);
+			MrBayesPrint ("%s   The following %d taxa were pruned from trees:\n", spacer, numExcludedTaxa);
 		MrBayesPrint ("%s      ", spacer);
 		j = lineWidth = 0;
 		for (i=0; i<numTaxa; i++)

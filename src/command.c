@@ -333,7 +333,7 @@ CmdType			commands[] =
 int					inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRead, isFirstInterleavedBlock, 
 					taxonCount, fromI, toJ, everyK, foundDash, foundSlash, foundFirst, isMixed, whichPartition,
 					isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
-					pairId, firstPair, inTaxaBlock, inCharactersBlock;
+					pairId, firstPair, inTaxaBlock, inCharactersBlock, foundEqual;
 char				gapId, missingId, matchId, tempSetName[100];
 CmdType 			*commandPtr; /*Points to the commands array entery which corresponds to currently processed command*/
 ParmInfoPtr			paramPtr;	 /*Points to paramTable table array entery which corresponds to currently processed parameter of current command*/
@@ -2209,10 +2209,12 @@ int DoConstraintsParm (char *parmName, char *tkn)
 			MrBayesPrint ("%s   Defining constraint called '%s'\n", spacer, tkn);
 			foundExp = NO;
 			foundFirst = YES;
+            foundEqual = NO;
 			isNegative = NO;
 			expecting = Expecting(ALPHA);
 			expecting |= Expecting(NUMBER);
 			expecting |= Expecting(DASH);
+            expecting |= Expecting(EQUALSIGN);
 			}
 		else
 			return (ERROR);
@@ -2220,6 +2222,7 @@ int DoConstraintsParm (char *parmName, char *tkn)
 
 	else if (expecting == Expecting(EQUALSIGN))
 		{
+        foundEqual = YES;
 		expecting  = Expecting(ALPHA);
 		expecting |= Expecting(NUMBER);
 		}
@@ -2245,7 +2248,7 @@ int DoConstraintsParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(ALPHA))
 		{
-		if (foundFirst == YES)
+		if (foundFirst == YES && foundEqual == NO)
 			{
 			/* We are filling in the probability for the constraint. Specifically, we expect exp(number). */
 			if (IsSame ("Exp", tkn) == SAME || IsSame ("Exp", tkn) == CONSISTENT_WITH)
@@ -2298,7 +2301,7 @@ int DoConstraintsParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(NUMBER))
 		{
-		if (foundFirst == YES)
+		if (foundFirst == YES && foundEqual == NO)
 			{
 			/* We are filling in the probability for the constraint. Specifically, we expect number. */
 			sscanf (tkn, "%lf", &tempD);		
@@ -3134,6 +3137,7 @@ int DoExecute (void)
 	int			c, i, rc, cmdLine, lineTerm, longestLineLength, nErrors;
 	char		*s, exeFileName[100];
 	FILE		*fp;
+    CmdType     *oldCommandPtr;
 #				if defined (MPI_ENABLED)
 	int			sumErrors;
 #				endif
@@ -3149,7 +3153,10 @@ int DoExecute (void)
 	else
 		MrBayesPrint ("%s   Executing file \"%s\"\n", spacer, inputFileName);
 
-	/* open binary file */
+    /* Save old command ptr */
+    oldCommandPtr = commandPtr;
+
+    /* open binary file */
 	if ((fp = OpenBinaryFileR(inputFileName)) == NULL)
 		nErrors++;
 
@@ -3365,7 +3372,9 @@ int DoExecute (void)
 	else
 		strcpy (spacer, "");
 
-	return (NO_ERROR);
+    commandPtr = oldCommandPtr;
+
+    return (NO_ERROR);
 	
 	quitExit:
 		if (s)
@@ -3379,6 +3388,9 @@ int DoExecute (void)
 			}
 		else
 			strcpy (spacer, "");
+
+        commandPtr = oldCommandPtr;
+
 		return (NO_ERROR_QUIT);
 			
 	errorExit:
@@ -3417,15 +3429,13 @@ int DoExecute (void)
 			inMrbayesBlock = YES;
 			MrBayesPrint ("\n   Returning execution to calling file ...\n\n");
 			strcpy (spacer, "   ");
-			return (NO_ERROR);
+			commandPtr = oldCommandPtr;
+            return (ERROR);
 			}
 		else
 			strcpy (spacer, "");
 
-		strcpy (token, "Execute");
-		i = 0;
-		if (FindValidCommand (token, &i) == ERROR)
-			MrBayesPrint ("%s   Could not find execute\n", spacer);
+		commandPtr = oldCommandPtr;
 
 		return (ERROR);	
 	
@@ -6990,7 +7000,7 @@ int DoTreeParm (char *parmName, char *tkn)
 	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
-	static int			foundAmpersand, foundColon, foundEqual, foundComment, foundE, foundB, foundFirst,
+	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundFirst,
 						foundClockrate, eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
 	static PolyNode		*pp, *qq;
 	static PolyTree		*t;
@@ -7044,7 +7054,7 @@ int DoTreeParm (char *parmName, char *tkn)
 			    return (ERROR);
 		    t = userTree[treeIndex];
             }
-        strncpy (t->name, tkn, 100);
+        strncpy (t->name, tkn, 99);
 	    foundColon = foundAmpersand = foundEqual = foundComment = NO;
         foundE = foundB = foundFirst = foundClockrate = NO;
 	    eSetIndex = bSetIndex = eventIndex = 0;
@@ -10309,7 +10319,7 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Dir             <name>                   %s\n", workingDir);
+        MrBayesPrint ("   Dir             <name>                   \"%s\"\n", workingDir);
         if (defMatrix == YES)
             MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
         else

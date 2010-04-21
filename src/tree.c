@@ -3075,7 +3075,11 @@ int MovePolyCalculationRoot (PolyTree *t, int outgroup)
 		return (ERROR);
 		}
 
-	/* mark the path to the new calculation root */
+    /* check if rerooting actually necessary */
+	if (t->root->left->sib->sib->index == outgroup)
+        return (NO_ERROR);
+    
+    /* mark the path to the new calculation root */
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
@@ -3450,7 +3454,7 @@ void PrintPolyNodes (PolyTree *pt)
 /*-------------------------------------------------------------------------------------------
 |
 |   PrunePolyTree: This routine will prune a polytomous tree according to the currently
-|      included taxa. In the the process, indices will be updated to reflect the indices
+|      included taxa. In the the process, tip indices will be updated to reflect the indices
 |      of the included taxa. NB! All tree nodes cannot be accessed by cycling over the
 |      pt->nodes array after the deletion, because some spaces will be occupied by deleted
 |      nodes and pt->nNodes is no longer the length of this array.
@@ -3464,13 +3468,14 @@ int PrunePolyTree (PolyTree *pt)
 	PolyNode		*p = NULL, *q=NULL, *r=NULL;
 
 	numDeleted = 0;
-	for (i=0; i<numTaxa; i++)
+	for (i=0; i<pt->nNodes; i++)
 		{
-		if (taxaInfo[i].isDeleted == YES)
+		p = pt->allDownPass[i];
+        if (p->left == NULL && taxaInfo[p->index].isDeleted == YES)
 			numDeleted++;
 		}
 		
-    if (numDeleted == 0 && pt->nNodes-pt->nIntNodes == numTaxa)
+    if (numDeleted == 0)
 		{
 		/* nothing to do */
 		return (NO_ERROR);
@@ -3486,7 +3491,6 @@ int PrunePolyTree (PolyTree *pt)
 		return (ERROR);
 		}
 
-	
 	/* prune away one node at a time */
 	numIntPruned = 0;
     numTermPruned = 0;
@@ -3575,24 +3579,6 @@ int PrunePolyTree (PolyTree *pt)
 	
 	/* get downpass; note that the deletion procedure does not change the root */
 	GetPolyDownPass (pt);
-
-	/* correct terminal indices */
-	for (i=j=0; i<numTaxa; i++)
-		{
-		if (taxaInfo[i].isDeleted == YES)
-			continue;
-		for (k=0; k<pt->nNodes; k++)
-			{
-			p = &pt->nodes[k];
-			if (p->index == i)
-				break;
-			}
-		p->index = j++;
-		}
-	
-	/* new indices for internal nodes */
-	for (i=0; i<pt->nIntNodes; i++)
-		pt->intDownPass[i]->index = numLocalTaxa + i;
 
 	return (NO_ERROR);
 	
@@ -3967,6 +3953,38 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 
     return NO_ERROR;
 }
+
+
+
+
+/*----------------------------------------------
+|
+|   ResetTipIndices: reset tip indices to be from 
+|      0 to number of included taxa, in same order
+|      as in the original taxon set.
+|
+-----------------------------------------------*/
+void ResetTipIndices (PolyTree *pt)
+{
+    int         i, j, k;
+    PolyNode    *p;
+
+    for (i=j=0; i<numTaxa; i++)
+		{
+		for (k=0; k<pt->nNodes; k++)
+			{
+			p = &pt->nodes[k];
+			if (p->index == i)
+				break;
+			}
+        if (k < pt->nNodes)
+            {
+            assert (p->left == NULL);
+		    p->index = j++;
+            }
+		}
+}
+
 
 
 
