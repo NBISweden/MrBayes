@@ -1181,7 +1181,7 @@ int CheckExpandedModels (void)
 		
 		if (mp->dataType == DNA || mp->dataType == RNA)
 			{
-			if (!strcmp(mp->nucModel,"Codon") || !strcmp(mp->nucModel,"Aa"))
+			if (!strcmp(mp->nucModel,"Codon") || !strcmp(mp->nucModel,"Protein"))
 				{
 				/* start check that the codon model is appropriate for this partition */
 				
@@ -1879,7 +1879,7 @@ int DoLset (void)
 		if (nApplied == numCurrentDivisions || nApplied == 0)
 			{
 			MrBayesPrint ("%s   Successfully set likelihood model parameters to all\n", spacer);
-			MrBayesPrint ("%s   applicable data partitions \n", spacer);
+			MrBayesPrint ("%s      applicable data partitions \n", spacer);
 			}
 		else
 			{
@@ -7669,7 +7669,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			}
 		else if (foundEqual == YES)
 			{
-			/* we are reading in a parameter value */
+            theValueMin = param->min;
+            theValueMax = param->max;
+
+            /* we are reading in a parameter value */
             if (param->paramType==P_OMEGA && nValuesRead==numExpectedValues && useSubvalues == NO)
                 {
                 /* continue with subvalues */
@@ -11318,7 +11321,7 @@ int NumStates (int part)
 			return (4);
 		else if (!strcmp(modelParams[part].nucModel, "Doublet"))
 			return (16);
-        else if (!strcmp(modelParams[part].nucModel, "Aa"))
+        else if (!strcmp(modelParams[part].nucModel, "Protein"))
             return (20);
 		else
 			{
@@ -12873,7 +12876,7 @@ int SetModelInfo (void)
 		{
 		m = &modelSettings[i];
 
-		/* make certain that we set this to "NO" so we 
+		/* make certain that we set this intentionally to "NO" so we 
 		   calculate cijk information when needed */
 		for (j=0; j<MAX_CHAINS; j++)
 			m->upDateCijk[j][0] = m->upDateCijk[j][1] = YES;
@@ -12941,7 +12944,7 @@ int SetModelInfo (void)
 		mp = &modelParams[i];
 		m = &modelSettings[i];
 		
-		if (!strcmp(mp->nucModel,"Aa") && (mp->dataType == DNA || mp->dataType == RNA))
+		if (!strcmp(mp->nucModel,"Protein") && (mp->dataType == DNA || mp->dataType == RNA))
             m->dataType = PROTEIN;
         else
             m->dataType = mp->dataType;
@@ -12951,7 +12954,7 @@ int SetModelInfo (void)
 			m->nucModelId = NUCMODEL_4BY4;
 		else if (!strcmp(mp->nucModel, "Doublet"))
 			m->nucModelId = NUCMODEL_DOUBLET;
-		else if (!strcmp(mp->nucModel, "Aa"))
+		else if (!strcmp(mp->nucModel, "Protein"))
             m->nucModelId = NUCMODEL_AA;
         else /* if (!strcmp(mp->nucModelId, "Codon")) */
 			m->nucModelId = NUCMODEL_CODON;
@@ -13050,7 +13053,7 @@ int SetModelInfo (void)
 		/* number of observable states */
 		if (m->dataType == STANDARD)
 			m->numStates = 0;	/* zero, meaining variable */
-		else if (!strcmp(mp->nucModel,"Aa") && (mp->dataType == DNA || mp->dataType == RNA))
+		else if (!strcmp(mp->nucModel,"Protein") && (mp->dataType == DNA || mp->dataType == RNA))
             m->numStates = 20;
         else
 			m->numStates = mp->nStates;
@@ -13060,7 +13063,7 @@ int SetModelInfo (void)
 			m->numModelStates = mp->nStates * 2;
 		else if (mp->dataType == PROTEIN && !strcmp (mp->covarionModel, "Yes"))
 			m->numModelStates = mp->nStates * 2;
-		else if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp(mp->nucModel,"Aa") && !strcmp (mp->covarionModel, "Yes"))
+		else if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp(mp->nucModel,"Protein") && !strcmp (mp->covarionModel, "Yes"))
 			m->numModelStates = 20 * 2;
 		else if (mp->dataType == CONTINUOUS)
 			m->numModelStates = 0;
@@ -13070,7 +13073,7 @@ int SetModelInfo (void)
 			m->numModelStates = 10;
 			}
 		else
-			m->numModelStates = mp->nStates;
+			m->numModelStates = m->numStates;
 			
 		/* Fill in some information for calculating cijk. We will use m->nCijk to 
 		   figure out if we need to diagonalize Q to calculate transition probabilities.
@@ -13334,7 +13337,10 @@ int SetModelParams (void)
 		mp = &modelParams[i];
         m  = &modelSettings[i];
 		
-		/* Parameter nValues and nSubValues, which are needed for memory allocation
+        /* Set default min and max */
+        p->min = p->max = NEG_INFINITY;
+
+        /* Parameter nValues and nSubValues, which are needed for memory allocation
 		   are calculated for each case in the code below. nSympi, however, is
 		   only used for one special type of parameter and it therefore makes
 		   sense to initialize it to 0 here. */
@@ -13382,6 +13388,8 @@ int SetModelParams (void)
 			p->paramType = P_TRATIO;
 			p->nValues = 1;         /* we store only the ratio */
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].tRatio = p;
@@ -13424,6 +13432,8 @@ int SetModelParams (void)
 			else
 				p->nValues = 6;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = 1.0;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].revMat = p;
@@ -13487,6 +13497,8 @@ int SetModelParams (void)
 			{
 			/* Set up omega *****************************************************************************************/
 			p->paramType = P_OMEGA;
+            p->min = 0.0;
+            p->max = INFINITY;
 			if (!strcmp(mp->omegaVar, "M3"))
 				{
 				p->nValues = 3;         /* omega values */
@@ -13669,6 +13681,8 @@ int SetModelParams (void)
 			{
 			/* Set up state frequencies *****************************************************************************/
 			p->paramType = P_PI;
+            p->min = 0.0;
+            p->max = 1.0;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].stateFreq = p;
@@ -13879,7 +13893,9 @@ int SetModelParams (void)
 			p->paramType = P_SHAPE;
 			p->nValues = 1;
 			p->nSubValues = mp->numGammaCats;
-			for (i=0; i<numCurrentDivisions; i++)
+            p->min = 1E-6;
+            p->max = 200;
+            for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].shape = p;
 
@@ -13907,6 +13923,8 @@ int SetModelParams (void)
 			p->paramType = P_PINVAR;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = 1.0;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].pInvar = p;
@@ -13932,6 +13950,8 @@ int SetModelParams (void)
 			p->paramType = P_CORREL;
 			p->nValues = 1;
 			p->nSubValues = mp->numGammaCats * mp->numGammaCats;
+            p->min = -1.0;
+            p->max = 1.0;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].correlation = p;
@@ -13958,6 +13978,8 @@ int SetModelParams (void)
 			p->paramType = P_SWITCH;
 			p->nValues = 2;
 			p->nSubValues = mp->numGammaCats * mp->numGammaCats;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].switchRates = p;
@@ -13989,6 +14011,8 @@ int SetModelParams (void)
 			p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
 			p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
 													 /* also keep Dirichlet prior parameters here		  		   */
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].rateMult = p;
@@ -14043,6 +14067,8 @@ int SetModelParams (void)
 			p->paramType = P_TOPOLOGY;
 			p->nValues = 0;
 			p->nSubValues = 0;
+            p->min = NEG_INFINITY;  /* NA */
+            p->max = NEG_INFINITY;  /* NA */
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].topology = p;
@@ -14181,6 +14207,8 @@ int SetModelParams (void)
 			p->paramType = P_BRLENS;
 			p->nValues = 0;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].brlens = p;
@@ -14227,6 +14255,8 @@ int SetModelParams (void)
 			p->paramType = P_SPECRATE;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].speciationRates = p;
@@ -14254,6 +14284,8 @@ int SetModelParams (void)
 			p->paramType = P_EXTRATE;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].extinctionRates = p;
@@ -14281,6 +14313,8 @@ int SetModelParams (void)
 			p->paramType = P_THETA;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].theta = p;
@@ -14308,6 +14342,8 @@ int SetModelParams (void)
 			p->paramType = P_GROWTH;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].growthRate = p;
@@ -14337,6 +14373,8 @@ int SetModelParams (void)
 			p->paramType = P_AAMODEL;
 			p->nValues = 1;
 			p->nSubValues = 10;
+            p->min = 0;
+            p->max = 9;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].aaModel = p;
@@ -14362,6 +14400,8 @@ int SetModelParams (void)
 			p->paramType = P_CPPRATE;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].cppRate = p;
@@ -14387,6 +14427,8 @@ int SetModelParams (void)
 			p->paramType = P_CPPEVENTS;
 			p->nValues = 0;
 			p->nSubValues = 2*numLocalTaxa;		/* keep effective branch lengths here (for all nodes to be on the safe side) */
+            p->min = 1E-6;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].cppEvents = p;
@@ -14416,6 +14458,8 @@ int SetModelParams (void)
 			p->paramType = P_PSIGAMMASHAPE;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].psiGamma = p;
@@ -14443,6 +14487,8 @@ int SetModelParams (void)
 			p->paramType = P_NU;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].nu = p;
@@ -14470,6 +14516,8 @@ int SetModelParams (void)
 			p->paramType = P_BMBRANCHRATES;
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].bmBranchRates = p;
@@ -14499,6 +14547,8 @@ int SetModelParams (void)
 			p->paramType = P_IBRSHAPE;
 			p->nValues = 1;
 			p->nSubValues = 0;
+            p->min = 1E-6;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrshape = p;
@@ -14526,6 +14576,8 @@ int SetModelParams (void)
 			p->paramType = P_IBRBRANCHRATES;
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
+            p->min = 0.0;
+            p->max = INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrBranchRates = p;
@@ -16746,7 +16798,7 @@ int ShowModel (void)
 				else if (modelSettings[i].dataType == PROTEIN)
 					{
                     if (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA)
-    					MrBayesPrint ("%s         Nucmodel  = Aa\n", spacer);
+    					MrBayesPrint ("%s         Nucmodel  = %s\n", spacer, modelParams[i].nucModel);
 					/* constraints on rates of substitution in 20 X 20 matrix */
 					if (!strcmp(modelParams[i].aaModelPr, "Mixed"))
 						MrBayesPrint ("%s         Aamodel   = Mixture of models with fixed rate matrices\n", spacer);
@@ -16880,7 +16932,7 @@ int ShowModel (void)
 							MrBayesPrint ("%s         # States  = %d\n", spacer, 16);
 						else if (!strcmp(modelParams[i].nucModel, "Codon"))	
 							MrBayesPrint ("%s         # States  = %d\n", spacer, 61);
-						else if (!strcmp(modelParams[i].nucModel, "Aa"))
+						else if (!strcmp(modelParams[i].nucModel, "Protein"))
 							MrBayesPrint ("%s         # States  = %d\n", spacer, 20);
 						else
 							MrBayesPrint ("%s         # States  = %d\n", spacer, 4);

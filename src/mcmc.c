@@ -118,7 +118,7 @@ typedef void (*sighandler_t)(int);
 /* debugging compiler statements */
 #undef	DEBUG_COMPRESSDATA
 #undef	DEBUG_ADDDUMMYCHARS
-#undef	DEBUG_CREATEPARSMATRIX
+#define	DEBUG_CREATEPARSMATRIX
 #undef	DEBUG_SETUPTERMSTATE
 #undef	DEBUG_INITCHAINCONDLIKES
 #undef	DEBUG_SETCHAINPARAMS
@@ -2547,7 +2547,7 @@ int CompressData (void)
 			{	
 			if (!strcmp(mp->nucModel, "Doublet"))
 				m->nCharsPerSite = 2;
-			if (!strcmp(mp->nucModel, "Codon") || !strcmp(mp->nucModel, "Aa"))
+			if (!strcmp(mp->nucModel, "Codon") || !strcmp(mp->nucModel, "Protein"))
 				m->nCharsPerSite = 3;
 			}
 		
@@ -6456,7 +6456,7 @@ int CreateParsMatrix (void)
 					}
 				}
 			}
-		else if (!strcmp(mp->nucModel, "Aa") && (mp->dataType == DNA || mp->dataType == RNA))
+		else if (!strcmp(mp->nucModel, "Protein") && (mp->dataType == DNA || mp->dataType == RNA))
 			{
 			allAmbig = 15;
 			for (i=0; i<numLocalTaxa; i++)
@@ -6496,7 +6496,7 @@ int CreateParsMatrix (void)
 			}
 		else
 			{
-			MrBayesPrint ("%s   Unrecognized data format during bitset compression\n");
+			MrBayesPrint ("%s   Unrecognized data format during bitset compression\n", spacer);
 			return ERROR;
 			}
 		}
