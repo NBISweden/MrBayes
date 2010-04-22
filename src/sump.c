@@ -121,7 +121,14 @@ int DoSump (void)
 		}
 	MrBayesPrint ("%s   Writing summary statistics to file %s.pstat\n", spacer, sumpParams.sumpFileName);
 
-	/* Initialize to silence warning. */
+    if (sumpParams.relativeBurnin == YES)
+        MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% ('burninfrac=%1.2f') of sampled trees\n",
+            spacer, sumpParams.sumpBurnInFraction*100.0, sumpParams.sumpBurnInFraction);
+    else
+        MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
+            spacer, sumpParams.sumpBurnIn, sumpParams.sumpBurnIn);
+
+    /* Initialize to silence warning. */
 	firstFileInfo.numRows = 0;
 	firstFileInfo.numColumns = 0;
 	/* examine input file(s) */

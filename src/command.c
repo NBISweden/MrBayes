@@ -320,7 +320,7 @@ CmdType			commands[] =
 			{ 44,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
 			{ 45,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
 			{ 46,            "Sump",  NO,            DoSump, 12,                                                  {96,97,137,138,139,140,141,161,162,178,211,212},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-			{ 47,            "Sumt",  NO,            DoSumt, 19,                        {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+			{ 47,            "Sumt",  NO,            DoSumt, 20,                    {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
 			{ 48,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
 			{ 49,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
 			{ 50,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
@@ -11008,22 +11008,26 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Filename      -- The name of the file(s) to be summarized. This is the base of\n");
 		MrBayesPrint ("                    the file name, to which endings are added according to the   \n");
 		MrBayesPrint ("                    current settings of the 'Nruns' and 'Ntrees' options.        \n");
-		MrBayesPrint ("   Displaygeq    -- The minimum probability of partitions to display.            \n");
+		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");
+		MrBayesPrint ("                    statistics.                                                  \n");
 		MrBayesPrint ("   Contype       -- Type of consensus tree. 'Halfcompat' results in a 50 % major-\n");
 		MrBayesPrint ("                    ity rule tree, 'Allcompat' adds all compatible groups to such\n");
 		MrBayesPrint ("                    a tree.                                                      \n");
-		MrBayesPrint ("   Calctreeprobs -- Determines whether tree probabilities should be calculated.  \n");
-		MrBayesPrint ("   Showtreeprobs -- Determines whether tree probabilities should be displayed on \n");
-		MrBayesPrint ("                    screen.                                                      \n");
+		MrBayesPrint ("   Conformat     -- Format of consensus tree. The 'Figtree' setting results in a \n");
+		MrBayesPrint ("                    consensus tree formatted for the program FigTree, with rich  \n");
+		MrBayesPrint ("                    summary statistics. The 'Simple' setting results in a simple \n");
+		MrBayesPrint ("                    consensus tree written in a format read by a variety of pro- \n");
+		MrBayesPrint ("                    grams.                                                       \n");
 		MrBayesPrint ("   Outputname    -- Base name of the file(s) to which 'sumt' results will be     \n");
 		MrBayesPrint ("                    printed.                                                     \n");
 		MrBayesPrint ("   Table         -- Determines whether a table of partition frequencies should be\n");
 		MrBayesPrint ("                    computed.                                                   \n");
 		MrBayesPrint ("   Summary       -- Determines whether summary statistics are calculated for the \n");
 		MrBayesPrint ("                    sampled partitions.                                          \n");
-		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");
-		MrBayesPrint ("                    statistics.                                                  \n");
 		MrBayesPrint ("   Consensus     -- Determines whether consensus trees should be computed.       \n");
+		MrBayesPrint ("   Calctreeprobs -- Determines whether tree probabilities should be calculated.  \n");
+		MrBayesPrint ("   Showtreeprobs -- Determines whether tree probabilities should be displayed on \n");
+		MrBayesPrint ("                    screen.                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11042,13 +11046,14 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Filename        <name>                   %s<.run<i>.t>\n", sumtParams.sumtFileName);
 		else if (sumtParams.numRuns > 1 && sumtParams.numTrees > 1)
 			MrBayesPrint ("   Filename        <name>                   %s<.tree<i>.run<i>.t>\n", sumtParams.sumtFileName);
-		MrBayesPrint ("   Outputname      <name>                   %s<.parts|.con|.trprobs>\n", sumtParams.sumtOutfile);
         MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", sumtParams.minPartFreq);
 		MrBayesPrint ("   Contype         Halfcompat/Allcompat     %s\n", sumtParams.sumtConType);
+        MrBayesPrint ("   Conformat       Figtree/Simple           %s                                  \n", sumtParams.consensusFormat == SIMPLE ? "Simple" : "Figtree");
+		MrBayesPrint ("   Outputname      <name>                   %s<.parts|.con|.trprobs>\n", sumtParams.sumtOutfile);
         MrBayesPrint ("   Table           Yes/No                   %s                                  \n", sumtParams.table == YES ? "Yes" : "No");
 		MrBayesPrint ("   Summary         Yes/No                   %s                                  \n", sumtParams.summary == YES ? "Yes" : "No");
 		MrBayesPrint ("   Consensus       Yes/No                   %s                                  \n", sumtParams.showConsensus == YES ? "Yes" : "No");
-		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                  \n", sumtParams.calcTrprobs == YES ? "Yes" : "No");
+		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                  \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
 		MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                  \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -12582,7 +12587,7 @@ void SetUpParms (void)
 	PARAM   (162, "Allruns",	    DoSumpParm,        "Yes|No|\0");
 	PARAM   (163, "Nruns",	        DoSumtParm,        "\0");
 	PARAM   (164, "Ntrees",	        DoSumtParm,        "\0");
-	PARAM   (165, "Calctrprobs",	DoSumtParm,        "Yes|No|\0");
+	PARAM   (165, "Calctreeprobs",  DoSumtParm,        "Yes|No|\0");
 	PARAM   (166, "Ordertaxa",	    DoMcmcParm,        "Yes|No|\0");
 	PARAM   (167, "Ordertaxa",	    DoSumtParm,        "Yes|No|\0");
 	PARAM   (168, "Aarevmatpr",     DoPrsetParm,       "Dirichlet|Fixed|\0");
@@ -12647,6 +12652,7 @@ void SetUpParms (void)
     PARAM   (227, "Xxxxxxxxxx",     DoBeginParm,       "\0");
 	PARAM   (228, "Xxxxxxxxxx",     DoTaxlabelsParm,   "\0");
 	PARAM   (229, "Dir",            DoSetParm,         "\0");
+    PARAM   (230, "Conformat",      DoSumtParm,        "Figtree|Simple|\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you

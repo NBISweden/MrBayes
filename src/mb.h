@@ -1103,7 +1103,7 @@ typedef struct sumt
     MrBFlt      sumtBurnInFraction;    /* relative burn in fraction                     */
 	int			burnin;                /* actual burnin when parsing tree files         */
 	char		sumtConType[100];      /* consensus tree type                           */
-	int			calcTrprobs;           /* should the individual tree probs be calculated*/
+	int			calcTreeprobs;         /* should the individual tree probs be calculated*/
 	int			showSumtTrees;         /* should the individual tree probs be shown     */
 	int			printBrlensToFile;     /* should branch lengths be printed to file      */
 	MrBFlt		brlensFreqDisplay;     /* threshold for printing branch lengths to file */
@@ -1137,7 +1137,7 @@ typedef struct sumt
 
 /* formats for consensus trees */
 #define SIMPLE      0
-#define RICH        1
+#define FIGTREE     1
 
 typedef struct comptree
 	{

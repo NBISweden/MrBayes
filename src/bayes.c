@@ -925,7 +925,7 @@ int ReinitializeMrBayes (void)
     sumtParams.sumtBurnInFraction = 0.25;            /* relative burnin fraction for sumt command     */
     sumtParams.sumtBurnIn = 0;                       /* absolute burnin for sumt command              */
 	strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
-	sumtParams.calcTrprobs = YES;                    /* should individual tree probs be calculated    */
+	sumtParams.calcTreeprobs = YES;                  /* should individual tree probs be calculated    */
 	sumtParams.showSumtTrees = NO;                   /* should the individual tree probs be shown     */
 	sumtParams.printBrlensToFile = NO;               /* should brlens be printed to file              */
 	sumtParams.brlensFreqDisplay = 0.50;             /* threshold for printing brlens to file         */
@@ -936,7 +936,7 @@ int ReinitializeMrBayes (void)
     sumtParams.table = YES;                          /* display table of part. freq.?                 */
     sumtParams.summary = YES;                        /* display overall diagnostics?                  */
     sumtParams.showConsensus = YES;                  /* display consensus tree(s)?                    */
-    sumtParams.consensusFormat = RICH;               /* format of consensus tree                      */
+    sumtParams.consensusFormat = FIGTREE;            /* format of consensus tree                      */
 	strcpy (sumtParams.sumtOutfile, "temp.t.stat");  /* output name for sumt command                  */
 	sumtParams.HPD = YES;                            /* use Highest Posterior Density?                */
 
