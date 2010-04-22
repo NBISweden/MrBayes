@@ -12321,7 +12321,7 @@ MrBFlt LogPrior (int chain)
 
 	int				i, j, c, n, nStates, *nEvents, sumEvents;
 	const int		*rateCat;
-	MrBFlt			*st, *sst, lnPrior, sum, x, theta, growth, *alphaDir, newProp[6],
+	MrBFlt			*st, *sst, lnPrior, sum, x, theta, growth, *alphaDir, newProp[190],
 					sR, eR, sF, freq, pInvar, lambda, alpha, nu, ibrshape, **rateMultiplier;
 	CLFlt			*nSitesOfPat;
 	Param			*p;
@@ -12350,7 +12350,7 @@ MrBFlt LogPrior (int chain)
 				x = 0.0;
 				for (i=0; i<2; i++)
 					x += (alphaDir[i]-1.0)*log(newProp[i]);
-				lnPrior = x;
+				lnPrior += x;
 				}
 			else
 				{
@@ -12374,7 +12374,7 @@ MrBFlt LogPrior (int chain)
 				x = 0.0;
 				for (i=0; i<p->nValues; i++)
 					x += (alphaDir[i] - 1.0) * log(newProp[i]);
-				lnPrior = x;
+				lnPrior += x;
 				}
 			else
 				{

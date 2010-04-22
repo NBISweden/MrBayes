@@ -3015,7 +3015,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 
 {
 
-	int			i, j, k, tempInt, nApplied, index, ns;
+        int		i, j, k, tempInt, nApplied, index, ns, flag;
 	MrBFlt		tempD, sum;
 	char		tempStr[100];
 
@@ -3124,6 +3124,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
 					nApplied = NumActiveParts ();
+					flag=0;
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
@@ -3131,12 +3132,18 @@ int DoPrsetParm (char *parmName, char *tkn)
 							strcpy(modelParams[i].tRatioPr, tempStr);
 							modelParams[i].tRatioDir[0] = modelParams[i].tRatioDir[1] = 1.0;
 							modelParams[i].tRatioFix = 1.0;
+							flag=1;
 							}
 						}
+					if( flag == 0)
+					        {
+						MrBayesPrint ("%s   Warning: Tratiopr can be set only for partition containing either DNA or RNA data. Currently there is no active partition with such data. The seting is ignored.\n", spacer);
+						}
+					
 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid Tratiopr argument\n", spacer);
+					MrBayesPrint ("%s   Invalid Tratiopr argument \n", spacer);
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);

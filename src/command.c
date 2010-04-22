@@ -12375,7 +12375,7 @@ void SetPartition (int part)
     tempLinkUnlinkVec = numVars + numCurrentDivisions;
     activeParts       = numVars + 2*numCurrentDivisions;
 
-    tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, (size_t)(4 * numCurrentDivisions * sizeof(MrBFlt)));
+    tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, (size_t)(6 * sizeof(MrBFlt)));
 
     activeParams[0] = (int *) SafeRealloc ((void *) (activeParams[0]), (size_t)(NUM_LINKED * numCurrentDivisions * sizeof(int)));
     for (i=1; i<NUM_LINKED; i++)
