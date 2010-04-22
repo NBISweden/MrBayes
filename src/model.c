@@ -13389,7 +13389,7 @@ int SetModelParams (void)
 			p->nValues = 1;         /* we store only the ratio */
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].tRatio = p;
@@ -13498,7 +13498,7 @@ int SetModelParams (void)
 			/* Set up omega *****************************************************************************************/
 			p->paramType = P_OMEGA;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			if (!strcmp(mp->omegaVar, "M3"))
 				{
 				p->nValues = 3;         /* omega values */
@@ -13979,7 +13979,7 @@ int SetModelParams (void)
 			p->nValues = 2;
 			p->nSubValues = mp->numGammaCats * mp->numGammaCats;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].switchRates = p;
@@ -14012,7 +14012,7 @@ int SetModelParams (void)
 			p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
 													 /* also keep Dirichlet prior parameters here		  		   */
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].rateMult = p;
@@ -14208,7 +14208,7 @@ int SetModelParams (void)
 			p->nValues = 0;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].brlens = p;
@@ -14256,7 +14256,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].speciationRates = p;
@@ -14285,7 +14285,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].extinctionRates = p;
@@ -14314,7 +14314,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].theta = p;
@@ -14343,7 +14343,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].growthRate = p;
@@ -14401,7 +14401,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].cppRate = p;
@@ -14428,7 +14428,7 @@ int SetModelParams (void)
 			p->nValues = 0;
 			p->nSubValues = 2*numLocalTaxa;		/* keep effective branch lengths here (for all nodes to be on the safe side) */
             p->min = 1E-6;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].cppEvents = p;
@@ -14459,7 +14459,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].psiGamma = p;
@@ -14488,7 +14488,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].nu = p;
@@ -14517,7 +14517,7 @@ int SetModelParams (void)
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].bmBranchRates = p;
@@ -14548,7 +14548,7 @@ int SetModelParams (void)
 			p->nValues = 1;
 			p->nSubValues = 0;
             p->min = 1E-6;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrshape = p;
@@ -14577,7 +14577,7 @@ int SetModelParams (void)
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
             p->min = 0.0;
-            p->max = INFINITY;
+            p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrBranchRates = p;

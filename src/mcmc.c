@@ -118,7 +118,7 @@ typedef void (*sighandler_t)(int);
 /* debugging compiler statements */
 #undef	DEBUG_COMPRESSDATA
 #undef	DEBUG_ADDDUMMYCHARS
-#define	DEBUG_CREATEPARSMATRIX
+#undef	DEBUG_CREATEPARSMATRIX
 #undef	DEBUG_SETUPTERMSTATE
 #undef	DEBUG_INITCHAINCONDLIKES
 #undef	DEBUG_SETCHAINPARAMS

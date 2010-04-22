@@ -245,7 +245,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define IBRSHAPE_MAX            100000.0f
 #define OMEGA_MAX               1000000.0f
 
-#define INFINITY                1E25f;
+#define POS_INFINITY                1E25f;
 #define NEG_INFINITY			-1000000.0f
 
 #define	CMD_STRING_LENGTH		20000
