@@ -3360,7 +3360,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
 						{
-						if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == PROTEIN)
+						if ((activeParts[i] == YES || nApplied == 0) && modelSettings[i].dataType == PROTEIN)
 							{
 							strcpy(modelParams[i].aaRevMatPr, tempStr);
 							for (j=0; j<190; j++)
@@ -3386,7 +3386,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				nApplied = NumActiveParts ();
 				for (i=0; i<numCurrentDivisions; i++)
 					{
-					if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == PROTEIN)
+					if ((activeParts[i] == YES || nApplied == 0) && modelSettings[i].dataType == PROTEIN)
 						strcpy (tempStr,modelParams[i].aaRevMatPr);
 					}
 				/* find and store the number */
@@ -16107,7 +16107,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = REVMAT_DIR;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Revmat_Dir;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
 	mt->minimum[0] = 0.0001;
@@ -16126,7 +16126,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = REVMAT_DIR;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Revmat_Slider;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.15;  /* window size */
 	mt->minimum[0] = 0.00001;
@@ -16210,7 +16210,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = PI_DIR;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Statefreqs;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 100.0; /* alphaPi per state */
 	mt->minimum[0] = 0.001;
@@ -16229,7 +16229,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = PI_DIR;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Statefreqs_Slider;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
 	mt->minimum[0] = 0.00001;

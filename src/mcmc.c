@@ -28506,12 +28506,14 @@ int Move_Revmat_Slider (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
 	int			i, j, nRates, isValid;
 	MrBFlt		delta, *newRate, *oldRate, *priorAlpha, x, y, sum, min, max;
 	ModelParams *mp;
+    ModelInfo   *m;
 
-	/* get model params */
+	/* get model params and settings */
 	mp = &modelParams[param->relParts[0]];
+    m  = &modelSettings[param->relParts[0]];
 
 	/* get Dirichlet parameters */
-	if (mp->dataType == PROTEIN)
+	if (m->dataType == PROTEIN)
 		priorAlpha = mp->aaRevMatDir;
 	else
 		priorAlpha = mp->revMatDir;
