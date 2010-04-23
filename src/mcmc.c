@@ -32377,7 +32377,7 @@ int PrintCheckPoint (int gen)
             if (p->paramType == P_OMEGA)
 				{
 				value = GetParamSubVals (p, j, state[j]);
-				nValues = 3;
+				nValues = p->nSubValues/2;
 			    for (k=0; k<nValues; k++)
 				    {
 				    if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%.15le", value[k]) == ERROR)
