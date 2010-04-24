@@ -1873,16 +1873,18 @@ int BuildStepwiseTree (Tree *t, int chain, safeLong *seed) {
 int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 
 {
-	int				c, i, j, nRates, posit;
+	int				c, i, j, nRates, posit, lastCharId;
 	MrBFlt			logScaler, max, prob, *F,
 					*oldF, *tempF, fSpace[2][MAX_GAMMA_CATS];
 	MrBFlt			*rP;
 	CLFlt			freq, *lnScaler;
 	ModelInfo		*m;
+    ModelParams     *mp;
     safeLong        *inHMM;
 	
     /* find nRates for first division in HMM */
 	m = &modelSettings[d];
+    mp = &modelParams[d];
 	nRates = m->numGammaCats;
 
 	/* calculate rate category frequencies */
@@ -1957,11 +1959,18 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	logScaler += lnScaler[compCharPos[c]] +  log(max);
 
 	/* now step along the sequence to the end */
+    lastCharId = charInfo[c].charId;
 	for (c++; c<numChar; c++)
 		{
 		/* skip if excluded */
 		if (charInfo[c].isExcluded == YES)
 			continue;
+
+        /* skip if part of same codon in translated protein model */
+        if ((mp->dataType == DNA || mp->dataType == RNA) && m->dataType == PROTEIN && charInfo[c].charId == lastCharId)
+            continue;
+        else
+            lastCharId = charInfo[c].charId;
 		
 		/* skip if not in HMM */
 		if (IsBitSet(partitionId[c][partitionNum] - 1, inHMM) == NO)
@@ -10476,7 +10485,7 @@ int InitTermCondLikes (void)
 				siteJump[c] = 0;
 			else if (charInfo[j].bigBreakAfter == YES)
 				siteJump[c] = BIG_JUMP;
-			else
+            else
 				{
 				siteJump[c] = c - j;
 				hasMarkovTi[c-j-1] = YES;
