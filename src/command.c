@@ -3289,13 +3289,6 @@ int DoExecute (void)
 		foundNewLine = YES;
 		cmdLine++;
 
-		if(cmdLine>15){
-	    for (i=0; i<numChar; i++) {
-        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
-        if (!partitionId[i])
-            return ERROR;
-    	}
-		}
 		/* process string if not empty */
 		if (strlen(s) > 1)
 			{

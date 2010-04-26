@@ -3136,10 +3136,11 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						}
 					if( flag == 0)
-					        {
-						MrBayesPrint ("%s   Warning: Tratiopr can be set only for partition containing either DNA or RNA data. Currently there is no active partition with such data. The seting is ignored.\n", spacer);
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
-					
 					}
 				else
 					{
@@ -3238,7 +3239,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 							modelParams[i].revMatDir[0] = modelParams[i].revMatDir[1] = 1.0;
 							modelParams[i].revMatDir[2] = modelParams[i].revMatDir[3] = 1.0;
 							modelParams[i].revMatDir[4] = modelParams[i].revMatDir[5] = 1.0;
+							flag=1;
 							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3365,7 +3373,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 							strcpy(modelParams[i].aaRevMatPr, tempStr);
 							for (j=0; j<190; j++)
 								modelParams[i].aaRevMatDir[j] = 1.0;
+							flag=1;
 							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing PROTEIN.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3577,7 +3592,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 							strcpy(modelParams[i].omegaPr, tempStr);
 							modelParams[i].omegaDir[0] = modelParams[i].omegaDir[1] = 1.0;
 							modelParams[i].omegaFix = 1.0;
+							flag=1;
 							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3672,7 +3694,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].ny98omega1pr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data. The setting is ignored.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3752,7 +3783,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].ny98omega3pr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data. The setting is ignored.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3842,7 +3882,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].m3omegapr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data. The setting is ignored.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -3929,7 +3978,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].codonCatFreqPr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing either DNA or RNA data.\
+							Currently there is no active partition with such data. The setting is ignored.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4016,7 +4074,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN || modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
+							{
 							strcpy(modelParams[i].shapePr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of following type: DNA, RNA, PROTEIN, RESTRICTION, STANDARD.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4126,7 +4193,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].pInvarPr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4216,7 +4292,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].adGammaCorPr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4322,7 +4407,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
+							{
 							strcpy(modelParams[i].brownCorPr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4445,7 +4539,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 								if (tempStr[0]=='V')
 									strcpy (tempStr,"Variable");
 								}
+							flag=1;
 							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
+							Currently there is no active partition with such data.\n", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4557,7 +4658,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN))
+							{
 							strcpy(modelParams[i].covSwitchPr, tempStr);
+							flag=1;
+							}
+						}
+					if( flag == 0)
+					    {
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA, PROTEIN.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+						return (ERROR);
 						}
 					}
 				else
@@ -4660,7 +4770,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 							if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == STANDARD || modelParams[i].dataType == RESTRICTION))
 								{
 								strcpy(modelParams[i].symPiPr, tempStr);
+								flag=1;
 								}
+							}
+						if( flag == 0)
+					    	{
+							MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: STANDARD, RESTRICTION.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+							return (ERROR);
 							}
 						}
 					else
@@ -4789,7 +4906,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 						for (i=0; i<numCurrentDivisions; i++)
 							{
 							if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+								{
 								strcpy(modelParams[i].stateFreqPr, tempStr);
+								flag=1;
+								}
+							}
+						if( flag == 0)
+					    	{
+							MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+							return (ERROR);
 							}
 						}
 					else
@@ -6696,8 +6822,17 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
+							{
 							strcpy(modelParams[i].brownScalesPr, tempStr);
+							flag=1;
+							}
 						}
+					if( flag == 0)
+					    	{
+							MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+							return (ERROR);
+							}
 					}
 				else
 					{
@@ -6801,8 +6936,17 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].m10betapr, tempStr);
+							flag=1;
+							}
 						}
+					if( flag == 0)
+					    	{
+							MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+							return (ERROR);
+							}
 					}
 				else
 					{
@@ -6896,8 +7040,17 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+							{
 							strcpy(modelParams[i].m10gammapr, tempStr);
+							flag=1;
+							}
 						}
+					if( flag == 0)
+					    	{
+							MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA.\
+							Currently there is no active partition with such data. ", spacer, parmName);
+							return (ERROR);
+							}
 					}
 				else
 					{
