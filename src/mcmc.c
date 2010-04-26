@@ -146,12 +146,12 @@ typedef void (*sighandler_t)(int);
 
 /* local (to this file) data types */
 typedef struct pfnode
-	{
-	struct pfnode	*left;
-	struct pfnode	*right;
-	int				*count;
-	safeLong			*partition;
-	} PFNODE;
+    {
+    struct pfnode   *left;
+    struct pfnode   *right;
+    int             *count;
+    safeLong        *partition;
+    } PFNODE;
 
 
 /* local prototypes */

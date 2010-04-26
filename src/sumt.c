@@ -5238,7 +5238,12 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 	if (p->left == NULL)
 		{
 		if (sumtParams.brlensDef == YES)
-			fprintf (fp, "%d:%s", p->index+1, MbPrintNum(p->length));
+            {
+            if (sumtParams.isClock == NO)
+    			fprintf (fp, "%d:%s", p->index+1, MbPrintNum(p->length));
+            else
+    			fprintf (fp, "%d:%s", p->index+1, MbPrintNum(p->anc->depth - p->depth));
+            }
 		else
 			fprintf (fp, "%d", p->index+1);
 		}
@@ -5248,11 +5253,21 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 		if (p->anc->anc != NULL)
 			{
 			if (sumtParams.brlensDef == YES && showSupport == NO)
-				fprintf (fp, "):%s", MbPrintNum(p->anc->length)); 
+                {
+                if (sumtParams.isClock == NO)
+    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->length));
+                else
+    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->anc->depth - p->anc->depth));
+                }
 			else if (sumtParams.brlensDef == NO && showSupport == YES)
 				fprintf (fp, ")%1.3lf", p->anc->support); 
 			else if (sumtParams.brlensDef == YES && showSupport == YES)
-				fprintf (fp, ")%1.3lf:%s", p->anc->support, MbPrintNum(p->anc->length));
+                {
+                if (sumtParams.isClock == NO)
+    			    fprintf (fp, ")%1.3lf:%s", p->index+1, MbPrintNum(p->anc->length));
+                else
+    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->anc->depth - p->anc->depth));
+                }
 			else
 				fprintf (fp, ")");
 			}
@@ -5276,7 +5291,10 @@ void WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
 		{
         fprintf (fp, "%d", p->index+1);
         PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
-        fprintf (fp, ":%s", MbPrintNum(p->length));
+        if (sumtParams.isClock == NO)
+            fprintf (fp, ":%s", MbPrintNum(p->length));
+        else
+            fprintf (fp, ":%s", MbPrintNum(p->anc->depth-p->depth));
 		}
     else
         {
@@ -5291,7 +5309,12 @@ void WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
         if (p->partitionIndex >= 0 && p->partitionIndex < numUniqueSplitsFound)
             PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
         if (p->anc != NULL)
-            fprintf (fp, ":%s", MbPrintNum(p->length));
+            {
+            if (sumtParams.isClock == NO)
+                fprintf (fp, ":%s", MbPrintNum(p->length));
+            else
+                fprintf (fp, ":%s", MbPrintNum(p->anc->depth-p->depth));
+            }
         }
 }
 
