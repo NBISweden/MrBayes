@@ -872,11 +872,12 @@ typedef struct model
 	MrBFlt		brownScalesGammaMean;
 
 	char		topologyPr[100];   /* prior for tree topology                      */
-    int         topologyFix;       /* default user tree index for fixed topology   */
+    int         topologyFix;       /* user tree index for fixed topology           */
 	int			activeConstraints[30]; 
 	int			numActiveConstraints;
 	int			numActiveLocks;
 	char		brlensPr[100];     /* prior on branch lengths                      */
+	int         brlensFix;         /* user tree index for fixed brlens             */
 	MrBFlt		brlensUni[2];
 	MrBFlt		brlensExp;
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */

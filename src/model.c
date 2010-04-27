@@ -5405,7 +5405,10 @@ int DoPrsetParm (char *parmName, char *tkn)
 						return (ERROR);
 						}
 					foundEqual = NO;
-					expecting  = Expecting(COLON);
+					if (!strcmp(colonPr,"Fixed"))
+						expecting = Expecting(LEFTPAR);
+					else
+						expecting = Expecting(COLON);
 					}
 				else
 					{
@@ -5479,6 +5482,18 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 						}
+					else if (!strcmp(colonPr, "Fixed"))
+						{
+						/*process argument of fixed() prior*/
+						/* find tree number */
+                        if (GetUserTreeFromName (&tempInt, tkn) == ERROR)
+						    {
+						    MrBayesPrint ("%s   Could not set fixed branch lengths from the user tree '%s'\n", spacer, tkn);
+						    return (ERROR);
+  						    }
+                        fromI = tempInt + 1;        /* fromI is used to hold the index of the user tree, 1-based */
+                        expecting = Expecting(RIGHTPAR);
+						}
 					else
 						{
 						MrBayesPrint ("%s   Do not understand %s\n", spacer, tkn);
@@ -5488,9 +5503,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<numCurrentDivisions; i++)
-					numVars[i] = 0;
 				expecting  = Expecting(NUMBER);
+				if (!strcmp(colonPr,"Fixed"))
+					{
+					expecting |= Expecting(ALPHA);
+					}
+				else
+					{
+					for (i=0; i<numCurrentDivisions; i++)
+						numVars[i] = 0;
+					}
 				}
 			else if (expecting == Expecting(NUMBER))
 				{
@@ -5540,9 +5562,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						}
 					}
-				else
+				else if (!strcmp(colonPr,"Fixed"))
 					{
-					
+					sscanf (tkn, "%d", &tempInt);
+					if (tempInt < 1 || tempInt > numUserTrees)
+						{
+						MrBayesPrint ("%s   Tree needs to be in the range %d to %d\n", spacer, 1, numUserTrees);
+						return (ERROR);
+						}
+					fromI = tempInt;
+					expecting = Expecting(RIGHTPAR);
 					}
 				}
 			else if (expecting == Expecting(COLON))
@@ -5555,6 +5584,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(RIGHTPAR))
 				{
+					if (!strcmp(colonPr,"Fixed"))
+						{
+				 		/* index of a tree which set up branch lengths*/
+						nApplied = NumActiveParts ();
+			    		for (i=0; i<numCurrentDivisions; i++)
+				        	{
+				        	if (activeParts[i] == YES || nApplied == 0)
+					        	modelParams[i].brlensFix = fromI-1;
+                        	}
+						}
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -8887,7 +8926,40 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 		{
 		q = param->subParams[i];
 		tree = GetTree (q, chn, state);
-		if (tree->isCalibrated == YES)
+		if (q->paramId == BRLENS_FIXED)
+			{
+			if (param->paramId == TOPOLOGY_NCL_FIXED ||
+				param->paramId == TOPOLOGY_CL_FIXED  ||
+				param->paramId == TOPOLOGY_RCL_FIXED ||
+				param->paramId == TOPOLOGY_CCL_FIXED ||
+				param->paramId == TOPOLOGY_RCCL_FIXED)
+				if (tree->isRooted != userTree[modelParams[q->relParts[0]].brlensFix]->isRooted)
+					{
+					MrBayesPrint("%s   Cannot set fixed branch lengths because of mismatch in rootedness", spacer);
+					return (ERROR);
+					}
+				if (CopyToTreeFromPolyTree(tree,userTree[modelParams[q->relParts[0]].brlensFix]) == ERROR)
+					{
+					MrBayesPrint("%s   Problem setting fixed branch lengths", spacer);
+					return (ERROR);
+					}
+				if (tree->isClock == YES && IsClockSatisfied(tree, 1E-6) == NO)
+					{
+					MrBayesPrint("%s   Fixed branch lengths do not satisfy clock", spacer);
+					return (ERROR);
+					}
+				if (tree->isCalibrated == YES && IsCalibratedClockSatisfied(tree, 1E-6) == NO)
+					{
+					MrBayesPrint("%s   Fixed branch lengths do not satisfy calibrations", spacer);
+					return (ERROR);
+					}
+			else
+				{
+				MrBayesPrint("%s   Fixed branch lengths can only be used for a fixed topology", spacer);
+				return (ERROR);
+				}
+			}
+	    else if (tree->isCalibrated == YES)
 			InitCalibratedBrlens (tree, 0.0001, seed);
 		else if (tree->isClock == YES)
 			InitClockBrlens (tree);
@@ -10799,6 +10871,12 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 							}
 						}
 					}
+				}
+			/* If fixed brlens, check if the brlens come from the same tree */
+			if (!strcmp(modelParams[part1].brlensPr, "Fixed") && !strcmp(modelParams[part2].brlensPr, "Fixed"))
+				{
+				if (modelParams[part1].brlensFix != modelParams[part2].brlensFix)
+					isSame = NO;
 				}
 			}
 		}
@@ -14397,6 +14475,10 @@ int SetModelParams (void)
 						p->paramId = BRLENS_UNI;
 					else if (!strcmp(mp->unconstrainedPr,"Exponential"))
 						p->paramId = BRLENS_EXP;
+					}
+				else if (!strcmp(mp->brlensPr,"Fixed"))
+					{
+					p->paramId = BRLENS_FIXED;
 					}
 				}
 
@@ -18031,7 +18113,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					else
 						MrBayesPrint ("(%1.1lf)\n", mp->brlensExp);
 					}
-				else
+				else if (!strcmp(mp->brlensPr, "Clock"))
 					{
 					MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
 					if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Birthdeath"))
@@ -18094,6 +18176,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						}
 					else
 						MrBayesPrint ("%s                         Node ages are not constrained\n", spacer);
+					}
+				else
+					{
+					assert(!strcmp(mp->brlensPr, "Fixed"));
+					MrBayesPrint ("%s            Prior      = Fixed, branch lengths are fixed to the one of the user tree '%s'\n", spacer,
+                                                    userTree[mp->topologyFix]->name);
 					}
 				}
 			}

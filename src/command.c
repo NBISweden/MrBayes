@@ -9357,6 +9357,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset brlenspr = clock:uniform                            \n");
 		MrBayesPrint ("                       prset brlenspr = clock:birthdeath                         \n");
 		MrBayesPrint ("                       prset brlenspr = clock:coalescence                        \n");
+		MrBayesPrint ("                       prset brlenspr = fixed(<treename>)                        \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    Trees with unconstrained branch lengths are unrooted         \n");
 		MrBayesPrint ("                    whereas clock-constrained trees are rooted. The option       \n");
@@ -9365,7 +9366,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    or coalescence prior, you may want to modify the details     \n");
 		MrBayesPrint ("                    of the parameters of those processes (speciation rate,       \n");
 		MrBayesPrint ("                    extinction rate and sample probability for the birth-death   \n");
-		MrBayesPrint ("                    prior; theta parameter for the coalescence prior.            \n");
+		MrBayesPrint ("                    prior; theta parameter for the coalescence prior. The branch \n");
+		MrBayesPrint ("                    lengths can also be fixed but only if the topology is fixed. \n");
 		MrBayesPrint ("   Treeheightpr  -- This parameter specifies the prior probability dist-         \n");
 		MrBayesPrint ("                    ribution on the tree height when a clock model is used.      \n");
 		MrBayesPrint ("                    The options are:                                             \n");
@@ -9737,7 +9739,7 @@ int GetUserHelp (char *helpTkn)
 					MrBayesPrint ("(%1.1lf)\n", mp->symBetaFix);
 				}
 			
-			MrBayesPrint ("   Topologypr       Uniform/Constraints          %s", mp->topologyPr);
+			MrBayesPrint ("   Topologypr       Uniform/Constraints/Fixed    %s", mp->topologyPr);
 			if (!strcmp(mp->topologyPr, "Constraints"))
 				{
 				MrBayesPrint ("(");
@@ -9752,21 +9754,25 @@ int GetUserHelp (char *helpTkn)
 						}
 					}
 				}
+			else if (!strcmp(mp->topologyPr, "Fixed"))
+				MrBayesPrint("(%s)\n", userTree[mp->topologyFix]->name);
 			else
 				MrBayesPrint ("\n");
 				
-			MrBayesPrint ("   Brlenspr         Unconstrained/Clock          %s:", mp->brlensPr);
+			MrBayesPrint ("   Brlenspr         Unconstrained/Clock/Fixed    %s", mp->brlensPr);
 			if (!strcmp(mp->brlensPr, "Unconstrained"))
 				{
 				if (!strcmp(mp->unconstrainedPr, "Uniform"))
-					MrBayesPrint ("Uni(%1.1lf,%1.1lf)\n", mp->brlensUni[0], mp->brlensUni[1]);
+					MrBayesPrint (":Uni(%1.1lf,%1.1lf)\n", mp->brlensUni[0], mp->brlensUni[1]);
 				else
-					MrBayesPrint ("Exp(%1.1lf)\n", mp->brlensExp);
+					MrBayesPrint (":Exp(%1.1lf)\n", mp->brlensExp);
 				}
-			else
+			else if (!strcmp(mp->brlensPr, "Clock"))
 				{
-				MrBayesPrint ("%s\n", mp->clockPr);
+				MrBayesPrint (":%s\n", mp->clockPr);
 				}
+			else if (!strcmp(mp->brlensPr, "Fixed"))
+				MrBayesPrint("(%s)\n", userTree[mp->brlensFix]->name);
 			
 			MrBayesPrint ("   Treeheightpr     Exponential/Gamma            %s", mp->treeHeightPr);
 			if (!strcmp(mp->treeHeightPr, "Gamma"))

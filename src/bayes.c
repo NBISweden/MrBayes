@@ -675,10 +675,11 @@ int InitializeMrBayes (void)
 	defaultModel.brownScalesGamma[1] = 10.0;
 	defaultModel.brownScalesGammaMean = 10.0;
 	strcpy(defaultModel.topologyPr, "Uniform");     /* prior for tree topology                      */
-    defaultModel.topologyFix = 0;                   /* user tree index to use for fixed topology    */
+    defaultModel.topologyFix = -1;                  /* user tree index to use for fixed topology    */
 	for (i=0; i<30; i++)
 		defaultModel.activeConstraints[i] = NO;     /* which constraints are active                 */
 	strcpy(defaultModel.brlensPr, "Unconstrained"); /* prior on branch lengths                      */
+    defaultModel.brlensFix = -1;                    /* user tree index to use for fixed brlens      */
 	defaultModel.brlensUni[0] = BRLENS_MIN;
 	defaultModel.brlensUni[1] = 10.0;
 	defaultModel.brlensExp = 10.0;
