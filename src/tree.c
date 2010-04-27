@@ -646,7 +646,8 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 	safeLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
     char            constrName[100];
-	   	
+	
+	pt->isRooted = t->isRooted;
 	if (t->isRooted == NO)
 		numTaxa = t->nNodes - t->nIntNodes;
 	else

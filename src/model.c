@@ -18180,7 +18180,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				else
 					{
 					assert(!strcmp(mp->brlensPr, "Fixed"));
-					MrBayesPrint ("%s            Prior      = Fixed, branch lengths are fixed to the one of the user tree '%s'\n", spacer,
+					MrBayesPrint ("%s            Prior      = Fixed, branch lengths are fixed to the ones of the user tree '%s'\n", spacer,
                                                     userTree[mp->topologyFix]->name);
 					}
 				}
