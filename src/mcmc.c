@@ -23432,6 +23432,10 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 		return (NO_ERROR);
 		}
 		
+	if( maxDepth-minDepth < window )
+		{
+		window = maxDepth-minDepth;
+		}
 	/* pick the new node depth */
     oldDepth = p->nodeDepth;
 	newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
