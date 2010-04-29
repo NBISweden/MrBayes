@@ -69,7 +69,7 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 
 /* Debugging options */
 #undef SHOW_TOKENS
-#undef ECHO_PROCESSED_COMMANDS
+#define ECHO_PROCESSED_COMMANDS
 
 /* Local function prototypes */
 int      AddToSet (int i, int j, int k, int id);
@@ -1334,6 +1334,11 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		else if (calibrationPtr->prior == offsetExponential)
 			{
 			sscanf (tkn, "%lf", &tempD);
+			if (strlen(tkn) > 20) /*the check is needed in order to prevent overflow of calibrationPtr->name */
+				{
+				MrBayesPrint ("%s   The length of the string specifying the number:%s is too long. You allowed to use at most 20 characters to represent a number as an argument to OffsetExponential(X,Y)\n", spacer, tkn);
+				return (ERROR);
+				}
 			if (calibrationPtr->offset < 0.0)
 				{
 				if (tempD < 0.0)
