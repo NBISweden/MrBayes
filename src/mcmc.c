@@ -3852,6 +3852,10 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 					likeR += tiPR[j++] * clR[i];
 					}
                 clP[h++] = likeL * likeR;
+#ifndef NDEBUG
+                if (clP[h-1] > 1.000001)
+                    getchar();
+#endif
 				}
 			clL += nStates;
 			clR += nStates;
@@ -12462,6 +12466,28 @@ MrBFlt LogPrior (int chain)
 					x += (st[i] - 1.0)*log(sst[i]);
 				lnPrior += x;
 				}
+            else if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_EXP_MS)
+                {
+                lnPrior += - mp->symBetaExp * st[0] + log(mp->symBetaExp);
+                }
+            else if (p->paramId == SYMPI_UNI || p->paramId == SYMPI_UNI_MS)
+                {
+                lnPrior += - log(mp->symBetaUni[1] - mp->symBetaUni[0]);
+                }                
+            if (p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_FIX_MS)
+                {
+                sst = GetParamStdStateFreqs(p, chain, state[chain]);
+                sst += 2*m->numBetaCats;
+                for (i=0; i<p->nSympi; i++)
+                    {
+			        nStates = p->sympinStates[i];
+			        x = LnGamma(nStates*st[0]) - nStates*LnGamma(st[0]);
+			        for (j=0; j<nStates; j++)
+				        x += (st[0] - 1.0)*log(sst[j]);
+			        lnPrior += x;
+                    sst += nStates;
+                    }
+                }
 			}
 		else if (p->paramType == P_SHAPE)
 			{
@@ -13902,8 +13928,8 @@ int Move_Beta (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, Mr
 	else
 		*lnPriorRatio = 0.0;
 
-	/* fill in the new betacat frequencies */
-	bs = GetParamSubVals(param, chain, state[chain]);
+    /* fill in the new betacat frequencies */
+	bs = GetParamStdStateFreqs(param, chain, state[chain]);
 	k = mp->numBetaCats;
 	BetaBreaks (newB, newB, bs, k);
 	k *= 2;
@@ -13933,7 +13959,7 @@ int Move_Beta (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, Mr
 			}
 		(*lnPriorRatio) += x - y;
 
-		/* update indices */
+		/* update pointer to state freqs */
 		bs += nStates;
 		}
 		
@@ -29640,8 +29666,8 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, safeLong *seed, Mr
 	
 	/* get the values we need */
 	symDirAlphai = *GetParamVals(param, chain, state[chain]);
-	newPi = GetParamSubVals (param, chain, state[chain]);
-	oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);
+	newPi = GetParamStdStateFreqs (param, chain, state[chain]);
+	oldPi = GetParamStdStateFreqs (param, chain, state[chain] ^ 1);
 	newPi += 2 * mp->numBetaCats;
 	oldPi += 2 * mp->numBetaCats;
 	for (i=0; i<charIndex; i++)
@@ -31557,10 +31583,8 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 			continue;
 		i = compCharPos[c] - m->compCharStart;
 		cL = ancStateCondLikes + (i*2);
-		if (scientific == YES)
-            SafeSprintf (&tempStr, &tempStrSize, "%le\t%le\t", cL[0], cL[1]);
-        else
-            SafeSprintf (&tempStr, &tempStrSize, "%lf\t%lf\t", cL[0], cL[1]);
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[0]));
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[1]));
 		if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 		}
 
@@ -31728,10 +31752,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
                 printedChar[i] = YES;
 		for (i=0; i<nStates; i++)
 			{
-		    if (scientific == YES)
-    			SafeSprintf (&tempStr, &tempStrSize, "%le\t", cL[i]);
-            else
-    			SafeSprintf (&tempStr, &tempStrSize, "%lf\t", cL[i]);
+			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[i]));
 			if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 			}
 		}
@@ -31896,10 +31917,10 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 			continue;
 		i = compCharPos[c] - m->compCharStart;
 		cL = ancStateCondLikes + (i*4);
-	    if (scientific == YES)
-    		SafeSprintf (&tempStr, &tempStrSize, "%le\t%le\t%le\t%le\t", cL[A], cL[C], cL[G], cL[T]);
-        else
-    		SafeSprintf (&tempStr, &tempStrSize, "%lf\t%lf\t%lf\t%lf\t", cL[A], cL[C], cL[G], cL[T]);
+		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[A]));
+		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[C]));
+		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[G]));
+		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[T]));
 		if (AddToPrintString (tempStr) == ERROR) return ERROR;
 		}
 	free (tempStr);
@@ -31920,8 +31941,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
 {
 
-	int				c, i, j, k, nStates, nCats;
-	MrBFlt			*bs, freq;
+	int				c, i, j, k, s, nStates;
+	MrBFlt			*bsBase, *bs, freq;
 	CLFlt			*clFP, *cL, sum;
 	char			*tempStr;
 	int			    tempStrSize = TEMPSTRSIZE;
@@ -31937,11 +31958,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 	/* find model settings for this division */
 	m = &modelSettings[division];
 
-	/* find state frequencies */
-	bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-	
-	/* find frequencies of rate categories */
-	freq =  1.0 /  m->numGammaCats;
+	/* find state frequencies, base index */
+	bsBase = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 	
 	/* find the conditional likelihoods from the final pass */
 	clFP = condLikePtr[chain][p->index] + m->condLikeStart + (1 ^ Bit(division, &p->clSpace[0])) * condLikeRowSize;
@@ -31953,36 +31971,42 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 	for (c=0; c<m->numChars; c++)
 		{
 		nStates = m->nStates[c];
+        bs = bsBase + m->bsIndex[c];
 
-		/* the following lines ensure that nCats is 1 unless */
-		/* the character is binary and beta categories are used  */
-		if (nStates == 2)
-			nCats = m->numBetaCats;
-		else
-			nCats = 1;
+		for (s=0; s<nStates; s++)
+			cL[s] = 0.0;
 
-		/* now multiply with the gamma cats */
-		nCats *= m->numGammaCats;
-
-		for (i=0; i<nStates; i++)
-			cL[i] = 0.0;
-
-		for (k=0; k<nCats; k++)
-			{
-			for (i=0; i<nStates; i++)
-				cL[i] += clFP[i];
-			clFP += nStates;
-			}
+        if (nStates == 2)
+            {
+            freq = 1.0 / (m->numBetaCats * m->numGammaCats);
+	        for (i=0; i<m->numBetaCats; i++)
+                {
+                for (k=0; k<m->numGammaCats; k++)
+			        {
+		            for (s=0; s<nStates; s++)
+			            cL[s] += clFP[s] * (CLFlt)(bs[s] * freq);
+    		        clFP += nStates;
+                    }
+                bs += nStates;
+		        }
+           }
+        else
+            {
+            freq = 1.0 / (m->numGammaCats);
+            for (k=0; k<m->numGammaCats; k++)
+		        {
+	            for (s=0; s<nStates; s++)
+		            cL[s] += clFP[s] * (CLFlt)(bs[s] * freq);
+		        clFP += nStates;
+                }
+	        }
 
 		sum = 0.0;
-		for (i=0; i<nStates; i++)
-			{
-			cL[i] *= (CLFlt) (bs[i] * freq);
-			sum += cL[i];
-			}
+		for (s=0; s<nStates; s++)
+			sum += cL[s];
 
-		for (i=0; i<nStates; i++) 
-			cL[i] /= sum;
+		for (s=0; s<nStates; s++) 
+			cL[s] /= sum;
 
 		cL += nStates;
 		}
@@ -32000,10 +32024,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
 		for (i=0; i<m->nStates[k]; i++)
 			{
-		    if (scientific == YES)
-    			SafeSprintf (&tempStr, &tempStrSize, "%le\t", cL[i]);
-            else
-    			SafeSprintf (&tempStr, &tempStrSize, "%lf\t", cL[i]);
+			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[i]));
 			if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 			}
 		}
@@ -32011,6 +32032,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 	return NO_ERROR;	
 
 }
+
 
 
 
@@ -32115,7 +32137,7 @@ int PrintChainCondLikes (int chain, int precision)
 int PrintCheckPoint (int gen)
 
 {
-	int			i, j, k, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE;
+	int			i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE;
 	char		bkupFileName[100], oldBkupFileName[100], ckpFileName[100], *tempString=NULL;
 	MrBFlt		*value;
 	Param		*p = NULL, *subParm = NULL;
@@ -32365,7 +32387,7 @@ int PrintCheckPoint (int gen)
 			{
 			run = (chainId[j] / chainParams.numChains) + 1;
 			chn = (chainId[j] % chainParams.numChains) + 1;
-			if (p->paramType == P_PI)
+			if (p->paramType == P_PI && modelSettings[p->relParts[0]].dataType != STANDARD)
 				{
 				value = GetParamSubVals (p, j, state[j]);
 				nValues = p->nSubValues;
@@ -32386,6 +32408,23 @@ int PrintCheckPoint (int gen)
 				if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
 					nErrors++;
 				}
+            /* print extra params for symdir multistate */
+            if (p->nSympi > 0)
+				{
+				value = GetParamStdStateFreqs (p, j, state[j]);
+                if (p->hasBinaryStd == YES)
+                    value += 2 * modelSettings[p->relParts[0]].numBetaCats;
+                for (k=0; k<p->nSympi; k++)
+				    {
+                    for (k1=0; k1<p->sympinStates[k]; k1++)
+                        {
+    				    if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%.15le", *value++) == ERROR)
+	    				    nErrors++;
+		    		    if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
+			    		    nErrors++;
+                        }
+                    }
+                }
             /* print extra params for omega */
             if (p->paramType == P_OMEGA)
 				{
@@ -33415,10 +33454,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
 			continue;
 		j = compCharPos[c] - m->compCharStart;
-        if (scientific == YES)
-            SafeSprintf (&tempStr, &tempStrSize, "%le\t", siteRates[j]);
-        else
-            SafeSprintf (&tempStr, &tempStrSize, "%lf\t", siteRates[j]);
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
 		if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 		}
 
@@ -33495,10 +33531,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
 			continue;
 		j = compCharPos[c] - m->compCharStart;
-        if (scientific == YES)
-            SafeSprintf (&tempStr, &tempStrSize, "%le\t", siteRates[j]);
-        else
-            SafeSprintf (&tempStr, &tempStrSize, "%lf\t", siteRates[j]);
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
 		if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 		}
 
@@ -33582,7 +33615,7 @@ int PrintStates (int curGen, int coldId)
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 		SafeSprintf (&tempStr, &tempStrSize, "Gen\t");
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-		SafeSprintf (&tempStr, &tempStrSize, "LnL\t");
+		SafeSprintf (&tempStr, &tempStrSize, "LnL");
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
 		/* print tree lengths or heights for all trees */
@@ -33596,16 +33629,16 @@ int PrintStates (int curGen, int coldId)
 				if (tree->isRooted == YES)
 					{
 					if (FillRelPartsString(p, partString) == YES)
-						SafeSprintf (&tempStr, &tempStrSize, "TH%s\tTL%s\t", partString, partString);
+						SafeSprintf (&tempStr, &tempStrSize, "\tTH%s\tTL%s", partString, partString);
 					else
-						SafeSprintf (&tempStr, &tempStrSize, "TH\tTL\t");
+						SafeSprintf (&tempStr, &tempStrSize, "\tTH\tTL");
 					}
 				else
                     {
                     if (FillRelPartsString(p, partString) == YES)
-					    SafeSprintf (&tempStr, &tempStrSize, "TL%s\t", partString);
+					    SafeSprintf (&tempStr, &tempStrSize, "\tTL%s", partString);
 				    else
-					    SafeSprintf (&tempStr, &tempStrSize, "TL\t");
+					    SafeSprintf (&tempStr, &tempStrSize, "\tTL");
                     }
 
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -33623,9 +33656,9 @@ int PrintStates (int curGen, int coldId)
 				if (tree->isCalibrated == YES)
 					{
 					if (FillRelPartsString(p, partString) == YES)
-						SafeSprintf (&tempStr, &tempStrSize, "clockRate%s\t", partString);
+						SafeSprintf (&tempStr, &tempStrSize, "\tclockRate%s", partString);
 					else
-						SafeSprintf (&tempStr, &tempStrSize, "clockRate\t");
+						SafeSprintf (&tempStr, &tempStrSize, "\tclockRate");
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				for (j=0; j<p->nSubParams; j++)
@@ -33633,9 +33666,9 @@ int PrintStates (int curGen, int coldId)
 					if (p->subParams[j]->paramType == P_CPPEVENTS)
 						{
 						if (FillRelPartsString(p->subParams[j], partString) == YES)
-							SafeSprintf (&tempStr, &tempStrSize, "n_CPP%s\t", partString);
+							SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP%s", partString);
 						else
-							SafeSprintf (&tempStr, &tempStrSize, "n_CPP\t");
+							SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP");
 						if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 						}
 					}
@@ -33646,7 +33679,7 @@ int PrintStates (int curGen, int coldId)
 		for (i=0; i<numPrintParams; i++)
 			{
 			p = printParam[i];
-			SafeSprintf (&tempStr, &tempStrSize, "%s\t", p->paramHeader);
+			SafeSprintf (&tempStr, &tempStrSize, "\t%s", p->paramHeader);
 			if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			}
 			
@@ -33668,7 +33701,7 @@ int PrintStates (int curGen, int coldId)
 					{
 					if (m->nCharsPerSite == 1)
 						{
-						SafeSprintf (&tempStr, &tempStrSize, "r(%d)\t", i+1);
+						SafeSprintf (&tempStr, &tempStrSize, "\tr(%d)", i+1);
 						if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 						}
 					else
@@ -33687,14 +33720,14 @@ int PrintStates (int curGen, int coldId)
 							}
 						if (k != m->nCharsPerSite)
 							return (ERROR);
-						SafeSprintf (&tempStr, &tempStrSize, "r(%d,", origAlignmentChars[0]);
+						SafeSprintf (&tempStr, &tempStrSize, "\tr(%d,", origAlignmentChars[0]);
 						if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 						for (j=1; j<k-1; j++)
 							{
 							SafeSprintf (&tempStr, &tempStrSize, "%d,", origAlignmentChars[j]);
 							if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 							}
-						SafeSprintf (&tempStr, &tempStrSize, "%d)\t", origAlignmentChars[k-1]);
+						SafeSprintf (&tempStr, &tempStrSize, "%d)", origAlignmentChars[k-1]);
 						if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 						}
 					}
@@ -33730,7 +33763,7 @@ int PrintStates (int curGen, int coldId)
 							printedChar[j] = YES;
 							}
 						}
-					SafeSprintf (&tempStr, &tempStrSize, "pr+(%d,%d,%d)\t", origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1);
+					SafeSprintf (&tempStr, &tempStrSize, "\tpr+(%d,%d,%d)", origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1);
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}	
@@ -33767,7 +33800,7 @@ int PrintStates (int curGen, int coldId)
 							printedChar[j] = YES;
 							}
 						}
-					SafeSprintf (&tempStr, &tempStrSize, "omega(%d,%d,%d)\t", origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1);
+					SafeSprintf (&tempStr, &tempStrSize, "\tomega(%d,%d,%d)", origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1);
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}	
@@ -33797,9 +33830,9 @@ int PrintStates (int curGen, int coldId)
 							for (k=0; k<m->nStates[compCharPos[j] - m->compCharStart]; k++)
 								{
 								if (mp->numActiveConstraints > 1)
-									SafeSprintf (&tempStr, &tempStrSize, "p(%c){%d@%d}\t", m->StateCode(k), j+1, i+1);
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%c){%d@%d}", m->StateCode(k), j+1, i+1);
 								else
-									SafeSprintf (&tempStr, &tempStrSize, "p(%c){%d}\t", m->StateCode(k), j+1);
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%c){%d}", m->StateCode(k), j+1);
 								if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 								}
 							}
@@ -33819,14 +33852,14 @@ int PrintStates (int curGen, int coldId)
 								{
                                 State_CODON(stateString, k, d);
 								if (mp->numActiveConstraints > 1)
-									SafeSprintf (&tempStr, &tempStrSize, "p(%s){%d,%d,%d@%d}\t",
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d,%d@%d}",
                                         stateString,
                                         origAlignmentChars[0],
                                         origAlignmentChars[1],
                                         origAlignmentChars[2],
                                         i+1);
 								else
-									SafeSprintf (&tempStr, &tempStrSize, "p(%s){%d,%d,%d}\t",
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d,%d}",
                                         stateString,
                                         origAlignmentChars[0],
                                         origAlignmentChars[1],
@@ -33850,13 +33883,13 @@ int PrintStates (int curGen, int coldId)
 								{
                                 State_DOUBLET(stateString, k);
 								if (mp->numActiveConstraints > 1)
-									SafeSprintf (&tempStr, &tempStrSize, "p(%s){%d,%d@%d}\t",
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d@%d}",
                                         stateString,
                                         origAlignmentChars[0],
                                         origAlignmentChars[1],
                                         i+1);
 								else
-									SafeSprintf (&tempStr, &tempStrSize, "p(%s){%d,%d}\t",
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d}",
                                         stateString,
                                         origAlignmentChars[0],
                                         origAlignmentChars[1]);
@@ -33868,9 +33901,9 @@ int PrintStates (int curGen, int coldId)
 							for (k=0; k<m->numStates; k++)
 								{
 								if (mp->numActiveConstraints > 1)
-									SafeSprintf (&tempStr, &tempStrSize, "p(%c){%d@%d}\t", m->StateCode(k), j+1, i+1);
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%c){%d@%d}", m->StateCode(k), j+1, i+1);
 								else
-									SafeSprintf (&tempStr, &tempStrSize, "p(%c){%d}\t", m->StateCode(k), j+1);
+									SafeSprintf (&tempStr, &tempStrSize, "\tp(%c){%d}", m->StateCode(k), j+1);
 								if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 								}
 							}
@@ -33884,12 +33917,9 @@ int PrintStates (int curGen, int coldId)
 		}
 		
 	/* now print parameter values */
-	SafeSprintf (&tempStr, &tempStrSize, "%d\t", curGen);
+	SafeSprintf (&tempStr, &tempStrSize, "%d", curGen);
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-	if (scientific == YES)
-        SafeSprintf (&tempStr, &tempStrSize, "%le\t", curLnL[coldId]);
-    else
-        SafeSprintf (&tempStr, &tempStrSize, "%1.3lf\t", curLnL[coldId]);
+    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnL[coldId]));
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
 	/* print tree lengths or heights for all trees */
@@ -33902,19 +33932,16 @@ int PrintStates (int curGen, int coldId)
 			tree = GetTree (p, coldId, state[coldId]);
 			if (tree->isClock == NO)
                 {
-				if (scientific == YES)
-                    SafeSprintf (&tempStr, &tempStrSize, "%le\t", TreeLength(p, coldId));
-				else
-                    SafeSprintf (&tempStr, &tempStrSize, "%lf\t", TreeLength(p, coldId));
+                SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
+			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
 			else
                 {
-				if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t%le\t", tree->root->left->nodeDepth, TreeLength(p, coldId));
-				else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t%lf\t", tree->root->left->nodeDepth, TreeLength(p, coldId));
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(tree->root->left->nodeDepth));
+			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
+			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
-			if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			}
 		}
 
@@ -33928,17 +33955,14 @@ int PrintStates (int curGen, int coldId)
 			if (p->tree[0]->isCalibrated == YES)
 				{
 				tree = GetTree (p, coldId, state[coldId]);
-				if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t", tree->clockRate);
-				else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t", tree->clockRate);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(tree->clockRate));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			for (j=0; j<p->nSubParams; j++)
 				{
 				if (p->subParams[j]->paramType == P_CPPEVENTS)
 					{
-					SafeSprintf (&tempStr, &tempStrSize, "%d\t", NumCppEvents(p->subParams[j],coldId));
+					SafeSprintf (&tempStr, &tempStrSize, "\t%d", NumCppEvents(p->subParams[j],coldId));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -33950,32 +33974,47 @@ int PrintStates (int curGen, int coldId)
 		{
 		p = printParam[i];
 
-		/* get model params */
+		/* get model params and settings */
 		mp = &modelParams[p->relParts[0]];
+        m  = &modelSettings[p->relParts[0]];
 		
 		st  = GetParamVals (p, coldId, state[coldId]);
 		sst = GetParamSubVals (p, coldId, state[coldId]);
 
-		if (p->paramType == P_PI && p->paramId != SYMPI_EXP && p->paramId != SYMPI_EXP_MS && p->paramId != SYMPI_UNI && p->paramId != SYMPI_UNI_MS)
+		if (p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_FIX_MS)
 			{
-			/* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues). If we have
-				morphological characters, then we don't want to print out the state frequencies because they will be integrated out over a
-				dirichlet prior that is specified in values, not subvalues. */
+			/* We print symmetric dirichlet alpha value if not fixed and then multistate character state frequencies */
+            if (p->paramId != SYMPI_FIX_MS)
+                {
+                SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[0]));
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }
+            sst = GetParamStdStateFreqs (p, coldId, state[coldId]);
+            if (p->hasBinaryStd == YES)
+                sst += 2 * m->numBetaCats;
+			for (j=0; j<p->nSympi; j++)
+				{
+                for (k=0; k<p->sympinStates[j]; k++)
+                    {
+				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(*sst++));
+    				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                    }
+				}
+			}
+		else if (p->paramType == P_PI)
+			{
+			/* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues). */
 			for (j=0; j<p->nSubValues; j++)
 				{
-				if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[j]);
-				else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[j]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			}
 		else if (p->paramType == P_TRATIO && !strcmp(mp->tratioFormat,"Dirichlet"))
 			{
-			if (scientific == YES)
-    			SafeSprintf (&tempStr, &tempStrSize, "%le\t%le\t", st[0] / (1.0 + st[0]), 1.0 / (1.0 + st[0]));
-			else
-    			SafeSprintf (&tempStr, &tempStrSize, "%lf\t%lf\t", st[0] / (1.0 + st[0]), 1.0 / (1.0 + st[0]));
+			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[0] / (1.0 + st[0])));
+			if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(1.0 / (1.0 + st[0])));
 			if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			}
 		else if (p->paramType == P_REVMAT && !strcmp(mp->revmatFormat,"Ratio"))
@@ -33983,10 +34022,7 @@ int PrintStates (int curGen, int coldId)
 			sum = st[p->nValues-1];
 			for (j=0; j<p->nValues; j++)
 				{
-				if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t", st[j] / sum);
-				else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t", st[j] / sum);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			}
@@ -33996,10 +34032,7 @@ int PrintStates (int curGen, int coldId)
 				{
 				for (j=0; j<p->nValues; j++)
 					{
-				    if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[j + p->nValues]);
-				    else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[j + p->nValues]);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j + p->nValues]));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -34010,10 +34043,7 @@ int PrintStates (int curGen, int coldId)
 					sum += sst[j + p->nValues];
 				for (j=0; j<p->nValues; j++)
 					{
-				    if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[j + p->nValues] / sum);
-				    else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[j + p->nValues] / sum);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j + p->nValues] / sum));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -34021,10 +34051,7 @@ int PrintStates (int curGen, int coldId)
 				{
 				for (j=0; j<p->nValues; j++)
 					{
-				    if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", st[j]);
-				    else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", st[j]);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j]));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -34033,40 +34060,33 @@ int PrintStates (int curGen, int coldId)
 			{
 			for (j=0; j<p->nValues; j++)
 				{
-				SafeSprintf (&tempStr, &tempStrSize, "%d\t", (int)st[j]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%d", (int)st[j]);
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			}
 		else
 			{
+            /* run of the mill parameter */
 			for (j=0; j<p->nValues; j++)
 				{
-			    if (scientific == YES)
-					SafeSprintf (&tempStr, &tempStrSize, "%le\t", st[j]);
-			    else
-					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", st[j]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j]));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			}
-		if (p->paramType == P_OMEGA && p->paramId != OMEGA_DIR && p->paramId != OMEGA_FIX && p->paramId != OMEGA_FFF && p->paramId != OMEGA_FF && p->paramId != OMEGA_10FFF)
+
+        if (p->paramType == P_OMEGA && p->paramId != OMEGA_DIR && p->paramId != OMEGA_FIX && p->paramId != OMEGA_FFF && p->paramId != OMEGA_FF && p->paramId != OMEGA_10FFF)
 			{
 			/* OK, we also need to print subvalues for the category frequencies in a NY98-like model. */
 			if (!strcmp(mp->omegaVar, "M10"))
 				{
 				for (j=0; j<4; j++)
 					{
-			        if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[mp->numM10BetaCats + mp->numM10GammaCats + 4 + j]);
-			        else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[mp->numM10BetaCats + mp->numM10GammaCats + 4 + j]);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[mp->numM10BetaCats + mp->numM10GammaCats + 4 + j]));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				for (j=0; j<2; j++)
 					{
-			        if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[mp->numM10BetaCats + mp->numM10GammaCats + j]);
-			        else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[mp->numM10BetaCats + mp->numM10GammaCats + j]);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[mp->numM10BetaCats + mp->numM10GammaCats + j]));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -34074,10 +34094,7 @@ int PrintStates (int curGen, int coldId)
 				{
 				for (j=0; j<3; j++)
 					{
-			        if (scientific == YES)
-    					SafeSprintf (&tempStr, &tempStrSize, "%le\t", sst[j]);
-			        else
-    					SafeSprintf (&tempStr, &tempStrSize, "%lf\t", sst[j]);
+					SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
 					if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 					}
 				}
@@ -34135,10 +34152,7 @@ int PrintStates (int curGen, int coldId)
 						printedChar[j] = YES;
 						}
 					}
-		        if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t", posSelProbs[compressedCharPosition]);
-		        else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t", posSelProbs[compressedCharPosition]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				/*printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]);*/
 				}
@@ -34180,10 +34194,7 @@ int PrintStates (int curGen, int coldId)
 						printedChar[j] = YES;
 						}
 					}
-		        if (scientific == YES)
-    				SafeSprintf (&tempStr, &tempStrSize, "%le\t", posSelProbs[compressedCharPosition]);
-		        else
-    				SafeSprintf (&tempStr, &tempStrSize, "%lf\t", posSelProbs[compressedCharPosition]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				/*printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]);*/
 				}
@@ -35311,7 +35322,8 @@ int ProcessStdChars (safeLong *seed)
 
 {
 
-	int				b, c, d, i, j, k, n, chn, ts, index, numStandardChars;
+	int				b, c, d, i, j, k, n, chn, ts, index, numStandardChars, origCharPos;
+    char            piHeader[30];
 	MrBFlt			*subValue, sum, symDir[10];
 	ModelInfo		*m;
 	ModelParams		*mp=NULL;
@@ -35434,19 +35446,25 @@ int ProcessStdChars (safeLong *seed)
 				}
 
 			/* set the ti probs needed */
-			if (m->cType[c] == UNORD)
-				m->isTiNeeded[m->nStates[c]-2] = YES;
-			if (m->cType[c] == ORD)
-				m->isTiNeeded[m->nStates[c]+6] = YES;
-			if (m->cType[c] == IRREV)
-				m->isTiNeeded[m->nStates[c]+11] = YES;
+			if (m->stateFreq->nValues == 0 || m->nStates[c] == 2)
+                {
+    			if (m->cType[c] == UNORD)
+	    			m->isTiNeeded[m->nStates[c]-2] = YES;
+		    	if (m->cType[c] == ORD)
+			    	m->isTiNeeded[m->nStates[c]+6] = YES;
+			    if (m->cType[c] == IRREV)
+				    m->isTiNeeded[m->nStates[c]+11] = YES;
+                }
 			}
 
 		/* set ti index for each compressed character first         */
 		/* set bs index	later (below)								*/
-		
-		/* first for unordered characters */
-		for (k=0; k<9; k++)
+
+        /* set base index, valid for binary chars */
+        m->tiIndex[c] = 0;
+
+		/* first adjust for unordered characters */
+        for (k=0; k<9; k++)
 			{
 			if (m->isTiNeeded [k] == NO)
 				continue;
@@ -35492,13 +35510,16 @@ int ProcessStdChars (safeLong *seed)
 
 		/* finally take beta cats into account in tiIndex        */
 		/* the beta cats will only be used for binary characters */
+        /* multistate characters get their ti indices reset here */
 		if (m->numBetaCats > 1 && m->isTiNeeded[0] == YES)
 			{
+            k = 4 * m->numBetaCats * m->numGammaCats;   /* offset for binary character ti probs */
 			for (c=0; c<m->numChars; c++)
 				{
 				if (m->nStates[c] > 2)
 					{
-					m->tiIndex[c] += 4 * (m->numBetaCats - 1) * m->numGammaCats;
+					m->tiIndex[c] = k;
+                    k += m->nStates[c] * m->nStates[c] * m->numGammaCats;
 					}
 				}
 			}
@@ -35512,6 +35533,12 @@ int ProcessStdChars (safeLong *seed)
 		if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
 			continue;
 		p->nSympi = 0;
+        p->hasBinaryStd = NO;
+		for (i=0; i<p->nRelParts; i++)
+			if (modelSettings[p->relParts[i]].isTiNeeded[0] == YES)
+				break;
+        if (i < p->nRelParts)
+            p->hasBinaryStd = YES;
 		if (p->paramId == SYMPI_EQUAL)
 			{
 			/* calculate the number of state frequencies needed */
@@ -35563,10 +35590,8 @@ int ProcessStdChars (safeLong *seed)
 		else
 			{
 			/* if not equal we need space for beta category frequencies */
-			for (i=index=0; i<p->nRelParts; i++)
-				if (modelSettings[p->relParts[i]].isTiNeeded[0] == YES)
-					break;
-			if (i < p->nRelParts) 
+            index = 0;
+			if (p->hasBinaryStd == YES)
 				index += (2 * modelSettings[p->relParts[0]].numBetaCats);
 			/* as well as one set of frequencies for each multistate character */
 			for (i=0; i<p->nRelParts; i++)
@@ -35620,6 +35645,7 @@ int ProcessStdChars (safeLong *seed)
 			p = &params[k];
 			if (p->nSympi > 0)
 				{
+                p->printParam = YES;    /* print even if fixed alpha_symdir */
 				index = 0;
 				p->sympiBsIndex = sympiIndex + i;
 				p->sympinStates = sympiIndex + i + n;
@@ -35634,16 +35660,21 @@ int ProcessStdChars (safeLong *seed)
 							p->sympinStates[index] = m->nStates[c];
 							p->sympiBsIndex[index] = m->bsIndex[c];
 							p->sympiCType[index] = m->cType[c];
+                            origCharPos = origChar[m->compCharStart + c];
+                            for (ts=0; ts<m->nStates[c]; ts++)
+                                {
+                                sprintf(piHeader, "\tpi_%d(%d)", origCharPos+1, ts);
+                                SafeStrcat(&p->paramHeader, piHeader);
+                                }
 							index++;
 							}
 						}
 					}
-#ifdef DEBUG_STDCHARS
-				assert(index==p->nSympi);
-#endif
+				assert (index == p->nSympi);
 				i += p->nSympi;
 				}
 			}
+        assert (i == n);
 		}
 	
 	/* count space needed for state frequencies */
@@ -35727,13 +35758,8 @@ int ProcessStdChars (safeLong *seed)
 			if (p->paramId == SYMPI_FIX || p->paramId == SYMPI_UNI || p->paramId == SYMPI_EXP
 				|| p->paramId == SYMPI_FIX_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_EXP_MS)
 				{
-				index = 0;
-				for (i=0; i<p->nRelParts; i++)
-					if (modelSettings[p->relParts[i]].isTiNeeded[0] == YES)
-						break;
-				if (i < p->nRelParts)
+				if (p->hasBinaryStd == YES)
 					{
-					index += (2 * mp->numBetaCats);
 					BetaBreaks (p->values[0], p->values[0], subValue, mp->numBetaCats);
 					b = 2*mp->numBetaCats;
 					for (i=b-2; i>0; i-=2)
@@ -35764,7 +35790,6 @@ int ProcessStdChars (safeLong *seed)
 						}
 					for (i=0; i<mp->nStates; i++)
 						subValue[i] /= sum;
-					
 					subValue += p->sympinStates[c];
 					}
 				}		
@@ -35933,6 +35958,39 @@ int ReassembleParamVals (int *curId)
 				{
 				return (ERROR);
 				}
+            }
+
+        /* std state frequencies */
+        if (stdStateFreqsRowSize > 0)
+            {
+            if (proc_id == 0)
+                {
+                x = stdStateFreqs + 2*stdStateFreqsRowSize*lower;
+                ierror = MPI_Irecv (x, stdStateFreqsRowSize*2*(upper-lower), MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, &request);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
+                ierror = MPI_Waitall (1, &request, &status);
+                if (ierror != MPI_SUCCESS)
+			        {
+			        return (ERROR);
+			        }
+                }
+            else if (proc_id == proc)
+                {
+		        x = stdStateFreqs;
+                ierror = MPI_Isend (x, stdStateFreqsRowSize*2*(upper-lower), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &request);
+		        if (ierror != MPI_SUCCESS)
+			        {
+			        return (ERROR);
+			        }
+		        ierror = MPI_Waitall (1, &request, &status);
+		        if (ierror != MPI_SUCCESS)
+			        {
+			        return (ERROR);
+			        }
+                }
             }
         
         /* mcmc trees */
@@ -36994,7 +37052,19 @@ void ResetChainIds (void)
 				toVals[k] = fromVals[k];
 				fromVals[k] = swapVals[k];
 				}
-			}
+            if (p->nStdStateFreqs > 0)
+                {
+                toVals = GetParamStdStateFreqs (p, toChn, 0);
+			    swapVals = GetParamStdStateFreqs (p, toChn, 1);
+			    fromVals = GetParamStdStateFreqs (p, fromChn, state[fromChn]);
+			    for (k=0; k<p->nStdStateFreqs; k++)
+                    {
+				    toVals[k] = fromVals[k];
+				    fromVals[k] = swapVals[k];
+				    }
+                }
+            }
+
 		/* mcmc trees */
 		for (j=0; j<numTrees; j++)
 			{
@@ -39870,9 +39940,10 @@ int SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType)
 	   needs to know the number of states and the type (ordered or unordered) 
 	   of the character. */
 
-	/* set diagonal of Q matrix to 0 */
+	/* set Q matrix to 0 */
 	for (i=0; i<nStates; i++)
-		a[i][i] = 0.0;
+        for (j=0; j<nStates; j++)
+    		a[i][j] = 0.0;
 
 	/* initialize Q matrix */
 	scaler = 0.0;
@@ -41509,15 +41580,13 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 	else
 		{
 		/* unequal state frequencies */
+        index = 0;
 
 		/* first fill in for binary characters using beta categories if needed */
 		if (m->isTiNeeded[0] == YES)
 			{
 			/* find base frequencies */
-			bs = GetParamSubVals(m->stateFreq, chain, state[chain]);
-
-			/* calculate alpha and beta */
-			index = 0;
+            bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 
 			/* cycle through beta and gamma cats */
 			for (b=0; b<m->numBetaCats; b++)
@@ -41557,14 +41626,13 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 				{
 				n = m->stateFreq->sympinStates[c];
 
-				/* get cijk pointers */
-				cijk = eigenValues + (2 * n);
-
 				/* fill in values */
 				for (k=0; k<m->numGammaCats; k++)
 					{
 					v =  length * baseRate * catRate[k];
 					
+			        cijk = eigenValues + (2 * n);
+
 					for (s=0; s<n; s++)
 						EigValexp[s] =  exp(eigenValues[s] * v);
 

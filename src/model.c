@@ -7637,7 +7637,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	PolyTree			*thePolyTree;
 	static Param	    *param = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
-	static int			useSubvalues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
+	static int			useSubvalues, useStdStateFreqs, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
 	static char			tempName[100];
 
 	if (defMatrix == NO)
@@ -7675,6 +7675,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			param = NULL;
 			runIndex = chainIndex = -1;
 			useSubvalues = NO;
+            useStdStateFreqs = NO;
 			foundComma = foundEqual = foundName = foundDash = NO;
 			expecting = Expecting(LEFTCURL) | Expecting(LEFTPAR) | 	Expecting(EQUALSIGN);
 			}
@@ -7878,7 +7879,28 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 nValuesRead = 0;
                 numExpectedValues = param->nSubValues/2;
                 useSubvalues = YES;
-                theValueMin = 0.000001;
+                theValueMin = ETA;
+                theValueMax = 1.0;
+                }
+            if (param->paramType==P_OMEGA && nValuesRead==numExpectedValues && useSubvalues == NO)
+                {
+                /* continue with subvalues */
+                nValuesRead = 0;
+                numExpectedValues = param->nSubValues/2;
+                useSubvalues = YES;
+                theValueMin = ETA;
+                theValueMax = 1.0;
+                }
+            if (param->paramType==P_PI && modelSettings[param->relParts[0]].dataType == STANDARD && param->paramId != SYMPI_EQUAL
+                && nValuesRead==numExpectedValues && useStdStateFreqs == NO)
+                {
+                /* we have read alpha_symdir, continue with multistate char state freqs */
+                nValuesRead = 0;
+                numExpectedValues = param->nStdStateFreqs;
+                if (param->hasBinaryStd == YES)
+                    numExpectedValues -= 2 * modelSettings[param->relParts[0]].numBetaCats;
+                useStdStateFreqs = YES;
+                theValueMin = ETA;
                 theValueMax = 1.0;
                 }
 			nValuesRead++;
@@ -7909,10 +7931,18 @@ int DoStartvalsParm (char *parmName, char *tkn)
 					{
 					if (chainIndex != -1 && chainIndex != j)
 						continue;
-					if (useSubvalues == NO)
+					if (useSubvalues == NO && useStdStateFreqs == NO)
 						theValue = GetParamVals (param, i*chainParams.numChains+j, 0);
-					else
+					else if (useSubvalues == YES)
 						theValue = GetParamSubVals (param, i*chainParams.numChains+j, 0);
+					else if (useStdStateFreqs == YES)
+                        {
+                        theValue = GetParamStdStateFreqs (param, i*chainParams.numChains+j, 0);
+                        if (param->hasBinaryStd == YES)
+                            theValue += 2 * modelSettings[param->relParts[0]].numBetaCats;
+                        }
+                    else
+                        return (ERROR);
 					theValue[nValuesRead-1] = tempFloat;
 					}
 				}
@@ -8073,18 +8103,18 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		else
 			/* run of the mill character */
 			{
+			theValueMin = param->min;
+			theValueMax = param->max;
 			if ((param->paramType == P_PI && modelParams[param->relParts[0]].dataType != STANDARD))
 				{
 				useSubvalues = YES;
 				numExpectedValues = param->nSubValues;
 				}
-			else
+            else
 				{
 				useSubvalues = NO;
 				numExpectedValues = param->nValues;
 				}
-			theValueMin = 0.0;
-			theValueMax = 1000000.0;
 			nValuesRead = 0;
 			expecting = Expecting(LEFTPAR);
 			}
@@ -8524,7 +8554,7 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 					{
 					if (mp->numDirParams != mp->nStates && mp->numDirParams != 0)
 						{
-						MrBayesPrint ("%s   Mismatch between number of dirichlet parameters (%d) and the number of states (%d)\n", spacer, mp->numDirParams, mp->nStates);
+						MrBayesPrint ("%s   Mismatch between number of dirichlet parameters (%d) and the number of states (%d)\n", spacer, mp->numDirParams, m->numStates);
 						return ERROR;
 						}
 
@@ -8534,17 +8564,17 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 						for (i=0; i<mp->nStates; i++)
 							value[i] = mp->stateFreqsDir[i] = 1.0;
 					else
-						for (i=0; i<mp->nStates; i++)
+						for (i=0; i<m->numStates; i++)
 							value[i] = mp->stateFreqsDir[i];
 
 					/* now fill in subvalues */
-					for (i=0; i<mp->nStates; i++)
+					for (i=0; i<m->numStates; i++)
 						subValue[i] =  (1.0 / mp->nStates);
 					}
 
 				else if (p->paramId == PI_USER)
 					{
-					for (i=0; i<mp->nStates; i++)
+					for (i=0; i<m->numStates; i++)
 						subValue[i] =  mp->stateFreqsFix[i];
 					}
 					
@@ -8597,7 +8627,6 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 							for (i=0; i<mp->nStates; i++)
 								subValue[i] = blosPi[i];
 							}
-
 						}
 					}
 
@@ -13581,8 +13610,9 @@ int SetModelParams (void)
         /* Parameter nValues and nSubValues, which are needed for memory allocation
 		   are calculated for each case in the code below. nSympi, however, is
 		   only used for one special type of parameter and it therefore makes
-		   sense to initialize it to 0 here. */
+		   sense to initialize it to 0 here. The same applies to hasBinaryStd. */
 		p->nSympi = 0;
+        p->hasBinaryStd = NO;
 		
 		/* should this parameter be printed to a file? */
 		p->printParam = NO;
@@ -13927,8 +13957,11 @@ int SetModelParams (void)
 
             if (mp->dataType == STANDARD)
 				{
-				p->paramTypeName = "Symmetric diricihlet/beta distribution alpha parameter";
+				p->paramTypeName = "Symmetric diricihlet/beta distribution alpha_i parameter";
 				strcpy (p->name, "Alpha_symdir");
+                /* boundaries for alpha_i */
+                p->min = ETA;
+                p->max = POS_INFINITY;
 				}
 			else
 				{
@@ -13941,24 +13974,31 @@ int SetModelParams (void)
 			/* and the number of values and subvalues needed */
 			if (mp->dataType == STANDARD)
 				{
+                /* find number of model states */
+                m->numModelStates = 2;
+                for (c=0; c<numChar; c++)
+                    {
+                    for (i=0; i<p->nRelParts; i++)
+                        {
+                        if (partitionId[c][partitionNum] == p->relParts[i] + 1 && charInfo[c].numStates > m->numModelStates)
+                            m->numModelStates = charInfo[c].numStates;
+                        }
+                    }
+                for (i=0; i<p->nRelParts; i++)
+                    modelSettings[p->relParts[i]].numModelStates = m->numModelStates;
+
 				/* symmetric hyperprior with only one variable (0 if equal) */
-				p->nValues = 1;
+				p->nValues = 1;     /* set to 0 below for the SYMPI_EQUAL model */
 				if (!strcmp(mp->symPiPr,"Uniform"))
 					{
-					for (i=0; i<p->nRelParts; i++)
-						if (modelSettings[p->relParts[i]].nCijk > 0)
-							break;
-					if (i < p->nRelParts) 
+					if (m->numModelStates > 2) 
 						p->paramId = SYMPI_UNI_MS;
 					else
 						p->paramId = SYMPI_UNI;
 					}
 				else if (!strcmp(mp->symPiPr,"Exponential"))
 					{
-					for (i=0; i<p->nRelParts; i++)
-						if (modelSettings[p->relParts[i]].nCijk > 0)
-							break;
-					if (i < p->nRelParts) 
+					if (m->numModelStates > 2)
 						p->paramId = SYMPI_EXP_MS;
 					else
 						p->paramId = SYMPI_EXP;
@@ -13972,10 +14012,7 @@ int SetModelParams (void)
 						}
 					else
 						{
-						for (i=0; i<p->nRelParts; i++)
-							if (modelSettings[p->relParts[i]].nCijk > 0)
-								break;
-						if (i < p->nRelParts) 
+						if (m->numModelStates > 2) 
 							p->paramId = SYMPI_FIX_MS;
 						else
 							p->paramId = SYMPI_FIX;
@@ -13984,8 +14021,9 @@ int SetModelParams (void)
 				p->nSubValues = 0;	/* store state frequencies in p->stdStateFreqs */
 				if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI || p->paramId == SYMPI_UNI_MS)
 					p->printParam = YES;
-				SafeStrcat (&p->paramHeader, "symdir");
+				SafeStrcat (&p->paramHeader, "alpha_symdir");
                 SafeStrcat (&p->paramHeader, partString);
+                /* further processing done in ProcessStdChars */
 				}
 			else
 				{
@@ -13993,7 +14031,7 @@ int SetModelParams (void)
 				/* no hyperprior or fixed to one value, set default to 0  */
 				p->nValues = 0;
 				/* one subvalue for each state */
-				p->nSubValues = mp->nStates;
+			    p->nSubValues = mp->nStates;    /* mp->nStates is set to 20 if DNA || RNA && nucmodel==PROTEIN */
 				if (!strcmp(mp->stateFreqPr, "Dirichlet"))
 					{
 					p->paramId = PI_DIR;
@@ -16478,7 +16516,7 @@ void SetUpMoveTypes (void)
 	mt = &moveTypes[i++];
 	mt->name = "Dirichlet proposal";
 	mt->shortName = "Dirichlet";
-	mt->paramName = "pi_symdiralpha";
+	mt->paramName = "Pi_symdir";
 	mt->tuningName[0] = "Dirichlet parameter";
 	mt->shortTuningName[0] = "alpha";
 	mt->applicableTo[0] = SYMPI_FIX_MS;

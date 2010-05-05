@@ -537,6 +537,7 @@ typedef struct param
 	int				nSubParams;		/* number of subparams							*/
 	Tree			**tree;			/* pointer to tree ptrs (for brlens & topology) */
 	int				treeIndex;		/* index to first tree in mcmcTree				*/
+    int             hasBinaryStd;   /* has binary standard chars                    */
 	int				*sympiBsIndex;	/* pointer to sympi bsIndex (std chars)			*/
 	int				*sympinStates;	/* pointer to sympi nStates (std chars)			*/
 	int				*sympiCType;	/* pointer to sympi cType (std chars)			*/
