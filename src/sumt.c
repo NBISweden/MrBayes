@@ -5255,18 +5255,18 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 			if (sumtParams.brlensDef == YES && showSupport == NO)
                 {
                 if (sumtParams.isClock == NO)
-    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->length));
+    			    fprintf (fp, "):%s", MbPrintNum(p->anc->length));
                 else
-    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->anc->depth - p->anc->depth));
+    			    fprintf (fp, "):%s", MbPrintNum(p->anc->anc->depth - p->anc->depth));
                 }
 			else if (sumtParams.brlensDef == NO && showSupport == YES)
 				fprintf (fp, ")%1.3lf", p->anc->support); 
 			else if (sumtParams.brlensDef == YES && showSupport == YES)
                 {
                 if (sumtParams.isClock == NO)
-    			    fprintf (fp, ")%1.3lf:%s", p->index+1, MbPrintNum(p->anc->length));
+    			    fprintf (fp, ")%1.3lf:%s", p->anc->support, MbPrintNum(p->anc->length));
                 else
-    			    fprintf (fp, "):%s", p->index+1, MbPrintNum(p->anc->anc->depth - p->anc->depth));
+    			    fprintf (fp, ")%1.3lf:%s", p->anc->support, MbPrintNum(p->anc->anc->depth - p->anc->depth));
                 }
 			else
 				fprintf (fp, ")");
