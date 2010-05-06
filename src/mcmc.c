@@ -14419,9 +14419,13 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 
 	/* get new tree height and reflect if necessary */
 	oldHeight = t->root->left->nodeDepth;
-	newHeight = oldHeight + (RandomNumber(seed) - 0.5) * delta;
     minHeight = TREEHEIGHT_MIN;
     maxHeight = TREEHEIGHT_MAX;
+	if( delta > maxHeight ) /* we do it to avoid fallowing long while loop in case if delta is high */
+		{
+		delta = maxHeight - minHeight;
+		}
+	newHeight = oldHeight + (RandomNumber(seed) - 0.5) * delta;
 	while (newHeight < minHeight || newHeight > maxHeight)
 		{
 		if (newHeight < minHeight)
@@ -22839,6 +22843,12 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
         else
             minDepth = b->nodeDepth + minV;
         maxDepth = u->nodeDepth - minV;
+
+		if( tuning > maxDepth-minDepth ) /* we do it to avoid fallowing long while loop in case if tuning is high */
+			{
+			tuning = maxDepth-minDepth;
+			}
+
         newDepth = v->nodeDepth + (RandomNumber(seed)-0.5)*tuning;
         while (newDepth <= minDepth || newDepth >= maxDepth)
             {
@@ -28573,13 +28583,18 @@ int Move_Revmat_Slider (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
     
     /* find new proportion */
     sum = oldRate[i] + oldRate[j];
-    x   = oldRate[i] / sum;
-    y = x + delta * (RandomNumber(seed) - 0.5);
 
     /* reflect */
     isValid = NO;
     min = RATE_MIN / sum;
     max = 1.0 - RATE_MIN;
+
+	 x   = oldRate[i] / sum;
+	if( delta > max-min ) /* we do it to avoid fallowing long while loop in case if delta is high */
+		{
+		delta = max-min;
+		}
+    y = x + delta * (RandomNumber(seed) - 0.5);
 	do {
 		if (y < min)
 			y = 2.0 * min - y;
@@ -29593,13 +29608,19 @@ int Move_Statefreqs_Slider (Param *param, int chain, safeLong *seed, MrBFlt *lnP
     
     /* find new proportion */
     sum = oldPi[i] + oldPi[j];
-    x   = oldPi[i] / sum;
-    y = x + delta * (RandomNumber(seed) - 0.5);
 
     /* reflect */
     isValid = NO;
     min = PI_MIN / sum;
     max = 1.0 - min;
+
+	x   = oldPi[i] / sum;
+	if( delta > max-min ) /* we do it to avoid fallowing long while loop in case if delta is high */
+		{
+		delta = max-min;
+		}
+    y = x + delta * (RandomNumber(seed) - 0.5);
+
 	do {
 		if (y < min)
 			y = 2.0 * min - y;

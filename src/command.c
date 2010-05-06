@@ -69,7 +69,7 @@ const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $
 
 /* Debugging options */
 #undef SHOW_TOKENS
-#define ECHO_PROCESSED_COMMANDS
+#undef ECHO_PROCESSED_COMMANDS
 
 /* Local function prototypes */
 int      AddToSet (int i, int j, int k, int id);

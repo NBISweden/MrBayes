@@ -485,11 +485,12 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 {
 	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
 	safeLong	x, *partition = NULL;
-	MrBFlt		freq;
-    PolyTree    *t;
+	MrBFlt		freq, freqInterapted;
+    PolyTree    *t, *t2;
 	PolyNode	*p, *q, *r, *ql, *pl;
     PartCtr     *part;
     Stat        theStats;
+	int 		isFirstLoop =1, isInterapted =0;
 	
 	/* check that we have at least three species */
     if (sumtParams.numTaxa < 3)
@@ -498,8 +499,8 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 		return ERROR;
 		}
 	
+treeConstruction:
 	/* now, make a consensus tree */
-
 	/* first allocate and initialize consensus tree */
 	t = AllocatePolyTree(sumtParams.numTaxa);
 	if (!t)
@@ -522,6 +523,8 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 			t->nodes[j].index = j;
             t->nodes[j].partitionIndex = -1;     /* partition ID */
 			strcpy(t->nodes[j].label,taxaNames[i]);
+			t->nodes[j].age = 0.0; /* temporally set to minimum value to allow any insertion in front of the terminal before actual values of age and depth are available */
+			t->nodes[j].depth = 0.0;
 			j++;
 			}
 		}
@@ -540,6 +543,8 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 	p = t->root = &t->nodes[sumtParams.numTaxa];
 	p->anc = p->sib = NULL;
 	p->x = sumtParams.numTaxa;
+	p->age = MRBFLT_MAX; /* temporally set to maximum value to allow any insertion in front of the root before actual values of age and depth are available */
+	p->depth = MRBFLT_MAX;
     j = localOutGroup;
     q = &t->nodes[j];
 	p->left = q;
@@ -602,13 +607,27 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
             if (sumtParams.isClock == YES)
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->depth = theStats.mean;
+                q->depth = theStats.median;
+				for( p = q->left; p!=NULL; p = p->sib )
+					{
+					if( q->depth <= p->depth )
+						break;
+					}
                 }
             if (sumtParams.isCalibrated == YES)
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->age = theStats.mean;
+                q->age = theStats.median;
+				for( p = q->left; p!=NULL; p = p->sib )
+					{
+					if( q->age <= p->age )
+						break;
+					}
                 }
+			if( p!=NULL ) /* Root is younger then ancestor. */
+				{
+				assert(0); /*  We never should get here because root always has 100% freq and it is older than any other node that has 100% freq. */
+				}
 			}
 		else if (nBits > 1 && !(nBits == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO))
 			{
@@ -635,28 +654,63 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
                 if (q!=NULL)
                     isCompat = NO;
 				}
+
 			if (isCompat == NO)
 				continue;
 
 			/* set new node */
-			q = &t->nodes[t->nNodes++];
-            t->nIntNodes++;
+			q = &t->nodes[t->nNodes];
             q->partitionIndex = i;
 			q->x = nBits;
             q->partition = partition;
             GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
             q->support = freq;
-            q->length = theStats.mean;
+            q->length = theStats.median;
+			r=NULL;
             if (sumtParams.isClock == YES)
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->depth = theStats.mean;
+                q->depth = theStats.median;
+				if( freq < 1.00 )
+					{
+					for( r = p->left; r!=NULL; r = r->sib )
+						{
+						if( IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded) &&  r->depth >= q->depth )
+							break; /* child is older then the node we try to add. Not good.*/
+						}
+					if( p->depth <= q->depth )
+						{      /* New node older than the parent. Not good.*/
+						r = p; /* Just to make r!=NULL*/
+						}
+					}
                 }
             if (sumtParams.isCalibrated == YES)
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->age = theStats.mean;
+                q->age = theStats.median;
+				if( freq < 1.00 )
+					{
+					for( r = p->left; r!=NULL; r = r->sib )
+						{
+						if( freq < 1.00 && IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded) && r->age >= q->age )
+							break; /* child is older then the node we try to add. Not good.*/
+						}
+					if( p->age <= q->age )
+						{      /* New node older than the parent. Not good.*/
+						r = p; /* Just to make r!=NULL*/
+						}
+					}
                 }
+
+			if( r!=NULL && isFirstLoop )
+				{
+				 /* cancel the addition of the new node*/
+				isInterapted =1;
+				freqInterapted=freq;
+				break; /* Finish creating the polytree */
+				}
+			t->nNodes++;
+			t->nIntNodes++;
 
 			/* go through descendants of anc */
 			ql = pl = NULL;
@@ -696,25 +750,44 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
             if (nBits == sumtParams.numTaxa - 1)
                 j = localOutGroup;
             else
-    			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded);
+    			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded); /* nbits == 1 */
 			q = &t->nodes[j];
             q->partitionIndex = i;
             q->partition = partition;
 			numTerminalsEncountered++;
             GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-            q->length = theStats.mean;
+            q->length = theStats.median;
             if (sumtParams.isClock == YES)
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->depth = theStats.mean;
+                q->depth = theStats.median;
+				if(q->anc->depth <= q->depth )
+					{
+					assert(0);/*  We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+					}
                 }
             if (sumtParams.isCalibrated == YES)
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
-                q->age = theStats.mean;
+                q->age = theStats.median;
+				if(q->anc->depth <= q->depth )
+					{
+					assert(0);/*  We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+					}
                 }
 			}
 		}
+
+	if( isFirstLoop )
+		{
+		t2 = t;
+		if( isInterapted )
+			{
+			isFirstLoop = 0;
+			goto treeConstruction;
+			}
+		}
+
 
     /* get downpass arrays */
     GetPolyDownPass(t);
@@ -722,6 +795,16 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
     /* order tips */
     if (sumtParams.orderTaxa == YES)
         OrderTips (t);
+
+	if( t!=t2 )
+		{
+		/* get downpass arrays */
+    	GetPolyDownPass(t2);
+
+    	/* order tips */
+   		if (sumtParams.orderTaxa == YES)
+        	OrderTips (t2);
+		}
 		
 	/* draw tree to stdout and fp */
 	MrBayesPrint ("\n%s   Clade credibility values:\n\n", spacer);
@@ -732,12 +815,20 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 		{
 		MrBayesPrint ("\n");
 		if (sumtParams.isClock == YES)
-			MrBayesPrint ("%s   Phylogram (based on average node depths):\n\n", spacer);
+			MrBayesPrint ("%s   Phylogram (based on average node depths):\n", spacer);
 		else
-			MrBayesPrint ("%s   Phylogram (based on average branch lengths):\n\n", spacer);
-	    ShowConPhylogram (stdout, t, 80);
+			MrBayesPrint ("%s   Phylogram (based on average branch lengths):\n", spacer);
+		if( isInterapted )
+			{
+			MrBayesPrint ("%s   Warning. Phylogram containing all nodes with credibility values exceeding\n",spacer);
+			MrBayesPrint ("%s   the level set by Contype could not be constructed.\n",spacer);
+			MrBayesPrint ("%s   Only nodes with credibility values exceeding %.2f%% (percentage of trees\n", spacer, freqInterapted*100);
+			MrBayesPrint ("%s   where the node is present) were included in the phylogram.\n", spacer);
+			}
+		MrBayesPrint ("\n");
+	    ShowConPhylogram (stdout, t2, 80);
 		if (logToFile == YES)
-			ShowConPhylogram (stdout, t, 80);
+			ShowConPhylogram (logFileFp, t2, 80);
 		}
 
     /* print taxa block */
@@ -746,10 +837,10 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
     MrBayesPrintf (fpCon, "\ttaxlabels\n", sumtParams.numTaxa);
     for (i=0; i<sumtParams.numTaxa; i++)
         {
-        for (j=0; j<t->nNodes; j++)
-            if (t->nodes[j].index == i)
+        for (j=0; j<t2->nNodes; j++)
+            if (t2->nodes[j].index == i)
                 break;
-        MrBayesPrintf (fpCon, "\t\t%s\n", t->nodes[j].label);
+        MrBayesPrintf (fpCon, "\t\t%s\n", t2->nodes[j].label);
         }
     MrBayesPrintf (fpCon, "\t\t;\nend;\n");
     
@@ -757,21 +848,25 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
     MrBayesPrintf (fpCon, "\ttranslate\n");
     for (i=0; i<sumtParams.numTaxa; i++)
         {
-        for (j=0; j<t->nNodes; j++)
-            if (t->nodes[j].index == i)
+        for (j=0; j<t2->nNodes; j++)
+            if (t2->nodes[j].index == i)
                 break;
         if (i == sumtParams.numTaxa-1)
-            MrBayesPrintf (fpCon, "\t\t%d\t%s\n", t->nodes[i].index+1, t->nodes[i].label);
+            MrBayesPrintf (fpCon, "\t\t%d\t%s\n", t2->nodes[i].index+1, t2->nodes[i].label);
         else
-            MrBayesPrintf (fpCon, "\t\t%d\t%s,\n", t->nodes[i].index+1, t->nodes[i].label);
+            MrBayesPrintf (fpCon, "\t\t%d\t%s,\n", t2->nodes[i].index+1, t2->nodes[i].label);
         }
     MrBayesPrintf (fpCon, "\t\t;\n");
     if (sumtParams.consensusFormat == SIMPLE)
-        PrintConTree(fpCon, t);
+        PrintConTree(fpCon, t2);
     else if (sumtParams.consensusFormat == FIGTREE)
-        PrintRichConTree(fpCon, t, treeParts);
+        PrintRichConTree(fpCon, t2, treeParts);
 	MrBayesPrintf (fpCon, "end;\n");
 
+	if( t!=t2 )
+		{
+		FreePolyTree (t2);
+		}
 	/* free memory */
 	FreePolyTree (t);
 
@@ -4098,7 +4193,7 @@ void PrintConTree (FILE *fp, PolyTree *t)
 		{
 		MrBayesPrintf (fp, "\n");
 		MrBayesPrintf (fp, "   [Note: This tree contains information only on the topology\n");
-		MrBayesPrintf (fp, "          and branch lengths (mean of the posterior probability density).]\n");
+		MrBayesPrintf (fp, "          and branch lengths (median of the posterior probability density).]\n");
 		if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
 			MrBayesPrintf (fp, "   tree con_50_majrule = ");
 		else
@@ -4398,7 +4493,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
     maxLabelLength = 20;
 
 	/* allocate space for label, printLine and markLine */
-	printLine = (char *) calloc ((2*screenWidth+2),sizeof(char));
+	printLine = (char *) calloc ((2*screenWidth+2),sizeof(char)); 
     label = (char *) calloc (maxLabelLength+1, sizeof(char));
 	if (!printLine || !label)
 		return ERROR;
@@ -4455,6 +4550,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
 		}
 
 	/* print tree line by line */
+
 	for (i=0; i<nLines; i++)
 		{
 		MrBayesPrint ("%s   ", spacer);
@@ -4619,8 +4715,6 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
 	return NO_ERROR;
 
 }
-
-
 		
 		
 		

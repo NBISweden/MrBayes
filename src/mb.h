@@ -1,3 +1,5 @@
+#include<float.h>
+
 #ifdef USECONFIG_H
 #   include "config.h"
 #else /* some defaults that would otherwise be guessed by configure */
@@ -35,6 +37,8 @@ typedef long safeLong;
 
 
 typedef	double MrBFlt;		/* double used for parameter values and generally for floating point values */
+#define MRBFLT_MAX DBL_MAX; /*Maximum possible value that can be stored in MrBFlt*/
+#define MRBFLT_MIN DBL_MIN; /*Maximum possible value that can be stored in MrBFlt*/
 typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
 							/* set CLFlt to double if you want increased precision */
 
@@ -383,7 +387,7 @@ enum CALPRIOR
 /* typedef for calibration */
 typedef struct calibration
 	{
-	char			name[20];
+	char			name[65];
 	enum CALPRIOR   prior;
 	MrBFlt			max;
 	MrBFlt			min;
