@@ -25,6 +25,7 @@ int     FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 int		FillTreeParams (safeLong *seed, int fromChain, int toChain);
 int		FreeModel (void);
 int		GetEmpiricalFreqs (int *relParts, int nRelParts);
+int		GetNumDivisionChars (void);
 MrBFlt	*GetParamStdStateFreqs (Param *parm, int chain, int state);
 MrBFlt	*GetParamSubVals (Param *parm, int chain, int state);
 MrBFlt	*GetParamVals (Param *parm, int chain, int state);

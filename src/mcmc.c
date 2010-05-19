@@ -6663,6 +6663,10 @@ int DoMcmc (void)
 	MrBayesPrint ("%s   Number of taxa = %d\n", spacer, numLocalTaxa);
 	MrBayesPrint ("%s   Number of characters = %d\n", spacer, numLocalChar);
 	
+	/* calculate number of (uncompressed) characters for each division */
+	if (GetNumDivisionChars() == ERROR)
+		goto errorExit;
+
     /* Compress data and calculate some things needed for setting up params. */
 	if (CompressData() == ERROR)
 		goto errorExit;
@@ -11511,6 +11515,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 	MrBFlt			*bs, freq, like, pUnobserved, pObserved;
 	CLFlt			*clP, *lnScaler, *nSitesOfPat;
 	ModelInfo		*m;
+
 	
 	m = &modelSettings[division];
 
@@ -37927,7 +37932,6 @@ int RunChain (safeLong *seed)
                 getchar();
                 }
 		    */
-
 			/* calculate likelihood ratio */
 			if (abortMove == NO)
 				{

@@ -485,12 +485,12 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
 {
 	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
 	safeLong	x, *partition = NULL;
-	MrBFlt		freq, freqInterapted;
-    PolyTree    *t, *t2;
+	MrBFlt		freq, freqInterapted=0;
+    PolyTree    *t, *t2=NULL;
 	PolyNode	*p, *q, *r, *ql, *pl;
     PartCtr     *part;
     Stat        theStats;
-	int 		isFirstLoop =1, isInterapted =0;
+	int 		isFirstLoop=1, isInterapted=0;
 	
 	/* check that we have at least three species */
     if (sumtParams.numTaxa < 3)

@@ -67,7 +67,6 @@ int		InitializeChainTrees (Param *p, int from, int to, int isRooted);
 int     FillBrlensSubParams (Param *param, int chn, int state);
 void    FreeCppEvents (Param *p);
 void	FreeMove (MCMCMove *mv);
-int		GetNumDivisionChars (void);
 void    GetPossibleAAs (int aaCode, int aa[]);
 void    GetPossibleNucs (int nucCode, int nuc[]);
 void    GetPossibleRestrictionSites (int resSiteCode, int *sites);
