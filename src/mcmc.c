@@ -8685,7 +8685,7 @@ void FreeChainMemory (void)
 		{
 		if (chainParams.allComps == YES)
 			{
-			for (i=0; i<chainParams.numRuns; i++)
+			for (i=0; i<numTopologies; i++)
 				FreeSquareDoubleMatrix (chainParams.stat[i].pair);
 			}
 		free (chainParams.stat);
