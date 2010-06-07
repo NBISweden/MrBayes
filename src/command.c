@@ -7001,8 +7001,9 @@ int DoTreeParm (char *parmName, char *tkn)
 	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
+	static char 		tempCppEventString[150]; /* Contains multiple tokens which form CppEvents string */
 	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundFirst,
-						foundClockrate, eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
+						foundClockrate, foundCppEvent, eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
 	static PolyNode		*pp, *qq;
 	static PolyTree		*t;
 	
@@ -7016,6 +7017,7 @@ int DoTreeParm (char *parmName, char *tkn)
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
     */
+
 
 	if (isTaxsetDef == NO)
 		{
@@ -7057,7 +7059,7 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         strncpy (t->name, tkn, 99);
 	    foundColon = foundAmpersand = foundEqual = foundComment = NO;
-        foundE = foundB = foundFirst = foundClockrate = NO;
+        foundE = foundB = foundFirst = foundClockrate = foundCppEvent = NO;
 	    eSetIndex = bSetIndex = eventIndex = 0;
 	    nextAvailableNode = 0;
         nextIntNodeIndex = numTaxa;
@@ -7086,7 +7088,9 @@ int DoTreeParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(LEFTPAR))
 		{
 		if (foundE == YES)
-            expecting = Expecting(NUMBER);
+			{
+			expecting = Expecting(NUMBER);
+			}
         else
             {
             if (nextAvailableNode >= 2*numTaxa)
@@ -7151,21 +7155,58 @@ int DoTreeParm (char *parmName, char *tkn)
 			}
 		else if (foundE == YES)
 			{
-			if (foundEqual == NO)
+			if( foundCppEvent == YES)
+				{
+				if ( IsSame("all",tkn) == SAME)
+					{
+					expecting = Expecting(RIGHTCURL);
+					if (foundEqual == NO)
+						{
+						strcat(t->eSetName[t->nESets-1],"all");
+						foundE = NO; //do not need 
+						}
+					else
+						{
+						strcat(tempCppEventString,"all");
+						}
+					}
+				else
+					{
+					MrBayesPrint ("%s   Urecognized argument: '%s' is passed to CppEvents()\n", spacer, tkn);
+					return (ERROR);
+					}
+				}
+			else if (foundEqual == NO)
 				{
 				t->nESets++;
                 t->isRelaxed = YES;
 				t->nEvents  = (int **) realloc ((void *)t->nEvents, t->nESets*sizeof(int *));
 				t->position = (MrBFlt ***) realloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
 				t->rateMult = (MrBFlt ***) realloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
+				t->eType = (int *) realloc ((void *)t->eType, t->nESets*sizeof(int));
                 t->nEvents[t->nESets-1]  = (int *) calloc ((size_t)(2*numTaxa), sizeof(int));
-                t->position[t->nESets=1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
-                t->rateMult[t->nESets=1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->position[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->rateMult[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+				t->eType[t->nESets-1] = CPPm;
 				t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));
 				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
-				strcpy (t->eSetName[t->nESets-1],tkn);
-				foundE = NO;
-				expecting = Expecting(RIGHTCOMMENT);
+				strcpy (t->eSetName[t->nESets-1],tkn);				
+				if (strcmp("CppEvents",tkn) == 0)
+					{
+					foundCppEvent = YES;
+					expecting = Expecting(LEFTCURL);
+					}
+				else
+					{
+					expecting = Expecting(RIGHTCOMMENT);
+					foundE = NO;
+					}
+				}
+			else if (strcmp("CppEvents",tkn) == 0)
+				{
+				strcpy (tempCppEventString,tkn);
+				foundCppEvent = YES;
+				expecting = Expecting(LEFTCURL);
 				}
 			else
 				{
@@ -7355,7 +7396,20 @@ int DoTreeParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(COMMA))
 		{
 		if (foundE == YES)
+			{
 			expecting = Expecting(NUMBER);
+			if( foundCppEvent == YES)
+				{
+				if (foundEqual == NO)
+					{
+					strcat(t->eSetName[t->nESets-1],tkn);
+					}
+				else
+					{
+					strcat(tempCppEventString,tkn);
+					}
+				}
+			}
 		else
 			{
 			if (nextAvailableNode >= 2*numTaxa)
@@ -7396,19 +7450,35 @@ int DoTreeParm (char *parmName, char *tkn)
 			{
 			if (foundColon == NO)
 				{
-				sscanf (tkn, "%d", &tempInt);
-				if (tempInt <= 0)
+
+				if( foundCppEvent == YES)
 					{
-					MrBayesPrint ("%s   Wrong number of events (%d) for event set '%s'\n", spacer, tempInt, t->eSetName[eSetIndex]);
-			        if (inSumtCommand == NO && inComparetreeCommand == NO)
-                        FreePolyTree (userTree[treeIndex]);
-					return (ERROR);
+					expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
+					if (foundEqual == NO)
+						{
+						strcat(t->eSetName[t->nESets-1],tkn);
+						}
+					else
+						{
+						strcat(tempCppEventString,tkn);
+						}
 					}
-				t->nEvents[eSetIndex][pp->index]  = tempInt;
-				t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-				t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-				eventIndex = 0;
-				expecting = Expecting (COLON);
+				else 
+					{
+					sscanf (tkn, "%d", &tempInt);
+					if (tempInt <= 0)
+						{
+						MrBayesPrint ("%s   Wrong number of events (%d) for event set '%s'\n", spacer, tempInt, t->eSetName[eSetIndex]);
+			        	if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        	FreePolyTree (userTree[treeIndex]);
+						return (ERROR);
+						}
+					t->nEvents[eSetIndex][pp->index]  = tempInt;
+					t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+					t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+					eventIndex = 0;
+					expecting = Expecting (COLON);
+					}
                 }
 			else if (foundFirst == NO)
 				{
@@ -7564,6 +7634,54 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		numComments++;
 		foundComment = NO;
+		}
+	else if (expecting == Expecting(LEFTCURL))
+		{
+		if( foundCppEvent == YES)
+			{
+			if (foundEqual == NO)
+				{
+				strcat(t->eSetName[t->nESets-1],"{");
+				}
+			else
+				{
+				strcat(tempCppEventString,"{");
+				}
+			expecting = Expecting(NUMBER) | Expecting(ALPHA);
+			}
+		else
+			return(ERROR);
+		}
+	else if (expecting == Expecting(RIGHTCURL))
+		{
+		if( foundCppEvent == YES)
+			{
+			foundCppEvent = NO;
+			if (foundEqual == NO)
+				{
+				strcat(t->eSetName[t->nESets-1],"}");
+				expecting = Expecting(RIGHTCOMMENT);
+				}
+			else
+				{
+				strcat(tempCppEventString,"}");
+				/* find the right event set */
+				for (i=0; i<t->nESets; i++)
+					if (strcmp(t->eSetName[i],tempCppEventString) == 0)
+						break;
+				if (i == t->nESets)
+					{
+					MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
+					if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
+					}
+				eSetIndex = i;
+				expecting = Expecting(NUMBER);
+				}
+			}
+		else
+			return(ERROR);
 		}
 	return (NO_ERROR);
 	

@@ -252,7 +252,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define POS_INFINITY                1E25f;
 #define NEG_INFINITY			-1000000.0f
 
-#define	CMD_STRING_LENGTH		20000
+#define	CMD_STRING_LENGTH		100000
 
 #define	pos(i,j,n)				((i)*(n)+(j))
 

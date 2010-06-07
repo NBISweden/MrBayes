@@ -3014,7 +3014,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 
 {
 
-        int		i, j, k, tempInt, nApplied, index, ns, flag;
+    int			i, j, k, tempInt, nApplied, index, ns, flag=0;
 	MrBFlt		tempD, sum;
 	char		tempStr[100];
 
@@ -4191,7 +4191,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
 						{
-						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+						if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN))
 							{
 							strcpy(modelParams[i].pInvarPr, tempStr);
 							flag=1;
@@ -4199,7 +4199,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						}
 					if( flag == 0)
 					    {
-						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA.\
+						MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: DNA, RNA, PROTEIN.\
 							Currently there is no active partition with such data.\n", spacer, parmName);
 						return (ERROR);
 						}
@@ -4222,7 +4222,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				nApplied = NumActiveParts ();
 				for (i=0; i<numCurrentDivisions; i++)
 					{
-					if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+					if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN))
 						{
 						if (!strcmp(modelParams[i].pInvarPr,"Uniform"))
 							{

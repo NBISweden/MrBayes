@@ -1488,8 +1488,8 @@ int AttemptSwap (int swapA, int swapB, safeLong *seed)
 			}
 		}
 
-	assert (fabs(curLnPr[swapA]-LogPrior(swapA)) < 0.00001);
-    assert (fabs(curLnPr[swapB]-LogPrior(swapB)) < 0.00001);
+	//assert (fabs(curLnPr[swapA]-LogPrior(swapA)) < 0.00001);
+    //assert (fabs(curLnPr[swapB]-LogPrior(swapB)) < 0.00001);
 
     tempA = Temperature (chainId[swapA]);
 	tempB = Temperature (chainId[swapB]);
@@ -37940,7 +37940,7 @@ int RunChain (safeLong *seed)
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
-                assert (fabs((lnPrior-LogPrior(chn))/LogPrior(chn)) < 0.001);
+                //assert (fabs((lnPrior-LogPrior(chn))/LogPrior(chn)) < 0.001);
 
 				/* heat */
                 lnLikelihoodRatio *= Temperature (chainId[chn]);
