@@ -8476,7 +8476,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Burninfrac    -- Determines the fraction of samples that will be discarded    \n");
 		MrBayesPrint ("                    when creating a plot. The value of this parameter is only    \n");
         MrBayesPrint ("                    relevant when Relburnin is set to 'Yes'. Example: A value of \n");
-		MrBayesPrint ("                    this option of 0.25 means that 25 % of the samples will be   \n");
+		MrBayesPrint ("                    this option of 0.25 means that 25%% of the samples will be   \n");
 		MrBayesPrint ("                    discarded.                                                   \n");
 		MrBayesPrint ("   Filename      -- The name of the file to plot.                                \n");
 		MrBayesPrint ("   Parameter     -- Specification of parameters to be plotted. See above for     \n");
@@ -10292,7 +10292,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   BurninFrac   -- Determines the fraction of samples that will be discarded     \n");
 		MrBayesPrint ("                   when convergence diagnostics are calculated. The value of     \n");
 		MrBayesPrint ("                   this option is only relevant when Relburnin is set to YES.    \n");
-		MrBayesPrint ("                   Example: A value for this option of 0.25 means that 25 % of   \n");
+		MrBayesPrint ("                   Example: A value for this option of 0.25 means that 25%% of   \n");
 		MrBayesPrint ("                   the samples will be discarded.                                \n");
 		MrBayesPrint ("   Stoprule     -- If this option is set to NO, then the chain is run the number \n");
 		MrBayesPrint ("                   of generations determined by Ngen. If it is set to YES, and   \n");
@@ -11003,7 +11003,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   BurninFrac    -- Determines the fraction of samples that will be discarded    \n");
 		MrBayesPrint ("                    when summary statistics are calculated. The value of this    \n");
 		MrBayesPrint ("                    option is only relevant when Relburnin is set to 'Yes'.      \n");
-		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25 % of  \n");
+		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25%% of  \n");
 		MrBayesPrint ("                    the samples will be discarded.                               \n");
 		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");
 		MrBayesPrint ("                    statistics.                                                  \n");
@@ -11115,7 +11115,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   BurninFrac    -- Determines the fraction of samples that will be discarded    \n");
 		MrBayesPrint ("                    when summary statistics are calculated. The value of this    \n");
 		MrBayesPrint ("                    option is only relevant when Relburnin is set to YES.        \n");
-		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25 % of  \n");
+		MrBayesPrint ("                    Example: A value for this option of 0.25 means that 25%% of  \n");
 		MrBayesPrint ("                    the samples will be discarded.                               \n");
 		MrBayesPrint ("   Nruns         -- Determines how many '.t' files from independent analyses that\n");
 		MrBayesPrint ("                    will be summarized. If Nruns > 1 then the names of the files \n");
@@ -11132,7 +11132,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    current settings of the 'Nruns' and 'Ntrees' options.        \n");
 		MrBayesPrint ("   Minpartfreq   -- The minimum probability of partitions to include in summary  \n");
 		MrBayesPrint ("                    statistics.                                                  \n");
-		MrBayesPrint ("   Contype       -- Type of consensus tree. 'Halfcompat' results in a 50 % major-\n");
+		MrBayesPrint ("   Contype       -- Type of consensus tree. 'Halfcompat' results in a 50%% major-\n");
 		MrBayesPrint ("                    ity rule tree, 'Allcompat' adds all compatible groups to such\n");
 		MrBayesPrint ("                    a tree.                                                      \n");
 		MrBayesPrint ("   Conformat     -- Format of consensus tree. The 'Figtree' setting results in a \n");
