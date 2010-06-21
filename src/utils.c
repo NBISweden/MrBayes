@@ -943,15 +943,18 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
     nVals = 0;
 	for (j=0; j<nRuns; j++)
 		{
-		aW = 0.0;
-		for (i=0; i<count[j]; i++)
+		if(count[j]==0)
+			{
+			return -1.0;
+			}
+		nVals += count[j];
+		aW = vals[j][0];
+		for (i=1; i<count[j]; i++)
 			{
 			x = vals[j][i];
 			aOldW = aW;
 			aW += (x - aW) / (MrBFlt) (i + 1);
-			if (i != 0)
-				sWj += (x - aW) * (x - aOldW);
-            nVals++;
+			sWj += (x - aW) * (x - aOldW);
 			}
         sW += sWj / (MrBFlt)(count[j] - 1);
 		x = aW;

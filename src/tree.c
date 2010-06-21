@@ -1913,6 +1913,7 @@ void FreePolyTreeRelClockParams (PolyTree *pt)
     free (pt->rateMult);
     free (pt->eType);
     free (pt->eSetName);
+	pt->nESets = 0;
     pt->nEvents = NULL;
     pt->position = NULL;
     pt->rateMult = NULL;

@@ -1363,8 +1363,14 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	MrBayesPrint ("\n");
 	if (nRuns > 1)
 		{
-		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential scale reduction factor; Gelman\n", spacer);
-		MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge.\n", spacer);
+		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+		MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge. NA is reported when\n", spacer);
+		MrBayesPrint ("%s     deviation of parameter values within all runs is 0 or any run has no\n", spacer);
+		MrBayesPrint ("%s     parameter value sampled at all. PSRF significantly smaller than 1\n", spacer);
+		MrBayesPrint ("%s     indicates that the parameter is undersampled but deviation of the \n", spacer);
+		MrBayesPrint ("%s     means among runs is small, while large PSRF indicates that there is\n", spacer);
+		MrBayesPrint ("%s     substantial deviation of parameter values among runs. In any case in\n", spacer);
+		MrBayesPrint ("%s     order to improve PSRF you should run mcmc longer.\n", spacer);
 		}
 
     fclose (fp);

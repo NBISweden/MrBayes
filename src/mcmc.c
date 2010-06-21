@@ -32707,7 +32707,7 @@ int PrintCompMatrix (void)
 int PrintEventTree (int curGen, Tree *tree, int chain, Param *param)
 
 {
-	int			i, counter, tempStrSize;
+	int			i, tempStrSize;
 	char		*tempStr;
 	TreeNode	*p=NULL, *q;
     Param       *subParm;
@@ -32795,15 +32795,13 @@ int PrintEventTree (int curGen, Tree *tree, int chain, Param *param)
 	    if (AddToPrintString (tempStr) == ERROR) return(ERROR);
 	    SafeSprintf (&tempStr, &tempStrSize, "   translate\n");
 	    if (AddToPrintString (tempStr) == ERROR) return(ERROR);
-	    counter = 0;
-	    for (i=0; i<numLocalTaxa; i++)
-		    {
-		    if (i == numLocalTaxa)
-			    SafeSprintf (&tempStr, &tempStrSize, "      %2d %s;\n", counter, localTaxonNames[i]);
-		    else
-			    SafeSprintf (&tempStr, &tempStrSize, "      %2d %s,\n", counter, localTaxonNames[i]);
-		    if (AddToPrintString (tempStr) == ERROR) return(ERROR);
-		    }
+		for (i=1; i<numLocalTaxa; i++)
+			{
+			SafeSprintf (&tempStr, &tempStrSize, "      %2d %s,\n", i, localTaxonNames[i-1]);
+			if (AddToPrintString (tempStr) == ERROR) return(ERROR);
+			}
+		SafeSprintf (&tempStr, &tempStrSize, "      %2d %s;\n", numLocalTaxa, localTaxonNames[numLocalTaxa-1]);
+		if (AddToPrintString (tempStr) == ERROR) return(ERROR);
 	    }
 	
 	/* write the tree preamble */
@@ -32829,7 +32827,7 @@ int PrintEventTree (int curGen, Tree *tree, int chain, Param *param)
         }
 
     /* write the tree in extended Newick format */
-    SafeSprintf (&tempStr, &tempStrSize, " = [&R] [&clockrate = %lf] ", curGen, MbPrintNum(tree->clockRate));
+	SafeSprintf (&tempStr, &tempStrSize, " = [&R] [&clockrate = %lf] ", tree->clockRate);
 	if (AddToPrintString (tempStr) == ERROR) return(ERROR);
    	WriteEventTreeToPrintString (tree->root->left, chain, param, NO);
    	SafeSprintf (&tempStr, &tempStrSize, ";\n");
@@ -35307,14 +35305,13 @@ int PrintTree (int curGen, Tree *tree, int showBrlens)
 		if (AddToPrintString (tempStr) == ERROR) return(ERROR);
 		SafeSprintf (&tempStr, &tempStrSize, "   translate\n");
 		if (AddToPrintString (tempStr) == ERROR) return(ERROR);
-		for (i=0; i<numLocalTaxa; i++)
+		for (i=1; i<numLocalTaxa; i++)
 			{
-			if (i == numLocalTaxa - 1)
-				SafeSprintf (&tempStr, &tempStrSize, "      %2d %s;\n", i+1, localTaxonNames[i]);
-			else
-				SafeSprintf (&tempStr, &tempStrSize, "      %2d %s,\n", i+1, localTaxonNames[i]);
+			SafeSprintf (&tempStr, &tempStrSize, "      %2d %s,\n", i, localTaxonNames[i-1]);
 			if (AddToPrintString (tempStr) == ERROR) return(ERROR);
 			}
+		SafeSprintf (&tempStr, &tempStrSize, "      %2d %s;\n", numLocalTaxa, localTaxonNames[numLocalTaxa-1]);
+		if (AddToPrintString (tempStr) == ERROR) return(ERROR);
 		}
 	
 	/* write the tree in Newick format */

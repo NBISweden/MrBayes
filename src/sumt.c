@@ -68,7 +68,7 @@ typedef struct partctr
 	MrBFlt          **length;
     MrBFlt          **height;
     MrBFlt          **age;
-    MrBFlt          ***eRate;
+    MrBFlt          ***eRate; /* eRate[0,numRuns][0,nESets][0,count[RunID]] */
 	int             ***nEvents;
 	MrBFlt          ***bRate;
 	}
@@ -118,6 +118,7 @@ int		 PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo);
 void     PrintConTree (FILE *fp, PolyTree *t);
 void     PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts);
 void     PrintRichNodeInfo (FILE *fp, PartCtr *x);
+void     PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numPSRFSamples, MrBFlt *maxPSRF, MrBFlt *sumPSRF);
 void     PrintSumtTaxaInfo (void);
 void     Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max);
 void     ResetTaxonSet (void);
@@ -141,11 +142,11 @@ extern int inSumtCommand;
 extern int inComparetreeCommand;
 
 /* local (to this file) */
-int			numUniqueSplitsFound, numUniqueTreesFound, numPackedTrees[2], numAsterices;  /* length of local to this file variables */
-FILE		*fpParts=NULL, *fpTstat=NULL, *fpVstat, *fpCon=NULL, *fpTrees=NULL, *fpDists=NULL;     /* file pointers */
-PartCtr     *partCtrRoot = NULL;        /* binary tree for holding splits info      */
-TreeCtr     *treeCtrRoot = NULL;        /* binary tree for holding unique tree info */
-PackedTree  *packedTreeList[2];         /* list of trees in packed format           */
+static int			numUniqueSplitsFound, numUniqueTreesFound, numPackedTrees[2], numAsterices;  /* length of local to this file variables */
+static FILE		*fpParts=NULL, *fpTstat=NULL, *fpVstat, *fpCon=NULL, *fpTrees=NULL, *fpDists=NULL;     /* file pointers */
+static PartCtr     *partCtrRoot = NULL;        /* binary tree for holding splits info      */
+static TreeCtr     *treeCtrRoot = NULL;        /* binary tree for holding unique tree info */
+static PackedTree  *packedTreeList[2];         /* list of trees in packed format           */
 
 
 
@@ -177,11 +178,11 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
             r->age[runId][0]= p->age;
         for (i=0; i<t->nESets; i++)
             {
-            r->nEvents[runId][i][0] = t->nEvents[i][p->index];
-            r->eRate[runId][i][0]   = CppEvolRate (t, p, i);
+            r->nEvents[i][runId][0] = t->nEvents[i][p->index];
+            r->eRate[i][runId][0]   = CppEvolRate (t, p, i);
             }
         for (i=0; i<t->nBSets; i++)
-            r->bRate[runId][i][0] = t->branchRate[i][p->index];
+            r->bRate[i][runId][0] = t->branchRate[i][p->index];
 		r->count[runId] ++;
         r->totCount++;
 		}
@@ -217,14 +218,14 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                     {
                     for (i=0; i<sumtParams.nESets; i++)
                         {
-                        r->nEvents[runId][i] = (int *) calloc ((size_t)(n+ALLOC_LEN), sizeof(int));
-                        r->eRate[runId][i]   = (MrBFlt *) calloc ((size_t)(n+ALLOC_LEN), sizeof(MrBFlt));
+                        r->nEvents[i][runId] = (int *) realloc ((void *)r->nEvents[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(int));
+                        r->eRate[i][runId]   = (MrBFlt *) realloc ((void *)r->eRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
                         }
                     }
                 if (sumtParams.nBSets > 0)
                     {
                     for (i=0; i<sumtParams.nBSets; i++)
-                        r->bRate[runId][i]   = (MrBFlt *) calloc ((size_t)(n+ALLOC_LEN), sizeof(MrBFlt));
+                        r->bRate[i][runId]   = (MrBFlt *) realloc ((void *)r->bRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
                     }
                 }
             /* record values */
@@ -240,14 +241,14 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                 {
                 for (i=0; i<sumtParams.nESets; i++)
                     {
-                    r->nEvents[runId][i][n] = t->nEvents[i][p->index];
-                    r->eRate[runId][i][n]   = CppEvolRate (t, p, i);
+                    r->nEvents[i][runId][n] = t->nEvents[i][p->index];
+                    r->eRate[i][runId][n]   = CppEvolRate (t, p, i);
                     }
                 }
             if (sumtParams.nBSets > 0)
                 {
                 for (i=0; i<sumtParams.nBSets; i++)
-                    r->bRate[runId][i][n]   = t->branchRate[i][p->index];
+                    r->bRate[i][runId][n]   = t->branchRate[i][p->index];
                 }
             }
 		else if (comp < 0)		/* greater than -> into left subtree */
@@ -369,29 +370,26 @@ PartCtr *AllocPartCtr ()
     /* allocate relaxed clock parameters: eRate, nEvents, bRate */
     if (sumtParams.nESets > 0)
         {
-        r->nEvents = (int    ***) calloc ((size_t) sumtParams.numRuns, sizeof(int **));
-        r->eRate   = (MrBFlt ***) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt **));
+        r->nEvents = (int    ***) calloc ((size_t) sumtParams.nESets, sizeof(int **));
+        r->eRate   = (MrBFlt ***) calloc ((size_t) sumtParams.nESets, sizeof(MrBFlt **));
         }
-    if (sumtParams.nBSets > 0)
-        r->bRate = (MrBFlt ***) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt **));
-    for (i=0; i<sumtParams.numRuns; i++)
+    for (i=0; i<sumtParams.nESets; i++)
         {
-        if (sumtParams.nESets > 0)
-            {
-            r->nEvents[i] = (int    **) calloc ((size_t) sumtParams.nESets, sizeof(int *));
-            r->eRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.nESets, sizeof(MrBFlt *));
-            for (j=0; j<sumtParams.nESets; j++)
-                {
-                r->nEvents[i][j] = (int    *) calloc ((size_t) ALLOC_LEN, sizeof(int));
-                r->eRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
-                }
+        r->nEvents[i] = (int    **) calloc ((size_t) sumtParams.numRuns, sizeof(int *));
+        r->eRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
+        for (j=0; j<sumtParams.numRuns; j++)
+        	{
+            r->nEvents[i][j] = (int    *) calloc ((size_t) ALLOC_LEN, sizeof(int));
+            r->eRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
             }
-        if (sumtParams.nBSets > 0)
-            {
-            r->bRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt *));
-            for (j=0; j<sumtParams.nBSets; j++)
-                r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
-            }
+		}
+	if (sumtParams.nBSets > 0)
+        r->bRate = (MrBFlt ***) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
+	for (i=0; i<sumtParams.nBSets; i++)
+        {
+        r->bRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
+        for (j=0; j<sumtParams.numRuns; j++)
+        	r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));   
         }
 
     return r;
@@ -613,6 +611,7 @@ treeConstruction:
 					if( q->depth <= p->depth )
 						break;
 					}
+				assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
                 }
             if (sumtParams.isCalibrated == YES)
                 {
@@ -623,11 +622,8 @@ treeConstruction:
 					if( q->age <= p->age )
 						break;
 					}
+				assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
                 }
-			if( p!=NULL ) /* Root is younger then ancestor. */
-				{
-				assert(0); /*  We never should get here because root always has 100% freq and it is older than any other node that has 100% freq. */
-				}
 			}
 		else if (nBits > 1 && !(nBits == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO))
 			{
@@ -770,7 +766,7 @@ treeConstruction:
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->age = theStats.median;
-				if(q->anc->depth <= q->depth )
+				if(q->anc->age <= q->age )
 					{
 					assert(0);/*  We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
 					}
@@ -1938,13 +1934,13 @@ int DoSumt (void)
 			sprintf (fileName,"%s.tree%d", sumtParams.sumtFileName, treeNo+1);
 		else
 			strcpy (fileName, sumtParams.sumtFileName);
-
+		//return;
 		if (sumtParams.numRuns == 1)
 			MrBayesPrint ("%s   Summarizing trees in file \"%s.t\"\n", spacer, fileName);
 		else if (sumtParams.numRuns == 2)
 			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\" and \"%s.run2.t\"\n", spacer, fileName, fileName);
 		else if (sumtParams.numRuns > 2)
-			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\", \"%s.run2.t\", etc\n", spacer, fileName, fileName);
+			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\", \"%s.run2.t\",...,\"%s.run%d.t\"\n", spacer, fileName, fileName,fileName,sumtParams.numRuns);
 
         if (sumtParams.relativeBurnin == YES)
             MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% ('burninfrac=%1.2f') of sampled trees\n",
@@ -2208,9 +2204,10 @@ int DoSumt (void)
 			    MrBayesPrint ("%s   Node heights will take calibration points into account, if such points were   \n", spacer);
                 MrBayesPrint ("%s   used in the analysis.                                                         \n", spacer);
 			    MrBayesPrint ("%s                                                                                 \n", spacer);
-			    MrBayesPrint ("%s   Note that Stddev and PSRF may be unreliable if the partition is not present in\n", spacer);
-			    MrBayesPrint ("%s   all runs (the last column indicates the number of runs that sampled the parti-\n", spacer);
-			    MrBayesPrint ("%s   tion if more than one run is summarized). The PSRF is also sensitive to small \n", spacer);
+			    MrBayesPrint ("%s   Note that Stddev may be unreliable if the partition is not present in all     \n", spacer);
+			    MrBayesPrint ("%s   runs (the last column indicates the number of runs that sampled the partition \n", spacer);
+			    MrBayesPrint ("%s   if more than one run is summarized). The PSRF is not calculated at all if     \n", spacer); 
+				MrBayesPrint ("%s   the partition is not present in all runs.The PSRF is also sensitive to small  \n", spacer);
 			    MrBayesPrint ("%s   sample sizes and it should only be considered a rough guide to convergence    \n", spacer);
 			    MrBayesPrint ("%s   since some of the assumptions allowing one to interpret it as a true potential\n", spacer);
 			    MrBayesPrint ("%s   scale reduction factor are violated in MrBayes.                               \n", spacer);
@@ -2241,7 +2238,7 @@ int DoSumt (void)
 		    if (sumtParams.numTrees == 1)
                 MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.parts\"):\n\n", spacer, sumtParams.sumtOutfile);
             else
-                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer, treeNo+1, sumtParams.sumtOutfile);
+                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer,  sumtParams.sumtOutfile, treeNo+1 );
             }
 
 		/* calculate a couple of numbers that are handy to have */
@@ -2500,13 +2497,13 @@ int DoSumt (void)
                 longestHeader = len;
 	        for (j=0; j<sumtParams.nBSets; j++)
 		        {
-                len = (int) strlen(sumtParams.tree->bSetName[i]) + i;
+                len = (int) strlen(sumtParams.tree->bSetName[j]) + i;
 		        if (len > longestHeader)
 			        longestHeader = len;
 		        }
 	        for (j=0; j<sumtParams.nESets; j++)
 		        {
-                len = (int) strlen(sumtParams.tree->eSetName[i]) + i;
+                len = (int) strlen(sumtParams.tree->eSetName[j]) + i;
 		        if (len > longestHeader)
 			        longestHeader = len;
 		        }
@@ -2555,48 +2552,10 @@ int DoSumt (void)
                     GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
                     MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
-                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
-
                     MrBayesPrintf (fpVstat, "%s", tempStr);
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
-                    if (sumtParams.numRuns > 1)
-			            {
-                        for (j=k=0; j<sumtParams.numRuns; j++)
-                            if (x->count[j] > 0)
-                                k++;
-			            if (theStats.PSRF < 0.0)
-                            {
-				            MrBayesPrint ("       NA  %3d", k);
-				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
-                            }
-			            else
-                            {
-				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
-				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
-                            sumPSRF += theStats.PSRF;
-                            numPSRFSamples++;
-                            if (theStats.PSRF > maxPSRF)
-                                maxPSRF = theStats.PSRF;
-                            }
 
-			            if (k != sumtParams.numRuns)
-	                    	MrBayesPrint (" *");
-			            }
+					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
 
-                    MrBayesPrintf (fpVstat, "\n");
-                    MrBayesPrint ("\n");
-                    /*
-			            MrBayesPrintf (fpVstat, "\n");
-                        if (k != sumtParams.numRuns)
-				            MrBayesPrint (" *\n");
-			            else
-				            MrBayesPrint ("\n");
-                        }
-                */
 		            }
                 }
 
@@ -2614,47 +2573,9 @@ int DoSumt (void)
                     GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
                     MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
-                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
-
                     MrBayesPrintf (fpVstat, "%s", tempStr);
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
 
-                    if (sumtParams.numRuns > 1)
-			            {
-                        for (j=k=0; j<sumtParams.numRuns; j++)
-                            if (x->count[j] > 0)
-                                k++;
-			            if (theStats.PSRF < 0.0)
-                            {
-			            	MrBayesPrint ("     NA  %3d", k);
-				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
-                            }
-			            else
-                            {
-				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
-				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
-                            sumPSRF += theStats.PSRF;
-                            numPSRFSamples++;
-                            if (theStats.PSRF > maxPSRF)
-                                maxPSRF = theStats.PSRF;
-                            }
-
-			            if (k != sumtParams.numRuns)
-	                    	MrBayesPrint (" *");
-			            }
-
-                    MrBayesPrintf (fpVstat, "\n");
-                    MrBayesPrint ("\n");
-                    /*
-                    if (k != sumtParams.numRuns)
-                    	MrBayesPrint (" +\n");
-					else
-						MrBayesPrint ("\n");
-			        */
+					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
                     }
                 }
 
@@ -2671,51 +2592,11 @@ int DoSumt (void)
 
                     GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
-                    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
-                    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
-
+					MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
                     MrBayesPrintf (fpVstat, "%s", tempStr);
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.mean));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.var));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.lower));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.upper));
-                    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats.median));
 
-                    if (sumtParams.numRuns > 1)
-			            {
-                        for (j=k=0; j<sumtParams.numRuns; j++)
-                            if (x->count[j] > 0)
-                                k++;
-			            if (theStats.PSRF < 0.0)
-                            {
-			            	MrBayesPrint ("     NA  %3d", k);
-				            MrBayesPrintf (fpVstat, "\tNA\t%d", k);
-                            }
-			            else
-                            {
-				            MrBayesPrint ("  %7.3lf  %3d", theStats.PSRF, k);
-				            MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats.PSRF), k);
-                            sumPSRF += theStats.PSRF;
-                            numPSRFSamples++;
-                            if (theStats.PSRF > maxPSRF)
-                                maxPSRF = theStats.PSRF;
-                            }
-
-			            if (k != sumtParams.numRuns)
-	                    	MrBayesPrint (" *");
-			            }
-
-                    MrBayesPrintf (fpVstat, "\n");
-                    MrBayesPrint ("\n");
-
-			         /*
-		            MrBayesPrintf (fpVstat, "\n");
-                    if (k != sumtParams.numRuns)
-			            MrBayesPrint (" *\n");
-		            else
-			            MrBayesPrint ("\n");
-			            */
-                    }
+					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+					}
                 }
 
             /* finish table */
@@ -2726,13 +2607,19 @@ int DoSumt (void)
 
             if (sumtParams.numRuns > 1)
 		        {
-                MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
-		        MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge.\n", spacer);
+				MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+				MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge. NA is reported when\n", spacer);
+				MrBayesPrint ("%s     deviation of parameter values within all runs is 0 or any run has no\n", spacer);
+				MrBayesPrint ("%s     parameter value sampled at all. PSRF significantly smaller than 1\n", spacer);
+				MrBayesPrint ("%s     indicates that the parameter is undersampled but deviation of the \n", spacer);
+				MrBayesPrint ("%s     means among runs is small, while large PSRF indicates that there is\n", spacer);
+				MrBayesPrint ("%s     substantial deviation of parameter values among runs. In any case in\n", spacer);
+				MrBayesPrint ("%s     order to improve PSRF you should run mcmc longer.\n", spacer);
                 }
 
             if (oneUnreliable == YES)
                 {
-		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n", spacer);
+		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable.\n", spacer);
                 }
             MrBayesPrint ("\n\n");
             }
@@ -2749,8 +2636,11 @@ int DoSumt (void)
                 }
             if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
                 {
-                MrBayesPrint ("%s       Average potential scale reduction factor for branch lengths = %1.3lf\n", spacer, avgPSRF);
-                MrBayesPrint ("%s       Maximum potential scale reduction factor for branch lengths = %1.3lf\n", spacer, maxPSRF);
+                MrBayesPrint ("%s       Average PSRF for parameter values ( excluding NA and >10.0 ) = %1.3lf\n", spacer, avgPSRF);
+				if(maxPSRF == 10 )
+                	MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
+				else
+					MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
                 }
             MrBayesPrint ("\n");
             
@@ -2838,6 +2728,55 @@ int DoSumt (void)
 
 
 
+
+void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numPSRFSamples, MrBFlt *maxPSRF, MrBFlt *sumPSRF)
+{
+	int j,k;
+
+    MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats->mean, theStats->var, theStats->lower, theStats->upper, theStats->median);
+
+    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats->mean));
+    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats->var));
+    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats->lower));
+    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats->upper));
+    MrBayesPrintf (fpVstat, "\t%s", MbPrintNum(theStats->median));
+
+    if (numRuns > 1)
+		{
+        for (j=k=0; j<numRuns; j++)
+            if (rowCount[j] > 0)
+                k++;
+		    if (theStats->PSRF < 0.0)
+                {
+		        MrBayesPrint ("     NA    %3d", k);
+			    MrBayesPrintf (fpVstat, "\tNA\t%d", k);
+                }
+		    else
+                {
+				if(theStats->PSRF > 10.0)
+					{
+		            MrBayesPrint ("    >10.0  %3d", k);
+			        MrBayesPrintf (fpVstat, "\tNA\t%d", k);
+					(*maxPSRF) = 10.0;
+					}
+				else
+					{
+			        MrBayesPrint ("  %7.3lf  %3d", theStats->PSRF, k);
+			        MrBayesPrintf (fpVstat, "\t%s\t%d", MbPrintNum(theStats->PSRF), k);
+                    (*sumPSRF) += theStats->PSRF;
+                    (*numPSRFSamples)++;
+                    if (theStats->PSRF > *maxPSRF)
+                         (*maxPSRF) = theStats->PSRF;
+					}
+                }
+
+		        if (k != numRuns)
+                    MrBayesPrint (" *");
+		}
+
+        MrBayesPrintf (fpVstat, "\n");
+        MrBayesPrint ("\n");
+}
 
 
 int DoSumtParm (char *parmName, char *tkn)
@@ -3735,9 +3674,9 @@ void FreePartCtr (PartCtr *r)
     /* free relaxed clock parameters: eRate, nEvents, bRate */
     if (sumtParams.nESets > 0)
         {
-        for (i=0; i<sumtParams.numRuns; i++)
+        for (i=0; i<sumtParams.nESets; i++)
             {
-            for (j=0; j<sumtParams.nESets; j++)
+            for (j=0; j<sumtParams.numRuns; j++)
                 {
                 free (r->nEvents[i][j]);
                 free (r->eRate[i][j]);
@@ -3750,9 +3689,9 @@ void FreePartCtr (PartCtr *r)
         }
     if (sumtParams.nBSets > 0)
         {
-        for (i=0; i<sumtParams.numRuns; i++)
+        for (i=0; i<sumtParams.nBSets; i++)
             {
-            for (j=0; j<sumtParams.nBSets; j++)
+            for (j=0; j<sumtParams.numRuns; j++)
                 free (r->bRate[i][j]);
             free (r->bRate[i]);
             }

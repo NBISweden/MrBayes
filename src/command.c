@@ -7019,7 +7019,7 @@ int DoTreeParm (char *parmName, char *tkn)
     */
 
 
-	if (isTaxsetDef == NO)
+if (isTaxsetDef == NO)
 		{
 		MrBayesPrint ("%s   Taxon labels must be specified before a tree can be read in\n", spacer);
 		return (ERROR);
@@ -7037,6 +7037,7 @@ int DoTreeParm (char *parmName, char *tkn)
             {
             /* we are reading in a tree to sumt or comparetree counters */
             t = sumtParams.tree;
+			sumtParams.nESets=0;
             ResetPolyTree (t);
             }
         else
@@ -7162,13 +7163,9 @@ int DoTreeParm (char *parmName, char *tkn)
 					expecting = Expecting(RIGHTCURL);
 					if (foundEqual == NO)
 						{
-						strcat(t->eSetName[t->nESets-1],"all");
 						foundE = NO; //do not need 
 						}
-					else
-						{
-						strcat(tempCppEventString,"all");
-						}
+					strcat(tempCppEventString,"all");
 					}
 				else
 					{
@@ -7178,6 +7175,7 @@ int DoTreeParm (char *parmName, char *tkn)
 				}
 			else if (foundEqual == NO)
 				{
+				sumtParams.nESets++;
 				t->nESets++;
                 t->isRelaxed = YES;
 				t->nEvents  = (int **) realloc ((void *)t->nEvents, t->nESets*sizeof(int *));
@@ -7188,11 +7186,10 @@ int DoTreeParm (char *parmName, char *tkn)
                 t->position[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
                 t->rateMult[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
 				t->eType[t->nESets-1] = CPPm;
-				t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));
-				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
-				strcpy (t->eSetName[t->nESets-1],tkn);				
+				t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));				
 				if (strcmp("CppEvents",tkn) == 0)
 					{
+					strcpy (tempCppEventString,tkn);
 					foundCppEvent = YES;
 					expecting = Expecting(LEFTCURL);
 					}
@@ -7200,6 +7197,8 @@ int DoTreeParm (char *parmName, char *tkn)
 					{
 					expecting = Expecting(RIGHTCOMMENT);
 					foundE = NO;
+					t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
+					strcpy (t->eSetName[t->nESets-1],tkn);
 					}
 				}
 			else if (strcmp("CppEvents",tkn) == 0)
@@ -7400,14 +7399,7 @@ int DoTreeParm (char *parmName, char *tkn)
 			expecting = Expecting(NUMBER);
 			if( foundCppEvent == YES)
 				{
-				if (foundEqual == NO)
-					{
-					strcat(t->eSetName[t->nESets-1],tkn);
-					}
-				else
-					{
-					strcat(tempCppEventString,tkn);
-					}
+				strcat(tempCppEventString,tkn);					
 				}
 			}
 		else
@@ -7454,14 +7446,7 @@ int DoTreeParm (char *parmName, char *tkn)
 				if( foundCppEvent == YES)
 					{
 					expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
-					if (foundEqual == NO)
-						{
-						strcat(t->eSetName[t->nESets-1],tkn);
-						}
-					else
-						{
-						strcat(tempCppEventString,tkn);
-						}
+					strcat(tempCppEventString,tkn);		
 					}
 				else 
 					{
@@ -7639,14 +7624,7 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		if( foundCppEvent == YES)
 			{
-			if (foundEqual == NO)
-				{
-				strcat(t->eSetName[t->nESets-1],"{");
-				}
-			else
-				{
-				strcat(tempCppEventString,"{");
-				}
+			strcat(tempCppEventString,"{");				
 			expecting = Expecting(NUMBER) | Expecting(ALPHA);
 			}
 		else
@@ -7657,14 +7635,15 @@ int DoTreeParm (char *parmName, char *tkn)
 		if( foundCppEvent == YES)
 			{
 			foundCppEvent = NO;
+			strcat(tempCppEventString,"}");
 			if (foundEqual == NO)
 				{
-				strcat(t->eSetName[t->nESets-1],"}");
+				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempCppEventString)+1,sizeof(char));
+				strcat(t->eSetName[t->nESets-1],tempCppEventString);
 				expecting = Expecting(RIGHTCOMMENT);
 				}
 			else
 				{
-				strcat(tempCppEventString,"}");
 				/* find the right event set */
 				for (i=0; i<t->nESets; i++)
 					if (strcmp(t->eSetName[i],tempCppEventString) == 0)
