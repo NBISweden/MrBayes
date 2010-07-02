@@ -4196,6 +4196,21 @@ MrBFlt LnGamma (MrBFlt alp)
 
 
 
+/* Log probability for a value drawn from a gamma distribution */
+MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
+
+{
+    MrBFlt lnProb;
+
+    lnProb = (alpha-1.0)*log(x) + alpha*log(beta) - x*beta - LnGamma(alpha);
+
+    return lnProb;
+}
+
+
+
+
+
 /* Log probability for a value drawn from a lognormal distribution */
 MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt var, MrBFlt x)
 
@@ -4221,7 +4236,7 @@ MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
 {
     MrBFlt lnProb;
 
-    lnProb = LnGamma(alpha) + alpha*log(alpha) - x*alpha*alpha;
+    lnProb = (alpha - 1.0) * log(x) - LnGamma(alpha) + alpha*log(alpha) - x*alpha;
 
     return lnProb;
 }

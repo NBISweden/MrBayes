@@ -24,6 +24,7 @@ void    FreeSquareIntegerMatrix (int **m);
 int     GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs);
 MrBFlt  LnFactorial (int value);
 MrBFlt  LnGamma (MrBFlt alp);
+MrBFlt  LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt  LnProbLogNormal (MrBFlt exp, MrBFlt var, MrBFlt x);
 MrBFlt  LnProbScaledGamma (MrBFlt alpha, MrBFlt x);
 MrBFlt  LnRatioLogNormal (MrBFlt exp, MrBFlt var, MrBFlt xNew, MrBFlt xOld);

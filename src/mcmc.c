@@ -12813,7 +12813,7 @@ MrBFlt LogPrior (int chain)
 			}
         else if (p->paramType == P_IBRSHAPE)
 			{
-			/* variance of rates (nu) in Thorne-Kishino model */
+			/* variance of rates (sigma) in independent branch rates model */
 			if (p->paramId == IBRSHAPE_EXP)
 				{
 				lnPrior += log (mp->ibrshapeExp) - mp->ibrshapeExp * st[0];
@@ -12832,7 +12832,7 @@ MrBFlt LogPrior (int chain)
 			for (i=0; i<t->nNodes-2; i++)
 				{
 				branch = t->allDownPass[i];
-				lnPrior += LnProbScaledGamma (ibrshape*branch->length, st[branch->index]);
+				lnPrior += LnProbGamma (branch->length/ibrshape, 1.0/ibrshape, st[branch->index]);
 				}
 			}
 		}
@@ -14010,7 +14010,7 @@ int Move_BmBranchRate (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	mp = &modelParams[param->relParts[0]];
 	m = &modelSettings[param->relParts[0]];
 
-	/* get the BM branch rate and effective branch length data */
+    /* get the BM branch rate and effective branch length data */
 	bmRate = GetParamVals (param, chain, state[chain]);
 	brlens = GetParamSubVals (param, chain, state[chain]);
 
@@ -20757,7 +20757,7 @@ int Move_IbrBranchRate (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
 	p = t->allDownPass[i];
 
 	/* find new rateMultiplier */
-	oldRate = ibrRate[p->index];
+	oldRate = brlens[p->index];
 	newRate = oldRate * (exp ((0.5 - RandomNumber (seed)) * tuning));
 
 	/* reflect if necessary */
@@ -20770,22 +20770,21 @@ int Move_IbrBranchRate (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
 		}
 
     /* set new rate */
-    ibrRate[p->index] = newRate;
-	
-	/* calculate prior ratio */
+    brlens[p->index] = newRate;
+
+    /* calculate prior ratio */
     ibrshape = *GetParamVals (m->ibrshape, chain, state[chain]);
     ibrshape /= t->root->left->nodeDepth;     /* shape is relative to tree height */
-    (*lnPriorRatio) -= LnProbScaledGamma (ibrshape*p->length, oldRate);
-    (*lnPriorRatio) += LnProbScaledGamma (ibrshape*p->length, newRate);
+    (*lnPriorRatio) -= LnProbGamma (p->length/ibrshape, 1.0/ibrshape, oldRate);
+    (*lnPriorRatio) += LnProbGamma (p->length/ibrshape, 1.0/ibrshape, newRate);
 
 	/* calculate proposal ratio */
 	(*lnProposalRatio) = log (newRate / oldRate);
 
 	/* update branch evolution lengths */
-	brlens[p->index] = p->length * newRate;
+    ibrRate[p->index] = newRate / p->length;
 
 	/* set update of cond likes down to root */
-	/* update of crowntree set in UpdateCppEvolLengths */
 	q = p->anc;
 	while (q->anc != NULL)
 		{
@@ -22645,7 +22644,7 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	ModelInfo	*m = NULL;
 	Param		*subParm;
 
-	/* get tuning parameter */
+    /* get tuning parameter */
     tuning = mvp[0];    /* sliding window size  */
 
     /* min branch length */
@@ -23410,7 +23409,7 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
         }
 #endif
 
-	/* pick a node that can be changed in position */
+    /* pick a node that can be changed in position */
 	do
 		{
 		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
@@ -23567,7 +23566,8 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
                 }
 			(*lnPriorRatio) -= LnProbLogNormal (bmRate[p->anc->index], nu*oldPLength, bmRate[p->index]);
 			(*lnPriorRatio) += LnProbLogNormal (bmRate[p->anc->index], nu*p->length, bmRate[p->index]);
-			/* update effective evolutionary lengths */
+
+            /* update effective evolutionary lengths */
 			if (p->left != NULL)
                 {
                 brlens[p->left->index] = p->left->length * (bmRate[p->left->index]+bmRate[p->index])/2.0;
@@ -23581,25 +23581,51 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 			ibrshape /= t->root->left->nodeDepth;		/* shape measured relative to tree height */
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-			/* no proposal ratio effect */
+			
+            /* proposal ratio */
+            if (p->left != NULL)
+                {
+                /*
+                (*lnProposalRatio) += log (fabs(p->left->length  / oldLeftLength +
+                                                p->right->length / oldRightLength +
+                                                p->length        / oldPLength - 2.0));
+                */
+                /*
+                (*lnProposalRatio) += log (p->left->length / oldLeftLength);
+                (*lnProposalRatio) += log (p->right->length/ oldRightLength);
+                (*lnProposalRatio) += log (p->length / oldPLength);
+                */
+                }
+            else
+                (*lnProposalRatio) += log (p->length / oldPLength);
+
 			/* prior ratio */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbScaledGamma (ibrshape*oldLeftLength, ibrRate[p->left->index ]);
-			    (*lnPriorRatio) -= LnProbScaledGamma (ibrshape*oldRightLength, ibrRate[p->right->index]);
-                (*lnPriorRatio) += LnProbScaledGamma (ibrshape*p->left->length, ibrRate[p->left->index ]);
-			    (*lnPriorRatio) += LnProbScaledGamma (ibrshape*p->right->length, ibrRate[p->right->index]);
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /ibrshape, 1.0/ibrshape, ibrRate[p->left->index ]*oldLeftLength);
+			    (*lnPriorRatio) -= LnProbGamma (oldRightLength  /ibrshape, 1.0/ibrshape, ibrRate[p->right->index]*oldRightLength);
+                (*lnPriorRatio) += LnProbGamma (p->left->length /ibrshape, 1.0/ibrshape, ibrRate[p->left->index ]*oldLeftLength);
+			    (*lnPriorRatio) += LnProbGamma (p->right->length/ibrshape, 1.0/ibrshape, ibrRate[p->right->index]*oldRightLength);
                 }
-			(*lnPriorRatio) -= LnProbScaledGamma (ibrshape*oldPLength, ibrRate[p->index]);
-			(*lnPriorRatio) += LnProbScaledGamma (ibrshape*p->length, ibrRate[p->index]);
-			/* update effective evolutionary lengths */
-			if (p->left != NULL)
+			(*lnPriorRatio) -= LnProbGamma (oldPLength/ibrshape, 1.0/ibrshape, ibrRate[p->index]*oldPLength);
+			(*lnPriorRatio) += LnProbGamma (p->length /ibrshape, 1.0/ibrshape, ibrRate[p->index]*oldPLength);
+
+            /* update effective evolutionary lengths */
+            /*
+            if (p->left != NULL)
                 {
                 brlens[p->left->index ] = p->left->length  * ibrRate[p->left->index ];
                 brlens[p->right->index] = p->right->length * ibrRate[p->right->index];
                 }
 			brlens[p->index] = p->length * ibrRate[p->index];
-			}
+            */
+            if (p->left != NULL)
+                {
+                ibrRate[p->left->index ] = ibrRate[p->left->index ] * oldLeftLength  / p->left->length;
+                ibrRate[p->right->index] = ibrRate[p->right->index] * oldRightLength / p->right->length;
+                }
+			ibrRate[p->index] = ibrRate[p->index] * oldPLength / p->length;
+            }
 		}
 
 #if defined (DEBUG_CSLIDER)
