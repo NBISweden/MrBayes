@@ -4178,7 +4178,7 @@ MrBFlt LnGamma (MrBFlt alp)
 	
 	if (x < 7) 
 		{
-		f = 1.0;  
+		f = 1.0;
 		z = x-1.0;
 		while (++z < 7.0)  
 			f *= z;
