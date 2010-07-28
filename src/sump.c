@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3
  *
- *  copyright 2002-2005
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
- *  johnh@biomail.ucsd.edu
+ *  Fredrik Ronquist
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  With important contributions by
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,8 +33,6 @@
  * GNU General Public License for more details (www.gnu.org).
  *
  */
-/* id-string for ident, do not edit: cvs will update this string */
-const char sumpID[]="$Id: sump.c,v 3.37 2009/01/06 21:40:10 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,6 +103,7 @@ int DoSump (void)
 	char		    **headerNames=NULL, temp[100];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
+    FILE            *fpLstat=NULL;
 
 #	if defined (MPI_ENABLED)
     if (proc_id != 0)
@@ -122,16 +123,17 @@ int DoSump (void)
 	MrBayesPrint ("%s   Writing summary statistics to file %s.pstat\n", spacer, sumpParams.sumpFileName);
 
     if (sumpParams.relativeBurnin == YES)
-        MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% ('burninfrac=%1.2f') of sampled trees\n",
+        MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of sampled trees\n",
             spacer, sumpParams.sumpBurnInFraction*100.0, sumpParams.sumpBurnInFraction);
     else
-        MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
+        MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d sampled trees\n",
             spacer, sumpParams.sumpBurnIn, sumpParams.sumpBurnIn);
 
     /* Initialize to silence warning. */
 	firstFileInfo.numRows = 0;
 	firstFileInfo.numColumns = 0;
-	/* examine input file(s) */
+
+    /* examine input file(s) */
     for (i=0; i<sumpParams.numRuns; i++)
         {
         if (sumtParams.numRuns == 1)
@@ -232,7 +234,25 @@ int DoSump (void)
         }
 			
 	/* calculate arithmetic and harmonic means of likelihoods */
-	oneUnreliable = NO;
+
+    /* open output file */
+    strncpy (temp, sumpParams.sumpOutfile, 90);
+    strcat (temp, ".lstat");
+    fpLstat = OpenNewMBPrintFile (temp);
+    if (!fpLstat)
+        goto errorExit;
+
+    /* print unique identifier to the output file */
+	if (strlen(stamp) > 1)
+		fprintf (fpLstat, "[ID: %s]\n", stamp);
+
+    /* print header */
+    if (sumpParams.numRuns == 1)
+        MrBayesPrintf(fpLstat, "arithmetic_mean\tharmonic_mean\tvalues_discarded\n");
+    else
+        MrBayesPrintf(fpLstat, "run\tarithmetic_mean\tharmonic_mean\tvalues_discarded\n");
+
+    oneUnreliable = NO;
 	for (n=0; n<sumpParams.numRuns; n++)
 		{
 		unreliable = NO;
@@ -252,6 +272,14 @@ int DoSump (void)
 				MrBayesPrint ("%s     %9.2lf        %9.2lf\n", spacer, mean, harm_mean);
 			else
 				MrBayesPrint ("%s     %9.2lf *      %9.2lf *\n", spacer, mean, harm_mean);
+
+            /* print to file */
+            MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(mean));
+            MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(harm_mean));
+            if (unreliable == YES)
+                MrBayesPrintf(fpLstat, "yes\n");
+            else
+                MrBayesPrintf(fpLstat, "no\n");
 			}
 		else
 			{
@@ -271,6 +299,15 @@ int DoSump (void)
 				MrBayesPrint ("%s   %3d     %9.2lf        %9.2lf\n", spacer, n+1, mean, harm_mean);
 			else
 				MrBayesPrint ("%s   %3d     %9.2lf *      %9.2lf *\n", spacer, n+1, mean, harm_mean);
+
+            /* print to file */
+            MrBayesPrintf(fpLstat, "%d\t", n+1);
+            MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(mean));
+            MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(harm_mean));
+            if (unreliable == YES)
+                MrBayesPrintf(fpLstat, "yes\n");
+            else
+                MrBayesPrintf(fpLstat, "no\n");
 			}					
 		}	/* next run */
 	if (sumpParams.numRuns == 1)
@@ -292,6 +329,15 @@ int DoSump (void)
 		else
 			MrBayesPrint ("%s   TOTAL   %9.2lf        %9.2lf\n", spacer, mean, harm_mean);
 		MrBayesPrint ("%s   --------------------------------------\n", spacer);
+
+        /* print total to file */
+        MrBayesPrintf(fpLstat, "all\t");
+        MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(mean));
+        MrBayesPrintf(fpLstat, "%s\t", MbPrintNum(harm_mean));
+        if (unreliable == YES)
+            MrBayesPrintf(fpLstat, "yes\n");
+        else
+            MrBayesPrintf(fpLstat, "no\n");
 		}
 	if (oneUnreliable == YES)
 		{
@@ -302,6 +348,7 @@ int DoSump (void)
 		{
 		MrBayesPrint ("\n");
 		}
+    SafeFclose(&fpLstat);
 
     /* Calculate burnin */
     burnin = fileInfo.firstParamLine - fileInfo.headerLine;
@@ -345,9 +392,9 @@ int DoSump (void)
 		}
 	MrBayesPrint ("%s      Parameter summaries are saved to file \"%s.pstat\".\n", spacer, sumpParams.sumpOutfile);
 
-    if (PrintParamStats (sumpParams.sumpFileName, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+    if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
 		goto errorExit;
-    if (PrintModelStats (sumpParams.sumpFileName, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+    if (PrintModelStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
 		goto errorExit;
 
     /* free memory */
@@ -368,6 +415,9 @@ errorExit:
     for (i=0; i<nHeaders; i++)
         free (headerNames[i]);
     free (headerNames);
+
+    if (fpLstat)
+        SafeFclose (&fpLstat);
 
     expecting = Expecting(COMMAND);    
 	strcpy (spacer, "");
@@ -415,6 +465,24 @@ int DoSumpParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+		/* set Outputname (sumpParams.sumpOutfile) *******************************************************/
+		else if (!strcmp(parmName, "Outputname"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				{
+				expecting = Expecting(ALPHA);
+				readWord = YES;
+				}
+			else if (expecting == Expecting(ALPHA))
+				{
+				sscanf (tkn, "%s", tempStr);
+				strcpy (sumpParams.sumpOutfile, tempStr);
+				MrBayesPrint ("%s   Setting sump output file name to \"%s\"\n", spacer, sumpParams.sumpOutfile);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
+			}
 		/* set Relburnin (sumpParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
@@ -432,7 +500,6 @@ int DoSumpParm (char *parmName, char *tkn)
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
 				if (sumpParams.relativeBurnin == YES)
@@ -443,7 +510,6 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				//free (tempStr);
 				return (ERROR);
 				}
 			}
@@ -461,7 +527,6 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -476,13 +541,11 @@ int DoSumpParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
                 sumpParams.sumpBurnInFraction = tempD;
@@ -491,7 +554,6 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else 
 				{
-				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -517,6 +579,36 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else
 				return (ERROR);
+			}
+		/* set Hpd (sumpParams.HPD) ********************************************************/
+		else if (!strcmp(parmName, "Hpd"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						sumpParams.HPD = YES;
+					else
+						sumpParams.HPD = NO;
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for Hpd\n", spacer);
+					return (ERROR);
+					}
+				if (sumpParams.HPD == YES)
+					MrBayesPrint ("%s   Reporting 95 %% region of Highest Posterior Density (HPD).\n", spacer);
+				else
+					MrBayesPrint ("%s   Reporting median interval containing 95 %% of values.\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				{
+				return (ERROR);
+				}
 			}
 		/* set Allruns (sumpParams.allRuns) ********************************************************/
 		else if (!strcmp(parmName, "Allruns"))
@@ -904,6 +996,141 @@ int GetHeaders (char ***headerNames, char *headerLine, int *nHeaders)
 
 
 
+/* PrintMargLikes: Print marginal likelihoods to screen and to .lstat file */
+int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
+{
+	int		i, j, len, longestHeader, *sampleCounts=NULL;
+	char	temp[100];
+    Stat    theStats;
+    FILE    *fp;
+	
+	/* calculate longest header */
+	longestHeader = 9;	/* length of 'parameter' */
+	for (i=0; i<nHeaders; i++)
+		{
+        strcpy (temp, headerNames[i]);
+		len = (int) strlen(temp);
+        for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
+            if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
+                break;
+        if (modelIndicatorParams[j][0]!='\0')
+            continue;
+		if (!strcmp (temp, "Gen"))
+			continue;
+		if (!strcmp (temp, "lnL") == SAME)
+			continue;
+		if (len > longestHeader)
+			longestHeader = len;
+		}
+	
+    /* open output file */
+    strncpy (temp, fileName, 90);
+    strcat (temp, ".pstat");
+    fp = OpenNewMBPrintFile (temp);
+    if (!fp)
+        return ERROR;
+
+    /* print unique identifier to the output file */
+	if (strlen(stamp) > 1)
+		fprintf (fp, "[ID: %s]\n", stamp);
+
+    /* allocate and set nSamples */
+    sampleCounts = (int *) SafeCalloc (nRuns, sizeof(int));
+    if (!sampleCounts)
+        {
+        fclose(fp);
+        return ERROR;
+        }
+    for (i=0; i<nRuns; i++)
+        sampleCounts[i] = nSamples;
+
+    /* print the header rows */
+    MrBayesPrint("\n");
+	if (sumpParams.HPD == YES)
+        MrBayesPrint ("%s   %*c                             95%% HPD Interval\n", spacer, longestHeader, ' ');
+    else
+        MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
+	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
+
+	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	if (nRuns > 1)
+		MrBayesPrint ("     PSRF+ ");
+	MrBayesPrint ("\n");
+
+	MrBayesPrint ("%s   ", spacer);
+	for (j=0; j<longestHeader+1; j++)
+		MrBayesPrint ("-");
+	MrBayesPrint ("----------------------------------------------------------");
+	if (nRuns > 1)
+		MrBayesPrint ("----------");
+	MrBayesPrint ("\n");
+    if (nRuns > 1)
+        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\tPSRF\n");
+    else
+        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\n");
+
+	/* print table values */
+	for (i=0; i<nHeaders; i++)
+		{
+        strcpy (temp, headerNames[i]);
+		len = (int) strlen(temp);
+        for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
+            if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
+                break;
+		if (IsSame (temp, "Gen") == SAME)
+			continue;
+		if (IsSame (temp, "lnL") == SAME)
+			continue;
+
+		GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
+		
+		MrBayesPrint ("%s   %-*s ", spacer, longestHeader, temp);
+		MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+		MrBayesPrintf (fp, "%s", temp);
+		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.mean));
+		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.var));
+		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.lower));
+		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
+		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
+		if (nRuns > 1)
+			{
+			if (theStats.PSRF < 0.0)
+                {
+				MrBayesPrint ("       N/A  ");
+                MrBayesPrintf (fp, "NA");
+                }
+			else
+                {
+				MrBayesPrint ("  %7.3lf", theStats.PSRF);
+                MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.PSRF));
+                }
+			}
+		MrBayesPrint ("\n");
+		MrBayesPrintf (fp, "\n");
+		}
+	MrBayesPrint ("%s   ", spacer);
+	for (j=0; j<longestHeader+1; j++)
+		MrBayesPrint ("-");
+	MrBayesPrint ("----------------------------------------------------------");
+	if (nRuns > 1)
+		MrBayesPrint ("----------");
+	MrBayesPrint ("\n");
+	if (nRuns > 1)
+		{
+		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+		MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge.\n", spacer);
+		}
+
+    fclose (fp);
+    free (sampleCounts);
+
+    return (NO_ERROR);
+}
+
+
+
+
+
 /* PrintModelStats: Print model stats to screen and to .mstat file */
 int PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
@@ -1204,20 +1431,20 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns, int nSamples)
 		} /* next run */
 
 	/* now print the overlay plot */
-	MrBayesPrint ("\n   +");
+	MrBayesPrint ("\n%s   +", spacer);
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint ("-");
 	MrBayesPrint ("+ %1.2lf\n", maxY);
 	for (i=screenHeight-1; i>=0; i--)
 		{
-		MrBayesPrint ("   |");
+		MrBayesPrint ("%s   |", spacer);
 		for (j=0; j<screenWidth; j++)
 			{
 			MrBayesPrint ("%c", plotSymbol[i][j]);
 			}
 		MrBayesPrint ("|\n");
 		}
-	MrBayesPrint ("   +");
+	MrBayesPrint ("%s   +", spacer);
 	for (i=0; i<screenWidth; i++)
 		{
 		if (i % (screenWidth/10) == 0 && i != 0)
@@ -1226,11 +1453,11 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns, int nSamples)
 			MrBayesPrint ("-");
 		}
 	MrBayesPrint ("+ %1.2lf\n", minY);
-	MrBayesPrint ("   ^");
+	MrBayesPrint ("%s   ^", spacer);
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint (" ");
 	MrBayesPrint ("^\n");
-	MrBayesPrint ("   %1.0lf", minX);
+	MrBayesPrint ("%s   %1.0lf", spacer, minX);
 	for (i=0; i<screenWidth-(int)(log10(minX)); i++)
 		MrBayesPrint (" ");
 	MrBayesPrint ("%1.0lf\n\n", maxX);
@@ -1295,10 +1522,10 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	if (sumpParams.HPD == YES)
         MrBayesPrint ("%s   %*c                             95%% HPD Interval\n", spacer, longestHeader, ' ');
     else
-        MrBayesPrint ("%s   %*c                             95%% Cred. Interval\n", spacer, longestHeader, ' ');
+        MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c    Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
 		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
@@ -1364,13 +1591,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	if (nRuns > 1)
 		{
 		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
-		MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge. NA is reported when\n", spacer);
-		MrBayesPrint ("%s     deviation of parameter values within all runs is 0 or any run has no\n", spacer);
-		MrBayesPrint ("%s     parameter value sampled at all. PSRF significantly smaller than 1\n", spacer);
-		MrBayesPrint ("%s     indicates that the parameter is undersampled but deviation of the \n", spacer);
-		MrBayesPrint ("%s     means among runs is small, while large PSRF indicates that there is\n", spacer);
-		MrBayesPrint ("%s     substantial deviation of parameter values among runs. In any case in\n", spacer);
-		MrBayesPrint ("%s     order to improve PSRF you should run mcmc longer.\n", spacer);
+		MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge.\n", spacer);
 		}
 
     fclose (fp);

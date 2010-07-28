@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.2
+ *  MrBayes 3
  *
- *  copyright 2002-2007
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
- *  johnh@biomail.ucsd.edu
+ *  Fredrik Ronquist
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  With important contributions by
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,11 +31,8 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details (www.gnu.org).
- * 
+ *
  */
-
-/* id-string for ident, do not edit: cvs will update this string */
-const char mcmcID[]="$Id: mcmc.c,v 3.177 2009/08/07 15:17:05 hoehna Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34856,6 +34855,7 @@ int PrintSwapInfo (void)
 		}
 	if (reweightingChars == YES)
 		MrBayesPrint ("%s   Reweighting increment = %1.2lf\n", spacer, chainParams.weightScheme[2]);
+    MrBayesPrint ("\n");
 		
 	free (tempStr);
 	return (NO_ERROR);

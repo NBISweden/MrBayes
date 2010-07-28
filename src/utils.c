@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3
  *
- *  copyright 2002-2005
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
- *  johnh@biomail.ucsd.edu
+ *  Fredrik Ronquist
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  With important contributions by
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,11 +31,8 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details (www.gnu.org).
- * 
+ *
  */
-
-/* id-string for ident, do not edit: cvs will update this string */
-const char utilsID[]="$Id: utils.c,v 1.7 2009/01/05 14:09:49 ronquist Exp $";
 
 #include <stdlib.h>
 #include <string.h>

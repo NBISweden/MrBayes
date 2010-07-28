@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3
  *
- *  copyright 2002-2005
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
- *  johnh@biomail.ucsd.edu
+ *  Fredrik Ronquist
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  With important contributions by
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,9 +33,6 @@
  * GNU General Public License for more details (www.gnu.org).
  *
  */
-
-/* id-string for ident, do not edit: cvs will update this string */
-const char commandID[]="$Id: command.c,v 3.95 2009/08/07 05:53:31 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -319,8 +318,8 @@ CmdType			commands[] =
 			{ 43,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
 			{ 44,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
 			{ 45,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-			{ 46,            "Sump",  NO,            DoSump, 12,                                                  {96,97,137,138,139,140,141,161,162,178,211,212},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-			{ 47,            "Sumt",  NO,            DoSumt, 20,                    {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+			{ 46,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+			{ 47,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
 			{ 48,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
 			{ 49,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
 			{ 50,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
@@ -921,16 +920,17 @@ int DoAbout (void)
 	MrBayesPrint ("   intended to be distributed to a small number of people. In March of 2001,     \n");
 	MrBayesPrint ("   Fredrik Ronquist started making contributions to the program. The contribu-   \n");
 	MrBayesPrint ("   tions were of such a significant nature that he was made a coauthor of the    \n");
-	MrBayesPrint ("   program. Several others have contributed to the MrBayes code since then,      \n");
-	MrBayesPrint ("   most notably Paul van der Mark and Maxim Teslenko, both postdocs/programmers  \n");
-	MrBayesPrint ("   in Fredrik's lab. A large number of users and students, too many to list      \n");
-	MrBayesPrint ("   here, have also contributed importantly to the project (type 'Acknowledgments'\n");
-	MrBayesPrint ("   for a list of some of them).                                                  \n");
+	MrBayesPrint ("   program. Version 3 of MrBayes was a fully joint effort, started in the summer \n");
+    MrBayesPrint ("   of 2002 when JPH visited Sweden on a grant from the Wenner-Gren Foundations.  \n");
+    MrBayesPrint ("   Several others have contributed to the MrBayes code since then, most notably  \n");
+	MrBayesPrint ("   Paul van der Mark and Maxim Teslenko, both postdocs/programmers in Fredrik's  \n");
+	MrBayesPrint ("   lab. A large number of users and students, too many to list here, have also   \n");
+	MrBayesPrint ("   contributed importantly to the project (type 'Acknowledgments' for a list of  \n");
+	MrBayesPrint ("   some of them).                                                                \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("   Since 2003, MrBayes has been distributed from SourceForge. Bugs can be repor- \n");
 	MrBayesPrint ("   ted to the MrBayes site on SourceForge or by contacting Maxim Teslenko        \n");
-	MrBayesPrint ("   (maxim.teslenko@nrm.se) directly. From 2010, the MrBayes code is considered   \n");
-	MrBayesPrint ("   mature and no further major additions are planned.                            \n");
+	MrBayesPrint ("   (maxim.teslenko@nrm.se) directly.                                             \n");
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
 	return (NO_ERROR);
@@ -3130,7 +3130,8 @@ int DoEndBlock (void)
 		return (ERROR);
 		}
 
-	return (NO_ERROR);
+    strcpy(spacer,"");  /* reset indentation */
+    return (NO_ERROR);
 
 }
 
@@ -3342,7 +3343,7 @@ int DoExecute (void)
 			}
 		} while (c != EOF); 
 	
-    MrBayesPrint ("%sReached end of file\n", spacer);
+    MrBayesPrint ("%s   Reached end of file\n", spacer);
 
 	if (inComment == YES)
 		nErrors++;
@@ -8250,11 +8251,11 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 	else if (IsIn(**sourceH,"\"") && readWord == YES)
 		{
 		(*sourceH)++;
-        *temp='\0'; /* Allow empty word */
 		while(**sourceH != '"' && **sourceH != '\0')
 			{
 			*temp++ = *((*sourceH)++);
 			}
+        *temp='\0';
 		*tokenType = ALPHA;
 		(*sourceH)++;
         readWord = NO;
@@ -10850,29 +10851,25 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		MrBayesPrint ("   Sump                                                                          \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   During a MCMC analysis, MrBayes prints the sampled parameter values to a tab- \n");
-		MrBayesPrint ("   delimited text file. This file has the extension \".p\". The command 'Sump'   \n");
-		MrBayesPrint ("   summarizes the information in the parameter file. By default, the name of the \n");
-		MrBayesPrint ("   parameter file is assumed to be the name of the last matrix-containing nexus  \n");
-		MrBayesPrint ("   file, but with a '.p' extension. You can set 'Sump' to summarize the infor-   \n");
-		MrBayesPrint ("   mation in any other parameter file by setting the 'filename' option to the    \n");
-		MrBayesPrint ("   appropriate file name. The 'Sump' command does not require a matrix to be     \n");
-		MrBayesPrint ("   read in first.                                                                \n");
-	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   During an MCMC analysis, MrBayes prints the sampled parameter values to one or\n");
+		MrBayesPrint ("   more tab-delimited text files, one for each independent run in your analysis. \n");
+        MrBayesPrint ("   The command 'Sump' summarizes the information in this parameter file or these \n");
+		MrBayesPrint ("   parameter files. By default, the root of the parameter file name(s) is assumed\n");
+		MrBayesPrint ("   to be the name of the last matrix-containing nexus file. MrBayes also remem-  \n");
+        MrBayesPrint ("   bers the number of independent runs in the last analysis that you set up, re- \n");
+		MrBayesPrint ("   gardless of whether you actually ran it. For instance, if there were two in-  \n");
+		MrBayesPrint ("   dependent runs, which is the initial setting when you read in a new matrix,   \n");
+		MrBayesPrint ("   MrBayes will assume that there are two parameter files with the endings       \n");
+        MrBayesPrint ("   '.run1.p' and '.run2.p'. You can change the root of the file names and the    \n");
+        MrBayesPrint ("   number of runs using the 'Filename' and 'Nruns' settings.                     \n");
+        MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   When you invoke the 'Sump' command, three items are output: (1) a generation  \n");
 		MrBayesPrint ("   plot of the likelihood values; (2) estimates of the marginal likelihood of    \n");
 		MrBayesPrint ("   the model; and (3) a table with the mean, variance, and 95 percent credible   \n");
-		MrBayesPrint ("   interval for the sampled parameters. Each of these items can be switched on   \n");
-		MrBayesPrint ("   or off using the options 'Plot', 'Marglike', and 'Table'. By default, all     \n");
-		MrBayesPrint ("   three items are output but only to the screen. If output to a file is also    \n");
-		MrBayesPrint ("   desired, set 'Printtofile' to 'Yes'. The name of the output file is specified \n");
-		MrBayesPrint ("   by setting the 'Outputname' option. When a new matrix is read in or when the  \n");
-		MrBayesPrint ("   'Mcmc' output filename or 'Sump' input filename are changed, the 'Sump'       \n");
-		MrBayesPrint ("   outputfile is changed as well. If you want to output to another file than the \n");
-		MrBayesPrint ("   default, make sure you specify the outputfile every time you invoke 'Sump'.   \n");
-		MrBayesPrint ("   If the specified outputfile already exists, you will be asked whether         \n");
-		MrBayesPrint ("   you like to overwrite it or append to it. This behavior can be altered using  \n");
-		MrBayesPrint ("   'Set nowarn=yes'; see the help for the 'Set' command.                         \n");
+		MrBayesPrint ("   interval for the sampled parameters. All three items are output to screen.    \n");
+		MrBayesPrint ("   The table of marginal likelihoods is also printed to a file with the ending   \n");
+		MrBayesPrint ("   '.mstat' and the parameter table to a file with the ending '.pstat'. For some \n");
+		MrBayesPrint ("   model parameters, there may also be a '.mstat' file.                          \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   When running 'Sump' you typically want to discard a specified number or       \n");
 		MrBayesPrint ("   fraction of samples from the beginning of the chain as the burn in. This is   \n");
@@ -10885,32 +10882,27 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   the burnin of the last 'Sump' command is 4000 and not 2000, and this absolute \n");
 		MrBayesPrint ("   burnin value is only used if 'Relburnin' is set to 'No' for 'Sump'. All burnin\n");
-		MrBayesPrint ("   values are reset to the default values every time a new matrix is read in.    \n");
-		MrBayesPrint ("   Similarly, 'Plot', 'Marglike' and 'Table' are all set to 'Yes' and            \n");
-		MrBayesPrint ("   'Printtofile' to 'No' (the default values) when a new matrix is processed.    \n");
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   If you have run several independent MCMC analyses, you may want to summarize  \n");
-		MrBayesPrint ("   and compare samples from each of these runs. To do this, set 'Nruns' to the   \n");
-		MrBayesPrint ("   number of runs you want to compare and make sure that the '.p' files are named\n");
-		MrBayesPrint ("   using the MrBayes convention (<filename>.run1.p, <filename>.run2.p, etc). When\n");
-		MrBayesPrint ("   you run several independent analyses simultaneously in MrBayes, the 'Nruns'   \n");
-		MrBayesPrint ("   and 'Filename' options are automatically set such that 'Sump' will summarize  \n");
-		MrBayesPrint ("   all of the resulting output files.                                            \n");
+		MrBayesPrint ("   values are reset to the default values every time a new matrix is read in. The\n");
+		MrBayesPrint ("   default for 'Sump' is relative burnin ('relburnin=yes') with 0 %% of samples  \n");
+		MrBayesPrint ("   (no samples) discarded ('burninfrac = 0.0').                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Relburnin    -- If this option is set to YES, then a proportion of the        \n");
+		MrBayesPrint ("   Relburnin    -- If this option is set to 'Yes', then a proportion of the      \n");
 		MrBayesPrint ("                   samples will be discarded as burnin when calculating summary  \n");
         MrBayesPrint ("                   statistics. The proportion to be discarded is set with        \n");
-		MrBayesPrint ("                   Burninfrac (see below). When the Relburnin option is set to   \n");
-		MrBayesPrint ("                   NO, then a specific number of samples is discarded instead.   \n");
-		MrBayesPrint ("                   This number is set by Burnin (see below). Note that the       \n");
+		MrBayesPrint ("                   'Burninfrac' (see below). When the 'Relburnin' option is set  \n");
+		MrBayesPrint ("                   to 'No', then a specific number of samples is discarded       \n");
+		MrBayesPrint ("                   instead. This number is set by 'Burnin' (see below). Note that\n");
 		MrBayesPrint ("                   burnin is set separately for the 'sumt', 'sump', and 'mcmc'   \n");
 		MrBayesPrint ("                   commands.                                                     \n");
 		MrBayesPrint ("   Burnin       -- Determines the number of samples (not generations) that will  \n");
 		MrBayesPrint ("                   be discarded when summary statistics are calculated. The      \n");
-		MrBayesPrint ("                   value of this option is only relevant when Relburnin is set   \n");
-		MrBayesPrint ("                   to NO.                                                        \n");
+		MrBayesPrint ("                   value of this option is only applicable when 'Relburnin' is   \n");
+		MrBayesPrint ("                   set to 'No'.                                                  \n");
+		MrBayesPrint ("   Burninfrac   -- Determines the fraction of samples that will be discarded when\n");
+		MrBayesPrint ("                   summary statistics are calculated. The setting only takes     \n");
+		MrBayesPrint ("                   effect if 'Relburnin' is set to 'Yes'.                        \n");
 		MrBayesPrint ("   Nruns        -- Determines how many '.p' files from independent analyses that \n");
 		MrBayesPrint ("                   will be summarized. If Nruns > 1 then the names of the files  \n");
 		MrBayesPrint ("                   are derived from 'Filename' by adding '.run1.p', '.run2.p',   \n");
@@ -10921,15 +10913,11 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                   setting of the 'Nruns' parameter. If 'Nruns' is 1, then only  \n");
 		MrBayesPrint ("                   '.p' is added to the file name. Otherwise, the endings will   \n");
 		MrBayesPrint ("                   be '.run1.p', '.run2.p', etc.                                 \n");
-		MrBayesPrint ("   Printtofile  -- Determines whether results will be printed to file.           \n");
-		MrBayesPrint ("   Outputname   -- Name of the file to which 'sump' results will be printed if   \n");
-		MrBayesPrint ("                   'Printtofile' is set to YES.                                  \n");
-		MrBayesPrint ("   Plot         -- Determines whether a likelihood plot should be output.        \n");
-		MrBayesPrint ("   Marglike     -- Determines whether estimates of marginal model likelihoods    \n");
-		MrBayesPrint ("                   should be calculated. The marginal model likelihoods are use- \n");
-		MrBayesPrint ("                   ful in Bayesian model testing.                                \n");
-		MrBayesPrint ("   Table        -- Determines whether the table summarizing the parameter value  \n");
-		MrBayesPrint ("                   samples should be output.                                     \n");
+		MrBayesPrint ("   Outputname   -- Base name of the file(s) to which 'Sump' results will be      \n");
+		MrBayesPrint ("                   printed.                                                      \n");
+		MrBayesPrint ("   Hpd          -- Determines whether credibility intervals will be given as the \n");
+		MrBayesPrint ("                   region of Highest Posterior Density ('Yes') or as the interval\n");
+		MrBayesPrint ("                   containing the median 95 %% of sampled values ('No').         \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -10943,6 +10931,8 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Filename        <name>                   %s<.p>\n", sumpParams.sumpFileName);
 		else
 			MrBayesPrint ("   Filename        <name>                   %s<.run<i>.p>\n", sumpParams.sumpFileName);
+		MrBayesPrint ("   Outputname      <name>                   %s<.pstat etc>\n", sumpParams.sumpOutfile);
+        MrBayesPrint ("   Hpd             <number>                 %d                                   \n", sumpParams.HPD == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -11022,63 +11012,64 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   length of the bipartition is also recorded, if branch lengths have been saved \n");
 	    MrBayesPrint ("   to file. The result is a list of the taxon bipartitions found, the frequency  \n");
 	    MrBayesPrint ("   with which they were found, the posterior probability of the bipartition      \n");
-	    MrBayesPrint ("   and, if the branch lengths were recorded, the mean and variance of the length \n");
-	    MrBayesPrint ("   of the branch.                                                                \n");
+	    MrBayesPrint ("   and, the mean and variance of the branch lengths or node depths, and various  \n");
+	    MrBayesPrint ("   other statistics.                                                              \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   The partition information is output to a file with the suffix \".parts\".     \n");
-	    MrBayesPrint ("   This information includes both a table over partitions and summary statistics.\n");
-	    MrBayesPrint ("   A consensus tree is also printed to a file with the suffix \".con\" and       \n");
+	    MrBayesPrint ("   The key to the partitions is output to a file with the suffix '.parts'. The   \n");
+	    MrBayesPrint ("   summary statistics pertaining to bipartition probabilities are output to a    \n");
+	    MrBayesPrint ("   file with the suffix '.tstat', and the statistics pertaining to branch or node\n");
+	    MrBayesPrint ("   parameters are output to a file with the suffix '.vstat'.                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   A consensus tree is also printed to a file with the suffix '.con' and         \n");
 	    MrBayesPrint ("   printed to the screen as a cladogram, and as a phylogram if branch lengths    \n");
 	    MrBayesPrint ("   have been saved. The consensus tree is either a 50 percent majority rule tree \n");
 	    MrBayesPrint ("   or a majority rule tree showing all compatible partitions. If branch lengths  \n");
-	    MrBayesPrint ("   have been recorded during the run, the \".con\" file will contain a consensus \n");
+	    MrBayesPrint ("   have been recorded during the run, the '.con' file will contain a consensus  \n");
 	    MrBayesPrint ("   tree with branch lengths and interior nodes labelled with support values.     \n");
-	    MrBayesPrint ("   This tree can be viewed in a program such as TreeView.                        \n");
+	    MrBayesPrint ("   By default, the consensus tree will also contain other summary information in \n");
+	    MrBayesPrint ("   a format understood by the program 'FigTree'. To use a simpler format under-  \n");
+	    MrBayesPrint ("   stood by other tree-drawing programs, such as 'TreeView', set 'Conformat' to  \n");
+	    MrBayesPrint ("   'Simple'.                                                                     \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   Finally, MrBayes produces a file with the ending \".trprobs\" that contains a \n");
-	    MrBayesPrint ("   list of all the trees that were found during the MCMC analysis, sorted by     \n");
-	    MrBayesPrint ("   their probabilities. This list of trees can be used to construct a credible   \n");
-	    MrBayesPrint ("   set of trees. For example, if you want to construct a 95 percent credible set \n");
-	    MrBayesPrint ("   of trees, you include all of those trees whose cumulative probability is less  \n");
+	    MrBayesPrint ("   MrBayes alo produces a file with the ending \".trprobs\" that contains a list \n");
+	    MrBayesPrint ("   of all the trees that were found during the MCMC analysis, sorted by their    \n");
+	    MrBayesPrint ("   probabilities. This list of trees can be used to construct a credible set of  \n");
+	    MrBayesPrint ("   trees. For example, if you want to construct a 95 percent credible set of     \n");
+	    MrBayesPrint ("   trees, you include all of those trees whose cumulative probability is less    \n");
 	    MrBayesPrint ("   than or equal to 0.95. You have the option of displaying the trees to the     \n");
 	    MrBayesPrint ("   screen using the \"Showtreeprobs\" option. The default is to not display the  \n");
 	    MrBayesPrint ("   trees to the screen; the number of different trees sampled by the chain can   \n");
 	    MrBayesPrint ("   be quite large. If you are analyzing a large set of taxa, you may actually    \n");
 	    MrBayesPrint ("   want to skip the calculation of tree probabilities entirely by setting        \n");
-	    MrBayesPrint ("   \"Calctreeprobs\" to NO.                                                      \n");
+	    MrBayesPrint ("   'Calctreeprobs' to 'No'.                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   When calculating summary statistics you probably want to skip those trees that\n");
 	    MrBayesPrint ("   were sampled in the initial part of the run, the so-called burn-in period. The\n");
-	    MrBayesPrint ("   number of skipped samples is controlled by the \"relburnin\", \"burnin\", and \n");
-	    MrBayesPrint ("   \"burninfrac\" settings, just as for the \"Mcmc\" command. Note that the      \n");
-	    MrBayesPrint ("   burn-in is controlled independently for \"Mcmc\" and \"Sumt\", that is,       \n");
-	    MrBayesPrint ("   changing the setting for one will not affect the setting of the other.        \n");
+	    MrBayesPrint ("   number of skipped samples is controlled by the 'Relburnin', 'Burnin', and     \n");
+	    MrBayesPrint ("   'Burninfrac' settings, just as for the 'Mcmc' command. Note that the burn-in  \n");
+	    MrBayesPrint ("   is controlled independently for 'Mcmc' and 'Sumt', that is, changing the set- \n");
+	    MrBayesPrint ("   ting for one will not affect the setting of the other.                        \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   If you are summarizing the trees sampled in several independent analyses,     \n");
-	    MrBayesPrint ("   such as those resulting from setting the \"Nruns\" option of the \"Mcmc\" com-\n");
-	    MrBayesPrint ("   mand to a value larger than 1, MrBayes will also calculate convergence diag-  \n");
-	    MrBayesPrint ("   nostics for the sampled topologies and branch lengths. These values can help  \n");
-	    MrBayesPrint ("   you determine whether it is likely that your chains have converged.           \n");
+	    MrBayesPrint ("   such as those resulting from setting the 'Nruns' option of the 'Mcmc' command \n");
+	    MrBayesPrint ("   to a value larger than 1, MrBayes will also calculate convergence diagnostics \n");
+	    MrBayesPrint ("   for the sampled topologies and branch lengths. These values can help you      \n");
+	    MrBayesPrint ("   determine whether it is likely that your chains have converged.               \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   The \"Sumt\" command expands the \"Filename\" according to the current values \n");
-	    MrBayesPrint ("   of the \"Nruns\" and \"Ntrees\" options. For instance, if both \"Nruns\" and  \n");
-	    MrBayesPrint ("   \"Ntrees\" are set to 1, \"Sumt\" will try to open a file named               \n");
-	    MrBayesPrint ("   \"<Filename>.t\". If \"Nruns\" is set to 2 and \"Ntrees\" to 1, then \"Sumt\" \n");
-	    MrBayesPrint ("   will open two files, \"<Filename>.run1.t\" and \"<Filename>.run2.t\", etc.    \n");
-	    MrBayesPrint ("   By default, the \"Filename\" option will be set such that \"Sumt\" auto-      \n");
-	    MrBayesPrint ("   matically summarizes all the results from your immediately preceding \"Mcmc\" \n");
-	    MrBayesPrint ("   command. You can also use the \"Sumt\" command to summarize tree samples in   \n");
-	    MrBayesPrint ("   older analyses. If you want to do that, remember to first read in a matrix    \n");
-	    MrBayesPrint ("   so that MrBayes knows what taxon names to expect in the trees. Then set the   \n");
-	    MrBayesPrint ("   \"Nruns\", \"Ntrees\" and \"Filename\" options appropriately.                 \n");
+	    MrBayesPrint ("   The 'Sumt' command expands the 'Filename' according to the current values of  \n");
+	    MrBayesPrint ("   the 'Nruns' and 'Ntrees' options. For instance, if both 'Nruns' and 'Ntrees'  \n");
+	    MrBayesPrint ("   are set to 1, 'Sumt' will try to open a file named '<Filename>.t'. If 'Nruns' \n");
+	    MrBayesPrint ("   is set to 2 and 'Ntrees' to 1, then 'Sumt' will open two files, the first     \n");
+	    MrBayesPrint ("   named '<Filename>.run1.t' and the second '<Filename>.run2.t', etc. By default,\n");
+	    MrBayesPrint ("   the 'Filename' option is set such that 'Sumt' automatically summarizes all the\n");
+	    MrBayesPrint ("   results from your immediately preceding 'Mcmc' command. You can also use the  \n");
+	    MrBayesPrint ("   'Sumt' command to summarize tree samples in older analyses. If you want to do \n");
+	    MrBayesPrint ("   that, remember to first read in a matrix so that MrBayes knows what taxon     \n");
+	    MrBayesPrint ("   names to expect in the trees. Then set the 'Nruns', 'Ntrees' and 'Filename'   \n");
+	    MrBayesPrint ("   options appropriately if they differ from the MrBayes defaults.               \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Burnin        -- Determines the number of samples that will be discarded from \n");
-		MrBayesPrint ("                    the input file before calculating summary statistics. If     \n");
-		MrBayesPrint ("                    there are several input files, the same number of samples    \n");
-		MrBayesPrint ("                    will be discarded from each. Note that the burnin is set     \n");
-		MrBayesPrint ("                    separately for the 'sumt', 'sump', and 'mcmc' commands.      \n");
 		MrBayesPrint ("   Relburnin     -- If this option is set to YES, then a proportion of the       \n");
 		MrBayesPrint ("                    samples will be discarded as burnin when calculating summary \n");
         MrBayesPrint ("                    statistics. The proportion to be discarded is set with       \n");
@@ -11121,14 +11112,12 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    grams.                                                       \n");
 		MrBayesPrint ("   Outputname    -- Base name of the file(s) to which 'sumt' results will be     \n");
 		MrBayesPrint ("                    printed.                                                     \n");
-		MrBayesPrint ("   Table         -- Determines whether a table of partition frequencies should be\n");
-		MrBayesPrint ("                    computed.                                                   \n");
-		MrBayesPrint ("   Summary       -- Determines whether summary statistics are calculated for the \n");
-		MrBayesPrint ("                    sampled partitions.                                          \n");
-		MrBayesPrint ("   Consensus     -- Determines whether consensus trees should be computed.       \n");
 		MrBayesPrint ("   Calctreeprobs -- Determines whether tree probabilities should be calculated.  \n");
 		MrBayesPrint ("   Showtreeprobs -- Determines whether tree probabilities should be displayed on \n");
 		MrBayesPrint ("                    screen.                                                      \n");
+		MrBayesPrint ("   Hpd           -- Determines whether credibility intervals will be given as the\n");
+		MrBayesPrint ("                    region of Highest Posterior Density ('Yes') or as the inter- \n");
+		MrBayesPrint ("                    val containing the median 95 %% of sampled values ('No').    \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11150,12 +11139,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", sumtParams.minPartFreq);
 		MrBayesPrint ("   Contype         Halfcompat/Allcompat     %s\n", sumtParams.sumtConType);
         MrBayesPrint ("   Conformat       Figtree/Simple           %s                                  \n", sumtParams.consensusFormat == SIMPLE ? "Simple" : "Figtree");
-		MrBayesPrint ("   Outputname      <name>                   %s<.parts|.con|.trprobs>\n", sumtParams.sumtOutfile);
-        MrBayesPrint ("   Table           Yes/No                   %s                                  \n", sumtParams.table == YES ? "Yes" : "No");
-		MrBayesPrint ("   Summary         Yes/No                   %s                                  \n", sumtParams.summary == YES ? "Yes" : "No");
-		MrBayesPrint ("   Consensus       Yes/No                   %s                                  \n", sumtParams.showConsensus == YES ? "Yes" : "No");
+		MrBayesPrint ("   Outputname      <name>                   %s<.parts etc>\n", sumtParams.sumtOutfile);
 		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                  \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
 		MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                  \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
+        MrBayesPrint ("   Hpd             <number>                 %d                                   \n", sumtParams.HPD == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -12130,7 +12117,7 @@ int ParseCommand (char *s)
 				}
 			}
 		
-		} while (*token && inError == NO && skipCmd == NO);
+		} while ((*token || tokenType == ALPHA) && inError == NO && skipCmd == NO);
 		
 	if (inError == YES)
 		{
@@ -12754,6 +12741,8 @@ void SetUpParms (void)
 	PARAM   (228, "Xxxxxxxxxx",     DoTaxlabelsParm,   "\0");
 	PARAM   (229, "Dir",            DoSetParm,         "\0");
     PARAM   (230, "Conformat",      DoSumtParm,        "Figtree|Simple|\0");
+    PARAM   (231, "Hpd",            DoSumpParm,        "Yes|No|\0");
+    PARAM   (232, "Hpd",            DoSumtParm,        "Yes|No|\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you

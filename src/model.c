@@ -1,21 +1,26 @@
 /*
  *  MrBayes 3
  *
- *  copyright 2002-2009
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Department of Integrative Biology
+ *  Dept. Integrative Biology
  *  University of California, Berkeley
  *  Berkeley, CA 94720-3140
  *  johnh@berkeley.edu
  *
- *	Fredrik Ronquist
- *  Department of Entomology
+ *  Fredrik Ronquist
  *  Swedish Museum of Natural History
- *  SE-10405 Stockholm, Sweden
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
  *  fredrik.ronquist@nrm.se
  *
- *  See the authors command for other important contributors.
+ *  With important contributions by
+ *
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,8 +33,6 @@
  * GNU General Public License for more details (www.gnu.org).
  *
  */
-/* id-string for ident, do not edit: cvs will update this string */
-const char modelID[]="$Id: model.c,v 3.73 2009/08/07 05:53:41 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15174,6 +15177,9 @@ int SetUpAnalysis (safeLong *seed)
 	if (AllocateTreeParams () == ERROR)
 		return (ERROR);
 	
+    /* Set default number of trees for sumt to appropriate number */
+    sumtParams.numTrees = numTrees;
+
 	/* Fill in normal parameters */
 	if (FillNormalParams (seed, 0, numGlobalChains) == ERROR)
 		return (ERROR);
@@ -15186,7 +15192,7 @@ int SetUpAnalysis (safeLong *seed)
 	if (SetMoves () == ERROR)
 		return (ERROR);
 	
-	return (NO_ERROR);
+    return (NO_ERROR);
 	
 }
 

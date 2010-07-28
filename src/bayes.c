@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.1.2
+ *  MrBayes 3
  *
- *  copyright 2002-2005
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
- *
- *  johnh@biomail.ucsd.edu
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
  *  Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  With important contributions by
+ *
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,9 +33,6 @@
  * GNU General Public License for more details (www.gnu.org).
  *
  */
-
-/* id-string for ident, do not edit: cvs will update this string */
-const char bayesID[]="$Id: bayes.c,v 3.72 2009/08/07 05:53:30 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -923,7 +922,7 @@ int ReinitializeMrBayes (void)
 	/* sumt parameters */
 	strcpy(sumtParams.sumtFileName, "temp.t");       /* input name for sumt command                   */
     sumtParams.relativeBurnin = YES;                 /* should relative burnin be used?               */
-    sumtParams.sumtBurnInFraction = 0.25;            /* relative burnin fraction for sumt command     */
+    sumtParams.sumtBurnInFraction = 0.0;             /* relative burnin fraction for sumt command     */
     sumtParams.sumtBurnIn = 0;                       /* absolute burnin for sumt command              */
 	strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
 	sumtParams.calcTreeprobs = YES;                  /* should individual tree probs be calculated    */
@@ -943,6 +942,8 @@ int ReinitializeMrBayes (void)
 
 	/* sump parameters */
 	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
+	sumpParams.relativeBurnin = YES;                 /* use relative burnin for sump command ?        */
+    sumpParams.sumpBurnInFraction = 0.0;             /* burnin fraction for sump command              */
 	sumpParams.sumpBurnIn = 0;                       /* burnin for sump command                       */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
 	sumpParams.HPD = YES;                            /* use Highest Posterior Density?                */
@@ -951,19 +952,18 @@ int ReinitializeMrBayes (void)
 	strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptOutfile, "temp.comp");/* input name for comparetree command            */
-	comptreeParams.relativeBurnin = NO;              /* use relative burnin for comparetree command ? */
+	comptreeParams.relativeBurnin = YES;             /* use relative burnin for comparetree command ? */
 	comptreeParams.comptBurnIn = 0;                  /* burnin for comparetree command                */
-	comptreeParams.comptBurnInFrac = 0.25;           /* burnin fraction for comparetree command       */
-	comptreeParams.comptBurnInFrac = 0.25;           /* burnin fraction for comparetree command       */
+	comptreeParams.comptBurnInFrac = 0.0;            /* burnin fraction for comparetree command       */
     comptreeParams.minPartFreq = 0.0;                /* minimum frequency of partitions to include    */
 
 	/* plot parameters */
 	strcpy(plotParams.plotFileName, "temp.p");       /* input name for plot command                   */
 	strcpy(plotParams.parameter, "lnL");             /* plotted parameter plot command                */
 	strcpy(plotParams.match, "Perfect");             /* matching for plot command                     */
-	plotParams.relativeBurnin = NO;                  /* use relative burnin for plot command ? */
+	plotParams.relativeBurnin = YES;                 /* use relative burnin for plot command ? */
 	plotParams.plotBurnIn = 0;                       /* burnin for plot command                       */
-	plotParams.plotBurnInFrac = 0.25;                /* burnin fraction for plot command       */
+	plotParams.plotBurnInFrac = 0.0;                 /* burnin fraction for plot command       */
 	
     return (NO_ERROR);
 

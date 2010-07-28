@@ -1,24 +1,26 @@
 /*
- *  MrBayes 3.2
+ *  MrBayes 3
  *
- *  copyright 2002-2009
+ *  (c) 2002-2010
  *
  *  John P. Huelsenbeck
- *  Section of Ecology, Behavior and Evolution
- *  Division of Biological Sciences
- *  University of California, San Diego
- *  La Jolla, CA 92093-0116
+ *  Dept. Integrative Biology
+ *  University of California, Berkeley
+ *  Berkeley, CA 94720-3140
+ *  johnh@berkeley.edu
  *
- *  johnh@biomail.ucsd.edu
+ *  Fredrik Ronquist
+ *  Swedish Museum of Natural History
+ *  Box 50007
+ *  SE-10405 Stockholm, SWEDEN
+ *  fredrik.ronquist@nrm.se
  *
- *	Fredrik Ronquist
- *  Paul van der Mark
- *  School of Computational Science
- *  Florida State University
- *  Tallahassee, FL 32306-4120
+ *  With important contributions by
  *
- *  ronquist@scs.fsu.edu
- *  paulvdm@scs.fsu.edu
+ *  Paul van der Mark (paulvdm@sc.fsu.edu)
+ *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *
+ *  and by many users (run 'acknowledgements' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,9 +33,6 @@
  * GNU General Public License for more details (www.gnu.org).
  *
  */
-
-/* id-string for ident, do not edit: cvs will update this string */
-const char sumtID[]="$Id: sumt.c,v 3.49 2009/02/04 13:19:49 ronquist Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -597,7 +596,7 @@ treeConstruction:
 			}
 
         /* find out if this is an informative partition */
-		if (nBits == sumtParams.numTaxa)
+		if (nBits == sumtParams.numTaxa || nBits == 0)
 			{
 			/* this is the root (for setting age of root node when tree is dated) */
 			q = t->root;
@@ -1242,7 +1241,16 @@ int DoCompareTree (void)
 			}
 		}
     MrBayesPrint ("                                                                                   \n");
-	MrBayesPrint ("%s   List of taxon bipartitions found in tree file:                                \n\n", spacer);
+	MrBayesPrint ("%s   List of taxon bipartitions found in tree files:                               \n\n", spacer);
+
+    i = (int)(log10(sumtParams.numTreesSampled)) - 1;
+    if (i<1)
+        i = 1;
+    j = sumtParams.numTaxa - 8;
+    if (j < 1)
+        j = 1;        
+    MrBayesPrint ("%s     ID -- Partition%*c  No1%*c  No2%*c  Freq1   Freq2\n",
+        spacer, j, ' ', i, ' ', i, ' ');
 
     mask = calloc (sumtParams.safeLongsNeeded, sizeof(safeLong));
     for (i=0; i<sumtParams.numTaxa; i++)
@@ -1257,8 +1265,11 @@ int DoCompareTree (void)
 			MrBayesPrint ("%s   %4d -- ", spacer, i+1);
 			ShowParts (stdout, x->partition, sumtParams.numTaxa);
 
-			MrBayesPrint ("   %4d %4d %1.3lf %1.3lf\n", 
-			x->count[0], x->count[1],
+			j = (int)(log10(sumtParams.numTreesSampled)) + 1;
+            if (j < 3)
+                j = 3;
+            MrBayesPrint ("   %*d   %*d   %1.3lf   %1.3lf\n", 
+			j, x->count[0], j, x->count[1],
 			(MrBFlt)x->count[0]/(MrBFlt)sumtParams.numFileTreesSampled[0], 
 			(MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1]);
 			
@@ -1293,7 +1304,8 @@ int DoCompareTree (void)
                 x = treeParts[i];
 				xProb = (MrBFlt)x->count[0]/(MrBFlt)sumtParams.numFileTreesSampled[0];
 				yProb = (MrBFlt)x->count[1]/(MrBFlt)sumtParams.numFileTreesSampled[1];
-				if (xProb > xLower && xProb <= xUpper && yProb > yLower && yProb <= yUpper)
+				if ((xProb > xLower || (xProb == 0.0 && xaxis == 0)) && (xProb <= xUpper || (xProb == 1.0 && xaxis == 79))
+                 && (yProb > yLower || (yProb == 0.0 && yaxis == 0)) && (yProb <= yUpper || (yProb == 1.0 && yaxis == 39)))
 					starHolder[xaxis] = 1;
 				}
 			xLower += xInc;
@@ -1327,8 +1339,8 @@ int DoCompareTree (void)
 		yLower = yUpper - yInc;
 		}
 
-	MrBayesPrint ("   ^                                                                              ^\n");
-	MrBayesPrint ("  0.00                                                                          1.00\n");
+	MrBayesPrint ("%s   ^                                                                              ^\n", spacer);
+	MrBayesPrint ("%s  0.00                                                                          1.00\n", spacer);
 		
     /* get tree-to-tree distances: first allocate some space */
     minNumTrees = sumtParams.numFileTreesSampled[0];
@@ -1422,13 +1434,13 @@ int DoCompareTree (void)
 		meanY[k] += yVal;
 		numY[k]++;
 		}
-	MrBayesPrint ("\n   +");
+	MrBayesPrint ("\n%s   +", spacer);
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint ("-");
 	MrBayesPrint ("+ %1.2lf\n", maxY);
 	for (j=screenHeigth-1; j>=0; j--)
 		{
-		MrBayesPrint ("   |");
+		MrBayesPrint ("%s   |", spacer);
 		for (i=0; i<screenWidth; i++)
 			{
 			if (numY[i] > 0)
@@ -1445,20 +1457,22 @@ int DoCompareTree (void)
 			}
 		MrBayesPrint ("|\n");
 		}
-	MrBayesPrint ("   +");
+	MrBayesPrint ("%s   +", spacer);
 	for (i=0; i<screenWidth; i++)
 		{
-		if (i % (screenWidth/10) == 0 && i != 0)
+        if (numY[i] > 0 && meanY[i] / numY[i] <= minY)
+			MrBayesPrint ("*");
+		else if (i % (screenWidth/10) == 0 && i != 0)
 			MrBayesPrint ("+");
 		else
 			MrBayesPrint ("-");
 		}
 	MrBayesPrint ("+ %1.2lf\n", minY);
-	MrBayesPrint ("   ^");
+	MrBayesPrint ("%s   ^", spacer);
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint (" ");
 	MrBayesPrint ("^\n");
-	MrBayesPrint ("   %1.0lf", minX);
+	MrBayesPrint ("%s   %1.0lf", spacer, minX);
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint (" ");
 	MrBayesPrint ("%1.0lf\n\n", maxX);
@@ -1511,13 +1525,13 @@ int DoCompareTree (void)
 				meanY[k] += yVal;
 				numY[k]++;
 				}
-			MrBayesPrint ("\n   +");
+			MrBayesPrint ("\n%s   +", spacer);
 			for (i=0; i<screenWidth; i++)
 				MrBayesPrint ("-");
 			MrBayesPrint ("+ %1.2lf\n", maxY);
 			for (j=screenHeigth-1; j>=0; j--)
 				{
-				MrBayesPrint ("   |");
+				MrBayesPrint ("%s   |", spacer);
 				for (i=0; i<screenWidth; i++)
 					{
 					if (numY[i] > 0)
@@ -1534,20 +1548,22 @@ int DoCompareTree (void)
 					}
 				MrBayesPrint ("|\n");
 				}
-			MrBayesPrint ("   +");
+			MrBayesPrint ("%s   +", spacer);
 			for (i=0; i<screenWidth; i++)
 				{
-				if (i % (screenWidth/10) == 0 && i != 0)
+                if (numY[i] > 0 && meanY[i] / numY[i] <= minY)
+			        MrBayesPrint ("*");
+				else if (i % (screenWidth/10) == 0 && i != 0)
 					MrBayesPrint ("+");
 				else
 					MrBayesPrint ("-");
 				}
 			MrBayesPrint ("+ %1.2lf\n", minY);
-			MrBayesPrint ("   ^");
+			MrBayesPrint ("%s   ^", spacer);
 			for (i=0; i<screenWidth; i++)
 				MrBayesPrint (" ");
 			MrBayesPrint ("^\n");
-			MrBayesPrint ("   %1.0lf", minX);
+			MrBayesPrint ("%s   %1.0lf", spacer, minX);
 			for (i=0; i<screenWidth; i++)
 				MrBayesPrint (" ");
 			MrBayesPrint ("%1.0lf\n\n", maxX);
@@ -1587,6 +1603,7 @@ int DoCompareTree (void)
 		MrBayesPrint ("%s             Mean(Robinson-Foulds with branch lengths) = %1.3lf\n", spacer, sums[1]/nSamples);
 		MrBayesPrint ("%s      Mean(Robinson-Foulds with scaled branch lengths) = %1.3lf\n", spacer, sums[2]/nSamples);
 		}
+    MrBayesPrint ("\n");
 
 	/* free memory and file pointers */
     free(s);    
@@ -1934,8 +1951,8 @@ int DoSumt (void)
 			sprintf (fileName,"%s.tree%d", sumtParams.sumtFileName, treeNo+1);
 		else
 			strcpy (fileName, sumtParams.sumtFileName);
-		//return;
-		if (sumtParams.numRuns == 1)
+
+        if (sumtParams.numRuns == 1)
 			MrBayesPrint ("%s   Summarizing trees in file \"%s.t\"\n", spacer, fileName);
 		else if (sumtParams.numRuns == 2)
 			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\" and \"%s.run2.t\"\n", spacer, fileName, fileName);
@@ -1943,10 +1960,10 @@ int DoSumt (void)
 			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\", \"%s.run2.t\",...,\"%s.run%d.t\"\n", spacer, fileName, fileName,fileName,sumtParams.numRuns);
 
         if (sumtParams.relativeBurnin == YES)
-            MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% ('burninfrac=%1.2f') of sampled trees\n",
+            MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of sampled trees\n",
                 spacer, sumtParams.sumtBurnInFraction*100.0, sumtParams.sumtBurnInFraction);
         else
-            MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
+            MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d sampled trees\n",
                 spacer, sumtParams.sumtBurnIn, sumtParams.sumtBurnIn);
         
 	    MrBayesPrint ("%s   Writing statistics to files %s.<parts|tstat|vstat|trprobs|con>\n", spacer, sumtParams.sumtOutfile);
@@ -2227,6 +2244,7 @@ int DoSumt (void)
 	
         if (sumtParams.numTrees > 1 && (sumtParams.table == YES || sumtParams.summary == YES))
 			{
+            MrBayesPrint ("\n\n");
 			MrBayesPrint ("%s   Results for tree number %d\n", spacer, treeNo+1);
 			MrBayesPrint ("%s   ==========================\n\n", spacer);
 			}
@@ -2511,7 +2529,7 @@ int DoSumt (void)
 	        /* print the header rows */
             MrBayesPrint ("\n");
 	        if (sumtParams.HPD == NO)
-                MrBayesPrint ("%s   %*c                              95%% Cred. Interval\n", spacer, longestHeader, ' ');
+                MrBayesPrint ("%s   %*c                             95%% Cred. Interval\n", spacer, longestHeader, ' ');
             else
     	        MrBayesPrint ("%s   %*c                              95%% HPD Interval\n", spacer, longestHeader, ' ');
 	        MrBayesPrint ("%s   %*c                            --------------------\n", spacer, longestHeader, ' ');
@@ -2608,13 +2626,9 @@ int DoSumt (void)
             if (sumtParams.numRuns > 1)
 		        {
 				MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
-				MrBayesPrint ("%s     and Rubin, 1992) should approach 1 as runs converge. NA is reported when\n", spacer);
-				MrBayesPrint ("%s     deviation of parameter values within all runs is 0 or any run has no\n", spacer);
-				MrBayesPrint ("%s     parameter value sampled at all. PSRF significantly smaller than 1\n", spacer);
-				MrBayesPrint ("%s     indicates that the parameter is undersampled but deviation of the \n", spacer);
-				MrBayesPrint ("%s     means among runs is small, while large PSRF indicates that there is\n", spacer);
-				MrBayesPrint ("%s     substantial deviation of parameter values among runs. In any case in\n", spacer);
-				MrBayesPrint ("%s     order to improve PSRF you should run mcmc longer.\n", spacer);
+				MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge. NA is reported when\n", spacer);
+				MrBayesPrint ("%s     deviation of parameter values within all runs is 0 or when a parameter\n", spacer);
+				MrBayesPrint ("%s     value (a branch length, for instance) is not sampled in all runs.\n", spacer);
                 }
 
             if (oneUnreliable == YES)
@@ -3044,6 +3058,34 @@ int DoSumtParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+		/* set Hpd (sumpParams.HPD) ********************************************************/
+		else if (!strcmp(parmName, "Hpd"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						sumtParams.HPD = YES;
+					else
+						sumtParams.HPD = NO;
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid argument for Hpd\n", spacer);
+					return (ERROR);
+					}
+				if (sumtParams.HPD == YES)
+					MrBayesPrint ("%s   Reporting 95 %% region of Highest Posterior Density (HPD).\n", spacer);
+				else
+					MrBayesPrint ("%s   Reporting median interval containing 95 %% of values.\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+            else
+                return (ERROR);
+            }
 		/* set Printbrlens (sumtParams.printBrlensToFile) *********************************************/
 		else if (!strcmp(parmName, "Printbrlens"))
 			{
@@ -5233,14 +5275,19 @@ int TreeProb (void)
 		}
 		
 	/* print out general information on credible sets of trees */
-	MrBayesPrint ("%s   Credible sets of trees (%d trees sampled):\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + nInSets[4]);
-	if (nInSets[0] != 0)
-		MrBayesPrint ("%s      50 %% credible set contains %d trees\n", spacer, nInSets[0] + 1);
-	if (nInSets[0] + nInSets[1] != 0)
-		MrBayesPrint ("%s      90 %% credible set contains %d trees\n", spacer, nInSets[0] + nInSets[1] + 1);
-	if (nInSets[0] + nInSets[1] + nInSets[2] != 0)
-		MrBayesPrint ("%s      95 %% credible set contains %d trees\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + 1);
-	MrBayesPrint ("%s      99 %% credible set contains %d trees\n\n", spacer, nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + 1);
+    i = nInSets[0] + nInSets[1] + nInSets[2] + nInSets[3] + nInSets[4];
+    MrBayesPrint ("%s   Credible sets of trees (%d tree%s sampled):\n", spacer, i, i > 1 ? "s" : "");
+	i = nInSets[0] + 1;
+	if (i > 1)
+        MrBayesPrint ("%s      50 %% credible set contains %d trees\n", spacer, i);
+	i += nInSets[1];
+	if (i > 1)
+        MrBayesPrint ("%s      90 %% credible set contains %d trees\n", spacer, i);
+	i += nInSets[2];
+	if (i > 1)
+        MrBayesPrint ("%s      95 %% credible set contains %d trees\n", spacer, i);
+    i += nInSets[3];
+	MrBayesPrint ("%s      99 %% credible set contains %d tree%s\n\n", spacer, i, i > 1 ? "s" : "");
 	
 	/* free memory */
 	free (trees);
