@@ -865,7 +865,7 @@ int ReinitializeMrBayes (void)
     /* reset all taxa flags */
     ResetTaxaFlags();
 
-	/* reset all characters flags */
+    /* reset all characters flags */
     ResetCharacterFlags();
 
 	/* chain parameters */

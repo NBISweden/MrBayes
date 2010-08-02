@@ -742,6 +742,8 @@ typedef struct
 	int			*nAccepted;			/* number of accepted moves						*/
 	int			*nTried;			/* number of tried moves						*/
 	int			*nBatches;			/* counter for autotuning rounds                */
+	int			*nTotAccepted;	    /* total number of accepted moves	    		*/
+	int			*nTotTried;			/* total number of tried moves				    */
 	MrBFlt	    *targetRate;        /* target acceptance rate for autotuning        */
 	MrBFlt		*lastAcceptanceRate;/* acceptance rate in last complete batch	    */
 	MrBFlt		**tuningParam;      /* tuning parameters for the move               */

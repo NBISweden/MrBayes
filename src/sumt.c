@@ -1122,6 +1122,7 @@ int DoCompareTree (void)
 			goto errorExit;
 		}
 	inTreesBlock = NO;
+    ResetTranslateTable();
 
 	/* Check that at least one tree was read in. */
     if (sumtParams.numFileTreesSampled[0] <= 0)
@@ -1171,6 +1172,7 @@ int DoCompareTree (void)
 			goto errorExit;
 		}
 	inTreesBlock = NO;
+    ResetTranslateTable();
 
 	/* Check that at least one tree was read in. */
     if (sumtParams.numFileTreesSampled[1] <= 0)
@@ -2105,6 +2107,7 @@ int DoSumt (void)
 					goto errorExit;
 				}
 			inTreesBlock = NO;
+            ResetTranslateTable();
 	
 			/* Finish cheap status bar. */
 			if (sumtParams.runId == sumtParams.numRuns - 1)

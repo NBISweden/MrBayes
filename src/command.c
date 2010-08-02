@@ -7020,7 +7020,7 @@ int DoTreeParm (char *parmName, char *tkn)
     */
 
 
-if (isTaxsetDef == NO)
+    if (isTaxsetDef == NO)
 		{
 		MrBayesPrint ("%s   Taxon labels must be specified before a tree can be read in\n", spacer);
 		return (ERROR);
@@ -8036,8 +8036,11 @@ int FreeTaxa (void)
     memoryLetFree = NO;
 	if (memAllocs[ALLOC_TAXA] == YES)
 		{
-		for (i=0; i<numTaxa; i++)
-            SafeFree ((void **) &taxaNames[i]);
+		if (taxaNames)
+            {
+            for (i=0; i<numTaxa; i++)
+                SafeFree ((void **) &taxaNames[i]);
+            }
         SafeFree ((void **) &taxaNames);
 		SafeFree ((void **) &taxaInfo);
         SafeFree ((void **) &tipCalibration);
@@ -12430,9 +12433,8 @@ void ResetTaxaFlags (void)
 {
 	numTaxa                 = 0;          			     /* number of taxa                                */
 	numNamedTaxa            = 0;          			     /* number of named taxa                          */
-    defTaxa                 = NO;                       /* flag for whether number of taxa is known      */
-    isTaxsetDef             = NO;                       /* is a taxlabels set defined                    */
-    isTranslateDef          = NO;                       /* is a translate block defined                  */
+    defTaxa                 = NO;                        /* flag for whether number of taxa is known      */
+    isTaxsetDef             = NO;                        /* is a taxlabels set defined                    */
 	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
@@ -13132,6 +13134,20 @@ void WhatVariableExp (safeLong exp, char *st)
 			if (n > 0)
 				strcat(st, " or");
 			strcat(st, " %");
+			n++;
+			}
+		if ((exp & Expecting(LEFTCURL)) == Expecting(LEFTCURL))
+			{
+			if (n > 0)
+				strcat(st, " or");
+            strcat(st, " {");
+			n++;
+			}
+		if ((exp & Expecting(RIGHTCURL)) == Expecting(RIGHTCURL))
+			{
+			if (n > 0)
+				strcat(st, " or");
+            strcat(st, " }");
 			n++;
 			}
 		if ((exp & Expecting(WEIRD)) == Expecting(WEIRD))

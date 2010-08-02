@@ -223,14 +223,16 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
 		return NULL;
 		}
 
-	if ((temp->nAccepted = (int *) calloc (3*numGlobalChains, sizeof (int))) == NULL)
+	if ((temp->nAccepted = (int *) calloc (5*numGlobalChains, sizeof (int))) == NULL)
 		{
 		free (temp->name);
 		free (temp);
 		return NULL;
 		}
-	temp->nTried = temp->nAccepted + numGlobalChains;
-	temp->nBatches  = temp->nAccepted + 2*numGlobalChains;
+	temp->nTried       = temp->nAccepted + numGlobalChains;
+	temp->nBatches     = temp->nAccepted + 2*numGlobalChains;
+    temp->nTotAccepted = temp->nAccepted + 3*numGlobalChains;
+    temp->nTotTried    = temp->nAccepted + 4*numGlobalChains; 
 	
 	if ((temp->relProposalProb = (MrBFlt *) calloc (4*numGlobalChains, sizeof (MrBFlt))) == NULL)
 		{
@@ -289,6 +291,8 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
 		temp->nAccepted[i] = 0;
 		temp->nTried[i] = 0;
         temp->nBatches[i] = 0;
+        temp->nTotAccepted[i] = 0;
+        temp->nTotTried[i] = 0;
         temp->targetRate[i] = moveType->targetRate;
         temp->lastAcceptanceRate[i] = 0.0;
 		for (j=0; j<moveType->numTuningParams; j++)
@@ -1075,15 +1079,19 @@ int ChangeNumRuns (int from, int to)
 		moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
         moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
         moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
-		moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (3 * numGlobalChains * sizeof (int)));
+		moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
 		moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
 		moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
+        moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
+        moves[i]->nTotTried    = moves[i]->nAccepted + 4*numGlobalChains;
 		/* initialize all values to default */
 		for (j=0; j<numGlobalChains; j++)
 			{
 			moves[i]->nAccepted[j] = 0;
 			moves[i]->nTried[j] = 0;
             moves[i]->nBatches[j] = 0;
+            moves[i]->nTotAccepted[j] = 0;
+            moves[i]->nTotTried[j] = 0;
 			moves[i]->relProposalProb[j] = mvt->relProposalProb;
 			moves[i]->cumProposalProb[j] = 0.0;
             moves[i]->lastAcceptanceRate[j] = 0.0;
@@ -8847,6 +8855,10 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 				else if (p->paramId == PSIGAMMASHAPE_FIX)
 					value[0] = mp->psiGammaFix;
 				}
+			else if (p->paramType == P_CPPEVENTS)
+				{
+				/* We fill in these when we fill in tree params **************************************************************************/
+				}
 			else if (p->paramType == P_NU)
 				{
 				/* Fill in variance of relaxed clock lognormal **************************************************************************/
@@ -8859,6 +8871,10 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 				else if (p->paramId == NU_FIX)
 					value[0] = mp->nuFix;
 				}
+			else if (p->paramType == P_BMBRANCHRATES)
+				{
+				/* We fill in these when we fill in tree params **************************************************************************/
+				}
 			else if (p->paramType == P_IBRSHAPE)
 				{
 				/* Fill in variance of relaxed clock lognormal **************************************************************************/
@@ -8870,6 +8886,10 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 				
 				else if (p->paramId == IBRSHAPE_FIX)
 					value[0] = mp->ibrshapeFix;
+				}
+			else if (p->paramType == P_IBRBRANCHRATES)
+				{
+				/* We fill in these when we fill in tree params **************************************************************************/
 				}
 			}	/* next param */
 		}	/* next chain */
@@ -9038,6 +9058,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 					rateMult[p->index] = NULL;
 					}
 				nEvents[p->index] = 0;
+                assert( j==tree->nNodes-2 || fabs(p->length - (p->anc->nodeDepth - p->nodeDepth)) < 0.000001);
 				brlen[p->index] = p->length;
 				}
 			}
@@ -9048,6 +9069,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 			for (j=0; j<tree->nNodes-1; j++)
 				{
 				p = tree->allDownPass[j];
+                assert( j==tree->nNodes-2 || fabs(p->length - (p->anc->nodeDepth - p->nodeDepth)) < 0.000001);
 				branchRate[p->index] = 1.0;
 				brlen[p->index] = p->length;
 				}
@@ -15571,7 +15593,7 @@ void SetUpMoveTypes (void)
 	/* Move_ExtSPRClock */
 	mt = &moveTypes[i++];
 	mt->name = "Extending SPR for clock trees";
-	mt->shortName = "ceSPR";
+	mt->shortName = "ExtSPRClock";
     mt->subParams = YES;
 	mt->tuningName[0] = "Extension probability";
 	mt->shortTuningName[0] = "p_ext";
@@ -15585,9 +15607,9 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
 	mt->nApplicable = 8;
 	mt->moveFxn = &Move_ExtSPRClock;
-	mt->relProposalProb = 20.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 0.7; /* extension probability */
+	mt->tuningParam[0] = 0.5; /* extension probability */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
 	mt->parsimonyBased = NO;
@@ -15649,7 +15671,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ExtTBR;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 10.0;
 	mt->numTuningParams = 2;
 	mt->tuningParam[0] = 0.8;  /* extension probability */
 	mt->tuningParam[1] = 2.0 * log (1.1);  /* lambda */
@@ -15853,7 +15875,7 @@ void SetUpMoveTypes (void)
 	/* Move_NNIClock */
 	mt = &moveTypes[i++];
 	mt->name = "NNI move for clock trees";
-	mt->shortName = "cNNI";
+	mt->shortName = "NNIClock";
     mt->subParams = YES;
 	mt->tuningName[0] = "Sliding window width";
 	mt->shortTuningName[0] = "delta";
@@ -15867,7 +15889,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
 	mt->nApplicable = 8;
 	mt->moveFxn = &Move_NNIClock;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.01; /* window size */
 	mt->minimum[0] = 0.0001;
@@ -16198,7 +16220,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ParsSPR;
-	mt->relProposalProb = 10.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 3;
 	mt->tuningParam[0] = 0.1; /* warp */
 	mt->tuningParam[1] = 2.0 * log (1.1); /* multiplier tuning parameter lambda */
@@ -16674,7 +16696,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_TreeHeightM;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->tuningParam[0] = 2.0 * log (1.2);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
@@ -16870,7 +16892,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_IbrBranchRate;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;

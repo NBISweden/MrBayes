@@ -155,8 +155,8 @@ extern MrBFlt			blosPi[20];                  /* stationary frequencies for Blosu
 #						if defined (MPI_ENABLED)
 extern int 				proc_id;                                /* process ID (0, 1, ..., num_procs-1)                        */
 extern int 				num_procs;                              /* number of active processors                                */
-extern MrBFlt			myStateInfo[5];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
-extern MrBFlt			partnerStateInfo[5];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
+extern MrBFlt			myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
+extern MrBFlt			partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #						endif
 
 #if defined (FAST_VERSION)

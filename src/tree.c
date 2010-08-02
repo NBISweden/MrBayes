@@ -820,7 +820,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 		}
 	
 	/* relabel interior nodes */
-	GetPolyDownPass(pt);
+    GetPolyDownPass(pt);
 	for (i=0; i<pt->nIntNodes; i++)
 		pt->intDownPass[i]->index = i + numLocalTaxa;
 
@@ -2224,7 +2224,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 
 {
 
-	int				i, recalibrate;
+	int				i;
 	TreeNode		*p;
 	MrBFlt			totDepth;
 
@@ -2274,7 +2274,10 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 						{
 						if (p->calibration->age <= p->nodeDepth)
 							{
-							MrBayesPrint ("%s   Calibration inconsistency (check calibrated nodes)\n", spacer);
+                            if (p->anc->anc == NULL)
+							    MrBayesPrint ("%s   Calibration inconsistency for root node (treeagepr)\n", spacer);
+                            else
+                                MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
 							return (ERROR);
 							}
 						else
@@ -2284,7 +2287,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 						{
 						if (p->calibration->max <= p->nodeDepth)
 							{
-							MrBayesPrint ("%s   Calibration inconsistency (check calibrated nodes)\n", spacer);
+							MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
 							return (ERROR);
 							}
 						else
@@ -2311,61 +2314,64 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 	
 	/* try to make root node deeper than minimum age */
     p = t->root->left;
-    if (p->calibration->prior == fixed)
-        p->nodeDepth = p->age;  /* can't do much */
+    if (p->calibration == NULL)
+        {
+        p->nodeDepth *= 1.5;
+        }
+    else if (p->calibration->prior == fixed)
+        {
+        /* can't do much ... */
+        }
     else if (p->calibration->prior == uniform)
-        p->nodeDepth = p->age = p->calibration->max;
+        {
+        if (p->nodeDepth * 1.5 < p->calibration->max)
+            p->nodeDepth = p->age = 1.5 * p->nodeDepth;
+        else
+            p->nodeDepth = p->age = p->calibration->max;
+        }
     else /* if (t->root->calibration->prior == offsetExponential */
-        p->nodeDepth = p->age = p->calibration->offset - log (RandomNumber(seed)) / p->calibration->lambda;
+        {
+        /* Make random draw */
+        p->age = p->calibration->offset - log (RandomNumber(seed)) / p->calibration->lambda;
+        if (p->age > 1.5 * p->nodeDepth)
+            p->nodeDepth = p->age;
+        else
+            p->age = p->nodeDepth = 1.5 * p->nodeDepth;
+        }
 
-                
+	/* calculate clock rate based on this total depth */
+	totDepth = t->root->left->nodeDepth;
+	t->clockRate =  (1.0 / totDepth);
+			
+	/* adjust node depths towards the root with 1/2 of available space in preorder traversal */
+	for (i=t->nIntNodes-2; i>=0; i--)
+		{
+		p = t->intDownPass[i];
+		if (p->calibration == NULL)
+            p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
+        else if (p->calibration->prior == offsetExponential)
+            p->age = p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
+        else if (p->calibration->prior == uniform)
+            {
+            p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
+            if (p->nodeDepth > p->calibration->max)
+                p->nodeDepth = p->age = p->calibration->max;
+            else
+                p->age = p->nodeDepth;
+        }
+        if (p->anc->nodeDepth - p->nodeDepth < minLength*t->clockRate ||
+            p->nodeDepth - p->left->nodeDepth < minLength*t->clockRate ||
+            p->nodeDepth - p->right->nodeDepth < minLength*t->clockRate)
+            return (ERROR);
+		}
+
     /* Scale tree so that it has depth (height) 1.0.
 	   NodeDepth will now be in substitution units */
-	totDepth = t->root->left->nodeDepth;
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
 		if (p->anc != NULL)
 			p->nodeDepth = (p->nodeDepth) / totDepth;
-		else
-			p->nodeDepth = 0.0;
-		}
-
-	/* calculate clock rate based on this total depth */
-	t->clockRate =  (1.0 / totDepth);
-			
-	/* adjust node depths so that a branch is at least of length minLength */
-	for (i=0; i<t->nIntNodes; i++)
-		{
-		p = t->intDownPass[i];
-		if (p->anc != NULL)
-			{
-			recalibrate = NO;
-			if (p->nodeDepth - p->left->nodeDepth < minLength)
-				{
-				p->nodeDepth = p->left->nodeDepth + minLength;
-				if (p->age > 0.0)
-					recalibrate = YES;
-				}
-			if (p->nodeDepth - p->right->nodeDepth < minLength)
-				{
-				p->nodeDepth = p->right->nodeDepth + minLength;
-				if (p->age > 0.0)
-					recalibrate = YES;
-				}
-			if (recalibrate == YES)
-				{
-				/* try to recalibrate */
-				if (p->calibration->prior == fixed || (p->calibration->prior == uniform && (p->nodeDepth / t->clockRate) >= p->calibration->max))
-					{
-					/* failed to recalibrate */
-					MrBayesPrint ("%s   Calibration inconsistency (check calibrated nodes)\n", spacer);
-					return (ERROR);
-					}
-				else /* successful recalibration */
-					p->age = p->nodeDepth / t->clockRate;
-				}
-			}
 		else
 			p->nodeDepth = 0.0;
 		}
@@ -3761,6 +3767,13 @@ int RandResolve (PolyTree *t, safeLong *seed, int destinationIsRooted)
 		/* update tree */
 		GetPolyDownPass (t);
 		}
+
+    /* relabel interior nodes (important that last indices are at the bottom!) */
+    for (i=0; i<t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        p->index = numLocalTaxa + i;
+        }
 	return NO_ERROR;
 }
 
