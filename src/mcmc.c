@@ -14083,7 +14083,7 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	/* change tree age using multiplier */
 
 	int			i, j, *nEvents;
-	MrBFlt		tuning, minV, maxV, newAge, oldAge, minAge, maxAge,
+	MrBFlt		tuning, minV, maxV, newAge, oldAge, minAge=0.0, maxAge=0.0,
 				*bmRate, *ibrRate, newTreeLength, oldTreeLength, lambda,
                 nu, ibrShape, oldTreeHeight, newTreeHeight, *brlens=NULL;
 	TreeNode	*p = NULL, *q, *root;
@@ -14601,7 +14601,7 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	/* change relative extinction rate using sliding window */
 	
 	int			i, isValidM;
-	MrBFlt		oldM, newM, window, minM, maxM, muExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior,
+	MrBFlt		oldM, newM, window, minM, maxM, ran, sR, eR, sF, oldLnPrior, newLnPrior,
                 oldProp[2], newProp[2], x, y, *alphaDir;
 	ModelParams *mp;
 	ModelInfo	*m;
@@ -22485,7 +22485,7 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	/* Change clock tree using NNI move */
 	
 	int		    i, topologyHasChanged, *nEvents;
-	MrBFlt		x, theta=0.0, growth=0.0, sR=0.0, eR=0.0, sF=0.0, minV, maxV, lambda, *bmRate=NULL,
+	MrBFlt		x, minV, maxV, lambda, *bmRate=NULL,
 				*brlens, *ibrRate=NULL, ibrshape=0.0, nu=0.0, oldALength, oldBLength,
                 oldCLength, oldVLength, minDepth, maxDepth, newDepth, tuning, oldDepth;
 	TreeNode	*p, *a, *b, *c, *u, *v;
@@ -28657,8 +28657,7 @@ int Move_SPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	int				i, stopLoop, topologyHasChanged, direction=0, nTipsOnSideA=0, nTipsOnSideB=0, whichTip, tempI, isPathTerminusRoot=0;
 	MrBFlt			attachmentRate, lnProbForward, lnProbReverse, dist=0.0, pathLength=0.0, pathLengthA=0.0, pathLengthB=0.0,
 					oldAttachmentDepth=0.0, newAttachmentDepth=0.0, newD, oldD, oldCeiling=0.0, newCeiling=0.0, alphaPi, x, y, sum, len, baseOfPath=0.0,
-					sR=0.0, eR=0.0, sF=0.0, theta=0.0, growth=0.0, dirichletParameters[2], oldProportions[2], newProportions[2],
-					newPathLengthA, newPathLengthB;
+					dirichletParameters[2], oldProportions[2], newProportions[2], newPathLengthA, newPathLengthB;
 	TreeNode		*p, *q, *nodeToMove=NULL, *nodeToDetach=NULL, *oldAttachmentNode=NULL, *newAttachmentNode=NULL, *pathEndA=NULL, *pathEndB=NULL;
 	Tree			*t;
 	ModelParams 	*mp;
