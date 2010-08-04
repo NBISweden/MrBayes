@@ -259,14 +259,10 @@ MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int     LnBDProbRannala1997 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int     LnBDProbGernhard2008 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int     LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t);
 MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
-MrBFlt  LnBDGernhardNominator (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
-MrBFlt  LnBDGernhardDenominator (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 void    MarkClsBelow (TreeNode *p);
 MrBFlt  MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt  MinimumValue (MrBFlt x, MrBFlt y);
@@ -12201,16 +12197,11 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
             }
         }
 
-	/* finally adjust for prior on tree height unless coalescence prior */
-	if (!strcmp(mp->clockPr,"Coalescence"))
-		{
-		/* tree height already accounted for */
-		}
-	else
+	/* finally adjust for prior on tree height if uniform prior on node heights */
+	if (!strcmp(mp->clockPr,"Uniform"))
 		{
         oldHeight = oldTree->root->left->nodeDepth;
         newHeight = newTree->root->left->nodeDepth;
-		/* uniform and birth-death priors */
 		if (!strcmp(mp->treeHeightPr,"Exponential"))
 			/* exponential prior on tree height */
 			(*lnPriorRatio) += mp->treeHeightExp * (oldHeight - newHeight);
@@ -12218,7 +12209,6 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 			/* gamma prior on tree height */
 			(*lnPriorRatio) += (mp->treeHeightGamma[1] - 1.0) * (log(newHeight) - log(oldHeight)) - mp->treeHeightGamma[0] * (newHeight - oldHeight);
 		}
-
 
     return (NO_ERROR);
 }
@@ -12701,10 +12691,6 @@ MrBFlt LogPrior (int chain)
 						MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 						}
 					lnPrior += x;
-					if (!strcmp(mp->treeHeightPr, "Exponential"))
-						lnPrior += log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-                    else if (!strcmp(mp->treeHeightPr, "Gamma"))
-						lnPrior += mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
 					}
                 if (t->isCalibrated == YES)
                     {
@@ -12759,13 +12745,15 @@ MrBFlt LogPrior (int chain)
 		else if (p->paramType == P_EXTRATE)
 			{
 			/* extinction rate parameter */
-			if (p->paramId == EXTRATE_UNI)
+			if (p->paramId == EXTRATE_BETA)
 				{
-				lnPrior += log(1.0) - log(mp->extinctionUni[1] - mp->extinctionUni[0]);
-				}
-			else if (p->paramId == EXTRATE_EXP)
-				{
-				lnPrior += log(mp->extinctionExp) - mp->extinctionExp * st[0];
+				alphaDir = mp->extinctionBeta;
+				newProp[0] =  (st[0] / (st[0] + 1.0));
+				newProp[1] =  (1.0 - newProp[0]);
+				x = 0.0;
+				for (i=0; i<2; i++)
+					x += (alphaDir[i]-1.0)*log(newProp[i]);
+				lnPrior += x;
 				}
 			}
 		else if (p->paramType == P_THETA)
@@ -12900,7 +12888,6 @@ MrBFlt LogPrior (int chain)
 			/* branch rates of independent branch rate model */
 			t = GetTree (p, chain, state[chain]);
 			ibrshape = *GetParamVals (m->ibrshape, chain, state[chain]);
-			ibrshape /= t->root->left->nodeDepth;		/* ibr gamma shape is relative to tree height */
 			for (i=0; i<t->nNodes-2; i++)
 				{
 				branch = t->allDownPass[i];
@@ -12919,83 +12906,69 @@ MrBFlt LogPrior (int chain)
 
 
 
+/*---------------------------------------------------------------------------------
+|
+|   LnBirthDeathPriorPr
+|
+|   See:
+|   Tanja Gernhard (2009) On incomplete sampling under birth-death models and
+|   connections to the sampling-based coalescent. Journal of Theoretical Biology
+|   261: 58-66.
+|
+|   We have the following distribution for oriented trees (equation 5):
+|
+|
+|                    (n-1)       (2n-1)          (e(t_1))             n-1         (b-d)^2 * e(t_i)
+|   p(t|n) = n * (f*b)     * (b-d)     * -------------------------- * prod  ----------------------------
+|                                         (f*b+(b*(1-f)-d)*e(t_1))    i=1    (f*b+(b*(1-f)-d)*e(t_i))^2
+|
+|
+|                  -(b-d)*t
+|   where e(t) = e
+|
+|   This simplifies to
+|
+|                      (b-d) *(e(t_1))        n-1             
+|   p(t|n) = n * -------------------------- * prod  b * p1(t_i)
+|                 (f*b+(b*(1-f)-d)*e(t_1))    i=1
+|
+|   where p1(t) is the probability that the process leaves exactly one surviving lineage after time t
+|   (see function LnP1(...))
+|
+|   For the critical process where the speciation and extinction rates are equal, the equation simplifies
+|   to an expression given in equation (6) in Gernhard (2009).
+|
+|   This function calculates the probability of a tree under the neutral
+|   birth death prior with constant birth and death rates.
+|   We assume a rooted tree that satisfies the molecular clock constraint. The
+|   tree is labelled as follows:
+|
+|                                      t_4  
+|     \         \         \        /            
+|      \         \         \      /              
+|       \         \         \    /         
+|        \         \         \  /          
+|         \         \         \/       t_3 
+|          \         \        /            
+|           \         \      /             
+|            \         \    /              
+|             \         \  /               
+|              \         \/            t_2  
+|               \        /                 
+|                \      /                  
+|                 \    /                        
+|                  \  /                         
+|                   \/                 t_1 
+|    
+|
+---------------------------------------------------------------------------------*/
+
 int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 
-{	
-	// use the BD prob from Rannala&Yang1996
-	return LnBDProbRannala1997(t,prob,sR,eR,sF);
-	
-	// use the BD prob from Gernhard2008
-	//return LnBDProbGernhard2008(t,prob,sR,eR,sF);
-		
-}
-
-
-/*---------------------------------------------------------------------------------
-|
-|   LnBDProbRannala1996
-|
-|   See:
-|   Rannala and Yang (1996),
-|   Probability Distribution of Molecular Evolutionary Trees: A New Method of Phylogenetic Inference
-|   Journal of Molecular Biology
-|
-|   and
-|
-|   Rannala and Yang (1997),
-|   Bayesian Phylogenetic Inference Using DNA Sequences: A Markov Chain Monte Carlo Approach
-|   Journal of Molecular Biology and Evolution
-|
-|   The formula was corrected by Sebastian Hoehna:
-|
-|                  (s-2)     (s-2)     s-1  
-|   p(t) = [p0(t_1)]     * mu       * prod p1(t_i)
-|                                      i=2
-|   with
-|
-|            f*mu + (b(1.0-f)-mu)e(t)
-|   p0(t) = -------------------------
-|             f*b + (b(1.0-f)-mu)e(t)
-|
-|           1   (        f(b-d)         ) 2
-|   p1(t) = - * (-----------------------)   * e(t)
-|           f   (f*b + (b(1.0-f)-mu)e(t))
-|
-|
-|                  -(b-d)*t
-|   where e(t) = e
-|
-|   This function calculates the probability of a tree under the neutral
-|   birth death prior with constant birth and death rates.
-|   We assume a rooted tree that satisfies the molecular clock constraint. The
-|   Tree is labelled as follows:
-|
-|                                      t_4  
-|     \         \         \        /            
-|      \         \         \      /              
-|       \         \         \    /         
-|        \         \         \  /          
-|         \         \         \/       t_3 
-|          \         \        /            
-|           \         \      /             
-|            \         \    /              
-|             \         \  /               
-|              \         \/            t_2  
-|               \        /                 
-|                \      /                  
-|                 \    /                        
-|                  \  /                         
-|                   \/                 t_1 
-|    
-|
----------------------------------------------------------------------------------*/
-
-int LnBDProbRannala1997 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
-
 {
 
-	int				i, j, nNodes;
-	MrBFlt			rootTime=0.0, *nt;
+	int				i, nTaxa;
+	MrBFlt			*nt, lambda, mu;
 	TreeNode		*p;
 
 	/* allocate space for the scaled speciation times */
@@ -13006,144 +12979,45 @@ int LnBDProbRannala1997 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 		return (ERROR);
 		}
 
-	/* get the node times and put them into a vector */
-	for (i=j=0; i<t->nIntNodes; i++)
+    /* calculate lambda and mu from the net speciation and relative extinction rates */
+    lambda = sR / (1.0 - eR);
+    mu = eR * lambda;
+
+    /* get the node times and put them into a vector */
+	for (i=0; i<t->nIntNodes; i++)
 		{
 		p = t->intDownPass[i];
-		if (p->anc->anc != NULL)
-			nt[j++] = p->nodeDepth;
-		else
-			rootTime = p->nodeDepth;
+		nt[i] = p->nodeDepth / t->clockRate;
 		}
-	nNodes = j;
-
-	// should work without rescaling
-	/* rescale all of the node times on the tree */
-	//for (i=0; i<nNodes; i++)
-	//	nt[i] /= rootTime;
-		
-	// set the time of the root to 1.0 because we are using a scaled tree
-	//rootTime = 1.0;
+    nTaxa = t->nIntNodes + 1;
 							
 	/* calculate probabilities of tree */
 	if (AreDoublesEqual(sR,eR,ETA)==NO)
 		{
-		// birth rate != death rate
-		// d^(s-2) * p0(t_root)^s-2
-		(*prob) = (numLocalTaxa - 2.0) * (log(eR) - LnP0(rootTime, sR, eR, sF));
-		for (i=0; i<nNodes; i++)
-			// p1(t_i)
-			(*prob) += LnP1 (nt[i], sR, eR, sF);
+		// birth rate != death rate, see equation (5) in Gernhard (2009)
+        (*prob) = (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
+        (*prob) += log(nTaxa) + log(lambda-mu) - (lambda-mu)*nt[t->nIntNodes-1];
+        (*prob) -= log(sF*lambda + (lambda*(1.0 - sF) - mu)*exp(-(lambda-mu)*nt[t->nIntNodes-1]));
+		for (i=0; i<t->nIntNodes; i++)
+			(*prob) += sR * LnP1(nt[i], lambda, mu, sF);
 		}
 	else
 		{
-		// birth rate == death rate -> the critical branching process
-		(*prob) = 0.0;
-		for (i=0; i<nNodes; i++)
-			(*prob) += log (1.0 + sF * eR) - (2.0 * log(1.0 + sF * eR * nt[i]));
+		// birth rate == death rate -> the critical branching process, see equation (6) in Gernhard (2009)
+        (*prob) = (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
+        (*prob) += log(nTaxa) + (nTaxa - 1.0) * log(sF*lambda);
+        (*prob) -= log(1.0 + sF*lambda*nt[t->nIntNodes-1]);
+        for (i=0; i<t->nIntNodes; i++)
+            (*prob) -= 2.0 * log(1.0 + sF*lambda*nt[i]);
 		}
 		
 	/* free memory */
 	free (nt);
 	
 	return (NO_ERROR);
-		
 }
 
-/*---------------------------------------------------------------------------------
-|
-|   LnBDProbGernhard2008
-|
-|   See:
-|   Tanja Gernhard (2008)
-|   The conditioned reconstructed process
-|   Journal of Theoretical Biology
-|
-|
-|                (n-1)         (2n-1)           (e(t_1))^2             n-1          e(t_i)
-|   p(t|n) = (f*b)     * [f(b-d)]     * --------------------------- * prod  ------------------------ 2
-|                                        (f*b-(b*(1-f)-d)*e(t_1))^3    i=2   (f*b-(b*(1-f)-d)*e(t_i))
-|
-|
-|                  -(b-d)*t
-|   where e(t) = e
-|
-|   This function calculates the probability of a tree under the neutral
-|   birth death prior with constant birth and death rates.
-|   We assume a rooted tree that satisfies the molecular clock constraint. The
-|   Tree is labelled as follows:
-|
-|                                      t_4  
-|     \         \         \        /            
-|      \         \         \      /              
-|       \         \         \    /         
-|        \         \         \  /          
-|         \         \         \/       t_3 
-|          \         \        /            
-|           \         \      /             
-|            \         \    /              
-|             \         \  /               
-|              \         \/            t_2  
-|               \        /                 
-|                \      /                  
-|                 \    /                        
-|                  \  /                         
-|                   \/                 t_1 
-|    
-|
----------------------------------------------------------------------------------*/
 
-int LnBDProbGernhard2008 (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
-
-{
-
-	int				i, j, nNodes;
-	MrBFlt			rootTime=0.0, *nt;
-	TreeNode		*p;
-
-	/* allocate space for the scaled speciation times */
-	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-	if (!nt)
-		{
-		printf ("\n   ERROR: Problem allocating nt\n");
-		return (ERROR);
-		}
-
-	/* get the node times and put them into a vector */
-	for (i=j=0; i<t->nIntNodes; i++)
-		{
-		p = t->intDownPass[i];
-		if (p->anc->anc != NULL)
-			nt[j++] = p->nodeDepth;
-		else
-			rootTime = p->nodeDepth;
-		}
-	nNodes = j;
-							
-	/* calculate probabilities of tree */
-	if (AreDoublesEqual(sR,eR,ETA)==NO)
-		{
-		// birth rate != death rate
-		// d^(s-2) * p0(t_root)^s-2
-		(*prob) = (numLocalTaxa - 1.0) * log(sF*sR);
-		(*prob) += (2*numLocalTaxa - 1.0) * log(sF*(sR-eR));
-		(*prob) += 2*LnBDGernhardNominator(rootTime, sR, eR, sF) - 3*LnBDGernhardDenominator(rootTime, sR, eR, sF);
-
-		for (i=0; i<nNodes; i++)
-			(*prob) += LnBDGernhardNominator(nt[i], sR, eR, sF) - 2*LnBDGernhardDenominator(nt[i], sR, eR, sF);
-		}
-	else
-		{
-		// birth rate == death rate -> the critical branching process
-		// not implemented yet!!!
-		}
-		
-	/* free memory */
-	free (nt);
-	
-	return (NO_ERROR);
-		
-}
 
 
 
@@ -13445,32 +13319,11 @@ MrBFlt LnUniformPriorPr (Tree *t)
 
 
 
-/*
-|
-| The probability of having one lineage remaining after time t.
-|
-| param: t - speciation time
-| param: b - birth rate
-| param: d - death rate
-| param: f - sample frequency
-| return: log probability of one remaining lineage
-|
-*/
-MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
-
-{
-
-	MrBFlt		p0t;
-	
-	p0t = f*(b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t) );
-	
-	return (log(1.0/f) + 2.0*log(p0t) + (d-b)*t);
-
-}
 
 /*
 |
-| The probability of having zero lineage remaining after time t (going extinct).
+| The probability of having zero lineages remaining after time t in the
+| birth-death process.
 |
 | param: t - speciation time
 | param: b - birth rate
@@ -13491,53 +13344,33 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 
 }
 
+
+
+
+
 /*
 |
-| The nominator of the birth death probability from Gernhard 2008
+| The probability of having one lineage remaining after time t
+| in the birth-death process.
 |
 | param: t - speciation time
 | param: b - birth rate
 | param: d - death rate
 | param: f - sample frequency
-| return: log probability of zero remaining lineage
+| return: log probability of one remaining lineage
 |
 */
-MrBFlt LnBDGernhardNominator (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 
 {
 
 	MrBFlt		p0t;
 	
-	p0t = (d-b)*t;
+	p0t = f*(b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
 	
-	return (p0t);
+	return (log(1.0/f) + 2.0*log(p0t) + (d-b)*t);
 
 }
-
-
-/*
-|
-| The denominator of the birth death probability from Gernhard 2008
-|
-| param: t - speciation time
-| param: b - birth rate
-| param: d - death rate
-| param: f - sample frequency
-| return: log probability of zero remaining lineage
-|
-*/
-MrBFlt LnBDGernhardDenominator (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
-
-{
-
-	MrBFlt		p0t;
-	
-	p0t = (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
-	
-	return (log(p0t));
-
-}
-
 
 
 
@@ -14372,8 +14205,9 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 			}
 		}
 
-    /* update prior ratio */
-    LogClockTreePriorRatio(param, chain, lnPriorRatio);
+    /* calculate prior ratio */
+    if (LogClockTreePriorRatio(param, chain, lnPriorRatio) == ERROR)
+        return (ERROR);
 
     /* adjust prior ratio for root age */
     if (root->calibration->prior == offsetExponential)
@@ -14427,6 +14261,7 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 			}
 		else if (subParm->paramType == P_IBRBRANCHRATES)
 			{
+            /* We leave all effective branch lengths the same */
 			ibrShape = *GetParamVals (m->ibrshape, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
             brlens  = GetParamSubVals (subParm, chain, state[chain]);
@@ -14436,8 +14271,8 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
                 {
                 p = t->allDownPass[j];
                 q = oldTree->allDownPass[j];
-			    (*lnPriorRatio) -= LnProbGamma (q->length/(ibrShape/oldTreeHeight), 1.0/(ibrShape/oldTreeHeight), brlens[q->index]);
-			    (*lnPriorRatio) += LnProbGamma (p->length/(ibrShape/newTreeHeight), 1.0/(ibrShape/newTreeHeight), brlens[p->index]);
+			    (*lnPriorRatio) -= LnProbGamma (q->length/ibrShape, 1.0/ibrShape, brlens[q->index]);
+			    (*lnPriorRatio) += LnProbGamma (p->length/ibrShape, 1.0/ibrShape, brlens[p->index]);
                 }
             for (j=0; j<t->nNodes-2; j++)
                 {
@@ -14480,7 +14315,7 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	/* change tree height using slider */
 
 	int			i;
-	MrBFlt	    treeFactor, delta, minV, maxV, minHeight, maxHeight, newHeight, oldHeight;
+	MrBFlt	    treeFactor, delta, minV, maxV, minHeight, maxHeight, newHeight, oldHeight, *brlens, *ibrRate, ibrshape;
 	TreeNode	*p = NULL;
 	ModelInfo	*m;
 	ModelParams *mp;
@@ -14556,7 +14391,8 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	(*lnProposalRatio) = 0.0;
 
 	/* calculate prior ratio */
-    LogClockTreePriorRatio(param, chain, lnPriorRatio);
+    if (LogClockTreePriorRatio(param, chain, lnPriorRatio) == ERROR)
+        return (ERROR);
 
     /* adjust proposal and prior ratios for relaxed clock models */
 	for (i=0; i<param->nSubParams; i++)
@@ -14586,13 +14422,20 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
             }
 		else if (subParm->paramType == P_IBRBRANCHRATES)
 			{
-			/* no proposal ratio effect [branch rates remain the same] */
-			/* no prior ratio effect [variance of branch rates is scaled to tree height] */
-			/* update effective evolutionary lengths */
-			if (UpdateIbrEvolLengths(subParm, t, chain)==ERROR)
+            /* get relevant parameters */
+            ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
+            ibrRate = GetParamVals (subParm, chain, state[chain]);
+			brlens = GetParamSubVals (subParm, chain, state[chain]);
+
+            /* no proposal ratio effect [effective branch lengths remain the same] */
+
+            /* update branch rates and adjust prior ratio */
+			for (i=0; i<t->nNodes-2; i++)
                 {
-                abortMove = YES;
-                return (NO_ERROR);
+                p = t->allDownPass[i];
+                (*lnPriorRatio) -= LnProbGamma ((p->length/treeFactor)/ibrshape, 1.0/ibrshape, brlens[p->index]);
+                (*lnPriorRatio) += LnProbGamma ((p->length           )/ibrshape, 1.0/ibrshape, brlens[p->index]);
+                ibrRate[p->index] = brlens[p->index] / p->length;
                 }
             }
 		}
@@ -14659,7 +14502,7 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 
 	/* multiply all branch lengths and node depths by this factor */
 	/* set update flags in the process */
-	for (i=0; i<t->nNodes; i++)
+	for (i=0; i<t->nNodes-1; i++)
 		{
 		p = t->allDownPass[i];
 		if (p->anc != NULL)
@@ -14690,7 +14533,8 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 	(*lnProposalRatio) = log(newHeight/oldHeight);
 
 	/* calculate prior ratio */
-	LogClockTreePriorRatio(param, chain, lnPriorRatio);
+	if (LogClockTreePriorRatio(param, chain, lnPriorRatio) == ERROR)
+        return (ERROR);
 	
 	/* adjust proposal and prior ratios for relaxed clock models */
 	for (i=0; i<param->nSubParams; i++)
@@ -14724,7 +14568,6 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
             ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-            ibrshape /= t->root->left->nodeDepth;	/* ibr gamma shape is relative to tree height */
 
             /* no proposal ratio effect [effective branch lengths remain the same] */
 
@@ -14732,7 +14575,7 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 			for (i=0; i<t->nNodes-2; i++)
                 {
                 p = t->allDownPass[i];
-                (*lnPriorRatio) -= LnProbGamma ((p->length/treeFactor)/(ibrshape*treeFactor), 1.0/(ibrshape*treeFactor), brlens[p->index]);
+                (*lnPriorRatio) -= LnProbGamma ((p->length/treeFactor)/ibrshape, 1.0/ibrshape, brlens[p->index]);
                 (*lnPriorRatio) += LnProbGamma ((p->length           )/ibrshape, 1.0/ibrshape, brlens[p->index]);
                 ibrRate[p->index] = brlens[p->index] / p->length;
                 }
@@ -14742,9 +14585,9 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 #if defined (DEBUG_TREEHEIGHT)
 	printf ("Old height -- New height -- lnPriorRatio -- lnProposalRatio\n");
 	printf ("%f -- %f -- %f -- %f\n", oldHeight, newHeight, *lnPriorRatio, *lnProposalRatio);
-    printf ("LnPriorOld %f -- lnpriorNew %f -- diff %lf\n", LogPrior(chain), curLnPr[chain], LogPrior(chain)-curLnPr[chain] - *lnPriorRatio);
-    printf ("oldLnPrior %f -- newLnPrior %f\n", oldLnPrior, newLnPrior);
-    getchar();
+    printf ("LnPriorNew %f -- lnpriorOld %f -- diff %lf\n", LogPrior(chain), curLnPr[chain], LogPrior(chain)-(curLnPr[chain] + *lnPriorRatio));
+    //printf ("oldLnPrior %f -- newLnPrior %f\n", oldLnPrior, newLnPrior);
+    //getchar();
 #endif		
 	return (NO_ERROR);	
 }
@@ -14755,10 +14598,11 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 
-	/* change extinction rate using sliding window */
+	/* change relative extinction rate using sliding window */
 	
-	int			isMPriorExp, isValidM;
-	MrBFlt		oldM, newM, window, minM, maxM, muExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior;
+	int			i, isValidM;
+	MrBFlt		oldM, newM, window, minM, maxM, muExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior,
+                oldProp[2], newProp[2], x, y, *alphaDir;
 	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
@@ -14773,30 +14617,14 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	m = &modelSettings[param->relParts[0]];
 	sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
 	
-	/* get minimum and maximum values for mu */
-	if (param->paramId == EXTRATE_UNI)
-		{
-		minM = mp->extinctionUni[0];
-		if (sR > mp->extinctionUni[1])
-			maxM = mp->extinctionUni[1];
-		else
-			maxM = sR;
-		if (maxM < minM)
-			minM = 0.0;
-		isMPriorExp = NO;
-		}
-	else
-		{
-		minM = 0.0;
-		maxM = sR;
-		muExp = mp->extinctionExp;
-		isMPriorExp = YES;
-		}
+	/* get minimum and maximum values for mu/lambda */
+	minM = 0.0;
+    maxM = 1.0;
 
-	/* get old value of mu */
+	/* get old value of mu/lambda */
 	newM = oldM = *GetParamVals(param, chain, state[chain]);
 
-	/* change value for mu */
+	/* change value for mu/lambda */
 	ran = RandomNumber(seed);
 	newM = oldM + window * (ran - 0.5);
 	
@@ -14812,7 +14640,13 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 			isValidM = YES;
 		} while (isValidM == NO);
 
-	/* get proposal ratio */
+    /* get proportions */
+    oldProp[0] = oldM;
+    oldProp[1] = 1.0 - oldM;
+    newProp[0] = newM;
+    newProp[1] = 1.0 - newM;
+
+    /* get proposal ratio */
 	*lnProposalRatio = 0.0;
 	
 	/* calculate prior ratio */
@@ -14830,106 +14664,16 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
-	if (isMPriorExp == NO)
-		*lnPriorRatio = newLnPrior - oldLnPrior;
-	else
-		*lnPriorRatio = -muExp * (newM - oldM) + (newLnPrior - oldLnPrior);
-	
-	/* copy new mu value back */
-	*GetParamVals(param, chain, state[chain]) = newM;
 
-	return (NO_ERROR);
-
-}
-
-
-
-
-
-int Move_Extinction_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
-{
-
-	/* change extinction rate using multiplier */
-
-	int			isMPriorExp, isValidM;
-	MrBFlt		oldM, newM, minM, maxM, muExp=0.0, ran, tuning, factor, sR, eR, sF, oldLnPrior, newLnPrior;
-	ModelParams *mp;
-	ModelInfo	*m;
-	Tree		*t;
-
-	/* get tuning parameter */
-	tuning = mvp[0];
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
-	
-	/* get speciation rate */
-	m = &modelSettings[param->relParts[0]];
-	sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-	
-	/* get minimum and maximum values for mu */
-	if (param->paramId == EXTRATE_UNI)
-		{
-		minM = mp->extinctionUni[0];
-		if (sR > mp->extinctionUni[1])
-			maxM = mp->extinctionUni[1];
-		else
-			maxM = sR;
-		if (maxM < minM)
-			minM = 0.0;
-		isMPriorExp = NO;
-		}
-	else
-		{
-		minM = 0.0;
-		maxM = sR;
-		muExp = mp->extinctionExp;
-		isMPriorExp = YES;
-		}
-
-	/* get old value of mu */
-	newM = oldM = *GetParamVals(param, chain, state[chain]);
-
-	/* change value for mu */
-	ran = RandomNumber(seed);
-	factor = exp(tuning * (ran - 0.5));
-	newM = oldM * factor;
-	
-	/* check that new value is valid */
-	isValidM = NO;
-	do
-		{
-		if (newM < minM)
-			newM = minM * minM / newM;
-		else if (newM > maxM)
-			newM = maxM * maxM / newM;
-		else
-			isValidM = YES;
-		} while (isValidM == NO);
-
-	/* get proposal ratio */
-	*lnProposalRatio = log (factor);
-	
-	/* calculate prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	sF = mp->sampleProb;
-	eR = oldM;
-	if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-		return (ERROR);
-		}
-	eR = newM;
-	if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-		return (ERROR);
-		}
-	if (isMPriorExp == NO)
-		*lnPriorRatio = newLnPrior - oldLnPrior;
-	else
-		*lnPriorRatio = -muExp * (newM - oldM) + (newLnPrior - oldLnPrior);
+    /* adjust prior ratio according to beta distribution */
+	alphaDir = mp->extinctionBeta;
+    x = y = 0.0;
+	for (i=0; i<2; i++)
+		x += (alphaDir[i]-1.0)*log(newProp[i]);
+	for (i=0; i<2; i++)
+		y += (alphaDir[i]-1.0)*log(oldProp[i]);
+	(*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;
+		
 	
 	/* copy new mu value back */
 	*GetParamVals(param, chain, state[chain]) = newM;
@@ -16611,19 +16355,21 @@ int Move_ExtSPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
             ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-            ibrshape /= t->root->left->nodeDepth;	/* ibr gamma shape is relative to tree height */
 
             /* no proposal ratio effect or dealt with below, record value here */
             origBrlenProp = brlens[u->index] / (brlens[a->index] + brlens[u->index]);
 
-             /* adjust prior ratio */
+             /* adjust prior ratio for old branches */
             (*lnPriorRatio) -= LnProbGamma(a->length/ibrshape, 1.0/ibrshape, brlens[a->index]);
 			(*lnPriorRatio) -= LnProbGamma(v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
 			(*lnPriorRatio) -= LnProbGamma(u->length/ibrshape, 1.0/ibrshape, brlens[u->index]);
-			(*lnPriorRatio) += LnProbGamma((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
 
             /* adjust effective branch lengths and rates */
-            ibrRate[a->index] = brlens[a->index] / (a->length + u->length);
+            brlens[a->index] += brlens[u->index];
+            ibrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
+    
+            /* adjust prior ratio for new branch lengths */
+			(*lnPriorRatio) += LnProbGamma((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
             }
 		}	/* next subparameter */
 
@@ -16744,8 +16490,8 @@ int Move_ExtSPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 	v4 = a->length;
 	v5 = u->length;
 
-	/* calculate clock tree prior ratio */
-	if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
+	/* adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
         return (ERROR);
     (*lnPriorRatio) += x;
 
@@ -16841,35 +16587,33 @@ int Move_ExtSPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 			{
             /* get relevant parameters */
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
-			ibrshape /= t->root->left->nodeDepth;		/* shape measured relative to tree height */
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
-            /* adjust effective branch lengths and rates */
-            ibrRate[v->index] = brlens[v->index] / v->length;
-            ibrRate[u->index] = brlens[u->index] / u->length;
-            ibrRate[a->index] = brlens[a->index] / a->length;
+            /* adjust prior ratio for old branch length */
+			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
 
-            /*
-			brlens [v->index] = brlens[v->index] + brlens[u->index];
+            /* adjust effective branch lengths and rates */
+			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
             brlens [u->index] = brlens[a->index] * y;
             brlens [a->index] = brlens[a->index] * (1.0 - y);
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
-            */
+            if (brlens[u->index] < minV || brlens[a->index] < minV)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
 
-            /* adjust prior ratio */
-			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
+            /* adjust prior ratio for new branch lengths */
 			(*lnPriorRatio) += LnProbGamma (a->length/ibrshape, 1.0/ibrshape, brlens[a->index]);
 			(*lnPriorRatio) += LnProbGamma (v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrshape, 1.0/ibrshape, brlens[u->index]);
 
             /* adjust proposal ratio */
-            /*
-            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])*(1.0 + brlens[oldA->index]*origBrlenProp)/(brlens[oldA->index]*brlens[oldA->index]));
-            */
-
+            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])*(1.0 + brlens[oldA->index]*origBrlenProp));
+            (*lnProposalRatio) -= log (brlens[oldA->index]*brlens[oldA->index]);
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
 
@@ -17610,7 +17354,6 @@ int Move_ExtSSClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
         else if (subParm->paramType == P_IBRBRANCHRATES)
             {
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
-			ibrshape /= t->root->left->nodeDepth;	/* ibr gamma shape is relative to tree height */
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			(*lnPriorRatio) -= LnProbScaledGamma(ibrshape*a->length, ibrRate[a->index]);
 			(*lnPriorRatio) -= LnProbScaledGamma(ibrshape*v->length, ibrRate[v->index]);
@@ -17735,7 +17478,7 @@ int Move_ExtSSClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	v4 = a->length;
 	v5 = u->length;
 
-	/* calculate clock tree prior ratio */
+	/* adjust prior ratio for clock tree */
 	if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
         return (ERROR);
     (*lnPriorRatio) += x;
@@ -17832,7 +17575,6 @@ int Move_ExtSSClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 			{
             /* get relevant parameters */
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
-			ibrshape /= t->root->left->nodeDepth;		/* shape measured relative to tree height */
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
@@ -20865,7 +20607,7 @@ int Move_IbrBranchRate (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
 	maxB = BRLENS_MAX;
 	
 	/* randomly pick a rate */
-	i = (int) (RandomNumber(seed) * (2*numLocalTaxa - 2));
+	i = (int) (RandomNumber(seed) * (t->nNodes - 2));
 	p = t->allDownPass[i];
 
 	/* find new effective branch length */
@@ -20887,7 +20629,6 @@ int Move_IbrBranchRate (Param *param, int chain, safeLong *seed, MrBFlt *lnPrior
 
     /* calculate prior ratio */
     ibrshape = *GetParamVals (m->ibrshape, chain, state[chain]);
-    ibrshape /= t->root->left->nodeDepth;     /* shape is relative to tree height */
     (*lnPriorRatio) -= LnProbGamma (p->length/ibrshape, 1.0/ibrshape, oldBrlen);
     (*lnPriorRatio) += LnProbGamma (p->length/ibrshape, 1.0/ibrshape, newBrlen);
 
@@ -21802,8 +21543,9 @@ int Move_LocalClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 			}
 		}
 
-    /* calculate prior ratio for clock tree */
-    LogClockTreePriorRatio (param, chain, &x);
+    /* calculate and adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
+        return (ERROR);
     (*lnPriorRatio) += x;
 	
 #	if defined (DEBUG_LOCAL)
@@ -22743,8 +22485,7 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	/* Change clock tree using NNI move */
 	
 	int		    i, topologyHasChanged, *nEvents;
-	MrBFlt		oldLnPrior, newLnPrior,
-			    theta=0.0, growth=0.0, sR=0.0, eR=0.0, sF=0.0, minV, maxV, lambda, *bmRate=NULL,
+	MrBFlt		x, theta=0.0, growth=0.0, sR=0.0, eR=0.0, sF=0.0, minV, maxV, lambda, *bmRate=NULL,
 				*brlens, *ibrRate=NULL, ibrshape=0.0, nu=0.0, oldALength, oldBLength,
                 oldCLength, oldVLength, minDepth, maxDepth, newDepth, tuning, oldDepth;
 	TreeNode	*p, *a, *b, *c, *u, *v;
@@ -22799,42 +22540,6 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	getchar();
 #	endif
 	
-	/* calculate prior ratio (part 1/2) */
-	/* tree height is not changed */
-	if (!strcmp(mp->clockPr,"Coalescence"))
-		{
-		/* coalescence prior */
-		m = &modelSettings[param->relParts[0]];
-		theta = *(GetParamVals (m->theta, chain, state[chain]));
-		if (!strcmp(mp->growthPr, "Fixed"))
-			growth = mp->growthFix;
-		else
-			growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-		if (LnCoalescencePriorPr (t, &oldLnPrior, theta, growth) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
-			return ERROR;
-			}
-		}
-	else if (!strcmp(mp->clockPr,"Birthdeath"))
-		{
-		/* birth-death prior */
-		m = &modelSettings[param->relParts[0]];
-		sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-		eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
-		sF = mp->sampleProb;
-		if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-			return ERROR;
-			}
-		}
-    else /* if (!strcmp(mp->clockPr,"Uniform")) */
-        {
-        if (t->isCalibrated == YES)
-            oldLnPrior = LnUniformPriorPr(t);
-        }
-
 	/* pick an interior branch */
 	do
 		{
@@ -22962,6 +22667,12 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 		return (NO_ERROR);
 		}
 
+    /* calculate and adjust prior ratio for clock trees */
+    x = 0.0;
+    if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
+        return (ERROR);
+    (*lnPriorRatio) += x;
+
 	/* adjust proposal and prior ratio for relaxed clock models */
 	for (i=0; i<param->subParams[0]->nSubParams; i++)
 		{
@@ -23039,7 +22750,6 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
             ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-            ibrshape /= t->root->left->nodeDepth;	/* ibr gamma shape is relative to tree height */
 
             /* adjust for prior (part 1) */
             if (topologyHasChanged == YES)
@@ -23094,73 +22804,8 @@ int Move_NNIClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
                 (*lnPriorRatio) += LnProbGamma (b->length/ibrshape, 1.0/ibrshape, brlens[b->index]);
                 (*lnPriorRatio) += LnProbGamma (v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
                 }
-
-            /* adjust branch rates keeping effective branch lengths the same */
-            /*
-			if (topologyHasChanged == YES)
-                {
-                ibrRate[a->index] = brlens[a->index] / a->length;
-                ibrRate[c->index] = brlens[c->index] / c->length;
-                }
-            else
-                {
-                ibrRate[a->index] = brlens[a->index] / a->length;
-                ibrRate[b->index] = brlens[b->index] / b->length;
-                ibrRate[v->index] = brlens[v->index] / v->length;
-                }
-            */
-
-			/* no proposal ratio effect (effective branch lengths are the same) */
-
-			/* adjust for prior ratio effect */
-			/*
-            if (topologyHasChanged == YES)
-                {
-                (*lnPriorRatio) -= LnProbGamma (oldALength/ibrshape, 1.0/ibrshape, brlens[a->index]);
-                (*lnPriorRatio) -= LnProbGamma (oldCLength/ibrshape, 1.0/ibrshape, brlens[c->index]);
-                (*lnPriorRatio) += LnProbGamma (a->length/ibrshape , 1.0/ibrshape, brlens[a->index]);
-                (*lnPriorRatio) += LnProbGamma (c->length/ibrshape , 1.0/ibrshape, brlens[c->index]);
-                }
-            else
-                {
-                (*lnPriorRatio) -= LnProbGamma (oldALength/ibrshape, 1.0/ibrshape, brlens[a->index]);
-                (*lnPriorRatio) -= LnProbGamma (oldBLength/ibrshape, 1.0/ibrshape, brlens[b->index]);
-                (*lnPriorRatio) -= LnProbGamma (oldVLength/ibrshape, 1.0/ibrshape, brlens[v->index]);
-                (*lnPriorRatio) += LnProbGamma (a->length/ibrshape , 1.0/ibrshape, brlens[a->index]);
-                (*lnPriorRatio) += LnProbGamma (b->length/ibrshape , 1.0/ibrshape, brlens[b->index]);
-                (*lnPriorRatio) += LnProbGamma (v->length/ibrshape , 1.0/ibrshape, brlens[v->index]);
-                }
-            */
             }
 		}
-
-
-    /* calculate prior ratio (part 2/2) */
-	if (!strcmp(mp->clockPr,"Coalescence"))
-		{
-		/* coalescence prior */
-		if (LnCoalescencePriorPr (t, &newLnPrior, theta, growth) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
-			return ERROR;
-			}
-		(*lnPriorRatio) += newLnPrior - oldLnPrior;
-		}
-	else if (!strcmp(mp->clockPr,"Birthdeath"))
-		{
-		/* birth-death prior */
-		if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-			return ERROR;
-			}
-		(*lnPriorRatio) += newLnPrior - oldLnPrior;
-		}
-    else /* if (!strcmp(mp->clockPr,"Uniform")) */
-        {
-        if (t->isCalibrated == YES)
-            (*lnPriorRatio) += LnUniformPriorPr(t) - oldLnPrior;
-        }
 	
 #	if defined (DEBUG_NNIClock)
 	printf ("After:\n");
@@ -23514,7 +23159,7 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 {
 	int			i, *nEvents;
 	MrBFlt	    window, minV, minDepth, maxDepth, oldDepth, newDepth,
-				oldLeftLength=0.0, oldRightLength=0.0,
+				oldLeftLength=0.0, oldRightLength=0.0, x,
 				oldPLength=0.0, lambda=0.0, nu=0.0, ibrshape=0.0, *brlens=NULL, *bmRate=NULL, *ibrRate=NULL;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
@@ -23670,9 +23315,10 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 	/* calculate proposal ratio */
 	(*lnProposalRatio) = 0.0;
 
-    /* calculate prior ratio for clock tree */
-    if (LogClockTreePriorRatio (param, chain, lnPriorRatio) == ERROR)
+    /* calculate and adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
         return (ERROR);
+    (*lnPriorRatio) += x;
 
     /* adjust proposal and prior ratio for relaxed clock models */
 	for (i=0; i<param->nSubParams; i++)
@@ -23732,7 +23378,6 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 		else if (subParm->paramType == P_IBRBRANCHRATES)
 			{
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
-			ibrshape /= t->root->left->nodeDepth;		/* shape measured relative to tree height */
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			
@@ -23769,32 +23414,6 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 			    (*lnPriorRatio) += LnProbGamma (p->right->length/ibrshape, 1.0/ibrshape, brlens[p->right->index]);
                 }
 			(*lnPriorRatio) += LnProbGamma (p->length /ibrshape, 1.0/ibrshape, brlens[p->index]);
-            
-
-            /* no proposal ratio effect (branch lengths are the same and we slide node position linearly) */
-            
-            /* prior ratio */
-            /*
-            if (p->left != NULL)
-                {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /ibrshape, 1.0/ibrshape, ibrRate[p->left->index ]*oldLeftLength);
-			    (*lnPriorRatio) -= LnProbGamma (oldRightLength  /ibrshape, 1.0/ibrshape, ibrRate[p->right->index]*oldRightLength);
-                (*lnPriorRatio) += LnProbGamma (p->left->length /ibrshape, 1.0/ibrshape, ibrRate[p->left->index ]*oldLeftLength);
-			    (*lnPriorRatio) += LnProbGamma (p->right->length/ibrshape, 1.0/ibrshape, ibrRate[p->right->index]*oldRightLength);
-                }
-			(*lnPriorRatio) -= LnProbGamma (oldPLength/ibrshape, 1.0/ibrshape, ibrRate[p->index]*oldPLength);
-			(*lnPriorRatio) += LnProbGamma (p->length /ibrshape, 1.0/ibrshape, ibrRate[p->index]*oldPLength);
-            */
-
-            /* update branch rates (we leave effective branch lengths the same, hence no proposal ratio effect) */
-            /*
-            if (p->left != NULL)
-                {
-                ibrRate[p->left->index ] = ibrRate[p->left->index ] * oldLeftLength  / p->left->length;
-                ibrRate[p->right->index] = ibrRate[p->right->index] * oldRightLength / p->right->length;
-                }
-			ibrRate[p->index] = ibrRate[p->index] * oldPLength / p->length;
-            */
             }
 		}
 
@@ -25925,8 +25544,9 @@ int Move_ParsSPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 		(*lnProposalRatio) += log (newBrlen / oldBrlen);
 		}
 
-	/* calculate prior ratio for clock tree */
-    LogClockTreePriorRatio (param, chain, &x);
+	/* calculate and adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
+        return (ERROR);
     (*lnPriorRatio) += x;
 	
 #	if defined (DEBUG_ParsSPRClock)
@@ -28861,29 +28481,25 @@ int Move_Speciation (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	m = &modelSettings[param->relParts[0]];
 	eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 	
-	/* get minimum and maximum values for lambda */
-	if (param->paramId == SPECRATE_UNI)
+	/* get minimum and maximum values for lambda - mu */
+    if (param->paramId == SPECRATE_UNI)
 		{
-		if (mp->speciationUni[0] < eR)
-			minL = eR;
-		else
-			minL = mp->speciationUni[0];
 		minL = mp->speciationUni[0];
 		maxL = mp->speciationUni[1];
 		isLPriorExp = NO;
 		}
 	else
 		{
-		minL = eR;
+		minL = 0.0;
 		maxL = KAPPA_MAX;
 		lambdaExp = mp->speciationExp;
 		isLPriorExp = YES;
 		}
 
-	/* get old value of lambda */
+	/* get old value of lambda - mu */
 	newL = oldL = *GetParamVals(param, chain, state[chain]);
 
-	/* change value for lambda */
+	/* change value for lambda - mu */
 	ran = RandomNumber(seed);
 	newL = oldL + window * (ran - 0.5);
 	
@@ -28922,7 +28538,7 @@ int Move_Speciation (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	else
 		*lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
 	
-	/* copy new lambda value back */
+	/* copy new lambda - mu value back */
 	*GetParamVals(param, chain, state[chain]) = newL;
 
 	return (NO_ERROR);
@@ -28956,29 +28572,25 @@ int Move_Speciation_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	m = &modelSettings[param->relParts[0]];
 	eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 	
-	/* get minimum and maximum values for lambda */
-	if (param->paramId == SPECRATE_UNI)
+	/* get minimum and maximum values for lambda - mu */
+    if (param->paramId == SPECRATE_UNI)
 		{
-		if (mp->speciationUni[0] < eR)
-			minL = eR;
-		else
-			minL = mp->speciationUni[0];
 		minL = mp->speciationUni[0];
 		maxL = mp->speciationUni[1];
 		isLPriorExp = NO;
 		}
 	else
 		{
-		minL = eR;
+		minL = 0.0;
 		maxL = KAPPA_MAX;
 		lambdaExp = mp->speciationExp;
 		isLPriorExp = YES;
 		}
 
-	/* get old value of lambda */
+	/* get old value of lambda - mu */
 	newL = oldL = *GetParamVals(param, chain, state[chain]);
 
-	/* change value for lambda */
+	/* change value for lambda - mu */
 	ran = RandomNumber(seed);
 	factor = exp(tuning * (ran - 0.5));
 	newL = oldL * factor;
@@ -29018,12 +28630,13 @@ int Move_Speciation_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	else
 		*lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
 	
-	/* copy new lambda value back */
+	/* copy new lambda - mu value back */
 	*GetParamVals(param, chain, state[chain]) = newL;
 
 	return (NO_ERROR);
 	
 }
+
 
 
 
@@ -29044,12 +28657,11 @@ int Move_SPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	int				i, stopLoop, topologyHasChanged, direction=0, nTipsOnSideA=0, nTipsOnSideB=0, whichTip, tempI, isPathTerminusRoot=0;
 	MrBFlt			attachmentRate, lnProbForward, lnProbReverse, dist=0.0, pathLength=0.0, pathLengthA=0.0, pathLengthB=0.0,
 					oldAttachmentDepth=0.0, newAttachmentDepth=0.0, newD, oldD, oldCeiling=0.0, newCeiling=0.0, alphaPi, x, y, sum, len, baseOfPath=0.0,
-					newLnPrior, oldLnPrior, sR=0.0, eR=0.0, sF=0.0, theta=0.0, growth=0.0, dirichletParameters[2], oldProportions[2], newProportions[2],
+					sR=0.0, eR=0.0, sF=0.0, theta=0.0, growth=0.0, dirichletParameters[2], oldProportions[2], newProportions[2],
 					newPathLengthA, newPathLengthB;
 	TreeNode		*p, *q, *nodeToMove=NULL, *nodeToDetach=NULL, *oldAttachmentNode=NULL, *newAttachmentNode=NULL, *pathEndA=NULL, *pathEndB=NULL;
 	Tree			*t;
 	ModelParams 	*mp;
-	ModelInfo		*m;
 	
 	/* Parameters used in this move. */
 	alphaPi = mvp[0];              /* Dirichlet parameter.                           */
@@ -29073,55 +28685,8 @@ int Move_SPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
-			
-	/* calculate prior ratio (part 1/2) */
-	if (!strcmp(mp->clockPr,"Uniform"))
-		{
-		/* uniformly distributed branch lengths */
-		if (!strcmp(mp->treeHeightPr, "Exponential"))
-			oldLnPrior = log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-		else
-			oldLnPrior = mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
-		}
-	else if (!strcmp(mp->clockPr,"Coalescence"))
-		{
-		/* coalescence prior */
-		m = &modelSettings[param->relParts[0]];
-		theta = *(GetParamVals (m->theta, chain, state[chain]));
-		if (!strcmp(mp->growthPr, "Fixed"))
-			growth = mp->growthFix;
-		else
-			growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-		if (LnCoalescencePriorPr (t, &oldLnPrior, theta, growth) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
-			goto errorExit;
-			}
-		}
-	else if (!strcmp(mp->clockPr,"Birthdeath"))
-		{
-		/* birth-death prior */
-		m = &modelSettings[param->relParts[0]];
-		sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-		eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
-		sF = mp->sampleProb;
-		if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-			goto errorExit;
-			}
-		if (!strcmp(mp->treeHeightPr, "Exponential"))
-			oldLnPrior += log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-		else
-			oldLnPrior += mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
-		}
-    else /* if (!strcmp(mp->clockPr,"Uniform")) */
-        {
-        if (t->isCalibrated == YES)
-            oldLnPrior = LnUniformPriorPr(t);
-        }
 
-	/* Pick a branch to move and get pointers to nodes in area of rearrangement. */
+    /* Pick a branch to move and get pointers to nodes in area of rearrangement. */
 	stopLoop = NO;
 	do
 		{
@@ -29598,46 +29163,9 @@ int Move_SPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 		p = p->anc;
 		}
 
-	/* calculate prior ratio (part 2/2) */
-	if (!strcmp(mp->clockPr,"Uniform"))
-		{
-		/* uniformly distributed branch lengths */
-		if (!strcmp(mp->treeHeightPr, "Exponential"))
-			newLnPrior = log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-		else
-			newLnPrior = mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
-		(*lnPriorRatio) = newLnPrior - oldLnPrior;
-		}
-	else if (!strcmp(mp->clockPr,"Coalescence"))
-		{
-		/* coalescence prior */
-		if (LnCoalescencePriorPr (t, &newLnPrior, theta, growth) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
-			goto errorExit;
-			}
-		(*lnPriorRatio) = newLnPrior - oldLnPrior;
-		}
-	else if (!strcmp(mp->clockPr,"Birthdeath"))
-		{
-		/* birth-death prior */
-		if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
-			{
-			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-			goto errorExit;
-			}
-		if (!strcmp(mp->treeHeightPr, "Exponential"))
-			newLnPrior += log(mp->treeHeightExp) - mp->treeHeightExp * t->root->left->nodeDepth;
-		else
-			newLnPrior += mp->treeHeightGamma[1] * log(mp->treeHeightGamma[0]) - LnGamma(mp->treeHeightGamma[1]) + (mp->treeHeightGamma[1] - 1.0) * log(t->root->left->nodeDepth) - mp->treeHeightGamma[0] * t->root->left->nodeDepth;
-		(*lnPriorRatio) = newLnPrior - oldLnPrior;
-		}
-    else /* if (!strcmp(mp->clockPr,"Uniform")) */
-        {
-        if (t->isCalibrated == YES)
-            (*lnPriorRatio) += LnUniformPriorPr(t) - oldLnPrior;
-        }
-
+	/* calculate prior ratio for clock trees */
+	if (LogClockTreePriorRatio (param, chain, lnPriorRatio) == ERROR)
+        return (ERROR);
 
 #	if defined (DEBUG_SPRCLOCK)
 	printf ("After:\n");

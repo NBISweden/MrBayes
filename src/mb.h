@@ -620,8 +620,7 @@ typedef struct param
 #define SPECRATE_UNI					60
 #define SPECRATE_EXP					61
 #define SPECRATE_FIX					62
-#define EXTRATE_UNI						63
-#define EXTRATE_EXP						64
+#define EXTRATE_BETA					63
 #define EXTRATE_FIX						65
 #define THETA_UNI						66
 #define THETA_EXP						67
@@ -891,14 +890,13 @@ typedef struct model
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
 	char		clockRatePr[100];     /* prior on clock rate (strict, cpp, mb(rateautocorr))   */
 	char		nodeAgePr[100];     /* prior on node depths (unconstrained, constraints) */
-	char		speciationPr[100];    /* prior on speciation rate                          */
+	char		speciationPr[100];    /* prior on net speciation rate                 */
 	MrBFlt		speciationFix;
 	MrBFlt		speciationUni[2];
 	MrBFlt		speciationExp;
 	char		extinctionPr[100];    /* prior on extinction rate                     */
 	MrBFlt		extinctionFix;
-	MrBFlt		extinctionUni[2];
-	MrBFlt		extinctionExp;
+	MrBFlt		extinctionBeta[2];
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
 	char		treeHeightPr[100];    /* prior on tree height for clock models        */
 	MrBFlt		treeHeightGamma[2];

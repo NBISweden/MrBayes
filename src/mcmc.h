@@ -18,7 +18,6 @@ int	    Move_CPPPsiGammaAlpha (Param *param, int chain, safeLong *seed, MrBFlt *
 int	    Move_CPPRateMultiplierMult (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int	    Move_CPPRateMultiplierRnd (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
-int     Move_Extinction_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_ExtSPR1 (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_ExtSPR2 (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_ExtSPRClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);

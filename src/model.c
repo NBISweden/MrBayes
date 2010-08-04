@@ -5736,39 +5736,34 @@ int DoPrsetParm (char *parmName, char *tkn)
 					{
 					if (activeParts[i] == YES || nApplied == 0)
 						{
-						if (!strcmp(modelParams[i].extinctionPr,"Uniform"))
+						if (!strcmp(modelParams[i].extinctionPr,"Beta"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].extinctionUni[numVars[i]++] = tempD;
+                            if (tempD <= 0.0)
+                                {
+								MrBayesPrint ("%s   Beta parameter must be positive\n", spacer);
+								return (ERROR);
+                                }
+							modelParams[i].extinctionBeta[numVars[i]++] = tempD;
 							if (numVars[i] == 1)
 								expecting  = Expecting(COMMA);
 							else
 								{
-								if (modelParams[i].extinctionUni[0] >= modelParams[i].extinctionUni[1])
-									{
-									MrBayesPrint ("%s   Lower value for uniform should be greater than upper value\n", spacer);
-									return (ERROR);
-									}
 								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Extinctionpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].extinctionUni[0], modelParams[i].extinctionUni[1]);
+									MrBayesPrint ("%s   Setting Extinctionpr to Beta(%1.2lf,%1.2lf)\n", spacer, modelParams[i].extinctionBeta[0], modelParams[i].extinctionBeta[1]);
 								else
-									MrBayesPrint ("%s   Setting Extinctionpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].extinctionUni[0], modelParams[i].extinctionUni[1], i+1);
+									MrBayesPrint ("%s   Setting Extinctionpr to Beta(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].extinctionBeta[0], modelParams[i].extinctionBeta[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
-							}
-						else if (!strcmp(modelParams[i].extinctionPr,"Exponential"))
-							{
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].extinctionExp = tempD;
-							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Extinctionpr to Exponential(%1.2lf)\n", spacer, modelParams[i].extinctionExp);
-							else
-								MrBayesPrint ("%s   Setting Extinctionpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].extinctionExp, i+1);
-							expecting  = Expecting(RIGHTPAR);
 							}
 						else if (!strcmp(modelParams[i].extinctionPr,"Fixed"))
 							{
 							sscanf (tkn, "%lf", &tempD);
+                            if (tempD < 0.0 || tempD > 1.0)
+                                {
+								MrBayesPrint ("%s   Relative extinction rate must be in the range [0,1]\n", spacer);
+								return (ERROR);
+                                }
 							modelParams[i].extinctionFix = tempD;
 							if (nApplied == 0 && numCurrentDivisions == 1)
 								MrBayesPrint ("%s   Setting Extinctionpr to Fixed(%1.2lf)\n", spacer, modelParams[i].extinctionFix);
@@ -10828,16 +10823,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						else
 							isSame = NO;
 
-						if (!strcmp(modelParams[part1].extinctionPr,"Uniform") && !strcmp(modelParams[part2].extinctionPr,"Uniform"))
+						if (!strcmp(modelParams[part1].extinctionPr,"Beta") && !strcmp(modelParams[part2].extinctionPr,"Beta"))
 							{
-							if (AreDoublesEqual (modelParams[part1].extinctionUni[0], modelParams[part2].extinctionUni[0], (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].extinctionBeta[0], modelParams[part2].extinctionBeta[0], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
-							if (AreDoublesEqual (modelParams[part1].extinctionUni[1], modelParams[part2].extinctionUni[1], (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
-						else if (!strcmp(modelParams[part1].extinctionPr,"Exponential") && !strcmp(modelParams[part2].extinctionPr,"Exponential"))
-							{
-							if (AreDoublesEqual (modelParams[part1].extinctionExp, modelParams[part2].extinctionExp, (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].extinctionBeta[1], modelParams[part2].extinctionBeta[1], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
 						else if (!strcmp(modelParams[part1].extinctionPr,"Fixed") && !strcmp(modelParams[part2].extinctionPr,"Fixed"))
@@ -11002,16 +10992,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on the extinction rates are the same. */
-		if (!strcmp(modelParams[part1].extinctionPr,"Uniform") && !strcmp(modelParams[part2].extinctionPr,"Uniform"))
+		if (!strcmp(modelParams[part1].extinctionPr,"Beta") && !strcmp(modelParams[part2].extinctionPr,"Beta"))
 			{
-			if (AreDoublesEqual (modelParams[part1].extinctionUni[0], modelParams[part2].extinctionUni[0], (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].extinctionBeta[0], modelParams[part2].extinctionBeta[0], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
-			if (AreDoublesEqual (modelParams[part1].extinctionUni[1], modelParams[part2].extinctionUni[1], (MrBFlt) 0.00001) == NO)
-				isSame = NO;
-			}
-		else if (!strcmp(modelParams[part1].extinctionPr,"Exponential") && !strcmp(modelParams[part2].extinctionPr,"Exponential"))
-			{
-			if (AreDoublesEqual (modelParams[part1].extinctionExp, modelParams[part2].extinctionExp, (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].extinctionBeta[1], modelParams[part2].extinctionBeta[1], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
 			}
 		else if (!strcmp(modelParams[part1].extinctionPr,"Fixed") && !strcmp(modelParams[part2].extinctionPr,"Fixed"))
@@ -14566,7 +14551,7 @@ int SetModelParams (void)
 					modelSettings[i].speciationRates = p;
 
             p->paramTypeName = "Speciation rate";
-			strcpy (p->name, "Lambda");
+			strcpy (p->name, "Lambda-mu");
 			strcat (p->name, partString);
 
 			/* find the parameter x prior type */
@@ -14579,7 +14564,7 @@ int SetModelParams (void)
 
 			if (p->paramId != SPECRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "lambda");
+			SafeStrcat (&p->paramHeader, "lambda-mu");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_EXTRATE)
@@ -14595,20 +14580,18 @@ int SetModelParams (void)
 					modelSettings[i].extinctionRates = p;
 
             p->paramTypeName = "Extinction rate";
-			strcpy (p->name, "Mu");
+			strcpy (p->name, "Mu/lambda");
 			strcat (p->name, partString);
 
 			/* find the parameter x prior type */
-			if (!strcmp(mp->extinctionPr,"Uniform"))
-				p->paramId = EXTRATE_UNI;
-			else if (!strcmp(mp->speciationPr,"Exponential"))
-				p->paramId = EXTRATE_EXP;
+			if (!strcmp(mp->extinctionPr,"Beta"))
+				p->paramId = EXTRATE_BETA;
 			else
 				p->paramId = EXTRATE_FIX;
 
 			if (p->paramId != EXTRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "mu");
+			SafeStrcat (&p->paramHeader, "mu/lambda");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_THETA)
@@ -15508,9 +15491,8 @@ void SetUpMoveTypes (void)
 	mt->shortName = "Slider";
 	mt->tuningName[0] = "Sliding window size";
 	mt->shortTuningName[0] = "delta";
-	mt->applicableTo[0] = EXTRATE_UNI;
-	mt->applicableTo[1] = EXTRATE_EXP;
-	mt->nApplicable = 2;
+	mt->applicableTo[0] = EXTRATE_BETA;
+	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Extinction;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
@@ -15520,26 +15502,6 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
-    mt->targetRate = 0.25;
-
-	/* Move_Extinction_M */
-	mt = &moveTypes[i++];
-	mt->name = "Multiplier";
-	mt->shortName = "Multiplier";
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
-	mt->applicableTo[0] = EXTRATE_UNI;
-	mt->applicableTo[1] = EXTRATE_EXP;
-	mt->nApplicable = 2;
-	mt->moveFxn = &Move_Extinction_M;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
 	/* Move_ExtSPR -- originally version 2 */
@@ -16477,7 +16439,7 @@ void SetUpMoveTypes (void)
     mt->targetRate = 0.25;
 
 	/* Move_SPRClock */
-	/* not correctly balanced yet */
+	/* not correctly balanced yet !! */
 	mt = &moveTypes[i++];
 	mt->name = "Clock-constrained SPR";
 	mt->shortName = "cSPR";
@@ -18261,10 +18223,8 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 		else if (j == P_EXTRATE)
 			{
-			if (!strcmp(mp->extinctionPr,"Uniform"))
-				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->extinctionUni[0], mp->extinctionUni[1]);
-			else if (!strcmp(mp->extinctionPr,"Exponential"))
-				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->extinctionExp);
+			if (!strcmp(mp->extinctionPr,"Beta"))
+				MrBayesPrint ("%s            Prior      = Beta(%1.2lf,%1.2lf)\n", spacer, mp->extinctionBeta[0], mp->extinctionBeta[1]);
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->extinctionFix);
 			}

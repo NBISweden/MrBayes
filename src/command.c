@@ -9489,8 +9489,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    insures that the prior probability distribution for          \n");
 		MrBayesPrint ("                    unconstrained and birth-death models is proper. The default  \n");
 		MrBayesPrint ("                    is exponential(1).                                           \n");
-		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the speciation rate. The    \n");
-		MrBayesPrint ("                    options are:                                                 \n");
+		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
+        MrBayesPrint ("                    that is, lambda - mu in the birth-death model. Options are:  \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset speciationpr = uniform(<number>,<number>)           \n");
 		MrBayesPrint ("                       prset speciationpr = exponential(<number>)                \n");
@@ -9498,11 +9498,11 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
-		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the extinction rate. The    \n");
-		MrBayesPrint ("                    options are:                                                 \n");
+		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the relative extinction     \n");
+		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; values  \n");
+        MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset extinctionpr = uniform(<number>,<number>)           \n");
-		MrBayesPrint ("                       prset extinctionpr = exponential(<number>)                \n");
+		MrBayesPrint ("                       prset extinctionpr = beta(<number>,<number>)              \n");
 		MrBayesPrint ("                       prset extinctionpr = fixed(<number>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
@@ -9894,11 +9894,9 @@ int GetUserHelp (char *helpTkn)
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->speciationFix);
 			
-			MrBayesPrint ("   Extinctionpr     Uniform/Exponential/Fixed    %s", mp->extinctionPr);
-			if (!strcmp(mp->extinctionPr, "Uniform"))
-				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->extinctionUni[0], mp->extinctionUni[1]);
-			else if (!strcmp(mp->extinctionPr, "Exponential"))
-				MrBayesPrint ("(%1.1lf)\n", mp->extinctionExp);
+			MrBayesPrint ("   Extinctionpr     Beta/Fixed                   %s", mp->extinctionPr);
+			if (!strcmp(mp->extinctionPr, "Beta"))
+				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->extinctionBeta[0], mp->extinctionBeta[1]);
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
@@ -12582,7 +12580,7 @@ void SetUpParms (void)
 	PARAM   ( 67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|\0");
 	PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
 	PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-	PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+	PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
 	PARAM   ( 71, "Thetapr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 72, "Topology",       DoLinkParm,        "\0");
 	PARAM   ( 73, "Brlens",         DoLinkParm,        "\0");

@@ -689,16 +689,15 @@ int InitializeMrBayes (void)
 	defaultModel.treeHeightGamma[1] = 1.0;
 	defaultModel.treeHeightExp = 1.0;
 	defaultModel.treeHeightFix = 1.0;
-	strcpy(defaultModel.speciationPr, "Uniform");   /* prior on speciation rate                     */
+	strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate                     */
 	defaultModel.speciationFix = 1.0;
 	defaultModel.speciationUni[0] = 0.0;
 	defaultModel.speciationUni[1] = 10.0;
 	defaultModel.speciationExp = 1.0;
-	strcpy(defaultModel.extinctionPr, "Uniform");   /* prior on extinction rate                     */
+	strcpy(defaultModel.extinctionPr, "Beta");      /* prior on extinction rate                     */
 	defaultModel.extinctionFix = 1.0;
-	defaultModel.extinctionUni[0] = 0.0;
-	defaultModel.extinctionUni[1] = 10.0;
-	defaultModel.extinctionExp = 1.0;
+	defaultModel.extinctionBeta[0] = 1;
+	defaultModel.extinctionBeta[1] = 1;
 	defaultModel.sampleProb = 1.0;                  /* taxon sampling fraction                      */
 	strcpy(defaultModel.thetaPr, "Uniform");        /* prior on coalescence prior                   */
 	defaultModel.thetaFix = 1.0;
