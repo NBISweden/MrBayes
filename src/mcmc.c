@@ -31333,6 +31333,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 		i = compCharPos[c] - m->compCharStart;
 		cL = ancStateCondLikes + (i*2);
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[0]));
+		if (AddToPrintString (tempStr) == ERROR) return (ERROR);
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[1]));
 		if (AddToPrintString (tempStr) == ERROR) return (ERROR);
 		}
@@ -31662,13 +31663,16 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 	/* print the resulting conditional likelihoods cycling over uncompressed chars */
 	for (c=0; c<numChar; c++)
 		{
-		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
-			continue;
+		//if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+			//continue;
 		i = compCharPos[c] - m->compCharStart;
 		cL = ancStateCondLikes + (i*4);
 		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[A]));
+		if (AddToPrintString (tempStr) == ERROR) return ERROR;
 		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[C]));
+		if (AddToPrintString (tempStr) == ERROR) return ERROR;
 		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[G]));
+		if (AddToPrintString (tempStr) == ERROR) return ERROR;
 		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[T]));
 		if (AddToPrintString (tempStr) == ERROR) return ERROR;
 		}

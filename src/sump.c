@@ -872,6 +872,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             for (i=0; i<*nHeaders; i++)
                 SafeFree ((void **) &((*headerNames)[i]));
             SafeFree ((void **) &(*headerNames));
+			*nHeaders=0;
             goto errorExit;
             }
         }
