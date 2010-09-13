@@ -11622,6 +11622,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			like += (clP[0]*bs[0] + clP[1]*bs[1]) * freq;
 			clP += 2;
 			}
+		//printf(":%f\n",like);
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
@@ -37693,6 +37694,7 @@ int RunChain (safeLong *seed)
 				else
 					r = exp(lnLikelihoodRatio + lnPriorRatio + lnProposalRatio);
 				}
+
 
 			/* decide to accept or reject the move */
 			acceptMove = NO;

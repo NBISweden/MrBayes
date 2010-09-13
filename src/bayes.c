@@ -104,8 +104,8 @@ char        workingDir[100];             /* working directory                   
 #			if defined (MPI_ENABLED)
 int 		proc_id;                     /* process ID (0, 1, ..., num_procs-1)                        */
 int 		num_procs;                   /* number of active processors                                */
-MrBFlt		myStateInfo[5];              /* likelihood/prior/heat/ran/moveInfo vals of me              */
-MrBFlt		partnerStateInfo[5];		 /* likelihood/prior/heat/ran/moveInfo vals of partner         */
+MrBFlt		myStateInfo[7];              /* likelihood/prior/heat/ran/moveInfo vals of me              */
+MrBFlt		partnerStateInfo[7];		 /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #			endif
 
 #if defined (FAST_VERSION)
