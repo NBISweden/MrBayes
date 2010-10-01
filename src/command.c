@@ -91,8 +91,8 @@ int      DoCharset (void);
 int      DoCharsetParm (char *parmName, char *tkn);
 int      DoCharStat (void);
 int      DoCitations (void);
-int      DoConstraints (void);
-int      DoConstraintsParm (char *parmName, char *tkn);
+int      DoConstraint (void);
+int      DoConstraintParm (char *parmName, char *tkn);
 int      DoCtype (void);
 int      DoCtypeParm (char *parmName, char *tkn);
 int      DoDelete (void);
@@ -155,7 +155,7 @@ int      NucID (char nuc);
 void     PrintSettings (char *command, ModelInfo *mp);
 void     PrintYesNo (int yn, char s[4]);
 int      ProtID (char aa);
-void     SetPartition (int part);
+int      SetPartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
 void     WhatVariableExp (safeLong exp, char *st);
@@ -231,6 +231,7 @@ TaxaInformation *taxaInfo;             /* holds critical information about taxa 
 char			**taxaNames;           /* holds name of taxa                            */
 safeLong        **taxaSet;             /* holds information about defined taxasets      */
 char			**taxaSetNames;        /* holds names of taxa sets                      */
+int             *tempActiveConstraints;/* temporarily holds active constraints in prset */
 int				*tempSet;              /* temporarily holds defined set                 */
 int  			theAmbigChar;          /* int containing ambiguous character            */
 Calibration     *tipCalibration;       /* holds information about node calibrations     */
@@ -278,7 +279,7 @@ CmdType			commands[] =
 			{  6,        "Charstat",  NO,        DoCharStat,  0,                                                                                             {-1},       32,                                 "Shows status of characters",  IN_CMD, SHOW },
 			{  7,       "Citations",  NO,       DoCitations,  0,                                                                                             {-1},       32,                            "Appropriate citation of program",  IN_CMD, SHOW },
 			{  8,     "Comparetree",  NO,     DoCompareTree,  7,																	{127,128,129,130,221,222,223},       36,                     "Compares the trees from two tree files",  IN_CMD, SHOW },
-			{  9,      "Constraint",  NO,     DoConstraints,  1,                                                                                             {66},        4,                      "Defines a constraint on tree topology",  IN_CMD, SHOW },
+			{  9,      "Constraint",  NO,      DoConstraint,  1,                                                                                             {66},        4,                      "Defines a constraint on tree topology",  IN_CMD, SHOW },
 			{ 10,           "Ctype",  NO,           DoCtype,  1,                                                                                             {65},        4,                        "Assigns ordering for the characters",  IN_CMD, SHOW },
 			{ 11,      "Databreaks", YES,          DoBreaks,  1,                                                                                             {93},    32768,           "Defines data breaks for autodiscrete gamma model",  IN_CMD, SHOW },
 			{ 12,          "Delete", YES,          DoDelete,  1,                                                                                             {47},    49152,                             "Deletes taxa from the analysis",  IN_CMD, SHOW },
@@ -602,6 +603,7 @@ int AllocTaxa (void)
     constraintNames = NULL;
     definedConstraint = NULL;
     numDefinedConstraints = 0;
+    tempActiveConstraints = NULL;
 	memAllocs[ALLOC_CONSTRAINTS] = YES;     /* safe to free */
 
 	/* translate table */
@@ -2096,7 +2098,7 @@ int DoCitations (void)
 
 
 
-int DoConstraints (void)
+int DoConstraint (void)
 
 {
 
@@ -2151,8 +2153,15 @@ int DoConstraints (void)
 
     /* increment number of defined constraints */
 	numDefinedConstraints++;
-	
-	/* show taxset (for debugging) */
+
+    /* reallocate space for activeConstraints */
+    for (i=0; i<numDivisions; i++)
+        modelParams[i].activeConstraints = (int *) realloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+
+    /* reallocate space for tempActiveConstraints */
+    tempActiveConstraints = (int *) realloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+
+    /* show taxset (for debugging) */
 #	if 0 
 	for (i=0; i<numTaxa; i++)
 		MrBayesPrint ("%4d  %4d\n", i+1, taxaInfo[i].constraints[numDefinedConstraints-1]);
@@ -2166,7 +2175,7 @@ int DoConstraints (void)
 
 
 
-int DoConstraintsParm (char *parmName, char *tkn)
+int DoConstraintParm (char *parmName, char *tkn)
 
 {
 
@@ -4869,7 +4878,8 @@ int DoMatrix (void)
 		}
 	numDefinedPartitions = 1;
 
-    SetPartition (0);
+    if (SetPartition (0) == ERROR)
+        return ERROR;
 
 	if (numCurrentDivisions == 1)
 		MrBayesPrint ("%s   Setting default partition (does not divide up characters)\n", spacer);
@@ -6189,7 +6199,8 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Could not find \"%s\" as a defined partition\n", spacer, tkn);
 					return (ERROR);
 					}
-				SetPartition (index);
+				if (SetPartition (index) == ERROR)
+                    return ERROR;
 				if (numCurrentDivisions == 1)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, tkn); 
 				else
@@ -6214,7 +6225,8 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
 					return (ERROR);
 					}
-				SetPartition (index);
+				if (SetPartition (index) == ERROR)
+                    return ERROR;
 				if (numCurrentDivisions == 1)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, partitionNames[index]);
 				else
@@ -8078,6 +8090,7 @@ int FreeTaxa (void)
 		SafeFree ((void **) &constraintNames);
         SafeFree ((void **) &nodeCalibration);
         numDefinedConstraints = 0;
+        SafeFree(&tempActiveConstraints);
 		memAllocs[ALLOC_CONSTRAINTS] = NO;
 		memoryLetFree = YES;
 		}
@@ -12434,6 +12447,7 @@ void ResetTaxaFlags (void)
     defTaxa                 = NO;                        /* flag for whether number of taxa is known      */
     isTaxsetDef             = NO;                        /* is a taxlabels set defined                    */
 	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
+    SafeFree(&tempActiveConstraints);                    /* holds temp info on active constraints         */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
 }
@@ -12443,15 +12457,26 @@ void ResetTaxaFlags (void)
 
     
 /* SetPartition: Set model partition */
-void SetPartition (int part)
+int SetPartition (int part)
 
 {
 	int		i, j;
 	
+	/* Free space for modelParams and modelSettings */
+	if (memAllocs[ALLOC_MODEL] == YES)
+		{
+		for (i=0; i<numCurrentDivisions; i++)
+            SafeFree(&(modelParams[i].activeConstraints));
+        free (modelParams);
+		free (modelSettings);
+		memAllocs[ALLOC_MODEL] = NO;
+		}
+
     /* Set model partition */
 	partitionNum = part;
 	numCurrentDivisions = 0;
-	/*Set numCurrentDivisions to maximum devision a charecter belongs to in patiotion part*/
+
+	/* Set numCurrentDivisions to maximum division a character belongs to in partition part */
 	for (i=0; i<numChar; i++)
 		{
 		j = partitionId[i][part];
@@ -12459,9 +12484,23 @@ void SetPartition (int part)
 			numCurrentDivisions = j;
 		}
 
-    numVars = (int *) SafeRealloc ((void *) numVars, (size_t)(4 * numCurrentDivisions * sizeof(int)));
+    /* Allocate space for partition models */
+    modelParams = (Model *) calloc (numCurrentDivisions, sizeof (Model));
+	modelSettings = (ModelInfo *) calloc (numCurrentDivisions, sizeof (ModelInfo));
+	if (!modelParams || !modelSettings)
+		{
+		MrBayesPrint ("%s   Could not allocate modelParams or modelSettings\n", spacer);
+        if (modelParams)
+			free (modelParams);
+		if (modelSettings)
+			free (modelSettings);
+		return (ERROR);
+		}
+	memAllocs[ALLOC_MODEL] = YES;
+
+    numVars = (int *) SafeRealloc ((void *) numVars, (size_t)(3 * numCurrentDivisions * sizeof(int)));
     tempLinkUnlinkVec = numVars + numCurrentDivisions;
-    activeParts       = numVars + 3*numCurrentDivisions;
+    activeParts       = numVars + 2*numCurrentDivisions;
 
     tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, (size_t)(6 * sizeof(MrBFlt)));
 
@@ -12477,7 +12516,7 @@ void SetPartition (int part)
         tempLinkUnlink[i] = tempLinkUnlink[0] + i*numCurrentDivisions;
         }
 
-    
+    return (NO_ERROR);
 }
 
 
@@ -12576,7 +12615,7 @@ void SetUpParms (void)
 	PARAM   ( 63, "Switchrates",    DoLinkParm,        "\0");
 	PARAM   ( 64, "Symdirihyperpr", DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 65, "Xxxxxxxxxx",     DoCtypeParm,       "\0");
-	PARAM   ( 66, "Xxxxxxxxxx",     DoConstraintsParm, "\0");
+	PARAM   ( 66, "Xxxxxxxxxx",     DoConstraintParm,  "\0");
 	PARAM   ( 67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|\0");
 	PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
 	PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");

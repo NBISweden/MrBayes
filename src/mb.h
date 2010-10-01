@@ -879,7 +879,7 @@ typedef struct model
 
 	char		topologyPr[100];   /* prior for tree topology                      */
     int         topologyFix;       /* user tree index for fixed topology           */
-	int			activeConstraints[30]; 
+	int         *activeConstraints;/* which constraints are active?                */
 	int			numActiveConstraints;
 	int			numActiveLocks;
 	char		brlensPr[100];     /* prior on branch lengths                      */

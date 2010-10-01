@@ -5164,7 +5164,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						    MrBayesPrint ("%s   Could not find constraint named %s\n", spacer, tkn);
 						    return (ERROR);
 						    }
-					    numVars[index] = YES;
+                        tempActiveConstraints[index] = YES;
                         expecting = Expecting(RIGHTPAR);
                         expecting |= Expecting(COMMA);
                         }
@@ -5183,8 +5183,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
-				for (i=0; i<numCurrentDivisions; i++)
-					numVars[i] = NO;
+				for (i=0; i<numDefinedConstraints; i++)
+					tempActiveConstraints[i] = NO;
 				fromI = toJ = -1;
 				foundDash = foundComma = NO;
 				expecting = Expecting(NUMBER) | Expecting(ALPHA);
@@ -5216,13 +5216,13 @@ int DoPrsetParm (char *parmName, char *tkn)
 					    {
 					    toJ = tempInt;
 					    for (i=fromI-1; i<toJ; i++)
-						    numVars[i] = YES;
+						    tempActiveConstraints[i] = YES;
 					    fromI = toJ = -1;
 					    foundDash = NO;
 					    }
 				    else if (fromI != -1 && toJ == -1 && foundDash == NO && foundComma == YES)
 					    {
-					    numVars[fromI-1] = YES;
+					    tempActiveConstraints[fromI-1] = YES;
 					    fromI = tempInt;
 					    foundComma = NO;
 					    }
@@ -5266,7 +5266,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				{
 				/* close expression for constraints */
                 if (fromI != -1)
-					numVars[fromI-1] = YES;
+					tempActiveConstraints[fromI-1] = YES;
 
                 /* find out whether we need a tree number or constraint number(s) */
 				nApplied = NumActiveParts ();
@@ -5284,7 +5284,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					        modelParams[i].numActiveConstraints = 0;
 					        for (j=0; j<numDefinedConstraints; j++)
 						        {
-						        if (numVars[j] == YES)
+						        if (tempActiveConstraints[j] == YES)
 							        {
 							        modelParams[i].activeConstraints[j] = YES;
 							        modelParams[i].numActiveConstraints++;
@@ -9232,7 +9232,9 @@ int FreeModel (void)
 	
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
-		free (modelParams);
+		for (i=0; i<numCurrentDivisions; i++)
+            SafeFree (&modelParams[i].activeConstraints);
+        free (modelParams);
 		free (modelSettings);
 		memAllocs[ALLOC_MODEL] = NO;
 		}
@@ -13074,7 +13076,7 @@ int SetModelDefaults (void)
 
 {
 
-	int			j;
+	int			i, j;
 
 	MrBayesPrint ("%s   Setting model defaults\n", spacer);
 	MrBayesPrint ("%s   Seed (for generating default start values) = %d\n", spacer, globalSeed);
@@ -13085,40 +13087,31 @@ int SetModelDefaults (void)
 		return (ERROR);
 		}
 
-	/* Allocate space for modelParams and modelSettings */
-	if (memAllocs[ALLOC_MODEL] == YES)
+	/* Check that models are allocated */
+	if (memAllocs[ALLOC_MODEL] == NO)
 		{
-		free (modelParams);
-		free (modelSettings);
-		memAllocs[ALLOC_MODEL] = NO;
-		}
-	modelParams = (Model *) calloc (numCurrentDivisions, sizeof (Model));
-	modelSettings = (ModelInfo *) calloc (numCurrentDivisions, sizeof (ModelInfo));
-	if (!modelParams || !modelSettings)
-		{
-		MrBayesPrint ("%s   Could not allocate modelParams or modelSettings\n", spacer);
-		if (modelParams)
-			free (modelParams);
-		if (modelSettings)
-			free (modelSettings);
+		MrBayesPrint ("%s   Model not allocated in SetModelDefaults\n", spacer);
 		return (ERROR);
 		}
-	memAllocs[ALLOC_MODEL] = YES;
 
 	/* model parameters */
 	for (j=0; j<numCurrentDivisions; j++)
 		{
-		modelParams[j] = defaultModel;      /* start with default settings */
+		modelParams[j] = defaultModel;                      /* start with default settings */
 		
-		modelParams[j].dataType = DataType (j);           /* data type for partition                      */
-		if (modelParams[j].dataType == STANDARD)		  /* set default ascertainment bias for partition */
+		modelParams[j].dataType = DataType (j);             /* data type for partition                      */
+
+		if (modelParams[j].dataType == STANDARD)		    /* set default ascertainment bias for partition */
 			strcpy(modelParams[j].coding, "Variable"); 
 		else if (modelParams[j].dataType == RESTRICTION)
 			strcpy(modelParams[j].coding, "Noabsencesites");
 		else
 			strcpy(modelParams[j].coding, "All");
-		SetCode (j);
+
+        SetCode (j);
 		modelParams[j].nStates = NumStates (j);			    /* number of states for partition             */
+
+        modelParams[j].activeConstraints = (int *) calloc(numDefinedConstraints, sizeof(int));  /* allocate space for active constraints (yes/no) */
 		}
 
 	return (NO_ERROR);
