@@ -11622,7 +11622,6 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			like += (clP[0]*bs[0] + clP[1]*bs[1]) * freq;
 			clP += 2;
 			}
-		//printf(":%f\n",like);
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
@@ -37695,7 +37694,6 @@ int RunChain (safeLong *seed)
 					r = exp(lnLikelihoodRatio + lnPriorRatio + lnProposalRatio);
 				}
 
-
 			/* decide to accept or reject the move */
 			acceptMove = NO;
 			i = chainId[chn];
@@ -38087,9 +38085,9 @@ int RunChain (safeLong *seed)
 	if (chainParams.numRuns == 1)
 		{
 		if (chainParams.numChains == 1)
-			MrBayesPrint ("%s   Likelihood of best state was %1.2lf\n", spacer, maxLnL0[0]);
+			MrBayesPrint ("%s   Log likelihood of best state was %1.2lf\n", spacer, maxLnL0[0]);
 		else
-			MrBayesPrint ("%s   Likelihood of best state for \"cold\" chain was %1.2lf\n", spacer, maxLnL0[0]);
+			MrBayesPrint ("%s   Log likelihood of best state for \"cold\" chain was %1.2lf\n", spacer, maxLnL0[0]);
 		}
 	else
 		{

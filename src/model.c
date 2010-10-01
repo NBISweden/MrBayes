@@ -6202,7 +6202,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 				return (ERROR);
 			}
 		/* set Compound Poisson Process rate multiplier PsiGamma shape (psiGammaPr ***********************/
-		else if (!strcmp(parmName, "Psigammashapepr"))
+		else if (!strcmp(parmName, "Psigammapr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -8955,9 +8955,10 @@ int FillRelPartsString (Param *p, char relPartString[100])
 /* FillTopologySubParams: Fill subparams (brlens) for a topology */
 int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 {
-	int		i;
+	int		i,returnVal;
 	Tree	*tree, *tree1;
 	Param	*q;
+	static count=0;
 
 	tree = GetTree (param, chn, state);
 	
@@ -8975,10 +8976,15 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 		if (q->paramId == BRLENS_FIXED)
 			{
 			if (param->paramId == TOPOLOGY_NCL_FIXED ||
+				param->paramId == TOPOLOGY_NCL_FIXED_HOMO ||
+				param->paramId == TOPOLOGY_NCL_FIXED_HETERO ||
 				param->paramId == TOPOLOGY_CL_FIXED  ||
 				param->paramId == TOPOLOGY_RCL_FIXED ||
 				param->paramId == TOPOLOGY_CCL_FIXED ||
-				param->paramId == TOPOLOGY_RCCL_FIXED)
+				param->paramId == TOPOLOGY_RCCL_FIXED||
+				param->paramId == TOPOLOGY_FIXED     ||
+				param->paramId == TOPOLOGY_PARSIMONY_FIXED
+				)
 				if (tree->isRooted != userTree[modelParams[q->relParts[0]].brlensFix]->isRooted)
 					{
 					MrBayesPrint("%s   Cannot set fixed branch lengths because of mismatch in rootedness", spacer);
@@ -9006,12 +9012,17 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 				}
 			}
 	    else if (tree->isCalibrated == YES)
-			InitCalibratedBrlens (tree, 0.0001, seed);
+			returnVal = InitCalibratedBrlens (tree, 0.0001, seed);
 		else if (tree->isClock == YES)
-			InitClockBrlens (tree);
+			returnVal = InitClockBrlens (tree);
 		else
-			InitBrlens (tree, 0.1);
-		FillBrlensSubParams (q, chn, state);
+			returnVal = InitBrlens (tree, 0.1);
+
+		if( returnVal == ERROR )
+			return (ERROR);
+
+		if( FillBrlensSubParams (q, chn, state) == ERROR )
+			return (ERROR);
 		}
 
 	return (NO_ERROR);
@@ -9108,12 +9119,16 @@ int FillTreeParams (safeLong *seed, int fromChain, int toChain)
 				else
 					nTaxa = tree->nNodes - tree->nIntNodes;
                 /* fixed topology */
-                if (p->paramId == TOPOLOGY_RCL_FIXED ||
-                    p->paramId == TOPOLOGY_RCCL_FIXED ||
-                    p->paramId == TOPOLOGY_CL_FIXED ||
-                    p->paramId == TOPOLOGY_CCL_FIXED ||
-                    p->paramId == TOPOLOGY_NCL_FIXED ||
-                    p->paramId == TOPOLOGY_PARSIMONY_FIXED)
+				if (p->paramId == TOPOLOGY_NCL_FIXED ||
+					p->paramId == TOPOLOGY_NCL_FIXED_HOMO ||
+					p->paramId == TOPOLOGY_NCL_FIXED_HETERO ||
+					p->paramId == TOPOLOGY_CL_FIXED  ||
+					p->paramId == TOPOLOGY_RCL_FIXED ||
+					p->paramId == TOPOLOGY_CCL_FIXED ||
+					p->paramId == TOPOLOGY_RCCL_FIXED||
+					p->paramId == TOPOLOGY_FIXED     ||
+					p->paramId == TOPOLOGY_PARSIMONY_FIXED
+					)
                     {
                     if (tree->nIntNodes != userTree[modelParams[p->relParts[0]].topologyFix]->nIntNodes)
 						{
@@ -9174,7 +9189,8 @@ int FillTreeParams (safeLong *seed, int fromChain, int toChain)
 					continue;	/* this is a parsimony tree without branch lengths */
 				if (InitializeTreeCalibrations (tree) == ERROR)
 					return (ERROR);
-				FillTopologySubParams(p, chn, 0, seed);
+				if (FillTopologySubParams(p, chn, 0, seed)== ERROR)
+					return (ERROR);
 				if (chn == toChain-1)	/* last chain to fill */
 					p->fill = NO;
 				}

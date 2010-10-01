@@ -12722,7 +12722,7 @@ void SetUpParms (void)
 	PARAM   (170, "Autoreplace",    DoSetParm,         "Yes|No|\0");
 	PARAM   (171, "Npthreads",      DoSetParm,         "\0");
 	PARAM   (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
-	PARAM   (173, "Psigammashapepr",DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (173, "Psigammapr",DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (174, "Nupr",           DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (175, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (176, "Pfile",			DoSumtParm,        "\0");

@@ -1048,7 +1048,7 @@ typedef struct modelinfo
 	int			numStates;					/* number of observable discrete states		*/
 
 	int			tiProbStart;
-	int			upDateCl;
+	int			upDateCl;					/* should CondLikes of corresponding division be updated, Yes or No */
 
 	int			nCijk;						/* stores length of cijk vector */
 	int			nCijkParts;					/* stores number of cijk partitions (for omega/covarion models) */

@@ -712,6 +712,7 @@ int InitializeMrBayes (void)
 	defaultModel.growthNorm[1] = 1.0;
 	strcpy(defaultModel.nodeAgePr, "Unconstrained");  /* prior on node depths                     */
 	strcpy(defaultModel.treeAgeCalibration.name, "Fixed");        /* prior on tree age                           */
+	defaultModel.treeAgeCalibration.prior = fixed;
 	defaultModel.treeAgeCalibration.age = 1.0;
 	defaultModel.treeAgeCalibration.min = 0.0;
 	defaultModel.treeAgeCalibration.max = 1.0;

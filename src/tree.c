@@ -2331,6 +2331,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
         }
     else /* if (t->root->calibration->prior == offsetExponential */
         {
+		assert( p->calibration->prior == offsetExponential );
         /* Make random draw */
         p->age = p->calibration->offset - log (RandomNumber(seed)) / p->calibration->lambda;
         if (p->age > 1.5 * p->nodeDepth)
@@ -2358,11 +2359,15 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
                 p->nodeDepth = p->age = p->calibration->max;
             else
                 p->age = p->nodeDepth;
-        }
-        if (p->anc->nodeDepth - p->nodeDepth < minLength*t->clockRate ||
-            p->nodeDepth - p->left->nodeDepth < minLength*t->clockRate ||
-            p->nodeDepth - p->right->nodeDepth < minLength*t->clockRate)
+			}
+		/* else if fixed do nothing to keep it where it was fixed before */
+		if ( (p->anc->nodeDepth - p->nodeDepth)*t->clockRate < minLength ||
+            (p->nodeDepth - p->left->nodeDepth)*t->clockRate < minLength ||
+            (p->nodeDepth - p->right->nodeDepth)*t->clockRate < minLength)
+			{
+			MrBayesPrint ("%s   The requirement for the minimal branch length could not be satisfied. Calibrations are too tight or there are too many levels(the length of the longest path from the root to a tip) in the tree.\n",spacer);
             return (ERROR);
+			}
 		}
 
     /* Scale tree so that it has depth (height) 1.0.
