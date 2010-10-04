@@ -2205,25 +2205,59 @@ int InitBrlens (Tree *t, MrBFlt v)
 
 
 
+/* 
+@param levUp		is the number of edges between the "node" and the most resent calibrated predecessor +1,
+					so for the calibrated nodes it should be 1
+@param calibrUp		is the age of the most resent calibrated predecessor
+@return				age of the node	
+*/
+MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
+{
+	MrBFlt r,l;
+
+	if( node->age != -1.0 )
+		{
+		if(node->right != NULL)
+			SetNodeCalibratedAge( node->right, 2, node->age );
+		if(node->left != NULL)
+			SetNodeCalibratedAge( node->left, 2, node->age );
+		return node->age;
+		}
+
+	r = SetNodeCalibratedAge( node->right, levUp+1, calibrUp );
+	l = SetNodeCalibratedAge( node->left, levUp+1, calibrUp );
+
+	if( r>l )
+		{
+		return node->age = r + ( calibrUp - r )/levUp;
+		}
+	else
+		{
+		return node->age = l + ( calibrUp - l )/levUp;
+		}
+
+}
+
+
+
+
+
 /*-------------------------------------------------------------------
 |
 |	InitCalibratedBrlens: This routine will build a clock tree
 |		consistent with calibration constraints on terminal
-|		taxa and/or constrained interior nodes. The tree will
-|       be of depth 1.0 and have minimum branch length of minLength
-|       (measured in substitution units). The tree might be slightly
-|       deeper if necessary to solve conflicts between calibrations
-|       and minLength. If not possible to build such a tree, ERROR
+|		taxa and/or constrained interior nodes. At least one
+|		node should be calibrated.
+|    	If not possible to build such a tree, ERROR
 |       is returned.
 |
 --------------------------------------------------------------------*/
-int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
+int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, safeLong *seed)
 
 {
 
 	int				i;
 	TreeNode		*p;
-	MrBFlt			totDepth, clockRate=0.0;
 
 #if 0
     printf ("Before initializing calibrated brlens\n");
@@ -2247,7 +2281,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 				if (p->isDated == NO)
 					{
 					p->nodeDepth = 0.0;
-					p->age = -1.0;
+					p->age = 0.0;
 					}
 				else
 					{
@@ -2309,11 +2343,13 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 			}
 		}
 	
+
 	/* try to make root node deeper than minimum age */
     p = t->root->left;
     if (p->calibration == NULL)
         {
-        p->nodeDepth *= 1.5;
+		if( p->nodeDepth==0.0 ) p->nodeDepth = 1.0;
+        p->age = p->nodeDepth *= 1.5;
         }
     else if (p->calibration->prior == fixed)
         {
@@ -2337,44 +2373,14 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
             p->age = p->nodeDepth = 1.5 * p->nodeDepth;
         }
 
-	/* calculate clock rate based on this total depth */
-	totDepth = t->root->left->nodeDepth;
-			
-	/* adjust node depths towards the root with 1/2 of available space in preorder traversal */
-	for (i=t->nIntNodes-2; i>=0; i--)
-		{
-		p = t->intDownPass[i];
-		if (p->calibration == NULL)
-            p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
-        else if (p->calibration->prior == offsetExponential)
-            p->age = p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
-        else if (p->calibration->prior == uniform)
-            {
-            p->nodeDepth = p->nodeDepth + 0.5 * (p->anc->nodeDepth - p->nodeDepth);
-            if (p->nodeDepth > p->calibration->max)
-                p->nodeDepth = p->age = p->calibration->max;
-            else
-                p->age = p->nodeDepth;
-			}
-		/* else if fixed do nothing to keep it where it was fixed before */
-		if ( (p->anc->nodeDepth - p->nodeDepth)*clockRate < minLength ||
-            (p->nodeDepth - p->left->nodeDepth)*clockRate < minLength ||
-            (p->nodeDepth - p->right->nodeDepth)*clockRate < minLength)
-			{
-			MrBayesPrint ("%s   The requirement for the minimal branch length could not be satisfied. Calibrations are too tight or there are too many levels(the length of the longest path from the root to a tip) in the tree.\n",spacer);
-            return (ERROR);
-			}
-		}
+	SetNodeCalibratedAge( p, 1, p->age );
 
-    /* Scale tree so that it has depth (height) 1.0.
-	   NodeDepth will now be in substitution units */
+
+    /* Setup node depths */
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
-		if (p->anc != NULL)
-			p->nodeDepth = (p->nodeDepth) / totDepth;
-		else
-			p->nodeDepth = 0.0;
+		p->nodeDepth = p->age * clockRate;
 		}
 
 	/* calculate branch lengths */
@@ -2384,7 +2390,10 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 		if (p->anc != NULL)
 			{
 			if (p->anc->anc != NULL)
+				{
 				p->length = p->anc->nodeDepth - p->nodeDepth;
+				assert( p->length > 0.0 );
+				}
 			else
 				p->length = 0.0;
 			}
@@ -3171,6 +3180,28 @@ int MovePolyCalculationRoot (PolyTree *t, int outgroup)
 	GetPolyDownPass (t);
 
 	return (NO_ERROR);
+}
+
+
+
+
+
+/* 
+@return the number of levels for the tree rooted at the "node" 
+*/
+int NrSubTreeLevels(TreeNode *node)
+{
+	int r,l;
+
+	if( node == NULL )
+		{
+		return -1;
+		}
+
+	r = NrSubTreeLevels( node->right );
+	l = NrSubTreeLevels( node->left );
+
+	return ((r>l)?(r):(l))+1;
 }
 
 
