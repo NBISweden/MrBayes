@@ -10761,13 +10761,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 					isSame = NO;
 				}
 			}
-
-        /* If both partitions have clock branch lengths, the clock branch lengths need to be the same */
-        if (!strcmp(modelParams[part1].brlensPr, "Clock") && !strcmp(modelParams[part2].brlensPr, "Clock"))
-            {
-            if (IsModelSame(P_BRLENS, part1, part2, isApplic1, isApplic2) == NO)
-                isSame = NO;
-    		}
         }
     else if (whichParam == P_BRLENS)
 		{
@@ -15578,6 +15571,72 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
+	/* Move_ClockRate_S */
+	mt = &moveTypes[i++];
+	mt->name = "Sliding window";
+	mt->shortName = "Slider";
+	mt->tuningName[0] = "Sliding window size";
+	mt->shortTuningName[0] = "delta";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_RealSlider;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 0.5;  /* window size */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 100.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+	/* Move_ClockRate_M */
+	mt = &moveTypes[i++];
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_PosRealMultiplier;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
+	/* Move_ClockRate_L */
+	mt = &moveTypes[i++];
+	mt->name = "Lognormal";
+	mt->shortName = "Lognormal";
+	mt->tuningName[0] = "Log normal proposal standard deviation";
+	mt->shortTuningName[0] = "sd";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_RealNormal;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 0.1;  /* sd */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
 	/* Move_Extinction */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -16636,72 +16695,6 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
 
-	/* Move_clockRate_S */
-	mt = &moveTypes[i++];
-	mt->name = "Sliding window";
-	mt->shortName = "Slider";
-	mt->tuningName[0] = "Sliding window size";
-	mt->shortTuningName[0] = "delta";
-	mt->applicableTo[0] = CLOCKRATE_NORMAL;
-	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
-	mt->applicableTo[2] = CLOCKRATE_GAMMA;
-	mt->applicableTo[3] = CLOCKRATE_EXP;
-	mt->nApplicable = 4;
-	mt->moveFxn = &Move_RealSlider;
-	mt->relProposalProb = 1.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 0.5;  /* window size */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 100.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneSlider;
-    mt->targetRate = 0.25;
-
-	/* Move_clockRate_M */
-	mt = &moveTypes[i++];
-	mt->name = "Multiplier";
-	mt->shortName = "Multiplier";
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
-	mt->applicableTo[0] = CLOCKRATE_NORMAL;
-	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
-	mt->applicableTo[2] = CLOCKRATE_GAMMA;
-	mt->applicableTo[3] = CLOCKRATE_EXP;
-	mt->nApplicable = 4;
-	mt->moveFxn = &Move_PosRealMultiplier;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
-
-	/* Move_clockRate_L */
-	mt = &moveTypes[i++];
-	mt->name = "Lognormal";
-	mt->shortName = "Lognormal";
-	mt->tuningName[0] = "Log normal proposal standard deviation";
-	mt->shortTuningName[0] = "sd";
-	mt->applicableTo[0] = CLOCKRATE_NORMAL;
-	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
-	mt->applicableTo[2] = CLOCKRATE_GAMMA;
-	mt->applicableTo[3] = CLOCKRATE_EXP;
-	mt->nApplicable = 4;
-	mt->moveFxn = &Move_RealNormal;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 0.1;  /* sd */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
-
 	/* Move_SwitchRate */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -16759,28 +16752,6 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
-    mt->targetRate = 0.25;
-
-	/* Move_TreeAgeM */
-	mt = &moveTypes[i++];
-	mt->name = "Tree age multiplier";
-	mt->shortName = "TAMult";
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
-	mt->applicableTo[0] = BRLENS_CLOCK_UNI;
-	mt->applicableTo[1] = BRLENS_CLOCK_COAL;
-	mt->applicableTo[2] = BRLENS_CLOCK_BD;
-	mt->nApplicable = 3;
-	mt->moveFxn = &Move_TreeAgeM;
-    mt->isApplicable = &IsApplicableTreeAgeMove;
-	mt->relProposalProb = 1.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0*log(1.1);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 1.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
 	/* Move_TreeHeight */

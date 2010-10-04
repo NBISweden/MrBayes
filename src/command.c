@@ -2155,7 +2155,7 @@ int DoConstraint (void)
 	numDefinedConstraints++;
 
     /* reallocate space for activeConstraints */
-    for (i=0; i<numDivisions; i++)
+    for (i=0; i<numCurrentDivisions; i++)
         modelParams[i].activeConstraints = (int *) realloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
 
     /* reallocate space for tempActiveConstraints */
