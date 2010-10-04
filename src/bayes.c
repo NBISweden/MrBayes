@@ -638,56 +638,65 @@ int InitializeMrBayes (void)
 		defaultModel.stateFreqsDir[i] = 1.0;
 		}    
 	defaultModel.numDirParams = 0;
-	strcpy(defaultModel.shapePr, "Uniform");        /* prior for gamma shape parameter              */
+	strcpy(defaultModel.shapePr, "Uniform");            /* prior for gamma shape parameter              */
 	defaultModel.shapeFix = 0.5;
 	defaultModel.shapeUni[0] = MIN_SHAPE_PARAM;
 	defaultModel.shapeUni[1] = MAX_SHAPE_PARAM;
 	defaultModel.shapeExp = 2.0;
-	strcpy(defaultModel.pInvarPr, "Uniform");       /* prior for proportion of invariable sites     */
+	strcpy(defaultModel.pInvarPr, "Uniform");           /* prior for proportion of invariable sites     */
 	defaultModel.pInvarFix = 0.1;
 	defaultModel.pInvarUni[0] = 0.0;
 	defaultModel.pInvarUni[1] = 1.0;
-	strcpy(defaultModel.adGammaCorPr, "Uniform");   /* prior for correlation param of adGamma model */
+	strcpy(defaultModel.adGammaCorPr, "Uniform");       /* prior for correlation param of adGamma model */
 	defaultModel.corrFix = 0.0;
 	defaultModel.corrUni[0] = -1.0;
 	defaultModel.corrUni[1] = 1.0;
-	strcpy(defaultModel.covSwitchPr, "Uniform");    /* prior for switching rates of covarion model  */
+	strcpy(defaultModel.covSwitchPr, "Uniform");        /* prior for switching rates of covarion model  */
 	defaultModel.covswitchFix[0] = 1.0;
 	defaultModel.covswitchFix[1] = 1.0;
 	defaultModel.covswitchUni[0] = 0.0;
 	defaultModel.covswitchUni[1] = 100.0;
 	defaultModel.covswitchExp = 1.0;
-	strcpy(defaultModel.symPiPr, "Fixed");           /* prior for pi when unidentifiable states used */
+	strcpy(defaultModel.symPiPr, "Fixed");              /* prior for pi when unidentifiable states used */
 	defaultModel.symBetaFix = -1.0;
 	defaultModel.symBetaUni[0] = 0.0;
 	defaultModel.symBetaUni[1] = 20.0;
 	defaultModel.symBetaExp = 2;
-	strcpy(defaultModel.brownCorPr, "Fixed");       /* prior on correlation of brownian model       */
+	strcpy(defaultModel.brownCorPr, "Fixed");           /* prior on correlation of brownian model       */
 	defaultModel.brownCorrFix = 0.0;
 	defaultModel.brownCorrUni[0] = -1.0;
 	defaultModel.brownCorrUni[1] = 1.0;
-	strcpy(defaultModel.brownScalesPr, "Gammamean");/* prior on scales of brownian model            */
+	strcpy(defaultModel.brownScalesPr, "Gammamean");    /* prior on scales of brownian model            */
 	defaultModel.brownScalesFix = 10.0;
 	defaultModel.brownScalesUni[0] = 0.0;
 	defaultModel.brownScalesUni[1] = 100.0;
 	defaultModel.brownScalesGamma[0] = 1.0;
 	defaultModel.brownScalesGamma[1] = 10.0;
 	defaultModel.brownScalesGammaMean = 10.0;
-	strcpy(defaultModel.topologyPr, "Uniform");     /* prior for tree topology                      */
-    defaultModel.topologyFix = -1;                  /* user tree index to use for fixed topology    */
-	defaultModel.activeConstraints = NULL;          /* which constraints are active                 */
-	strcpy(defaultModel.brlensPr, "Unconstrained"); /* prior on branch lengths                      */
-    defaultModel.brlensFix = -1;                    /* user tree index to use for fixed brlens      */
+	strcpy(defaultModel.topologyPr, "Uniform");         /* prior for tree topology                      */
+    defaultModel.topologyFix = -1;                      /* user tree index to use for fixed topology    */
+	defaultModel.activeConstraints = NULL;              /* which constraints are active                 */
+	strcpy(defaultModel.brlensPr, "Unconstrained");     /* prior on branch lengths                      */
+    defaultModel.brlensFix = -1;                        /* user tree index to use for fixed brlens      */
 	defaultModel.brlensUni[0] = BRLENS_MIN;
 	defaultModel.brlensUni[1] = 10.0;
 	defaultModel.brlensExp = 10.0;
-	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained       */
-	strcpy(defaultModel.clockPr, "Uniform");        /* prior on branch lengths if clock enforced    */
-	strcpy(defaultModel.treeHeightPr, "Exponential");/* prior on tree height                        */
+	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
+	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
+	strcpy(defaultModel.treeHeightPr, "Exponential");   /* prior on tree height                         */
 	defaultModel.treeHeightGamma[0] = 1.0;
 	defaultModel.treeHeightGamma[1] = 1.0;
 	defaultModel.treeHeightExp = 1.0;
 	defaultModel.treeHeightFix = 1.0;
+	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
+	defaultModel.clockRateNormal[0] = 1.0;
+	defaultModel.clockRateNormal[1] = 1.0;
+	defaultModel.clockRateLognormal[0] = 0.0;
+	defaultModel.clockRateLognormal[1] = 0.3;           /* double or half in one standard deviation     */
+	defaultModel.clockRateGamma[0] = 1.0;
+	defaultModel.clockRateGamma[1] = 1.0;
+	defaultModel.clockRateExp = 1.0;
+	defaultModel.clockRateFix = 1.0;
 	strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate                     */
 	defaultModel.speciationFix = 1.0;
 	defaultModel.speciationUni[0] = 0.0;
@@ -698,11 +707,11 @@ int InitializeMrBayes (void)
 	defaultModel.extinctionBeta[0] = 1;
 	defaultModel.extinctionBeta[1] = 1;
 	defaultModel.sampleProb = 1.0;                  /* taxon sampling fraction                      */
-	strcpy(defaultModel.thetaPr, "Uniform");        /* prior on coalescence prior                   */
-	defaultModel.thetaFix = 1.0;
-	defaultModel.thetaUni[0] = 0.0;
-	defaultModel.thetaUni[1] = 10.0;
-	defaultModel.thetaExp = 1.0;
+	strcpy(defaultModel.popSizePr, "Exponential");  /* prior on coalescence population size         */
+	defaultModel.popSizeFix = 1.0;
+	defaultModel.popSizeUni[0] = 0.0;
+	defaultModel.popSizeUni[1] = 10.0;
+	defaultModel.popSizeExp = 1.0;
 	strcpy(defaultModel.growthPr, "Fixed");        /* prior on coalescence growth rate prior      */
 	defaultModel.growthFix = 0.0;
 	defaultModel.growthUni[0] = 0.0;
@@ -710,16 +719,9 @@ int InitializeMrBayes (void)
 	defaultModel.growthExp = 1.0;
 	defaultModel.growthNorm[0] = 0.0;
 	defaultModel.growthNorm[1] = 1.0;
-	strcpy(defaultModel.nodeAgePr, "Unconstrained");  /* prior on node depths                     */
-	strcpy(defaultModel.treeAgeCalibration.name, "Fixed");        /* prior on tree age                           */
-	defaultModel.treeAgeCalibration.prior = fixed;
-	defaultModel.treeAgeCalibration.age = 1.0;
-	defaultModel.treeAgeCalibration.min = 0.0;
-	defaultModel.treeAgeCalibration.max = 1.0;
-	defaultModel.treeAgeCalibration.offset = 1.0;
-	defaultModel.treeAgeCalibration.lambda = 1.0;
-	strcpy(defaultModel.clockRatePr, "Strict");     /* prior on clock rate                          */
-	strcpy(defaultModel.cppRatePr, "Exponential") ;	/* prior on rate of CPP for relaxed clock     */
+	strcpy(defaultModel.nodeAgePr, "Unconstrained");    /* prior on node depths                     */
+	strcpy(defaultModel.clockVarPr, "Strict");          /* prior on clock rate variation               */
+	strcpy(defaultModel.cppRatePr, "Exponential") ;	    /* prior on rate of CPP for relaxed clock     */
 	defaultModel.cppRateExp = 0.1;
 	defaultModel.cppRateFix = 1.0;
 	strcpy(defaultModel.psiGammaPr, "Fixed") ;	/* prior on psigamma shape for CPP rel clock */

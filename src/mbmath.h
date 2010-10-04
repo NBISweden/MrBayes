@@ -31,6 +31,7 @@ MrBFlt  LnRatioLogNormal (MrBFlt exp, MrBFlt var, MrBFlt xNew, MrBFlt xOld);
 MrBFlt  LogNormalRandomVariable (MrBFlt mean, MrBFlt var, safeLong *seed);
 void    MultiplyMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result);
 int     MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result);
+MrBFlt  PointNormal (MrBFlt prob);
 MrBFlt  PsiGammaLnProb (MrBFlt alpha, MrBFlt value);
 MrBFlt  PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator);
 MrBFlt  PsiGammaRandomVariable (MrBFlt alpha, safeLong *seed);

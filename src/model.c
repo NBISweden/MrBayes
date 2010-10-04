@@ -1748,10 +1748,10 @@ int DoLinkParm (char *parmName, char *tkn)
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_EXTRATE][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Theta"))
+		else if (!strcmp(parmName, "Popsize"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
-				tempLinkUnlink[P_THETA][i] = tempLinkUnlinkVec[i];
+				tempLinkUnlink[P_POPSIZE][i] = tempLinkUnlinkVec[i];
 			}
 		else if (!strcmp(parmName, "Growthrate"))
 			{
@@ -5355,8 +5355,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Clockratepr (clockRatePr) ********************************************************/
-		else if (!strcmp(parmName, "Clockratepr"))
+		/* set Clockvarpr (clockVarPr) ********************************************************/
+		else if (!strcmp(parmName, "Clockvarpr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -5369,17 +5369,17 @@ int DoPrsetParm (char *parmName, char *tkn)
 						{
 						if (activeParts[i] == YES || nApplied == 0)
 							{
-							strcpy(modelParams[i].clockRatePr, tempStr);
+							strcpy(modelParams[i].clockVarPr, tempStr);
 							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Clockratepr to %s\n", spacer, modelParams[i].clockRatePr);
+								MrBayesPrint ("%s   Setting Clockvarpr to %s\n", spacer, modelParams[i].clockVarPr);
 							else
-								MrBayesPrint ("%s   Setting Clockratepr to %s for partition %d\n", spacer, modelParams[i].clockRatePr, i+1);
+								MrBayesPrint ("%s   Setting Clockvarpr to %s for partition %d\n", spacer, modelParams[i].clockVarPr, i+1);
 							}
 						}
 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid Clockratepr argument\n", spacer);
+					MrBayesPrint ("%s   Invalid Clockvarpr argument\n", spacer);
 					return (ERROR);
 					}
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -5901,8 +5901,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Treeagepr (treeAgePr) ****************************************************/
-		else if (!strcmp(parmName, "Treeagepr"))
+		/* set Clockratepr (clockRatePr) ****************************************************/
+		else if (!strcmp(parmName, "Clockratepr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -5914,20 +5914,12 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if (activeParts[i] == YES || nApplied == 0)
-							{
-							strcpy(modelParams[i].treeAgeCalibration.name, tempStr);
-							if (!strcmp(tempStr,"Fixed"))
-								modelParams[i].treeAgeCalibration.prior = fixed;
-							else if (!strcmp(tempStr,"Uniform"))
-								modelParams[i].treeAgeCalibration.prior = uniform;
-							else /* if (!strcmp(tempStr,"Offsetexponential")) */
-								modelParams[i].treeAgeCalibration.prior = offsetExponential;
-							}
+							strcpy(modelParams[i].clockRatePr, tempStr);
 						}
 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid Treeagepr argument\n", spacer);
+					MrBayesPrint ("%s   Invalid Clockratepr argument\n", spacer);
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
@@ -5945,77 +5937,85 @@ int DoPrsetParm (char *parmName, char *tkn)
 					{
 					if (activeParts[i] == YES || nApplied == 0)
 						{
-						if (!strcmp(modelParams[i].treeAgeCalibration.name,"Uniform"))
+						if (!strcmp(modelParams[i].clockRatePr,"Normal"))
 							{
 							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
-								MrBayesPrint ("%s   Tree age must be positive\n", spacer);
+								if (numVars[i] == 0)
+                                    MrBayesPrint ("%s   Mean of the normal must be positive\n", spacer);
+								else if (numVars[i] == 1)
+                                    MrBayesPrint ("%s   Standard deviation of the normal must be positive\n", spacer);
 								return (ERROR);
 								}
-							if (numVars[i] == 1 && tempD <= modelParams[i].treeAgeCalibration.min)
-								{
-								MrBayesPrint ("%s   Second parameter of the uniform must be larger than the first\n", spacer);
-								return (ERROR);
-								}
-							if (numVars[i] == 0)
-								modelParams[i].treeAgeCalibration.min = tempD;
-							else
-								modelParams[i].treeAgeCalibration.max = tempD;
+							modelParams[i].clockRateNormal[numVars[i]] = tempD;
 							numVars[i]++;
 							if (numVars[i] == 1)
 								expecting  = Expecting(COMMA);
 							else
 								{
-								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Treeagepr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].treeAgeCalibration.min, modelParams[i].treeAgeCalibration.max);
+								if (nApplied == 0 || numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
 								else
-									MrBayesPrint ("%s   Setting Treeagepr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeCalibration.min, modelParams[i].treeAgeCalibration.max, i+1);
+									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
-						else if (!strcmp(modelParams[i].treeAgeCalibration.name,"Offsetexponential"))
+						else if (!strcmp(modelParams[i].clockRatePr,"Lognormal"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-							if (numVars[i] == 0)
-								modelParams[i].treeAgeCalibration.offset = tempD;
-							else
-								modelParams[i].treeAgeCalibration.lambda = tempD;
+							modelParams[i].clockRateLognormal[numVars[i]] = tempD;
 							numVars[i]++;
 							if (numVars[i] == 1)
-								{
-								if (tempD < 0.0)
-									{
-									MrBayesPrint ("%s   Offset age cannot be negative\n", spacer);
-									return (ERROR);
-									}
 								expecting  = Expecting(COMMA);
-								}
 							else
 								{
-								if (tempD <= 0.0)
-									{
-									MrBayesPrint ("%s   Rate parameter must be positive\n", spacer);
-									return (ERROR);
-									}
-								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Treeagepr to Offsetexponential(%1.2lf,%1.2lf)\n", spacer, modelParams[i].treeAgeCalibration.offset, modelParams[i].treeAgeCalibration.lambda);
+								if (nApplied == 0 || numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1]);
 								else
-									MrBayesPrint ("%s   Setting Treeagepr to Offsetexponential(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeCalibration.offset, modelParams[i].treeAgeCalibration.lambda, i+1);
+									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
-						else if (!strcmp(modelParams[i].treeAgeCalibration.name,"Fixed"))
+						else if (!strcmp(modelParams[i].clockRatePr,"Exponential"))
 							{
 							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
-								MrBayesPrint ("%s   Tree age must be positive\n", spacer);
+                                MrBayesPrint ("%s   Rate of the exponential must be positive\n", spacer);
 								return (ERROR);
 								}
-							modelParams[i].treeAgeCalibration.age = tempD;
-							MrBayesPrint ("%s   Setting Treeagepr to Fixed(%1.2lf)\n", spacer, modelParams[i].treeAgeCalibration.age);
+							modelParams[i].clockRateExp = tempD;
+							numVars[i]++;
+							if (nApplied == 0 || numCurrentDivisions == 1)
+								MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].clockRateExp);
+							else
+								MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
+							}
+						else if (!strcmp(modelParams[i].clockRatePr,"Gamma"))
+							{
+							sscanf (tkn, "%lf", &tempD);
+							if (tempD <= 0.0)
+								{
+								if (numVars[i] == 0)
+                                    MrBayesPrint ("%s   Shape of the gamma must be positive\n", spacer);
+								else if (numVars[i] == 1)
+                                    MrBayesPrint ("%s   Rate (inverse scale) of the gamma must be positive\n", spacer);
+								return (ERROR);
+								}
+							modelParams[i].clockRateGamma[numVars[i]] = tempD;
+							numVars[i]++;
+							if (numVars[i] == 1)
+								expecting  = Expecting(COMMA);
+							else
+								{
+								if (nApplied == 0 || numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1]);
+								else
+									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1], i+1);
+								expecting  = Expecting(RIGHTPAR);
+								}
 							}
 						}
 					}
@@ -6031,8 +6031,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Thetapr (thetaPr) **************************************************************/
-		else if (!strcmp(parmName, "Thetapr"))
+		/* set Popsizepr (popSizePr) **************************************************************/
+		else if (!strcmp(parmName, "Popsizepr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -6044,12 +6044,12 @@ int DoPrsetParm (char *parmName, char *tkn)
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if (activeParts[i] == YES || nApplied == 0)
-							strcpy(modelParams[i].thetaPr, tempStr);
+							strcpy(modelParams[i].popSizePr, tempStr);
 						}
 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid Thetapr argument\n", spacer);
+					MrBayesPrint ("%s   Invalid Popsizepr argument\n", spacer);
 					return (ERROR);
 					}
 				expecting  = Expecting(LEFTPAR);
@@ -6067,49 +6067,49 @@ int DoPrsetParm (char *parmName, char *tkn)
 					{
 					if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
 						{
-						if (!strcmp(modelParams[i].thetaPr,"Uniform"))
+						if (!strcmp(modelParams[i].popSizePr,"Uniform"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].thetaUni[numVars[i]++] = tempD;
+							modelParams[i].popSizeUni[numVars[i]++] = tempD;
 							if (numVars[i] == 1)
 								expecting  = Expecting(COMMA);
 							else
 								{
-								if (modelParams[i].thetaUni[0] >= modelParams[i].thetaUni[1])
+								if (modelParams[i].popSizeUni[0] >= modelParams[i].popSizeUni[1])
 									{
 									MrBayesPrint ("%s   Lower value for uniform should be greater than upper value\n", spacer);
 									return (ERROR);
 									}
 								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Thetapr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].thetaUni[0], modelParams[i].thetaUni[1]);
+									MrBayesPrint ("%s   Setting Popsizepr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].popSizeUni[0], modelParams[i].popSizeUni[1]);
 								else
-									MrBayesPrint ("%s   Setting Thetapr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].thetaUni[0], modelParams[i].thetaUni[1], i+1);
+									MrBayesPrint ("%s   Setting Popsizepr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeUni[0], modelParams[i].popSizeUni[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
-						else if (!strcmp(modelParams[i].thetaPr,"Exponential"))
+						else if (!strcmp(modelParams[i].popSizePr,"Exponential"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].thetaExp = tempD;
+							modelParams[i].popSizeExp = tempD;
 							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Thetapr to Exponential(%1.2lf)\n", spacer, modelParams[i].thetaExp);
+								MrBayesPrint ("%s   Setting Popsizepr to Exponential(%1.2lf)\n", spacer, modelParams[i].popSizeExp);
 							else
-								MrBayesPrint ("%s   Setting Thetapr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].thetaExp, i+1);
+								MrBayesPrint ("%s   Setting Popsizepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
-						else if (!strcmp(modelParams[i].thetaPr,"Fixed"))
+						else if (!strcmp(modelParams[i].popSizePr,"Fixed"))
 							{
 							sscanf (tkn, "%lf", &tempD);
 							if (AreDoublesEqual(tempD, 0.0, ETA)==YES)
 								{
-								MrBayesPrint ("%s   Theta cannot be fixed to 0.0\n", spacer);
+								MrBayesPrint ("%s   Popsizepr cannot be fixed to 0.0\n", spacer);
 								return (ERROR);
 								}
-							modelParams[i].thetaFix = tempD;
+							modelParams[i].popSizeFix = tempD;
 							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Thetapr to Fixed(%1.2lf)\n", spacer, modelParams[i].thetaFix);
+								MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.2lf)\n", spacer, modelParams[i].popSizeFix);
 							else
-								MrBayesPrint ("%s   Setting Thetapr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].thetaFix, i+1);
+								MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeFix, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
 						}
@@ -6585,7 +6585,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 								MrBayesPrint ("%s   Setting Growthpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].growthExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
-						else if (!strcmp(modelParams[i].thetaPr,"Fixed"))
+						else if (!strcmp(modelParams[i].growthPr,"Fixed"))
 							{
 							sscanf (tkn, "%lf", &tempD);
 							if (isNegative == YES)
@@ -8736,17 +8736,17 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 				else
 					value[0] =  0.2;
 				}
-			else if (p->paramType == P_THETA)
+			else if (p->paramType == P_POPSIZE)
 				{
-				/* Fill in theta ****************************************************************************************/
-				if (p->paramId == THETA_UNI)
-					value[0] = RandomNumber(seed) * (mp->thetaUni[1] - mp->thetaUni[0]) + mp->thetaUni[0];
+				/* Fill in population size ****************************************************************************************/
+				if (p->paramId == POPSIZE_UNI)
+					value[0] = RandomNumber(seed) * (mp->popSizeUni[1] - mp->popSizeUni[0]) + mp->popSizeUni[0];
 
-				else if (p->paramId == THETA_EXP)
-					value[0] =   (-(1.0/mp->thetaExp) * log(1.0 - RandomNumber(seed)));
+				else if (p->paramId == POPSIZE_EXP)
+					value[0] =   (-(1.0/mp->popSizeExp) * log(1.0 - RandomNumber(seed)));
 
-				else if (p->paramId == THETA_FIX)
-					value[0] = mp->thetaFix;
+				else if (p->paramId == POPSIZE_FIX)
+					value[0] = mp->popSizeFix;
 				}
 			else if (p->paramType == P_AAMODEL)
 				{
@@ -8885,6 +8885,20 @@ int FillNormalParams (safeLong *seed, int fromChain, int toChain)
 			else if (p->paramType == P_IBRBRANCHRATES)
 				{
 				/* We fill in these when we fill in tree params **************************************************************************/
+				}
+			else if (p->paramType == P_CLOCKRATE)
+				{
+				/* Fill in base rate of molecular clock **************************************************************************/
+				if (p->paramId == CLOCKRATE_FIX)
+					value[0] = mp->clockRateFix;
+                else if (p->paramId == CLOCKRATE_NORMAL)
+                    value[0] = mp->clockRateNormal[0];
+                else if (p->paramId == CLOCKRATE_LOGNORMAL)
+                    value[0] = exp(mp->clockRateLognormal[0]);
+                else if (p->paramId == CLOCKRATE_EXP)
+                    value[0] = 1.0/(mp->clockRateExp);
+                else if (p->paramId == CLOCKRATE_GAMMA)
+                    value[0] = mp->clockRateGamma[0]/mp->clockRateGamma[1];
 				}
 			}	/* next param */
 		}	/* next chain */
@@ -9899,17 +9913,6 @@ int InitializeTreeCalibrations (Tree *t)
 			}
 		}
 
-	/* add root age calibration */
-	p = t->root->left;
-	p->isDated = YES;
-	p->calibration = &modelParams[t->relParts[0]].treeAgeCalibration;
-	if (p->calibration->prior == fixed)
-		p->age = p->calibration->age;
-	else if (p->calibration->prior == uniform)
-		p->age = p->calibration->min;
-	else /* if (p->calibration->prior == offsetExponential) */
-		p->age = p->calibration->offset;
-
 	return (NO_ERROR);
 }
 
@@ -9950,7 +9953,6 @@ int IsApplicableTreeAgeMove (Param *param)
     else
         return YES;
 }
-
 
 
 
@@ -10752,15 +10754,22 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			else
 				{
 				nDiff = 0;
-				for (i=0; i<modelParams[part1].numActiveConstraints; i++)
+				for (i=0; i<numDefinedConstraints; i++)
 					if (modelParams[part1].activeConstraints[i] != modelParams[part2].activeConstraints[i])
 						nDiff++;
 				if (nDiff != 0)
 					isSame = NO;
 				}
 			}
-		}
-	else if (whichParam == P_BRLENS)
+
+        /* If both partitions have clock branch lengths, the clock branch lengths need to be the same */
+        if (!strcmp(modelParams[part1].brlensPr, "Clock") && !strcmp(modelParams[part2].brlensPr, "Clock"))
+            {
+            if (IsModelSame(P_BRLENS, part1, part2, isApplic1, isApplic2) == NO)
+                isSame = NO;
+    		}
+        }
+    else if (whichParam == P_BRLENS)
 		{
 		/* Check the branch lengths for partitions 1 and 2. */
 
@@ -10855,30 +10864,36 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 							}
 						else
 							isSame = NO;
-						}
+
+						if (AreDoublesEqual (modelParams[part1].sampleProb, modelParams[part2].sampleProb, 0.00001) == NO)
+                            isSame = NO;
+                        }
 					else if (!strcmp(modelParams[part1].clockPr, "Coalescence"))
 						{
-						if (!strcmp(modelParams[part1].thetaPr,"Uniform") && !strcmp(modelParams[part2].thetaPr,"Uniform"))
+						if (!strcmp(modelParams[part1].popSizePr,"Uniform") && !strcmp(modelParams[part2].popSizePr,"Uniform"))
 							{
-							if (AreDoublesEqual (modelParams[part1].thetaUni[0], modelParams[part2].thetaUni[0], (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].popSizeUni[0], modelParams[part2].popSizeUni[0], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
-							if (AreDoublesEqual (modelParams[part1].thetaUni[1], modelParams[part2].thetaUni[1], (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
-						else if (!strcmp(modelParams[part1].thetaPr,"Exponential") && !strcmp(modelParams[part2].thetaPr,"Exponential"))
-							{
-							if (AreDoublesEqual (modelParams[part1].thetaExp, modelParams[part2].thetaExp, (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].popSizeUni[1], modelParams[part2].popSizeUni[1], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
-						else if (!strcmp(modelParams[part1].thetaPr,"Fixed") && !strcmp(modelParams[part2].thetaPr,"Fixed"))
+						else if (!strcmp(modelParams[part1].popSizePr,"Exponential") && !strcmp(modelParams[part2].popSizePr,"Exponential"))
 							{
-							if (AreDoublesEqual (modelParams[part1].thetaFix, modelParams[part2].thetaFix, (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].popSizeExp, modelParams[part2].popSizeExp, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							}
+						else if (!strcmp(modelParams[part1].popSizePr,"Fixed") && !strcmp(modelParams[part2].popSizePr,"Fixed"))
+							{
+							if (AreDoublesEqual (modelParams[part1].popSizeFix, modelParams[part2].popSizeFix, (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
 						else
 							isSame = NO;
+
+                        if (strcmp(modelParams[part1].ploidy, modelParams[part2].ploidy) != 0)
+                            isSame = NO;
 						}
-					if (strcmp(modelParams[part1].clockPr, "Coalescence") != 0)
+					if (strcmp(modelParams[part1].clockPr, "Uniform") == 0)
 						{
 						if (strcmp(modelParams[part1].treeHeightPr,modelParams[part2].treeHeightPr) != 0)
 							isSame = NO;
@@ -10908,29 +10923,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						isSame = NO;
 					if (!strcmp(modelParams[part1].nodeAgePr,"Calibrated"))
 						{
-						/* check the root age calibration */
-						if (strcmp(modelParams[part1].treeAgeCalibration.name,modelParams[part2].treeAgeCalibration.name) != 0)
-							isSame = NO;
-						else if (!strcmp(modelParams[part1].treeAgeCalibration.name,"Fixed"))
-							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeCalibration.age, modelParams[part2].treeAgeCalibration.age, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
-						else if (!strcmp(modelParams[part1].treeAgeCalibration.name,"Uniform"))
-							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeCalibration.min, modelParams[part2].treeAgeCalibration.min, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							if (AreDoublesEqual (modelParams[part1].treeAgeCalibration.max, modelParams[part2].treeAgeCalibration.max, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
-						else if (!strcmp(modelParams[part1].treeAgeCalibration.name,"Offsetexponential"))
-							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeCalibration.offset, modelParams[part2].treeAgeCalibration.offset, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							if (AreDoublesEqual (modelParams[part1].treeAgeCalibration.lambda, modelParams[part2].treeAgeCalibration.lambda, (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
-						}
+						/* check the calibrations; if the constraints are the same, the calibrations are also */
+				        nDiff = 0;
+				        for (i=0; i<numDefinedConstraints; i++)
+					        if (modelParams[part1].activeConstraints[i] != modelParams[part2].activeConstraints[i])
+						        nDiff++;
+				        if (nDiff != 0)
+					        isSame = NO;
+				        }
 					}
 				}
 			/* If fixed brlens, check if the brlens come from the same tree */
@@ -11030,12 +11030,12 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			isSame = NO; 
 
 		}
-	else if (whichParam == P_THETA)
+	else if (whichParam == P_POPSIZE)
 		{
-		/* Check theta for partitions 1 and 2. */
+		/* Check population size for partitions 1 and 2. */
 
 		/* Check if the model is parsimony for either partition. If so, then the branch lengths cannot apply (as parsimony is very
-		   silly and doesn't take this information into account) and theta cannot be estimated. */
+		   silly and doesn't take this information into account) and population size cannot be estimated. */
 		if (!strcmp(modelParams[part1].parsModel, "Yes"))
 			*isApplic1 = NO; 
 		if (!strcmp(modelParams[part2].parsModel, "Yes"))
@@ -11051,28 +11051,28 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (strcmp(modelParams[part2].clockPr, "Coalescence"))
 			*isApplic2 = NO;
 		
-		/* Now, check that the prior on theta is the same. */
-		if (!strcmp(modelParams[part1].thetaPr,"Uniform") && !strcmp(modelParams[part2].thetaPr,"Uniform"))
+		/* Now, check that the prior on population size is the same. */
+		if (!strcmp(modelParams[part1].popSizePr,"Uniform") && !strcmp(modelParams[part2].popSizePr,"Uniform"))
 			{
-			if (AreDoublesEqual (modelParams[part1].thetaUni[0], modelParams[part2].thetaUni[0], (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].popSizeUni[0], modelParams[part2].popSizeUni[0], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
-			if (AreDoublesEqual (modelParams[part1].thetaUni[1], modelParams[part2].thetaUni[1], (MrBFlt) 0.00001) == NO)
-				isSame = NO;
-			}
-		else if (!strcmp(modelParams[part1].thetaPr,"Exponential") && !strcmp(modelParams[part2].thetaPr,"Exponential"))
-			{
-			if (AreDoublesEqual (modelParams[part1].thetaExp, modelParams[part2].thetaExp, (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].popSizeUni[1], modelParams[part2].popSizeUni[1], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
 			}
-		else if (!strcmp(modelParams[part1].thetaPr,"Fixed") && !strcmp(modelParams[part2].thetaPr,"Fixed"))
+		else if (!strcmp(modelParams[part1].popSizePr,"Exponential") && !strcmp(modelParams[part2].popSizePr,"Exponential"))
 			{
-			if (AreDoublesEqual (modelParams[part1].thetaFix, modelParams[part2].thetaFix, (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].popSizeExp, modelParams[part2].popSizeExp, (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			}
+		else if (!strcmp(modelParams[part1].popSizePr,"Fixed") && !strcmp(modelParams[part2].popSizePr,"Fixed"))
+			{
+			if (AreDoublesEqual (modelParams[part1].popSizeFix, modelParams[part2].popSizeFix, (MrBFlt) 0.00001) == NO)
 				isSame = NO;
 			}
 		else
 			isSame = NO;
 		
-		/* Check to see if theta is inapplicable for either partition. */
+		/* Check to see if population size is inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 
 
@@ -11122,7 +11122,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* Check to see if growth rate is inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 
-
 		}
 	else if (whichParam == P_AAMODEL)
 		{
@@ -11262,9 +11261,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is cpp for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part1].clockVarPr, "Cpp"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part2].clockVarPr, "Cpp"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on cpp rate is the same. */
@@ -11303,9 +11302,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is cpp for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part1].clockVarPr, "Cpp"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part2].clockVarPr, "Cpp"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on psigamma shape is the same. */
@@ -11351,9 +11350,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is cpp for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part1].clockVarPr, "Cpp"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Cpp"))
+		if (strcmp(modelParams[part2].clockVarPr, "Cpp"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the cpp parameter is the same */
@@ -11386,9 +11385,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is bm for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Bm"))
+		if (strcmp(modelParams[part1].clockVarPr, "Bm"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Bm"))
+		if (strcmp(modelParams[part2].clockVarPr, "Bm"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on bm variance is the same. */
@@ -11434,9 +11433,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is bm for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Bm"))
+		if (strcmp(modelParams[part1].clockVarPr, "Bm"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Bm"))
+		if (strcmp(modelParams[part2].clockVarPr, "Bm"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the bm variance parameter is the same */
@@ -11465,9 +11464,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is ibr for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Ibr"))
+		if (strcmp(modelParams[part1].clockVarPr, "Ibr"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Ibr"))
+		if (strcmp(modelParams[part2].clockVarPr, "Ibr"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on ibr gamma shape is the same. */
@@ -11513,9 +11512,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			*isApplic2 = NO;
 
 		/* Check that the clock rate prior is ibr for both partitions */
-		if (strcmp(modelParams[part1].clockRatePr, "Ibr"))
+		if (strcmp(modelParams[part1].clockVarPr, "Ibr"))
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockRatePr, "Ibr"))
+		if (strcmp(modelParams[part2].clockVarPr, "Ibr"))
 			*isApplic2 = NO;
 		
 		/* Now, check that the ibr gamma shape parameter is the same */
@@ -11525,6 +11524,32 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* Set isSame to NO if ibr branch rates are inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
+		}
+	else if (whichParam == P_CLOCKRATE)
+		{
+		/* Check base substitution rates of clock tree for partitions 1 and 2. */
+	
+        /* Check that the topology parameter is the same for both partitions; then we overwrite isApplic. */
+		if (IsModelSame(P_TOPOLOGY, part1, part2, isApplic1, isApplic2) == NO)
+            isSame = NO;
+
+        /* Check if the model is parsimony for either partition. If so, then branch lengths do not apply (as parsimony is very
+		silly and doesn't take this information into account) and clock branch rates are inapplicable. */
+		if (!strcmp(modelParams[part1].parsModel, "Yes"))
+			*isApplic1 = NO; 
+		if (!strcmp(modelParams[part2].parsModel, "Yes"))
+			*isApplic2 = NO; 
+
+		/* Check that the branch length prior is clock for both partitions. */
+		if (strcmp(modelParams[part1].brlensPr, "Clock"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].brlensPr, "Clock"))
+			*isApplic2 = NO;
+
+        /* Set isSame to NO if base substitution rate parameter is inapplicable for either partition. */
+		if ((*isApplic1) == NO || (*isApplic2) == NO)
+			isSame = NO;
+
 		}
 	else
 		{
@@ -13092,7 +13117,7 @@ int SetModelDefaults (void)
 
 {
 
-	int			i, j;
+	int			j;
 
 	MrBayesPrint ("%s   Setting model defaults\n", spacer);
 	MrBayesPrint ("%s   Seed (for generating default start values) = %d\n", spacer, globalSeed);
@@ -13183,7 +13208,7 @@ int SetModelInfo (void)
 		m->brlens = NULL;
 		m->speciationRates = NULL;
 		m->extinctionRates = NULL;
-		m->theta = NULL;
+		m->popSize = NULL;
 		m->aaModel = NULL;
 		m->cppRate = NULL;
 		m->cppEvents = NULL;
@@ -13192,6 +13217,7 @@ int SetModelInfo (void)
 		m->bmBranchRates = NULL;
 		m->ibrshape = NULL;
 		m->ibrBranchRates = NULL;
+        m->clockRate = NULL;
 
 		m->CondLikeDown = NULL;
 		m->CondLikeRoot = NULL;
@@ -13646,6 +13672,15 @@ int SetModelParams (void)
 		
 		/* set fill to yes */
 		p->fill = YES;
+
+        /* set prior function to NULL */
+        p->LnPriorRatio = NULL;
+
+        /* set prior paramters to NULL */
+        p->priorParams = NULL;
+
+        /* set affectsLikelihood to NO */
+        p->affectsLikelihood = NO;
 
 		/* set cpp event pointers to NULL */
 		p->nEvents = NULL;
@@ -14393,7 +14428,7 @@ int SetModelParams (void)
 					if (!strcmp(modelParams[p->relParts[i]].brlensPr, "Clock"))
 						{
 						nClockBrlens++;
-						if (strcmp(modelParams[p->relParts[i]].clockRatePr,"Strict") != 0)  /* not strict */
+						if (strcmp(modelParams[p->relParts[i]].clockVarPr,"Strict") != 0)  /* not strict */
 							nRelaxedBrlens++;
 						if (!strcmp(modelParams[p->relParts[i]].nodeAgePr,"Calibrated"))
 							nCalibratedBrlens++;
@@ -14603,33 +14638,33 @@ int SetModelParams (void)
 			SafeStrcat (&p->paramHeader, "mu/lambda");
 			SafeStrcat (&p->paramHeader, partString);
 			}
-		else if (j == P_THETA)
+		else if (j == P_POPSIZE)
 			{
-			/* Set up theta *****************************************************************************************/
-			p->paramType = P_THETA;
+			/* Set up population size *****************************************************************************************/
+			p->paramType = P_POPSIZE;
 			p->nValues = 1;
 			p->nSubValues = 0;
-            p->min = 0.0;
+            p->min = POS_MIN;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
-					modelSettings[i].theta = p;
+					modelSettings[i].popSize = p;
 
-            p->paramTypeName = "Coalescent process parameter";
-			strcpy (p->name, "Theta");
+            p->paramTypeName = "Coalescent process population size parameter";
+			strcpy (p->name, "N_e");
 			strcat (p->name, partString);
 
 			/* find the parameter x prior type */
-			if (!strcmp(mp->thetaPr,"Uniform"))
-				p->paramId = THETA_UNI;
-			else if (!strcmp(mp->thetaPr,"Exponential"))
-				p->paramId = THETA_EXP;
+			if (!strcmp(mp->popSizePr,"Uniform"))
+				p->paramId = POPSIZE_UNI;
+			else if (!strcmp(mp->popSizePr,"Exponential"))
+				p->paramId = POPSIZE_EXP;
 			else
-				p->paramId = THETA_FIX;
+				p->paramId = POPSIZE_FIX;
 
-			if (p->paramId != THETA_FIX)
+			if (p->paramId != POPSIZE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "theta");
+			SafeStrcat (&p->paramHeader, "N_e");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_GROWTH)
@@ -14896,6 +14931,55 @@ int SetModelParams (void)
 
 			SafeStrcat (&p->paramHeader, "ibr");
 			SafeStrcat (&p->paramHeader, partString);
+			}
+		if (j == P_CLOCKRATE)
+			{
+			/* Set up clockRate ****************************************************************************************/
+			p->paramType = P_CLOCKRATE;
+			p->nValues = 1;
+			p->nSubValues = 0;
+            p->min = POS_MIN;
+            p->max = POS_INFINITY;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].tRatio = p;
+	
+            p->paramTypeName = "Base substitution rate of clock tree";
+			strcpy (p->name, "clockrate");
+            strcat (p->name, partString);			
+
+            /* parameter does affect likelihoods */
+            p->affectsLikelihood = YES;
+            
+            /* find the parameter x prior type */
+			if (!strcmp(mp->clockRatePr,"Normal"))
+				{
+				p->paramId = CLOCKRATE_NORMAL;
+                p->LnPriorRatio = &LnProbRatioNormal;
+                p->priorParams = mp->clockRateNormal;
+				}
+			else if (!strcmp(mp->clockRatePr,"Lognormal"))
+				{
+				p->paramId = CLOCKRATE_LOGNORMAL;
+                p->LnPriorRatio = &LnProbRatioLognormal;
+                p->priorParams = mp->clockRateLognormal;
+				}
+			else if (!strcmp(mp->clockRatePr,"Exponential"))
+				{
+				p->paramId = CLOCKRATE_EXP;
+                p->LnPriorRatio = &LnProbRatioExponential;
+                p->priorParams = &mp->clockRateExp;
+				}
+			else if (!strcmp(mp->clockRatePr,"Gamma"))
+				{
+				p->paramId = CLOCKRATE_GAMMA;
+                p->LnPriorRatio = &LnProbRatioGamma;
+                p->priorParams = mp->clockRateGamma;
+				}
+			else
+				p->paramId = CLOCKRATE_FIX;
+				
+			p->printParam = YES;
 			}
 		}
 	free (tempStr);
@@ -16254,6 +16338,26 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
+	/* Move_Popsize */
+	mt = &moveTypes[i++];
+	mt->name = "Sliding window";
+	mt->shortName = "Slider";
+	mt->tuningName[0] = "Sliding window size";
+	mt->shortTuningName[0] = "delta";
+	mt->applicableTo[0] = POPSIZE_UNI;
+	mt->applicableTo[1] = POPSIZE_EXP;
+	mt->nApplicable = 2;
+	mt->moveFxn = &Move_PopSize;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 1.0;  /* window size */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 100.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
 	/* Move_RanSPR1 */
 	mt = &moveTypes[i++];
 	mt->name = "Random SPR version 1";
@@ -16532,6 +16636,72 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
 
+	/* Move_clockRate_S */
+	mt = &moveTypes[i++];
+	mt->name = "Sliding window";
+	mt->shortName = "Slider";
+	mt->tuningName[0] = "Sliding window size";
+	mt->shortTuningName[0] = "delta";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_RealSlider;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 0.5;  /* window size */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 100.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+	/* Move_clockRate_M */
+	mt = &moveTypes[i++];
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_PosRealMultiplier;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
+	/* Move_clockRate_L */
+	mt = &moveTypes[i++];
+	mt->name = "Lognormal";
+	mt->shortName = "Lognormal";
+	mt->tuningName[0] = "Log normal proposal standard deviation";
+	mt->shortTuningName[0] = "sd";
+	mt->applicableTo[0] = CLOCKRATE_NORMAL;
+	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
+	mt->applicableTo[2] = CLOCKRATE_GAMMA;
+	mt->applicableTo[3] = CLOCKRATE_EXP;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_RealNormal;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 0.1;  /* sd */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
 	/* Move_SwitchRate */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -16570,26 +16740,6 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
-
-	/* Move_Theta */
-	mt = &moveTypes[i++];
-	mt->name = "Sliding window";
-	mt->shortName = "Slider";
-	mt->tuningName[0] = "Sliding window size";
-	mt->shortTuningName[0] = "delta";
-	mt->applicableTo[0] = THETA_UNI;
-	mt->applicableTo[1] = THETA_EXP;
-	mt->nApplicable = 2;
-	mt->moveFxn = &Move_Theta;
-	mt->relProposalProb = 1.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;  /* window size */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 100.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
 	/* Move_Tratio_Dir */
@@ -17813,9 +17963,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Extinctionrate ", spacer);
 			}
-		else if (j == P_THETA)
+		else if (j == P_POPSIZE)
 			{
-			MrBayesPrint ("%s      Theta          ", spacer);
+			MrBayesPrint ("%s      Popsize        ", spacer);
 			}
 		else if (j == P_GROWTH)
 			{
@@ -18152,22 +18302,32 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				else if (!strcmp(mp->brlensPr, "Clock"))
 					{
 					MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
-					if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Birthdeath"))
+					if (!strcmp(mp->clockPr,"Uniform"))
 						{
 						if (!strcmp(mp->treeHeightPr, "Gamma"))
-							MrBayesPrint ("%s                         Tree height is Gamma(%1.3lf,%1.3lf) distributed\n", spacer, mp->treeHeightGamma[0], mp->treeHeightGamma[1]);
+							MrBayesPrint ("%s                         Base rate of clock is Gamma(%1.3lf,%1.3lf) distributed\n", spacer, mp->treeHeightGamma[0], mp->treeHeightGamma[1]);
 						else
-							MrBayesPrint ("%s                         Tree height has an Exponential(%1.3lf) distribution\n", spacer, mp->treeHeightExp);
+							MrBayesPrint ("%s                         Base rate of clock has an Exponential(%1.3lf) distribution\n", spacer, mp->treeHeightExp);
 						}
-					if (!strcmp(mp->clockRatePr,"Strict"))
+					if (!strcmp(mp->clockVarPr,"Strict"))
 						MrBayesPrint ("%s                         The clock rate is constant\n", spacer);
-					else if (!strcmp(mp->clockRatePr,"Cpp"))
+					else if (!strcmp(mp->clockVarPr,"Cpp"))
 						MrBayesPrint ("%s                         The clock rate varies according to a CPP model\n", spacer);
-					else if (!strcmp(mp->clockRatePr,"Bm"))
+					else if (!strcmp(mp->clockVarPr,"Bm"))
 						MrBayesPrint ("%s                         The clock rate varies according to a Brownian motion model\n", spacer);
-					else /* if (!strcmp(mp->clockRatePr,"Ibr")) */
-						MrBayesPrint ("%s                         The clock rate varies according to an independent scaled gamma model\n", spacer);
-					if (!strcmp(mp->nodeAgePr,"Calibrated"))
+					else /* if (!strcmp(mp->clockVarPr,"Ibr")) */
+						MrBayesPrint ("%s                         The clock rate varies according to an independent scaled gamma (white noise) model\n", spacer);
+                    if (!strcmp(mp->clockRatePr,"Fixed"))
+						MrBayesPrint ("%s                         The base clock rate per time unit is fixed to %1.3lf\n", spacer, mp->clockRateFix);
+                    else if (!strcmp(mp->clockRatePr,"Normal"))
+						MrBayesPrint ("%s                         The base clock rate per time unit has a Normal(%1.3lf,%1.3lf) distribution\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
+                    else if (!strcmp(mp->clockRatePr,"Lognormal"))
+						MrBayesPrint ("%s                         The base clock rate per time unit has a Lognormal(%1.3lf,%1.3lf) distribution\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
+                    else if (!strcmp(mp->clockRatePr,"Exponential"))
+						MrBayesPrint ("%s                         The base clock rate per time unit has an Exponential(%1.3lf) distribution\n", spacer, mp->clockRateExp);
+                    else if (!strcmp(mp->clockRatePr,"Gamma"))
+						MrBayesPrint ("%s                         The base clock rate per time unit has a Gamma(%1.3lf,%1.3lf) distribution\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
+                    if (!strcmp(mp->nodeAgePr,"Calibrated"))
 						{
 						b = 0;
 						for (a=0; a<numTaxa; a++)
@@ -18180,35 +18340,26 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 							if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
 								b++;
 							}
-						if (b > 0)
-							{
+						if (b > 1)
 							MrBayesPrint ("%s                         Node depths are constrained by the following age constraints:\n", spacer);
-							for (a=0; a<numTaxa; a++)
-								{
-								if (taxaInfo[a].isDeleted == NO && tipCalibration[a].prior != unconstrained)
-									{
-									MrBayesPrint ("%s                         -- The age of terminal \"%s\" is %s\n", spacer, taxaNames[a],
-										tipCalibration[a].name);
-									}
-								}
-							for (a=0; a<numDefinedConstraints; a++)
-								{
-								if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
-									{
-									MrBayesPrint ("%s                         -- The age of constrained node '%s' is %s\n", spacer,
-                                        constraintNames[a], nodeCalibration[a].name);
-									}
-								}
-							}
 						else
 							MrBayesPrint ("%s                         Node depths are calibrated by the following age constraint:\n", spacer);
-						MrBayesPrint ("%s                         -- The age of the root node is %s", spacer, mp->treeAgeCalibration.name);
-						if (!strcmp(mp->treeAgeCalibration.name,"Fixed"))
-							MrBayesPrint ("(%1.2lf)\n", mp->treeAgeCalibration.age);
-						else if (!strcmp(mp->treeAgeCalibration.name,"Uniform"))
-							MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->treeAgeCalibration.min,mp->treeAgeCalibration.max);
-						else /* if (!strcmp)mp->treeAgeCalibration.name,"Offsetexponential")) */
-							MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->treeAgeCalibration.offset, mp->treeAgeCalibration.lambda);
+						for (a=0; a<numTaxa; a++)
+							{
+							if (taxaInfo[a].isDeleted == NO && tipCalibration[a].prior != unconstrained)
+								{
+								MrBayesPrint ("%s                         -- The age of terminal \"%s\" is %s\n", spacer, taxaNames[a],
+									tipCalibration[a].name);
+								}
+							}
+						for (a=0; a<numDefinedConstraints; a++)
+							{
+							if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
+								{
+								MrBayesPrint ("%s                         -- The age of constrained node '%s' is %s\n", spacer,
+                                    constraintNames[a], nodeCalibration[a].name);
+								}
+							}
 						}
 					else
 						MrBayesPrint ("%s                         Node ages are not constrained\n", spacer);
@@ -18237,14 +18388,14 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->extinctionFix);
 			}
-		else if (j == P_THETA)
+		else if (j == P_POPSIZE)
 			{
-			if (!strcmp(mp->thetaPr,"Uniform"))
-				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->thetaUni[0], mp->thetaUni[1]);
-			else if (!strcmp(mp->thetaPr,"Exponential"))
-				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->thetaExp);
+			if (!strcmp(mp->popSizePr,"Uniform"))
+				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->popSizeUni[0], mp->popSizeUni[1]);
+			else if (!strcmp(mp->popSizePr,"Exponential"))
+				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->popSizeExp);
 			else
-				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->thetaFix);
+				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->popSizeFix);
 			}
 		else if (j == P_GROWTH)
 			{
@@ -18342,7 +18493,20 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		else if (j == P_IBRBRANCHRATES)
 			{
 			MrBayesPrint ("%s            Prior      = Scaledgamma (shape = %s * f) \n", spacer, modelSettings[p->relParts[0]].ibrshape->name);
-			MrBayesPrint ("%s                            [f is branch length in proportion to tree height]\n", spacer);
+			MrBayesPrint ("%s                            [where f is branch length]\n", spacer);
+			}
+		else if (j == P_CLOCKRATE)
+			{
+			if (!strcmp(mp->clockRatePr,"Normal"))
+				MrBayesPrint ("%s            Prior      = Normal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
+			else if (!strcmp(mp->clockRatePr,"Lognormal"))
+				MrBayesPrint ("%s            Prior      = Lognormal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
+			else if (!strcmp(mp->clockRatePr,"Gamma"))
+				MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
+			else if (!strcmp(mp->clockRatePr,"Exponential"))
+				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->clockRateExp);
+			else
+				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->clockRateFix);
 			}
 				
 		/* print partitions */

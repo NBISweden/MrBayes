@@ -249,7 +249,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define IBRSHAPE_MAX            100000.0f
 #define OMEGA_MAX               1000000.0f
 
-#define POS_INFINITY                1E25f;
+#define POS_MIN                 1E-25f;
+#define POS_INFINITY            1E25f;
 #define NEG_INFINITY			-1000000.0f
 
 #define	CMD_STRING_LENGTH		100000
@@ -325,10 +326,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_TFILEPOS           87
 
 
-#define	NUM_LINKED				25
 #define	LINKED					0
 #define	UNLINKED				1
 
+#define	NUM_LINKED				26
 #define	P_TRATIO				0
 #define	P_REVMAT				1
 #define	P_OMEGA					2
@@ -342,7 +343,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_BRLENS				10
 #define	P_SPECRATE				11
 #define	P_EXTRATE				12
-#define	P_THETA					13
+#define	P_POPSIZE				13
 #define	P_AAMODEL				14
 #define	P_BRCORR				15
 #define	P_BRSIGMA				16
@@ -353,7 +354,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_CPPEVENTS				21
 #define P_BMBRANCHRATES			22
 #define P_IBRSHAPE              23
-#define P_IBRBRANCHRATES        24      /* NOTE: If you add another parameter, change NUM_LINKED */
+#define P_IBRBRANCHRATES        24
+#define P_CLOCKRATE             25      /* NOTE: If you add another parameter, change NUM_LINKED */
 
 #define CPPm                    0       /* CPP rate multipliers */
 #define CPPi                    1       /* CPP independent rates */
@@ -463,7 +465,6 @@ typedef struct
 	TreeNode		**intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
 	TreeNode		*root;              /*!< pointer to root (lower root in rooted trees) */
 	TreeNode		*nodes;             /*!< array containing the nodes                   */
-	MrBFlt			clockRate;          /*!< clock rate (0.0 if not clock tree)           */
 	safeLong		*bitsets;           /*!< pointer to bitsets describing splits         */
 	safeLong		*flags;             /*!< pointer to cond like flags                   */
 	}
@@ -522,42 +523,52 @@ typedef struct
 	}
 	PolyTree;
 
+/* typedef for a ln prior prob fxn */
+typedef MrBFlt (*LnPriorProbFxn)(MrBFlt val, MrBFlt *priorParams);
+
+/* typedef for a ln prior prob ratio fxn */
+typedef MrBFlt (*LnPriorRatioFxn)(MrBFlt newVal, MrBFlt oldVal, MrBFlt *priorParams);
+
 /* struct for holding model parameter info for the mcmc run */
 typedef struct param
 	{
-	int				index;			/* index to the parameter (0, 1, 2, ...)        */
-	int				paramType;		/* the type of the parameter					*/
-	int				paramId;		/* unique ID for parameter x prior combination	*/
-	MrBFlt			*values;		/* main values of parameter						*/
-	MrBFlt			*subValues;		/* subvalues of parameter						*/
-	int				nValues;		/* number of values								*/
-	int				nSubValues;		/* number of subvalues							*/
-    MrBFlt          min;            /* minimum value of parameter                   */
-    MrBFlt          max;            /* maximum value of parameter                   */
-	int				*relParts;		/* pointer to relevant divisions				*/
-	int				nRelParts;		/* number of relevant divisions					*/
-	int				upDate;			/* update flag (for copying)					*/
-	struct param	**subParams;	/* pointers to subparams (for topology)			*/
-	int				nSubParams;		/* number of subparams							*/
-	Tree			**tree;			/* pointer to tree ptrs (for brlens & topology) */
-	int				treeIndex;		/* index to first tree in mcmcTree				*/
-    int             hasBinaryStd;   /* has binary standard chars                    */
-	int				*sympiBsIndex;	/* pointer to sympi bsIndex (std chars)			*/
-	int				*sympinStates;	/* pointer to sympi nStates (std chars)			*/
-	int				*sympiCType;	/* pointer to sympi cType (std chars)			*/
-	int				nSympi;			/* number of sympis								*/
-	int				printParam;     /* whether parameter should be printed          */
-	int				nPrintSubParams;/* number of subparams that should be printed   */
-	char			*paramHeader;   /* a string holding header for param values		*/
-	char			name[100];		/* string holding name of parameter				*/
-	char			*paramTypeName;	/* pointer to description of parameter type     */
-	int				checkConstraints; /* is tree parameter constrained?             */
-	int				fill;			/* flags whether the parameter should be filled */
-	int				nStdStateFreqs; /* number of std state frequencies				*/
-	MrBFlt			*stdStateFreqs; /* pointer to std state frequencies				*/
-	int				**nEvents;		/* number of branch events for Cpp model        */
-	MrBFlt			***position;	/* event positions for Cpp relaxed clock model  */
-	MrBFlt			***rateMult;	/* rate multipliers for Cpp relaxed clock model */
+	int				index;			    /* index to the parameter (0, 1, 2, ...)        */
+	int				paramType;		    /* the type of the parameter					*/
+	int				paramId;		    /* unique ID for parameter x prior combination	*/
+	MrBFlt			*values;		    /* main values of parameter						*/
+	MrBFlt			*subValues;		    /* subvalues of parameter						*/
+	int				nValues;		    /* number of values								*/
+	int				nSubValues;		    /* number of subvalues							*/
+    MrBFlt          min;                /* minimum value of parameter                   */
+    MrBFlt          max;                /* maximum value of parameter                   */
+	int				*relParts;		    /* pointer to relevant divisions				*/
+	int				nRelParts;		    /* number of relevant divisions					*/
+	int				upDate;			    /* update flag (for copying)					*/
+	struct param	**subParams;	    /* pointers to subparams (for topology)			*/
+	int				nSubParams;		    /* number of subparams							*/
+	Tree			**tree;			    /* pointer to tree ptrs (for brlens & topology) */
+	int				treeIndex;		    /* index to first tree in mcmcTree				*/
+    int             hasBinaryStd;       /* has binary standard chars                    */
+	int				*sympiBsIndex;	    /* pointer to sympi bsIndex (std chars)			*/
+	int				*sympinStates;	    /* pointer to sympi nStates (std chars)			*/
+	int				*sympiCType;	    /* pointer to sympi cType (std chars)			*/
+	int				nSympi;			    /* number of sympis								*/
+	int				printParam;         /* whether parameter should be printed          */
+	int				nPrintSubParams;    /* number of subparams that should be printed   */
+	char			*paramHeader;       /* a string holding header for param values		*/
+	char			name[100];		    /* string holding name of parameter				*/
+	char			*paramTypeName;	    /* pointer to description of parameter type     */
+	int				checkConstraints;   /* is tree parameter constrained?             */
+	int				fill;			    /* flags whether the parameter should be filled */
+	int				nStdStateFreqs;     /* number of std state frequencies				*/
+	MrBFlt			*stdStateFreqs;     /* pointer to std state frequencies				*/
+	int				**nEvents;		    /* number of branch events for Cpp model        */
+	MrBFlt			***position;	    /* event positions for Cpp relaxed clock model  */
+	MrBFlt			***rateMult;	    /* rate multipliers for Cpp relaxed clock model */
+    int             affectsLikelihood;  /* does parameter directly influence likelihood? */
+    MrBFlt*         priorParams;        /* pointer to the prior parameters              */
+    LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                       */
+    LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function         */
 	} Param;
 
 
@@ -622,9 +633,9 @@ typedef struct param
 #define SPECRATE_FIX					62
 #define EXTRATE_BETA					63
 #define EXTRATE_FIX						65
-#define THETA_UNI						66
-#define THETA_EXP						67
-#define THETA_FIX						68
+#define POPSIZE_UNI						66
+#define POPSIZE_EXP						67
+#define POPSIZE_FIX						68
 #define	AAMODEL_FIX						69
 #define	AAMODEL_MIX						70
 #define GROWTH_UNI						71
@@ -687,6 +698,12 @@ typedef struct param
 #define IBRSHAPE_EXP                    130
 #define IBRSHAPE_UNI                    131
 #define IBRBRANCHRATES					132
+#define CLOCKRATE_FIX                   133
+#define CLOCKRATE_NORMAL                134
+#define CLOCKRATE_LOGNORMAL             135
+#define CLOCKRATE_GAMMA                 136
+#define CLOCKRATE_EXP                   137
+
 
 /* typedef for a MoveFxn */
 typedef int (MoveFxn)(Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
@@ -888,8 +905,8 @@ typedef struct model
 	MrBFlt		brlensExp;
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
-	char		clockRatePr[100];     /* prior on clock rate (strict, cpp, mb(rateautocorr))   */
-	char		nodeAgePr[100];     /* prior on node depths (unconstrained, constraints) */
+	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, mb(rateautocorr))   */
+	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
 	char		speciationPr[100];    /* prior on net speciation rate                 */
 	MrBFlt		speciationFix;
 	MrBFlt		speciationUni[2];
@@ -898,16 +915,21 @@ typedef struct model
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
-	char		treeHeightPr[100];    /* prior on tree height for clock models        */
+	char		treeHeightPr[100];    /* prior on tree height for uniform clock prior */
 	MrBFlt		treeHeightGamma[2];
 	MrBFlt		treeHeightExp;
 	MrBFlt		treeHeightFix;
-	Calibration treeAgeCalibration;   /* prior on tree age for calibrated clock models */
-	char		thetaPr[100];         /* prior on coalescence                         */
-	MrBFlt		thetaFix;
-	MrBFlt		thetaUni[2];
-	MrBFlt		thetaExp;
-	char		growthPr[100];      /* prior on coalescence growth rate            */
+	char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
+	MrBFlt		clockRateNormal[2];
+	MrBFlt		clockRateLognormal[2];
+	MrBFlt		clockRateGamma[2];
+	MrBFlt		clockRateExp;
+	MrBFlt		clockRateFix;
+	char		popSizePr[100];       /* prior on population size                    */
+	MrBFlt		popSizeFix;
+	MrBFlt		popSizeUni[2];
+	MrBFlt		popSizeExp;
+	char		growthPr[100];        /* prior on coalescence growth rate            */
 	MrBFlt		growthFix;
 	MrBFlt		growthUni[2];
 	MrBFlt		growthExp;
@@ -1010,7 +1032,7 @@ typedef struct modelinfo
 	Param		*rateMult;					/* ptr to rateMult used in model			*/
 	Param		*speciationRates;			/* ptr to speciationRates used in model		*/
 	Param		*extinctionRates;			/* ptr to extinctionRates used in model		*/
-	Param		*theta;						/* ptr to theta used in model			 	*/
+	Param		*popSize;			        /* ptr to population size used in model		*/
 	Param		*growthRate;				/* ptr to growth rate used in model			*/
 	Param		*topology;					/* ptr to topology used in model			*/
 	Param		*brlens;					/* ptr to brlens (and tree) used in model	*/
@@ -1022,6 +1044,7 @@ typedef struct modelinfo
 	Param		*bmBranchRates;				/* ptr to branch rates for BM relaxed clock */
 	Param		*ibrshape;				    /* ptr to gamma shape for IBR relaxed clock */
 	Param		*ibrBranchRates;			/* ptr to branch rates for IBR relaxed clock*/
+    Param       *clockRate;                 /* ptr to clock rate parameter              */
 
 	int			numChars;					/* number of compressed characters			*/
 	int			numUncompressedChars;		/* number of uncompressed characters		*/

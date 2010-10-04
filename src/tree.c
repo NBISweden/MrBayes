@@ -255,7 +255,6 @@ Tree *AllocateTree (int numTaxa)
     
     t->isRooted = NO;
     t->isClock = NO;
-    t->clockRate = 0.0;
 
     t->checkConstraints = NO;
     t->nConstraints = 0;
@@ -320,7 +319,6 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
     
     t->isRooted = isRooted;
     t->isClock = NO;
-    t->clockRate = 0.0;
 
     t->checkConstraints = NO;
     t->nConstraints = 0;
@@ -1600,7 +1598,6 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 	strcpy (to->name, from->name);
     to->isRooted = from->isRooted;
     to->isClock = from->isClock;
-    to->clockRate = from->clockRate;
     to->isCalibrated = from->isCalibrated;
     to->checkConstraints = from->checkConstraints;
     to->nConstraints = from->nConstraints;
@@ -2226,7 +2223,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 
 	int				i;
 	TreeNode		*p;
-	MrBFlt			totDepth;
+	MrBFlt			totDepth, clockRate=0.0;
 
 #if 0
     printf ("Before initializing calibrated brlens\n");
@@ -2275,7 +2272,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 						if (p->calibration->age <= p->nodeDepth)
 							{
                             if (p->anc->anc == NULL)
-							    MrBayesPrint ("%s   Calibration inconsistency for root node (treeagepr)\n", spacer);
+							    MrBayesPrint ("%s   Calibration inconsistency for root node\n", spacer);
                             else
                                 MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
 							return (ERROR);
@@ -2342,7 +2339,6 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
 
 	/* calculate clock rate based on this total depth */
 	totDepth = t->root->left->nodeDepth;
-	t->clockRate =  (1.0 / totDepth);
 			
 	/* adjust node depths towards the root with 1/2 of available space in preorder traversal */
 	for (i=t->nIntNodes-2; i>=0; i--)
@@ -2361,9 +2357,9 @@ int InitCalibratedBrlens (Tree *t, MrBFlt minLength, safeLong *seed)
                 p->age = p->nodeDepth;
 			}
 		/* else if fixed do nothing to keep it where it was fixed before */
-		if ( (p->anc->nodeDepth - p->nodeDepth)*t->clockRate < minLength ||
-            (p->nodeDepth - p->left->nodeDepth)*t->clockRate < minLength ||
-            (p->nodeDepth - p->right->nodeDepth)*t->clockRate < minLength)
+		if ( (p->anc->nodeDepth - p->nodeDepth)*clockRate < minLength ||
+            (p->nodeDepth - p->left->nodeDepth)*clockRate < minLength ||
+            (p->nodeDepth - p->right->nodeDepth)*clockRate < minLength)
 			{
 			MrBayesPrint ("%s   The requirement for the minimal branch length could not be satisfied. Calibrations are too tight or there are too many levels(the length of the longest path from the root to a tip) in the tree.\n",spacer);
             return (ERROR);
@@ -2475,8 +2471,6 @@ int InitClockBrlens (Tree *t)
 				p->length = 0.0;
 			}
 		}
-
-    t->clockRate = 1.0;
 
 	return (NO_ERROR);
 	
@@ -2614,7 +2608,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 {
 
 	int				i, j, maxRateConstrained, minRateConstrained, isViolated;
-	MrBFlt			f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y;
+	MrBFlt			f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
 	TreeNode		*p, *q, *r, *s;
 
 	if (t->isRooted == NO)
@@ -2783,15 +2777,15 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 
 	/* date all nodes based on a suitable rate */
 	if (minRateConstrained == YES)
-		t->clockRate = minRate;
+		clockRate = minRate;
 	else if (maxRateConstrained == YES)
-		t->clockRate = 0.5 * maxRate;
+		clockRate = 0.5 * maxRate;
 	else
-		t->clockRate = 1.0;
+		clockRate = 1.0;
 	for (i=0; i<t->nNodes-1; i++)
 		{
 		p = t->allDownPass[i];
-		p->age = p->nodeDepth / t->clockRate;
+		p->age = p->nodeDepth / clockRate;
 		}
 
 	/* check if there is an age to add */

@@ -8888,11 +8888,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   To actually use the calibrations to obtain dated trees, you also need to set  \n");
 	    MrBayesPrint ("   a clock model using relevant 'brlenspr' and 'nodeagepr' options of the 'prset'\n");
-	    MrBayesPrint ("   command. You may also want to examine the 'clockratepr' options. Furthermore, \n");
-	    MrBayesPrint ("   you need to activate the relevant constraint(s) using 'topologypr', if you    \n");
-		MrBayesPrint ("   use any dated interior nodes, and you must also set an appropriate prior on   \n");
-	    MrBayesPrint ("   the age of the root node in the tree using 'treeagepr'. For more information, \n");
-	    MrBayesPrint ("   see the text for these parameters in the help for the 'prset' command.        \n");
+	    MrBayesPrint ("   command. You may also want to examine the 'clockvarpr' and 'clockratepr' op-  \n");
+	    MrBayesPrint ("   tions. Furthermore, you need to activate the relevant constraint(s) using     \n");
+		MrBayesPrint ("   'topologypr', if you use any dated interior nodes in the tree.                \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   You may wish to remove a calibration from an interior or terminal node, which \n");
 	    MrBayesPrint ("   has previously been calibrated. You can do that using                         \n");
@@ -9487,21 +9485,22 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    extinction rate and sample probability for the birth-death   \n");
 		MrBayesPrint ("                    prior; theta parameter for the coalescence prior. The branch \n");
 		MrBayesPrint ("                    lengths can also be fixed but only if the topology is fixed. \n");
-		MrBayesPrint ("   Treeheightpr  -- This parameter specifies the prior probability dist-         \n");
-		MrBayesPrint ("                    ribution on the tree height when a clock model is used.      \n");
+		MrBayesPrint ("   Treeheightpr  -- This parameter specifies the prior probability distribution  \n");
+		MrBayesPrint ("                    on the tree height when a uniform prior is used on the branch\n");
+		MrBayesPrint ("                    lengths of a clock tree.                                     \n");
+		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    The options are:                                             \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset treeheightpr = Gamma(<num>,<num>)                   \n");
 		MrBayesPrint ("                       prset treeheightpr = Exponential(<number>)                \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    (And, yes, we know the exponential is a special case of      \n");
-		MrBayesPrint ("                    the gamma distribution.) The tree height is the expected     \n");
-		MrBayesPrint ("                    number of substitutions on a single branch that extends      \n");
-		MrBayesPrint ("                    from the root of the tree to the tips. This parameter        \n");
-		MrBayesPrint ("                    does not come into play for the coalescence prior. It        \n");
-		MrBayesPrint ("                    insures that the prior probability distribution for          \n");
-		MrBayesPrint ("                    unconstrained and birth-death models is proper. The default  \n");
-		MrBayesPrint ("                    is exponential(1).                                           \n");
+		MrBayesPrint ("                    (And, yes, we know the exponential is a special case of the  \n");
+		MrBayesPrint ("                    gamma distribution.) The tree height is the expected number  \n");
+		MrBayesPrint ("                    of substitutions on a single branch that extends from the    \n");
+		MrBayesPrint ("                    root of the tree to a tip. The tree height prior ensures that\n");
+		MrBayesPrint ("                    the joint prior probability distribution for the uniform     \n");
+		MrBayesPrint ("                    prior model of branch lengths in a clock trees is proper. The\n");
+		MrBayesPrint ("                    default setting is exponential(1).                           \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
         MrBayesPrint ("                    that is, lambda - mu in the birth-death model. Options are:  \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -9523,15 +9522,17 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of species that are         \n");
 		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-        \n");
 		MrBayesPrint ("                    death prior on trees (see Yang and Rannala, 1997).           \n");
-		MrBayesPrint ("   Thetapr       -- This parameter sets the prior on the coalescence para-       \n");
-		MrBayesPrint ("                    meter. The options are:                                      \n");
+		MrBayesPrint ("   Popsizepr     -- This parameter sets the prior on the population size compo-  \n");
+		MrBayesPrint ("                    nent of the coalescent parameter. The options are:           \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset thetapr = uniform(<number>,<number>)                \n");
-		MrBayesPrint ("                       prset thetapr = exponential(<number>)                     \n");
-		MrBayesPrint ("                       prset thetapr = fixed(<number>)                           \n");
+		MrBayesPrint ("                       prset popsizepr = uniform(<number>,<number>)              \n");
+		MrBayesPrint ("                       prset popsizepr = exponential(<number>)                   \n");
+		MrBayesPrint ("                       prset popsizepr = fixed(<number>)                         \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    This parameter is only relevant if the coalescence           \n");
-		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
+		MrBayesPrint ("                    This parameter is only relevant if the coalescence process is\n");
+		MrBayesPrint ("                    selected as the prior on branch lengths. Note that the set-  \n");
+		MrBayesPrint ("                    ting of 'ploidy' in 'lset' is important for how this para-   \n");
+		MrBayesPrint ("                    meter is interpreted.                                        \n");
 	/*	MrBayesPrint ("   Growthpr      -- This parameter sets the prior on the exponential growth      \n");
 		MrBayesPrint ("                    parameter of the coalescence process. The options are:       \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -9550,38 +9551,54 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    and interior node ages from the calibration settings (see    \n");
 		MrBayesPrint ("                    the 'calibrate' command). The 'nodeagepr' parameter is only  \n");
 		MrBayesPrint ("                    relevant for clock trees.                                    \n");
-		MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior assumption concerning the \n");
-		MrBayesPrint ("                    age of the root node of a clock tree. By default, the age is \n");
-		MrBayesPrint ("                    fixed to 1.0 (the age of non-calibrated terminal nodes is    \n");
-		MrBayesPrint ("                    assumed to be 0.0). You can change this assumption by either \n");
-		MrBayesPrint ("                    assuming an offset exponential distribution or a uniform     \n");
-		MrBayesPrint ("                    distribution on the root age. The offset exponential option  \n");
-		MrBayesPrint ("                    is invoked with:                                             \n");
+		MrBayesPrint ("   Clockratepr   -- This parameter specifies the prior assumptions concerning the\n");
+		MrBayesPrint ("                    base substitution rate of the tree, measured in expected num-\n");
+		MrBayesPrint ("                    ber of substitutions per site per time unit. The default set-\n");
+		MrBayesPrint ("                    ting is 'Fixed(1.0)', which effectively means that the time  \n");
+		MrBayesPrint ("                    unit is the number of expected substitutions per site. If you\n");
+		MrBayesPrint ("                    apply age constraints to the tree, the default setting chan- \n");
+		MrBayesPrint ("                    ges automatically to 'Exponential(<x>)', where '<x>' is set  \n");
+		MrBayesPrint ("                    such that the expectation of the exponential is ten times the\n");
+		MrBayesPrint ("                    age of the maximum age constraint. This will give you a very \n");
+		MrBayesPrint ("                    vague prior, which may or may not be adequate for your parti-\n");
+		MrBayesPrint ("                    cular problem.                                               \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = offsetexponential(<number1>,<number2>)  \n");
+		MrBayesPrint ("                    If you do not have any age calibrations in the tree, you can \n");
+		MrBayesPrint ("                    still calibrate the tree using 'Clockratepr'. For instance,  \n");
+		MrBayesPrint ("                    if you know that your sequence data evolve at a rat of 0.20  \n");
+		MrBayesPrint ("                    substitutions per million years, you might calibrate the tree\n");
+		MrBayesPrint ("                    by fixing the substitution rate to 0.20 using                \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    where <number1> is the minimum age of the root node and      \n");
-		MrBayesPrint ("                    <number2> is the rate parameter of the exponential distribu- \n");
-		MrBayesPrint ("                    tion. For instance,                                          \n");
+		MrBayesPrint ("                       prset clockratepr = fixed(0.20)                           \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = offsetexponential(100,0.01)             \n");
+		MrBayesPrint ("                    after which the tree will be calibrated using millions of    \n");
+		MrBayesPrint ("                    years as the unit.                                           \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    would specify a prior distribution where the minimum age was \n");
-		MrBayesPrint ("                    100.0 (in user-specified time units) and the expected age was\n");
-		MrBayesPrint ("                    200.0 (= 100 + 1/0.01). The uniform distribution simply      \n");
-		MrBayesPrint ("                    assumes a uniform probability on the root age from a minimum \n");
-		MrBayesPrint ("                    to a maximum value. For instance,                            \n");
+		MrBayesPrint ("                    You can also assign a prior probability distribution to the  \n");
+		MrBayesPrint ("                    substitution rate, accommodating the uncertainty about its   \n");
+		MrBayesPrint ("                    value. You can choose between normal, lognormal, exponential \n");
+		MrBayesPrint ("                    and gamma distributions for this purpose. For instance, if   \n");
+		MrBayesPrint ("                    you would like to associate the substitution rate with a     \n");
+		MrBayesPrint ("                    normal distribution truncated at 0, so that only positive    \n");
+		MrBayesPrint ("                    values are allowed, and with mean 0.20 and standard deviation\n");
+		MrBayesPrint ("                    of 0.02, you would use                                       \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = uniform(100,200)                        \n");
+		MrBayesPrint ("                       prset clockratepr = normal(0.20,0.02)                     \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    would mean that the root age had a uniform prior probability \n");
-		MrBayesPrint ("                    in the interval (100,200). Finally, you can fix the root     \n");
-		MrBayesPrint ("                    age to an arbitrary value using                              \n");
+		MrBayesPrint ("                    The lognormal distribution is parameterized in terms of the  \n");
+		MrBayesPrint ("                    mean and standard deviation on the log scale (natural logs). \n");
+		MrBayesPrint ("                    For instance,                                                \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = fixed(<number>)                         \n");
+		MrBayesPrint ("                       prset clockratepr = lognormal(-1.61,0.10)                 \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    The 'treeagepr' parameter has no effect on non-clock trees.  \n");
-		MrBayesPrint ("   Clockratepr   -- This parameter allows you to specify the type of clock you   \n");
+		MrBayesPrint ("                    specifies a lognormal distribution with a mean of log values \n");
+        MrBayesPrint ("                    of -1.61, corresponding to a rate of e^(-1.61) = 0.20, and a \n");
+        MrBayesPrint ("                    standard deviation of log values of  0.10, corresponding to  \n");
+        MrBayesPrint ("                    a range of about 10 % up or down, since e^(0.10) = 1.10.     \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                    Note that the 'Clockratepr' parameter has no effect on non-  \n");
+		MrBayesPrint ("                    clock trees.                                                 \n");
+		MrBayesPrint ("   Clockvarpr    -- This parameter allows you to specify the type of clock you   \n");
 		MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
 		MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
 		MrBayesPrint ("                    constant throughout the tree. You can also use 'cpp', which  \n");
@@ -9593,11 +9610,11 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    independent rate drawn from a scaled gamma distribution, such\n");
         MrBayesPrint ("                    that there is a specified variance in the effective height of\n");
         MrBayesPrint ("                    the tree in the prior, the Independent Branch Rate (IBR)     \n");
-        MrBayesPrint ("                    model. Each of the relaxed clock models has additional para- \n");
-		MrBayesPrint ("                    meters with priors. For the CPP model, it is 'cppratepr' and \n");
-		MrBayesPrint ("                    'psigammaspr'; for the BM model, it is 'nupr'; for the IBR   \n");
-        MrBayesPrint ("                    model, it is 'ibrshapepr'. The 'clockratepr' parameter is    \n");
-		MrBayesPrint ("                    only relevant for clock trees.                               \n");
+        MrBayesPrint ("                    model (LePage et al., 2007). Each of the relaxed clock models\n");
+		MrBayesPrint ("                    has additional parameters with priors. For the CPP model, it \n");
+		MrBayesPrint ("                    is 'cppratepr' and 'psigammaspr'; for the BM model, it is    \n");
+        MrBayesPrint ("                    'nupr'; for the IBR  model, it is 'ibrshapepr'. The          \n");
+		MrBayesPrint ("                    'clockvarpr' parameter is only relevant for clock trees.     \n");
 		MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
 		MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
 		MrBayesPrint ("                    changes in the evolutionary rate in the CPP relaxed clock    \n");
@@ -9914,13 +9931,13 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
-			MrBayesPrint ("   Thetapr          Uniform/Exponential/Fixed    %s", mp->thetaPr);
-			if (!strcmp(mp->thetaPr, "Uniform"))
-				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->thetaUni[0], mp->thetaUni[1]);
-			else if (!strcmp(mp->thetaPr, "Exponential"))
-				MrBayesPrint ("(%1.1lf)\n", mp->thetaExp);
+			MrBayesPrint ("   Popsizepr        Uniform/Exponential/Fixed    %s", mp->popSizePr);
+			if (!strcmp(mp->popSizePr, "Uniform"))
+				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeUni[0], mp->popSizeUni[1]);
+			else if (!strcmp(mp->popSizePr, "Exponential"))
+				MrBayesPrint ("(%1.1lf)\n", mp->popSizeExp);
 			else
-				MrBayesPrint ("(%1.1lf)\n", mp->thetaFix);
+				MrBayesPrint ("(%1.1lf)\n", mp->popSizeFix);
 
 			/*
 			MrBayesPrint ("   Growthpr         Uniform/Exponential/         \n");
@@ -9937,16 +9954,9 @@ int GetUserHelp (char *helpTkn)
 
 			MrBayesPrint ("   Nodeagepr        Unconstrained/Calibrated     %s\n", mp->nodeAgePr);
 
-			MrBayesPrint ("   Treeagepr        Fixed/Uniform/\n%s", spacer);
-			MrBayesPrint ("                    Offsetexponential            %s", mp->treeAgeCalibration.name);
-			if (!strcmp(mp->treeAgeCalibration.name, "Fixed"))
-				MrBayesPrint ("(%1.2lf)\n", mp->treeAgeCalibration.age);
-			else if (!strcmp(mp->treeAgeCalibration.name,"Uniform"))
-				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->treeAgeCalibration.min, mp->treeAgeCalibration.max);
-			else /* if (!strcmp(mp->treeAgeCalibration.name,"Offsetexponential")) */
-				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->treeAgeCalibration.offset, mp->treeAgeCalibration.lambda);
-
-			MrBayesPrint ("   Clockratepr      Strict/Cpp/Bm/Ibr            %s\n", mp->clockRatePr);
+			MrBayesPrint ("   Clockratepr      Fixed/Normal/Lognormal/\n%s", spacer);
+			MrBayesPrint ("                    Exponential/Gamma            %s", mp->clockRatePr);
+			MrBayesPrint ("   Clockvarpr       Strict/Cpp/Bm/Ibr            %s\n", mp->clockVarPr);
 
 			MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
 			if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -12620,7 +12630,7 @@ void SetUpParms (void)
 	PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
 	PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
-	PARAM   ( 71, "Thetapr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+	PARAM   ( 71, "Popsizepr",      DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 72, "Topology",       DoLinkParm,        "\0");
 	PARAM   ( 73, "Brlens",         DoLinkParm,        "\0");
 	PARAM   ( 74, "Speciationrate", DoLinkParm,        "\0");
@@ -12732,9 +12742,9 @@ void SetUpParms (void)
 	PARAM   (180, "Allavailable",   DoShowmovesParm,   "Yes|No|\0");
 	PARAM   (181, "Seed",			DoSetParm,         "\0");
 	PARAM   (182, "Swapseed",		DoSetParm,         "\0");
-	PARAM   (183, "Treeagepr",      DoPrsetParm,       "Fixed|Offsetexponential|Uniform|\0");
+    PARAM   (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
 	PARAM   (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-	PARAM   (185, "Clockratepr",    DoPrsetParm,       "Strict|Cpp|Bm|Ibr|\0");
+	PARAM   (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|Bm|Ibr|\0");
 	PARAM   (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
 	PARAM   (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
 	PARAM	(188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");

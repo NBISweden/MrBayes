@@ -109,7 +109,6 @@ void    LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b);
 int     LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd);
 void    MultiplyMatrixByScalar (int dim, MrBFlt **a, MrBFlt scalar, MrBFlt **result);
 MrBFlt  PointChi2 (MrBFlt prob, MrBFlt v);
-MrBFlt  PointNormal (MrBFlt prob);
 void    PrintComplexVector (int dim, complex *vec);
 void    PrintSquareComplexMatrix (int dim, complex **m);
 void    PrintSquareDoubleMatrix (int dim, MrBFlt **matrix);

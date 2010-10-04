@@ -258,8 +258,8 @@ int     LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio);
 MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
-int     LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int     LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
+int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
+int     LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t);
 MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
@@ -298,7 +298,7 @@ int     PrintTermState (void);
 void	PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates);
 int     PrintTopConvInfo (void);
 void    PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT);
-int     PrintTree (int curGen, Tree *tree, int showBrlens);
+int     PrintTree (int curGen, Tree *tree, int showBrlens, MrBFlt clockRate);
 int     ProcessStdChars (safeLong *seed);
 #       if defined (MPI_ENABLED)
 int     ReassembleMoveInfo (void);
@@ -6283,7 +6283,6 @@ void CopyTrees (int chain)
 			}
 
 		to->root = to->nodes + from->root->memoryIndex;
-		to->clockRate = from->clockRate;
 
 		/* rest of tree info is constant and need not be copied */
 		}
@@ -10720,12 +10719,16 @@ int IsTreeConsistent (Param *param, int chain, int state)
     Tree        *tree;
     TreeNode    *p;
     int         i, j;
-    MrBFlt      b, r;
+    MrBFlt      b, r, clockRate;
 
     if (param->paramType != P_TOPOLOGY && param->paramType != P_BRLENS)
         return YES;
 
-    tree = GetTree(param, chain, state);
+    tree      = GetTree(param, chain, state);
+    if (param->paramType == P_BRLENS && modelSettings[param->relParts[0]].clockRate != NULL)
+        clockRate = *GetParamVals(modelSettings[param->relParts[0]].clockRate, chain, state);
+    else
+        clockRate = 0.0;
 
     if (CheckConstraints(tree)==ERROR) {
         printf ("Tree does not obey constraints\n");
@@ -10763,10 +10766,10 @@ int IsTreeConsistent (Param *param, int chain, int state)
             {
             p = tree->allDownPass[i];
             if (p->isDated == YES) {
-                if (fabs(p->age - p->nodeDepth/tree->clockRate) > 0.000001)
+                if (fabs(p->age - p->nodeDepth/clockRate) > 0.000001)
                     {
                     printf ("Node %d has age %f but nodeDepth %f when clock rate is %f\n",
-                        p->index, p->age, p->nodeDepth, tree->clockRate);
+                        p->index, p->age, p->nodeDepth, clockRate);
                     return NO;
                     }
                 if (p->calibration->prior == fixed && fabs(p->age - p->calibration->age) > 0.000001)
@@ -12120,7 +12123,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 
 {
-    MrBFlt          oldLnPrior, newLnPrior, theta, growth, sR, eR, sF, oldHeight, newHeight;
+    MrBFlt          oldLnPrior, newLnPrior, theta, growth, sR, eR, sF, oldHeight, newHeight, oldClockRate, newClockRate;
     Model           *mp;
     ModelInfo       *m;
     Tree            *newTree, *oldTree;
@@ -12134,22 +12137,33 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     
     newTree = GetTree (m->brlens, chain, state[chain]);
     oldTree = GetTree (m->brlens, chain, state[chain]^1);
+
+    newClockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+    oldClockRate = *GetParamVals(m->clockRate, chain, state[chain]^1);
     
     /* calculate prior ratio on brlens of clock tree */
 	if (!strcmp(mp->clockPr,"Coalescence"))
 		{
 		/* coalescence prior */
-		theta = *(GetParamVals (m->theta, chain, state[chain]));
-		if (!strcmp(mp->growthPr, "Fixed"))
+        /* first calculate theta as 4*N*mu or 2*N*mu */
+		theta = *(GetParamVals (m->popSize, chain, state[chain]));
+        if (!strcmp(mp->ploidy, "Diploid"))
+            theta *= 4;
+        else
+            theta *= 2;
+        if (m->clockRate != NULL)
+            theta *= *(GetParamVals (m->clockRate, chain, state[chain]));
+        /* deal with growth */
+        if (!strcmp(mp->growthPr, "Fixed"))
 			growth = mp->growthFix;
 		else
 			growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-		if (LnCoalescencePriorPr (oldTree, &oldLnPrior, theta, growth) == ERROR)
+		if (LnCoalescencePriorPr (oldTree, oldClockRate, &oldLnPrior, theta, growth) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
 			return (ERROR);
 			}
-		if (LnCoalescencePriorPr (newTree, &newLnPrior, theta, growth) == ERROR)
+		if (LnCoalescencePriorPr (newTree, newClockRate, &newLnPrior, theta, growth) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
 			return (ERROR);
@@ -12162,12 +12176,12 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 		sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
 		eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 		sF = mp->sampleProb;
-		if (LnBirthDeathPriorPr (oldTree, &oldLnPrior, sR, eR, sF) == ERROR)
+		if (LnBirthDeathPriorPr (oldTree, oldClockRate, &oldLnPrior, sR, eR, sF) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 			return (ERROR);
 			}
-		if (LnBirthDeathPriorPr (newTree, &newLnPrior, sR, eR, sF) == ERROR)
+		if (LnBirthDeathPriorPr (newTree, newClockRate, &newLnPrior, sR, eR, sF) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 			return (ERROR);
@@ -12392,7 +12406,7 @@ MrBFlt LogPrior (int chain)
 
 	int				i, j, c, n, nStates, *nEvents, sumEvents;
 	const int		*rateCat;
-	MrBFlt			*st, *sst, lnPrior, sum, x, theta, growth, *alphaDir, newProp[190],
+	MrBFlt			*st, *sst, lnPrior, sum, x, clockRate, theta, growth, *alphaDir, newProp[190],
 					sR, eR, sF, freq, pInvar, lambda, alpha, nu, ibrshape, **rateMultiplier;
 	CLFlt			*nSitesOfPat;
 	Param			*p;
@@ -12669,12 +12683,13 @@ MrBFlt LogPrior (int chain)
 				else if (p->paramId == BRLENS_CLOCK_COAL)
 					{
 					/* coalescence prior */
-					theta = *(GetParamVals (m->theta, chain, state[chain]));
+					theta     = *(GetParamVals (m->popSize, chain, state[chain]));
+                    clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
 					if (!strcmp(mp->growthPr, "Fixed"))
 						growth = mp->growthFix;
 					else
 						growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-					if (LnCoalescencePriorPr (t, &x, theta, growth) == ERROR)
+					if (LnCoalescencePriorPr (t, clockRate, &x, theta, growth) == ERROR)
 						{
 						MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
 						}
@@ -12683,10 +12698,11 @@ MrBFlt LogPrior (int chain)
 				else
 					{
 					/* birth-death prior */
-					sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-					eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
-					sF = mp->sampleProb;
-					if (LnBirthDeathPriorPr (t, &x, sR, eR, sF) == ERROR)
+					sR        = *(GetParamVals (m->speciationRates, chain, state[chain]));
+					eR        = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+					sF        = mp->sampleProb;
+                    clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
+					if (LnBirthDeathPriorPr (t, clockRate, &x, sR, eR, sF) == ERROR)
 						{
 						MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 						}
@@ -12756,16 +12772,16 @@ MrBFlt LogPrior (int chain)
 				lnPrior += x;
 				}
 			}
-		else if (p->paramType == P_THETA)
+		else if (p->paramType == P_POPSIZE)
 			{
 			/* neutral coalescence parameter */
-			if (p->paramId == THETA_UNI)
+			if (p->paramId == POPSIZE_UNI)
 				{
-				lnPrior += log(1.0) - log(mp->thetaUni[1] - mp->thetaUni[0]);
+				lnPrior += log(1.0) - log(mp->popSizeUni[1] - mp->popSizeUni[0]);
 				}
-			else if (p->paramId == THETA_EXP)
+			else if (p->paramId == POPSIZE_EXP)
 				{
-				lnPrior += log(mp->thetaExp) - mp->thetaExp * st[0];
+				lnPrior += log(mp->popSizeExp) - mp->popSizeExp * st[0];
 				}
 			}
 		else if (p->paramType == P_AAMODEL)
@@ -12896,6 +12912,11 @@ MrBFlt LogPrior (int chain)
                 assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < 0.000001);
 				}
 			}
+		else if (p->paramType == P_CLOCKRATE)
+			{
+			/* base rate of molecular clock */
+            lnPrior += p->LnPriorProb(st[0], p->priorParams);
+			}
 		}
 
 	return (lnPrior);
@@ -12910,40 +12931,10 @@ MrBFlt LogPrior (int chain)
 |
 |   LnBirthDeathPriorPr
 |
-|   See:
-|   Tanja Gernhard (2009) On incomplete sampling under birth-death models and
-|   connections to the sampling-based coalescent. Journal of Theoretical Biology
-|   261: 58-66.
-|
-|   We have the following distribution for oriented trees (equation 5):
-|
-|
-|                    (n-1)       (2n-1)          (e(t_1))             n-1         (b-d)^2 * e(t_i)
-|   p(t|n) = n * (f*b)     * (b-d)     * -------------------------- * prod  ----------------------------
-|                                         (f*b+(b*(1-f)-d)*e(t_1))    i=1    (f*b+(b*(1-f)-d)*e(t_i))^2
-|
-|
-|                  -(b-d)*t
-|   where e(t) = e
-|
-|   This simplifies to
-|
-|                      (b-d) *(e(t_1))        n-1             
-|   p(t|n) = n * -------------------------- * prod  b * p1(t_i)
-|                 (f*b+(b*(1-f)-d)*e(t_1))    i=1
-|
-|   where p1(t) is the probability that the process leaves exactly one surviving lineage after time t
-|   (see function LnP1(...))
-|
-|   For the critical process where the speciation and extinction rates are equal, the equation simplifies
-|   to an expression given in equation (6) in Gernhard (2009).
-|
-|   This function calculates the probability of a tree under the neutral
-|   birth death prior with constant birth and death rates.
 |   We assume a rooted tree that satisfies the molecular clock constraint. The
 |   tree is labelled as follows:
 |
-|                                      t_4  
+|                                      t_4 (age of tips)
 |     \         \         \        /            
 |      \         \         \      /              
 |       \         \         \    /         
@@ -12958,20 +12949,76 @@ MrBFlt LogPrior (int chain)
 |                \      /                  
 |                 \    /                        
 |                  \  /                         
-|                   \/                 t_1 
+|                   \/                 t_1 (age of most recent common ancestor)
 |    
+|
+|   This function calculates the probability of such a tree under the neutral
+|   birth death prior with constant birth and death rates, conditioned on
+|   a particular time of the first split, t_1, and a particular number of
+|   species, n. We assume rho-sampling, that is, a constant sampling pro-
+|   bability rho, which is known, across tips of the tree. Variables:
+|
+|   b: birth (speciation) rate
+|   d: death (extintion) rate
+|   f: sampling fraction
+|
+|   See:
+|   Tanja Stadler (2009) On incomplete sampling under birth-death models and
+|   connections to the sampling-based coalescent. Journal of Theoretical Biology
+|   261: 58-66.
+|
+|   We have the following distribution for ordered bifurcation times (cf. equation
+|   2 in Stadler, 2009):
+|
+|
+|                            n-1       (b-d) * p1(t_i)
+|   f(t|n, t_1) = (n - 2)! * prod --------------------------
+|                            i=2   (1-p0(t)) * (1 - e(t_1))
+|
+|
+|                    -(b-d)*t
+|   where   e(t)  = e
+|           p0(t) = prob. of no descendants surviving and being sampled after time t (see LnP0 function below)
+|           p1(t) = prob. of one descendant surviving and being sampled after time t (see LnP1 function below)
+|
+|   To get the distribution on oriented trees, this density needs to be divided by the
+|   number of ways of ordering n-1 bifurcation times, (n-1)!, since each way of ordering
+|   the bifurcation times corresponds to a distinct oriented tree. The result is the following
+|   density on oritented trees:
+|
+|                   1     n-1       (b-d) * p1(t_i)
+|   f(T|n, t_1) = ----- * prod ----------------------------
+|                 (n-1)   i=2   (1-p0(t_1)) * (1 - e(t_1))
+|
+|
+|   To translate this to a density on distinct labeled trees, the density needs to be multiplied by
+|   (2^(n-1) / n!).
+|
+|   For the critical process where the speciation and extinction rates are equal, we obtain the
+|   following result in the limit:
+|
+|                   1     n-1   (1/t_1 + f*b)
+|   f(T|n, t_1) = ----- * prod -----------------
+|                 (n-1)   i=2   (1 + f*b*t_i)^2
+|
+|   All these densities are expressed in terms of raw birth and death rates, lambda and mu.
+|   However, we use the slightly different parameterization involving net birth and relative
+|   death rates, corresponding to b' = (b - d) and d' = (d/b), in the specification of the
+|   priors. This gives rise to a variable transformation factor, a Jacobian, which is
+|
+|   J = (1 + d')*b' / (1 - d')^3
 |
 ---------------------------------------------------------------------------------*/
 
-int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
+int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 
 {
 
 	int				i, nTaxa;
-	MrBFlt			*nt, lambda, mu;
+	MrBFlt			*nt, et_1, p0t_1, lambda, mu, rho;
 	TreeNode		*p;
 
-	/* allocate space for the scaled speciation times */
+	/* allocate space for the speciation times */
 	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
 	if (!nt)
 		{
@@ -12979,37 +13026,44 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 		return (ERROR);
 		}
 
-    /* calculate lambda and mu from the net speciation and relative extinction rates */
+    /* transform to standard variables */
+    rho    = sF;
     lambda = sR / (1.0 - eR);
-    mu = eR * lambda;
+    mu     = eR * lambda;
 
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
 		{
 		p = t->intDownPass[i];
-		nt[i] = p->nodeDepth / t->clockRate;
+		nt[i] = p->nodeDepth / clockRate;
 		}
     nTaxa = t->nIntNodes + 1;
-							
-	/* calculate probabilities of tree */
+
+	/* calculate probability of tree using standard variables */
 	if (AreDoublesEqual(sR,eR,ETA)==NO)
 		{
-		// birth rate != death rate, see equation (5) in Gernhard (2009)
-        (*prob) = (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        (*prob) += log(nTaxa) + log(lambda-mu) - (lambda-mu)*nt[t->nIntNodes-1];
-        (*prob) -= log(sF*lambda + (lambda*(1.0 - sF) - mu)*exp(-(lambda-mu)*nt[t->nIntNodes-1]));
-		for (i=0; i<t->nIntNodes; i++)
-			(*prob) += sR * LnP1(nt[i], lambda, mu, sF);
+		// birth rate != death rate, see equation (2) in Stadler (2009) and above
+    	et_1  = exp(-(mu - lambda)*nt[t->nIntNodes-1]);
+        p0t_1 = (rho*mu     + (lambda*(1.0 - rho) - mu)*et_1) /
+                (rho*lambda + (lambda*(1.0 - rho) - mu)*et_1);
+        (*prob) = - log(nTaxa - 1.0);
+        (*prob) += (nTaxa - 2.0) * (log(lambda - mu) - log(1.0 - p0t_1) - log(1.0 - et_1));
+		for (i=0; i<t->nIntNodes-1; i++)
+			(*prob) += lambda * LnP1(nt[i], lambda, mu, rho);
+        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
 	else
 		{
-		// birth rate == death rate -> the critical branching process, see equation (6) in Gernhard (2009)
+		// birth rate == death rate -> the critical branching process
+        (*prob) = - log(nTaxa - 1.0);
+    	(*prob) += (nTaxa - 2.0) * (log((1.0 / nt[t->nIntNodes-1]) + rho*lambda));
+        for (i=0; i<t->nIntNodes-1; i++)
+            (*prob) -= 2.0 * log(1.0 + rho*lambda*nt[i]);
         (*prob) = (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        (*prob) += log(nTaxa) + (nTaxa - 1.0) * log(sF*lambda);
-        (*prob) -= log(1.0 + sF*lambda*nt[t->nIntNodes-1]);
-        for (i=0; i<t->nIntNodes; i++)
-            (*prob) -= 2.0 * log(1.0 + sF*lambda*nt[i]);
 		}
+
+    /* Jacobian because of variable transformation */
+    (*prob) += log(sR * (1.0 + eR)) - 3.0 * log(1.0 - eR);
 		
 	/* free memory */
 	free (nt);
@@ -13076,7 +13130,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 |   (2004; Inferring Phylogenies). -- Fredrik.
 |
 ---------------------------------------------------------------------------------*/
-int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
+int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 
 {
 
@@ -13097,7 +13151,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 		{
 		p = t->intDownPass[i];
 		if (p->anc != NULL)
-			ct[j++] = p->nodeDepth;
+			ct[j++] = p->nodeDepth / clockRate;
 		}
 	nNodes = j;
 
@@ -13195,6 +13249,7 @@ MrBFlt LnUniformPriorPr (Tree *t)
     
     /* Calculate default probability */
     nTips = t->nNodes - t->nIntNodes - 1;
+
     /* lnProb = (nTips - 1.0)*log (2.0) - LnFactorial(nTips) - LnFactorial(nTips-1); */
     /* lnProb += LnFactorial(t->nIntNodes - 1); */
 
@@ -13329,7 +13384,7 @@ MrBFlt LnUniformPriorPr (Tree *t)
 | param: b - birth rate
 | param: d - death rate
 | param: f - sample frequency
-| return: log probability of zero remaining lineage
+| return: log probability of zero remaining lineages
 |
 */
 MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
@@ -13370,6 +13425,66 @@ MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 	
 	return (log(1.0/f) + 2.0*log(p0t) + (d-b)*t);
 
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for exponential random variable */
+MrBFlt LnProbRatioExponential(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return params[0] * (oldX - newX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for gamma random variable */
+MrBFlt LnProbRatioGamma(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return (params[1] - 1.0) * (log(newX) - log(oldX)) - params[0] * (newX - oldX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for log normal random variable */
+MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    newZ = (log(newX) - params[0]) / params[1];
+    oldZ = (log(oldX) - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldZ) - log(newZ);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for normal random variable */
+MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    newZ = (newX - params[0]) / params[1];
+    oldZ = (oldX - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0;
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for uniform random variable */
+MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return 0.0;
 }
 
 
@@ -14085,7 +14200,8 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	int			i, j, *nEvents;
 	MrBFlt		tuning, minV, maxV, newAge, oldAge, minAge=0.0, maxAge=0.0,
 				*bmRate, *ibrRate, newTreeLength, oldTreeLength, lambda,
-                nu, ibrShape, oldTreeHeight, newTreeHeight, *brlens=NULL;
+                nu, ibrShape, oldTreeHeight, newTreeHeight, *brlens=NULL,
+                clockRate;
 	TreeNode	*p = NULL, *q, *root;
 	ModelInfo	*m;
 	ModelParams *mp;
@@ -14097,7 +14213,10 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
 	mp = &modelParams[param->relParts[0]];
 	m = &modelSettings[param->relParts[0]];
 
-	/* min brlen */
+    /* clock rate */
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+
+    /* min brlen */
 	minV = BRLENS_MIN;
 
 	/* max brlen */
@@ -14146,10 +14265,10 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
         MrBayesPrint ("%s   Cannot change tree age\n", spacer);
         return (ERROR);
         }
-    if (root->left->nodeDepth / t->clockRate > minAge)
-        minAge = root->left->nodeDepth / t->clockRate;
-    if (root->right->nodeDepth / t->clockRate > minAge)
-        minAge = root->right->nodeDepth / t->clockRate;
+    if (root->left->nodeDepth / clockRate > minAge)
+        minAge = root->left->nodeDepth / clockRate;
+    if (root->right->nodeDepth / clockRate > minAge)
+        minAge = root->right->nodeDepth / clockRate;
 
 	while (newAge < minAge || newAge > maxAge)
 		{
@@ -14165,9 +14284,9 @@ int Move_TreeAgeM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio
     /* update proposal ratio */
     (*lnProposalRatio) += log (newAge / oldAge);
 
-    /* adjust clock rate (a book-keeping device for calibrated trees) */
+    /* adjust clock rate */
     /* the larger the age of the tree, the slower the clock rate */
-    t->clockRate = root->nodeDepth / newAge;
+    clockRate = root->nodeDepth / newAge;
 
     /* adjust all node depths in the tree so that the nodes can keep their age */
     /* set update flags in the process and calculate proposal ratio */
@@ -14340,7 +14459,7 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	oldHeight = t->root->left->nodeDepth;
     minHeight = TREEHEIGHT_MIN;
     maxHeight = TREEHEIGHT_MAX;
-	if( delta > maxHeight ) /* we do it to avoid fallowing long while loop in case if delta is high */
+	if( delta > maxHeight ) /* we do it to avoid following long while loop in case if delta is high */
 		{
 		delta = maxHeight - minHeight;
 		}
@@ -14353,10 +14472,6 @@ int Move_TreeHeight (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 			newHeight = 2.0*maxHeight - newHeight;
 		}
 	treeFactor = newHeight / oldHeight;
-
-	/* adjust clock rate (a book-keeping device for calibrated trees) */
-	if (t->isCalibrated == YES)
-		t->clockRate = t->clockRate * treeFactor;
 
 	/* multiply all branch lengths and node depths by this factor */
 	/* set update flags in the process */
@@ -14496,10 +14611,6 @@ int Move_TreeHeightM (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRa
 		}
 	treeFactor = newHeight / oldHeight;
 
-	/* adjust clock rate (a book-keeping device for calibrated trees) */
-	if (t->isCalibrated == YES)
-		t->clockRate = t->clockRate * treeFactor;
-
 	/* multiply all branch lengths and node depths by this factor */
 	/* set update flags in the process */
 	for (i=0; i<t->nNodes-1; i++)
@@ -14602,7 +14713,7 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	
 	int			i, isValidM;
 	MrBFlt		oldM, newM, window, minM, maxM, ran, sR, eR, sF, oldLnPrior, newLnPrior,
-                oldProp[2], newProp[2], x, y, *alphaDir;
+                oldProp[2], newProp[2], x, y, *alphaDir, clockRate;
 	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
@@ -14650,16 +14761,17 @@ int Move_Extinction (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	*lnProposalRatio = 0.0;
 	
 	/* calculate prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	sF = mp->sampleProb;
-	eR = oldM;
-	if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
+	t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+	sF        = mp->sampleProb;
+	eR        = oldM;
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+	if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
 	eR = newM;
-	if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
+	if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
@@ -20478,9 +20590,9 @@ int Move_Growth (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, 
 
 {
 
-	int			isGPriorExp, isGPriorNorm, isValidG;
-	MrBFlt			oldG, newG, window, minG=0.0, maxG=0.0, growthExp=0.0, ran, oldLnPrior, 
-                                newLnPrior, curTheta, growthMu=0.0, growthVar=0.0, x, y;
+	int			    isGPriorExp, isGPriorNorm, isValidG;
+	MrBFlt	        oldG, newG, window, minG=0.0, maxG=0.0, growthExp=0.0, ran, oldLnPrior, 
+                    newLnPrior, curTheta, growthMu=0.0, growthVar=0.0, x, y, clockRate;
 	ModelParams 	        *mp;
 	ModelInfo		*m;
 	Tree			*t;
@@ -20491,9 +20603,14 @@ int Move_Growth (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get model params */
 	m = &modelSettings[param->relParts[0]];
 	mp = &modelParams[param->relParts[0]];
-	curTheta = *(GetParamVals (m->theta, chain, state[chain]));
+	curTheta = *(GetParamVals (m->popSize, chain, state[chain]));
+    curTheta *= *(GetParamVals (m->clockRate, chain, state[chain]));
+    if (!strcmp(mp->ploidy, "Diploid"))
+        curTheta *= 4;
+    else
+        curTheta *= 4;
 	
-	/* get minimum and maximum values for theta */
+	/* get minimum and maximum values for growth */
 	isGPriorExp = isGPriorNorm = NO;
 	if (param->paramId == GROWTH_UNI)
 		{
@@ -20541,13 +20658,14 @@ int Move_Growth (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, 
 	*lnProposalRatio = 0.0;
 	
 	/* get prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	if (LnCoalescencePriorPr (t, &oldLnPrior, curTheta, oldG) == ERROR)
+	t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
+	if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, curTheta, oldG) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
-	if (LnCoalescencePriorPr (t, &newLnPrior, curTheta, newG) == ERROR)
+	if (LnCoalescencePriorPr (t, clockRate, &newLnPrior, curTheta, newG) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
@@ -23159,7 +23277,7 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 {
 	int			i, *nEvents;
 	MrBFlt	    window, minV, minDepth, maxDepth, oldDepth, newDepth,
-				oldLeftLength=0.0, oldRightLength=0.0, x,
+				oldLeftLength=0.0, oldRightLength=0.0, x, clockRate,
 				oldPLength=0.0, lambda=0.0, nu=0.0, ibrshape=0.0, *brlens=NULL, *bmRate=NULL, *ibrRate=NULL;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
@@ -23177,6 +23295,9 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
+
+    /* get clock rate */
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
 #if defined (DEBUG_CSLIDER)
     for (i=0; i<t->nNodes; i++)
@@ -23250,15 +23371,15 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 		{
 		if (p->calibration->prior == uniform)
 			{
-			if (p->calibration->max * t->clockRate < maxDepth)
-				maxDepth = p->calibration->max * t->clockRate;
-			if (p->calibration->min * t->clockRate > minDepth)
-				minDepth = p->calibration->min * t->clockRate;
+			if (p->calibration->max * clockRate < maxDepth)
+				maxDepth = p->calibration->max * clockRate;
+			if (p->calibration->min * clockRate > minDepth)
+				minDepth = p->calibration->min * clockRate;
 			}
 		else /* if (p->calibration->prior == Offsetexponential) */
 			{
-			if (p->calibration->offset * t->clockRate > minDepth)
-				minDepth = p->calibration->offset * t->clockRate;
+			if (p->calibration->offset * clockRate > minDepth)
+				minDepth = p->calibration->offset * clockRate;
 			}
 		}
 		
@@ -23301,7 +23422,7 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
     /* adjust age of p if dated */
     if (p->isDated == YES)
         {
-        p->age = p->nodeDepth / t->clockRate;
+        p->age = p->nodeDepth / clockRate;
         }
 
     /* set flags for update of cond likes from p and down to root */
@@ -25683,6 +25804,216 @@ int Move_Pinvar (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, 
 	
 	return (NO_ERROR);
 
+}
+
+
+
+
+
+int Move_PopSize (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+	int				isNPriorExp, isValidN;
+	MrBFlt			oldN, newN, window, minN, maxN, popSizeExp=0.0, ran, oldLnPrior, newLnPrior, growth,
+                    oldT, newT, clockRate;
+	ModelParams 	*mp;
+	ModelInfo		*m;
+	Tree			*t;
+
+	/* get size of window, centered on current population size value */
+	window = mvp[0];
+
+	/* get model params */
+	mp = &modelParams[param->relParts[0]];
+	
+	/* get minimum and maximum values for population size */
+	if (param->paramId == POPSIZE_UNI)
+		{
+		minN = mp->popSizeUni[0];
+		maxN = mp->popSizeUni[1];
+		isNPriorExp = NO;
+		}
+	else
+		{
+		minN = 0.0001;
+		maxN = 10000000;
+		popSizeExp = mp->popSizeExp;
+		isNPriorExp = YES;
+		}
+
+	/* get old value of population size */
+	newN = oldN = *GetParamVals(param, chain, state[chain]);
+
+	/* change value for theta */
+	ran = RandomNumber(seed);
+	newN = oldN + window * (ran - 0.5);
+	
+	/* check that new value is valid */
+	isValidN = NO;
+	do
+		{
+		if (newN < minN)
+			newN = 2* minN - newN;
+		else if (newN > maxN)
+			newN = 2 * maxN - newN;
+		else
+			isValidN = YES;
+		} while (isValidN == NO);
+
+	/* get proposal ratio */
+	*lnProposalRatio = 0.0;
+	
+	/* get prior ratio */
+	t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+	m         = &modelSettings[param->relParts[0]];
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+	if (!strcmp(mp->growthPr, "Fixed"))
+		growth = mp->growthFix;
+	else
+		growth = *(GetParamVals (m->growthRate, chain, state[chain]));
+    oldT = oldN;
+    newT = newN;
+    if (!strcmp(mp->ploidy, "Diploid"))
+        {
+        newT *= 4;
+        oldT *= 4;
+        }
+    else
+        {
+        newT *= 2;
+        oldT *= 2;
+        }
+    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
+    newT *= clockRate;
+    oldT *= clockRate;
+	if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, oldT, growth) == ERROR)
+		{
+		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+		return (ERROR);
+		}
+	if (LnCoalescencePriorPr (t, clockRate, &newLnPrior, newT, growth) == ERROR)
+		{
+		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+		return (ERROR);
+		}
+	if (isNPriorExp == NO)
+		*lnPriorRatio = newLnPrior - oldLnPrior;
+	else
+		*lnPriorRatio = -popSizeExp * (newN - oldN) + (newLnPrior - oldLnPrior);
+	
+	/* copy new population size value back */
+	*GetParamVals(param, chain, state[chain]) = newN;
+
+	return (NO_ERROR);
+
+}
+
+
+
+
+
+/* Generalized lognormal move for positive real random variables */
+int Move_PosRealLognormal (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	int			i;
+	MrBFlt		oldX, newX, minX, maxX, tuning, u, z;
+
+	/* get tuning parameter */
+	tuning = mvp[0];
+
+	/* get minimum and maximum values for X */
+	minX = param->min;
+    maxX = param->max;
+
+	/* get old value of X */
+	newX = oldX = *GetParamVals(param, chain, state[chain]);
+
+	/* change value of X */
+	u = RandomNumber(seed);
+	z = PointNormal(u);
+
+    newX = exp (log(oldX) + z * tuning);
+	
+	/* check that new value is valid */
+    if (newX < minX || newX > maxX) {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
+    
+	/* get proposal ratio */
+	(*lnProposalRatio) = log (newX / oldX);
+	
+	/* get prior ratio */
+	(*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+	
+	/* copy new value back */
+    (*GetParamVals(param, chain, state[chain])) = newX;
+
+	/* Set update flags for tree nodes if relevant */
+	if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+		    TouchAllTreeNodes(GetTree(modelSettings[param->relParts[i]].brlens,chain,state[chain]));
+        }
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/* Generalized multiplier move for positive real random variables */
+int Move_PosRealMultiplier (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	int			i, isValid;
+	MrBFlt		oldX, newX, minX, maxX, tuning, ran, factor;
+
+	/* get tuning parameter */
+	tuning = mvp[0];
+
+	/* get minimum and maximum values for X */
+	minX = param->min;
+    maxX = param->max;
+
+	/* get old value of X */
+	newX = oldX = *GetParamVals(param, chain, state[chain]);
+
+	/* change value of X */
+	ran = RandomNumber(seed);
+	factor = exp(tuning * (ran - 0.5));
+	newX = oldX * factor;
+	
+	/* check that new value is valid */
+	isValid = NO;
+	do
+		{
+		if (newX < minX)
+			newX = minX * minX / newX;
+		else if (newX > maxX)
+			newX = maxX * maxX / newX;
+		else
+			isValid = YES;
+		} while (isValid == NO);
+
+	/* get proposal ratio */
+	(*lnProposalRatio) = log (newX / oldX);
+	
+	/* get prior ratio */
+	(*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+	
+	/* copy new value back */
+    (*GetParamVals(param, chain, state[chain])) = newX;
+
+	/* Set update flags for tree nodes if relevant */
+	if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+		    TouchAllTreeNodes(GetTree(modelSettings[param->relParts[i]].brlens,chain,state[chain]));
+        }
+
+	return (NO_ERROR);
 }
 
 
@@ -28466,7 +28797,8 @@ int Move_Speciation (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	/* change speciation rate using sliding window */
 	
 	int			isLPriorExp, isValidL;
-	MrBFlt		oldL, newL, window, minL, maxL, lambdaExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior;
+	MrBFlt		oldL, newL, window, minL, maxL, lambdaExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior,
+                clockRate;
 	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
@@ -28519,16 +28851,17 @@ int Move_Speciation (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRat
 	*lnProposalRatio = 0.0;
 	
 	/* calculate prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	sF = mp->sampleProb;
-	sR = oldL;
-	if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
+	t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+	sF        = mp->sampleProb;
+	sR        = oldL;
+    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
+	if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
 	sR = newL;
-	if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
+	if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
@@ -28557,7 +28890,7 @@ int Move_Speciation_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	
 	int			isLPriorExp, isValidL;
 	MrBFlt		oldL, newL, minL, maxL, lambdaExp=0.0, ran, sR, eR, sF, oldLnPrior, newLnPrior,
-				tuning, factor;
+				tuning, factor, clockRate;
 	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
@@ -28611,16 +28944,17 @@ int Move_Speciation_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	*lnProposalRatio = log (newL / oldL);
 	
 	/* calculate prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	sF = mp->sampleProb;
-	sR = oldL;
-	if (LnBirthDeathPriorPr (t, &oldLnPrior, sR, eR, sF) == ERROR)
+	t        = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+	sF       = mp->sampleProb;
+	sR       = oldL;
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+	if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
 	sR = newL;
-	if (LnBirthDeathPriorPr (t, &newLnPrior, sR, eR, sF) == ERROR)
+	if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sF) == ERROR)
 		{
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
@@ -29659,92 +29993,6 @@ int Move_SwitchRate_M (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorR
 	return (NO_ERROR);
 
 }
-
-
-
-
-int Move_Theta (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
-{
-
-	int				isTPriorExp, isValidT;
-	MrBFlt			oldT, newT, window, minT, maxT, thetaExp=0.0, ran, oldLnPrior, newLnPrior, growth;
-	ModelParams 	*mp;
-	ModelInfo		*m;
-	Tree			*t;
-
-	/* get size of window, centered on current theta value */
-	window = mvp[0];
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
-	
-	/* get minimum and maximum values for theta */
-	if (param->paramId == THETA_UNI)
-		{
-		minT = mp->thetaUni[0];
-		maxT = mp->thetaUni[1];
-		isTPriorExp = NO;
-		}
-	else
-		{
-		minT = 0.0001;
-		maxT = 10000000;
-		thetaExp = mp->thetaExp;
-		isTPriorExp = YES;
-		}
-
-	/* get old value of theta */
-	newT = oldT = *GetParamVals(param, chain, state[chain]);
-
-	/* change value for theta */
-	ran = RandomNumber(seed);
-	newT = oldT + window * (ran - 0.5);
-	
-	/* check that new value is valid */
-	isValidT = NO;
-	do
-		{
-		if (newT < minT)
-			newT = 2* minT - newT;
-		else if (newT > maxT)
-			newT = 2 * maxT - newT;
-		else
-			isValidT = YES;
-		} while (isValidT == NO);
-
-	/* get proposal ratio */
-	*lnProposalRatio = 0.0;
-	
-	/* get prior ratio */
-	t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-	m = &modelSettings[param->relParts[0]];
-	if (!strcmp(mp->growthPr, "Fixed"))
-		growth = mp->growthFix;
-	else
-		growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-	if (LnCoalescencePriorPr (t, &oldLnPrior, oldT, growth) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-		return (ERROR);
-		}
-	if (LnCoalescencePriorPr (t, &newLnPrior, newT, growth) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
-		return (ERROR);
-		}
-	if (isTPriorExp == NO)
-		*lnPriorRatio = newLnPrior - oldLnPrior;
-	else
-		*lnPriorRatio = -thetaExp * (newT - oldT) + (newLnPrior - oldLnPrior);
-	
-	/* copy new theta value back */
-	*GetParamVals(param, chain, state[chain]) = newT;
-
-	return (NO_ERROR);
-
-}
-
 
 
 
@@ -31894,7 +32142,7 @@ int PrintCheckPoint (int gen)
 {
 	int			i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE;
 	char		bkupFileName[100], oldBkupFileName[100], ckpFileName[100], *tempString=NULL;
-	MrBFlt		*value;
+	MrBFlt		*value, clockRate;
 	Param		*p = NULL, *subParm = NULL;
 	Tree		*t;
 	FILE		*fp = NULL;
@@ -32017,7 +32265,10 @@ int PrintCheckPoint (int gen)
             if (t->isRooted == YES && t->isClock == NO)
     	        SafeSprintf (&tempString, &tempStrSize, " = ");
             else if (t->isRooted == YES && t->isClock == YES)
-    	        SafeSprintf (&tempString, &tempStrSize, " = [&R] [&clockrate = %s] ", MbPrintNum(t->clockRate));
+                {
+                clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, j, state[j]);
+    	        SafeSprintf (&tempString, &tempStrSize, " = [&R] [&clockrate = %s] ", MbPrintNum(clockRate));
+                }
             else /* if (t->isRooted == NO) */
     	        SafeSprintf (&tempString, &tempStrSize, " = ");
             if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
@@ -32438,6 +32689,7 @@ int PrintEventTree (int curGen, Tree *tree, int chain, Param *param)
 {
 	int			i, tempStrSize;
 	char		*tempStr;
+    MrBFlt      clockRate;
 	TreeNode	*p=NULL, *q;
     Param       *subParm;
 
@@ -32556,7 +32808,8 @@ int PrintEventTree (int curGen, Tree *tree, int chain, Param *param)
         }
 
     /* write the tree in extended Newick format */
-	SafeSprintf (&tempStr, &tempStrSize, " = [&R] [&clockrate = %lf] ", tree->clockRate);
+    clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chain, state[chain]);
+	SafeSprintf (&tempStr, &tempStrSize, " = [&R] [&clockrate = %lf] ", clockRate);
 	if (AddToPrintString (tempStr) == ERROR) return(ERROR);
    	WriteEventTreeToPrintString (tree->root->left, chain, param, NO);
    	SafeSprintf (&tempStr, &tempStrSize, ";\n");
@@ -33303,7 +33556,7 @@ int PrintStates (int curGen, int coldId)
 
 	int				d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
 	char			partString[100], stateString[4];
-	MrBFlt			*st, *sst, sum;
+	MrBFlt			*st, *sst, sum, clockRate;
 	Param			*p;
 	ModelInfo		*m;
 	Tree			*tree;
@@ -33692,7 +33945,8 @@ int PrintStates (int curGen, int coldId)
 			if (p->tree[0]->isCalibrated == YES)
 				{
 				tree = GetTree (p, coldId, state[coldId]);
-				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(tree->clockRate));
+                clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, coldId, state[coldId]);
+				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(clockRate));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				}
 			for (j=0; j<p->nSubParams; j++)
@@ -34010,6 +34264,7 @@ int PrintStatesToFiles (int curGen)
 {
 
 	int				i, j, chn, coldId, runId;
+    MrBFlt          clockRate;
 	Tree			*tree=NULL;
 	Param			*param;
 #	if defined (MPI_ENABLED)
@@ -34041,7 +34296,7 @@ int PrintStatesToFiles (int curGen)
 				tree = GetTree (param, coldId, state[coldId]);
 				if (param->paramType == P_TOPOLOGY)
 					{
-					if (PrintTree (curGen, tree, NO) == ERROR)
+					if (PrintTree (curGen, tree, NO, 0.0) == ERROR)
 						return (ERROR);
 					}
 				else if (param->nPrintSubParams > 0)
@@ -34051,8 +34306,12 @@ int PrintStatesToFiles (int curGen)
 					}
 				else
 					{
-					if (PrintTree (curGen, tree, YES) == ERROR)
-						return (ERROR);
+                    if (tree->isCalibrated == YES)
+                        clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
+                    else
+                        clockRate = 0.0;
+			        if (PrintTree (curGen, tree, YES, clockRate) == ERROR)
+				        return (ERROR);
 					}
 
 				MrBayesPrintf (fpTree[runId][i], "%s", printString);
@@ -34939,7 +35198,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 
 
 
-int PrintTree (int curGen, Tree *tree, int showBrlens)
+int PrintTree (int curGen, Tree *tree, int showBrlens, MrBFlt clockRate)
 
 {
 
@@ -35044,7 +35303,7 @@ int PrintTree (int curGen, Tree *tree, int showBrlens)
     if (tree->isRooted == YES && tree->isClock == NO)
     	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] ", curGen);
     else if (tree->isRooted == YES && tree->isClock == YES)
-        SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] [&clockrate=%s] ", curGen, MbPrintNum(tree->clockRate));
+        SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&R] [&clockrate=%s] ", curGen, MbPrintNum(clockRate));
     else /* if (tree->isRooted == NO) */
     	SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d = [&U] ", curGen);
     if (AddToPrintString (tempStr) == ERROR) return(ERROR);
@@ -35547,6 +35806,112 @@ int ProcessStdChars (safeLong *seed)
 
 	return (NO_ERROR);
 	
+}
+
+
+
+
+
+/* Generalized normal move for real random variables */
+int Move_RealNormal (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	int             i;
+    MrBFlt			oldX, newX, tuning, minX, maxX, u, z;
+
+	/* get tuning parameter */
+	tuning = mvp[0];
+
+	/* get minimum and maximum values for X */
+    minX = param->min;
+    maxX = param->max;
+
+	/* get old value of X */
+	newX = oldX = *GetParamVals(param, chain, state[chain]);
+
+	/* change value */
+	u = RandomNumber(seed);
+    z = PointNormal(u);
+	newX = oldX + z * tuning;
+	
+	/* check that new value is valid */
+    if (newX < minX || newX > maxX)
+		{
+		abortMove = YES;
+        return (NO_ERROR);
+        }
+
+	/* get proposal ratio */
+	(*lnProposalRatio) = 0.0;
+	
+	/* get prior ratio */
+	(*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+
+    /* copy new value back */
+	*GetParamVals(param, chain, state[chain]) = newX;
+
+	/* Set update flags for tree nodes if relevant */
+	if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+		    TouchAllTreeNodes(GetTree(modelSettings[param->relParts[i]].brlens,chain,state[chain]));
+        }
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/* Generalized slider move for real random variables */
+int Move_RealSlider (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	int				i, isValid;
+	MrBFlt			oldX, newX, window, minX, maxX, u;
+
+	/* get size of window, centered on current value */
+	window = mvp[0];
+
+	/* get minimum and maximum values for X */
+    minX = param->min;
+    maxX = param->max;
+
+	/* get old value of X */
+	newX = oldX = *GetParamVals(param, chain, state[chain]);
+
+	/* change value */
+	u = RandomNumber(seed);
+	newX = oldX + window * (u - 0.5);
+	
+	/* check that new value is valid */
+	isValid = NO;
+	do
+		{
+		if (newX < minX)
+			newX = 2* minX - newX;
+		else if (newX > maxX)
+			newX = 2 * maxX - newX;
+		else
+			isValid = YES;
+		} while (isValid == NO);
+
+	/* get proposal ratio */
+	(*lnProposalRatio) = 0.0;
+	
+	/* get prior ratio */
+	(*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+
+    /* copy new value back */
+	*GetParamVals(param, chain, state[chain]) = newX;
+
+	/* Set update flags for tree nodes if relevant */
+	if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+		    TouchAllTreeNodes(GetTree(modelSettings[param->relParts[i]].brlens,chain,state[chain]));
+        }
+
+	return (NO_ERROR);
 }
 
 
@@ -40183,11 +40548,11 @@ void ShowValuesForChain (int chn)
 		PrintParamValues (modelSettings[i].extinctionRates, chn, s);
 		}
 
-	/* theta */
+	/* popSize */
 	for (i=0; i<numCurrentDivisions; i++)
 		{
-		sprintf (s, "theta[%d]", i);
-		PrintParamValues (modelSettings[i].theta, chn, s);
+		sprintf (s, "popSize[%d]", i);
+		PrintParamValues (modelSettings[i].popSize, chn, s);
 		}
 
 	/* topology */
