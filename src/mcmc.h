@@ -5,11 +5,6 @@ void    AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrB
 int	    DoMcmc (void);
 int	    DoMcmcp (void);
 int	    DoMcmcParm (char *parmName, char *tkn);
-MrBFlt  LnProbRatioExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
-MrBFlt  LnProbRatioGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
-MrBFlt  LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
-MrBFlt  LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
-MrBFlt  LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 int     Move_Aamodel (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_Adgamma (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int	    Move_AddDeleteCPPEvent (Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);

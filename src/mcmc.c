@@ -12138,8 +12138,13 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     newTree = GetTree (m->brlens, chain, state[chain]);
     oldTree = GetTree (m->brlens, chain, state[chain]^1);
 
-    newClockRate = *GetParamVals(m->clockRate, chain, state[chain]);
-    oldClockRate = *GetParamVals(m->clockRate, chain, state[chain]^1);
+    if (m->clockRate != NULL)
+        {
+        newClockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+        oldClockRate = *GetParamVals(m->clockRate, chain, state[chain]^1);
+        }
+    else
+        newClockRate = oldClockRate = 1.0;
     
     /* calculate prior ratio on brlens of clock tree */
 	if (!strcmp(mp->clockPr,"Coalescence"))
@@ -13428,66 +13433,6 @@ MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 	
 	return (log(1.0/f) + 2.0*log(p0t) + (d-b)*t);
 
-}
-
-
-
-
-
-/* Calculate probability ratio of realizations for exponential random variable */
-MrBFlt LnProbRatioExponential(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
-{
-    return params[0] * (oldX - newX);
-}
-
-
-
-
-
-/* Calculate probability ratio of realizations for gamma random variable */
-MrBFlt LnProbRatioGamma(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
-{
-    return (params[1] - 1.0) * (log(newX) - log(oldX)) - params[0] * (newX - oldX);
-}
-
-
-
-
-
-/* Calculate probability ratio of realizations for log normal random variable */
-MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
-{
-    MrBFlt  newZ, oldZ;
-
-    newZ = (log(newX) - params[0]) / params[1];
-    oldZ = (log(oldX) - params[0]) / params[1];
-
-    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldZ) - log(newZ);
-}
-
-
-
-
-
-/* Calculate probability ratio of realizations for normal random variable */
-MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
-{
-    MrBFlt  newZ, oldZ;
-
-    newZ = (newX - params[0]) / params[1];
-    oldZ = (oldX - params[0]) / params[1];
-
-    return (oldZ * oldZ - newZ * newZ) / 2.0;
-}
-
-
-
-
-
-/* Calculate probability ratio of realizations for uniform random variable */
-MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
-{
-    return 0.0;
 }
 
 
@@ -23064,7 +23009,10 @@ int Move_NodeSliderClock (Param *param, int chain, safeLong *seed, MrBFlt *lnPri
 	t = GetTree (param, chain, state[chain]);
 
     /* get clock rate */
-    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+    if (m->clockRate == NULL)
+        clockRate = 1.0;
+    else
+        clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
 #if defined (DEBUG_CSLIDER)
     for (i=0; i<t->nNodes; i++)

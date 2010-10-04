@@ -4194,6 +4194,137 @@ MrBFlt LnGamma (MrBFlt alp)
 
 
 
+/* Calculate probability of a realization for exponential random variable */
+MrBFlt LnPriorProbExponential(MrBFlt val, MrBFlt *params)
+{
+    return log(params[0]) - params[0] * val;
+}
+
+
+
+
+
+/* Calculate probability of a realization for a fixed variable */
+MrBFlt LnPriorProbFix(MrBFlt val, MrBFlt *params)
+{
+    if (AreDoublesEqual(val, params[0], 0.00001) == YES)
+        return 0.0;
+    else
+        return NEG_INFINITY;
+}
+
+
+
+
+
+/* Calculate probability of a realization for gamma random variable */
+MrBFlt LnPriorProbGamma(MrBFlt val, MrBFlt *params)
+{
+    return (params[0] - 1) * log(val) + params[0] * log(params[1]) - params[1] * val - LnGamma(params[0]);
+}
+
+
+
+
+
+/* Calculate probability of a realization for lognormal random variable */
+MrBFlt LnPriorProbLognormal(MrBFlt val, MrBFlt *params)
+{
+    MrBFlt z;
+
+    z = (log(val) - params[0]) / params[1];
+
+    return -log(params[1] * val * sqrt(2.0 * PI)) - z * z / 2.0;
+}
+
+
+
+
+
+/* Calculate probability of a realization for normal random variable */
+MrBFlt LnPriorProbNormal(MrBFlt val, MrBFlt *params)
+{
+    MrBFlt z;
+
+    z = (val - params[0]) / params[1];
+
+    return -log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0;
+}
+
+
+
+
+
+/* Calculate probability of a realization for uniform random variable */
+MrBFlt LnPriorProbUniform(MrBFlt val, MrBFlt *params)
+{
+    return - log(params[1] - params[0]);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for exponential random variable */
+MrBFlt LnProbRatioExponential(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return params[0] * (oldX - newX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for gamma random variable */
+MrBFlt LnProbRatioGamma(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return (params[1] - 1.0) * (log(newX) - log(oldX)) - params[0] * (newX - oldX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for log normal random variable */
+MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    newZ = (log(newX) - params[0]) / params[1];
+    oldZ = (log(oldX) - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldZ) - log(newZ);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for normal random variable */
+MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    newZ = (newX - params[0]) / params[1];
+    oldZ = (oldX - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0;
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for uniform random variable */
+MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    return 0.0;
+}
+
+
+
+
+
 /* Log probability for a value drawn from a gamma distribution */
 MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 

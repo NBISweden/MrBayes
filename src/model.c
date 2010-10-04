@@ -11539,10 +11539,15 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (strcmp(modelParams[part2].brlensPr, "Clock"))
 			*isApplic2 = NO;
 
+        /* Check that both partitions have calibrated nodes */
+        if (strcmp(modelParams[part1].nodeAgePr, "Calibrated") != 0)
+            *isApplic1 = NO;
+        if (strcmp(modelParams[part2].nodeAgePr, "Calibrated") != 0)
+            *isApplic2 = NO;
+
         /* Set isSame to NO if base substitution rate parameter is inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
-
 		}
 	else
 		{
@@ -14947,30 +14952,39 @@ int SetModelParams (void)
             /* find the parameter x prior type */
 			if (!strcmp(mp->clockRatePr,"Normal"))
 				{
-				p->paramId = CLOCKRATE_NORMAL;
+				p->paramId      = CLOCKRATE_NORMAL;
                 p->LnPriorRatio = &LnProbRatioNormal;
-                p->priorParams = mp->clockRateNormal;
+                p->priorParams  = mp->clockRateNormal;
+                p->LnPriorProb  = &LnPriorProbNormal;
 				}
 			else if (!strcmp(mp->clockRatePr,"Lognormal"))
 				{
-				p->paramId = CLOCKRATE_LOGNORMAL;
+				p->paramId      = CLOCKRATE_LOGNORMAL;
                 p->LnPriorRatio = &LnProbRatioLognormal;
-                p->priorParams = mp->clockRateLognormal;
+                p->priorParams  = mp->clockRateLognormal;
+                p->LnPriorProb  = &LnPriorProbNormal;
 				}
 			else if (!strcmp(mp->clockRatePr,"Exponential"))
 				{
-				p->paramId = CLOCKRATE_EXP;
+				p->paramId      = CLOCKRATE_EXP;
                 p->LnPriorRatio = &LnProbRatioExponential;
-                p->priorParams = &mp->clockRateExp;
+                p->priorParams  = &mp->clockRateExp;
+                p->LnPriorProb  = &LnPriorProbNormal;
 				}
 			else if (!strcmp(mp->clockRatePr,"Gamma"))
 				{
-				p->paramId = CLOCKRATE_GAMMA;
+				p->paramId      = CLOCKRATE_GAMMA;
                 p->LnPriorRatio = &LnProbRatioGamma;
-                p->priorParams = mp->clockRateGamma;
+                p->priorParams  = mp->clockRateGamma;
+                p->LnPriorProb  = &LnPriorProbGamma;
 				}
 			else
-				p->paramId = CLOCKRATE_FIX;
+                {
+				p->paramId      = CLOCKRATE_FIX;
+                p->LnPriorRatio = NULL;
+                p->priorParams  = &mp->clockRateFix;
+                p->LnPriorProb  = &LnPriorProbFix;
+                }
 				
 			p->printParam = YES;
 			}
