@@ -8972,6 +8972,7 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 	int		i,returnVal;
 	Tree	*tree, *tree1;
 	Param	*q;
+	MrBFlt  clockRate;
 	static count=0;
 
 	tree = GetTree (param, chn, state);
@@ -9026,7 +9027,10 @@ int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
 				}
 			}
 	    else if (tree->isCalibrated == YES)
-			returnVal = InitCalibratedBrlens (tree, 0.0001, seed);
+			{
+			clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state );
+			returnVal = InitCalibratedBrlens (tree, clockRate, seed);
+			}
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
 		else
