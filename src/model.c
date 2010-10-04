@@ -11539,12 +11539,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (strcmp(modelParams[part2].brlensPr, "Clock"))
 			*isApplic2 = NO;
 
-        /* Check that both partitions have calibrated nodes */
-        if (strcmp(modelParams[part1].nodeAgePr, "Calibrated") != 0)
-            *isApplic1 = NO;
-        if (strcmp(modelParams[part2].nodeAgePr, "Calibrated") != 0)
-            *isApplic2 = NO;
-
         /* Set isSame to NO if base substitution rate parameter is inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
