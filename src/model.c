@@ -14934,7 +14934,7 @@ int SetModelParams (void)
             p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
-					modelSettings[i].tRatio = p;
+					modelSettings[i].clockRate = p;
 	
             p->paramTypeName = "Base substitution rate of clock tree";
 			strcpy (p->name, "clockrate");
