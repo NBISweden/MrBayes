@@ -10493,8 +10493,14 @@ int InitBeagleInstance (ModelInfo *m)
 			MrBayesPrint ("\tDesc: %s\n", beagleResources->list[i].description);
 			}
 		MrBayesPrint("\n", spacer);	
+	beaglResources = beagleGetResourceList();
+	MrBayesPrint ("%s   Available reources reported by beagle library:", spacer);
+	for(i=0;i<beaglResources->length-1;i++)
+		{
+		MrBayesPrint (" %s,", beaglResources->list[i].name);
 		}
 		
+	MrBayesPrint (" %s\n", beaglResources->list[i].name);
 
     /* at least one eigen buffer needed */
     if (m->nCijkParts == 0)
