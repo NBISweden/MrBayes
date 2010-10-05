@@ -36,5 +36,7 @@
 /* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
 #undef FAST_VERSION
 
+/* Define to enable beagle library */
+#undef BEAGLE_ENABLED
 
 /* PAUL: "#if defined READLINE_LIBRARY" (sax?) */

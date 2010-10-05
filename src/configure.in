@@ -21,6 +21,43 @@ if test "x$enable_fastlog" == "xyes"; then
 	AC_DEFINE(FAST_VERSION)
 fi
 
+# ------------------------------------------------------------------------------
+# Setup BEAGLE
+# ------------------------------------------------------------------------------
+
+AC_ARG_WITH([beagle],
+   [AS_HELP_STRING([--with-beagle[[=PATH]]],[enable beagle and optionally set prefix where beagle is installed if not /usr/local @<:@default=no@:>@])],
+   [],
+   [with_beagle=no])
+
+AC_ARG_WITH([cuda],
+   [AS_HELP_STRING([--with-cuda=PATH],[optionally set prefix where cuda is installed (only applies for beagle) @<:@default=/usr/local/cuda@:>@])],
+   [],
+   [with_cuda=/usr/local/cuda])
+
+if test "x$with_beagle" != "xno"
+then
+   if test "x$with_beagle" == "xyes"
+   then
+   	  with_beagle=/usr/local
+   fi
+
+   AC_CHECK_FILE($with_beagle/include/libhmsbeagle-1.0,[BEAGLE_CFLAGS="-I$with_beagle/include/libhmsbeagle-1.0"],[AC_MSG_ERROR([beagle library not found in ${with_beagle}])])
+   AC_CHECK_FILE($with_beagle/lib,[BEAGLE_LIBS="-L$with_beagle/lib -lhmsbeagle"],[AC_MSG_ERROR([beagle library not found in ${with_beagle}])])
+
+   if test "x$with_cuda" == "xyes"
+   then
+      with_cuda=/usr/local/cuda
+   fi
+   
+    AC_CHECK_FILE($with_cuda/lib,[CUDA_LIBS="-L$with_cuda/lib -lcuda"],[AC_MSG_ERROR([cuda library not found in ${with_cuda}])])
+
+	AC_DEFINE(BEAGLE_ENABLED)
+	CFLAGS="${CFLAGS} ${BEAGLE_CFLAGS} "
+	LDFLAGS="${LDFLAGS}  ${BEAGLE_LIBS} ${CUDA_LIBS} "
+fi
+# ------------------------------------------------------------------------------
+
 dnl check OS 
 dnl case $host in
 dnl i386-*-gnu*) 
@@ -72,9 +109,9 @@ fi
 
 AC_ARG_ENABLE(debug, [ --enable-debug=[no/yes]     compile with debug support [default="no"]],,enable_debug="no")
 if test "x$enable_debug" == "xyes"; then
-	CFLAGS="-ggdb"
+	CFLAGS="${CFLAGS} -ggdb"
 else
-	CFLAGS="-O3 -ffast-math -Wall -DNDEBUG"
+	CFLAGS="${CFLAGS} -O3 -ffast-math -Wall -DNDEBUG"
 fi
 
 AC_CONFIG_FILES([Makefile])
