@@ -45,7 +45,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 // TODO: Move these flags to configure script
 #undef SSE_ENABLED
-#undef BEAGLE_ENABLED
+#define BEAGLE_ENABLED
 #undef FAST_LOG
 
 /* Define a compiler and vector size for the SSE code */
