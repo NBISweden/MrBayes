@@ -139,7 +139,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_TREEHEIGHT
 #undef  DEBUG_STDCHARS
 #undef  DEBUG_MOVE_TREEAGE
-#undef  SHOW_MOVE
+#define  SHOW_MOVE
 #undef  DEBUG_LNLIKELIHOODRATIO
 #undef  DEBUG_NNIClock
 
@@ -12123,7 +12123,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 
 {
-    MrBFlt          oldLnPrior, newLnPrior, theta, growth, sR, eR, sF, oldHeight, newHeight, oldClockRate, newClockRate;
+    MrBFlt          oldLnPrior, newLnPrior, theta, growth, sR, eR, sF, oldHeight, newHeight, clockRate;
     Model           *mp;
     ModelInfo       *m;
     Tree            *newTree, *oldTree;
@@ -12139,12 +12139,9 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     oldTree = GetTree (m->brlens, chain, state[chain]^1);
 
     if (m->clockRate != NULL)
-        {
-        newClockRate = *GetParamVals(m->clockRate, chain, state[chain]);
-        oldClockRate = *GetParamVals(m->clockRate, chain, state[chain]^1);
-        }
+        clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
     else
-        newClockRate = oldClockRate = 1.0;
+        clockRate = 1.0;
     
     /* calculate prior ratio on brlens of clock tree */
 	if (!strcmp(mp->clockPr,"Coalescence"))
@@ -12153,22 +12150,20 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
         /* first calculate theta as 4*N*mu or 2*N*mu */
 		theta = *(GetParamVals (m->popSize, chain, state[chain]));
         if (!strcmp(mp->ploidy, "Diploid"))
-            theta *= 4;
+            theta *= 4 * clockRate;
         else
-            theta *= 2;
-        if (m->clockRate != NULL)
-            theta *= *(GetParamVals (m->clockRate, chain, state[chain]));
+            theta *= 2 * clockRate;
         /* deal with growth */
         if (!strcmp(mp->growthPr, "Fixed"))
 			growth = mp->growthFix;
 		else
 			growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-		if (LnCoalescencePriorPr (oldTree, oldClockRate, &oldLnPrior, theta, growth) == ERROR)
+		if (LnCoalescencePriorPr (oldTree, clockRate, &oldLnPrior, theta, growth) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
 			return (ERROR);
 			}
-		if (LnCoalescencePriorPr (newTree, newClockRate, &newLnPrior, theta, growth) == ERROR)
+		if (LnCoalescencePriorPr (newTree, clockRate, &newLnPrior, theta, growth) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
 			return (ERROR);
@@ -12181,12 +12176,12 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 		sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
 		eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 		sF = mp->sampleProb;
-		if (LnBirthDeathPriorPr (oldTree, oldClockRate, &oldLnPrior, sR, eR, sF) == ERROR)
+		if (LnBirthDeathPriorPr (oldTree, clockRate, &oldLnPrior, sR, eR, sF) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 			return (ERROR);
 			}
-		if (LnBirthDeathPriorPr (newTree, newClockRate, &newLnPrior, sR, eR, sF) == ERROR)
+		if (LnBirthDeathPriorPr (newTree, clockRate, &newLnPrior, sR, eR, sF) == ERROR)
 			{
 			MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 			return (ERROR);
@@ -12411,7 +12406,7 @@ MrBFlt LogPrior (int chain)
 
 	int				i, j, c, n, nStates, *nEvents, sumEvents;
 	const int		*rateCat;
-	MrBFlt			*st, *sst, lnPrior, sum, x, clockRate, theta, growth, *alphaDir, newProp[190],
+	MrBFlt			*st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
 					sR, eR, sF, freq, pInvar, lambda, alpha, nu, ibrshape, **rateMultiplier;
 	CLFlt			*nSitesOfPat;
 	Param			*p;
@@ -12688,8 +12683,12 @@ MrBFlt LogPrior (int chain)
 				else if (p->paramId == BRLENS_CLOCK_COAL)
 					{
 					/* coalescence prior */
-					theta     = *(GetParamVals (m->popSize, chain, state[chain]));
+					popSize   = *(GetParamVals (m->popSize, chain, state[chain]));
                     clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
+                    if (strcmp(mp->ploidy, "Diploid") == 0)
+                        theta = 4.0 * popSize * clockRate;
+                    else
+                        theta = 2.0 * popSize * clockRate;
 					if (!strcmp(mp->growthPr, "Fixed"))
 						growth = mp->growthFix;
 					else
@@ -13051,7 +13050,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 	if (AreDoublesEqual(sR,eR,ETA)==NO)
 		{
 		// birth rate != death rate, see equation (2) in Stadler (2009) and above
-    	et_1  = exp(-(mu - lambda)*nt[t->nIntNodes-1]);
+    	et_1  = exp(-(lambda - mu)*nt[t->nIntNodes-1]);
         p0t_1 = (rho*mu     + (lambda*(1.0 - rho) - mu)*et_1) /
                 (rho*lambda + (lambda*(1.0 - rho) - mu)*et_1);
         (*prob) = - log(nTaxa - 1.0);
