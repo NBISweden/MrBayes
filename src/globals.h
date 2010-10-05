@@ -7,9 +7,13 @@ extern int				chainHasAdgamma;						/* indicates if chain has adgamma HMMs			 */
 extern Chain			chainParams;                            /* holds parameters for Markov chain             */
 extern CharInformation	*charInfo;								/* holds critical information about characters   */
 extern char				**charSetNames;                         /* holds names of character sets                 */
+extern int				*compCharPos;		                    /* char position in compressed matrix            */
+extern int				*compColPos;		                    /* column position in compressed matrix		     */
+extern SafeLong		    *compMatrix;		                    /* compressed character matrix					 */
+extern int				compMatrixRowSize;	                    /* row size of compressed matrix				 */
 extern Comptree			comptreeParams;                         /* holds parameters for comparetree command      */
 extern char				**constraintNames;					    /* holds names of constraints                    */
-extern safeLong         **definedConstraint;                    /* holds information about defined constraints   */
+extern SafeLong         **definedConstraint;                    /* holds information about defined constraints   */
 extern int				dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */
@@ -20,11 +24,11 @@ extern int				defPartition;                           /* flag for whether charac
 extern int				defTaxa;                                /* are taxon labels defined ?                    */
 extern Doublet			doublet[16];                            /* holds information on states for doublets      */
 extern int				echoMB;							   	    /* flag used by Manual to prevent echoing        */
-extern safeLong         expecting;								/* variable denoting expected token type         */
+extern SafeLong         expecting;								/* variable denoting expected token type         */
 extern int				fileNameChanged;					    /* has file name been changed?                   */
 extern int				foundNewLine;                           /* whether a new line has been found             */
 extern char				gapId;                                  /* gap character Id                              */
-extern safeLong			globalSeed;                             /* seed that is initialized at start up          */
+extern SafeLong			globalSeed;                             /* seed that is initialized at start up          */
 extern char				**headerNames;                          /* string to hold headers in sump and plot       */
 extern int 				inComment;                              /* flag for whether input stream is commented    */
 extern int				inferAncStates;					   	    /* should ancestral states be inferred (y/n)     */
@@ -59,7 +63,7 @@ extern char				missingId;                              /* missing character Id  
 extern Tree				**mcmcTree;								/* pointers to mcmc trees						 */
 extern Model			*modelParams;							/* holds model params for partitions             */
 extern ModelInfo		*modelSettings;							/* stores important info on model params         */
-extern int              nBitsInALong;                           /* number of bits in a safeLong                  */
+extern int              nBitsInALong;                           /* number of bits in a SafeLong                  */
 extern Calibration      *nodeCalibration;                       /* holds information about node calibrations     */
 extern int				noWarn;                					/* no warnings on overwriting files              */
 extern int              nPThreads;                              /* number of pthreads to use                     */
@@ -68,6 +72,7 @@ extern int				numApplicableMoves;						/* number of moves applicable to paramete
 extern int				numChar;                                /* number of characters in character matrix      */
 extern int				numCharSets;                            /* holds number of character sets                */
 extern int				numComments;                            /* number of nested comments				     */
+extern int				numCompressedChars;                     /* number of compressed characters				 */
 extern int				numCurrentDivisions;                    /* number of partitions of data                  */
 extern int				numDefinedConstraints;                  /* number of constraints defined                 */
 extern int				numDefinedPartitions;                   /* number of partitions defined                  */
@@ -80,6 +85,7 @@ extern int				numParams;								/* number of parameters in model				 */
 extern int				numDivisions;                           /* number of current divisions                   */
 extern int				numPrintParams;						    /* number of substitution model parameters to print */
 extern int				numPrintTreeParams;						/* number of tree model parameters to print      */
+extern CLFlt			*numSitesOfPat;		                    /* no. sites of each pattern					 */
 extern int				numTaxa;                                /* number of taxa in character matrix            */
 extern int				numTaxaSets;                            /* holds number of taxa sets                     */
 extern int				numTopologies;						    /* number of topologies for one chain and state	 */
@@ -87,6 +93,7 @@ extern int				numTranslates;                          /* number of taxa in activ
 extern int				numTrees;						        /* number of trees for one chain and state	     */
 extern int				numUserTrees;						    /* number of defined user trees				     */
 extern int              *numVars;                               /* number of variables in setting arrays         */
+extern int				*origChar;			                    /* index from compressed char to original char   */
 extern int				outGroupNum;                            /* number of outgroup taxon                      */
 extern ParmInfo			paramTable[];						    /* information on parameters                     */
 extern int              **partitionId;                          /* holds information about defined partitions    */
@@ -102,12 +109,15 @@ extern int				readComment;							/* should we read comment (looking for &)?     
 extern int				readWord;							    /* should we read a word next?                   */
 extern ReassembleInfo	reassembleParams;		                /* holds parameters for reassemble command       */
 extern int				replaceLogFile;                         /* should logfile be replace/appended to         */
-extern safeLong			runIDSeed;                              /* seed used only for generating run ID [stamp]  */
+extern SafeLong			runIDSeed;                              /* seed used only for generating run ID [stamp]  */
 extern int 				scientific;                             /* use scientific format for samples ?           */
 extern ShowmovesParams	showmovesParams;					    /* holds parameters for Showmoves command        */
 extern char				spacer[10];                             /* holds blanks for printing indentations        */
-extern safeLong			swapSeed;                               /* seed used only for determining which to swap  */
+extern char			    stamp[11];                              /* holds a unique identifier for each analysis  */
+extern SafeLong			swapSeed;                               /* seed used only for determining which to swap  */
 extern int				state[MAX_CHAINS];						/* state of chain								 */
+extern MrBFlt			*stdStateFreqs;				            /* std char state frequencies					 */
+extern int				*stdType;				                /* compressed std char type: ord, unord, irrev  */
 extern Sump				sumpParams;                             /* holds parameters for sump command             */
 extern char				sumpToken[];							/* string holding a .p file token                */
 extern char				*sumpTokenP;							/* pointer to a .p file token					 */
@@ -124,13 +134,14 @@ extern int              *tempLinkUnlinkVec;                     /* for changing 
 extern MrBFlt           *tempNum;                               /* vector of numbers used for setting arrays     */
 extern int				*tempSet;                               /* temporarily holds defined character set       */
 extern int  			theAmbigChar;                           /* int containing ambiguous character            */
+extern int				*tiIndex;				                /* compressed std char ti index                  */
 extern Calibration		*tipCalibration;                        /* holds tip calibrations                        */
 extern char				**transFrom;                            /* translation block information                 */
 extern char				**transTo;                              /* translation block information                 */
 extern int				userBrlensDef;                          /* are the branch lengths on user tree defined   */
 extern int              userLevel;                              /* the level of the user                         */ 	
 extern PolyTree			*userTree[];						    /* array of user trees							 */
-extern char			    workingDir[100];                         /* working directory                             */
+extern char			    workingDir[100];                        /* working directory                             */
 
 /* Aamodel parameters */
 extern MrBFlt			aaJones[20][20];	         /* rates for Jones model                        */
@@ -156,11 +167,11 @@ extern MrBFlt			blosPi[20];                  /* stationary frequencies for Blosu
 #						if defined (MPI_ENABLED)
 extern int 				proc_id;                                /* process ID (0, 1, ..., num_procs-1)                        */
 extern int 				num_procs;                              /* number of active processors                                */
-extern MrBFlt			myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
-extern MrBFlt			partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
+extern MrBFlt			myStateInfo[5];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
+extern MrBFlt			partnerStateInfo[5];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #						endif
 
-#if defined (FAST_VERSION)
+#if defined (FAST_LOG)
 extern CLFlt			scalerValue[];
 extern CLFlt			logValue[];
 #endif

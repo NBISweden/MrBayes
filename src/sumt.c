@@ -61,7 +61,7 @@
 typedef struct partctr
 	{
 	struct partctr	*left, *right;
-	safeLong        *partition;
+	SafeLong        *partition;
     int             totCount;
     int             *count;
 	MrBFlt          **length;
@@ -122,8 +122,8 @@ void     PrintSumtTaxaInfo (void);
 void     Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max);
 void     ResetTaxonSet (void);
 int		 ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth);
-void     ShowParts (FILE *fp, safeLong *p, int nTaxaToShow);
-void     ShowSomeParts (FILE *fp, safeLong *p, int offset, int nTaxaToShow);
+void     ShowParts (FILE *fp, SafeLong *p, int nTaxaToShow);
+void     ShowSomeParts (FILE *fp, SafeLong *p, int offset, int nTaxaToShow);
 void     SortPartCtr (PartCtr **item, int left, int right);
 void     SortTerminalPartCtr (PartCtr **item, int len);
 void     SortTreeCtr (TreeCtr **item, int left, int right);
@@ -153,7 +153,7 @@ static PackedTree  *packedTreeList[2];         /* list of trees in packed format
 PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
 
 {
-	int		i, n, comp, nLongsNeeded = sumtParams.safeLongsNeeded;
+	int		i, n, comp, nLongsNeeded = sumtParams.SafeLongsNeeded;
 	
 	if (r == NULL)
 		{
@@ -345,7 +345,7 @@ PartCtr *AllocPartCtr ()
     /* allocate basic stuff */
     r = (PartCtr *) calloc ((size_t) 1, sizeof(PartCtr));
     r->left = r->right = NULL;
-    r->partition = (safeLong *) calloc ((size_t) sumtParams.safeLongsNeeded, sizeof(safeLong));
+    r->partition = (SafeLong *) calloc ((size_t) sumtParams.SafeLongsNeeded, sizeof(SafeLong));
     r->count = (int *) calloc ((size_t) sumtParams.numRuns, sizeof (int));
     if (sumtParams.brlensDef)
         {
@@ -441,10 +441,10 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 		for (j=0; j<tree2->nNodes; j++)
 			{
             q = tree2->allDownPass[j];
-			for (k=0; k<sumtParams.safeLongsNeeded; k++)
+			for (k=0; k<sumtParams.SafeLongsNeeded; k++)
                 if (p->partition[k] != q->partition[k])
                     break;
-			if (k == sumtParams.safeLongsNeeded)
+			if (k == sumtParams.SafeLongsNeeded)
                 break;
             }
         if (j < tree2->nNodes)
@@ -456,7 +456,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 				(*d3) -= (p->length/treeLen1 + q->length/treeLen2 - fabs(p->length/treeLen1 - q->length/treeLen2));
                 }
             }
-    	else /* if (k < sumtParams.safeLongsNeeded) */
+    	else /* if (k < sumtParams.SafeLongsNeeded) */
 			{
 		    /* no match */
             (*d1) += 2.0;
@@ -481,7 +481,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
 	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
-	safeLong	x, *partition = NULL;
+	SafeLong	x, *partition = NULL;
 	MrBFlt		freq, freqInterapted=0;
     PolyTree    *t, *t2=NULL;
 	PolyNode	*p, *q, *r, *ql, *pl;
@@ -588,7 +588,7 @@ treeConstruction:
 		partition = part->partition;
 
         /* count bits in this partition */
-		for (j=nBits=0; j<sumtParams.safeLongsNeeded; j++)
+		for (j=nBits=0; j<sumtParams.SafeLongsNeeded; j++)
 			{
 			x = partition[j];
 			for (x = partition[j]; x != 0; x &= (x - 1))
@@ -628,7 +628,7 @@ treeConstruction:
 			{
 			/* this is an informative partition */
 			/* find anc of partition */
-			j = FirstTaxonInPartition (partition, sumtParams.safeLongsNeeded);
+			j = FirstTaxonInPartition (partition, sumtParams.SafeLongsNeeded);
 			for (p = &t->nodes[j]; p!=NULL; p = p->anc)
 				if (p->x > nBits)
 					break;
@@ -637,13 +637,13 @@ treeConstruction:
 			   do not check terminals or root because it is
 			   redundant and partitions have not necessarily been set for those */
 			isCompat = YES;
-			if (p->anc != NULL && IsPartNested(partition, p->partition, sumtParams.safeLongsNeeded)==NO)
+			if (p->anc != NULL && IsPartNested(partition, p->partition, sumtParams.SafeLongsNeeded)==NO)
 				isCompat = NO;
 			else 
                 {
                 for (q=p->left; q!=NULL; q=q->sib)
 				    {
-				    if (q->x > 1 && IsPartCompatible(q->partition, partition, sumtParams.safeLongsNeeded)==NO)
+				    if (q->x > 1 && IsPartCompatible(q->partition, partition, sumtParams.SafeLongsNeeded)==NO)
 					    break;
                     }
                 if (q!=NULL)
@@ -670,7 +670,7 @@ treeConstruction:
 					{
 					for( r = p->left; r!=NULL; r = r->sib )
 						{
-						if( IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded) &&  r->depth >= q->depth )
+						if( IsPartNested(r->partition, partition, sumtParams.SafeLongsNeeded) &&  r->depth >= q->depth )
 							break; /* child is older then the node we try to add. Not good.*/
 						}
 					if( p->depth <= q->depth )
@@ -687,7 +687,7 @@ treeConstruction:
 					{
 					for( r = p->left; r!=NULL; r = r->sib )
 						{
-						if( freq < 1.00 && IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded) && r->age >= q->age )
+						if( freq < 1.00 && IsPartNested(r->partition, partition, sumtParams.SafeLongsNeeded) && r->age >= q->age )
 							break; /* child is older then the node we try to add. Not good.*/
 						}
 					if( p->age <= q->age )
@@ -712,7 +712,7 @@ treeConstruction:
 			for (r=p->left; r!=NULL; r=r ->sib)
 				{
 				/* test if r is in the new partition or not */
-				if ((r->x > 1 && IsPartNested(r->partition, partition, sumtParams.safeLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
+				if ((r->x > 1 && IsPartNested(r->partition, partition, sumtParams.SafeLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
 					{
 					/* r is in the partition */
 					if (ql == NULL)
@@ -745,7 +745,7 @@ treeConstruction:
             if (nBits == sumtParams.numTaxa - 1)
                 j = localOutGroup;
             else
-    			j = FirstTaxonInPartition(partition, sumtParams.safeLongsNeeded); /* nbits == 1 */
+    			j = FirstTaxonInPartition(partition, sumtParams.SafeLongsNeeded); /* nbits == 1 */
 			q = &t->nodes[j];
             q->partitionIndex = i;
             q->partition = partition;
@@ -949,7 +949,7 @@ int DoCompareTree (void)
 	int			    i, j, k, n, longestLineLength, brlensDef[2], numTreesInLastBlock[2],
                     lastTreeBlockBegin[2], lastTreeBlockEnd[2], xaxis, yaxis, starHolder[80],
                     minNumTrees, screenWidth, screenHeigth, numY[60], nSamples;
-	safeLong	    temporarySeed, *mask;
+	SafeLong	    temporarySeed, *mask;
 	PartCtr	        *x;
 	MrBFlt		    xProb, yProb, xInc, yInc, xUpper, xLower, yUpper, yLower, *dT1=NULL, *dT2=NULL, *dT3=NULL, d1, d2, d3, 
 				    meanY[60], xVal, yVal, minX, minY, maxX, maxY, sums[3];
@@ -1254,14 +1254,14 @@ int DoCompareTree (void)
     MrBayesPrint ("%s     ID -- Partition%*c  No1%*c  No2%*c  Freq1   Freq2\n",
         spacer, j, ' ', i, ' ', i, ' ');
 
-    mask = calloc (sumtParams.safeLongsNeeded, sizeof(safeLong));
+    mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
     for (i=0; i<sumtParams.numTaxa; i++)
         SetBit (i, mask);
     for (i=0; i<numUniqueSplitsFound; i++)
 		{
         x = treeParts[i];
         if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
-            FlipBits(x->partition, sumtParams.safeLongsNeeded, mask);
+            FlipBits(x->partition, sumtParams.SafeLongsNeeded, mask);
         if ((MrBFlt)x->totCount/(MrBFlt)sumtParams.numTreesSampled >= comptreeParams.minPartFreq)
 			{
 			MrBayesPrint ("%s   %4d -- ", spacer, i+1);
@@ -1574,7 +1574,7 @@ int DoCompareTree (void)
 
 	/* calculate average tree-to-tree distances */
 	curTime = time(NULL);
-	temporarySeed  = (safeLong)curTime;
+	temporarySeed  = (SafeLong)curTime;
 	if (temporarySeed < 0)
 		temporarySeed = -temporarySeed;
 	sums[0] = sums[1] = sums[2] = 0.0;
@@ -1893,7 +1893,7 @@ int DoSumt (void)
     PartCtr         **treeParts=NULL;
     SumtFileInfo    sumtFileInfo;
     Stat            theStats;
-    safeLong        *mask;
+    SafeLong        *mask;
 
 #define SCREEN_WIDTH 80
 	
@@ -1917,7 +1917,7 @@ int DoSumt (void)
 
     /* Initialize sumtParams struct */
     sumtParams.numTaxa = 0;
-    sumtParams.safeLongsNeeded = 0;
+    sumtParams.SafeLongsNeeded = 0;
     sumtParams.tree = AllocatePolyTree (numTaxa);
     AllocatePolyTreePartitions (sumtParams.tree);
     sumtParams.numFileTrees = (int *) calloc (2*sumtParams.numRuns+2*numTaxa, sizeof(int));
@@ -2293,16 +2293,16 @@ int DoSumt (void)
             }
 
         /* now, show partitions that were found on screen; print to .parts file simultaneously */
-		mask = calloc (sumtParams.safeLongsNeeded, sizeof(safeLong));
+		mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
         for (i=0; i<sumtParams.numTaxa; i++)
             SetBit (i, mask);
         for (i=0; i<numTreePartsToPrint; i++)
 			{
 			x = treeParts[i];
             if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
-                FlipBits(x->partition, sumtParams.safeLongsNeeded, mask);
+                FlipBits(x->partition, sumtParams.SafeLongsNeeded, mask);
 
-            if ((NumBits(x->partition, sumtParams.safeLongsNeeded) == numLocalTaxa || NumBits(x->partition, sumtParams.safeLongsNeeded) == 0) && sumtParams.isClock == NO)
+            if ((NumBits(x->partition, sumtParams.SafeLongsNeeded) == numLocalTaxa || NumBits(x->partition, sumtParams.SafeLongsNeeded) == 0) && sumtParams.isClock == NO)
                 continue;
 
             if (sumtParams.table == YES)
@@ -2414,9 +2414,9 @@ int DoSumt (void)
 			x = treeParts[i];
 
             /* skip uninformative partitions */
-            if (NumBits(x->partition, sumtParams.safeLongsNeeded) <= 1 || NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+            if (NumBits(x->partition, sumtParams.SafeLongsNeeded) <= 1 || NumBits(x->partition, sumtParams.SafeLongsNeeded) == sumtParams.numTaxa)
                 continue;
-            if (NumBits(x->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO)
+            if (NumBits(x->partition, sumtParams.SafeLongsNeeded) == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO)
                 continue;
 
             if (sumtParams.table == YES)
@@ -3366,7 +3366,7 @@ int DoSumtTree (void)
                     }
                 }
             numLocalTaxa = sumtParams.numTaxa;
-            sumtParams.safeLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
+            sumtParams.SafeLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
             if (t->isRooted == YES)
                 sumtParams.orderLen = numLocalTaxa - 2;
             else
@@ -4959,12 +4959,12 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 
 
 
-void ShowParts (FILE *fp, safeLong *p, int nTaxaToShow)
+void ShowParts (FILE *fp, SafeLong *p, int nTaxaToShow)
 
 {
 
     int         i;
-	safeLong    x, y;
+	SafeLong    x, y;
 	
 	for (i=0; i<nTaxaToShow; i++)
 		{
@@ -4982,12 +4982,12 @@ void ShowParts (FILE *fp, safeLong *p, int nTaxaToShow)
 
 
 
-void ShowSomeParts (FILE *fp, safeLong *p, int offset, int nTaxaToShow)
+void ShowSomeParts (FILE *fp, SafeLong *p, int offset, int nTaxaToShow)
 
 {
 
 	int         i;
-	safeLong    x, y;
+	SafeLong    x, y;
 	
 	for (i=offset; i<nTaxaToShow; i++)
 		{
@@ -5055,7 +5055,7 @@ void SortTerminalPartCtr (PartCtr **item, int len)
     
     /* put root first */
     for (i=0; item[i]->totCount == maxCount; i++)
-        if (NumBits(item[i]->partition, sumtParams.safeLongsNeeded) == sumtParams.numTaxa)
+        if (NumBits(item[i]->partition, sumtParams.SafeLongsNeeded) == sumtParams.numTaxa)
             break;
 
     if (i!=0)
@@ -5069,8 +5069,8 @@ void SortTerminalPartCtr (PartCtr **item, int len)
     for (i=1; i<=sumtParams.numTaxa; i++)
         {
         for (j=i; item[j]->totCount == maxCount && j<len; j++)
-            if (NumBits(item[j]->partition, sumtParams.safeLongsNeeded) == 1 && 
-                FirstTaxonInPartition(item[j]->partition, sumtParams.safeLongsNeeded) == i-1)
+            if (NumBits(item[j]->partition, sumtParams.SafeLongsNeeded) == 1 && 
+                FirstTaxonInPartition(item[j]->partition, sumtParams.SafeLongsNeeded) == i-1)
                 break;
 
         if (j!=i)

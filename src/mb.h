@@ -8,7 +8,7 @@
 #   undef HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
 #   undef _64BIT
-#   undef FAST_VERSION
+#   undef FAST_LOG
 #endif
 
 #if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)
@@ -23,47 +23,51 @@
 
 /* found out that mrbayes crashes on 64 bit platform
    especially in sumt function. If every long is substituted with
-   an int, it works. I'm going to define a safeLong and an unsigned
-   safeLong for 64 bit platforms...
+   an int, it works. I'm going to define a SafeLong and an unsigned
+   SafeLong for 64 bit platforms...
    Davide Cittaro - daweonline(at)gmail.com
 */
 
 /* This is a configuration option from the configure script. */
 #ifdef _64BIT
-typedef int safeLong;
+typedef int SafeLong;
 #else
-typedef long safeLong;
+typedef long SafeLong;
 #endif
 
 
 typedef	double MrBFlt;		/* double used for parameter values and generally for floating point values */
-#define MRBFLT_MAX DBL_MAX; /*Maximum possible value that can be stored in MrBFlt*/
-#define MRBFLT_MIN DBL_MIN; /*Maximum possible value that can be stored in MrBFlt*/
+#define MRBFLT_MAX DBL_MAX; /* maximum possible value that can be stored in MrBFlt */
+#define MRBFLT_MIN DBL_MIN; /* maximum possible value that can be stored in MrBFlt */
 typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
 							/* set CLFlt to double if you want increased precision */
+							/* NOTE: CLFlt = double not compatible with SSE_ENABLED */
 
-/* Can be set by the configure script */
-#ifndef FAST_VERSION
-#undef FAST_VERSION    /* define to use a log lookup for 4by4 nucleotide data, speed gain questionable */
+// TODO: Move these flags to configure script
+#undef SSE_ENABLED
+#define BEAGLE_ENABLED
+#define FAST_LOG
+
+/* Define a compiler and vector size for the SSE code */
+#if defined (SSE_ENABLED)
+#define FLOATS_PER_VEC 4
+#define MS_VCPP_SSE
+#undef GCC_SSE
+#undef ICC_SSE
 #endif
 
-#undef SSE		/* DO NOT #define THESE: ONLY FOR TESTING PURPOSES FOR NOW,    */
-#undef ALTIVEC  /* NOT YET FUNCTIONAL										   */
-
-/* These statements are needed for the SIMD code tessting ONLY, DO NOT #DEFINE THESE */
-/*
-#undef MS_VCPP
-#undef GCC
-#undef ICC
-*/
-
-#if defined GCC			/* gcc compiler */
-#define ALIGNEDMALLOC memalign
-#elif defined ICC		/* icc compiler */
-#define ALIGNEDMALLOC _mm_malloc
-#elif defined MS_VCPP   /* Visual .Net */
-#define ALIGNEDMALLOC _aligned_malloc
+#if defined GCC_SSE			/* gcc compiler */
+#define ALIGNED_MALLOC memalign
+#define ALIGNED_FREE free
+#elif defined ICC_SSE		/* icc compiler */
+#define ALIGNED_MALLOC _mm_malloc
+#define ALIGNED_FREE _mm_free
+#elif defined MS_VCPP_SSE   /* Visual .Net */
+#define ALIGNED_MALLOC _aligned_malloc
+#define ALIGNED_FREE _aligned_free
 #include <xmmintrin.h>
+#else
+#define ALIGNED_MALLOC malloc
 #endif
 
 /* For comparing floating points: two values are the same if the absolute difference is less then 
@@ -81,6 +85,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #if defined (MPI_ENABLED)
 #include "mpi.h"
+#endif
+
+#if defined (BEAGLE_ENABLED)
+#include "libhmsbeagle/beagle.h"
 #endif
 
 /*#define RELEASE*/
@@ -171,6 +179,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	NUCMODEL_DOUBLET			1
 #define	NUCMODEL_CODON				2
 #define NUCMODEL_AA                 3
+
+#define NST_MIXED                  -1     /* anything other than 1, 2, or 6 */
 
 #define	MISSING					10000000
 #define	GAP						10000001
@@ -270,9 +280,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	ALLOC_CONSTRAINTS    	 9
 #define	ALLOC_USERTREE			 10
 #define ALLOC_SUMTPARAMS         11
+#define ALLOC_TERMSTATE          12
+#define ALLOC_ISPARTAMBIG        13
 #define	ALLOC_AVAILNODES		 25
 #define	ALLOC_AVAILINDICES		 26
-#define ALLOC_SCALERS			 27
 #define	ALLOC_CURLNL			 28
 #define	ALLOC_CURLNPR			 29
 #define	ALLOC_CHAINID			 30
@@ -280,25 +291,15 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	ALLOC_TREE				 32
 #define	ALLOC_NODES				 33
 #define	ALLOC_LOCTAXANAMES		 34
-#define	ALLOC_PARSMATRIX		 35
-#define	ALLOC_TERMSTATE			 36
-#define	ALLOC_ISPARTAMBIG		 37
-#define	ALLOC_TERMCONDLIKES		 38
 #define	ALLOC_COMPMATRIX		 39
 #define	ALLOC_NUMSITESOFPAT		 40
 #define ALLOC_COMPCOLPOS		 41
 #define	ALLOC_COMPCHARPOS		 42
 #define ALLOC_ORIGCHAR			 43
-#define ALLOC_CHAINCONDLIKES	 44
-#define ALLOC_NODEPTRS			 45
 #define ALLOC_PARAMVALUES		 46
 #define ALLOC_MCMCTREES			 47
 #define ALLOC_MOVES				 48
-#define ALLOC_CLSCALERS			 49
-#define ALLOC_INVCONDLIKES		 50
-#define ALLOC_TIPROBS			 51
 #define	ALLOC_PRELIKES			 52
-#define	ALLOC_CIJK				 53
 #define ALLOC_SITEJUMP			 54
 #define ALLOC_MARKOVTIS			 55
 #define ALLOC_RATEPROBS			 56
@@ -309,11 +310,9 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	ALLOC_SWAPINFO			 64
 #define ALLOC_SYMPIINDEX		 65
 #define	ALLOC_POSSELPROBS		 66
-#define ALLOC_PARSSETS			 67
 #define	ALLOC_PBF				 68
 #define ALLOC_LOCALTAXONCALIBRATION		 69
 #define	ALLOC_SPR_PARSSETS		 72
-#define ALLOC_ANCSTATECONDLIKES  73
 #define ALLOC_PFCOUNTERS         74
 #define ALLOC_FILEPOINTERS       75
 #define	ALLOC_STATS				 76
@@ -432,10 +431,7 @@ typedef struct node
     int             isLocked;               /*!< is node locked?                            */
     int             lockID;                 /*!< id of lock                                 */
     int             isDated;                /*!< is node dated (calibrated)?                */
-	safeLong		*scalersSet;            /*!< bitfield for scalers                       */
-    safeLong        *clSpace;               /*!< bitfield pointing to cond like space       */
-    safeLong        *tiSpace;               /*!< bitfield pointing to trans prob space      */
-	safeLong 		*partition;             /*!< pointer to bitfield describing splits      */
+	SafeLong 		*partition;             /*!< pointer to bitfield describing splits      */
 	MrBFlt			length;                 /*!< length of pending branch                   */
     MrBFlt          nodeDepth;              /*!< node depth (height)                        */
     MrBFlt          age;                    /*!< age of node                                */
@@ -465,8 +461,8 @@ typedef struct
 	TreeNode		**intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
 	TreeNode		*root;              /*!< pointer to root (lower root in rooted trees) */
 	TreeNode		*nodes;             /*!< array containing the nodes                   */
-	safeLong		*bitsets;           /*!< pointer to bitsets describing splits         */
-	safeLong		*flags;             /*!< pointer to cond like flags                   */
+	SafeLong		*bitsets;           /*!< pointer to bitsets describing splits         */
+	SafeLong		*flags;             /*!< pointer to cond like flags                   */
 	}
 	Tree;
 
@@ -487,7 +483,7 @@ typedef struct pNode
 	MrBFlt			depth;              /*!< depth (height) of node                       */
     MrBFlt          age;                /*!< age of node                                  */
     MrBFlt          support, f;         /*!< scratch variables                            */
-	safeLong		*partition;         /*!< pointer to partition (split) bitset          */
+	SafeLong		*partition;         /*!< pointer to partition (split) bitset          */
 	Calibration		*calibration;       /*!< pointer to dating of node                    */
 	}
 	PolyNode;
@@ -504,7 +500,7 @@ typedef struct
 	PolyNode		**intDownPass;       /*!< downpass array over interior nodes          */
 	PolyNode		*root;               /*!< pointer to root (lower for rooted trees     */
 	PolyNode		*nodes;              /*!< array holding the tree nodes                */  
-	safeLong		*bitsets;            /*!< bits describing partitions (splits)         */
+	SafeLong		*bitsets;            /*!< bits describing partitions (splits)         */
 	int				nBSets;              /*!< number of branch rate sets                  */
     int             nESets;              /*!< number of breakpoint rate sets              */
     char            **bSetName;          /*!< names of branch rate sets                   */
@@ -706,7 +702,7 @@ typedef struct param
 
 
 /* typedef for a MoveFxn */
-typedef int (MoveFxn)(Param *param, int chain, safeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+typedef int (MoveFxn)(Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
 /* typedef for an ApplicFxn */
 typedef int (ApplicFxn)(Param *param);
@@ -758,8 +754,8 @@ typedef struct
 	int			*nAccepted;			/* number of accepted moves						*/
 	int			*nTried;			/* number of tried moves						*/
 	int			*nBatches;			/* counter for autotuning rounds                */
-	int			*nTotAccepted;	    /* total number of accepted moves	    		*/
-	int			*nTotTried;			/* total number of tried moves				    */
+	int			*nTotAccepted;	    /* total number of accepted moves				*/
+	int			*nTotTried;			/* total number of tried moves					*/
 	MrBFlt	    *targetRate;        /* target acceptance rate for autotuning        */
 	MrBFlt		*lastAcceptanceRate;/* acceptance rate in last complete batch	    */
 	MrBFlt		**tuningParam;      /* tuning parameters for the move               */
@@ -907,13 +903,14 @@ typedef struct model
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
 	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, mb(rateautocorr))   */
 	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
-	char		speciationPr[100];    /* prior on net speciation rate                 */
+	char		speciationPr[100];    /* prior on speciation rate                          */
 	MrBFlt		speciationFix;
 	MrBFlt		speciationUni[2];
 	MrBFlt		speciationExp;
 	char		extinctionPr[100];    /* prior on extinction rate                     */
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
+	MrBFlt		extinctionExp;
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
 	char		treeHeightPr[100];    /* prior on tree height for uniform clock prior */
 	MrBFlt		treeHeightGamma[2];
@@ -1015,13 +1012,23 @@ typedef struct chain
 
 typedef struct modelinfo
 	{
+    /* General model information */
 	int			dataType;          			/* data type for partition                  */
 	int			nucModelId;					/* structure of nucleotide model            */
 	int			nst;						/* # substitution types                     */
 	int 		aaModelId;					/* amino acid model type                    */
 	int			parsModelId;				/* is parsimony model used YES/NO           */
 
-	Param		*tRatio;					/* ptr to tRatio used in model				*/
+    /* Specific model information */
+    int			numGammaCats;				/* number of gamma cats (1 if inapplic.)	*/
+	int			numBetaCats;				/* number of beta cats (1 if inapplic.)	    */
+	int			numOmegaCats;				/* number of omega cats	(1 if inapplic.)    */
+	int			numTiCats;					/* number of cats needing different tis     */
+	int			numModelStates;				/* number of states including hidden ones	*/
+	int			numStates;					/* number of observable discrete states		*/
+
+    /* Model parameter pointers */
+    Param		*tRatio;					/* ptr to tRatio used in model				*/
 	Param		*revMat;					/* ptr to revMat used in model				*/
 	Param		*omega;						/* ptr to omega used in model				*/
 	Param		*stateFreq;					/* ptr to statFreq used in model			*/
@@ -1046,7 +1053,8 @@ typedef struct modelinfo
 	Param		*ibrBranchRates;			/* ptr to branch rates for IBR relaxed clock*/
     Param       *clockRate;                 /* ptr to clock rate parameter              */
 
-	int			numChars;					/* number of compressed characters			*/
+    /* Information about characters and transformations */
+    int			numChars;					/* number of compressed characters			*/
 	int			numUncompressedChars;		/* number of uncompressed characters		*/
 	int			numDummyChars;				/* number of dummy characters				*/
 	int			compMatrixStart;			/* start column in compressed matrix		*/
@@ -1057,68 +1065,111 @@ typedef struct modelinfo
 	int			parsMatrixStop;				/* stop collumn in parsimony matrix			*/
 	int			nParsIntsPerSite;			/* # parsimony ints per character			*/	
 	int			nCharsPerSite;				/* number chars per site (eg 3 for codon)	*/
-	int			condLikeStart;				/* start column	in cond like matrix			*/
-	int			condLikeStop;				/* stop column in cond like matrix			*/
 	int			rateProbStart;				/* start of rate probs (for adgamma)		*/
-	int			sprParsMatrixStart;			/* start column in SPR parsimony matrix		*/
-	int			sprParsMatrixStop;			/* stop collumn in SPR parsimony matrix		*/
 				
-	int			numGammaCats;				/* number of gamma cats (1 if inapplic.)	*/
-	int			numBetaCats;				/* number of beta cats (1 if inapplic.)	    */
-	int			numOmegaCats;				/* number of omega cats	(1 if inapplic.)    */
-	int			numTiCats;					/* number of cats needing different tis     */
-	int			numModelStates;				/* number of states including hidden ones	*/
-	int			numStates;					/* number of observable discrete states		*/
+     /* Variables for eigen decompositions */
+    int			cijkLength;			     	/* stores length of cijk vector                 */
+    int			nCijkParts;					/* stores number of cijk partitions (1 except for omega/covarion models) */
+    int			upDateCijk;                 /* whether cijk vector needs to be updated      */
 
-	int			tiProbStart;
-	int			upDateCl;					/* should CondLikes of corresponding division be updated, Yes or No */
+    /* Variables for standard model */
+    int			*tiIndex;					/* index to trans probs for each compressed char*/
+    int			*bsIndex;					/* index to stat freqs for each compressed char */
+    int			*nStates;					/* # states of each compressed char             */
+    int			*cType;						/* whether char is ord, unord or irrev          */
+    int			*weight;					/* prior weight of each compressed char         */
+    int			isTiNeeded[20];				/* marks whether a trans prob matrix is needed  */
 
-	int			nCijk;						/* stores length of cijk vector */
-	int			nCijkParts;					/* stores number of cijk partitions (for omega/covarion models) */
-	int			cijkStart;
-	int 		cijkBits[MAX_CHAINS][2];	/* bits indicate which cijk to use */
-	int			upDateCijk[MAX_CHAINS][2];	/* whether cijk vector needs to be updated */
-
-	int			*tiIndex;					/* index to trans probs for each compressed char */
-	int			*bsIndex;					/* index to stat freqs for each compressed char  */
-	int			*nStates;					/* # states of each compressed char */
-	int			*cType;						/* whether char is ord, unord or irrev */
-	int			*weight;					/* prior weight of each compressed char */
-	int			isTiNeeded[20];				/* marks whether a trans prob matrix is needed */
-
-	CLFlt		***catLike;					/* likelihood for Gibbs sampling of gamma */
+    /* Gibbs sampling of gamma site rate parameters */
+    CLFlt		***catLike;					/* likelihood for Gibbs sampling of gamma */
 	CLFlt		***catLnScaler;				/* scaler for Gibbs sampling of gamma */
 	int			gibbsGamma;					/* flags whether Gibbs sampling of discrete gamma is used */
 	int			gibbsFreq;			        /* frequency of Gibbs resampling of discrete gamma */
 	
-	MrBFlt		parsTreeLength[MAX_CHAINS * 2]; /* parsimony tree lengths for chains        */
-	int			parsNodeLenStart;			/* start column in parsimony node length array */
-	
-	int			tiProbsId;
-	int			*isPartAmbig;
-	int			mark;
-	CLFlt		*invCondLikes;
+    /* Variables for parsimony sets and parsimony calculations */
+    MrBFlt		parsTreeLength[MAX_CHAINS*2];   /* parsimony tree lengths for chains        */
+    SafeLong    **parsSets;                 /* parsimony sets                               */
+    int         numParsSets;                /* number of parsimony sets                     */
+    CLFlt       *parsNodeLens;              /* parsimony node lengths                       */
+    int         numParsNodeLens;            /* number of parsimony node lengths             */
 
-	MrBFlt		lnLike[MAX_CHAINS * 2];
+    /* Miscellaneous parameters */
+    int			mark;                       /* scratch parameter                            */
+	int         parsimonyBasedMove;         /* is parsimony-based move used (YES/NO)        */
 
-	LikeDownFxn		CondLikeDown;
-	LikeRootFxn		CondLikeRoot;
-	LikeScalerFxn	CondLikeScaler;
-	LikeFxn			Likelihood;
-	TiProbFxn		TiProbs;
-	LikeUpFxn		CondLikeUp;
-	PrintAncStFxn   PrintAncStates;
-	StateCodeFxn	StateCode;
-	PrintSiteRateFxn PrintSiteRates;
+    /* Variables for conditional likelihoods */
+    int			upDateCl;                   /* flags whether update of cond likes needed    */
+    int			upDateAll;                  /* flags whether update of entire tree is needed*/
+    int			*isPartAmbig;               /* is tip partially ambiguous?                  */
+    int         **termState;                /* index arrays for terminal branch shortcuts   */
+    CLFlt		*invCondLikes;              /* space for the invariable cond likes          */
+    CLFlt       **condLikes;                /* space for the cond likes                     */
+    CLFlt       **tiProbs;                  /* space for the ti probs                       */
+    CLFlt       **scalers;                  /* space for the node and site scalers          */
+    CLFlt       **clP;                      /* handy pointers to cond likes for ti cats     */
+#if defined (SSE_ENABLED)
+    __m128      **clP_SSE;                  /* handy pointers to cond likes, SSE version    */
+    int         numSSEChars;                /* number of compact SSE character groups       */
+    CLFlt       *lnL_SSE;                   /* temp storage for log site likes              */
+    CLFlt       *lnLI_SSE;                  /* temp storage for log site invariable likes   */
+#endif
+    MrBFlt      **cijks;                    /* space for cijks                              */
+    int         **condLikeIndex;            /* index to cond like space for nodes & chains  */
+    int         *condLikeScratchIndex;      /* index to scratch space for node cond likes   */
+    int         **nodeScalerIndex;          /* index to scaler space for nodes & chains     */
+    int         *nodeScalerScratchIndex;    /* index to scratch space for node scalers      */
+    int         **scalersSet;               /* flags whether scalers are set                */
+    int         *scalersSetScratch;         /* scratch flag for whether scalers are set     */
+    int         *siteScalerIndex;           /* index to site scaler space for chains        */
+    int         siteScalerScratchIndex;     /* index to scratch space for site scalers      */
+    int         **tiProbsIndex;             /* index to ti probs for branches & chains      */
+    int         *tiProbsScratchIndex;       /* index to scratch space for branch ti probs   */
+    int         *cijkIndex;                 /* index to cijks for chains                    */
+    int         cijkScratchIndex;           /* index to scratch space for cijks             */
+    int         numCondLikes;               /* number of cond like arrays                   */
+    int         numScalers;                 /* number of scaler arrays                      */
+    int         numTiProbs;                 /* number of ti prob arrays                     */
+    int         condLikeLength;             /* length of cond like array (incl. ti cats)    */
+    int         tiProbLength;               /* length of ti prob array                      */
+    MrBFlt		lnLike[MAX_CHAINS];         /* log like for chain                           */
+    CLFlt       *ancStateCondLikes;         /* ancestral state cond like array              */
 
-	int			printAncStates;				/* should ancestral states be printed (YES/NO)  */
+    /* Likelihood function pointers */
+    LikeDownFxn		    CondLikeDown;       /* function for calculating partials            */
+	LikeRootFxn		    CondLikeRoot;       /* function for calculating partials at root    */
+	LikeScalerFxn	    CondLikeScaler;     /* function for scaling partials                */
+	LikeFxn			    Likelihood;         /* function for getting cond likes for tree     */
+	TiProbFxn		    TiProbs;            /* function for calculating transition probs    */
+	LikeUpFxn		    CondLikeUp;         /* final-pass calculation of cond likes         */
+	PrintAncStFxn       PrintAncStates;     /* function for sampling ancestral states       */
+	StateCodeFxn        StateCode;          /* function for getting states from codes       */
+	PrintSiteRateFxn    PrintSiteRates;     /* function for samling site rates              */
+
+    /* Report variables */
+    int			printAncStates;				/* should ancestral states be printed (YES/NO)  */
 	int			printSiteRates;             /* should site rates be printed (YES/NO)        */
 	int			printPosSel;                /* should selection be printed (YES/NO)         */
 	int			printSiteOmegas;            /* should site omegas be printed (YES/NO)       */
 
-	int         parsimonyBasedMove;         /* is parsimony-based move used (YES/NO)        */
+#if defined (BEAGLE_ENABLED)
+    /* Beagle variables */
+    int         useBeagle;                  /* use Beagle for this partition?               */
+    MrBFlt*     branchLengths;              /* array of branch lengths for Beagle           */
+    MrBFlt*     inRates;                    /* array of category rates for Beagle           */
+    int*        tiProbIndices;              /* array of trans prob indices for Beagle       */
+    MrBFlt*     logLikelihoods;             /* array of log likelihoods from Beagle         */
+    int         beagleInstance;             /* beagle instance for division                 */
+    MrBFlt*     inWeights;                  /* array of weights for Beagle root likelihood  */
+    int*        bufferIndices;              /* array of partial indices for root likelihood */
+    int*        eigenIndices;               /* array of eigen indices for root likelihood   */
+    int*        childBufferIndices;         /* array of child partial indices (unrooted)    */
+    int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
+    int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
+#endif
 
-	} ModelInfo;
+    } ModelInfo;
+
+/* TODO: Delete these old pointers to cond likes, ti probs and scalers */
 
 typedef struct sumt
 	{
@@ -1156,7 +1207,7 @@ typedef struct sumt
     int         isCalibrated;          /* is sumt tree calibrated ?                     */
     int         nESets;                /* number of event sets                          */
     int         nBSets;                /* number of branch rate sets                    */
-    int         safeLongsNeeded;       /* number of safe longs needed for taxon bits    */
+    int         SafeLongsNeeded;       /* number of safe longs needed for taxon bits    */
     int         runId;                 /* id of run being processed                     */
     int         numTaxa;               /* number of sumt taxa                           */
     int        *numFileTrees;          /* number of trees per file                      */
@@ -1214,12 +1265,12 @@ typedef struct
 
 typedef struct doublet
 	{
-	safeLong	first, second;
+	SafeLong	first, second;
 	} Doublet;
 
 typedef struct matrix
 	{
-	safeLong *origin;
+	SafeLong *origin;
 	int rowSize;
 	int nRows;
 	int column;

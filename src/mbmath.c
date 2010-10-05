@@ -97,7 +97,7 @@ void    ElTran (int dim, int low, int high, MrBFlt **a, int *interchanged, MrBFl
 void    Exchange (int j, int k, int l, int m, int n, MrBFlt **a, MrBFlt *scale);
 MrBFlt  Factorial (int x);
 void    ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b);
-MrBFlt  GammaRandomVariable (MrBFlt a, MrBFlt b, safeLong *seed);
+MrBFlt  GammaRandomVariable (MrBFlt a, MrBFlt b, SafeLong *seed);
 void    GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat);
 int     Hqr2 (int dim, int low, int high, MrBFlt **h, MrBFlt *wr, MrBFlt *wi, MrBFlt **z);
 MrBFlt  IncompleteBetaFunction (MrBFlt alpha, MrBFlt beta, MrBFlt x);
@@ -114,9 +114,9 @@ void    PrintSquareComplexMatrix (int dim, complex **m);
 void    PrintSquareDoubleMatrix (int dim, MrBFlt **matrix);
 void    PrintSquareIntegerMatrix (int dim, int **matrix);
 complex ProductOfRealAndComplex (MrBFlt a, complex b);
-MrBFlt  RndGamma (MrBFlt s, safeLong *seed);
-MrBFlt  RndGamma1 (MrBFlt s, safeLong *seed);
-MrBFlt  RndGamma2 (MrBFlt s, safeLong *seed);
+MrBFlt  RndGamma (MrBFlt s, SafeLong *seed);
+MrBFlt  RndGamma1 (MrBFlt s, SafeLong *seed);
+MrBFlt  RndGamma2 (MrBFlt s, SafeLong *seed);
 int     SetQvalue (MrBFlt tol);
 void    SetToIdentity (int dim, MrBFlt **matrix);
 MrBFlt  Tha (MrBFlt h1, MrBFlt h2, MrBFlt a1, MrBFlt a2);
@@ -1916,7 +1916,7 @@ void CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to)
 |   in the vector z.
 |      
 ---------------------------------------------------------------------------------*/
-void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, safeLong *seed)
+void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, SafeLong *seed)
 
 {
 
@@ -2584,7 +2584,7 @@ void FreeSquareIntegerMatrix (int **m)
 |   a and b. The mean is E(X) = a / b and the variance is Var(X) = a / b^2.
 |      
 ---------------------------------------------------------------------------------*/
-MrBFlt GammaRandomVariable (MrBFlt a, MrBFlt b, safeLong *seed)
+MrBFlt GammaRandomVariable (MrBFlt a, MrBFlt b, SafeLong *seed)
 
 {
 
@@ -4430,7 +4430,7 @@ int LogBase2Plus1 (MrBFlt x)
 |   Draw a random variable from a lognormal distribution.
 |      
 ---------------------------------------------------------------------------------*/
-MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt var, safeLong *seed)
+MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt var, SafeLong *seed)
 
 {
 
@@ -5066,7 +5066,7 @@ MrBFlt  PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator)
 |   PsiGammaRandomVariable: Returns a random draw from the PsiGamma
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt  PsiGammaRandomVariable (MrBFlt alpha, safeLong *seed)
+MrBFlt  PsiGammaRandomVariable (MrBFlt alpha, SafeLong *seed)
 {
 	return GammaRandomVariable (alpha, PsiExp(alpha), seed);
 }
@@ -5106,11 +5106,11 @@ MrBFlt QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta)
 |      ones are hard to find.  Communications of the ACM, 31(10):1192-1201.
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt RandomNumber (safeLong *seed)
+MrBFlt RandomNumber (SafeLong *seed)
 
 {
 
-	safeLong	lo, hi, test;
+	SafeLong	lo, hi, test;
 	
 	hi = (*seed) / 127773;
 	lo = (*seed) % 127773;
@@ -5132,7 +5132,7 @@ MrBFlt RandomNumber (safeLong *seed)
 |   RndGamma
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt RndGamma (MrBFlt s, safeLong *seed)
+MrBFlt RndGamma (MrBFlt s, SafeLong *seed)
 
 {
 
@@ -5160,7 +5160,7 @@ MrBFlt RndGamma (MrBFlt s, safeLong *seed)
 |   RndGamma1
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt RndGamma1 (MrBFlt s, safeLong *seed)
+MrBFlt RndGamma1 (MrBFlt s, SafeLong *seed)
 
 {
 
@@ -5204,7 +5204,7 @@ MrBFlt RndGamma1 (MrBFlt s, safeLong *seed)
 |   RndGamma2
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt RndGamma2 (MrBFlt s, safeLong *seed)
+MrBFlt RndGamma2 (MrBFlt s, SafeLong *seed)
 
 {
 

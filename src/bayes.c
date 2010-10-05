@@ -87,16 +87,16 @@ int			defPartition;                /* flag for whether character partition is re
 int			defPairs;                    /* flag for whether pairs are read               */
 Doublet		doublet[16];                 /* holds information on states for doublets      */
 int			fileNameChanged;			 /* has file name been changed ?                  */
-safeLong	globalSeed;                  /* seed that is initialized at start up          */
+SafeLong	globalSeed;                  /* seed that is initialized at start up          */
 char        **modelIndicatorParams;      /* model indicator params                        */
 char        ***modelElementNames;        /* names for component models                    */
-int			nBitsInALong;                /* number of bits in a safeLong                  */
+int			nBitsInALong;                /* number of bits in a SafeLong                  */
 int			nPThreads;					 /* number of pthreads to use                     */
 int			numUserTrees;			     /* number of defined user trees		    	  */
 int			readComment;			     /* should we read comment (looking for &) ?      */
 int			readWord;					 /* should we read word next ?                    */
-safeLong	runIDSeed;                   /* seed used only for determining run ID [stamp] */
-safeLong	swapSeed;                    /* seed used only for determining which to swap  */
+SafeLong	runIDSeed;                   /* seed used only for determining run ID [stamp] */
+SafeLong	swapSeed;                    /* seed used only for determining which to swap  */
 int         userLevel;                   /* user level                                    */
 PolyTree	*userTree[MAX_NUM_USERTREES];/* array of user trees							  */
 char        workingDir[100];             /* working directory                             */
@@ -108,7 +108,7 @@ MrBFlt		myStateInfo[7];              /* likelihood/prior/heat/ran/moveInfo vals 
 MrBFlt		partnerStateInfo[7];		 /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #			endif
 
-#if defined (FAST_VERSION)
+#if defined (FAST_LOG)
 CLFlt		scalerValue[400];
 CLFlt		logValue[400];
 #endif
@@ -159,7 +159,7 @@ int main (int argc, char *argv[])
 #	endif
 	/*mtrace();*/
 	/* calculate the size of a long - used by bit manipulation functions */
-	nBitsInALong = sizeof(safeLong) * 8;
+	nBitsInALong = sizeof(SafeLong) * 8;
 	if (nBitsInALong > 32) /* Do not use more than 32 bits until we    */
 		nBitsInALong = 32; /* understand how 64-bit longs are handled. */
 
@@ -410,7 +410,7 @@ void GetTimeSeed (void)
 	if (proc_id == 0)
 		{
 		curTime = time(NULL);
-		globalSeed  = (safeLong)curTime;
+		globalSeed  = (SafeLong)curTime;
 		if (globalSeed < 0)
 			globalSeed = -globalSeed;
 		}
@@ -424,7 +424,7 @@ void GetTimeSeed (void)
 		{
 		/* Note: swapSeed will often be same as globalSeed */
 		curTime = time(NULL);
-		swapSeed  = (safeLong)curTime;
+		swapSeed  = (SafeLong)curTime;
 		if (swapSeed < 0)
 			swapSeed = -swapSeed;
 		}
@@ -438,7 +438,7 @@ void GetTimeSeed (void)
 		{
 		/* Note: runIDSeed will often be same as globalSeed */
 		curTime = time(NULL);
-		runIDSeed  = (safeLong)curTime;
+		runIDSeed  = (SafeLong)curTime;
 		if (runIDSeed < 0)
 			runIDSeed = -runIDSeed;
 		}
@@ -450,19 +450,19 @@ void GetTimeSeed (void)
 
 #	else
 	curTime = time(NULL);
-	globalSeed  = (safeLong)curTime;
+	globalSeed  = (SafeLong)curTime;
 	if (globalSeed < 0)
 		globalSeed = -globalSeed;
 		
 	/* Note: swapSeed will often be the same as globalSeed */
 	curTime = time(NULL);
-	swapSeed  = (safeLong)curTime;
+	swapSeed  = (SafeLong)curTime;
 	if (swapSeed < 0)
 		swapSeed = -swapSeed;
 
 	/* Note: runIDSeed will often be the same as globalSeed */
 	curTime = time(NULL);
-	runIDSeed  = (safeLong)curTime;
+	runIDSeed  = (SafeLong)curTime;
 	if (runIDSeed < 0)
 		runIDSeed = -runIDSeed;
 		
@@ -481,7 +481,7 @@ int InitializeMrBayes (void)
 	
 	int		i;
 
-    nBitsInALong         = sizeof(safeLong) * 8;     /* global variable: number of bits in a safeLong */
+    nBitsInALong         = sizeof(SafeLong) * 8;     /* global variable: number of bits in a SafeLong */
 	userLevel            = STANDARD_USER;            /* default user level                            */
 
 	readWord			 = NO;                       /* should we read a word next ?                  */
@@ -543,7 +543,7 @@ int InitializeMrBayes (void)
 	doublet[14].first  = 8;   doublet[14].second = 4;
 	doublet[15].first  = 8;   doublet[15].second = 8;
 
-#if defined (FAST_VERSION)
+#if defined (FAST_LOG)
 	/* set up log table */
 	for (i=0; i<400; i++)
 		{

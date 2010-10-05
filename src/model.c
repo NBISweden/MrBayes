@@ -40,6 +40,7 @@
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
@@ -49,46 +50,54 @@
 #include "mbmath.h"
 #include "tree.h"
 #include "utils.h"
+
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #include <assert.h>
 #endif
 
-
-#undef DEBUG_CONSTRAINTS
+#undef	DEBUG_ADDDUMMYCHARS
+#undef  DEBUG_CONSTRAINTS
+#undef	DEBUG_COMPRESSDATA
 
 /* local prototypes */
-void    AllocateCppEvents (Param *p);
+int       AddDummyChars (void);
+void      AllocateCppEvents (Param *p);
 MCMCMove *AllocateMove (MoveType *moveType, Param *param);
-int		AllocateNormalParams (void);
-int		AllocateTreeParams (void);
-int     CheckExpandedModels (void);
-int		InitializeChainTrees (Param *p, int from, int to, int isRooted);
-int     FillBrlensSubParams (Param *param, int chn, int state);
-void    FreeCppEvents (Param *p);
-void	FreeMove (MCMCMove *mv);
-void    GetPossibleAAs (int aaCode, int aa[]);
-void    GetPossibleNucs (int nucCode, int nuc[]);
-void    GetPossibleRestrictionSites (int resSiteCode, int *sites);
-int     GetUserTreeFromName (int *index, char *treeName);
-void	InitializeMcmcTrees (Param *p);
-int     IsApplicable (Param *param);
-int     IsApplicableTreeAgeMove (Param *param);
-int		IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
-int		NumActiveParts (void);
-int     NumNonExcludedChar (void);
-int		NumStates (int part);
-int		SetModelParams (void);
-int     SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
-int		SetUpLinkTable (void);
-int		ShowMoves (int used);
-int		ShowParameters (int showStartVals, int showMoves, int showAllAvailable);
-void	TouchAllNormalParams (void);
-void	TouchAllTreeParams (void);
-int 	UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *evolLength, TreeNode *p, MrBFlt baseRate);
+int		  AllocateNormalParams (void);
+int		  AllocateTreeParams (void);
+void      CheckCharCodingType (Matrix *m, CharInfo *ci);
+int       CheckExpandedModels (void);
+int       CompressData (void);
+int		  InitializeChainTrees (Param *p, int from, int to, int isRooted);
+int       FillBrlensSubParams (Param *param, int chn, int state);
+void      FreeCppEvents (Param *p);
+void	  FreeMove (MCMCMove *mv);
+void      GetPossibleAAs (int aaCode, int aa[]);
+void      GetPossibleNucs (int nucCode, int nuc[]);
+void      GetPossibleRestrictionSites (int resSiteCode, int *sites);
+int       GetUserTreeFromName (int *index, char *treeName);
+void	  InitializeMcmcTrees (Param *p);
+int       IsApplicable (Param *param);
+int       IsApplicableTreeAgeMove (Param *param);
+int		  IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
+int		  NumActiveParts (void);
+int       NumNonExcludedChar (void);
+int		  NumStates (int part);
+int	      PrintCompMatrix (void);
+int	      PrintMatrix (void);
+int       ProcessStdChars (SafeLong *seed);
+int		  SetModelParams (void);
+int       SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
+int		  SetUpLinkTable (void);
+int		  ShowMoves (int used);
+int		  ShowParameters (int showStartVals, int showMoves, int showAllAvailable);
+void	  TouchAllNormalParams (void);
+void	  TouchAllTreeParams (void);
+int 	  UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *evolLength, TreeNode *p, MrBFlt baseRate);
 
 
 
@@ -149,14 +158,305 @@ int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char		colonPr[100];
 
+/* other local variables (this file) */
 MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition      */
 Tree			**mcmcTree;                  /* pointers to trees for mcmc                   */
 int				paramValsRowSize;	         /* row size of paramValues matrix				 */
 MrBFlt			*paramValues = NULL;         /* stores actual values of chain parameters     */
 int				*relevantParts = NULL;       /* partitions that are affected by this move    */
 Param			**subParamPtrs;		         /* pointer to subparams for topology params     */
+int				*stateSize;			         /* # states for each compressed char			 */
 
 
+
+/*-----------------------------------------------------------------------
+|
+|	AddDummyChars: Add dummy characters to relevant partitions
+|
+------------------------------------------------------------------------*/
+int AddDummyChars (void)
+{
+
+	int			i, j, k, d, numIncompatible, numDeleted, numStdChars, oldRowSize,
+				newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
+				isCompat, *tempChar, numIncompatibleChars;
+	SafeLong	*tempMatrix;
+	CLFlt		*tempSitesOfPat;
+	ModelInfo	*m;
+	ModelParams	*mp;
+	CharInfo	cinfo;
+	Matrix		matrix;
+
+	extern int	NBits(int x);
+
+	/* set pointers to NULL */
+	tempMatrix = NULL;
+	tempSitesOfPat = NULL;
+	tempChar = NULL;
+
+	/* check how many dummy characters needed in total */
+	numDummyChars = 0;
+	numStdChars = 0;
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		m = &modelSettings[d];
+		mp = &modelParams[d];
+
+		m->numDummyChars = 0;
+
+		if (mp->dataType == RESTRICTION && !strcmp(mp->parsModel,"No"))
+			{
+			if (!strcmp(mp->coding, "Variable"))
+				m->numDummyChars = 2;
+			else if (!strcmp(mp->coding, "Noabsencesites") || !strcmp(mp->coding, "Nopresencesites"))
+				m->numDummyChars = 1;
+			else if (!strcmp(mp->coding, "Informative"))
+				m->numDummyChars = 2 + 2 * numLocalTaxa;
+			}
+
+		if (mp->dataType == STANDARD && !strcmp(mp->parsModel,"No"))
+			{
+			if (!strcmp(mp->coding, "Variable"))
+				m->numDummyChars = 2;
+			else if (!strcmp(mp->coding, "Informative"))
+				m->numDummyChars = 2 + 2 * numLocalTaxa;
+			numStdChars += (m->numChars + m->numDummyChars);
+			}
+
+		numDummyChars += m->numDummyChars;
+		m->numChars += m->numDummyChars;
+
+		}
+
+	/* exit if dummy characters not needed */
+	if (numDummyChars == 0)
+		return NO_ERROR;
+
+	/* print original compressed matrix */
+#	if	0
+	MrBayesPrint ("Compressed matrix before adding dummy characters...\n");
+	PrintCompMatrix();
+#	endif		
+
+	/* set row sizes for old and new matrices */
+	oldRowSize = compMatrixRowSize;
+	compMatrixRowSize += numDummyChars;
+	newRowSize = compMatrixRowSize;
+	numCompressedChars += numDummyChars;
+
+	/* allocate space for new data */
+	tempMatrix = (SafeLong *) calloc (numLocalTaxa * newRowSize, sizeof(SafeLong));
+	tempSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
+	tempChar = (int *) calloc (compMatrixRowSize, sizeof(int));
+	if (!tempMatrix || !tempSitesOfPat || !tempChar)
+		{
+		MrBayesPrint ("%s   Problem allocating temporary variables in AddDummyChars\n", spacer);
+		goto errorExit;
+		}
+
+	/* initialize indices */
+	oldChar = newChar = newColumn = numDeleted = 0;
+
+	/* set up matrix struct */
+	matrix.origin = compMatrix;
+	matrix.nRows = numLocalTaxa;
+	matrix.rowSize = oldRowSize;
+
+	/* loop over divisions */
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		m = &modelSettings[d];
+		mp = &modelParams[d];
+
+		/* insert the dummy characters first for each division */
+		if (m->numDummyChars > 0)
+			{
+			MrBayesPrint("%s   Adding dummy characters (unobserved site patterns) for division %d\n", spacer, d+1);
+
+			if (!strcmp(mp->coding, "Variable") || !strcmp(mp->coding, "Informative"))
+				{
+				for (k=0; k<2; k++)
+					{
+					for (i=0; i<numLocalTaxa; i++)
+						tempMatrix[pos(i,newColumn,newRowSize)] = (1<<k);
+					tempSitesOfPat[newChar] = 0;
+					tempChar[newColumn] = -1;
+					newChar++;
+					newColumn++;
+					}
+				}
+
+			if (!strcmp(mp->coding, "Informative"))
+				{
+				for (k=0; k<2; k++)
+					{
+					for (i=0; i< numLocalTaxa; i++)
+						{
+						for (j=0; j<numLocalTaxa; j++)
+							{
+							if(j == i)
+								tempMatrix[pos(j,newColumn,newRowSize)] = (1 << k) ^ 3;
+							else
+								tempMatrix[pos(j,newColumn,newRowSize)] = 1 << k;
+							}
+						tempSitesOfPat[newChar] = 0;
+						tempChar[newColumn] = -1;
+						newChar++;
+						newColumn++;
+						}
+					}
+				}
+
+			if (!strcmp(mp->coding, "Noabsencesites"))
+				{
+				for (i=0; i<numLocalTaxa; i++)
+					tempMatrix[pos(i,newColumn,newRowSize)] = 1;
+				tempSitesOfPat[newChar] = 0;
+				tempChar[newColumn] = -1;
+				newChar++;
+				newColumn++;
+				}
+
+			if (!strcmp(mp->coding, "Nopresencesites"))
+				{
+				for (i=0; i<numLocalTaxa; i++)
+					tempMatrix[pos(i,newColumn,newRowSize)] = 2;
+				tempSitesOfPat[newChar] = 0;
+				tempChar[newColumn] = -1;
+				newChar++;
+				newColumn++;
+				}
+			}
+
+		/* add the normal characters */
+		numIncompatible = numIncompatibleChars = 0;
+		for (oldColumn=m->compMatrixStart; oldColumn<m->compMatrixStop; oldColumn++)
+			{
+			isCompat = YES;
+			/* first check if the character is supposed to be present */
+			if (m->numDummyChars > 0)
+				{
+				/* set up matrix struct */
+				matrix.column = oldColumn;
+				/* set up charinfo struct */
+				cinfo.dType = mp->dataType;
+				cinfo.cType = charInfo[origChar[oldChar]].ctype;
+				cinfo.nStates = charInfo[origChar[oldChar]].numStates;
+				CheckCharCodingType(&matrix, &cinfo);
+
+				if (!strcmp(mp->coding, "Variable") && cinfo.variable == NO)
+					isCompat = NO;
+				else if (!strcmp(mp->coding, "Informative") && cinfo.informative == NO)
+					isCompat = NO;
+				else if (!strcmp(mp->coding, "Noabsencesites") && cinfo.constant[0] == YES)
+					isCompat = NO;
+				else if (!strcmp(mp->coding, "Nopresencesites") && cinfo.constant[1] == YES)
+					isCompat = NO;
+				}
+
+			if (isCompat == NO)
+				{
+				numIncompatible++;
+				numIncompatibleChars += (int) numSitesOfPat[oldChar];
+				oldChar++;
+				}
+			else
+				{
+				/* add character */
+				for (i=0; i<numLocalTaxa; i++)
+					tempMatrix[pos(i,newColumn,newRowSize)] = compMatrix[pos(i,oldColumn,oldRowSize)];
+				/* set indices */
+				compCharPos[origChar[oldColumn]] = newChar;
+				compColPos[origChar[oldColumn]] = newColumn;
+				tempSitesOfPat[newChar] = numSitesOfPat[oldChar];
+				tempChar[newColumn] = origChar[oldColumn];
+				newColumn++;
+				if ((oldColumn-m->compMatrixStart+1) % m->nCharsPerSite == 0)
+					{
+					newChar++;
+					oldChar++;
+					}
+				}
+			}
+
+		/* print a warning if there are incompatible characters */
+		if (numIncompatible > 0)
+			{
+			m->numChars -= numIncompatible;
+			m->numUncompressedChars -= numIncompatibleChars;
+			numDeleted += numIncompatible;
+			if (numIncompatibleChars > 1)
+				{
+				MrBayesPrint ("%s   WARNING: There are %d characters incompatible with the specified\n", spacer, numIncompatibleChars);
+				MrBayesPrint ("%s            coding bias. These characters will be excluded.\n", spacer);
+				}
+			else
+				{
+				MrBayesPrint ("%s   WARNING: There is one character incompatible with the specified\n", spacer);
+				MrBayesPrint ("%s            coding bias. This character will be excluded.\n", spacer);
+				}
+			}
+
+		/* update division comp matrix and comp char pointers */
+		m->compCharStop = newChar;
+		m->compMatrixStop = newColumn;
+		m->compCharStart = newChar - m->numChars;
+		m->compMatrixStart = newColumn - m->nCharsPerSite * m->numChars;
+
+		}	/* next division */
+
+	/* compress matrix if necessary */
+	if (numDeleted > 0)
+		{
+		for (i=k=0; i<numLocalTaxa; i++)
+			{
+			for (j=0; j<newRowSize-numDeleted; j++)
+				{
+				tempMatrix[k++] = tempMatrix[j+i*newRowSize];
+				}
+			}
+		numCompressedChars -= numDeleted;
+		compMatrixRowSize -= numDeleted;
+		}
+
+
+	/* free old data, set pointers to new data */
+	free (compMatrix);
+	free (numSitesOfPat);
+	free (origChar);
+	
+	compMatrix = tempMatrix;
+	numSitesOfPat = tempSitesOfPat;
+	origChar = tempChar;
+	
+	tempMatrix = NULL;
+	tempSitesOfPat = NULL;
+	tempChar = NULL;
+	
+	/* print new compressed matrix */
+#	if	defined (DEBUG_ADDDUMMYCHARS)
+	MrBayesPrint ("After adding dummy characters...\n");
+	PrintCompMatrix();
+#	endif		
+
+	return NO_ERROR;
+
+	errorExit:
+		if (tempMatrix)
+			free (tempMatrix);
+		if (tempSitesOfPat)
+			free (tempSitesOfPat);
+		if (tempChar)
+			free (tempChar);
+
+		return ERROR;	
+}
+
+
+
+
+
+/* Allocate space for cpp events */
 void AllocateCppEvents (Param *p)
 {
     int     i;
@@ -1155,6 +1455,177 @@ int ChangeNumRuns (int from, int to)
 
 /*-----------------------------------------------------------
 |
+|	CheckCharCodingType: check if character is parsimony-
+|		informative, variable, or constant
+|
+-----------------------------------------------------------*/
+void CheckCharCodingType (Matrix *m, CharInfo *ci)
+
+{
+	int		i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
+			numConsidered, numInformative, lastInformative=0, uniqueBits,
+			newPoss, oldPoss, combinations[2048], *newComb, *oldComb, *tempComb;
+
+	extern int NBits (int x);
+
+	/* set up comb pointers */
+	oldComb = combinations;
+	newComb = oldComb + 1024;
+
+	/* set counters to 0 */
+	numPartAmbig = numConsidered = 0;
+
+	/* set variable and informative to yes */
+	ci->variable = ci->informative = YES;
+
+	/* set constant to no and state counters to 0 for all states */
+	for (i=0; i<10; i++)
+		{
+		ci->constant[i] = NO;
+		n1[i] = n2[i] = 0;
+		}
+
+	for (i=0; i<m->nRows; i++)
+		{
+		/* retrieve character */
+		x = m->origin[m->column + i*m->rowSize];
+
+		/* add it to counters if not all ambiguous */
+		if (NBits(x) < ci->nStates)
+			{
+			numConsidered++;
+			if (NBits(x) > 1)
+				numPartAmbig++;
+			for (j=0; j<10; j++)
+				{
+				if (((1<<j) & x) != 0)
+					{	
+					n1[j]++;
+					if (NBits(x) == 1)
+						n2[j]++;
+					}
+				}
+			}
+		}
+
+	/* if the ambig counter for any state is equal to the number of considered
+	   states, then set constant for that state and set variable and informative to no */
+	for (i=0; i<10; i++)
+		{
+		if (n1[i] == numConsidered)
+			{
+			ci->constant[i] = YES;
+			ci->variable = ci->informative = NO;
+			}
+		}
+
+	/* return if variable is no or if a restriction site char */
+	if (ci->variable == NO || ci->dType == RESTRICTION)
+		return;
+
+	/* the character is either (variable and uninformative) or informative */
+	
+	/* first consider unambiguous characters */
+	/* find smallest and largest unambiguous state for this character */
+	smallest = 9;
+	largest = 0;
+	for (i=0; i<10; i++)
+		{
+		if (n2[i] > 0)
+			{
+			if (i < smallest)
+				smallest = i;
+			if (i > largest)
+				largest = i;
+			}
+		}
+		
+	/* count the number of informative states in the unambiguous codings */
+	for (i=numInformative=0; i<10; i++)
+		{
+		if (ci->cType == ORD && n2[i] > 0 && i != smallest && i != largest)
+			{	
+			numInformative++;
+			lastInformative = i;
+			}
+		else if (n2[i] > 1)
+			{
+			numInformative++;
+			lastInformative = i;
+			}
+		}
+
+	/* set informative */
+	if (numInformative > 1)
+		ci->informative = YES;
+	else
+		ci->informative = NO;
+
+	
+	/* we can return now unless informative is no and numPartAmbig is not 0 */
+	if (!(numPartAmbig > 0 && ci->informative == NO))
+		return;
+
+	/* check if partially ambiguous observations make this character informative
+	   after all */
+	
+	/* first set the bits for the taken states */
+	x = 0;
+	for (i=0; i<10; i++)
+		{
+		if (n2[i] > 0 && i != lastInformative)
+			x |= (1<<i);
+		}
+	oldPoss = 1;
+	oldComb[0] = x;
+
+	/* now go through all partambig chars and see if we can add them without
+	   making the character informative */
+	for (i=0; i<m->nRows; i++)
+		{
+		x = m->origin[m->column + i*m->rowSize];
+		/* if partambig */ 
+		if (NBits(x) > 1 && NBits(x) < ci->nStates)
+			{
+			/* remove lastInformative */
+			x &= !(1<<lastInformative);
+			/* reset newPoss */
+			newPoss = 0;
+			/* see if we can add it, store all possible combinations */
+			for (j=0; j<oldPoss; j++)
+				{
+				uniqueBits = x & (!oldComb[j]);
+				for (k=0; k<10; k++)
+					{
+					if (((1<<k) & uniqueBits) != 0)
+						newComb[newPoss++] = oldComb[j] | (1<<k);
+					}
+				}
+			/* break out if we could not add it */
+			if (newPoss == 0)
+				break;
+			
+			/* prepare for next partAmbig */
+			oldPoss = newPoss;
+			tempComb = oldComb;
+			oldComb = newComb;
+			newComb = tempComb;
+			}
+		}
+
+	if (i < m->nRows)
+		ci->informative = YES;
+
+	return;
+	
+}
+
+
+
+
+
+/*-----------------------------------------------------------
+|
 |   CheckExpandedModels: check data partitions that have
 |   the codon or doublet model specified
 |
@@ -1499,21 +1970,18 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 	for (i=from; i<to; i++)
 		{
 		treeHandle = p->tree + i*2*numTrees;
+		free(*treeHandle);
 		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
 			}
-		else
-			AllocateTreeFlags (*treeHandle);
 		treeHandle += numTrees;
 		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
 			}
-		else
-			AllocateTreeFlags (*treeHandle);
 		}
 
 	/* initialize the trees; j is offset in mpi version */
@@ -1564,6 +2032,334 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 		}
 
 	return (NO_ERROR);
+}
+
+
+
+
+
+/*-----------------------------------------------------------
+|
+|   CompressData: compress original data matrix
+|
+-------------------------------------------------------------*/
+int CompressData (void)
+
+{
+
+	int				a, c, d, i, j, k, t, col[3], isSame, newRow, newColumn,
+					*isTaken, *tempSitesOfPat, *tempChar;
+	SafeLong        *tempMatrix;
+	ModelInfo		*m;
+	ModelParams		*mp;
+
+#	if defined DEBUG_COMPRESSDATA
+	if (PrintMatrix() == ERROR)
+		goto errorExit;
+	getchar();
+#	endif
+
+	/* set all pointers that will be allocated locally to NULL */
+	isTaken = NULL;
+	tempMatrix = NULL;
+	tempSitesOfPat = NULL;
+	tempChar = NULL;
+
+	/* allocate indices pointing from original to compressed matrix */
+	if (memAllocs[ALLOC_COMPCOLPOS] == YES)
+        {
+		SafeFree (&compColPos);
+        memAllocs[ALLOC_COMPCOLPOS] = NO;
+        }
+	compColPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
+	if (!compColPos)
+		{
+		MrBayesPrint ("%s   Problem allocating compColPos (%d)\n", spacer, numChar * sizeof(int));
+		goto errorExit;
+		}
+	for (i=0; i<numChar; i++)
+		compColPos[i] = 0;
+	memAllocs[ALLOC_COMPCOLPOS] = YES;
+
+	if (memAllocs[ALLOC_COMPCHARPOS] == YES)
+        {
+        SafeFree (&compCharPos);
+        memAllocs[ALLOC_COMPCHARPOS] = NO;
+        }
+	compCharPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
+	if (!compCharPos)
+		{
+		MrBayesPrint ("%s   Problem allocating compCharPos (%d)\n", spacer, numChar * sizeof(int));
+		goto errorExit;
+		}
+	for (i=0; i<numChar; i++)
+		compCharPos[i] = 0;
+	memAllocs[ALLOC_COMPCHARPOS] = YES;
+
+	/* allocate space for temporary matrix, tempSitesOfPat,             */
+	/* vector keeping track of whether a character has been compressed, */
+	/* and vector indexing first original char for each compressed char */
+	tempMatrix = (SafeLong *) calloc (numLocalTaxa * numLocalChar, sizeof(SafeLong));
+	tempSitesOfPat = (int *) calloc (numLocalChar, sizeof(int));
+	isTaken = (int *) calloc (numChar, sizeof(int));
+	tempChar = (int *) calloc (numLocalChar, sizeof(int));
+	if (!tempMatrix || !tempSitesOfPat || !isTaken || !tempChar)
+		{
+		MrBayesPrint ("%s   Problem allocating temporary variables in CompressData\n", spacer);
+		goto errorExit;
+		}
+
+    /* initialize isTaken */
+    for(c=0; c<numChar; c++)
+        isTaken[c] = NO;
+
+	/* set index to first empty column in temporary matrix */
+	newColumn = 0;
+
+	/* initialize number of compressed characters */
+	numCompressedChars = 0;
+
+	/* sort and compress data */
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		MrBayesPrint ("%s   Compressing data matrix for division %d\n", spacer, d+1);
+
+		/* set pointers to the model params and settings for this division */
+		m = &modelSettings[d];
+		mp = &modelParams[d];
+
+		/* set column offset for this division in compressed matrix */
+		m->compMatrixStart = newColumn;
+
+		/* set compressed character offset for this division */
+		m->compCharStart = numCompressedChars;
+
+		/* set number of compressed characters to 0 for this division */
+		m->numChars = 0;
+
+		/* find the number of original characters per model site */
+		m->nCharsPerSite = 1;
+		if (mp->dataType == DNA || mp->dataType == RNA)
+			{	
+			if (!strcmp(mp->nucModel, "Doublet"))
+				m->nCharsPerSite = 2;
+			if (!strcmp(mp->nucModel, "Codon") || !strcmp(mp->nucModel, "Protein"))
+				m->nCharsPerSite = 3;
+			}
+		
+		/* sort and compress the characters for this division */
+		for (c=0; c<numChar; c++)
+			{
+			if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != d+1 || isTaken[c] == YES)
+				continue;
+
+			col[0] = c;
+			isTaken[c] = YES;
+			
+			/* find additional columns if more than one character per model site      */
+			/* return error if the number of matching characters is smaller or larger */
+			/* than the actual number of characters per model site                    */
+			if (m->nCharsPerSite > 1)
+				{
+				j = 1;
+				if (charInfo[c].charId == 0)
+					{
+					MrBayesPrint("%s   Character %d is not properly defined\n", spacer, c+1);
+					goto errorExit;
+					}
+				for (i=c+1; i<numChar; i++)
+					{
+					if (charInfo[i].charId == charInfo[c].charId)
+						{
+						if (j >= m->nCharsPerSite)
+							{
+							MrBayesPrint("%s   Too many matches in charId (division %d char %d)\n", spacer, d, numCompressedChars);
+							goto errorExit;
+							}
+						else
+							{
+							col[j++] = i;
+							isTaken[i] = YES;
+							}
+						}
+					}
+				if (j != m->nCharsPerSite)
+					{
+					MrBayesPrint ("%s   Too few matches in charId (division %d char %d)\n", spacer, d, numCompressedChars);
+					goto errorExit;
+					}
+				}
+			
+			/* add character to temporary matrix in column(s) at newColumn */
+			for (t=newRow=0; t<numTaxa; t++)
+				{
+				if (taxaInfo[t].isDeleted == YES)
+					continue;
+
+				for (k=0; k<m->nCharsPerSite; k++)
+					{
+					tempMatrix[pos(newRow,newColumn+k,numLocalChar)] = matrix[pos(t,col[k],numChar)];
+					}
+				newRow++;
+				}
+			
+			/* is it unique? */
+			isSame = NO;
+			if (mp->dataType != CONTINUOUS)
+				{
+				for (i=m->compMatrixStart; i<newColumn; i+=m->nCharsPerSite)
+					{
+					isSame = YES;
+					for (j=0; j<numLocalTaxa; j++)
+                        {
+						for (k=0; k<m->nCharsPerSite; k++)
+							if (tempMatrix[pos(j,newColumn+k,numLocalChar)] != tempMatrix[pos(j,i+k,numLocalChar)])
+								{
+								isSame = NO;
+								break;
+								}
+                        if (isSame == NO)
+                            break;
+                        }
+					if (isSame == YES)
+						break;
+					}
+				}
+
+			/* if subject to data augmentation, it is always unique */
+			if (!strcmp(mp->augmentData, "Yes"))
+				{
+				for (k=0; k<m->nCharsPerSite; k++)
+					{
+					if (charInfo[col[k]].isMissAmbig == YES)
+						isSame = NO;
+					}
+				}
+
+			if (isSame == NO)
+				{
+				/* if it is unique then it should be added */
+				tempSitesOfPat[numCompressedChars] = 1;
+				for (k=0; k<m->nCharsPerSite; k++)
+					{
+					compColPos[col[k]] = newColumn + k;
+					compCharPos[col[k]] = numCompressedChars;
+					tempChar[newColumn + k] = col[k];
+					}
+				newColumn+=m->nCharsPerSite;
+				m->numChars++;
+				numCompressedChars++;
+				}
+			else
+				{
+				/* if it is not unique then simply update tempSitesOfPat     */
+				/* calculate compressed character position and put it into a */
+				/* (i points to compressed column position)                  */
+				a = m->compCharStart + ((i - m->compMatrixStart) / m->nCharsPerSite);
+				tempSitesOfPat[a]++;
+				for (k=0; k<m->nCharsPerSite; k++)
+					{
+					compColPos[col[k]] = i;
+					compCharPos[col[k]] = a;
+					/* tempChar (pointing from compressed to uncompresed) */
+					/* can only be set for first pattern */
+					}
+				}
+			}	/* next character */
+			
+		/* check that the partition has at least a single character */
+		if (m->numChars <= 0)
+			{
+			MrBayesPrint ("%s   You must have at least one site in a partition. Partition %d\n", spacer, d+1);
+			MrBayesPrint ("%s   has %d site patterns.\n", spacer, m->numChars);
+			goto errorExit;
+			}
+
+		MrBayesPrint("%s   Division %d has %d unique site patterns\n", spacer, d+1, m->numChars);
+
+		m->compCharStop = m->compCharStart + m->numChars;
+		m->compMatrixStop = newColumn;
+
+		} /* next division */
+
+	compMatrixRowSize = newColumn;
+
+	/* now we know the size, so we can allocate space for the compressed matrix ... */
+	if (memAllocs[ALLOC_COMPMATRIX] == YES)
+		{
+        SafeFree (&compMatrix);
+        memAllocs[ALLOC_COMPMATRIX] = NO;
+		}
+	compMatrix = (SafeLong *) calloc (compMatrixRowSize * numLocalTaxa, sizeof(SafeLong));
+	if (!compMatrix)
+		{
+		MrBayesPrint ("%s   Problem allocating compMatrix (%d)\n", spacer, compMatrixRowSize * numLocalTaxa * sizeof(SafeLong));
+		goto errorExit;
+		}
+	memAllocs[ALLOC_COMPMATRIX] = YES;
+	
+	if (memAllocs[ALLOC_NUMSITESOFPAT] == YES)
+		{
+        SafeFree (&numSitesOfPat);
+        memAllocs[ALLOC_NUMSITESOFPAT] = NO;
+		}
+	numSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
+	if (!numSitesOfPat)
+		{
+		MrBayesPrint ("%s   Problem allocating numSitesOfPat (%d)\n", spacer, numCompressedChars * sizeof(MrBFlt));
+		goto errorExit;
+		}
+	memAllocs[ALLOC_NUMSITESOFPAT] = YES;
+
+	if (memAllocs[ALLOC_ORIGCHAR] == YES)
+		{
+        SafeFree (&origChar);
+        memAllocs[ALLOC_ORIGCHAR] = NO;
+		}
+	origChar = (int *)SafeMalloc((size_t) (compMatrixRowSize * sizeof(int)));
+	if (!origChar)
+		{
+		MrBayesPrint ("%s   Problem allocating origChar (%d)\n", spacer, numCompressedChars * sizeof(int));
+		goto errorExit;
+		}
+	memAllocs[ALLOC_ORIGCHAR] = YES;
+
+	/* ... and copy the data there */
+	for (i=0; i<numLocalTaxa; i++)
+		for (j=0; j<compMatrixRowSize; j++)
+			compMatrix[pos(i,j,compMatrixRowSize)] = tempMatrix[pos(i,j,numLocalChar)];
+
+	for (i=0; i<numCompressedChars; i++)
+		numSitesOfPat[i] = (CLFlt) tempSitesOfPat[i];
+
+	for (i=0; i<compMatrixRowSize; i++)
+		origChar[i] = tempChar[i];
+
+#	if defined (DEBUG_COMPRESSDATA)
+	if (PrintCompMatrix() == ERROR)
+		goto errorExit;
+	getchar();
+#	endif
+
+	/* free the temporary variables */
+	free (tempSitesOfPat);
+	free (tempMatrix);
+	free (isTaken);
+	free (tempChar);
+
+	return NO_ERROR;
+
+	errorExit:
+		if (tempMatrix)
+		    free (tempMatrix);
+		if (tempSitesOfPat)
+			free (tempSitesOfPat);
+		if (isTaken)
+			free (isTaken);
+		if (tempChar)
+			free (tempChar);
+
+		return ERROR;
 }
 
 
@@ -8342,7 +9138,7 @@ int DoShowParams (void)
 |	FillNormalParams: Allocate and fill in non-tree parameters
 |
 -------------------------------------------------------------------------*/
-int FillNormalParams (safeLong *seed, int fromChain, int toChain)
+int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 {
 
@@ -8967,7 +9763,7 @@ int FillRelPartsString (Param *p, char relPartString[100])
 
 
 /* FillTopologySubParams: Fill subparams (brlens) for a topology */
-int FillTopologySubParams (Param *param, int chn, int state, safeLong *seed)
+int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 {
 	int		i,returnVal;
 	Tree	*tree, *tree1;
@@ -9112,7 +9908,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 |	FillTreeParams: Fill in trees and branch lengths
 |
 ------------------------------------------------------------------*/
-int FillTreeParams (safeLong *seed, int fromChain, int toChain)
+int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
 
@@ -9280,6 +10076,37 @@ int FreeModel (void)
 		moves = NULL;
 		numApplicableMoves = 0;
 		memAllocs[ALLOC_MOVES] = NO;
+		}
+	if (memAllocs[ALLOC_COMPMATRIX] == YES)
+		{
+		free (compMatrix);
+		memAllocs[ALLOC_COMPMATRIX] = NO;
+		}
+	if (memAllocs[ALLOC_NUMSITESOFPAT] == YES)
+		{
+		free (numSitesOfPat);
+		memAllocs[ALLOC_NUMSITESOFPAT] = NO;
+		}
+	if (memAllocs[ALLOC_COMPCOLPOS] == YES)
+		{
+		free (compColPos);
+		memAllocs[ALLOC_COMPCOLPOS] = NO;
+		}
+	if (memAllocs[ALLOC_COMPCHARPOS] == YES)
+		{
+		free (compCharPos);
+		memAllocs[ALLOC_COMPCHARPOS] = NO;
+		}
+	if (memAllocs[ALLOC_ORIGCHAR] == YES)
+		{
+		free (origChar);
+		memAllocs[ALLOC_ORIGCHAR] = NO;
+		}
+	if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
+		{
+		free (stdStateFreqs);
+		stdStateFreqs = NULL;
+		memAllocs[ALLOC_STDSTATEFREQS] = NO;
 		}
 	if (memAllocs[ALLOC_PARAMVALUES] == YES)
 		{
@@ -11675,6 +12502,704 @@ int NumStates (int part)
 
 
 
+/*-----------------------------------------------------------------------
+|
+|	PrintCompMatrix: Print compressed matrix
+|
+------------------------------------------------------------------------*/
+int PrintCompMatrix (void)
+
+{
+	int				i, j, k, c, d;
+	ModelInfo		*m;
+	ModelParams		*mp;
+	char			tempName[100];
+	char			(*whichChar)(int);
+
+	extern char		WhichAA (int x);
+	extern char		WhichNuc (int x);
+	extern char		WhichRes (int x);
+	extern char		WhichStand (int x);
+
+
+	if (!compMatrix)
+		return ERROR;
+
+	whichChar = &WhichNuc;
+	
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		m = &modelSettings[d];
+		mp = &modelParams[d];
+
+		if (mp->dataType == DNA || mp->dataType == RNA)
+			whichChar = &WhichNuc;
+		if (mp->dataType == PROTEIN)
+			whichChar = &WhichAA;
+		if (mp->dataType == RESTRICTION)
+			whichChar = &WhichRes;
+		if (mp->dataType == STANDARD)
+			whichChar = &WhichStand;
+
+		MrBayesPrint ("\nCompressed matrix for division %d\n\n", d+1);
+		
+		k = 66;
+		if (mp->dataType == CONTINUOUS)
+			k /= 4;
+
+		for (c=m->compMatrixStart; c<m->compMatrixStop; c+=k)
+			{
+			for (i=0; i<numLocalTaxa; i++)
+				{
+				strcpy (tempName, localTaxonNames[i]);
+				MrBayesPrint ("%-10.10s   ", tempName);
+				for (j=c; j<c+k; j++)
+					{
+					if (j >= m->compMatrixStop)
+						break;
+					if (mp->dataType == CONTINUOUS)
+						MrBayesPrint ("%3d ", compMatrix[pos(i,j,compMatrixRowSize)]);
+					else
+						MrBayesPrint ("%c", whichChar(compMatrix[pos(i,j,compMatrixRowSize)]));
+					}
+				MrBayesPrint("\n");
+				}
+			MrBayesPrint("\nNo. sites    ");
+			for (j=c; j<c+k; j++)
+				{
+				if (j >= m->compMatrixStop)
+					break;
+				i = (int) numSitesOfPat[m->compCharStart + (0*numCompressedChars) + (j - m->compMatrixStart)/m->nCharsPerSite]; /* NOTE: We are printing the unadulterated site pat nums */
+				if (i>9)
+					i = 'A' + i - 10;
+				else
+					i = '0' + i;
+				if (mp->dataType == CONTINUOUS)
+					MrBayesPrint("   %c ", i);
+				else
+					{
+					if ((j-m->compMatrixStart) % m->nCharsPerSite == 0)
+						MrBayesPrint ("%c", i);
+					else
+						MrBayesPrint(" ");
+					}
+				}
+			MrBayesPrint ("\nOrig. char   ");
+			for (j=c; j<c+k; j++)
+				{
+				if (j >= m->compMatrixStop)
+					break;
+				i = origChar[j];
+				if (i>9)
+					i = '0' + (i % 10);
+				else
+					i = '0' +i;
+				if (mp->dataType == CONTINUOUS)
+					MrBayesPrint("   %c ", i);
+				else
+					MrBayesPrint ("%c", i);
+				}
+
+			if (mp->dataType == STANDARD && m->nStates != NULL)
+				{
+				MrBayesPrint ("\nNo. states   ");
+				for (j=c; j<c+k; j++)
+					{
+					if (j >= m->compMatrixStop)
+						break;
+					i = m->nStates[j-m->compCharStart];
+					MrBayesPrint ("%d", i);
+					}
+				MrBayesPrint ("\nCharType     ");
+				for (j=c; j<c+k; j++)
+					{
+					if (j >= m->compMatrixStop)
+						break;
+					i = m->cType[j-m->compMatrixStart];
+					if (i == ORD)
+						MrBayesPrint ("%c", 'O');
+					else if (i == UNORD)
+						MrBayesPrint ("%c", 'U');
+					else
+						MrBayesPrint ("%c", 'I');
+					}
+				MrBayesPrint ("\ntiIndex      ");
+				for (j=c; j<c+k; j++)
+					{
+					if (j >= m->compMatrixStop)
+						break;
+					i = m->tiIndex[j-m->compCharStart];
+					MrBayesPrint ("%d", i % 10);
+					}
+				MrBayesPrint ("\nbsIndex      ");
+				for (j=c; j<c+k; j++)
+					{
+					if (j >= m->compMatrixStop)
+						break;
+					i = m->bsIndex[j-m->compCharStart];
+					MrBayesPrint ("%d", i % 10);
+					}
+				}
+			MrBayesPrint ("\n\n");
+			}
+		MrBayesPrint ("Press return to continue\n");
+		getchar();
+		}	/* next division */
+
+	return NO_ERROR;
+
+}
+
+
+
+
+
+/*----------------------------------------------------------------------
+|
+|	PrintMatrix: Print data matrix
+|
+|
+------------------------------------------------------------------------*/
+int PrintMatrix (void)
+
+{
+
+	int				i, j=0, c, printWidth, nextColumn;
+
+	extern char		WhichAA (int x);
+	extern char		WhichNuc (int x);
+	extern char		WhichRes (int x);
+	extern char		WhichStand (int x);
+
+
+	if (!matrix)
+		return ERROR;
+	
+	MrBayesPrint ("\nData matrix\n\n");
+	
+	printWidth = 79;
+
+	for (c=0; c<numChar; c=j)
+		{
+		for (i=0; i<numTaxa; i++)
+			{
+			MrBayesPrint ("%-10.10s   ", taxaNames[i]);
+			j = c;
+			for (nextColumn=13; nextColumn < printWidth; nextColumn++)
+				{
+				if (j >= numChar)
+					break;
+				if (charInfo[j].charType == CONTINUOUS && nextColumn < printWidth - 3)
+					break;
+				if (charInfo[j].charType == CONTINUOUS)
+					{	
+					MrBayesPrint ("%3d ", matrix[pos(i,j,numChar)]);
+					nextColumn += 3;
+					}
+				else if (charInfo[j].charType == DNA || charInfo[j].charType == RNA)
+					MrBayesPrint ("%c", WhichNuc(matrix[pos(i,j,numChar)]));
+				else if (charInfo[j].charType == PROTEIN)
+					MrBayesPrint ("%c", WhichAA(matrix[pos(i,j,numChar)]));
+				else if (charInfo[j].charType == RESTRICTION)
+					MrBayesPrint ("%c", WhichRes(matrix[pos(i,j,numChar)]));
+				else if (charInfo[j].charType == STANDARD)
+					MrBayesPrint ("%c", WhichStand(matrix[pos(i,j,numChar)]));
+				j++;
+				}
+			MrBayesPrint("\n");
+			}
+		MrBayesPrint ("\n");
+		}
+
+	return NO_ERROR;
+
+}
+
+
+
+
+
+/*--------------------------------------------------------------
+|
+|	ProcessStdChars: process standard characters
+|
+---------------------------------------------------------------*/
+int ProcessStdChars (SafeLong *seed)
+
+{
+
+	int				b, c, d, i, j, k, n, chn, ts, index, numStandardChars, origCharPos, *bsIndex;
+    char            piHeader[30];
+	MrBFlt			*subValue, sum, symDir[10];
+	ModelInfo		*m;
+	ModelParams		*mp=NULL;
+	Param			*p;
+
+	/* set character type, no. states, ti index and bs index for standard characters */
+	/* first calculate how many standard characters we have */
+	numStandardChars = 0;
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		mp = &modelParams[d];
+		m = &modelSettings[d];
+
+		if (mp->dataType != STANDARD)
+			continue;
+
+		numStandardChars += m->numChars;
+		}
+	
+	/* return if there are no standard characters */
+	if (numStandardChars == 0)
+		return (NO_ERROR);
+
+	/* we are still here so we have standard characters and need to deal with them */
+	
+	/* first allocate space for stdType, stateSize, tiIndex, bsIndex */
+	if (memAllocs[ALLOC_STDTYPE] == YES)
+		{
+		SafeFree (&stdType);
+		memAllocs[ALLOC_STDTYPE] = NO;
+		}
+	stdType = (int *)calloc((size_t) (4 * numStandardChars), sizeof(int));
+	if (!stdType)
+		{
+		MrBayesPrint ("%s   Problem allocating stdType (%d ints)\n", 4 * numStandardChars);
+		return ERROR;
+		}
+	memAllocs[ALLOC_STDTYPE] = YES;
+	stateSize = stdType + numStandardChars;
+	tiIndex = stateSize + numStandardChars;
+	bsIndex = tiIndex + numStandardChars;
+
+	/* then fill in stdType and stateSize, set pointers */
+	/* also fill in isTiNeeded for each division and tiIndex for each character */
+	for (d=j=0; d<numCurrentDivisions; d++)
+		{
+		mp = &modelParams[d];
+		m = &modelSettings[d];
+		
+		if (mp->dataType != STANDARD)
+			continue;
+
+		m->cType = stdType + j;
+		m->nStates = stateSize + j;
+		m->tiIndex = tiIndex + j;
+		m->bsIndex = bsIndex + j;
+
+		m->cijkLength = 0;
+        m->nCijkParts = 0;
+		for (c=0; c<m->numChars; c++)
+			{
+			if (origChar[c+m->compMatrixStart] < 0)
+				{
+				/* this is a dummy character */
+				m->cType[c] = UNORD;
+				m->nStates[c] = 2;
+				}
+			else
+				{
+				/* this is an ordinary character */
+				m->cType[c] = charInfo[origChar[c + m->compMatrixStart]].ctype;
+				m->nStates[c] = charInfo[origChar[c + m->compMatrixStart]].numStates;
+				}
+			
+			/* check ctype settings */
+			if (m->nStates[c] < 2)
+				{
+				MrBayesPrint ("%s   WARNING: Compressed character %d of division %d has less than two observed\n", spacer, c+m->compCharStart, d+1);
+				MrBayesPrint ("%s            states; it will be assumed to have two states.\n", spacer);
+				m->nStates[c] = 2;
+				}
+			if (m->nStates[c] > 6 && m->cType[c] != UNORD)
+				{
+				MrBayesPrint ("%s   Only unordered model supported for characters with more than 6 states\n", spacer);
+				return ERROR;
+				}
+			if (m->nStates[c] == 2 && m->cType[c] == ORD)
+				m->cType[c] = UNORD;
+			if (m->cType[c] == IRREV)
+				{
+				MrBayesPrint ("%s   Irreversible model not yet supported\n", spacer);
+				return ERROR;
+				}
+			
+			/* find max number of states */
+			if (m->nStates[c] > m->numModelStates)
+				m->numModelStates = m->nStates[c];
+
+			/* update Cijk info */
+			if (strcmp(mp->symPiPr,"Fixed") != 0 || AreDoublesEqual(mp->symBetaFix, -1.0, 0.00001) == NO)
+				{
+				/* Asymmetry between stationary state frequencies -- we need one cijk and eigenvalue
+					set for each multistate character */
+				if (m->nStates[c] > 2 && (m->cType[c] == UNORD || m->cType[c] == ORD))
+					{
+					ts = m->nStates[c];
+					m->cijkLength += (ts * ts * ts) + (2 * ts);
+					m->nCijkParts++;
+					}
+				}
+
+			/* set the ti probs needed */
+			if (m->stateFreq->nValues == 0 || m->nStates[c] == 2)
+                {
+    			if (m->cType[c] == UNORD)
+	    			m->isTiNeeded[m->nStates[c]-2] = YES;
+		    	if (m->cType[c] == ORD)
+			    	m->isTiNeeded[m->nStates[c]+6] = YES;
+			    if (m->cType[c] == IRREV)
+				    m->isTiNeeded[m->nStates[c]+11] = YES;
+                }
+			}
+
+		/* set ti index for each compressed character first         */
+		/* set bs index	later (below)								*/
+
+        /* set base index, valid for binary chars */
+        m->tiIndex[c] = 0;
+
+		/* first adjust for unordered characters */
+        for (k=0; k<9; k++)
+			{
+			if (m->isTiNeeded [k] == NO)
+				continue;
+
+			for (c=0; c<m->numChars; c++)
+				{
+				if (m->cType[c] != UNORD || m->nStates[c] > k + 2)
+					{
+					m->tiIndex[c] += (k + 2) * (k + 2) * m->numGammaCats;
+					}
+				}
+			}
+
+		/* second for ordered characters */
+		for (k=9; k<13; k++)
+			{
+			if (m->isTiNeeded [k] == NO)
+				continue;
+
+			for (c=0; c<m->numChars; c++)
+				{
+				if (m->cType[c] == IRREV || (m->cType[c] == ORD && m->nStates[c] > k - 6))
+					{
+					m->tiIndex[c] += (k - 6) * (k - 6) * m->numGammaCats;
+					}
+				}
+			}
+
+		/* third for irrev characters */
+		for (k=13; k<18; k++)
+			{
+			if (m->isTiNeeded [k] == NO)
+				continue;
+
+			for (c=0; c<m->numChars; c++)
+				{
+				if (m->cType[c] == IRREV && m->nStates[c] > k - 11)
+					{
+					m->tiIndex[c] += (k - 11) * (k - 11) * m->numGammaCats;
+					}
+				}
+			}
+
+		/* finally take beta cats into account in tiIndex        */
+		/* the beta cats will only be used for binary characters */
+        /* multistate characters get their ti indices reset here */
+		if (m->numBetaCats > 1 && m->isTiNeeded[0] == YES)
+			{
+            k = 4 * m->numBetaCats * m->numGammaCats;   /* offset for binary character ti probs */
+			for (c=0; c<m->numChars; c++)
+				{
+				if (m->nStates[c] > 2)
+					{
+					m->tiIndex[c] = k;
+                    k += m->nStates[c] * m->nStates[c] * m->numGammaCats;
+					}
+				}
+			}
+		j += m->numChars;
+		}
+	
+	/* deal with bsIndex */
+	for (k=0; k<numParams; k++)
+		{
+		p = &params[k];
+		if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+			continue;
+		p->nSympi = 0;
+        p->hasBinaryStd = NO;
+		for (i=0; i<p->nRelParts; i++)
+			if (modelSettings[p->relParts[i]].isTiNeeded[0] == YES)
+				break;
+        if (i < p->nRelParts)
+            p->hasBinaryStd = YES;
+		if (p->paramId == SYMPI_EQUAL)
+			{
+			/* calculate the number of state frequencies needed */
+			/* also set bsIndex appropriately                   */
+			for (n=index=0; n<9; n++)
+				{
+				for (i=0; i<p->nRelParts; i++)
+					if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+						break;
+				if (i < p->nRelParts)
+					{
+					for (i=0; i<p->nRelParts; i++)
+						{
+						m = &modelSettings[p->relParts[i]];
+						for (c=0; c<m->numChars; c++)
+							{
+							if (m->cType[c] != UNORD || m->nStates[c] > n + 2)
+								{
+								m->bsIndex[c] += (n + 2);
+								}
+							}
+						}
+					index += (n + 2);
+					}
+				}
+			for (n=9; n<13; n++)
+				{
+				for (i=0; i<p->nRelParts; i++)
+					if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+						break;
+				if (i < p->nRelParts)
+					{
+					for (i=0; i<p->nRelParts; i++)
+						{
+						m = &modelSettings[p->relParts[i]];
+						for (c=0; c<m->numChars; c++)
+							{
+							if (m->cType[c] == ORD && m->nStates[c] > n - 6)
+								{
+								m->bsIndex[c] += (n - 6);
+								}
+							}
+						}
+					index += (n - 6);
+					}
+				}
+			p->nStdStateFreqs = index;
+			}
+		else
+			{
+			/* if not equal we need space for beta category frequencies */
+            index = 0;
+			if (p->hasBinaryStd == YES)
+				index += (2 * modelSettings[p->relParts[0]].numBetaCats);
+			/* as well as one set of frequencies for each multistate character */
+			for (i=0; i<p->nRelParts; i++)
+				{
+				m = &modelSettings[p->relParts[i]];
+				for (c=0; c<m->numChars; c++)
+					{
+					if (m->nStates[c] > 2 && (m->cType[c] == UNORD || m->cType[c] == ORD))
+						{
+						m->bsIndex[c] = index;
+						index += m->nStates[c];
+						p->nSympi++;
+						}
+					}
+				}
+			}
+		p->nStdStateFreqs = index;
+		}
+	
+	/* allocate space for bsIndex, sympiIndex, stdStateFreqs; then fill */
+
+	/* first count number of sympis needed */
+	for (k=n=i=0; k<numParams; k++)
+		{
+		p = &params[k];
+		n += p->nSympi;		/* nsympi calculated above */
+		}
+	
+	/* then allocate and fill in */
+	if (n > 0)
+		{
+		if (memAllocs[ALLOC_SYMPIINDEX] == YES)
+			{
+			sympiIndex = (int *) realloc ((void *) sympiIndex, 3*n * sizeof (int));
+			for (i=0; i<3*n; i++)
+				sympiIndex[i] = 0;
+			}
+		else
+			sympiIndex = (int *) calloc (3*n, sizeof (int));
+		if (!sympiIndex)
+			{
+			MrBayesPrint ("%s   Problem allocating sympiIndex\n", spacer);
+			return (ERROR);
+			}
+		else
+			memAllocs[ALLOC_SYMPIINDEX] = YES;
+		
+		/* set up sympi pointers and fill sympiIndex */
+		for (k=i=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->nSympi > 0)
+				{
+                p->printParam = YES;    /* print even if fixed alpha_symdir */
+				index = 0;
+				p->sympiBsIndex = sympiIndex + i;
+				p->sympinStates = sympiIndex + i + n;
+				p->sympiCType = sympiIndex + i + (2 * n);
+				for (j=0; j<p->nRelParts; j++)
+					{						
+					m = &modelSettings[p->relParts[j]];
+					for (c=0; c<m->numChars; c++)
+						{
+						if (m->nStates[c] > 2 && (m->cType[c] == UNORD || m->cType[c] == ORD))
+							{
+							p->sympinStates[index] = m->nStates[c];
+							p->sympiBsIndex[index] = m->bsIndex[c];
+							p->sympiCType[index] = m->cType[c];
+                            origCharPos = origChar[m->compCharStart + c];
+                            for (ts=0; ts<m->nStates[c]; ts++)
+                                {
+                                sprintf(piHeader, "\tpi_%d(%d)", origCharPos+1, ts);
+                                SafeStrcat(&p->paramHeader, piHeader);
+                                }
+							index++;
+							}
+						}
+					}
+				assert (index == p->nSympi);
+				i += p->nSympi;
+				}
+			}
+        assert (i == n);
+		}
+	
+	/* count space needed for state frequencies */
+	for (k=n=0; k<numParams; k++)
+		{
+		p = &params[k];
+		if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+			continue;
+		n += p->nStdStateFreqs;
+		}
+	
+	stdStateFreqsRowSize = n;
+	
+	/* allocate space */
+	if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
+		{
+		SafeFree (&stdStateFreqs);
+        memAllocs[ALLOC_STDSTATEFREQS] = NO;
+		}
+	stdStateFreqs = (MrBFlt *) calloc (n * 2 * numGlobalChains, sizeof (MrBFlt));
+	if (!stdStateFreqs)
+		{
+		MrBayesPrint ("%s   Problem allocating stdStateFreqs in ProcessStdChars\n", spacer);
+		return (ERROR);
+		}
+	else
+		memAllocs[ALLOC_STDSTATEFREQS] = YES;
+	
+	/* set pointers */
+	for (k=n=0; k<numParams; k++)
+		{
+		p = &params[k];
+		if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+			continue;
+		p->stdStateFreqs = stdStateFreqs + n;
+		n += p->nStdStateFreqs;
+		}
+	
+	/* fill */
+	for (chn=0; chn<numGlobalChains; chn++)
+		{
+		for (k=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+				continue;
+			subValue = GetParamStdStateFreqs (p, chn, 0);
+			if (p->paramId == SYMPI_EQUAL)
+				{
+				for (n=index=0; n<9; n++)
+					{
+					for (i=0; i<p->nRelParts; i++)
+						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+							break;
+					if (i < p->nRelParts)
+						{
+						for (j=0; j<(n+2); j++)
+							{
+							subValue[index++] =  (1.0 / (n + 2));
+							}
+						}
+					}
+				for (n=9; n<13; n++)
+					{
+					for (i=0; i<p->nRelParts; i++)
+						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+							break;
+					if (i < p->nRelParts)
+						{
+						for (j=0; j<(n-6); j++)
+							{
+							subValue[index++] =  (1.0 / (n - 6));
+							}
+						}
+					}
+				}
+
+			/* Deal with transition asymmetry for standard characters */
+			/* First, fill in stationary frequencies for beta categories if needed; */
+			/* discard category frequencies (assume equal) */
+			if (p->paramId == SYMPI_FIX || p->paramId == SYMPI_UNI || p->paramId == SYMPI_EXP
+				|| p->paramId == SYMPI_FIX_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_EXP_MS)
+				{
+				if (p->hasBinaryStd == YES)
+					{
+					BetaBreaks (p->values[0], p->values[0], subValue, mp->numBetaCats);
+					b = 2*mp->numBetaCats;
+					for (i=b-2; i>0; i-=2)
+						{
+						subValue[i] = subValue[i/2];
+						}
+					for (i=1; i<b; i+=2)
+						{
+						subValue[i] =  (1.0 - subValue[i-1]);
+						}
+					subValue += (2 * mp->numBetaCats);
+					}
+				
+				/* Then fill in state frequencies for multistate chars, one set for each */
+				for (i=0; i<10; i++)
+					symDir[i] = p->values[0];
+			
+				for (c=0; c<p->nSympi; c++)
+					{
+					/* now fill in subvalues */
+					DirichletRandomVariable (symDir, subValue, p->sympinStates[c], seed);
+					sum = 0.0;
+					for (i=0; i<p->sympinStates[c]; i++)
+						{
+						if (subValue[i] < 0.0001)
+							subValue[i] =  0.0001;
+						sum += subValue[i];
+						}
+					for (i=0; i<mp->nStates; i++)
+						subValue[i] /= sum;
+					subValue += p->sympinStates[c];
+					}
+				}		
+			}	/* next parameter */
+		}	/* next chain */
+
+	return (NO_ERROR);
+	
+}
+
+
+
+
+
 int SetAARates (void)
 
 {
@@ -13183,9 +14708,10 @@ int SetModelInfo (void)
 		m = &modelSettings[i];
 
 		/* make certain that we set this intentionally to "NO" so we 
-		   calculate cijk information when needed */
-		for (j=0; j<MAX_CHAINS; j++)
-			m->upDateCijk[j][0] = m->upDateCijk[j][1] = YES;
+		   calculate cijk information and calculate cond likes when needed */
+		m->upDateCijk = YES;
+        m->upDateCl = YES;
+        m->upDateAll = YES;
 
 		/* make certain that we start with a parsimony branch length of zero */
 		for (j=0; j<MAX_CHAINS; j++)
@@ -13239,7 +14765,48 @@ int SetModelInfo (void)
 		m->gibbsFreq = 0;
 
 		m->parsimonyBasedMove = NO;
-		}
+
+#if defined (BEAGLE_ENABLED)
+        m->useBeagle = NO;                    /* use Beagle for this partition?               */
+        m->beagleInstance = -1;               /* beagle instance                              */
+        m->logLikelihoods = NULL;             /* array of log likelihoods from Beagle         */
+        m->inRates = NULL;                    /* array of category rates for Beagle           */
+        m->branchLengths = NULL;              /* array of branch lengths for Beagle           */
+        m->tiProbIndices = NULL;              /* array of trans prob indices for Beagle       */
+        m->inWeights = NULL;                  /* array of weights for Beagle root likelihood  */
+        m->bufferIndices = NULL;              /* array of partial indices for root likelihood */
+        m->childBufferIndices = NULL;         /* array of child partial indices (unrooted)    */
+        m->childTiProbIndices = NULL;         /* array of child ti prob indices (unrooted)    */
+        m->cumulativeScaleIndices = NULL;     /* array of cumulative scale indices            */
+#endif
+
+        /* set all memory pointers to NULL */
+        m->parsSets = NULL;
+        m->numParsSets = 0;
+        m->parsNodeLens = NULL;
+        m->numParsNodeLens = 0;
+
+        m->condLikes = NULL;
+        m->tiProbs = NULL;
+        m->scalers = NULL;
+        m->numCondLikes = 0;
+        m->numTiProbs = 0;
+        m->numScalers = 0;
+
+        m->condLikeIndex = NULL;
+        m->condLikeScratchIndex = NULL;
+        m->tiProbsIndex = NULL;
+        m->tiProbsScratchIndex = NULL;
+        m->nodeScalerIndex = NULL;
+        m->nodeScalerScratchIndex = NULL;
+        m->siteScalerIndex = NULL;
+        m->siteScalerScratchIndex = -1;
+
+        m->cijks = NULL;
+        m->nCijkParts = 0;
+        m->cijkIndex = NULL;
+        m->cijkScratchIndex = -1;
+        }
 
 	/* set state of all chains to zero */
 	for (chn=0; chn<numGlobalChains; chn++)
@@ -13274,7 +14841,7 @@ int SetModelInfo (void)
 		else if (!strcmp(mp->nst, "6"))
 			m->nst = 6;
 		else
-			m->nst = 203;
+			m->nst = NST_MIXED;
 			
 		/* We set the aa model here. We have two options. First, the model
 		   could be fixed, in which case mp->aaModel has been set. We then
@@ -13382,18 +14949,18 @@ int SetModelInfo (void)
 		else
 			m->numModelStates = m->numStates;
 			
-		/* Fill in some information for calculating cijk. We will use m->nCijk to 
+		/* Fill in some information for calculating cijk. We will use m->cijkLength to 
 		   figure out if we need to diagonalize Q to calculate transition probabilities.
-		   If nCijk = 0, then we won't bother. We use nCijk later in this function. */
-		m->nCijk = 0;
+		   If cijkLength = 0, then we won't bother. We use cijkLength later in this function. */
+		m->cijkLength = 0;
 		m->nCijkParts = 1;
 		if (m->dataType == PROTEIN)
 			{
 			ts = m->numModelStates;
-			m->nCijk = (ts * ts * ts) + (2 * ts);
+			m->cijkLength = (ts * ts * ts) + (2 * ts);
 			if (!strcmp (mp->covarionModel, "Yes"))
 				{
-				m->nCijk *= m->numGammaCats;
+				m->cijkLength *= m->numGammaCats;
 				m->nCijkParts = m->numGammaCats;
 				}
 			}
@@ -13407,28 +14974,28 @@ int SetModelInfo (void)
 			if (m->nucModelId == NUCMODEL_4BY4)
 				{
 				if (!strcmp (mp->covarionModel, "No") && m->nst != 6 && m->nst != 203)
-					m->nCijk = 0;
+					m->cijkLength = 0;
 				else
 					{
 					ts = m->numModelStates;
-					m->nCijk = (ts * ts * ts) + (2 * ts);
+					m->cijkLength = (ts * ts * ts) + (2 * ts);
 					}
 				if (!strcmp (mp->covarionModel, "Yes"))
 					{
-					m->nCijk *= m->numGammaCats;
+					m->cijkLength *= m->numGammaCats;
 					m->nCijkParts = m->numGammaCats;
 					}
 				}
 			else if (m->nucModelId == NUCMODEL_DOUBLET)
 				{
 				ts = m->numModelStates;
-				m->nCijk = (ts * ts * ts) + (2 * ts);
+				m->cijkLength = (ts * ts * ts) + (2 * ts);
 				}
 			else if (m->nucModelId == NUCMODEL_CODON)
 				{
 				ts = m->numModelStates;
-				m->nCijk = (ts * ts * ts) + (2 * ts);
-				m->nCijk *= m->numOmegaCats;
+				m->cijkLength = (ts * ts * ts) + (2 * ts);
+				m->cijkLength *= m->numOmegaCats;
 				m->nCijkParts = m->numOmegaCats;
 				}
 			else
@@ -13437,11 +15004,6 @@ int SetModelInfo (void)
 				return ERROR;
 				}
 			}
-
-		/* assume all divisions need different transition probability matrices */
-		m->tiProbsId = i;
-		if (m->dataType == CONTINUOUS)
-			m->tiProbsId = i;
 
 		/* check if we should calculate ancestral states */
 		if (!strcmp(mp->inferAncStates,"Yes"))
@@ -14411,7 +15973,7 @@ int SetModelParams (void)
 				}
 
 			if (areAllPartsParsimony == YES)
-				p->paramTypeName = "Topology";
+				p->paramTypeName = "Topology"; /*Why again we set it to "Topology" we did it unconditionally 1 lines before*/
 			
 			/* check if topology is clock or nonclock */
 			nClockBrlens = 0;
@@ -15234,13 +16796,14 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 |	SetUpAnalysis: Set parameters and moves
 |
 ------------------------------------------------------------------------*/
-int SetUpAnalysis (safeLong *seed)
+int SetUpAnalysis (SafeLong *seed)
 
 {
 
     /* calculate number of characters and taxa */
 	numLocalChar = NumNonExcludedChar ();
-	/* we are checking later to make sure no partition is without characters */
+
+    /* we are checking later to make sure no partition is without characters */
 	SetLocalTaxa ();
 	if (numLocalTaxa <= 2)
 		{
@@ -15264,8 +16827,16 @@ int SetUpAnalysis (safeLong *seed)
 	if (SetModelInfo() == ERROR) 
 		return (ERROR);
 	
-	/* calculate number of (uncompressed) characters for each division */
+	/* Calculate number of (uncompressed) characters for each division */
 	if (GetNumDivisionChars() == ERROR)
+		return (ERROR);
+
+    /* Compress data and calculate some things needed for setting up params. */
+	if (CompressData() == ERROR)
+		return (ERROR);
+
+	/* Add dummy characters, if needed. */
+	if (AddDummyChars() == ERROR)
 		return (ERROR);
 
 	/* Set up parameters for the chain. */
@@ -15282,6 +16853,10 @@ int SetUpAnalysis (safeLong *seed)
 	
     /* Set default number of trees for sumt to appropriate number */
     sumtParams.numTrees = numTrees;
+
+	/* Process standard characters (calculates bsIndex, tiIndex, and more). */
+	if (ProcessStdChars(seed) == ERROR)
+		return (ERROR);
 
 	/* Fill in normal parameters */
 	if (FillNormalParams (seed, 0, numGlobalChains) == ERROR)

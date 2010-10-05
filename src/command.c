@@ -158,7 +158,7 @@ int      ProtID (char aa);
 int      SetPartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
-void     WhatVariableExp (safeLong exp, char *st);
+void     WhatVariableExp (SafeLong exp, char *st);
 char     WhichAA (int x);
 MrBFlt   WhichCont (int x);
 char     WhichRes (int x);
@@ -171,15 +171,15 @@ int				autoClose;             /* autoclose                                     *
 int 			autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes */
 Calibration		*calibrationPtr;       /* ptr to calibration being set                  */
 CharInformation *charInfo;             /* holds critical information about characters   */
-safeLong        **charSet;             /* holds information about defined charsets      */
+SafeLong        **charSet;             /* holds information about defined charsets      */
 char			**charSetNames;        /* holds names of character sets                 */
 Comptree		comptreeParams;        /* holds parameters for comparetree command      */
 char			**constraintNames;     /* holds names of constraints                    */
 int				dataType;              /* type of data                                  */
 Calibration     defaultCalibration;    /* default calibration                           */
-safeLong        **definedConstraint;   /* holds information about defined constraints   */
+SafeLong        **definedConstraint;   /* holds information about defined constraints   */
 int				echoMB;				   /* flag used by Manual to prevent echoing        */
-safeLong        expecting;             /* variable denoting expected token type         */
+SafeLong        expecting;             /* variable denoting expected token type         */
 int				foundNewLine;          /* whether a new line has been found             */
 int 			inComment;             /* flag for whether input stream is commented    */
 int				inComparetreeCommand;  /* flag set whenever you enter comparetree cmd   */
@@ -229,7 +229,7 @@ Sump			sumpParams;            /* holds parameters for sump command             *
 Sumt			sumtParams;            /* holds parameters for sumt command             */
 TaxaInformation *taxaInfo;             /* holds critical information about taxa         */
 char			**taxaNames;           /* holds name of taxa                            */
-safeLong        **taxaSet;             /* holds information about defined taxasets      */
+SafeLong        **taxaSet;             /* holds information about defined taxasets      */
 char			**taxaSetNames;        /* holds names of taxa sets                      */
 int             *tempActiveConstraints;/* temporarily holds active constraints in prset */
 int				*tempSet;              /* temporarily holds defined set                 */
@@ -4888,6 +4888,7 @@ int DoMatrix (void)
 	
 	if (SetModelDefaults () == ERROR)
 		return (ERROR);
+
 	if (SetUpAnalysis (&globalSeed) == ERROR)
 		return (ERROR);
 
@@ -7771,13 +7772,13 @@ int DoVersion (void)
 
 
 
-safeLong Expecting (int y)
+SafeLong Expecting (int y)
 
 {
 
-	safeLong x;
+	SafeLong x;
 	
-	x = (safeLong)pow(2.0, (MrBFlt)y);
+	x = (SafeLong)pow(2.0, (MrBFlt)y);
 	
 	return (x);
 
@@ -12813,24 +12814,24 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 		printf ("   ");
 		if (p->left == NULL && p->right == NULL && p->anc != NULL)
 			{
-			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) ", 
-			indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label);
+			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d", 
+			indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode);
 			}
 		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
 			{
 			if (isThisTreeRooted == NO)
 				{
 				if (p->label[0] == '\0' || p->label[0] == '\n' || p->label[0] == ' ')
-					printf("%*cN %d (l=%d r=%d a=%d) (---) ", 
-					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
+					printf("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d", 
+					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				else
-					printf("%*cN %d (l=%d r=%d a=%d) (%s) ", 
-					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label);
+					printf("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d", 
+					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label, p->scalerNode);
 				}
 			else
 				{
-				printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ", 
-				indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
+				printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d", 
+				indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				}
 			}
 		else
@@ -12838,11 +12839,11 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 			if (p->anc != NULL)
 				{
 				if (p->anc->anc == NULL && isThisTreeRooted == YES)
-					printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ", 
-					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
+					printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d", 
+					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				else	
-					printf("%*cN %d (l=%d r=%d a=%d) %1.15lf ", 
-					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length);
+					printf("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d", 
+					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->scalerNode);
 				}
 			}
 		if (isThisTreeRooted == YES)
@@ -13026,7 +13027,7 @@ int StateCode_Std (int n)
 
 
 
-void WhatVariableExp (safeLong exp, char *st)
+void WhatVariableExp (SafeLong exp, char *st)
 
 {
 

@@ -219,7 +219,7 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
 
     /* allocate space */
-    pt->bitsets = (safeLong *) realloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(safeLong));
+    pt->bitsets = (SafeLong *) realloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(SafeLong));
 	if (pt->bitsets == NULL)
 		return (ERROR);
     for (i=0; i<pt->memNodes*nLongsNeeded; i++)
@@ -372,35 +372,6 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
 
 
 
-/* AllocateTreeFlags: Allocate space for condLike and other flags */
-int AllocateTreeFlags (Tree *t)
-{
-	int			i, nLongsNeeded;
-	TreeNode	*p;
-	
-	nLongsNeeded = (numCurrentDivisions / nBitsInALong) + 1;
-
-	t->flags = (safeLong *) realloc ((void *)t->flags, 3*t->memNodes*nLongsNeeded*sizeof(safeLong));
-	if (t->flags == NULL)
-		return (ERROR);
-	for (i=0; i<3*t->memNodes*nLongsNeeded; i++)
-		t->flags[i] = 0;
-	
-	for (i=0; i<t->memNodes; i++)
-		{
-		p = &t->nodes[i];
-		p->clSpace = t->flags + 3*i*nLongsNeeded;
-		p->tiSpace = p->clSpace + nLongsNeeded;
-		p->scalersSet = p->tiSpace + nLongsNeeded;
-		}
-
-	return (NO_ERROR);
-}
-
-
-
-
-
 /* AllocateTreePartitions: Allocate space for and set partitions for tree */
 int AllocateTreePartitions (Tree *t)
 {
@@ -415,7 +386,7 @@ int AllocateTreePartitions (Tree *t)
 	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
 
 	/* reallocate space */
-    t->bitsets = (safeLong *) realloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(safeLong)));
+    t->bitsets = (SafeLong *) realloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(SafeLong)));
     if (!t->bitsets)
 		return (ERROR);
 	
@@ -444,7 +415,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa, revertBits;
-	safeLong	*bitsets, *mask;
+	SafeLong	*bitsets, *mask;
 	TreeNode	*p, *q;
 
     if (t1->nNodes != t2->nNodes)
@@ -464,7 +435,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 	
     /* allocate space */
     nLongsNeeded = (nTaxa / nBitsInALong) + 1;
-    bitsets = (safeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(safeLong));
+    bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
     /* set mask */
@@ -539,7 +510,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa, revertBits;
-	safeLong	*bitsets, *mask;
+	SafeLong	*bitsets, *mask;
 	TreeNode	*p, *q;
 	
 	if (t1->nNodes != t2->nNodes)
@@ -559,7 +530,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	
 	/* allocate space */
     nLongsNeeded = (nTaxa / nBitsInALong) + 1;
-    bitsets = (safeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(safeLong));
+    bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
     /* set mask */
@@ -641,7 +612,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 {
 
 	int				i, k, constraintId, nLongsNeeded, nextNode;
-	safeLong		*constraintPartition, *mask;
+	SafeLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
     char            constrName[100];
 	
@@ -652,7 +623,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 		numTaxa = t->nNodes - t->nIntNodes - 1;
 
 	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
-	constraintPartition = (safeLong *) calloc (2*nLongsNeeded, sizeof(safeLong));
+	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in BuildConstraintTree", spacer);
@@ -842,7 +813,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 |      of tips.
 |
 ----------------------------------------------*/
-int BuildRandomRTopology (Tree *t, safeLong *seed)
+int BuildRandomRTopology (Tree *t, SafeLong *seed)
 {
 	int			i, j, nTips;
 	TreeNode	*p, *q, *r;
@@ -915,7 +886,7 @@ int BuildRandomRTopology (Tree *t, safeLong *seed)
 |      this routine to get the right root.
 |
 ----------------------------------------------*/
-int BuildRandomUTopology (Tree *t, safeLong *seed)
+int BuildRandomUTopology (Tree *t, SafeLong *seed)
 {
 	int			i, j, nTips;
 	TreeNode	*p, *q, *r;
@@ -986,7 +957,7 @@ int CheckConstraints (Tree *t)
 {
 
 	int				a, i, j, nLongsNeeded;
-	safeLong		*constraintPartition, *mask;
+	SafeLong		*constraintPartition, *mask;
 	TreeNode		*p=NULL;
 	   	
 	if (t->checkConstraints == NO)
@@ -994,7 +965,7 @@ int CheckConstraints (Tree *t)
 
 	/* allocate space */
 	nLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
-	constraintPartition = (safeLong *) calloc (2*nLongsNeeded, sizeof(safeLong));
+	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in CheckConstraints", spacer);
@@ -1073,7 +1044,7 @@ int CheckSetConstraints (Tree *t)
 {
 
 	int				a, i, j, nTaxa, nLongsNeeded, foundIt;
-	safeLong		*constraintPartition, *mask;
+	SafeLong		*constraintPartition, *mask;
 	TreeNode		*p;
 	   	
     if (t->checkConstraints == NO)
@@ -1100,7 +1071,7 @@ int CheckSetConstraints (Tree *t)
 		nTaxa = t->nNodes - t->nIntNodes;
 	nLongsNeeded = nTaxa / nBitsInALong + 1;
 
-	constraintPartition = (safeLong *) calloc (2*nLongsNeeded, sizeof(safeLong));
+	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition", spacer);
@@ -1625,19 +1596,12 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 
 void CopyTreeNodes (TreeNode *p, TreeNode *q)
 {
-	int j;
-	
-	/* copies everything except pointers and memoryIndex */
+
+    /* copies everything except pointers and memoryIndex */
 	p->index                  = q->index;
 	p->scalerNode			  = q->scalerNode;			
 	p->upDateCl               = q->upDateCl;
 	p->upDateTi				  = q->upDateTi;
-	for (j=0; j<=numCurrentDivisions/nBitsInALong; j++)
-		{
-		p->clSpace[j]         = q->clSpace[j];
-		p->tiSpace[j]         = q->tiSpace[j];
-		p->scalersSet[j]      = q->scalersSet[j]; 
-		}
 	p->marked                 = q->marked;
 	p->length                 = q->length;
 	p->nodeDepth              = q->nodeDepth;
@@ -1673,8 +1637,6 @@ void CopyTreeToSubtree (Tree *t, Tree *subtree)
 		q = &subtree->nodes[j++];
 		q->index = p->index;
 		q->length = p->length;
-		for (k=0; k<=numCurrentDivisions/nBitsInALong; k++)
-			q->clSpace[k] = p->clSpace[k];
 		if (p->left == NULL || p->left->marked == NO)
 			q->left = q->right = NULL;
 		else
@@ -1704,8 +1666,6 @@ void CopyTreeToSubtree (Tree *t, Tree *subtree)
 			q->anc = r;
 			r->length = 0.0;
 			r->index = p->anc->index;
-			for (k=0; k<=numCurrentDivisions/nBitsInALong; k++)
-				r->clSpace[k] = p->anc->clSpace[k];
 			}
 
 		}
@@ -2252,7 +2212,7 @@ MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
 |       is returned.
 |
 --------------------------------------------------------------------*/
-int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, safeLong *seed)
+int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 
 {
 
@@ -2489,7 +2449,7 @@ int InitClockBrlens (Tree *t)
 
 
 
-int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, safeLong *seed, int *nEmbeddedTrees)
+int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmbeddedTrees)
 
 {
 	
@@ -3631,7 +3591,7 @@ int PrunePolyTree (PolyTree *pt)
 |		RandPerturb: Randomly perturb a tree by nPert NNIs
 |
 ---------------------------------------------------------------------*/
-int RandPerturb (Tree *t, int nPert, safeLong *seed)
+int RandPerturb (Tree *t, int nPert, SafeLong *seed)
 {
 	
 	int			i, whichNode;
@@ -3710,7 +3670,7 @@ int RandPerturb (Tree *t, int nPert, safeLong *seed)
 |		RandResolve: Randomly resolve a polytomous tree
 |
 ---------------------------------------------------------------------*/
-int RandResolve (PolyTree *t, safeLong *seed, int destinationIsRooted)
+int RandResolve (PolyTree *t, SafeLong *seed, int destinationIsRooted)
 
 {
 
@@ -3819,9 +3779,6 @@ void ResetTreeNode (TreeNode *p)
 	p->scalerNode			  = NO;			
 	p->upDateCl               = NO;
 	p->upDateTi				  = NO;
-	p->clSpace                = NULL;
-	p->tiSpace                = NULL;
-	p->scalersSet             = NULL;
 	p->marked                 = NO;
 	p->length                 = 0.0;
 	p->nodeDepth              = 0.0;
