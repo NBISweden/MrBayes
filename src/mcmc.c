@@ -10483,12 +10483,12 @@ int InitBeagleInstance (ModelInfo *m)
         return ERROR;
 
 	beaglResources = beagleGetResourceList();
-	MrBayesPrint ("%s   Beagle library is capable to use the fallowing resources:", spacer);
+	MrBayesPrint ("%s   Available reources reported by beagle library:", spacer);
 	for(i=0;i<beaglResources->length-1;i++)
 		{
-		MrBayesPrint ("%s,", beaglResources->list[i]);
+		MrBayesPrint (" %s,", beaglResources->list[i]);
 		}
-	MrBayesPrint ("%s;\n", beaglResources->list[i]);
+	MrBayesPrint (" %s\n", beaglResources->list[i]);
 
     /* at least one eigen buffer needed */
     if (m->nCijkParts == 0)
@@ -10927,12 +10927,10 @@ int InitChainCondLikes (void)
             indexStep = 1;
         for (i=0; i<numLocalTaxa; i++)
             {
-				/*
 #if !defined (DEBUG_NOSHORTCUTS)
             if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO)
                 continue;
 #endif
-				*/
             for (j=0; j<numLocalChains; j++)
                 m->condLikeIndex[j][i] = clIndex;
             clIndex += indexStep;
@@ -24501,7 +24499,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             minDepth = b->nodeDepth + minV;
         maxDepth = u->nodeDepth - minV;
 
-		if( tuning > maxDepth-minDepth ) /* we do it to avoid fallowing long while loop in case if tuning is high */
+		if( tuning > maxDepth-minDepth ) /* we do it to avoid following long while loop in case if tuning is high */
 			{
 			tuning = maxDepth-minDepth;
 			}
@@ -30549,7 +30547,7 @@ int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
     max = 1.0 - RATE_MIN;
 
 	 x   = oldRate[i] / sum;
-	if( delta > max-min ) /* we do it to avoid fallowing long while loop in case if delta is high */
+	if( delta > max-min ) /* we do it to avoid following long while loop in case if delta is high */
 		{
 		delta = max-min;
 		}
@@ -31488,7 +31486,7 @@ int Move_Statefreqs_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
     max = 1.0 - min;
 
 	x   = oldPi[i] / sum;
-	if( delta > max-min ) /* we do it to avoid fallowing long while loop in case if delta is high */
+	if( delta > max-min ) /* we do it to avoid following long while loop in case if delta is high */
 		{
 		delta = max-min;
 		}
@@ -40343,7 +40341,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 
 	register int	i, j, k;
 	int				isTransition=0, nDiff, rtNum=0;
-	MrBFlt			scaler, mult=0.0, probOn, sum, *swr, s01, s10, s[4][4], nonsyn, *rateValues=NULL, *bs, dN, dS, trans;
+	MrBFlt			scaler, mult=0.0, probOn, sum, *swr, s01, s10, s[4][4], nonsyn, *rateValues=NULL, *bs, dN, dS;
 	ModelInfo		*m;
 	ModelParams 	*mp;
 		
@@ -43412,12 +43410,10 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           m->eigenIndices,
                                           m->cumulativeScaleIndices,
                                           m->nCijkParts,
-                                          lnL,
+                                          (double*)(lnL),
                                           NULL,
                                           NULL);       
         }
-    
-
 
     /* accumulate logs across sites */
 	if (hasPInvar == NO)

@@ -2122,8 +2122,6 @@ int CompressData (void)
 	/* sort and compress data */
 	for (d=0; d<numCurrentDivisions; d++)
 		{
-		MrBayesPrint ("%s   Compressing data matrix for division %d\n", spacer, d+1);
-
 		/* set pointers to the model params and settings for this division */
 		m = &modelSettings[d];
 		mp = &modelParams[d];
@@ -2274,8 +2272,6 @@ int CompressData (void)
 			MrBayesPrint ("%s   has %d site patterns.\n", spacer, m->numChars);
 			goto errorExit;
 			}
-
-		MrBayesPrint("%s   Division %d has %d unique site patterns\n", spacer, d+1, m->numChars);
 
 		m->compCharStop = m->compCharStart + m->numChars;
 		m->compMatrixStop = newColumn;
@@ -19568,6 +19564,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		else if (j == P_IBRBRANCHRATES)
 			{
 			MrBayesPrint ("%s      Ibrbranchrates ", spacer);
+			}
+		else if (j == P_CLOCKRATE)
+			{
+			MrBayesPrint ("%s      Clockrate      ", spacer);
 			}
 		
 		for (i=0; i<numCurrentDivisions; i++)
