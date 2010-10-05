@@ -10478,6 +10478,7 @@ int InitBeagleInstance (ModelInfo *m)
     SafeLong                *charBits;
     BeagleInstanceDetails   details;
 	BeagleResourceList* beagleResources;
+	long preferedFlags, requiredFlags;
     
     if (m->useBeagle == NO)
         return ERROR;
@@ -10492,8 +10493,9 @@ int InitBeagleInstance (ModelInfo *m)
 			{
 			MrBayesPrint ("\tDesc: %s\n", beagleResources->list[i].description);
 			}
-		MrBayesPrint("\n", spacer);	
-	beaglResources = beagleGetResourceList();
+		MrBayesPrint("\n", spacer);
+		}
+/*	beaglResources = beagleGetResourceList();
 	MrBayesPrint ("%s   Available reources reported by beagle library:", spacer);
 	for(i=0;i<beaglResources->length-1;i++)
 		{
@@ -10501,7 +10503,7 @@ int InitBeagleInstance (ModelInfo *m)
 		}
 		
 	MrBayesPrint (" %s\n", beaglResources->list[i].name);
-
+*/
     /* at least one eigen buffer needed */
     if (m->nCijkParts == 0)
         m->nCijkParts = 1;
@@ -10531,9 +10533,9 @@ int InitBeagleInstance (ModelInfo *m)
         }
 
 
-	long preferedFlags = //0L;
-						 BEAGLE_FLAG_PROCESSOR_GPU;
-	long requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
+	preferedFlags = BEAGLE_FLAG_PROCESSOR_GPU;//0L;
+						 //BEAGLE_FLAG_PROCESSOR_GPU;
+	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
     /* create beagle instance */
     m->beagleInstance = beagleCreateInstance(numLocalTaxa,
                                              m->numCondLikes * m->nCijkParts,
