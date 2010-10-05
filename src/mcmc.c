@@ -40344,7 +40344,10 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 	MrBFlt			scaler, mult=0.0, probOn, sum, *swr, s01, s10, s[4][4], nonsyn, *rateValues=NULL, *bs, dN, dS;
 	ModelInfo		*m;
 	ModelParams 	*mp;
-		
+#if defined BEAGLE_ENABLED
+    MrBFlt          trans;
+#endif
+
 	/* set up pointers to the appropriate model information */
 	mp = &modelParams[division];
 	m = &modelSettings[division];
@@ -43410,7 +43413,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           m->eigenIndices,
                                           m->cumulativeScaleIndices,
                                           m->nCijkParts,
-                                          (double*)(lnL),
+                                          lnL,
                                           NULL,
                                           NULL);       
         }

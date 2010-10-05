@@ -17917,7 +17917,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ParsSPR;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 3;
 	mt->tuningParam[0] = 0.1; /* warp */
 	mt->tuningParam[1] = 2.0 * log (1.1); /* multiplier tuning parameter lambda */
