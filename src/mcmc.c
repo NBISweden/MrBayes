@@ -9319,7 +9319,7 @@ void FreeChainMemory (void)
 #else
                 SafeFree (&m->condLikes[i]);
 #endif
-            SafeFree (&((void *)(m->condLikes)));
+            SafeFree (((void **)&(m->condLikes)));
             }
 
         if (m->scalers)
@@ -9330,14 +9330,14 @@ void FreeChainMemory (void)
 #else
                 SafeFree (&m->scalers[i]);
 #endif
-            SafeFree (&((void *)(m->scalers)));
+            SafeFree (((void **)&(m->scalers)));
             }
 
         if (m->clP)
-            SafeFree (&(void *)(m->clP));
+            SafeFree ((void **)&(m->clP));
 #if defined (SSE_ENABLED)
         if (m->clP_SSE)
-            SafeFree (&(void *)(m->clP_SSE));
+            SafeFree ((void **)&(m->clP_SSE));
         if (m->lnL_SSE)
             AlignedSafeFree (&m->lnL_SSE);
         if (m->lnLI_SSE)
@@ -9348,21 +9348,21 @@ void FreeChainMemory (void)
             {
             for (i=0; i<m->numTiProbs; i++)
                 SafeFree (&m->tiProbs[i]);
-            SafeFree (&(void *)(m->tiProbs));
+            SafeFree ((void **)&(m->tiProbs));
             }
                 
         if (m->cijks)
             {
             for (i=0; i<numLocalChains+1; i++)
                 SafeFree (&m->cijks[i]);
-            SafeFree (&(void *)(m->cijks));
+            SafeFree ((void **)&(m->cijks));
             }
 
         if (m->condLikeIndex)
             {
             for (i=0; i<numLocalChains; i++)
                 SafeFree (&m->condLikeIndex[i]);
-            SafeFree (&(void *)(m->condLikeIndex));
+            SafeFree ((void **)&(m->condLikeIndex));
             }
 
         if (m->condLikeScratchIndex)
@@ -9372,7 +9372,7 @@ void FreeChainMemory (void)
             {
             for (i=0; i<numLocalChains; i++)
                 SafeFree (&m->tiProbsIndex[i]);
-            SafeFree (&(void *)(m->tiProbsIndex));
+            SafeFree ((void **)&(m->tiProbsIndex));
             }
         if (m->tiProbsScratchIndex)
             SafeFree (&m->tiProbsScratchIndex);
@@ -9381,7 +9381,7 @@ void FreeChainMemory (void)
             {
             for (i=0; i<numLocalChains; i++)
                 SafeFree (&m->nodeScalerIndex[i]);
-            SafeFree (&(void *)(m->nodeScalerIndex));
+            SafeFree ((void **)&(m->nodeScalerIndex));
             }
         if (m->nodeScalerScratchIndex)
             SafeFree (&m->nodeScalerScratchIndex);
@@ -9390,7 +9390,7 @@ void FreeChainMemory (void)
             {
             for (i=0; i<numLocalChains; i++)
                 SafeFree (&m->scalersSet[i]);
-            SafeFree (&(void *)(m->scalersSet));
+            SafeFree ((void **)&(m->scalersSet));
             }
         if (m->scalersSetScratch)
             SafeFree (&m->scalersSetScratch);
