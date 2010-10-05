@@ -10461,9 +10461,55 @@ int InitAugmentedModels (void)
 	return NO_ERROR;
 }
 
-
-
-
+#if defined (BEAGLE_ENABLED)
+/*-------------------
+|
+|  PrintBeagleFlags: outputs beagle instance details
+|
+______________________*/
+void printFlags(long inFlags) {
+    if (inFlags & BEAGLE_FLAG_PROCESSOR_CPU)      
+    	MrBayesPrint( " PROCESSOR_CPU", spacer);
+    if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU)      
+    	MrBayesPrint( " PROCESSOR_GPU", spacer);
+    if (inFlags & BEAGLE_FLAG_PROCESSOR_FPGA)     
+    	MrBayesPrint( " PROCESSOR_FPGA", spacer);
+    if (inFlags & BEAGLE_FLAG_PROCESSOR_CELL)     
+    	MrBayesPrint( " PROCESSOR_CELL", spacer);
+    if (inFlags & BEAGLE_FLAG_PRECISION_DOUBLE)   
+    	MrBayesPrint( " PRECISION_DOUBLE", spacer);
+    if (inFlags & BEAGLE_FLAG_PRECISION_SINGLE)   
+    	MrBayesPrint( " PRECISION_SINGLE", spacer);
+    if (inFlags & BEAGLE_FLAG_COMPUTATION_ASYNCH) 
+    	MrBayesPrint( " COMPUTATION_ASYNCH", spacer);
+    if (inFlags & BEAGLE_FLAG_COMPUTATION_SYNCH)  
+    	MrBayesPrint( " COMPUTATION_SYNCH", spacer);
+    if (inFlags & BEAGLE_FLAG_EIGEN_REAL)         
+    	MrBayesPrint( " EIGEN_REAL", spacer);
+    if (inFlags & BEAGLE_FLAG_EIGEN_COMPLEX)      
+    	MrBayesPrint( " EIGEN_COMPLEX", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALING_MANUAL)     
+    	MrBayesPrint( " SCALING_MANUAL", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALING_AUTO)       
+    	MrBayesPrint( " SCALING_AUTO", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALING_ALWAYS)     
+    	MrBayesPrint( " SCALING_ALWAYS", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALING_DYNAMIC)    
+    	MrBayesPrint( " SCALING_DYNAMIC", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALERS_RAW)        
+    	MrBayesPrint( " SCALERS_RAW", spacer);
+    if (inFlags & BEAGLE_FLAG_SCALERS_LOG)        
+    	MrBayesPrint( " SCALERS_LOG", spacer);
+    if (inFlags & BEAGLE_FLAG_VECTOR_NONE)        
+    	MrBayesPrint( " VECTOR_NONE", spacer);
+    if (inFlags & BEAGLE_FLAG_VECTOR_SSE)         
+    	MrBayesPrint( " VECTOR_SSE", spacer);
+    if (inFlags & BEAGLE_FLAG_THREADING_NONE)     
+    	MrBayesPrint( " THREADING_NONE", spacer);
+    if (inFlags & BEAGLE_FLAG_THREADING_OPENMP)   
+    	MrBayesPrint( " THREADING_OPENMP", spacer);
+}
+#endif
 
 #if defined (BEAGLE_ENABLED)
 /*------------------------------------------------------------------------
@@ -10559,16 +10605,12 @@ int InitBeagleInstance (ModelInfo *m)
         }
     else
         {
-        if (details.flags & BEAGLE_FLAG_PROCESSOR_CPU && details.flags & BEAGLE_FLAG_VECTOR_SSE)
-            MrBayesPrint ("%s   Using beagle on CPU processor with SSE code\n", spacer);
-        else if (details.flags & BEAGLE_FLAG_PROCESSOR_CPU && details.flags & BEAGLE_FLAG_VECTOR_NONE)
-            MrBayesPrint ("%s   Using beagle on CPU processor with non-SSE code\n", spacer);
-        else if (details.flags & BEAGLE_FLAG_PROCESSOR_GPU)
-            MrBayesPrint ("%s   Using beagle on GPU processor\n", spacer);
-        else if (details.flags & BEAGLE_FLAG_PROCESSOR_FPGA)
-            MrBayesPrint ("%s   Using beagle on FPGA processor\n", spacer);
-        else if (details.flags & BEAGLE_FLAG_PROCESSOR_CELL)
-            MrBayesPrint ("%s   Using beagle on CELL processor\n", spacer);
+        MrBayesPrint( "   Using beagle resource %i:\n", details.resourceNumber);
+    	MrBayesPrint( "\tRsrc Name : %s\n", details.resourceName);
+    	MrBayesPrint( "\tImpl Name : %s\n", details.implName);    
+    	MrBayesPrint( "\tFlags:");
+    	printFlags(details.flags);
+    	MrBayesPrint( "\n\n");
         }
 
     /* initialize tip data */
