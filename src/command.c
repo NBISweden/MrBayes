@@ -6338,7 +6338,7 @@ int DoSetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
         }
-        /* set Beagle resource (global variable BEAGLE flag) ****************************************************/
+        /* set Beagle resources requirements (global variable BEAGLE flag) ****************************************/
 		else if (!strcmp(parmName, "Beagledevice"))
         {
 			if (expecting == Expecting(EQUALSIGN))
@@ -6348,6 +6348,7 @@ int DoSetParm (char *parmName, char *tkn)
 #if defined (BEAGLE_ENABLED)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
+                    long oldFlags = beagleFlags;
 					if (!strcmp(tempStr, "Gpu"))
                         {
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_CPU;
@@ -6358,16 +6359,20 @@ int DoSetParm (char *parmName, char *tkn)
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_GPU;
 						beagleFlags |= BEAGLE_FLAG_PROCESSOR_CPU;
                         }
+                    if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
+                        beagleFlags = oldFlags;
+                    } else {
+                        if (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU)
+                            MrBayesPrint ("%s   Setting beagledevice to GPU\n", spacer);
+                        else
+                            MrBayesPrint ("%s   Setting beagledevice to CPU\n", spacer);
+                    }
                 }
 				else
                 {
 					MrBayesPrint ("%s   Invalid argument for beagledevice\n", spacer);
 					return (ERROR);
-                }
-				if (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU)
-					MrBayesPrint ("%s   Setting beagledevice to GPU\n", spacer);
-				else
-					MrBayesPrint ("%s   Setting beagledevice to CPU\n", spacer);
+                }				
 #else
                 BeagleNotLinked();
 #endif
@@ -6385,6 +6390,7 @@ int DoSetParm (char *parmName, char *tkn)
 #if defined (BEAGLE_ENABLED)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
+                    long oldFlags = beagleFlags;
 					if (!strcmp(tempStr, "Single"))
                     {                     
                         beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;
@@ -6395,16 +6401,20 @@ int DoSetParm (char *parmName, char *tkn)
                         beagleFlags &= ~BEAGLE_FLAG_PRECISION_SINGLE;
 						beagleFlags |= BEAGLE_FLAG_PRECISION_DOUBLE;
                     }
+                    if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
+                        beagleFlags = oldFlags;
+                    } else {
+                        if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE)
+                            MrBayesPrint ("%s   Setting beagleprecision to double\n", spacer);
+                        else
+                            MrBayesPrint ("%s   Setting beagleprecision to single\n", spacer);
+                    }
                 }
 				else
                 {
 					MrBayesPrint ("%s   Invalid argument for beagleprecision\n", spacer);
 					return (ERROR);
-                }
-				if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE)
-					MrBayesPrint ("%s   Setting beagleprecision to double\n", spacer);
-				else
-					MrBayesPrint ("%s   Setting beagleprecision to single\n", spacer);
+                }				
 #else
                 BeagleNotLinked();
 #endif
@@ -6412,7 +6422,87 @@ int DoSetParm (char *parmName, char *tkn)
             }
 			else
 				return (ERROR);
-        }                 
+        } 
+		else if (!strcmp(parmName, "Beagleopenmp"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+#if defined (BEAGLE_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {                    
+                    long oldFlags = beagleFlags;
+					if (!strcmp(tempStr, "Yes"))
+                    {                      
+						beagleFlags |= BEAGLE_FLAG_THREADING_OPENMP;
+                    }
+					else
+                    {  
+                        beagleFlags &= ~BEAGLE_FLAG_THREADING_OPENMP;						
+                    }             
+                    if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
+                        beagleFlags = oldFlags;
+                    } else {
+                        if (beagleFlags & BEAGLE_FLAG_THREADING_OPENMP)
+                            MrBayesPrint ("%s   Setting beagleopenmp to Yes\n", spacer);
+                        else
+                            MrBayesPrint ("%s   Setting beagleopenmp to No\n", spacer);
+                    }
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
+					return (ERROR);
+                }				
+#else
+                BeagleNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        } 
+		else if (!strcmp(parmName, "Beaglesse"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+#if defined (BEAGLE_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {                    
+                    long oldFlags = beagleFlags;
+					if (!strcmp(tempStr, "Yes"))
+                    {                      
+						beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;
+                    }
+					else
+                    {  
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;						
+                    }             
+                    if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
+                        beagleFlags = oldFlags;
+                    } else {
+                        if (beagleFlags & BEAGLE_FLAG_VECTOR_SSE)
+                            MrBayesPrint ("%s   Setting beaglesse to Yes\n", spacer);
+                        else
+                            MrBayesPrint ("%s   Setting beaglesse to No\n", spacer);
+                    }
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
+					return (ERROR);
+                }				
+#else
+                BeagleNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        }            
 		else
 			return (ERROR);
 			
@@ -10573,6 +10663,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   performance hardware including multicore CPUs and GPUs. Some  \n"); 
         MrBayesPrint ("                   models in MrBayes are not yet supported by BEAGLE.  If you    \n");
         MrBayesPrint ("                   employ BEAGLE please, reference [INSERT REFERENCE HERE].      \n");
+        MrBayesPrint ("   Beagledevice -- Set this option to 'GPU' or 'CPU' to select processor.        \n"); 
+        MrBayesPrint ("   Beagleprecision   -- Selection 'Single' or 'Double' precision computation.    \n");
+        MrBayesPrint ("   Beaglesse    -- Use SSE instructions on Intel CPU processors.                 \n");
+        MrBayesPrint ("   Beagleopenmp -- Use OpenMP to parallelize across multi-core CPU processors.   \n");
 #endif
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
@@ -10592,6 +10686,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Precision       <number>                 %d                                   \n", precision);
 #if defined (BEAGLE_ENABLED)
         MrBayesPrint ("   Usebeagle       Yes/No                   %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
+        MrBayesPrint ("   Beagledevice    CPU/GPU                  %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
+        MrBayesPrint ("   Beaglesse       Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
+        MrBayesPrint ("   Beagleopenmp    Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
 #endif
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");

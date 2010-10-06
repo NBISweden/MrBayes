@@ -77,6 +77,21 @@ void BeagleNotLinked()
 }
     
 
+int BeagleCheckFlagCompatability(long inFlags) {
+    
+    if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
+        if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
+            MrBayesPrint("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
+            return NO;
+        }
+        if (inFlags & BEAGLE_FLAG_THREADING_OPENMP) {
+            MrBayesPrint("%s   Simultaneous use of GPU and OpenMP not available.\n", spacer);
+            return NO;
+        }
+    }
+    return YES;
+}
+
 
 /*-------------------
 |
