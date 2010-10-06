@@ -7,8 +7,10 @@
 #   define PACKAGE_VERSION "3.2"
 #   undef HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
-#   undef _64BIT
 #   undef FAST_LOG
+#if !defined(XCODE_VERSION)
+#   undef _64BIT
+#endif
 #endif
 
 #if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)
