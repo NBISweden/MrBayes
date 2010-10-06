@@ -45,8 +45,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 							/* set CLFlt to double if you want increased precision */
 							/* NOTE: CLFlt = double not compatible with SSE_ENABLED */
 
-// TODO: Move these flags to configure script
-#undef SSE_ENABLED
+// TODO: Move this flag to configure script
 #undef FAST_LOG
 
 /* Define a compiler and vector size for the SSE code */
@@ -329,7 +328,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	LINKED					0
 #define	UNLINKED				1
 
-#define	NUM_LINKED				26
+#define	NUM_LINKED				27
 #define	P_TRATIO				0
 #define	P_REVMAT				1
 #define	P_OMEGA					2
@@ -355,7 +354,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_BMBRANCHRATES			22
 #define P_IBRSHAPE              23
 #define P_IBRBRANCHRATES        24
-#define P_CLOCKRATE             25      /* NOTE: If you add another parameter, change NUM_LINKED */
+#define P_CLOCKRATE             25
+#define P_SPECIESTREE           26      /* NOTE: If you add another parameter, change NUM_LINKED */
 
 #define CPPm                    0       /* CPP rate multipliers */
 #define CPPi                    1       /* CPP independent rates */

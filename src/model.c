@@ -12370,6 +12370,15 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
 		}
+	else if (whichParam == P_SPECIESTREE)
+		{
+		/* Species tree inapplicable for now */
+        // TODO: BEST code needed here to deal with species tree applicability across partitions
+	
+        *isApplic1 = NO;
+        *isApplic2 = NO;
+        isSame = NO;
+		}
 	else
 		{
 		MrBayesPrint ("%s   Could not find parameter in IsModelSame\n", spacer);

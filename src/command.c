@@ -958,10 +958,14 @@ int DoAcknowledgments (void)
 	MrBayesPrint ("   JPH and FR would like to thank Gautam Altekar, Andrea Betancourt, Jon         \n");
     MrBayesPrint ("   Bollback, Barry Hall, Jimmy McGuire, Rasmus Nielsen, David Swofford,          \n");
     MrBayesPrint ("   Johan Nylander, Mikael Thollesson, and Derrick Zwickl for help during the     \n");
-    MrBayesPrint ("   development of this program. Gautam Altekar, especially, was instrumental     \n");
-    MrBayesPrint ("   in getting the parallel version of the program working. Important bugfixes    \n");
-    MrBayesPrint ("   and additional functionality was contributed by Clemens Lakner, Sebastian     \n");
-    MrBayesPrint ("   Hoehna, Paul Lewis, Mark Holder, Julian Catchen, and many others.             \n");
+    MrBayesPrint ("   initial development of this program. Gautam Altekar, especially, was instru-  \n");
+    MrBayesPrint ("   mental in getting the parallel version of the program working. Important bug- \n");
+    MrBayesPrint ("   fixes and additional functionality was contributed by Clemens Lakner, Sebas-  \n");
+    MrBayesPrint ("   tian Hoehna, Paul Lewis, Mark Holder, Julian Catchen and Bret Larget. Marc    \n");
+    MrBayesPrint ("   Suchard, Daniel Ayres and Aaron Darling got mrbayes working with beagle and   \n");
+    MrBayesPrint ("   contributed a lot of related functionality and bug fixes. Aaron Darling was   \n");
+    MrBayesPrint ("   instrumental in getting the Windows installer set up. Liu Liang and Dennis    \n");
+    MrBayesPrint ("   Pearl helped integrate MrBayes with BEST.                                     \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Bug fixes and user support was provided by Paul van der Mark (2005-2007) and  \n");
     MrBayesPrint ("   from 2010 by Maxim Teslenko (maxim.teslenko@nrm.se).                          \n");

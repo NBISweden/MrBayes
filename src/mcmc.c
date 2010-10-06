@@ -1546,8 +1546,6 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
     }
     GetDownPass(t);
 
-    // Todo: Free parsimony matrix if not needed
-
     return (NO_ERROR);
 }
 
@@ -4377,8 +4375,8 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
 				}
 			break;
 		}
-PrintOld_SSE (p, division, chain);
-	return NO_ERROR;
+
+    return NO_ERROR;
 }
 #endif
 
@@ -7287,10 +7285,15 @@ int DoMcmc (void)
 {
 
 	SafeLong	seed;
-	int			rc, i, j;
-    char         c;
-    FILE         *tempFile;
-    char         temp[20];
+	int		    rc, i, j;
+    char        c;
+    FILE        *tempFile;
+    char        temp[20];
+
+#if defined (BEST_MPI_ENABLED)
+    Tree        *tree;
+#endif
+
 #if !defined (VISUAL) && !defined (MPI_ENABLED)
     sighandler_t sigint_oldhandler, sigterm_oldhandler;
 #endif
@@ -7391,6 +7394,44 @@ int DoMcmc (void)
 	/* How many taxa and characters ? */
 	MrBayesPrint ("%s   Number of taxa = %d\n", spacer, numLocalTaxa);
 	MrBayesPrint ("%s   Number of characters = %d\n", spacer, numLocalChar);
+
+#if defined (BEST_MPI_ENABLED)
+
+    /* Set up the load balancing scheme. Here we give each processor an equal number of trees.
+       If trees are not evenly divisibly by the number of processors, we give the odd n trees to
+       the first n processors. */
+
+    /* Throw an error if we have too many processors */
+    if (numTopologies < num_procs)
+        {
+        MrBayesPrint("%s   There are too many processors (%d processors and only %d gene trees)\n", spacer, num_procs, numTopologies);
+        return (ERROR);
+        }
+
+    /* First deal with the basic case */
+    from = proc_id * (numTopologies / num_procs);
+    to   = (proc_id + 1) * (numTopologies / num_procs);
+
+    /* Now adjust to deal with the odd trees */
+    if (proc_id < numTopologies % num_procs)
+        {
+        from += proc_id;
+        to += proc_id + 1;
+        }
+    else
+        {
+        from += numTopologies % num_procs;
+        to += numTopologies % num_procs;
+        }
+
+    /* Now set the active divisions. Note that if one tree has several model partitions, we set all divisions
+       relevant to the tree as being active by checking the relevant partitions for the tree (tree->relParts). */
+    for (i=from; i<to; i++)
+        {
+        for (j=0; j<topologyParam[i]->nRelParts; j++)
+            isDivisionActive[topologyParam[i]->relParts[j]] = YES;
+        }
+#endif
 
     /* Set up the moves to be used */
 	if (SetUsedMoves () == ERROR)
@@ -9149,9 +9190,9 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLengt
 		nSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
 
 		/* Find final-pass parsimony sets for the node and its ancestor */
-		pP    = m->parsSets[m->condLikeIndex[chain][p->index      ]];
-        pA    = m->parsSets[m->condLikeIndex[chain][p->anc->index ]];
-		pX    = m->parsSets[m->condLikeIndex[chain][addNode->index]];
+		pP    = m->parsSets[p->index      ];
+        pA    = m->parsSets[p->anc->index ];
+		pX    = m->parsSets[addNode->index];
 
 		for (c=0; c<m->numChars; c++)
 			{
@@ -9645,9 +9686,9 @@ MrBFlt GetParsDP (Tree *t, TreeNode *p, int chain)
 			/* Get Fitch partials and length */
 			length += GetFitchPartials(m,
                                        chain,
-                                       m->condLikeIndex[chain][p->left->index ],
-                                       m->condLikeIndex[chain][p->right->index],
-                                       m->condLikeIndex[chain][p->index       ]);
+                                       p->left->index,
+                                       p->right->index,
+                                       p->index);
  		
 			}
 		}
@@ -9678,10 +9719,10 @@ void GetParsFP (Tree *t, TreeNode *p, int chain)
             assert (m->nParsIntsPerSite == 1);
 
 			/* find parsimony sets for the node and its environment */
-			pL   = m->parsSets[m->condLikeIndex[chain][p->left->index ]];
-			pR   = m->parsSets[m->condLikeIndex[chain][p->right->index]];
-            pP   = m->parsSets[m->condLikeIndex[chain][p->index       ]];
-            pA   = m->parsSets[m->condLikeIndex[chain][p->anc->index  ]];
+			pL   = m->parsSets[p->left->index ];
+			pR   = m->parsSets[p->right->index];
+            pP   = m->parsSets[p->index       ];
+            pA   = m->parsSets[p->anc->index  ];
             
 			for (c=0; c<m->numChars; c++)
 				{
@@ -9741,8 +9782,8 @@ int GetParsimonyBrlens (Tree *t, int chain, MrBFlt *brlens)
 			p = t->allDownPass[i];
 
 			/* Find final-pass parsimony sets for the node and its ancestor */
-			pP    = m->parsSets[m->condLikeIndex[chain][p->index     ]];
-			pA    = m->parsSets[m->condLikeIndex[chain][p->anc->index]];
+			pP    = m->parsSets[p->index     ];
+			pA    = m->parsSets[p->anc->index];
             
 			if (m->nParsIntsPerSite == 1)
                 {
@@ -9804,8 +9845,8 @@ MrBFlt GetParsimonyLength (Tree *t, int chain)
 		p = t->intDownPass[t->nIntNodes-1];
 
 		/* find downpass parsimony sets for the node and its environment */
-		pP    = m->parsSets[m->condLikeIndex[chain][p->index     ]];
-		pA    = m->parsSets[m->condLikeIndex[chain][p->anc->index]];
+		pP    = m->parsSets[p->index     ];
+		pA    = m->parsSets[p->anc->index];
         
         if (m->nParsIntsPerSite == 1)
             {
@@ -9878,12 +9919,12 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
 				continue;
 
 			/* find downpass and uppass parsimony sets for the node and its environment */
-			pP     = m->parsSets[m->condLikeIndex[chain][p->index       ]];
+			pP     = m->parsSets[p->index       ];
             if (p->left->marked == YES)
-				pD = m->parsSets[m->condLikeIndex[chain][p->right->index]];
+				pD = m->parsSets[p->right->index];
             else
-				pD = m->parsSets[m->condLikeIndex[chain][p->left->index ]];
-            pA     = m->parsSets[m->condLikeIndex[chain][p->anc->index  ]];
+				pD = m->parsSets[p->left->index ];
+            pA     = m->parsSets[p->anc->index  ];
             
 			if (m->nParsIntsPerSite == 1)
                 {
@@ -10930,6 +10971,10 @@ int InitChainCondLikes (void)
             clIndex += indexStep;
             }
 
+        /* reserve private space for parsimony-based moves if parsimony model is used */
+        if (m->parsModelId == YES && m->parsimonyBasedMove == YES)
+            clIndex += nIntNodes;
+
         /* set up indices for internal nodes */
         for (j=0; j<numLocalChains; j++)
             {
@@ -11568,8 +11613,10 @@ int InitParsSets (void)
         
         /* Calculate number of parsimony sets */
         m->numParsSets = numLocalTaxa;
-	    if (m->parsModelId == YES || m->parsimonyBasedMove == YES)
-		    m->numParsSets += (numLocalChains + 1) * nIntNodes;
+        if (m->parsimonyBasedMove == YES || !strcmp(chainParams.startTree, "Parsimony"))
+            m->numParsSets += nIntNodes;
+        if (m->parsModelId == YES)
+            m->numParsSets += (numLocalChains + 1) * nIntNodes;
 
         if (m->parsModelId == YES)
             m->numParsNodeLens = (numLocalChains + 1) * nNodes;
@@ -14270,6 +14317,10 @@ MrBFlt LogLike (int chain)
 	/* that could share ti probs with other divisions.                          */
 	for (d=0; d<numCurrentDivisions; d++)
 		{
+#if defined (BEST_MPI_ENABLED)
+        if (isDivisionActive[d] == NO)
+            continue;
+#endif
 		m = &modelSettings[d];
 		
 		if (m->upDateCl == YES)
@@ -14380,6 +14431,10 @@ MrBFlt LogLike (int chain)
 		/* update HMM likelihoods if appropriate */
 		for (d=0; d<numCurrentDivisions; d++)
 			{
+#if defined (BEST_MPI_ENABLED)
+            if (isDivisionActive[d] == NO)
+                continue;
+#endif
 			m = &modelSettings[d];
 			
 			if (m->upDateCl == YES && m->correlation != NULL && m->mark != YES)
@@ -14677,6 +14732,11 @@ MrBFlt LogPrior (int chain)
 			}
 		else if (p->paramType == P_TOPOLOGY)
 			{
+            // TODO: BEST code needed here to calculate prior probability of a gene tree
+            // Note that a topology can have several unlinked branch length subparameters but only
+            // one set of clock branch lengths. To find all the branch length subparameters of a
+            // topology, cycle through the p->subParams, which will contain at least one branch length
+            // parameter.
 			t = GetTree (p, chain, state[chain]);
             if (t->isClock == YES)
                 continue;   /* prior probability taken care of in the brlens parameter */
@@ -14968,6 +15028,11 @@ MrBFlt LogPrior (int chain)
 			/* base rate of molecular clock */
             lnPrior += p->LnPriorProb(st[0], p->priorParams);
 			}
+        else if (p->paramType == P_SPECIESTREE)
+            {
+            // TODO: BEST code needed here to calculate prior probability of a species tree
+            lnPrior += 0.0;
+            }
 		}
 
 	return (lnPrior);
@@ -26739,9 +26804,9 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 			divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
 
 			/* find downpass parsimony sets for the node and its environment */
-			pP   = m->parsSets[m->condLikeIndex[chain][p->index]];
-			pA   = m->parsSets[m->condLikeIndex[chain][p->anc->index]];
-			pV   = m->parsSets[m->condLikeIndex[chain][v->index]];
+			pP   = m->parsSets[p->index     ];
+			pA   = m->parsSets[p->anc->index];
+			pV   = m->parsSets[v->index     ];
 		
 			length = 0.0;
 			for (j=0; j<m->numChars; j++)
@@ -27239,9 +27304,9 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
 
 			/* find downpass parsimony sets for the node and its environment */
-			pP   = m->parsSets[m->condLikeIndex[chain][p->index     ]];
-            pA   = m->parsSets[m->condLikeIndex[chain][p->anc->index]];
-			pV   = m->parsSets[m->condLikeIndex[chain][v->index     ]];
+			pP   = m->parsSets[p->index     ];
+            pA   = m->parsSets[p->anc->index];
+			pV   = m->parsSets[v->index     ];
             
 			length = 0.0;
 			for (j=0; j<m->numChars; j++)
@@ -39121,7 +39186,18 @@ int RunChain (SafeLong *seed)
 #if defined SHOW_MOVE
             printf ("Making move '%s'\n", theMove->name);
 #endif
-			/* set prior and proposal ratios */
+
+#if defined (BEST_MPI_ENABLED)
+            bestCycleGen = n % (numNonTreeMoves + numTreeMoves + numBestMoves);
+            if (bestCycleGen < numNonTreeMoves)
+                PickNonTreeProposal(seed, chainId[chn]);
+            else if (bestCycleGen < numNonTreeMoves + numTreeMoves)
+                PickTreeProposal(seed, chainId[chn]);
+            else
+                PickBestProposal(chainId[chn]);
+#endif
+
+            /* set prior and proposal ratios */
 			lnProposalRatio = 0.0;
 			lnPriorRatio = 0.0;
 
@@ -39172,8 +39248,18 @@ int RunChain (SafeLong *seed)
                 }
 		    */
 
-            /* calculate likelihood ratio */
-			if (abortMove == NO)
+#if defined (BEST_MPI_ENABLED)
+
+            /* we have gene tree parallelization so we have to accumulate likelihood ratios across nodes */
+            if (bestCycleGen > numNonTreeMoves || numLocalChains > 1)
+                {
+                /* Likelihood ratio needs to be accumulated across nodes */
+                
+                }
+#endif
+
+            /* calculate likelihood ratio */            
+            if (abortMove == NO)
 				{
 				/* TouchAllTrees(chn); */ /* for debugging copying shortcuts [SLOW!!]*/
                 assert (IsTreeConsistent(theMove->parm, chn, state[chn]) == YES);
