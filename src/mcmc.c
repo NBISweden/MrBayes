@@ -43244,10 +43244,8 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
     BeagleOperation     operations;
     TreeNode            *p;
     ModelInfo           *m;
-//    double              *result;
     
     m = &modelSettings[division];
-//    result = (double *) calloc (m->numChars * m->numModelStates * m->numGammaCats, sizeof(double));
     
     for (i=0; i<t->nIntNodes; i++)
         {
@@ -43339,14 +43337,13 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     double      *nSitesOfPat_Beagle;
     TreeNode    *p;
     ModelInfo   *m;
-    double      pUnobserved; // *result
+    double      pUnobserved;
 
     /* find root node */
     p = t->root->left;
 
 	/* find model settings and nStates, pInvar, invar cond likes */
 	m = &modelSettings[division];
-//    result = (double *) calloc (m->numChars * m->numModelStates * m->numGammaCats, sizeof(double));
     
 	nStates = m->numModelStates;
 	if (m->pInvar == NULL)
