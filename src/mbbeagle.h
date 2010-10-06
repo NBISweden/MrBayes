@@ -1,4 +1,2 @@
-
-#if defined (BEAGLE_ENABLED)
+void BeaglePrintResources(void);
 void BeaglePrintFlags(long inFlags);
-#endif

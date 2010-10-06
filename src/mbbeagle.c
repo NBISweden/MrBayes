@@ -40,13 +40,46 @@
 #include "mbbeagle.h"
 #include "utils.h"
 
+/*-----
+|
+| BeaglePrintResources: outputs the available BEAGLE resources
+|
+----------*/
+
+void BeaglePrintResources() 
+{
 #if defined (BEAGLE_ENABLED)
+	int i;
+	BeagleResourceList* beagleResources;
+	
+	beagleResources = beagleGetResourceList();
+	MrBayesPrint ("%s   Available resources reported by beagle library:\n", spacer);
+	for (i=0; i<beagleResources->length; i++) 
+		{
+		MrBayesPrint ("\tResource %i:\n", i);		
+		MrBayesPrint ("\tName: %s\n", beagleResources->list[i].name);
+		if (i > 0) 
+			{
+			MrBayesPrint ("\tDesc: %s\n", beagleResources->list[i].description);
+			}
+        MrBayesPrint("\tFlags:");
+        BeaglePrintFlags(beagleResources->list[i].supportFlags);
+		MrBayesPrint("\n\n");
+		}
+#else
+	MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
+#endif
+}
+
+
 /*-------------------
 |
-|  PrintBeagleFlags: outputs beagle instance details
+|  BeaglePrintFlags: outputs beagle instance details
 |
 ______________________*/
-void BeaglePrintFlags(long inFlags) {
+void BeaglePrintFlags(long inFlags) 
+{
+#if defined (BEAGLE_ENABLED)
     if (inFlags & BEAGLE_FLAG_PROCESSOR_CPU)      
     	MrBayesPrint( " PROCESSOR_CPU", spacer);
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU)      
@@ -87,5 +120,7 @@ void BeaglePrintFlags(long inFlags) {
     	MrBayesPrint( " THREADING_NONE", spacer);
     if (inFlags & BEAGLE_FLAG_THREADING_OPENMP)   
     	MrBayesPrint( " THREADING_OPENMP", spacer);
-}
+#else
+	// Do nothing
 #endif
+}

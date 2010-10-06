@@ -51,6 +51,7 @@
 #include "sumt.h"
 #include "tree.h"
 #include "utils.h"
+#include "mbbeagle.h"
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
@@ -6432,8 +6433,7 @@ int DoShowUserTrees (void)
 int DoShowBeagleResources (void)
 
 {
-    MrBayesPrint("\n Hello! I am your friendly BEAGLE resources!\n");
-    
+    BeaglePrintResources();    
     return (NO_ERROR);
 }
 
