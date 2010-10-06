@@ -56,7 +56,7 @@
 #endif
 
 
-#define	NUMCOMMANDS					    56  /* Note: NUMCOMMANDS gives the total number  */
+#define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
 #define	NUMPARAMS						250
 #define PARAM(i, s, f, l)				p->string = s;    \
@@ -129,6 +129,7 @@ int      DoSet (void);
 int      DoSetParm (char *parmName, char *tkn);
 int      DoShowMatrix (void);
 int      DoShowUserTrees (void);
+int      DoShowBeagleResources (void);
 int      DoTaxaset (void);
 int      DoTaxasetParm (char *parmName, char *tkn);
 int      DoTaxaStat (void);
@@ -311,7 +312,7 @@ CmdType			commands[] =
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet, 12,                                                       {13,14,94,145,170,171,179,181,182,216,229},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 14,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -329,7 +330,7 @@ CmdType			commands[] =
 			{ 53,          "Unlink",  NO,          DoUnlink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
 			{ 54,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
 			{ 55,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
-		    
+        { 56, "Showbeagleresources",  NO, DoShowBeagleResources, 0,                                                                                          {-1},       32, "Show available BEAGLE resources",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
 		    { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
 		};
@@ -6428,6 +6429,13 @@ int DoShowUserTrees (void)
 	
 }
 
+int DoShowBeagleResources (void)
+
+{
+    MrBayesPrint("\n Hello! I am your friendly BEAGLE resources!\n");
+    
+    return (NO_ERROR);
+}
 
 
 
@@ -12793,6 +12801,8 @@ void SetUpParms (void)
     PARAM   (230, "Conformat",      DoSumtParm,        "Figtree|Simple|\0");
     PARAM   (231, "Hpd",            DoSumpParm,        "Yes|No|\0");
     PARAM   (232, "Hpd",            DoSumtParm,        "Yes|No|\0");
+    PARAM   (233, "Usebeagle",      DoSetParm,         "Yes|No|\0");
+    PARAM   (234, "Beagleresource", DoSetParm,         "\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you
