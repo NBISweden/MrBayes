@@ -10670,7 +10670,7 @@ int InitChainCondLikes (void)
 #if defined (BEAGLE_ENABLED)
             /* tentatively decide on whether to use Beagle */
             if (m->gibbsGamma == NO)
-                m->useBeagle = YES;
+                m->useBeagle = tryToUseBEAGLE;
             else
                 m->useBeagle = NO;
 #endif

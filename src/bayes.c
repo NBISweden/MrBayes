@@ -517,6 +517,9 @@ int InitializeMrBayes (void)
     precision = 15;                                  /* set default precision                         */
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
 	strcpy(workingDir,"");				             /* working directory		                      */
+#if defined (BEAGLE_ENABLED)
+    tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
+#endif
 
 	/* set the proposal information */
 	SetUpMoveTypes ();

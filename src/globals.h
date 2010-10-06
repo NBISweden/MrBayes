@@ -142,6 +142,9 @@ extern int				userBrlensDef;                          /* are the branch lengths 
 extern int              userLevel;                              /* the level of the user                         */ 	
 extern PolyTree			*userTree[];						    /* array of user trees							 */
 extern char			    workingDir[100];                        /* working directory                             */
+#if defined (BEAGLE_ENABLED)
+extern int              tryToUseBEAGLE;                         /* try to use the BEAGLE library                 */
+#endif
 
 /* Aamodel parameters */
 extern MrBFlt			aaJones[20][20];	         /* rates for Jones model                        */

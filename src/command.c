@@ -240,6 +240,9 @@ Calibration     *tipCalibration;       /* holds information about node calibrati
 char			**transFrom;           /* translation block information                 */
 char			**transTo;             /* translation block information                 */
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
+#if defined (BEAGLE_ENABLED)
+int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
+#endif
 
 /* local (to this file) */
 char			*tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
@@ -6298,6 +6301,34 @@ int DoSetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+        /* set Usebeagle (global variable BEAGLE usage) ***************************************************************/    
+        else if (!strcmp(parmName, "Usebeagle"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {
+					if (!strcmp(tempStr, "Yes"))
+						tryToUseBEAGLE = YES;
+					else
+						tryToUseBEAGLE = NO;
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for usebeagle\n", spacer);
+					return (ERROR);
+                }
+				if (tryToUseBEAGLE == YES)
+					MrBayesPrint ("%s   Setting usebeagle to yes\n", spacer);
+				else
+					MrBayesPrint ("%s   Setting usebeagle to no\n", spacer);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        }
 		else
 			return (ERROR);
 			
@@ -10452,6 +10483,13 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Precision    -- Precision allows you to set the number of decimals to be prin-\n");
 		MrBayesPrint ("                   ted when sampled values are written to file. Precision must be\n");
 		MrBayesPrint ("                   in the range 3 to 15.                                         \n");
+#if defined (BEAGLE_ENABLED)
+        MrBayesPrint ("   Usebeagle    -- Set this option to 'Yes' to attempt to use the BEAGLE library \n");
+        MrBayesPrint ("                   to compute the phylogenetic likelihood on a variety of high-  \n");
+        MrBayesPrint ("                   performance hardware including multicore CPUs and GPUs. Some  \n"); 
+        MrBayesPrint ("                   models in MrBayes are not yet supported by BEAGLE.  If you    \n");
+        MrBayesPrint ("                   employ BEAGLE please, reference [INSERT REFERENCE HERE].      \n");
+#endif
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -10468,6 +10506,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Quitonerror     Yes/No                   %s                                   \n", quitOnError == YES ? "Yes" : "No");
         MrBayesPrint ("   Sientific       Yes/No                   %s                                   \n", scientific == YES ? "Yes" : "No");
         MrBayesPrint ("   Precision       <number>                 %d                                   \n", precision);
+#if defined (BEAGLE_ENABLED)
+        MrBayesPrint ("   Usebeagle       Yes/No                   %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
+#endif
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -12224,7 +12265,7 @@ void PrintSettings (char *command, ModelInfo *mp)
 		MrBayesPrint ("   Ordertaxa       Yes/No                %s                                     \n", chainParams.orderTaxa == YES? "Yes" : "No");
 		MrBayesPrint ("   Append          Yes/No                %s                                     \n", chainParams.append == YES? "Yes" : "No");
 		MrBayesPrint ("   Autotune        Yes/No                %s                                     \n", chainParams.autotune == YES? "Yes" : "No");
-		MrBayesPrint ("   Tunefreq        <number>              %d                                     \n", chainParams.tuneFreq);;
+        MrBayesPrint ("   Tunefreq        <number>              %d                                     \n", chainParams.tuneFreq);
 	    MrBayesPrint ("                                                                                \n");
 		}
 }
