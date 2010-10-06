@@ -6313,7 +6313,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(ALPHA);
 			else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLE)
+#if defined (BEAGLE_ENABLED)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
 					if (!strcmp(tempStr, "Yes"))
