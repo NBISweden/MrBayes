@@ -519,6 +519,7 @@ int InitializeMrBayes (void)
 	strcpy(workingDir,"");				             /* working directory		                      */
 #if defined (BEAGLE_ENABLED)
     tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
+    beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
 #endif
 
 	/* set the proposal information */

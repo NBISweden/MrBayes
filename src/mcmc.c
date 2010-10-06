@@ -10524,8 +10524,6 @@ int InitBeagleInstance (ModelInfo *m)
     if (m->useBeagle == NO)
         return ERROR;
     
-    BeaglePrintResources();
-    
     /* at least one eigen buffer needed */
     if (m->nCijkParts == 0)
         m->nCijkParts = 1;
@@ -10555,9 +10553,10 @@ int InitBeagleInstance (ModelInfo *m)
         }
 
 
-	preferedFlags = 0L; //BEAGLE_FLAG_PROCESSOR_GPU;//0L;
-						 //BEAGLE_FLAG_PROCESSOR_GPU;
-	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
+	preferedFlags = 0L;
+    requiredFlags = beagleFlags;
+	requiredFlags |= BEAGLE_FLAG_SCALERS_LOG;
+
     /* create beagle instance */
     m->beagleInstance = beagleCreateInstance(numLocalTaxa,
                                              m->numCondLikes * m->nCijkParts,
@@ -10581,12 +10580,12 @@ int InitBeagleInstance (ModelInfo *m)
         }
     else
         {
-        MrBayesPrint( "   Using beagle resource %i:\n", details.resourceNumber);
+        MrBayesPrint( "\n   Using BEAGLE resource %i:\n", details.resourceNumber);
     	MrBayesPrint( "\tRsrc Name : %s\n", details.resourceName);
     	MrBayesPrint( "\tImpl Name : %s\n", details.implName);    
     	MrBayesPrint( "\tFlags:");
     	BeaglePrintFlags(details.flags);
-    	MrBayesPrint( "\n\n");
+    	MrBayesPrint( "\n");
         }
 
     /* initialize tip data */

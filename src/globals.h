@@ -144,6 +144,7 @@ extern PolyTree			*userTree[];						    /* array of user trees							 */
 extern char			    workingDir[100];                        /* working directory                             */
 #if defined (BEAGLE_ENABLED)
 extern int              tryToUseBEAGLE;                         /* try to use the BEAGLE library                 */
+extern long             beagleFlags;                            /* BEAGLE requirement flags                      */
 #endif
 
 /* Aamodel parameters */

@@ -67,9 +67,15 @@ void BeaglePrintResources()
 		MrBayesPrint("\n\n");
 		}
 #else
-	MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
+	BeagleNotLinked();
 #endif
 }
+
+void BeagleNotLinked()
+{
+    MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
+}
+    
 
 
 /*-------------------

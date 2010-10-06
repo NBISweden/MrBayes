@@ -59,7 +59,7 @@
 
 #define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						250
+#define	NUMPARAMS						254
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -242,6 +242,7 @@ char			**transTo;             /* translation block information                 *
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
 #if defined (BEAGLE_ENABLED)
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
+long            beagleFlags;           /* BEAGLE required resource flags                */
 #endif
 
 /* local (to this file) */
@@ -311,12 +312,12 @@ CmdType			commands[] =
 			{ 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
 			{ 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
 			{ 33,           "Prset",  NO,           DoPrset, 35,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
-																												                 168,172,173,174,183,184,185,218},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
+                168,172,173,174,183,184,185,218},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
 			{ 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet, 14,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 17,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -6312,6 +6313,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(ALPHA);
 			else if (expecting == Expecting(ALPHA))
             {
+#if defined (BEAGLE_ENABLE)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
 					if (!strcmp(tempStr, "Yes"))
@@ -6328,11 +6330,89 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Setting usebeagle to yes\n", spacer);
 				else
 					MrBayesPrint ("%s   Setting usebeagle to no\n", spacer);
+#else
+                BeagleNotLinked();
+#endif
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
 				return (ERROR);
         }
+        /* set Beagle resource (global variable BEAGLE flag) ****************************************************/
+		else if (!strcmp(parmName, "Beagledevice"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+#if defined (BEAGLE_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {
+					if (!strcmp(tempStr, "Gpu"))
+                        {
+                        beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_CPU;
+						beagleFlags |= BEAGLE_FLAG_PROCESSOR_GPU;
+                        }
+					else
+                        {  
+                        beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_GPU;
+						beagleFlags |= BEAGLE_FLAG_PROCESSOR_CPU;
+                        }
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for beagledevice\n", spacer);
+					return (ERROR);
+                }
+				if (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU)
+					MrBayesPrint ("%s   Setting beagledevice to GPU\n", spacer);
+				else
+					MrBayesPrint ("%s   Setting beagledevice to CPU\n", spacer);
+#else
+                BeagleNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        }
+		else if (!strcmp(parmName, "Beagleprecision"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+#if defined (BEAGLE_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {
+					if (!strcmp(tempStr, "Single"))
+                    {                     
+                        beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;
+						beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;                       
+                    }
+					else
+                    {  
+                        beagleFlags &= ~BEAGLE_FLAG_PRECISION_SINGLE;
+						beagleFlags |= BEAGLE_FLAG_PRECISION_DOUBLE;
+                    }
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for beagleprecision\n", spacer);
+					return (ERROR);
+                }
+				if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE)
+					MrBayesPrint ("%s   Setting beagleprecision to double\n", spacer);
+				else
+					MrBayesPrint ("%s   Setting beagleprecision to single\n", spacer);
+#else
+                BeagleNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        }                 
 		else
 			return (ERROR);
 			
@@ -12847,7 +12927,10 @@ void SetUpParms (void)
     PARAM   (231, "Hpd",            DoSumpParm,        "Yes|No|\0");
     PARAM   (232, "Hpd",            DoSumtParm,        "Yes|No|\0");
     PARAM   (233, "Usebeagle",      DoSetParm,         "Yes|No|\0");
-    PARAM   (234, "Beagleresource", DoSetParm,         "\0");
+    PARAM   (234, "Beagledevice",   DoSetParm,         "Cpu|Gpu|\0");
+    PARAM   (235, "Beagleprecision",DoSetParm,         "Single|Double|\0");
+    PARAM   (236, "Beaglesse",      DoSetParm,         "Yes|No|\0");
+    PARAM   (237, "Beagleopenmp",   DoSetParm,         "Yes|No|\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you
