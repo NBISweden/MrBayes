@@ -2068,7 +2068,7 @@ int CompressData (void)
 	/* allocate indices pointing from original to compressed matrix */
 	if (memAllocs[ALLOC_COMPCOLPOS] == YES)
         {
-		SafeFree (&compColPos);
+	  SafeFree ((void **)(&compColPos));
         memAllocs[ALLOC_COMPCOLPOS] = NO;
         }
 	compColPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
@@ -2083,7 +2083,7 @@ int CompressData (void)
 
 	if (memAllocs[ALLOC_COMPCHARPOS] == YES)
         {
-        SafeFree (&compCharPos);
+	  SafeFree ((void **)(&compCharPos));
         memAllocs[ALLOC_COMPCHARPOS] = NO;
         }
 	compCharPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
@@ -2283,7 +2283,7 @@ int CompressData (void)
 	/* now we know the size, so we can allocate space for the compressed matrix ... */
 	if (memAllocs[ALLOC_COMPMATRIX] == YES)
 		{
-        SafeFree (&compMatrix);
+		  SafeFree ((void **)(&compMatrix));
         memAllocs[ALLOC_COMPMATRIX] = NO;
 		}
 	compMatrix = (SafeLong *) calloc (compMatrixRowSize * numLocalTaxa, sizeof(SafeLong));
@@ -2296,7 +2296,7 @@ int CompressData (void)
 	
 	if (memAllocs[ALLOC_NUMSITESOFPAT] == YES)
 		{
-        SafeFree (&numSitesOfPat);
+		  SafeFree ((void **)(&numSitesOfPat));
         memAllocs[ALLOC_NUMSITESOFPAT] = NO;
 		}
 	numSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
@@ -2309,7 +2309,7 @@ int CompressData (void)
 
 	if (memAllocs[ALLOC_ORIGCHAR] == YES)
 		{
-        SafeFree (&origChar);
+		  SafeFree ((void **)(&origChar));
         memAllocs[ALLOC_ORIGCHAR] = NO;
 		}
 	origChar = (int *)SafeMalloc((size_t) (compMatrixRowSize * sizeof(int)));
@@ -9765,7 +9765,7 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 	Tree	*tree, *tree1;
 	Param	*q;
 	MrBFlt  clockRate;
-	static count=0;
+	//	static int count=0;
 
 	tree = GetTree (param, chn, state);
 	
@@ -10059,7 +10059,7 @@ int FreeModel (void)
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
 		for (i=0; i<numCurrentDivisions; i++)
-            SafeFree (&modelParams[i].activeConstraints);
+		  SafeFree ((void **)(&modelParams[i].activeConstraints));
         free (modelParams);
 		free (modelSettings);
 		memAllocs[ALLOC_MODEL] = NO;
@@ -12754,7 +12754,7 @@ int ProcessStdChars (SafeLong *seed)
 	/* first allocate space for stdType, stateSize, tiIndex, bsIndex */
 	if (memAllocs[ALLOC_STDTYPE] == YES)
 		{
-		SafeFree (&stdType);
+		  SafeFree ((void **)(&stdType));
 		memAllocs[ALLOC_STDTYPE] = NO;
 		}
 	stdType = (int *)calloc((size_t) (4 * numStandardChars), sizeof(int));
@@ -13083,7 +13083,7 @@ int ProcessStdChars (SafeLong *seed)
 	/* allocate space */
 	if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
 		{
-		SafeFree (&stdStateFreqs);
+		  SafeFree ((void **)(&stdStateFreqs));
         memAllocs[ALLOC_STDSTATEFREQS] = NO;
 		}
 	stdStateFreqs = (MrBFlt *) calloc (n * 2 * numGlobalChains, sizeof (MrBFlt));

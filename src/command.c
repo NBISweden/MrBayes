@@ -8099,7 +8099,7 @@ int FreeTaxa (void)
 		SafeFree ((void **) &constraintNames);
         SafeFree ((void **) &nodeCalibration);
         numDefinedConstraints = 0;
-        SafeFree(&tempActiveConstraints);
+        SafeFree((void **)(&tempActiveConstraints));
 		memAllocs[ALLOC_CONSTRAINTS] = NO;
 		memoryLetFree = YES;
 		}
@@ -12466,7 +12466,7 @@ void ResetTaxaFlags (void)
     defTaxa                 = NO;                        /* flag for whether number of taxa is known      */
     isTaxsetDef             = NO;                        /* is a taxlabels set defined                    */
 	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
-    SafeFree(&tempActiveConstraints);                    /* holds temp info on active constraints         */
+	SafeFree((void **)(&tempActiveConstraints));                    /* holds temp info on active constraints         */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
 }
@@ -12485,7 +12485,7 @@ int SetPartition (int part)
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
 		for (i=0; i<numCurrentDivisions; i++)
-            SafeFree(&(modelParams[i].activeConstraints));
+		  SafeFree((void **)(&(modelParams[i].activeConstraints)));
         free (modelParams);
 		free (modelSettings);
 		memAllocs[ALLOC_MODEL] = NO;
