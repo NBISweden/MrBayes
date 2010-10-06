@@ -5829,7 +5829,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 
 {
 
-	int				a, c, h, i, j, k, nStates, nCats, tmp;
+	int				a, c, h, i, j, k, nStates=0, nCats=0, tmp;
 	CLFlt			*clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA,
 					likeL, likeR, likeA;
 	ModelInfo		*m;
@@ -9304,11 +9304,11 @@ void FreeChainMemory (void)
         if (m->parsSets)
             {
             for (j=0; j<m->numParsSets; j++)
-                SafeFree (&m->parsSets[j]);
+	      SafeFree ((void **)(&m->parsSets[j]));
             SafeFree ((void **)(&m->parsSets));
             }
         if (m->parsNodeLens)
-            SafeFree(&m->parsNodeLens);
+	  SafeFree((void **)(&m->parsNodeLens));
         }
 
     /* free model variables for conditional likelihoods */
@@ -9321,9 +9321,9 @@ void FreeChainMemory (void)
 #if defined (SSE_ENABLED)
                 AlignedSafeFree (&m->condLikes[i]);
 #else
-                SafeFree (&m->condLikes[i]);
+	    SafeFree ((void **)(&m->condLikes[i]));
 #endif
-            SafeFree (((void **)&(m->condLikes)));
+            SafeFree (((void **)(&m->condLikes)));
             }
 
         if (m->scalers)
@@ -9332,16 +9332,17 @@ void FreeChainMemory (void)
 #if defined (SSE_ENABLED)
                 AlignedSafeFree (&m->scalers[i]);
 #else
-                SafeFree (&m->scalers[i]);
+	    SafeFree ((void **)(&m->scalers[i]));
+
 #endif
-            SafeFree (((void **)&(m->scalers)));
+            SafeFree (((void **)(&m->scalers)));
             }
 
         if (m->clP)
-            SafeFree ((void **)&(m->clP));
+	  SafeFree ((void **)(&m->clP));
 #if defined (SSE_ENABLED)
         if (m->clP_SSE)
-            SafeFree ((void **)&(m->clP_SSE));
+	  SafeFree ((void **)(&m->clP_SSE));
         if (m->lnL_SSE)
             AlignedSafeFree (&m->lnL_SSE);
         if (m->lnLI_SSE)
@@ -9351,77 +9352,77 @@ void FreeChainMemory (void)
         if (m->tiProbs)
             {
             for (i=0; i<m->numTiProbs; i++)
-                SafeFree (&m->tiProbs[i]);
-            SafeFree ((void **)&(m->tiProbs));
+	      SafeFree ((void **)(&m->tiProbs[i]));
+            SafeFree ((void **)(&m->tiProbs));
             }
                 
         if (m->cijks)
             {
             for (i=0; i<numLocalChains+1; i++)
-                SafeFree (&m->cijks[i]);
-            SafeFree ((void **)&(m->cijks));
+	      SafeFree ((void **)(&m->cijks[i]));
+            SafeFree ((void **)(&m->cijks));
             }
 
         if (m->condLikeIndex)
             {
             for (i=0; i<numLocalChains; i++)
-                SafeFree (&m->condLikeIndex[i]);
-            SafeFree ((void **)&(m->condLikeIndex));
+	      SafeFree ((void **)(&m->condLikeIndex[i]));
+            SafeFree ((void **)(&m->condLikeIndex));
             }
 
         if (m->condLikeScratchIndex)
-            SafeFree (&m->condLikeScratchIndex);
+	  SafeFree ((void **)(&m->condLikeScratchIndex));
 
         if (m->tiProbsIndex)
             {
             for (i=0; i<numLocalChains; i++)
-                SafeFree (&m->tiProbsIndex[i]);
+	      SafeFree ((void **)(&m->tiProbsIndex[i]));
             SafeFree ((void **)&(m->tiProbsIndex));
             }
         if (m->tiProbsScratchIndex)
-            SafeFree (&m->tiProbsScratchIndex);
+	  SafeFree ((void **)(&m->tiProbsScratchIndex));
 
         if (m->nodeScalerIndex)
             {
             for (i=0; i<numLocalChains; i++)
-                SafeFree (&m->nodeScalerIndex[i]);
+	      SafeFree ((void **)(&m->nodeScalerIndex[i]));
             SafeFree ((void **)&(m->nodeScalerIndex));
             }
         if (m->nodeScalerScratchIndex)
-            SafeFree (&m->nodeScalerScratchIndex);
+	  SafeFree ((void **)(&m->nodeScalerScratchIndex));
 
         if (m->scalersSet)
             {
             for (i=0; i<numLocalChains; i++)
-                SafeFree (&m->scalersSet[i]);
-            SafeFree ((void **)&(m->scalersSet));
+	      SafeFree ((void **)(&m->scalersSet[i]));
+            SafeFree ((void **)(&m->scalersSet));
             }
         if (m->scalersSetScratch)
-            SafeFree (&m->scalersSetScratch);
+	  SafeFree ((void **)(&m->scalersSetScratch));
 
         if (m->siteScalerIndex)
-            SafeFree (&m->siteScalerIndex);
+	  SafeFree ((void **)(&m->siteScalerIndex));
 
         if (m->cijkIndex)
-            SafeFree (&m->cijkIndex);
+	  SafeFree ((void **)(&m->cijkIndex));
 
         if (m->ancStateCondLikes)
-            SafeFree (&m->ancStateCondLikes);
+	  SafeFree ((void **)(&m->ancStateCondLikes));
 
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == NO)
             continue;
         beagleFinalizeInstance(m->beagleInstance);
-        SafeFree(&m->logLikelihoods);
-        SafeFree(&m->inRates);
-        SafeFree(&m->branchLengths);
-        SafeFree(&m->tiProbIndices);
-        SafeFree(&m->inWeights);
-        SafeFree(&m->bufferIndices);
-        SafeFree(&m->eigenIndices);
-        SafeFree(&m->childBufferIndices);
-        SafeFree(&m->childTiProbIndices);
-        SafeFree(&m->cumulativeScaleIndices);
+        SafeFree((void **)(&m->logLikelihoods));
+        SafeFree((void **)(&m->inRates));
+        SafeFree((void **)(&m->branchLengths));
+        SafeFree((void **)(&m->tiProbIndices));
+        SafeFree((void **)(&m->inWeights));
+        SafeFree((void **)(&m->bufferIndices));
+        SafeFree((void **)(&m->eigenIndices));
+        SafeFree((void **)(&m->childBufferIndices));
+        SafeFree((void **)(&m->childTiProbIndices));
+        SafeFree((void **)(&m->cumulativeScaleIndices));
 #endif
         }
 
@@ -9448,12 +9449,12 @@ void FreeChainMemory (void)
 		}
     if (memAllocs[ALLOC_TERMSTATE] == YES)
 		{
-		SafeFree (&termState);
+		  SafeFree ((void **)(&termState));
 		memAllocs[ALLOC_TERMSTATE] = NO;
 		}
     if (memAllocs[ALLOC_ISPARTAMBIG] == YES)
 		{
-		SafeFree (&isPartAmbig);
+		  SafeFree ((void **)(&isPartAmbig));
 		memAllocs[ALLOC_ISPARTAMBIG] = NO;
 		}
     if (memAllocs[ALLOC_PRELIKES] == YES)
@@ -10784,7 +10785,7 @@ int InitChainCondLikes (void)
                 nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
             beagleSetPatternWeights(m->beagleInstance,
                                     nSitesOfPat);
-            SafeFree (&nSitesOfPat);
+            SafeFree ((void **)(&nSitesOfPat));
             }
 
         /* Set up scalers for Beagle */
@@ -43266,8 +43267,8 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 
 {
     int         i, j, c, nStates, hasPInvar;
-    MrBFlt      *swr, s01, s10, probOn, probOff, covBF[40], pInvar, *bs, freq, likeI, lnLikeI, diff, *omegaCatFreq;
-    CLFlt       *clInvar, *nSitesOfPat;
+    MrBFlt      *swr, s01, s10, probOn, probOff, covBF[40], pInvar=0.0, *bs, freq, likeI, lnLikeI, diff, *omegaCatFreq;
+    CLFlt       *clInvar=NULL, *nSitesOfPat;
     double      *nSitesOfPat_Beagle;
     TreeNode    *p;
     ModelInfo   *m;
@@ -43360,7 +43361,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
             nSitesOfPat_Beagle[c] = numSitesOfPat[m->compCharStart + c];
         beagleSetPatternWeights(m->beagleInstance,
                                 nSitesOfPat_Beagle);
-        SafeFree (&nSitesOfPat_Beagle);
+        SafeFree ((void **)(&nSitesOfPat_Beagle));
         }
 
     /* find root log likelihoods and scalers */
@@ -43588,7 +43589,7 @@ int UpDateCijk (int whichPart, int whichChain)
 	ModelInfo	*m;
 	Param		*p;
 #if defined (BEAGLE_ENABLED)
-    double      *beagleEigvecs, *beagleInverseEigvecs;
+	double      *beagleEigvecs=NULL, *beagleInverseEigvecs=NULL;
 #endif
 
 	/* get a pointer to the model settings for this partition */
