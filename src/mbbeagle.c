@@ -79,6 +79,7 @@ void BeagleNotLinked()
 
 int BeagleCheckFlagCompatability(long inFlags) {
 #if defined (BEAGLE_ENABLED)    
+#if defined (BEAGLE_ENABLED)
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
         if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
             MrBayesPrint("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
@@ -89,6 +90,8 @@ int BeagleCheckFlagCompatability(long inFlags) {
             return NO;
         }
     }
+#endif
+
     return YES;
 #else
     BeagleNotLinked();

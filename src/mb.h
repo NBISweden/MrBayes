@@ -41,12 +41,10 @@ typedef long SafeLong;
 typedef	double MrBFlt;		/* double used for parameter values and generally for floating point values */
 #define MRBFLT_MAX DBL_MAX; /* maximum possible value that can be stored in MrBFlt */
 #define MRBFLT_MIN DBL_MIN; /* maximum possible value that can be stored in MrBFlt */
-typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
+typedef double CLFlt;		/* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
 							/* set CLFlt to double if you want increased precision */
 							/* NOTE: CLFlt = double not compatible with SSE_ENABLED */
 
-// TODO: Move this flag to configure script
-#undef FAST_LOG
 
 /* Define a compiler and vector size for the SSE code */
 #if defined (SSE_ENABLED)
@@ -55,6 +53,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #undef GCC_SSE
 #undef ICC_SSE
 #endif
+
 
 #if defined GCC_SSE			/* gcc compiler */
 #define ALIGNED_MALLOC memalign
@@ -700,6 +699,8 @@ typedef struct param
 #define CLOCKRATE_LOGNORMAL             135
 #define CLOCKRATE_GAMMA                 136
 #define CLOCKRATE_EXP                   137
+#define SPECIESTREE_UNIFORM             138
+#define TOPOLOGY_SPECIESTREE            139
 
 
 /* typedef for a MoveFxn */
@@ -1044,6 +1045,7 @@ typedef struct modelinfo
 	Param		*growthRate;				/* ptr to growth rate used in model			*/
 	Param		*topology;					/* ptr to topology used in model			*/
 	Param		*brlens;					/* ptr to brlens (and tree) used in model	*/
+	Param		*speciestree;			    /* ptr to species tree used in model        */
 	Param		*aaModel;					/* ptr to amino acid matrix used            */
 	Param		*psiGamma;				    /* ptr to psigamma shape used in model      */
 	Param		*cppRate;				    /* ptr to CPP rate used in model            */

@@ -142,7 +142,6 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_ExtTBR
 #undef  DEBUG_TREEHEIGHT
 #undef  DEBUG_MOVE_TREEAGE
-#undef  SHOW_MOVE
 #undef  DEBUG_LNLIKELIHOODRATIO
 #undef  DEBUG_NNIClock
 #undef  SHOW_MOVE
@@ -6603,13 +6602,12 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
 			}
 
 #if defined (FAST_LOG)
-		scP[c]       = logValue[index];			/* store node scaler */
+		scP[c]       = logValue[index];     /* store node scaler */
 		lnScaler[c] += scP[c];				/* add into tree scaler  */
 #else
-		scP[c]       = (CLFlt) log (scaler);	/* store node scaler */
+		scP[c]       = (CLFlt) log(scaler);	/* store node scaler */
 		lnScaler[c] += scP[c];	/* add into tree scaler  */
 #endif
-
 		}
 
 	m->scalersSet[chain][p->index] = YES;	/* set flag marking scalers set */
@@ -7397,6 +7395,7 @@ int DoMcmc (void)
 
 #if defined (BEST_MPI_ENABLED)
 
+    // TODO: BEST MPI Set up BEST MPI run
     /* Set up the load balancing scheme. Here we give each processor an equal number of trees.
        If trees are not evenly divisibly by the number of processors, we give the odd n trees to
        the first n processors. */
@@ -11824,6 +11823,7 @@ int InitPrintParams (void)
 		if (p->printParam == YES &&
 			p->paramType != P_TOPOLOGY &&
 			p->paramType != P_BRLENS &&
+            p->paramType != P_SPECIESTREE &&
 			p->paramType != P_CPPEVENTS &&
 			p->paramType != P_BMBRANCHRATES)
 			numPrintParams++;
@@ -11845,6 +11845,12 @@ int InitPrintParams (void)
 			{
 			/* print only if brlens (or events) requested for at least one partition */
 			if (p->printParam == YES || p->nPrintSubParams > 0)
+				numPrintTreeParams++;
+			}
+		else if (p->paramType == P_SPECIESTREE)
+			{
+			/* always print if printParam set to YES */
+			if (p->printParam == YES)
 				numPrintTreeParams++;
 			}
 		}
@@ -11871,6 +11877,7 @@ int InitPrintParams (void)
 		if (p->printParam == YES &&
 			p->paramType != P_TOPOLOGY &&
 			p->paramType != P_BRLENS &&
+            p->paramType != P_SPECIESTREE &&
 			p->paramType != P_CPPEVENTS &&
 			p->paramType != P_BMBRANCHRATES)
 			printParam[j++] = p;
@@ -11893,6 +11900,11 @@ int InitPrintParams (void)
 			if (p->printParam == YES || p->nPrintSubParams > 0)
 				printTreeParam[k++] = p;
 			}
+        else if (p->paramType == P_SPECIESTREE)
+            {
+            if (p->printParam == YES)
+                printTreeParam[k++] = p;
+            }
 		}
 
 	/* find topologies, topology file index, and printtree topology index */
@@ -11901,7 +11913,17 @@ int InitPrintParams (void)
 	for (i=j=0; i<numParams; i++)
 		{
 		p = &params[i];
-		if (p->paramType == P_TOPOLOGY)
+        if (p->paramType == P_SPECIESTREE)
+            {
+			topologyParam[j] = p;
+			for (k=0; k<numPrintTreeParams; k++)
+				if (printTreeParam[k] == p)
+					break;
+			topologyPrintIndex[j] = k;
+			printTreeTopologyIndex[k] = j;
+			j++;
+			}
+		else if (p->paramType == P_TOPOLOGY)
 			{
 			topologyParam[j] = p;
 			for (k=0; k<numPrintTreeParams; k++)
@@ -14517,12 +14539,21 @@ MrBFlt LogPrior (int chain)
 	for (n=0; n<numParams; n++)
 		{
 		p = &params[n];
+#if defined (MPI_BEST_ENABLED)
+        /* We skip all parameters that are not handled on this processor. The scheme used here
+           requires that parameters either be unique to one partition (processor) or that they
+           are shared across all partitions and that the first processor has all the relevant
+           information about that parameter. */
+        if (isDivisionActive[p->relParts[0]] == NO)
+            continue;
+#endif
+        
 		st  = GetParamVals (p, chain, state[chain]);
 		sst = GetParamSubVals (p, chain, state[chain]);
 		mp = &modelParams[p->relParts[0]];
 		m = &modelSettings[p->relParts[0]];
 
-		if (p->paramType == P_TRATIO)
+        if (p->paramType == P_TRATIO)
 			{
 			/* tratio parameter */
 			if (p->paramId == TRATIO_DIR)
@@ -15030,11 +15061,19 @@ MrBFlt LogPrior (int chain)
         else if (p->paramType == P_SPECIESTREE)
             {
             // TODO: BEST code needed here to calculate prior probability of a species tree
+            // This code is only executed on proc_0 if BEST_MPI_ENABLED is defined. We assume
+            // In that case that proc_0 knows about all the gene trees.
             lnPrior += 0.0;
             }
 		}
 
-	return (lnPrior);
+#if defined (BEST_MPI_ENABLED)
+    /* Assemble prior probabilities across processors */
+    myLnPrior = lnPrior;
+    MPI_AllReduce (&myLnPrior, &lnPrior, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+
+    return (lnPrior);
 
 }
 
@@ -22407,6 +22446,44 @@ int Move_GammaShape_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 	return (NO_ERROR);
 
+}
+
+
+
+
+
+int Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+    /* Move gene tree */
+
+    Tree			*t, *spt;
+    ModelInfo       *m;
+    ModelParams     *mp;
+
+	/* get model params */
+	mp = &modelParams[param->relParts[0]];
+	
+	/* get model settings */
+    m = &modelSettings[param->relParts[0]];
+
+    /* get gene tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* get species tree */
+    spt = GetTree (m->speciestree, chain, state[chain]);
+
+    // TODO: BEST Modify gene tree.
+    //printf ("Proposing new gene tree, index = %d\n", param->treeIndex);
+
+    // TODO: BEST Calculate proposal ratio
+    (*lnProposalRatio) = 0.0;
+
+    // TODO: BEST Calculate prior ratio taking species tree into account
+    (*lnPriorRatio) = 0.0;
+    
+    return (NO_ERROR);
 }
 
 
@@ -30842,6 +30919,67 @@ int Move_Speciation_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
+int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+    /* Move species tree */
+
+    int             i;
+    Tree			*t, *genetree;
+    ModelInfo       *m;
+    ModelParams     *mp;
+
+	/* get model params */
+	mp = &modelParams[param->relParts[0]];
+	
+	/* get model settings */
+    m = &modelSettings[param->relParts[0]];
+
+    /* get species tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* cycle over gene trees */
+    for (i=0; i<param->nSubParams; i++)
+        genetree = GetTree(param->subParams[i], chain, state[chain]);
+
+    // TODO: BEST code needed here::
+    // printf ("Modifying species tree...\n");
+    
+    // Modify the species tree, given info on the gene trees
+
+    // Calculate proposal ratio
+    (*lnProposalRatio) = 0.0;
+
+#if defined (BEST_MPI_ENABLED)
+    // Broadcast the proposed species tree to all processors if MPI version
+#endif
+
+    // Calculate the ln prior probability ratio of the new to old species trees from hyperpriors
+    (*lnPriorRatio) = 0.0;
+
+#if defined (BEST_MPI_ENABLED)
+    // Let each processor calculate the ln probability ratio of its current gene tree(s)
+    //    given the new and old species tree in the MPI version
+
+    // Assemble the ln probability ratios across the processors and to lnPriorRatio
+#else
+    // Calculate the ln probability ratio of the current gene trees
+    //    given the new and old species trees
+
+#endif
+
+    // Add ln probability ratio to (*lnPriorRatio)
+    (*lnPriorRatio) += 0.0;
+    
+    return (NO_ERROR);
+
+}
+
+
+
+
+
 /*----------------------------------------------------------------
 |
 |	Move_SPRClock: This proposal mechanism changes the topology and
@@ -35852,14 +35990,14 @@ int PrintStatesToFiles (int curGen)
 					if (PrintTree (curGen, tree, NO, 0.0) == ERROR)
 						return (ERROR);
 					}
-				else if (param->nPrintSubParams > 0)
+                else if (param->nPrintSubParams > 0)
 					{
 					if (PrintEventTree (curGen, tree, coldId, param) == ERROR)
 						return (ERROR);
 					}
 				else
 					{
-                    if (tree->isCalibrated == YES)
+                    if (tree->isClock == YES)
                         clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
                     else
                         clockRate = 0.0;
@@ -39246,16 +39384,6 @@ int RunChain (SafeLong *seed)
                 getchar();
                 }
 		    */
-
-#if defined (BEST_MPI_ENABLED)
-
-            /* we have gene tree parallelization so we have to accumulate likelihood ratios across nodes */
-            if (bestCycleGen > numNonTreeMoves || numLocalChains > 1)
-                {
-                /* Likelihood ratio needs to be accumulated across nodes */
-                
-                }
-#endif
 
             /* calculate likelihood ratio */            
             if (abortMove == NO)
@@ -43545,15 +43673,20 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 			likeI = 0.0;
 			for (j=0; j<nStates; j++)
 				likeI += (*(clInvar++)) * bs[j];
-			lnLikeI = log(likeI * pInvar);
-            diff = lnLikeI - m->logLikelihoods[c];
+			if (likeI != 0.0)
+                {
+                lnLikeI = log(likeI * pInvar);
+                diff = lnLikeI - m->logLikelihoods[c];
+                }
+            else
+                diff = -1000.0;
             if (diff < -200.0)
                 (*lnL) += m->logLikelihoods[c] * nSitesOfPat[c];
             else if (diff > 200.0)
                 (*lnL) += lnLikeI * nSitesOfPat[c];
             else
                 {
-                (*lnL) += (m->logLikelihoods[c] + log(1 + exp(diff))) * nSitesOfPat[c];
+                (*lnL) += (m->logLikelihoods[c] + log(1.0 + exp(diff))) * nSitesOfPat[c];
                 }
 
 			/* check for numerical errors */

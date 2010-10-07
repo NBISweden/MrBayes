@@ -240,10 +240,9 @@ Calibration     *tipCalibration;       /* holds information about node calibrati
 char			**transFrom;           /* translation block information                 */
 char			**transTo;             /* translation block information                 */
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
-#if defined (BEAGLE_ENABLED)
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
 long            beagleFlags;           /* BEAGLE required resource flags                */
-#endif
+
 
 /* local (to this file) */
 char			*tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
@@ -9667,13 +9666,16 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    phylogenies. The options are:                                \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset topologypr = uniform                                \n");
+		MrBayesPrint ("                       prset topologypr = speciestree                            \n");
 		MrBayesPrint ("                       prset topologypr = constraints(<list>)                    \n");
 		MrBayesPrint ("                       prset topologypr = fixed(<treename>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    If the prior is selected to be \"uniform\", the default,     \n");
 		MrBayesPrint ("                    then all possible trees are considered a priori equally      \n");
-		MrBayesPrint ("                    probable. The constraints option allows you to specify       \n");
-		MrBayesPrint ("                    complicated prior probabilities on trees (constraints        \n");
+		MrBayesPrint ("                    probable. The 'speciestree' option is used when the topology \n");
+        MrBayesPrint ("                    is constrained by being folded inside a species tree together\n");
+        MrBayesPrint ("                    with other (gene) trees. The constraints option allows you to\n");
+		MrBayesPrint ("                    specify complicated prior probabilities on trees (constraints\n");
 		MrBayesPrint ("                    are discussed more fully in \"help constraint\"). Note       \n");
 		MrBayesPrint ("                    that you must specify a list of constraints that you         \n");
 		MrBayesPrint ("                    wish to be obeyed. The list can be either the constraints'   \n");
@@ -12857,7 +12859,7 @@ void SetUpParms (void)
 	PARAM   ( 64, "Symdirihyperpr", DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 65, "Xxxxxxxxxx",     DoCtypeParm,       "\0");
 	PARAM   ( 66, "Xxxxxxxxxx",     DoConstraintParm,  "\0");
-	PARAM   ( 67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|\0");
+	PARAM   ( 67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|Speciestree|\0");
 	PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
 	PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");

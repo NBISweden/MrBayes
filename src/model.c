@@ -73,6 +73,7 @@ void      CheckCharCodingType (Matrix *m, CharInfo *ci);
 int       CheckExpandedModels (void);
 int       CompressData (void);
 int		  InitializeChainTrees (Param *p, int from, int to, int isRooted);
+int       FillSpeciesTreeParams (SafeLong* seed, int from, int to);
 int       FillBrlensSubParams (Param *param, int chn, int state);
 void      FreeCppEvents (Param *p);
 void	  FreeMove (MCMCMove *mv);
@@ -693,12 +694,12 @@ int AllocateTreeParams (void)
 		{
 		if (params[k].paramType == P_BRLENS)
 			numTrees++;
-		if (params[k].paramType == P_TOPOLOGY)
+		else if (params[k].paramType == P_TOPOLOGY)
 			numTopologies++;
 		}
 
 	/* We need to add the trees that do not have any branch lengths */
-	/* that is, the pure parsimony model trees */
+	/* that is, the pure parsimony model trees, and the species trees */
 	for (k=0; k<numParams; k++)
 		{
 		if (params[k].paramType == P_TOPOLOGY)
@@ -706,13 +707,22 @@ int AllocateTreeParams (void)
 			if (!strcmp(modelParams[params[k].relParts[0]].parsModel, "Yes"))
 				numTrees++;
 			}
+        else if (params[k].paramType == P_SPECIESTREE)
+            {
+            numTopologies++;
+            numTrees++;
+            }
 		}
 
-	/* Finally add subparam pointers for relaxed clock parameters */
-	numSubParamPtrs = numTrees;
+	/* Finally add subparam pointers for relaxed clock parameters and species trees */
+	numSubParamPtrs = 0;
 	for (k=0; k<numParams; k++)
 		{
-		if (params[k].paramType == P_CPPEVENTS)
+        if (params[k].paramType == P_TOPOLOGY && params[k].paramId == TOPOLOGY_SPECIESTREE)
+            numSubParamPtrs += 1;
+        else if (params[k].paramType == P_BRLENS)
+            numSubParamPtrs += 1;
+        else if (params[k].paramType == P_CPPEVENTS)
 			numSubParamPtrs += 3;
 		else if (params[k].paramType == P_BMBRANCHRATES)
 			numSubParamPtrs += 2;
@@ -723,15 +733,14 @@ int AllocateTreeParams (void)
 	/* Allocate space for trees and subparam pointers */
 	if (memAllocs[ALLOC_MCMCTREES] == YES)
 		{
-		subParamPtrs = (Param **) realloc ((void *) subParamPtrs, (size_t) (numSubParamPtrs * sizeof (Param *)));
-		mcmcTree = (Tree **) realloc ((void *) mcmcTree, (size_t) (numTrees * 2 * numGlobalChains * sizeof (Tree *)));
+		free (subParamPtrs);
+        free (mcmcTree);
+        subParamPtrs = NULL;
+        mcmcTree = NULL;
+        memAllocs[ALLOC_MCMCTREES] = NO;
 		}
-	else
-		{
-		subParamPtrs = (Param **) calloc (numSubParamPtrs, sizeof (Param *));
-		mcmcTree = (Tree **) calloc (numTrees * 2 * numGlobalChains, sizeof (Tree *));
-		}
-
+	subParamPtrs = (Param **) calloc (numSubParamPtrs, sizeof (Param *));
+	mcmcTree = (Tree **) calloc (numTrees * 2 * numGlobalChains, sizeof (Tree *));
 	if (!subParamPtrs || !mcmcTree)
 		{
 		if (subParamPtrs) free (subParamPtrs);
@@ -748,7 +757,7 @@ int AllocateTreeParams (void)
 	for (k=0; k<numParams; k++)
 		params[k].nSubParams = 0;
 	
-	/* Count number of trees (brlens) for each topology */
+	/* Count number of trees (brlens) for each topology or species tree */
 	for (k=0; k<numParams; k++)
 		{
 		p = &params[k];
@@ -759,6 +768,12 @@ int AllocateTreeParams (void)
 			if (p->printParam == YES)
 				q->nPrintSubParams++;
 			}
+        else if (params[k].paramType == P_TOPOLOGY)
+            {
+            q = modelSettings[p->relParts[0]].speciestree;
+            if (q != NULL)
+                q->nSubParams++;
+            }
 		}
 
 	/* Make sure there is also one subparam for a parsimony tree */
@@ -818,9 +833,10 @@ int AllocateTreeParams (void)
 	for (k=0; k<numParams; k++)
 		{
 		p = &params[k];
-		if (p->paramType == P_BRLENS ||
-			p->paramId == TOPOLOGY_PARSIMONY_UNIFORM ||
-			p->paramId == TOPOLOGY_PARSIMONY_CONSTRAINED)
+		if ((p->paramType == P_BRLENS) ||
+			(p->paramType == P_TOPOLOGY && p->paramId == TOPOLOGY_PARSIMONY_UNIFORM) ||
+			(p->paramType == P_TOPOLOGY && p->paramId == TOPOLOGY_PARSIMONY_CONSTRAINED) ||
+            (p->paramType == P_SPECIESTREE))
 			{
 			/* allocate space for trees and initialize trees */
 			p->treeIndex = nOfTrees;
@@ -874,6 +890,25 @@ int AllocateTreeParams (void)
 				
 				p->tree = p->subParams[0]->tree;
 				p->treeIndex = p->subParams[0]->treeIndex;
+				}
+			}
+		else if (p->paramType == P_SPECIESTREE)
+			{
+			/* now proceed with pointer assignment */
+			q = modelSettings[p->relParts[0]].topology;
+			n = 0;	/* number of stored subParams */
+			i = 0;	/* relevant partition number  */
+			while (i < p->nRelParts)
+				{
+				for (j=0; j<n; j++)
+					if (q == p->subParams[j])
+						break;
+
+				if (j == n && q != p)	/* a new topology for this species tree */
+					{
+					p->subParams[n++] = q;
+					}
+				q = modelSettings[p->relParts[++i]].topology;
 				}
 			}
 		}
@@ -941,6 +976,11 @@ int AllocateTreeParams (void)
 			if (InitializeChainTrees (p, 0, numGlobalChains, isRooted) == ERROR)
 				return (ERROR);
 			}
+        else if (p->paramType == P_SPECIESTREE)
+            {
+            if (InitializeChainTrees (p, 0, numGlobalChains, YES) == ERROR)
+                return (ERROR);
+            }
 		}
 
 	/* now initialize subparam pointers for relaxed clock models */
@@ -1966,17 +2006,21 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 	else
 		isCalibrated = NO;
 
-	/* construct the trees */
+	/* allocate space for and construct the trees */
+    /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
 	for (i=from; i<to; i++)
 		{
-		treeHandle = p->tree + i*2*numTrees;
-		free(*treeHandle);
+		treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
+		if (*treeHandle)
+            free(*treeHandle);
 		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
 			}
-		treeHandle += numTrees;
+		treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
+        if (*treeHandle)
+            free(*treeHandle);
 		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
@@ -5929,7 +5973,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						return (ERROR);
 						}
                     /* make sure we know what to do next */
-					if (!strcmp(tempStr, "Uniform"))
+					if (!strcmp(tempStr, "Uniform") || !strcmp(tempStr, "Speciestree"))
 						expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 					else
 						expecting = Expecting(LEFTPAR);
@@ -9901,6 +9945,47 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 /*------------------------------------------------------------------
 |
+|	FillSpeciesTreeParams: Fill in species trees
+|
+------------------------------------------------------------------*/
+int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
+
+{
+
+    // TODO: BEST Build an appropriate starting tree
+
+    int			k, chn;
+	Param		*p;
+	Tree		*tree;
+
+	/* Build species trees for state 0 */
+	for (chn=fromChain; chn<toChain; chn++)
+		{
+		for (k=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->paramType == P_SPECIESTREE && p->fill == YES)
+				{
+                tree = GetTree(p, chn, 0);
+                BuildRandomRTopology(tree, seed);
+                InitClockBrlens(tree);
+				if (LabelTree (tree, localTaxonNames) == ERROR)
+					return (ERROR);
+				if (chn == toChain-1)	/* last chain to fill */
+					p->fill = NO;
+                }
+            }
+        }
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/*------------------------------------------------------------------
+|
 |	FillTreeParams: Fill in trees and branch lengths
 |
 ------------------------------------------------------------------*/
@@ -10006,6 +10091,9 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 				}
 			}
 		}
+
+    if (FillSpeciesTreeParams(seed, fromChain, toChain) == ERROR)
+        return (ERROR);
 
 	return (NO_ERROR);
 }
@@ -12372,13 +12460,16 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		}
 	else if (whichParam == P_SPECIESTREE)
 		{
-		/* Species tree inapplicable for now */
-        // TODO: BEST code needed here to deal with species tree applicability across partitions
-	
-        *isApplic1 = NO;
-        *isApplic2 = NO;
-        isSame = NO;
-		}
+		/* Species tree; check that it is used in both partitions */
+        if (strcmp(modelParams[part1].topologyPr, "Speciestree") != 0)
+            *isApplic1 = NO;
+        if (strcmp(modelParams[part2].topologyPr, "Speciestree") != 0)
+            *isApplic2 = NO;
+
+        /* Not same if inapplicable to either partition */
+		if ((*isApplic1) == NO || (*isApplic2) == NO)
+			isSame = NO;
+        }
 	else
 		{
 		MrBayesPrint ("%s   Could not find parameter in IsModelSame\n", spacer);
@@ -16021,7 +16112,9 @@ int SetModelParams (void)
 				/* we assume for now that there is only one branch length; we will correct this
 				   later in AllocateTreeParams if there are more than one set of branch lengths,
                    which is only possible for non-clock trees */
-				if (!strcmp(mp->topologyPr, "Uniform") && nClockBrlens == 0)
+				if (!strcmp(mp->topologyPr, "Speciestree"))
+					p->paramId = TOPOLOGY_SPECIESTREE;
+				else if (!strcmp(mp->topologyPr, "Uniform") && nClockBrlens == 0)
 					p->paramId = TOPOLOGY_NCL_UNIFORM_HOMO;
 				else if (!strcmp(mp->topologyPr,"Constraints") && nClockBrlens == 0)
 					p->paramId = TOPOLOGY_NCL_CONSTRAINED_HOMO;
@@ -16144,6 +16237,36 @@ int SetModelParams (void)
 				p->printParam = YES;
 			else
 				p->printParam = NO;
+			}
+		else if (j == P_SPECIESTREE)
+			{
+			/* Set up species tree **************************************************************************************/
+			p->paramType = P_SPECIESTREE;
+			p->nValues = 0;
+			p->nSubValues = 0;
+            p->min = NEG_INFINITY;  /* NA */
+            p->max = NEG_INFINITY;  /* NA */
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].speciestree = p;
+
+            p->paramTypeName = "Species tree";
+			strcpy (p->name, "Spt");
+			strcat (p->name, partString);
+					
+			/* check that the model is not parsimony for all of the relevant partitions */
+			areAllPartsParsimony = YES;
+			for (i=0; i<p->nRelParts; i++)
+				{
+				if (modelSettings[p->relParts[i]].parsModelId == NO)
+					areAllPartsParsimony = NO;
+				}
+			
+			/* find the parameter x prior type */
+            p->paramId = SPECIESTREE_UNIFORM;
+
+			/* should we print the tree? */
+            p->printParam = YES;
 			}
 		else if (j == P_SPECRATE)
 			{
@@ -17085,8 +17208,9 @@ void SetUpMoveTypes (void)
         mt->targetRate = -1.0;
 		}
 
-	/* All moves are in alphabetic order of move function name. This list should match
-	   the list of move functions exactly (see function declarations at top of this file). */
+	/* Moves are in alphabetic order after parameter name, which matches the name of a move function if
+       there is a separate move function for the parameter. See mcmc.h for declaration of move functions.
+       Since 2010-10-04, some parameters use generalized move functions and do not have their own. */
     
 	i = 0;
 
@@ -17503,6 +17627,24 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
+
+	/* Move_GeneTree */
+    // TODO: BEST set this struct to appropriate values for the gene tree move
+	mt = &moveTypes[i++];
+	mt->name = "Gene tree move";
+	mt->shortName = "Genetreemove";
+	mt->tuningName[0] = "Long name of tuning parameter";
+	mt->shortTuningName[0] = "shortname";
+	mt->applicableTo[0] = TOPOLOGY_SPECIESTREE;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_GeneTree;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 1.0;       /* Tuning parameter value */
+	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
+	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
+	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
+	mt->level = STANDARD_USER;
 
 	/* Move_Growth */
 	mt = &moveTypes[i++];
@@ -18201,6 +18343,24 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
+
+	/* Move_SpeciesTree */
+    // TODO: BEST set this struct to appropriate values for the species tree move
+	mt = &moveTypes[i++];
+	mt->name = "Species tree move";
+	mt->shortName = "Speciestreemove";
+	mt->tuningName[0] = "Long name of tuning parameter";
+	mt->shortTuningName[0] = "shortname";
+	mt->applicableTo[0] = SPECIESTREE_UNIFORM;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_SpeciesTree;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 1.0;       /* Tuning parameter value */
+	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
+	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
+	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
+	mt->level = STANDARD_USER;
 
 	/* Move_SPRClock */
 	/* not correctly balanced yet !! */
@@ -19578,6 +19738,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Clockrate      ", spacer);
 			}
+		else if (j == P_SPECIESTREE)
+			{
+			MrBayesPrint ("%s      Speciestree    ", spacer);
+			}
 		
 		for (i=0; i<numCurrentDivisions; i++)
 			{
@@ -19846,6 +20010,8 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			if (!strcmp(mp->topologyPr,"Uniform"))
 				MrBayesPrint ("%s            Prior      = All topologies equally probable a priori\n", spacer);
+			else if (!strcmp(mp->topologyPr,"Speciestree"))
+				MrBayesPrint ("%s            Prior      = Topology constrained to fold within species tree\n", spacer);
 			else if (!strcmp(mp->topologyPr,"Constraints"))
 				MrBayesPrint ("%s            Prior      = Prior on topologies obeys constraints\n", spacer);
 			else
@@ -20074,6 +20240,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->clockRateExp);
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->clockRateFix);
+			}
+		else if (j == P_SPECIESTREE)
+			{
+			MrBayesPrint ("%s            Prior      = Uniform on topologies and branch lengths\n", spacer);
 			}
 				
 		/* print partitions */
@@ -20556,7 +20726,7 @@ void TouchAllTreeParams (void)
 	for (i=0; i<numParams; i++)
 		{
 		p = &params[i];
-		if (p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS)
+		if (p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS || p->paramType == P_SPECIESTREE)
 			p->fill = YES;
 		}
 }
