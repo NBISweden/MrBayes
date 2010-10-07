@@ -43540,7 +43540,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                 (*lnL) += lnLikeI * nSitesOfPat[c];
             else
                 {
-                (*lnL) += (lnLikeI + log(1 + exp(diff))) * nSitesOfPat[c];
+                (*lnL) += (m->logLikelihoods[c] + log(1 + exp(diff))) * nSitesOfPat[c];
                 }
 
 			/* check for numerical errors */
