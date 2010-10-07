@@ -10967,7 +10967,7 @@ int InitChainCondLikes (void)
 #endif
             for (j=0; j<numLocalChains; j++)
                 m->condLikeIndex[j][i] = clIndex;
-            clIndex += indexStep;
+            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of canditioonal lokilihood for all chains.
             }
 
         /* reserve private space for parsimony-based moves if parsimony model is used */
@@ -43264,6 +43264,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
     BeagleOperation     operations;
     TreeNode            *p;
     ModelInfo           *m;
+	unsigned			chil1Step, chil2Step;
     
     m = &modelSettings[division];
     
@@ -43301,6 +43302,18 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             operations.child1TransitionMatrix = m->tiProbsIndex [chain][p->left->index ];
             operations.child2Partials         = m->condLikeIndex[chain][p->right->index];
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
+
+			/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+			if(p->left->left== NULL && p->left->right== NULL)
+				chil1Step=0;
+			else
+				chil1Step=1;
+
+			if(p->right->left== NULL && p->right->right== NULL)
+				chil2Step=0;
+			else
+				chil2Step=1;
+
             if (p->scalerNode == YES)
                 {
                 m->scalersSet[chain][p->index] = YES;
@@ -43322,9 +43335,9 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
                                      cumulativeScaleIndex);
 
                 operations.destinationPartials++;
-                operations.child1Partials++;
+                operations.child1Partials+=chil1Step;
                 operations.child1TransitionMatrix++;
-                operations.child2Partials++;
+                operations.child2Partials+=chil2Step;
                 operations.child2TransitionMatrix++;
                 if (p->scalerNode == YES)
                     {
@@ -43666,7 +43679,7 @@ int UpDateCijk (int whichPart, int whichChain)
 
 {
 
-	int			c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
+	int			c, i, j, k, t, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
 	MrBFlt		**q[100], **eigvecs, **inverseEigvecs;
 	MrBFlt		*eigenValues, *eigvalsImag, *cijk;
 	MrBFlt		*bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
@@ -43814,6 +43827,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     for (i=k=0; i<n; i++)
                         {
+							//eigenValues[i] =0.1;
                         for (j=0; j<n; j++)
                             {
                             beagleEigvecs[k] = eigvecs[i][j];
@@ -43905,14 +43919,19 @@ int UpDateCijk (int whichPart, int whichChain)
 						}
                     if (m->useBeagle == YES)
                         {
-                        for (i=0; i<n; i++)
+                        for (i=t=0; i<n; i++)
                             {
+								//eigenValues[i] =0.1;
                             for (j=0; j<n; j++)
                                 {
-                                beagleEigvecs[k] = eigvecs[i][j];
-                                beagleInverseEigvecs[k] = inverseEigvecs[i][j];
+                                beagleEigvecs[t] = eigvecs[i][j];
+                                beagleInverseEigvecs[t] = inverseEigvecs[i][j];
+								//beagleEigvecs[t] = 0.1; //eigvecs[i][j];
+								//beagleInverseEigvecs[t] = 0.1;//inverseEigvecs[i][j];
+								t++;
                                 }
-                            }                    
+                            }
+
                         beagleSetEigenDecomposition(m->beagleInstance,
                                                     m->cijkIndex[whichChain] + k,
                                                     beagleEigvecs,
