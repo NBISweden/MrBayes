@@ -523,7 +523,7 @@ int AddToPrintString (char *tempStr)
 	if (len1 + len2 + 5 > printStringSize)
 		{
 		printStringSize += len1 + len2 - printStringSize + 200;
-		printString = realloc((void *)printString, printStringSize * sizeof(char));
+		printString = (char*)realloc((void*)printString, printStringSize * sizeof(char));
 		if (!printString)
 			{
 			MrBayesPrint ("%s   Problem reallocating printString (%d)\n", spacer, printStringSize * sizeof(char));

@@ -264,10 +264,11 @@ int poisson(double x)
   	poi_value = 0;
   	t_sum = 0.0;
 
-  	while(1){
-		t_sum = t_sum - x * log(rndu());
-		if (t_sum >= 1.0) break;
-		poi_value++;
+  	while(1)
+  	{
+    		t_sum = t_sum - x * log(rndu());
+    		if (t_sum >= 1.0) break;
+    			poi_value++;
   	}
  	return(poi_value);
 }
@@ -338,117 +339,145 @@ void ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu)
           }
              
      }
-	Toclocktree(&gtree[i],gtree[i].root);
+  
+
+ 
+  Toclocktree(&gtree[i],gtree[i].root);
  
     tl = TreeL(file);
     tlg = 0.0;
     for(j=0;j<nspecies*2-1;j++) tlg += gtree[i].nodes[j].brlens;
  
-	for(j=0;j<nspecies*2-1;j++){
+  for(j=0;j<nspecies*2-1;j++)
+	{
 		gtree[i].nodes[j].brlens /= (GeneMu*tlg/tl);
-        gtree[i].nodes[j].age /= (GeneMu*tlg/tl);
+            gtree[i].nodes[j].age /= (GeneMu*tlg/tl);
 	} 
+  
 }
 
 
-void ToGenetree(Tree *file[], int *updatedtreeid, int nfile,double *GeneMu)
+void ToGenetree(Tree *file[],int nfile,double *GeneMu)
 {
   	TreeNode *p;
   	int i,j;
   	double tlg,tl;
 
-	for(i=0;i<nfile;i++){
-		if(updatedtreeid[i] == 1){
-			if(file[i]->isRooted != 1){
-				gtree[i].root = gtree[i].nTaxa*2-2;
-   				gtree[i].nodes[gtree[i].root].sons[0] = file[i]->root->left->index;
-   				gtree[i].nodes[gtree[i].root].sons[1] = file[i]->root->index;
-   				gtree[i].nodes[gtree[i].root].nson = 2;
-   				gtree[i].nodes[gtree[i].root].father = -1;
-   				gtree[i].nodes[gtree[i].root].brlens = 0.0;
+  	for(i=0;i<nfile;i++)
+  	{
+		if(file[i]->isRooted != 1)
+		{
+			gtree[i].root = gtree[i].nTaxa*2-2;
+   			gtree[i].nodes[gtree[i].root].sons[0] = file[i]->root->left->index;
+   			gtree[i].nodes[gtree[i].root].sons[1] = file[i]->root->index;
+   			gtree[i].nodes[gtree[i].root].nson = 2;
+   			gtree[i].nodes[gtree[i].root].father = -1;
+   			gtree[i].nodes[gtree[i].root].brlens = 0.0;
 
-   				for(j=0;j<file[i]->nNodes;j++){ 
+   			for(j=0;j<file[i]->nNodes;j++)
+     			{ 
        				p=file[i]->allDownPass[j];
-       				if(p != file[i]->root){
-              			if(p->anc != NULL){
-                   			if(p != file[i]->root->left){
-                      			gtree[i].nodes[p->index].brlens = p->length;
-                      			gtree[i].nodes[p->index].father = p->anc->index;
-                   			}else{
-                        			gtree[i].nodes[p->index].brlens = p->length/2;
-                        			gtree[i].nodes[p->index].father = gtree[i].root;
-                       		}
-						}else{
-							gtree[i].nodes[p->index].father = -1;
-						}
-          				if(p->left != NULL){ 
-                  			gtree[i].nodes[p->index].nson = 2;
-                 			gtree[i].nodes[p->index].sons[0] = p->left->index;
-                 			gtree[i].nodes[p->index].sons[1] = p->right->index;
-                		}else{ 
-                   			gtree[i].nodes[p->index].nson = 0;
-                   			gtree[i].nodes[p->index].sons[0] = -2;
-                   			gtree[i].nodes[p->index].sons[1] = -2;
-                		}
-      				}else{
-                   		gtree[i].nodes[p->index].nson = 0;
-                   		gtree[i].nodes[p->index].sons[0] = -2;
-                   		gtree[i].nodes[p->index].sons[1] = -2;
-                   		gtree[i].nodes[p->index].brlens = p->left->length/2;
-                   		gtree[i].nodes[p->index].father = gtree[i].root;
-      				}		
-				}
-			}else{
-				for(j=0;j<file[i]->nNodes-1;j++){
- 					p=file[i]->allDownPass[j];
-					gtree[i].nodes[p->index].brlens = p->length;
-					gtree[i].nodes[p->index].father = p->anc->index;
-
-					if(p->left != NULL){
-						gtree[i].nodes[p->index].sons[0] = p->left->index;
-						gtree[i].nodes[p->index].sons[1] = p->right->index;
-						gtree[i].nodes[p->index].nson = 2;
-					}else{
-                        gtree[i].nodes[p->index].nson = 0;
-                        gtree[i].nodes[p->index].sons[0] = -2;
-                        gtree[i].nodes[p->index].sons[1] = -2;
-                    }
-				}
-				p=file[i]->allDownPass[file[i]->nNodes-1];
-				gtree[i].root = p->left->index;
-				gtree[i].nodes[gtree[i].root].father = -1;
-			} 	
+       				if(p != file[i]->root)
+          			{
+              				if(p->anc != NULL)
+                     			{
+                       				if(p != file[i]->root->left) 
+                           			{
+                              			gtree[i].nodes[p->index].brlens = p->length;
+                              			gtree[i].nodes[p->index].father = p->anc->index;
+                           			}
+                      				else 
+						{
+                            			gtree[i].nodes[p->index].brlens = p->length/2;
+                            			gtree[i].nodes[p->index].father = gtree[i].root;
+                           			}
+                     			}	
+              				else 
+						gtree[i].nodes[p->index].father = -1;
+              				if(p->left != NULL)
+                    			{ 
+                      			gtree[i].nodes[p->index].nson = 2;
+                     			gtree[i].nodes[p->index].sons[0] = p->left->index;
+                     			gtree[i].nodes[p->index].sons[1] = p->right->index;
+                    			}
+               				else
+                    			{ 
+                       			gtree[i].nodes[p->index].nson = 0;
+                       			gtree[i].nodes[p->index].sons[0] = -2;
+                       			gtree[i].nodes[p->index].sons[1] = -2;
+                    			}
+          			}
+       				else
+          			{
+                       		gtree[i].nodes[p->index].nson = 0;
+                       		gtree[i].nodes[p->index].sons[0] = -2;
+                       		gtree[i].nodes[p->index].sons[1] = -2;
+                       		gtree[i].nodes[p->index].brlens = p->left->length/2;
+                       		gtree[i].nodes[p->index].father = gtree[i].root;
+          			}		
+         		}
+			/*for(j=0;j<file[i]->nNodes;j++)
+                                printf("node %d %d %d %d %lf\n",j,gtree[i].nodes[j].sons[0],gtree[i].nodes[j].sons[1],gtree[i].nodes[j].father,gtree[i].nodes[j].brlens);*/
 		}
+		else
+		{
+			for(j=0;j<file[i]->nNodes-1;j++)
+                	{
+ 				p=file[i]->allDownPass[j];
+                        	gtree[i].nodes[p->index].brlens = p->length;
+				gtree[i].nodes[p->index].father = p->anc->index;
+
+                        	if(p->left != NULL)
+				{
+                                gtree[i].nodes[p->index].sons[0] = p->left->index;
+				gtree[i].nodes[p->index].sons[1] = p->right->index;
+				gtree[i].nodes[p->index].nson = 2;
+				}
+				else
+                                {
+                                gtree[i].nodes[p->index].nson = 0;
+                                gtree[i].nodes[p->index].sons[0] = -2;
+                                gtree[i].nodes[p->index].sons[1] = -2;
+                                }
+			}
+			p=file[i]->allDownPass[file[i]->nNodes-1];
+			gtree[i].root = p->left->index;
+			gtree[i].nodes[gtree[i].root].father = -1;
+
+			/*for(j=0;j<file[i]->nNodes-1;j++)
+				printf("node %d %d %d %d %lf\n",j,gtree[i].nodes[j].sons[0],gtree[i].nodes[j].sons[1],gtree[i].nodes[j].father,gtree[i].nodes[j].brlens);*/
+		}  	
 	}
   	
-	for(i=0;i<nfile;i++) {
-		if(updatedtreeid[i] == 1)
-			Toclocktree(&gtree[i],gtree[i].root);
-	}
+	for(i=0;i<nfile;i++) Toclocktree(&gtree[i],gtree[i].root);
   
 	/*normalized by total branch length*/
- 	if (!strcmp(modelParams[0].brlensPr,"Clock")){
-		for(i=0;i<nfile;i++){
-			if(updatedtreeid[i] == 1){
-                for(j=0;j<gtree[i].nTaxa*2-1;j++){
-					gtree[i].nodes[j].brlens /= GeneMu[i];
-					gtree[i].nodes[j].age    /= GeneMu[i];
-                }
-			}
+ 	if (!strcmp(modelParams[0].brlensPr,"Clock"))
+      	{
+		for(i=0;i<nfile;i++)
+                {
+                                for(j=0;j<gtree[i].nTaxa*2-1;j++)
+                                {
+                                gtree[i].nodes[j].brlens /= GeneMu[i];
+                                gtree[i].nodes[j].age    /= GeneMu[i];
+                                }
 		}
-	}else{
-  		for(i=0;i<nfile;i++){
-			if(updatedtreeid[i] == 1){
+      	}
+	else
+	{
+  		for(i=0;i<nfile;i++)
+   		{
     			tl = TreeL(file[i]);
     			tlg = 0.0;
     			for(j=0;j<gtree[i].nTaxa*2-1;j++) tlg += gtree[i].nodes[j].brlens;
-    			for(j=0;j<gtree[i].nTaxa*2-1;j++){
-					gtree[i].nodes[j].brlens /= (GeneMu[i]*tlg/tl);
-					gtree[i].nodes[j].age /= (GeneMu[i]*tlg/tl);
-				}
+    			for(j=0;j<gtree[i].nTaxa*2-1;j++)
+			{
+			gtree[i].nodes[j].brlens /= (GeneMu[i]*tlg/tl);
+			gtree[i].nodes[j].age   /= (GeneMu[i]*tlg/tl);
 			}
-		}
+   		}
 	}
+
 }
 
 long int ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist) {
@@ -507,81 +536,64 @@ long int OneClockTreeNodeDist(SPTree *clocktree, Distance *dist)
 	return (indexc);
 }
 
-void OutNodes(Treenode n,int id,int lvl) 
-{
-	int i;
-
-	for(i=0; i<lvl; i++) printf("  ");
+void OutNodes(treenode n,int id,int lvl) {
+	for(int i=0; i<lvl; i++) printf("  ");
 	printf("NODE %d: Age=%f, %d sons, species %d\n",id,n.age,n.nson,spnode[id]);
 }
-void PrintSPTree(SPTree *s,int nid,int lvl) {
+void PrintSPTree(SPTree *s,int nid,int lvl=0) {
 	OutNodes(s->nodes[nid],nid,lvl);
 	if(s->nodes[nid].nson>0) PrintSPTree(s,s->nodes[nid].sons[0],lvl+1);
 	if(s->nodes[nid].nson>1) PrintSPTree(s,s->nodes[nid].sons[1],lvl+1);
 }
 
+void PrintMinMat(double **md, int nsp) {
+	for(int i=0; i<nsp; i++) { printf("\n");
+	for(int j=0; j<nsp; j++) printf("%05f ",md[0][i*nsp+j]);
+	}
+	printf("\n");
+}
+
 /*Scans across the ngene clocktrees to find mindist between all species*/
-/*void GetMinDists(SPTree *clocktree, int ngene, double **md) {
-	int trace=0;
-	int i, j, k, w, nR, nL, son0, son1;
+long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
+	bool trace=0;
+	int i, j, k, w, nR, nL, son0, son1, nsp=sptree.nSpecies;
 	long int indexc=0;
 	int taxa0[clocktree[0].nTaxa], taxa1[clocktree[0].nTaxa];
+	for(i=0; i<nsp;i++) for(j=0;j<nsp;j++) md[0][i*nsp+j]=0.0;
 
 	for(w=0; w<ngene; w++) {
-		if(trace) { printf("\nGene %d\n",w); PrintSPTree(clocktree,clocktree[0].root,0); }
-		for(j=clocktree[w].nTaxa; j<2*clocktree[w].nTaxa-1;j++) {
+		if(trace) { printf("\nGene %d\n",w); PrintSPTree(&(clocktree[w]),clocktree[0].root); }
+		for(j=clocktree[w].nTaxa; j<2*clocktree[w].nTaxa-1;j++) { //for each internode
 			son0 = clocktree[w].nodes[j].sons[0];
 			son1 = clocktree[w].nodes[j].sons[1];
 			nR = 0;
 			FindDescendantTaxa(&clocktree[w], son0, taxa0, &nR);
 			nL = 0;
 			FindDescendantTaxa(&clocktree[w], son1, taxa1, &nL);
+			if(trace) for(i=0; i<nR; i++) for(k=0; k<nL; k++) printf("%dx%d ",taxa0[i],taxa1[k]);
 			
 			for(i=0; i<nR; i++) for(k=0; k<nL; k++)
 				if(spnode[taxa0[i]] != spnode[taxa1[k]]) { //if from different species
-				   if(spnode[taxa0[i]]<spnode[taxa1[k]]) indexc=spnode[taxa0[i]]*sptree.nSpecies+spnode[taxa1[k]];
-				   else indexc=spnode[taxa1[k]]*sptree.nSpecies+spnode[taxa0[i]]; //figure out where to put this min
-				   if((w==0 && md[0][indexc]==0.0) || 2*(clocktree[w].nodes[j].age)<md[0][indexc])
+				   if(spnode[taxa0[i]]<spnode[taxa1[k]]) indexc=spnode[taxa0[i]]*nsp+spnode[taxa1[k]];
+				   else indexc=spnode[taxa1[k]]*nsp+spnode[taxa0[i]]; //figure out where to put this min
+				   if((w==0 && md[0][indexc]==0.0) || 2*(clocktree[w].nodes[j].age)<md[0][indexc]) {
 						md[0][indexc] = 2*(clocktree[w].nodes[j].age);
+						if(trace) PrintMinMat(md,nsp);
+						if(md[0][indexc]<.000001) printf("\n0 BL ERROR: Gene %d %d.%d",w,indexc/nsp,indexc%nsp);
+					}
 				}
 		}
 	}
-	if(trace) for(i=0;i<sptree.nSpecies;i++) { printf("\n");
-		for(j=i+1;j<sptree.nSpecies;j++) printf("%05f ",md[0][i*sptree.nSpecies+j]);
-	}
-}*/
-
-void GetMinDists(SPTree *clocktree, double **md) {
-	int trace=0;
-	int i, j, k, nR, nL, son0, son1;
-	long int indexc;
-	int taxa0[clocktree->nTaxa], taxa1[clocktree->nTaxa];
-
-	//PrintSPTree(clocktree,clocktree->root,0); 
-	for(i=0; i<sptree.nSpecies; i++)
-		for(j=i+1; j<sptree.nSpecies; j++){
-				md[0][i*sptree.nSpecies+j] = 0.0;
+	if(trace) for(i=0;i<nsp;i++) { printf("\n");
+		for(j=i+1;j<nsp;j++) {
+			printf("%05f ",md[0][i*nsp+j]);
+			if(md[0][i*nsp+j]<.000001) system("PAUSE");
 		}
-	for(j=clocktree->nTaxa; j<2*clocktree->nTaxa-1;j++) {
-			son0 = clocktree->nodes[j].sons[0];
-			son1 = clocktree->nodes[j].sons[1];
-			nR = 0;
-			FindDescendantTaxa(clocktree, son0, taxa0, &nR);
-			nL = 0;
-			FindDescendantTaxa(clocktree, son1, taxa1, &nL);
-
-			for(i=0; i<nR; i++) for(k=0; k<nL; k++)
-				if(spnode[taxa0[i]] != spnode[taxa1[k]]) { //if from different species
-				   if(spnode[taxa0[i]]<spnode[taxa1[k]]) indexc=spnode[taxa0[i]]*sptree.nSpecies+spnode[taxa1[k]];
-				   else indexc=spnode[taxa1[k]]*sptree.nSpecies+spnode[taxa0[i]]; //figure out where to put this min
-				   if((md[0][indexc]==0.0) || (2*(clocktree->nodes[j].age)<md[0][indexc]))
-						md[0][indexc] = 2*(clocktree->nodes[j].age);
-				}
-	}
-	if(trace) for(i=0;i<sptree.nSpecies;i++) { printf("\n");
-		for(j=i+1;j<sptree.nSpecies;j++) printf("%05f ",md[0][i*sptree.nSpecies+j]);
 	}
 }
+
+
+
 
 double TreeL(Tree *t)
 {
@@ -710,21 +722,25 @@ double ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p)
 	int 	inode_sp, jnode_sp, father;
 
 	/*find the node in the species tree that is immidiately down the gene node p*/
-	inode_sp = FindSpnodeDownGenenode(speciestree,spnode,p);
+    	inode_sp = FindSpnodeDownGenenode(speciestree,spnode,p);
 	jnode_sp = FindSpnodeDownGenenode(speciestree,spnode,p->anc);
 
-	if(inode_sp == jnode_sp){
-		length = (p->length)*(speciestree->nodes[inode_sp].mu);
-	}else{
-			father = speciestree->nodes[inode_sp].father;
-			length = (speciestree->nodes[father].age - p->nodeDepth)*(speciestree->nodes[inode_sp].mu);
-			while(father != jnode_sp){
-				inode_sp = father;
-				father = speciestree->nodes[father].father;
-				length += (speciestree->nodes[father].age - speciestree->nodes[inode_sp].age)*(speciestree->nodes[inode_sp].mu);
-			}
-			length += (p->anc->nodeDepth - speciestree->nodes[father].age)*(speciestree->nodes[father].mu);
+	if(inode_sp == jnode_sp)
+	{
+		length = (p->length) * (speciestree->nodes[inode_sp].mu);
 	}
+	else
+	{
+		father = speciestree->nodes[inode_sp].father;
+		length = (speciestree->nodes[father].age - p->nodeDepth)*(speciestree->nodes[inode_sp].mu);
+		while(father != jnode_sp)
+		{
+			inode_sp = father;
+			father = speciestree->nodes[father].father;
+			length += (speciestree->nodes[father].age - speciestree->nodes[inode_sp].age)*(speciestree->nodes[inode_sp].mu);
+		}
+		length += (p->anc->nodeDepth - speciestree->nodes[father].age)*(speciestree->nodes[father].mu);
+  	}
 	return(length);		
 }
 
@@ -735,44 +751,37 @@ int FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p)
 
 	depth = p->nodeDepth;
 	father = speciestree->nodes[spnode].father;
-	if(p->index < sptree.nTaxa) return findnode;
-	while(speciestree->nodes[father].age <= depth){
-		if(father == speciestree->root){
+
+	if(p->index < sptree.nTaxa)
+		return findnode;
+
+	while(speciestree->nodes[father].age <= depth)
+	{
+		if(father == speciestree->root)
+		{
 			findnode = father;
 			break;
-		}else{
+		}
+		else
+		{
 			findnode = father;
 			father = speciestree->nodes[father].father;
 		}
 	}
+	
 	return (findnode);
+
 }
 			
-int LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, double *lncoalPrior, double *GeneMu, SPTree *speciestree)
+int LnJointGenetreePr(Tree *t[],int num_tree, double *lncoalPrior, double *GeneMu, SPTree *speciestree)
 { 	
-    double	lnLike, lnPrior; 
- 	int	i, j,k, numchange;
-	
+    	double	lnLike, lnPrior; 
+ 	int 		k, numchange;
+
 	/*convert non-clock gene trees to clock gene trees*/
-    ToGenetree(t,updatedtreeid, num_tree,GeneMu);
+    	ToGenetree(t,num_tree,GeneMu);
 
-	//calculate minimum gene coalescence times 
-	for(k=0; k<num_tree; k++){
-		if(updatedtreeid[k] == 1)
-			GetMinDists(&gtree[k], &gtree[k].mindist);
-	}
-	
-	//find species tree constraints
-	for(k=0; k<nGene; k++){
-		for(i=0; i<sptree.nSpecies; i++)
-			for(j=i+1; j<sptree.nSpecies; j++){
-			if(k==0 || sptree.mindist[i*sptree.nSpecies+j] > gtree[k].mindist[i*sptree.nSpecies+j]){
-				sptree.mindist[i*sptree.nSpecies+j] = gtree[k].mindist[i*sptree.nSpecies+j];
-			}
-		}
-	}
-
-	//random species tree
+	/*generate a random species tree*/
 	numchange = poisson(1/poissonMean);
 	if(StartSptree(&sptree, numchange)==ERROR)
 	   {
@@ -780,8 +789,8 @@ int LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, double *lncoal
 		   return ERROR;
 
 	   }  
-	
-   //Calculate likelihood
+
+   /*Calculate likelihood*/
 	if(modelParam.thetainvgamma == 1) {
 		if(SPLogLike_invgamma(gtree,&sptree,&lnLike) == ERROR) {
      		printf("Error for Lnlike\n");
@@ -795,30 +804,39 @@ int LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, double *lncoal
       	}
 	}
 
-	//prior probability
-	if(SPLogPrior(&sptree,&lnPrior) == ERROR){
- 		printf("Error for LnPrior\n");
-       	return ERROR;
-	}    
+	/*Calculate prior probability*/
+    	if(SPLogPrior(&sptree,&lnPrior) == ERROR)
+    	{
+     		printf("Error for LnPrior\n");
+           	return ERROR;
+    	}                                
  
-	//Copy the species tree
-	FOR(k, (2*sptree.nSpecies-1)){
-     	speciestree->nodes[k].nson = sptree.nodes[k].nson;
-      	speciestree->nodes[k].sons[0] = sptree.nodes[k].sons[0];
-      	speciestree->nodes[k].sons[1] = sptree.nodes[k].sons[1];
+	/*Copy the species tree*/
+	FOR(k, (2*sptree.nSpecies-1))
+   	{
+         	speciestree->nodes[k].nson = sptree.nodes[k].nson;
+          	speciestree->nodes[k].sons[0] = sptree.nodes[k].sons[0];
+          	speciestree->nodes[k].sons[1] = sptree.nodes[k].sons[1];
 		speciestree->nodes[k].father = sptree.nodes[k].father;
-      	speciestree->nodes[k].brlens = sptree.nodes[k].brlens;
-      	speciestree->nodes[k].age = sptree.nodes[k].age;
+          	speciestree->nodes[k].brlens = sptree.nodes[k].brlens;
+          	speciestree->nodes[k].age = sptree.nodes[k].age;
 		speciestree->nodes[k].theta = sptree.nodes[k].theta;
 		speciestree->root = sptree.root;    
 		speciestree->nSpecies = sptree.nSpecies;
+		/*if(k == speciestree->root) speciestree->nodes[k].theta = 0.0;*/
    	}
-	*lncoalPrior = (lnLike + lnPrior);		
-	return NO_ERROR;		       
+
+	/*lnproposal = (-poissonMean + numchange * log(poissonMean));
+	for(k = 1; k <= numchange; k++)
+		lnproposal -= log(k); */
+
+	*lncoalPrior = (lnLike + lnPrior);
+    	return NO_ERROR;		       
 }
 
 int SPPrintTreeTitle (int curGen, FILE *fout)
 {
+
 	int				i;
 	char			name[200], spfilename[100];
 	FILE			*sumt;
@@ -1199,44 +1217,65 @@ int ReadControlfile(FILE *fdata)
    	for(i=1;i<=sptree.nSpecies-1;i++)
        		sptree.popIndex[j++] = sptree.nSpecies-1+i;
    
-	sptree.mindist = (double*)malloc(sptree.nSpecies*sptree.nSpecies*sizeof(double));
-	for(i=0; i<sptree.nSpecies*sptree.nSpecies; i++)
-		sptree.mindist[i] = 0.0;
+   	sptree.nconstraint = sptree.nSpecies*(sptree.nSpecies-1)/2;
 
-  	// allocating memory for gene tree
-       	FOR(i,nGene){
-			gtree[i].taxaIndex = (int*)malloc(sptree.nTaxa*sizeof(int));
-			if(!gtree[i].taxaIndex){
+   	sptree.constraint = (double*)malloc(sptree.nconstraint*sizeof(double));
+   	
+	if(!sptree.constraint)
+       	{
+          	printf("allocating problem for sptree.constraint\n");
+          	return(ERROR);
+       	}
+
+   	sptree.treeConstraint = (Distance*)malloc((sptree.nSpecies-1)*sizeof(Distance));
+   	
+	if(!sptree.treeConstraint)
+	{
+		printf("allocating problem for treecontraint\n");
+		return(ERROR);
+	}
+
+  	/* allocating space for gene tree */
+
+       	FOR(i,nGene)
+        {
+
+
+           gtree[i].taxaIndex = (int*)malloc(sptree.nTaxa*sizeof(int));
+           if(!gtree[i].taxaIndex)
+            {
                 printf("allocating problem for gtree.taxaIndex\n");
                 return(ERROR);
-			}
-			gtree[i].speciesIndex = (int**)calloc(sptree.nSpecies,sizeof(int*));
-			if(!gtree[i].speciesIndex){
-				printf(" allocating problem for gtree[i].speciesIndex\n");
-				return(ERROR);
-			} 
-			gtree[i].speciesIndex[0] = (int*)calloc(sptree.nSpecies*max,sizeof(int));
-			FOR(j,sptree.nSpecies)
+             }
+
+
+           gtree[i].speciesIndex = (int**)calloc(sptree.nSpecies,sizeof(int*));
+           if(!gtree[i].speciesIndex)
+	   {
+	   printf(" allocating problem for gtree[i].speciesIndex\n");
+	   return(ERROR);
+	   } 
+           gtree[i].speciesIndex[0] = (int*)calloc(sptree.nSpecies*max,sizeof(int));
+           FOR(j,sptree.nSpecies)
                 gtree[i].speciesIndex[j] = gtree[i].speciesIndex[0] + j*max;
 
 
-			gtree[i].popIndex = (int*)malloc(sptree.nPop*sizeof(int));
-			if(!gtree[i].popIndex)
-			{
-				printf(" allocating problem for gtree[i].popIndex\n");
-				return(ERROR);
-			} 
+           gtree[i].popIndex = (int*)malloc(sptree.nPop*sizeof(int));
+           if(!gtree[i].popIndex)
+	   {
+	   printf(" allocating problem for gtree[i].popIndex\n");
+	   return(ERROR);
+	   } 
         }
 
 	FOR(i,nGene)
         	FOR(j,sptree.nTaxa)
          		gtree[i].taxaIndex[j] = j;
 
-	FOR(i,nGene){
- 		gtree[i].mindist = (double*)malloc(sptree.nSpecies*sptree.nSpecies*sizeof(double));
-		FOR(j,sptree.nSpecies*sptree.nSpecies) gtree[i].mindist[j]=0.0;
-		gtree[i].nSpecies = sptree.nSpecies;
-		gtree[i].nPop = sptree.nPop;
+	FOR(i,nGene)
+        {
+ 		gtree[i].nSpecies = sptree.nSpecies;
+           	gtree[i].nPop = sptree.nPop;
 
 		/*copy species index*/
            	FOR(j,sptree.nSpecies)
@@ -1713,12 +1752,10 @@ int StartSptree(SPTree *speciestree, int numchange) { //*speciestree is the addr
    Distance onetreeConstraint[speciestree->nSpecies];
 
 	//CNKA 10/10 we don't want all cophenetic distances for all genes, just the min across genes
-
+	speciestree->mindist = (double*)malloc(speciestree->nSpecies*speciestree->nSpecies*sizeof(double));
+   GetMinDists(gtree, nGene, &speciestree->mindist);
    GetConstraints(speciestree, onetreeConstraint);
 
-  // for(i=0; i<sptree.nSpecies-1; i++)
-	//   printf("(%d . %d):%lf\n",onetreeConstraint[i].nodes[0],onetreeConstraint[i].nodes[1],onetreeConstraint[i].dist);
-   
 	/*jiggle polytomys*/
   	for(i=0;i<sptree.nSpecies-2;i++)
 		for(j=i+1;j<sptree.nSpecies-1;j++) {
@@ -1736,12 +1773,8 @@ int StartSptree(SPTree *speciestree, int numchange) { //*speciestree is the addr
   	MaximumTree(onetreeConstraint, speciestree, speciestree->nSpecies-1);
 
   	// initial theta
-  	FOR(i, 2*speciestree->nSpecies-1) 
-		speciestree->nodes[i].theta = -1.0;
-  	FOR(i, speciestree->nPop)		
-		speciestree->nodes[speciestree->popIndex[i]].theta = 0.1;
-	
-
+  	FOR(i, 2*speciestree->nSpecies-1) speciestree->nodes[i].theta = -1.0;
+  	FOR(i, speciestree->nPop) speciestree->nodes[speciestree->popIndex[i]].theta = 0.1;
   	return(NO_ERROR); 
 }
 
@@ -1873,7 +1906,7 @@ int SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nco
 
 //loads constraints on the species tree given that s->mindist is already set
 int GetConstraints(SPTree *s, Distance *constr) {
-	int trace=0;
+	bool trace=0;
 	int i,j,k=0,nsp=s->nSpecies;
 	int node[nsp], index[2];
 
@@ -1884,9 +1917,6 @@ int GetConstraints(SPTree *s, Distance *constr) {
 		minimumdistance[k].nodes[0]=i;
 		minimumdistance[k++].nodes[1]=j;
 	}
-	/*for(i=0; i<nsp*(nsp-1)/2; i++) {
-		printf("min %lf ",minimumdistance[i].dist);
-	}*/
 	quick_struct(minimumdistance, nsp*(nsp-1)/2);
 
   	constr[0].dist = minimumdistance[0].dist;
@@ -1922,7 +1952,6 @@ int GetConstraints(SPTree *s, Distance *constr) {
   	}
   	if(trace) for(i=0;i<nsp-1;i++)
 	  printf("\n%d. (%d.%d:%f)",i+1,constr[i].nodes[0],constr[i].nodes[1],constr[i].dist);
-
 	return(NO_ERROR);
 }
 
@@ -2316,98 +2345,76 @@ int GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, C
   	}
 }
 
-double SPLnP1 (double t, double l, double m, double r)
-
-{
-
+double SPLnP1 (double t, double l, double m, double r) {
 	double		p0t;
-	
 	p0t = r*(l-m) / (r*l + (l*(1.0-r)-m)*exp((m-l)*t) );
-	
 	return (log(1.0/r) + 2.0*log(p0t) + (m-l)*t);
-
 }
 
-
-
-
-
-double SPLnVt (double t, double l, double m, double r)
-
-{
-
+double SPLnVt (double t, double l, double m, double r) {
 	double		p0t;
-	
 	p0t = r*(l-m) / (r*l + (l*(1.0-r)-m)*exp((m-l)*t) );
-	
 	return (log(1.0 - (1.0/r) * p0t * exp((m-l)*t)));
-
 }
 
-int SPLnBirthDeathPriorPr (double *prob, double sR, double eR, double sF,SPTree *speciestree)
-
-{
-
-	int			i, j;	
-        double                  *nt,rootTime;
-	
-      
-
-      nt = (double*)malloc((speciestree->nSpecies-1)*sizeof(double));
-      if(!nt)
-       {
-         printf("allocating problem for nt\n");
-         return(ERROR);
-       }
-	/* rescale all of the node times on the tree */
-		rootTime = speciestree->nodes[speciestree->root].age;
-      j = 0;
-      for (i=speciestree->nSpecies; i<2*speciestree->nSpecies-1; i++)  
-        {
-           if(i != speciestree->root)
-             {
-                nt[j] = speciestree->nodes[i].age;
-                j++;
-             }
-        }
-      nt[speciestree->nSpecies-2] = rootTime; 
-
-	for (i=0; i<speciestree->nSpecies-1; i++)
-		{ 
-                  nt[i] /= rootTime;
-                  if(nt[i]>1.0) 
-			{
-				printf("nt time error\n");
-				return(ERROR);
-			}
-		}				
+int SPLnBirthDeathPriorPr (double *prob, double sR, double eR, double sF,SPTree *speciestree) {
+	int		i, j;
+	double	*nt,rootTime;
+   nt = (double*)malloc((speciestree->nSpecies-1)*sizeof(double));
+   if(!nt) {
+   	printf("allocating problem for nt\n");
+      return(ERROR);
+   }
+	// rescale all of the node times on the tree
+	rootTime = speciestree->nodes[speciestree->root].age;
+   j = 0;
+   for (i=speciestree->nSpecies; i<2*speciestree->nSpecies-1; i++)
+   	if(i != speciestree->root) nt[j++] = speciestree->nodes[i].age;
+   nt[speciestree->nSpecies-2] = rootTime;
+	for (i=0; i<speciestree->nSpecies-1; i++) {
+		nt[i] /= rootTime;
+      if(nt[i]>1.0) {
+			printf("nt time error\n");
+			return(ERROR);
+		}
+	}
 	/* I think this is correct. It looks as if Yang and Rannala (1997)
 	   have the root time constrained to be 1.0. */
 	rootTime = 1.0;
 							
 	/* calculate probabilities of tree */
-	if ((sR - eR)> 1e-8)
-		{
+	if ((sR - eR)> 1e-8) {
 		(*prob) = (speciestree->nSpecies - 2.0) * log(sR);
 		for (i=0; i<speciestree->nSpecies-2; i++)
 			(*prob) += SPLnP1 (nt[i], sR, eR, sF) - SPLnVt (rootTime, sR, eR, sF);
-		}
-	else
-		{
+	} else {
 		(*prob) = 0.0;
 		for (i=0; i<speciestree->nSpecies-2; i++)
 			(*prob) += log (1.0 + sF * eR) - (2.0 * log(1.0 + sF * eR * nt[i]));
-		}
+	}
 
 	/*plus the probability for the root*/
 	*prob -= modelParam.treeHeightExp*speciestree->nodes[speciestree->root].age;
-
 	free(nt);
-
 	return (NO_ERROR);
-		
 }
 
+int FindConstraint(int node, int *anode)
+{
+	int i;
+
+	if(node == sptree.treeConstraint[0].nodes[0])
+	{
+		*anode = sptree.treeConstraint[0].nodes[1];
+		return(0);
+	}
+	
+	for(i=0;i<sptree.nSpecies;i++)
+		if(node == sptree.treeConstraint[i].nodes[1])
+			break;
+	*anode = sptree.treeConstraint[i].nodes[0];
+	return(i);
+}
 
 MrBFlt Prob_sptree(Distance *tau,int ntime)
 {
@@ -2503,211 +2510,4 @@ int SPSaveSprintf(char **target, int *targetLen, char *fmt, ...) {
 /*   fprintf(stderr, "* savesprintf /%s/\n",*target); */
   return retval;
 }
-FILE *gfopen(char *filename, char *mode)
-{
-   FILE *fp=(FILE*)fopen(filename, mode);
-   if(fp==NULL) {
-      printf("\nerror when opening file %s\n", filename);
-      exit(-1);
-   }
-   return(fp);
-}
-
-
-void error2 (char * message)
-{ printf("\nError: %s.\n", message); exit(-1); }
-
-static time_t time_start;
-void starttime (void)
-{  
-   time_start=time(NULL);
-}
-
-
-void strcase (char *str, int direction)
-{
-/* direction = 0: to lower; 1: to upper */
-   char *p=str;
-   if(direction)  while(*p) { *p=(char)toupper(*p); p++; }
-   else           while(*p) { *p=(char)tolower(*p); p++; }
-}
-
-int matIout (FILE *fout, int x[], int n, int m)
-{
-   int i,j;
-   for (i=0,FPN(fout); i<n; i++,FPN(fout)) 
-      FOR(j,m) fprintf(fout,"%6d", x[i*m+j]);
-   return (0);
-}
-
-/*///////////////////////////////////////////*/
-/*      math function                       */
-/*/////////////////////////////////////////*/
-long factorial(int n)
-{
-   long f, i;
-   if (n>10) error2("n>10 in factorial");
-   for (i=2,f=1; i<=(long)n; i++) f*=i;
-   return (f);
-}
-
-
-static unsigned int z_rndu=137;
-static unsigned int w_rndu=123456757;
-
-void SetSeed (unsigned int seed)
-{
-   if(sizeof(int)-4) puts("oh-oh, we are in trouble.  int not 32-bit?");
-   z_rndu=170*(seed%178)+137;
-   w_rndu = seed*127773;
-}
-
-
-double rndu (void)
-{
-/* U(0,1): AS 183: Appl. Stat. 31:188-190 
-   Wichmann BA & Hill ID.  1982.  An efficient and portable
-   pseudo-random number generator.  Appl. Stat. 31:188-190
-
-   x, y, z are any numbers in the range 1-30000.  Integer operation up
-   to 30323 required.
-*/
-   static unsigned int x_rndu=11, y_rndu=23;
-   double r;
-   
-
-  
-   x_rndu = 171*(x_rndu%177) -  2*(x_rndu/177);
-   y_rndu = 172*(y_rndu%176) - 35*(y_rndu/176);
-   z_rndu = 170*(z_rndu%178) - 63*(z_rndu/178);
-/*
-   if (x_rndu<0) x_rndu+=30269;
-   if (y_rndu<0) y_rndu+=30307;
-   if (z_rndu<0) z_rndu+=30323;
-*/
-  r = x_rndu/30269.0 + y_rndu/30307.0 + z_rndu/30323.0;
-
-  return (r-(int)r);
-}
-
-double rndgamma1 (double s);
-double rndgamma2 (double s);
-
-double rndgamma (double s)
-{
-/* random standard gamma (Mean=Var=s,  with shape parameter=s, scale para=1)
-      r^(s-1)*exp(-r)
-   J. Dagpunar (1988) Principles of random variate generation,
-   Clarendon Press, Oxford
-   calling rndgamma1() if s<1 or
-           rndgamma2() if s>1 or
-           exponential if s=1
-*/
-   double r=0;
-
-   if (s<=0)      puts ("jgl gamma..");
-   else if (s<1)  r=rndgamma1 (s);
-   else if (s>1)  r=rndgamma2 (s);
-   else           r=-log(rndu());
-   return (r);
-}
-
-
-double rndgamma1 (double s)
-{
-/* random standard gamma for s<1
-   switching method
-*/
-   double r, x=0,small=1e-37,w;
-   static double a,p,uf,ss=10,d;
-
-   if (s!=ss) {
-      a=1-s;
-      p=a/(a+s*exp(-a));
-      uf=p*pow(small/a,s);
-      d=a*log(a);
-      ss=s;
-   }
-   for (;;) {
-      r=rndu();
-      if (r>p)        x=a-log((1-r)/(1-p)), w=a*log(x)-d;
-      else if (r>uf)  x=a*pow(r/p,1/s), w=x;
-      else            return (0);
-      r=rndu ();
-      if (1-r<=w && r>0)
-         if (r*(w+1)>=1 || -log(r)<=w)  continue;
-      break;
-   }
-   return (x);
-}
-
-double rndgamma2 (double s)
-{
-/* random standard gamma for s>1
-   Best's (1978) t distribution method
-*/
-   double r,d,f,g,x;
-   static double b,h,ss=0;
-   if (s!=ss) {
-      b=s-1;
-      h=sqrt(3*s-0.75);
-      ss=s;
-   }
-   for (;;) {
-      r=rndu ();
-      g=r-r*r;
-      f=(r-0.5)*h/sqrt(g);
-      x=b+f;
-      if (x <= 0) continue;
-      r=rndu();
-      d=64*r*r*g*g*g;
-      if (d*x < x-2*f*f || log(d) < 2*(b*log(x/b)-f))  break;
-   }
-   return (x);
-}
-
-int comparedouble (const void *a, const void *b)
-{  
-   double aa = *(double*)a, bb= *(double*)b;
-   return (aa==bb ? 0 : aa > bb ? 1 : -1);
-}
-
-
-
-double Lngamma (double x)
-{
-/* returns ln(gamma(x)) for x>0, accurate to 10 decimal places.
-   Stirling's formula is used for the central polynomial part of the procedure.
-
-   Pike MC & Hill ID (1966) Algorithm 291: Logarithm of the gamma function.
-   Communications of the Association for Computing Machinery, 9:684
-*/
-   double f=0, fneg=0, z, lng;
-   int nx=(int)x-1;
-
-   if((double)nx==x && nx>0 && nx<10)
-      lng=log((double)factorial(nx));
-   else {
-      if(x<=0) {
-         error2("lngamma not implemented for x<0");
-         if((int)x-x==0) { puts("lngamma undefined"); return(-1); }
-         for (fneg=1; x<0; x++) fneg/=x;
-         if(fneg<0) error2("strange!! check lngamma");
-         fneg=log(fneg);
-      }
-      if (x<7) {
-         f=1;  z=x-1;
-         while (++z<7)  f*=z;
-         x=z;   f=-log(f);
-      }
-      z = 1/(x*x);
-      lng = fneg+ f + (x-0.5)*log(x) - x + .918938533204673 
-             + (((-.000595238095238*z+.000793650793651)*z-.002777777777778)*z
-                  +.083333333333333)/x;
-   }
-   return  lng;
-}
-
-
-
 
