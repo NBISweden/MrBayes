@@ -16892,6 +16892,7 @@ int SetUpAnalysis (SafeLong *seed)
 
 {
 
+	printf("############Rundom number drown:%f\n",RandomNumber(seed));
     /* calculate number of characters and taxa */
 	numLocalChar = NumNonExcludedChar ();
 

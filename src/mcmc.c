@@ -43499,11 +43499,11 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
         {
         m->bufferIndices[i] = m->condLikeIndex[chain][p->index] + i;
         m->eigenIndices[i]  = m->cijkIndex[chain] + i;
+		m->cumulativeScaleIndices[i] = m->siteScalerIndex[chain] + i;
         if (t->isRooted == NO)
             {
             m->childBufferIndices[i]     = m->condLikeIndex  [chain][p->anc->index];
-            m->childTiProbIndices[i]     = m->tiProbsIndex   [chain][p->index]      + i;
-            m->cumulativeScaleIndices[i] = m->siteScalerIndex[chain]                + i;
+            m->childTiProbIndices[i]     = m->tiProbsIndex   [chain][p->index] + i;
             }
         }
 
