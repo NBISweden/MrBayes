@@ -7,9 +7,8 @@
 #include <float.h>
 #include <time.h>
 #include <stdarg.h>
-#include "mb.h"
 
-/*#define DEBUG*/
+/* #define DEBUG */
 #define LSPNAME  30
 #define ERROR 1
 #define NO_ERROR 0
@@ -68,6 +67,20 @@ typedef struct PARAM
 	}
 	SParam; 
 
+/* Struct for an SPMCMCMove */
+typedef struct
+	{
+	char		*name;				/* pointer to the name of the move type         */
+	char		*shortName;	        /* pointer to the short name of the move        */
+	MoveFxn		*moveFxn;			/* pointer to the move function					*/
+	SParam		*parm;				/* ptr to parameter the move applies to			*/
+	double		relProposalProb;	/* the actual proposal probability used			*/
+	double		cumProposalProb;	/* the cumulative proposal probability			*/
+	int			*nAccepted;			/* number of accepted moves						*/
+	int			*nTried;			/* number of tried moves						*/
+	double		proposalParam[2];	/* parameters for the proposal mechanism        */
+	} SPMCMCMove;
+
 typedef struct COALPOP 
 	{
    	int nin[NSPECIES], ncoal[NSPECIES], nout[NSPECIES],nodes[NSPECIES];
@@ -93,18 +106,6 @@ typedef struct
 	} SPMoveType;
 /* max number of move types */
 
-typedef struct
-	{
-	char		*name;				/* pointer to the name of the move type         */
-	char		*shortName;	        /* pointer to the short name of the move        */
-	MoveFxn		*moveFxn;			/* pointer to the move function					*/
-	SParam		*parm;				/* ptr to parameter the move applies to			*/
-	double		relProposalProb;	/* the actual proposal probability used			*/
-	double		cumProposalProb;	/* the cumulative proposal probability			*/
-	int			*nAccepted;			/* number of accepted moves						*/
-	int			*nTried;			/* number of tried moves						*/
-	double		proposalParam[2];	/* parameters for the proposal mechanism        */
-	} SPMCMCMove;
 
 /* tool functions*/
 FILE *gfopen(char *filename, char *mode);
@@ -112,3 +113,20 @@ void SetSeed (unsigned int seed);
 double Lngamma (double x);
 double rndu (void);
 
+/* functions originally declared in jointprior.h */
+int		LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, MrBFlt *lnprior, MrBFlt *GeneMu, SPTree *speciestree);
+int		ReadControlfile(FILE *fdata);
+void 	InitiateParam(void);
+int		SPPrintTreeTitle (int curGen, FILE *fout);
+int		SPLnBirthDeathPriorPr (double *prob, double sR, double eR, double sF,SPTree *speciestree);
+int		SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int showMu, int isRooted);
+/*species tree mutation rate*/
+int		populationMutation (Tree *genetree,SPTree *speciestree, MrBFlt genemu);
+
+
+/**************** Declaration of functions that are called from MrBayes **************/
+int     FillSpeciesTreeParams (SafeLong* seed, int from, int to);
+int     Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+int     Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+
+/* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */

@@ -22451,44 +22451,6 @@ int Move_GammaShape_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
-{
-
-    /* Move gene tree */
-
-    Tree			*t, *spt;
-    ModelInfo       *m;
-    ModelParams     *mp;
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
-	
-	/* get model settings */
-    m = &modelSettings[param->relParts[0]];
-
-    /* get gene tree */
-    t = GetTree (param, chain, state[chain]);
-
-    /* get species tree */
-    spt = GetTree (m->speciestree, chain, state[chain]);
-
-    // TODO: BEST Modify gene tree.
-    //printf ("Proposing new gene tree, index = %d\n", param->treeIndex);
-
-    // TODO: BEST Calculate proposal ratio
-    (*lnProposalRatio) = 0.0;
-
-    // TODO: BEST Calculate prior ratio taking species tree into account
-    (*lnPriorRatio) = 0.0;
-    
-    return (NO_ERROR);
-}
-
-
-
-
-
 int Move_Growth (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -30912,67 +30874,6 @@ int Move_Speciation_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 	return (NO_ERROR);
 	
-}
-
-
-
-
-
-int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
-{
-
-    /* Move species tree */
-
-    int             i;
-    Tree			*t, *genetree;
-    ModelInfo       *m;
-    ModelParams     *mp;
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
-	
-	/* get model settings */
-    m = &modelSettings[param->relParts[0]];
-
-    /* get species tree */
-    t = GetTree (param, chain, state[chain]);
-
-    /* cycle over gene trees */
-    for (i=0; i<param->nSubParams; i++)
-        genetree = GetTree(param->subParams[i], chain, state[chain]);
-
-    // TODO: BEST code needed here::
-    // printf ("Modifying species tree...\n");
-    
-    // Modify the species tree, given info on the gene trees
-
-    // Calculate proposal ratio
-    (*lnProposalRatio) = 0.0;
-
-#if defined (BEST_MPI_ENABLED)
-    // Broadcast the proposed species tree to all processors if MPI version
-#endif
-
-    // Calculate the ln prior probability ratio of the new to old species trees from hyperpriors
-    (*lnPriorRatio) = 0.0;
-
-#if defined (BEST_MPI_ENABLED)
-    // Let each processor calculate the ln probability ratio of its current gene tree(s)
-    //    given the new and old species tree in the MPI version
-
-    // Assemble the ln probability ratios across the processors and to lnPriorRatio
-#else
-    // Calculate the ln probability ratio of the current gene trees
-    //    given the new and old species trees
-
-#endif
-
-    // Add ln probability ratio to (*lnPriorRatio)
-    (*lnPriorRatio) += 0.0;
-    
-    return (NO_ERROR);
-
 }
 
 
@@ -43811,7 +43712,7 @@ int UpDateCijk (int whichPart, int whichChain)
 
 {
 
-	int			c, i, j, k, t, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
+	int			c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
 	MrBFlt		**q[100], **eigvecs, **inverseEigvecs;
 	MrBFlt		*eigenValues, *eigvalsImag, *cijk;
 	MrBFlt		*bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;

@@ -1,4 +1,5 @@
-#include<float.h>
+#include <stdio.h>
+#include <float.h>
 
 #ifdef USECONFIG_H
 #   include "config.h"

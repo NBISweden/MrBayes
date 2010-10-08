@@ -15,62 +15,63 @@
  *  liuliang@stat.ohio-state.edu
  */
 
-#include	"speciestree.h"
-#include   	"globals.h"
-#include	"jointprior.h"
-#include	"command.h"
+#include    "mb.h"
 
-double		NodeDistance(SPTree *tree, int inode, int jnode);
-int			ReadaTree (FILE *fTree,SPTree *tree);
-void		ReadGeneTree(FILE *fTree);
-void		SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted);
-int 		Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
-double		CalNodeAge(int node, SPTree *tree);
-double		PopNodeDistance(int inode, int jnode, SPTree *tree);
-int 		FindaPosition(int nodenumber,int root,double currentdistance,double *position,SPTree *speciestree);  
-int 		StartSptree(SPTree *speciestree, int numchange);
-void		quick_struct(Distance *item,int count);
-void		qs_struct(Distance *item,int left,int right);
-int 		GetCoaltime(SPTree *genetree,SPTree *speciestree, CoalTime *coal);
-int 		GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, CoalTime *coal_t,int *index);
-void		SPMrBayesPrint (char *format, ...);
-void 		PrintInf(FILE *fp);
-int 		SPLogLike(SPTree *genetree, SPTree *speciestree, double *lnl);
-int 		LnLikehood1Tree(SPTree *genetree, SPTree *speciestree, double *lnp);
-void 		SPPrintToScreen (int curGen, time_t endingT, time_t startingT);
-int 		SPLogPrior(SPTree *speciestree, double *lnprior);
-int 		Move_SPSpeciation (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-int 		Move_SPExtinction (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-double 	SPLnP1 (double t, double l, double m, double r);
-double 	SPLnVt (double t, double l, double m, double r);
-void 		CopyParam(int chn);
-int 		SPPickProposal (void);
-void 		SPPreparePrintFiles (void);
-void 		DelAllmissingspecies(int nummissing,int *missnode, SPTree *speciestree);
-void 		DeleteaSpecies(int inode,SPTree *speciestree);
-int 		SPAddToPrintString (char *tempStr);
-double 	Toclocktree(SPTree *t, int node);
-double 	TreeL(Tree *t);
-void 		ToGenetree(Tree *file[],int *updatedtreeid, int nfile,double *GeneMu);
-MrBFlt 	Prob_sptree(Distance *tau,int ntime);
-int 		LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
-int 		SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
-int 		poisson(double x);
-double 	ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
-int 		FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p);
-int 		FindspNodeBelow(SPTree *speciestree, int spnode, double dis_gene);
-int 		SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nconstraints, int nspecies);
-int 		MaximumTree(Distance *dist, SPTree *speciestree, int nconstraints);
-int 		ChangeConstraint(Distance *dist, int nconstraints);
-void 		ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
-void 		FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index);
-long int 	ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist);
-int 		CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints);
-long int 	OneClockTreeNodeDist(SPTree *clocktree, Distance *dist);
+#include	"best.h"
+#include	"command.h"
+#include   	"globals.h"
+
+double      NodeDistance(SPTree *tree, int inode, int jnode);
+int	        ReadaTree (FILE *fTree,SPTree *tree);
+void        ReadGeneTree(FILE *fTree);
+void        SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted);
+int         Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
+double      CalNodeAge(int node, SPTree *tree);
+double      PopNodeDistance(int inode, int jnode, SPTree *tree);
+int         FindaPosition(int nodenumber,int root,double currentdistance,double *position,SPTree *speciestree);  
+int         StartSptree(SPTree *speciestree, int numchange);
+void        quick_struct(Distance *item,int count);
+void        qs_struct(Distance *item,int left,int right);
+int         GetCoaltime(SPTree *genetree,SPTree *speciestree, CoalTime *coal);
+int         GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, CoalTime *coal_t,int *index);
+void        SPMrBayesPrint (char *format, ...);
+void        PrintInf(FILE *fp);
+int         SPLogLike(SPTree *genetree, SPTree *speciestree, double *lnl);
+int         LnLikehood1Tree(SPTree *genetree, SPTree *speciestree, double *lnp);
+void        SPPrintToScreen (int curGen, time_t endingT, time_t startingT);
+int         SPLogPrior(SPTree *speciestree, double *lnprior);
+int         Move_SPSpeciation (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
+int         Move_SPExtinction (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
+double 	    SPLnP1 (double t, double l, double m, double r);
+double 	    SPLnVt (double t, double l, double m, double r);
+void        CopyParam(int chn);
+int         SPPickProposal (void);
+void        SPPreparePrintFiles (void);
+void        DelAllmissingspecies(int nummissing,int *missnode, SPTree *speciestree);
+void        DeleteaSpecies(int inode,SPTree *speciestree);
+int         SPAddToPrintString (char *tempStr);
+double 	    Toclocktree(SPTree *t, int node);
+double 	    TreeL(Tree *t);
+void        ToGenetree(Tree *file[],int *updatedtreeid, int nfile,double *GeneMu);
+MrBFlt 	    Prob_sptree(Distance *tau,int ntime);
+int         LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
+int         SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
+int         poisson(double x);
+double 	    ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
+int         FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p);
+int         FindspNodeBelow(SPTree *speciestree, int spnode, double dis_gene);
+int         SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nconstraints, int nspecies);
+int         MaximumTree(Distance *dist, SPTree *speciestree, int nconstraints);
+int         ChangeConstraint(Distance *dist, int nconstraints);
+void        ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
+void        FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index);
+long int    ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist);
+int 	    CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints);
+long int    OneClockTreeNodeDist(SPTree *clocktree, Distance *dist);
 int 		populationMutation (Tree *genetree, SPTree *speciestree, MrBFlt genemu);
 int			SPSaveSprintf(char **target, int *targetLen, char *fmt, ...);
-int GetConstraints(SPTree *s, Distance *constr);
-void GetMinDists(SPTree *clocktree, double **md);
+int         GetConstraints(SPTree *s, Distance *constr);
+void        GetMinDists(SPTree *clocktree, double **md);
 
 McmcPara 	mcmc;
 SPTree 	sptree;
@@ -91,6 +92,159 @@ int		spMupr = 0; 		/*non-clock species tree or clock species tree*/
 int		spMupralpha = 5; 		/*for non-clock species tree model, gamma(spMupralpha,r/spMupralpha) for mutation rate ratio r*/
 int		speciestreePr = 0; 	/*birth-death prior or uniform prior*/
 double 	poissonMean = 1.0; 	/*the number of nodes changed for proposing a new species tree*/
+
+
+
+/**************************** Functions that interact directly with MrBayes ****************************/
+
+/*------------------------------------------------------------------
+|
+|	FillSpeciesTreeParams: Fill in species trees (start value)
+|
+------------------------------------------------------------------*/
+int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
+
+{
+
+    // TODO: BEST Build an appropriate starting tree
+
+    int			k, chn;
+	Param		*p;
+	Tree		*tree;
+
+	/* Build species trees for state 0 */
+	for (chn=fromChain; chn<toChain; chn++)
+		{
+		for (k=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->paramType == P_SPECIESTREE && p->fill == YES)
+				{
+                tree = GetTree(p, chn, 0);
+                BuildRandomRTopology(tree, seed);
+                InitClockBrlens(tree);
+				if (LabelTree (tree, localTaxonNames) == ERROR)
+					return (ERROR);
+				if (chn == toChain-1)	/* last chain to fill */
+					p->fill = NO;
+                }
+            }
+        }
+
+	return (NO_ERROR);
+}
+
+
+
+
+
+/*------------------------------------------------------------------
+|
+|	Move_GeneTree: Propose a new gene tree
+|
+------------------------------------------------------------------*/
+int Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+    Tree			*t, *spt;
+    ModelInfo       *m;
+    ModelParams     *mp;
+
+	/* get model params */
+	mp = &modelParams[param->relParts[0]];
+	
+	/* get model settings */
+    m = &modelSettings[param->relParts[0]];
+
+    /* get gene tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* get species tree */
+    spt = GetTree (m->speciestree, chain, state[chain]);
+
+    // TODO: BEST Modify gene tree.
+    //printf ("Proposing new gene tree, index = %d\n", param->treeIndex);
+
+    // TODO: BEST Calculate proposal ratio
+    (*lnProposalRatio) = 0.0;
+
+    // TODO: BEST Calculate prior ratio taking species tree into account
+    (*lnPriorRatio) = 0.0;
+    
+    return (NO_ERROR);
+}
+
+
+
+
+
+/*------------------------------------------------------------------
+|
+|	Move_SpeciesTree: Propose a new species tree
+|
+------------------------------------------------------------------*/
+int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+    /* Move species tree */
+
+    int             i;
+    Tree			*t, *genetree;
+    ModelInfo       *m;
+    ModelParams     *mp;
+
+	/* get model params */
+	mp = &modelParams[param->relParts[0]];
+	
+	/* get model settings */
+    m = &modelSettings[param->relParts[0]];
+
+    /* get species tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* cycle over gene trees */
+    for (i=0; i<param->nSubParams; i++)
+        genetree = GetTree(param->subParams[i], chain, state[chain]);
+
+    // TODO: BEST code needed here::
+    // printf ("Modifying species tree...\n");
+    
+    // Modify the species tree, given info on the gene trees
+
+    // Calculate proposal ratio
+    (*lnProposalRatio) = 0.0;
+
+#if defined (BEST_MPI_ENABLED)
+    // Broadcast the proposed species tree to all processors if MPI version
+#endif
+
+    // Calculate the ln prior probability ratio of the new to old species trees from hyperpriors
+    (*lnPriorRatio) = 0.0;
+
+#if defined (BEST_MPI_ENABLED)
+    // Let each processor calculate the ln probability ratio of its current gene tree(s)
+    //    given the new and old species tree in the MPI version
+
+    // Assemble the ln probability ratios across the processors and to lnPriorRatio
+#else
+    // Calculate the ln probability ratio of the current gene trees
+    //    given the new and old species trees
+
+#endif
+
+    // Add ln probability ratio to (*lnPriorRatio)
+    (*lnPriorRatio) += 0.0;
+    
+    return (NO_ERROR);
+
+}
+
+
+
+
+
+/*************************** best functions ***********************************/
 
 //recursive function that loads the IDs of the (index) tips descending from inode into taxa
 void FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index) {

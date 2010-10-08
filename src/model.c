@@ -44,6 +44,7 @@
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
+#include "best.h"
 #include "model.h"
 #include "command.h"
 #include "mcmc.h"
@@ -73,7 +74,6 @@ void      CheckCharCodingType (Matrix *m, CharInfo *ci);
 int       CheckExpandedModels (void);
 int       CompressData (void);
 int		  InitializeChainTrees (Param *p, int from, int to, int isRooted);
-int       FillSpeciesTreeParams (SafeLong* seed, int from, int to);
 int       FillBrlensSubParams (Param *param, int chn, int state);
 void      FreeCppEvents (Param *p);
 void	  FreeMove (MCMCMove *mv);
@@ -1063,7 +1063,7 @@ int ChangeNumChains (int from, int to)
 {
 	int			i, i1, j, k, nRuns, fromIndex, toIndex, run, chn, nCppEventParams, *toEvents, *fromEvents;
 	MCMCMove	**tempMoves, *fromMove, *toMove;
-	Tree		**tempTrees, *fromTree, *toTree;
+	Tree		**tempTrees;
 	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition;
     Param       *p, *cppEventParams = NULL;
 
@@ -9940,47 +9940,6 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 				}
 			}
 		}
-
-	return (NO_ERROR);
-}
-
-
-
-
-
-/*------------------------------------------------------------------
-|
-|	FillSpeciesTreeParams: Fill in species trees
-|
-------------------------------------------------------------------*/
-int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
-
-{
-
-    // TODO: BEST Build an appropriate starting tree
-
-    int			k, chn;
-	Param		*p;
-	Tree		*tree;
-
-	/* Build species trees for state 0 */
-	for (chn=fromChain; chn<toChain; chn++)
-		{
-		for (k=0; k<numParams; k++)
-			{
-			p = &params[k];
-			if (p->paramType == P_SPECIESTREE && p->fill == YES)
-				{
-                tree = GetTree(p, chn, 0);
-                BuildRandomRTopology(tree, seed);
-                InitClockBrlens(tree);
-				if (LabelTree (tree, localTaxonNames) == ERROR)
-					return (ERROR);
-				if (chn == toChain-1)	/* last chain to fill */
-					p->fill = NO;
-                }
-            }
-        }
 
 	return (NO_ERROR);
 }
