@@ -10555,6 +10555,7 @@ int InitBeagleInstance (ModelInfo *m)
 	preferedFlags = beagleFlags;
 	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
 
+    /* TODO: allocate fewer buffers when nCijkParts > 1 */
     /* create beagle instance */
     m->beagleInstance = beagleCreateInstance(numLocalTaxa,
                                              m->numCondLikes * m->nCijkParts,
@@ -43442,6 +43443,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 		bs = covBF;
 		}
 
+    /* TODO: frequencies only need to be set when they change */
     /* set base frequencies in beagle instance */
     for (i=0; i<m->nCijkParts; i++)
         beagleSetStateFrequencies(m->beagleInstance,
@@ -43454,6 +43456,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 	else
 		freq = (1.0 - pInvar) /  m->numGammaCats;
 
+    /* TODO: cat weights only need to be set when they change */
     /* set category frequencies in beagle instance */
     if (m->numOmegaCats > 1)
         {
@@ -43479,6 +43482,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 	/* find nSitesOfPat */
 	nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
 	
+    /* TODO: pattern weights only need to be set when they change */
     /* set pattern weights in beagle instance if using dynamic reweighting */
     if (chainParams.weightScheme[0] + chainParams.weightScheme[1] > ETA)
         {
@@ -43537,7 +43541,8 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 
     /* accumulate logs across sites */
 	if (hasPInvar == NO)
-		{	
+		{
+        /* TODO: site likelihoods not necessary in every case */
         beagleGetSiteLogLikelihoods(m->beagleInstance, m->logLikelihoods);
         (*lnL) = 0.0;
 		c=0;
@@ -43652,6 +43657,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
     for (k=0; k<m->numGammaCats; k++)
         m->inRates[k] = baseRate * catRate[k] * correctionFactor;
 
+    /* TODO: only need to set category rates when they change */
     /* set category rates */
 	beagleSetCategoryRates(m->beagleInstance, m->inRates);
     
@@ -43685,6 +43691,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
             }
         }
 
+    /* TODO: only need to update branches that have changed */
     /* calculate transition probabilities */
     for (i=0; i<m->nCijkParts; i++)
         {
@@ -43856,6 +43863,7 @@ int UpDateCijk (int whichPart, int whichChain)
 					}
                 if (m->useBeagle == YES)
                     {
+                    /* TODO: only allocate this space once at initialization */
                     beagleEigvecs = (double*) calloc (2*n*n, sizeof(double));
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     for (i=k=0; i<n; i++)
@@ -43937,6 +43945,7 @@ int UpDateCijk (int whichPart, int whichChain)
 #if defined (BEAGLE_ENABLED)
                 if (m->useBeagle == YES)
                     {
+                    /* TODO: only allocate this space once at initialization */
                     beagleEigvecs = (double*) calloc (2*n*n, sizeof(double));
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     }
