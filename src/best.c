@@ -15,11 +15,12 @@
  *  liuliang@stat.ohio-state.edu
  */
 
-#include    "mb.h"
-
 #include	"best.h"
 #include	"command.h"
-#include   	"globals.h"
+#include "globals.h"
+#include "mb.h"
+#include "model.h"
+#include "tree.h"
 
 double      NodeDistance(SPTree *tree, int inode, int jnode);
 int	        ReadaTree (FILE *fTree,SPTree *tree);

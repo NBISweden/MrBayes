@@ -7,6 +7,7 @@
 #include <float.h>
 #include <time.h>
 #include <stdarg.h>
+#include "mb.h"
 
 /* #define DEBUG */
 #define LSPNAME  30
@@ -67,6 +68,7 @@ typedef struct PARAM
 	}
 	SParam; 
 
+#if 0
 /* Struct for an SPMCMCMove */
 typedef struct
 	{
@@ -80,6 +82,7 @@ typedef struct
 	int			*nTried;			/* number of tried moves						*/
 	double		proposalParam[2];	/* parameters for the proposal mechanism        */
 	} SPMCMCMove;
+#endif
 
 typedef struct COALPOP 
 	{
@@ -112,6 +115,39 @@ FILE *gfopen(char *filename, char *mode);
 void SetSeed (unsigned int seed);
 double Lngamma (double x);
 double rndu (void);
+
+/*prior for joint gene tree*/
+typedef struct {
+	int nodes[2];
+	double dist;
+} Distance;
+
+typedef struct treenode {
+	int father, nson, sons[2];
+	double brlens, age, theta,mu;
+} Treenode;
+
+typedef struct SPTree {
+	int root;
+	int haploid;
+	int *hT;
+	int nTaxa;
+	int nmissTaxa;
+	int nSpecies;
+	int nmissSpecies;
+	int nPop;
+	int nmissPop;
+	int nconstraint;
+	int *taxaIndex;
+	int **speciesIndex;
+	int *popIndex;
+	char **taxaName;
+	double *constraint;
+	double *mindist;
+	Distance *treeConstraint;
+	double muratio;
+   Treenode *nodes;
+} SPTree; /*all for the best.c*/
 
 /* functions originally declared in jointprior.h */
 int		LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, MrBFlt *lnprior, MrBFlt *GeneMu, SPTree *speciestree);

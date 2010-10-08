@@ -1,3 +1,6 @@
+#ifndef __MB_H__
+#define __MB_H__
+
 #include <stdio.h>
 #include <float.h>
 
@@ -1328,3 +1331,5 @@ typedef struct
 	int		allavailable;
 	}
 	ShowmovesParams;
+
+#endif
