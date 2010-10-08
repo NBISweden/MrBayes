@@ -1072,47 +1072,6 @@ int ChangeNumChains (int from, int to)
 	nRuns = chainParams.numRuns;
 	numGlobalChains = chainParams.numRuns * chainParams.numChains;
 
-	/* do the trees */
-	/* allocate new space */
-	free (subParamPtrs);
-	subParamPtrs = NULL;
-	tempTrees = mcmcTree;
-	mcmcTree = NULL;
-	memAllocs[ALLOC_MCMCTREES] = NO;
-	if (AllocateTreeParams () == ERROR)
-		{
-		MrBayesPrint ("%s   Problem reallocating mcmc trees\n", spacer);
-		return (ERROR);
-		}
-
-	/* fill new tree parameters */
-	TouchAllTreeParams ();
-	FillTreeParams (&globalSeed, 0, numGlobalChains);
-	
-	/* overwrite with old values when available */
-	for (run=0; run<nRuns; run++)
-		{
-		for (chn=0; chn<from; chn++)
-			{
-			if (chn < to)
-				{
-				fromIndex = (run*from + chn)*2*numTrees;
-				toIndex = (run*to + chn)*2*numTrees;
-				for (i=0; i<numTrees; i++)
-					{
-					fromTree = tempTrees[fromIndex+i];
-					toTree = mcmcTree[toIndex+i];
-					CopyToTreeFromTree (toTree, fromTree);
-					}
-				}
-			}
-		}
-	
-	/* and free up space */
-	for (i=0; i<from*nRuns*2*numTrees; i++)
-		FreeTree (tempTrees[i]);
-	free (tempTrees);
-	
 	/* Do the normal parameters */	
 	/* first save old values */
 	tempVals = paramValues;
@@ -1204,6 +1163,52 @@ int ChangeNumChains (int from, int to)
     if (nCppEventParams > 0)
         free (cppEventParams);
 
+	/* then do the trees (they cannot be done before the parameters because otherwise FillTreeParams will overwrite
+       relaxed clock parameters that need to be saved) */
+	/* reallocate trees */
+	tempTrees = mcmcTree;
+	mcmcTree = (Tree **) calloc (2*numGlobalChains*numTrees, sizeof(Tree*));
+
+    /* move the old trees over */
+    for (run=0; run<nRuns; run++)
+        {
+        for (chn=0; chn<from; chn++)
+            {
+            if (chn >= to)
+                continue;
+
+            fromIndex = (2*(run*from + chn) + 0) * numTrees;
+            toIndex   = (2*(run*to   + chn) + 0) * numTrees;
+            mcmcTree[toIndex]    = tempTrees[fromIndex];
+            tempTrees[fromIndex] = NULL;
+
+            fromIndex = (2*(run*from + chn) + 1) * numTrees;
+            toIndex   = (2*(run*to   + chn) + 1) * numTrees;
+            mcmcTree[toIndex]    = tempTrees[fromIndex];
+            tempTrees[fromIndex] = NULL;
+            }
+        }
+
+    /* remove any remaining old trees */
+    for (i=0; i<2*nRuns*from*numTrees; i++)
+        if (tempTrees[i] != NULL)
+            free (tempTrees[i]);
+    free (tempTrees);
+    
+	/* fill new tree parameters */
+	if (to > from)
+        {
+	    for (run=0; run<nRuns; run++)
+            {
+            for (chn=from; chn<to; chn++)
+                {
+                toIndex = run*to + chn;
+                TouchAllTreeParams ();
+                FillTreeParams (&globalSeed, toIndex, toIndex+1);
+                }
+            }
+        }
+		
 	/* Do the moves */
 	/* first allocate space and set up default moves */
 	tempMoves = moves;
