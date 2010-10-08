@@ -10811,7 +10811,7 @@ int InitChainCondLikes (void)
             useSSE = YES;
 #endif
         if (useBeagle == NO && useSSE == NO)
-            MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d\n", spacer, d+1);
+            MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
         else if (useBeagle == NO && useSSE == YES)
             MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d\n", spacer, d+1);
 
