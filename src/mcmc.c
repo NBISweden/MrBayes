@@ -10552,9 +10552,8 @@ int InitBeagleInstance (ModelInfo *m)
         }
 
 
-	preferedFlags = 0L;
-    requiredFlags = beagleFlags;
-	requiredFlags |= BEAGLE_FLAG_SCALERS_LOG;
+	preferedFlags = beagleFlags;
+	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
 
     /* create beagle instance */
     m->beagleInstance = beagleCreateInstance(numLocalTaxa,
