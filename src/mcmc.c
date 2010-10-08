@@ -43719,7 +43719,7 @@ int UpDateCijk (int whichPart, int whichChain)
 
 {
 
-	int			c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
+	int			c, i, j, k, u, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
 	MrBFlt		**q[100], **eigvecs, **inverseEigvecs;
 	MrBFlt		*eigenValues, *eigvalsImag, *cijk;
 	MrBFlt		*bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
@@ -43961,16 +43961,13 @@ int UpDateCijk (int whichPart, int whichChain)
 						}
                     if (m->useBeagle == YES)
                         {
-                        for (i=t=0; i<n; i++)
+                        for (i=u=0; i<n; i++)
                             {
-								//eigenValues[i] =0.1;
                             for (j=0; j<n; j++)
                                 {
-                                beagleEigvecs[t] = eigvecs[i][j];
-                                beagleInverseEigvecs[t] = inverseEigvecs[i][j];
-								//beagleEigvecs[t] = 0.1; //eigvecs[i][j];
-								//beagleInverseEigvecs[t] = 0.1;//inverseEigvecs[i][j];
-								t++;
+                                beagleEigvecs[u] = eigvecs[i][j];
+                                beagleInverseEigvecs[u] = inverseEigvecs[i][j];
+								u++;
                                 }
                             }
 
