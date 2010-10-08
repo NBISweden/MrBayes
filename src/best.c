@@ -606,7 +606,7 @@ long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
 				   if((w==0 && md[0][indexc]==0.0) || 2*(clocktree[w].nodes[j].age)<md[0][indexc]) {
 						md[0][indexc] = 2*(clocktree[w].nodes[j].age);
 						if(trace) PrintMinMat(md,nsp);
-						if(md[0][indexc]<.000001) printf("\n0 BL ERROR: Gene %d %d.%d",w,indexc/nsp,indexc%nsp);
+						if(md[0][indexc]<.000001) printf("\n0 BL ERROR: Gene %d %ld.%ld",w,indexc/nsp,indexc%nsp);
 					}
 				}
 		}

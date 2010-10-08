@@ -28,7 +28,7 @@ fi
 AC_ARG_WITH([beagle],
    [AS_HELP_STRING([--with-beagle[[=PATH]]],[enable beagle and optionally set prefix where beagle is installed if not /usr/local @<:@default=no@:>@])],
    [],
-   [with_beagle=no])
+   [with_beagle=yes])
 
 AC_ARG_WITH([cuda],
    [AS_HELP_STRING([--with-cuda=PATH],[optionally set prefix where cuda is installed (only applies for beagle) @<:@default=/usr/local/cuda@:>@])],
