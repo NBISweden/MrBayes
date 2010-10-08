@@ -17,10 +17,12 @@
 
 #include	"best.h"
 #include	"command.h"
-#include "globals.h"
-#include "mb.h"
-#include "model.h"
-#include "tree.h"
+#include    "globals.h"
+#include    "mb.h"
+#include    "mbmath.h"
+#include    "model.h"
+#include    "tree.h"
+#include    "utils.h"
 
 double      NodeDistance(SPTree *tree, int inode, int jnode);
 int	        ReadaTree (FILE *fTree,SPTree *tree);
@@ -50,10 +52,9 @@ int         SPPickProposal (void);
 void        SPPreparePrintFiles (void);
 void        DelAllmissingspecies(int nummissing,int *missnode, SPTree *speciestree);
 void        DeleteaSpecies(int inode,SPTree *speciestree);
-int         SPAddToPrintString (char *tempStr);
 double 	    Toclocktree(SPTree *t, int node);
+void        ToGenetree(Tree *file[], int *updatedtreeid, int nfile, double *GeneMu);
 double 	    TreeL(Tree *t);
-void        ToGenetree(Tree *file[],int *updatedtreeid, int nfile,double *GeneMu);
 MrBFlt 	    Prob_sptree(Distance *tau,int ntime);
 int         LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
 int         SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
@@ -72,20 +73,20 @@ long int    OneClockTreeNodeDist(SPTree *clocktree, Distance *dist);
 int 		populationMutation (Tree *genetree, SPTree *speciestree, MrBFlt genemu);
 int			SPSaveSprintf(char **target, int *targetLen, char *fmt, ...);
 int         GetConstraints(SPTree *s, Distance *constr);
-void        GetMinDists(SPTree *clocktree, double **md);
+long int    GetMinDists(SPTree *clocktree, int ngene, double **md);
 
 McmcPara 	mcmc;
-SPTree 	sptree;
-SPTree	*gtree;
+SPTree 	    sptree;
+SPTree	    *gtree;
 ModelParam	modelParam;
-int		nGene;
+int		    nGene;
 char		spacer[10]="  ";
 FILE		*fptree;     		/* Output tree file */
 FILE		*fpparm;     		/* Output parameter file */          
-int		*spnode;       /*Vector of taxaIDs for each tip */
+int		    *spnode;       /*Vector of taxaIDs for each tip */
 long int 	seed;
-int		curGeneration=0;  /*should be defined in mcmc.c and used to print species tree*/
-double	speciationR, extinctionR, sampleF; 
+int		    curGeneration=0;  /*should be defined in mcmc.c and used to print species tree*/
+double	    speciationR, extinctionR, sampleF; 
 
 /*global variables*/
 int		jointGenePr=0 ; 		/*best or mrbayes*/
@@ -267,7 +268,7 @@ int poisson(double x)
 
   	while(1)
   	{
-    		t_sum = t_sum - x * log(rndu());
+    		t_sum = t_sum - x * log(RandomNumber(&globalSeed));
     		if (t_sum >= 1.0) break;
     			poi_value++;
   	}
@@ -357,8 +358,7 @@ void ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu)
   
 }
 
-
-void ToGenetree(Tree *file[],int nfile,double *GeneMu)
+void        ToGenetree(Tree *file[],int *updatedtreeid, int nfile,double *GeneMu)
 {
   	TreeNode *p;
   	int i,j;
@@ -484,7 +484,10 @@ void ToGenetree(Tree *file[],int nfile,double *GeneMu)
 long int ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist) {
 	int i, j, k, w, indexa, indexb, son0, son1;
 	long int indexc=0;
-	int taxa0[clocktree[0].nTaxa], taxa1[clocktree[0].nTaxa];
+	int *taxa0, *taxa1;
+
+    taxa0 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
+    taxa1 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
 
 	for(w=0; w<ngene; w++) {
 		for(j=clocktree[w].nTaxa; j<2*clocktree[w].nTaxa-1;j++) {
@@ -504,7 +507,11 @@ long int ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist) {
 				}
 		}
 	}
-	return (indexc);
+
+    free (taxa0);
+    free (taxa1);
+
+    return (indexc);
 }
 
 long int OneClockTreeNodeDist(SPTree *clocktree, Distance *dist)
@@ -514,56 +521,75 @@ long int OneClockTreeNodeDist(SPTree *clocktree, Distance *dist)
 	int taxa0[NSPECIES], taxa1[NSPECIES]; 
 
 	for(j=clocktree->nTaxa; j<2*clocktree->nTaxa-1;j++)
-		{	
-			son0 = clocktree->nodes[j].sons[0];
-			son1 = clocktree->nodes[j].sons[1];
-			indexa = 0; 
-			FindDescendantTaxa(clocktree, son0, taxa0, &indexa);
-			indexb = 0;
-			FindDescendantTaxa(clocktree, son1, taxa1, &indexb);
-		
-			for(i=0; i<indexa; i++)
-				for(k=0; k<indexb; k++)
+	{	
+		son0 = clocktree->nodes[j].sons[0];
+		son1 = clocktree->nodes[j].sons[1];
+		indexa = 0; 
+		FindDescendantTaxa(clocktree, son0, taxa0, &indexa);
+		indexb = 0;
+		FindDescendantTaxa(clocktree, son1, taxa1, &indexb);
+	
+		for(i=0; i<indexa; i++)
+			for(k=0; k<indexb; k++)
+			{
+				if(spnode[taxa0[i]] != spnode[taxa1[k]])
 				{
-					if(spnode[taxa0[i]] != spnode[taxa1[k]])
-					{
-						dist[indexc].nodes[0] = spnode[taxa0[i]];
-						dist[indexc].nodes[1] = spnode[taxa1[k]];
-						dist[indexc].dist = 2*(clocktree->nodes[j].age);
-						indexc++; 
-					}
+					dist[indexc].nodes[0] = spnode[taxa0[i]];
+					dist[indexc].nodes[1] = spnode[taxa1[k]];
+					dist[indexc].dist = 2*(clocktree->nodes[j].age);
+					indexc++; 
 				}
-		}
+			}
+    }
 	return (indexc);
 }
 
-void OutNodes(treenode n,int id,int lvl) {
-	for(int i=0; i<lvl; i++) printf("  ");
-	printf("NODE %d: Age=%f, %d sons, species %d\n",id,n.age,n.nson,spnode[id]);
+#if 0
+void OutNodes(treenode n, int id, int lvl) {
+	int i;
+    for(i=0; i<lvl; i++)
+        printf("  ");
+	printf("NODE %d: Age=%f, %d sons, species %d\n", id, n.age, n.nson, spnode[id]);
 }
-void PrintSPTree(SPTree *s,int nid,int lvl=0) {
+
+void PrintSPTree(SPTree *s,int nid,int lvl) {
 	OutNodes(s->nodes[nid],nid,lvl);
 	if(s->nodes[nid].nson>0) PrintSPTree(s,s->nodes[nid].sons[0],lvl+1);
 	if(s->nodes[nid].nson>1) PrintSPTree(s,s->nodes[nid].sons[1],lvl+1);
 }
+#endif
 
 void PrintMinMat(double **md, int nsp) {
-	for(int i=0; i<nsp; i++) { printf("\n");
-	for(int j=0; j<nsp; j++) printf("%05f ",md[0][i*nsp+j]);
+	int i, j;
+
+    for(i=0; i<nsp; i++)
+    {
+        printf("\n");
+        for(j=0; j<nsp; j++)
+            printf("%05f ",md[0][i*nsp+j]);
 	}
 	printf("\n");
 }
 
 /*Scans across the ngene clocktrees to find mindist between all species*/
 long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
-	bool trace=0;
+	int trace=0;
 	int i, j, k, w, nR, nL, son0, son1, nsp=sptree.nSpecies;
 	long int indexc=0;
-	int taxa0[clocktree[0].nTaxa], taxa1[clocktree[0].nTaxa];
-	for(i=0; i<nsp;i++) for(j=0;j<nsp;j++) md[0][i*nsp+j]=0.0;
+	int *taxa0, *taxa1;
+
+    taxa0 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
+    taxa1 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
+
+    
+    for(i=0; i<nsp;i++) for(j=0;j<nsp;j++) md[0][i*nsp+j]=0.0;
 
 	for(w=0; w<ngene; w++) {
-		if(trace) { printf("\nGene %d\n",w); PrintSPTree(&(clocktree[w]),clocktree[0].root); }
+		if(trace)
+        {
+            printf("\nGene %d\n",w);
+            // PrintSPTree(&(clocktree[w]),clocktree[0].root);
+        }
 		for(j=clocktree[w].nTaxa; j<2*clocktree[w].nTaxa-1;j++) { //for each internode
 			son0 = clocktree[w].nodes[j].sons[0];
 			son1 = clocktree[w].nodes[j].sons[1];
@@ -591,6 +617,11 @@ long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
 			if(md[0][i*nsp+j]<.000001) system("PAUSE");
 		}
 	}
+
+    free (taxa0);
+    free (taxa1);
+
+    return (NO_ERROR);
 }
 
 
@@ -774,13 +805,13 @@ int FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p)
 
 }
 			
-int LnJointGenetreePr(Tree *t[],int num_tree, double *lncoalPrior, double *GeneMu, SPTree *speciestree)
+int LnJointGenetreePr(Tree *t[], int *updatedtreeid, int num_tree, double *lncoalPrior, double *GeneMu, SPTree *speciestree)
 { 	
     	double	lnLike, lnPrior; 
  	int 		k, numchange;
 
 	/*convert non-clock gene trees to clock gene trees*/
-    	ToGenetree(t,num_tree,GeneMu);
+    	ToGenetree(t,updatedtreeid, num_tree,GeneMu);
 
 	/*generate a random species tree*/
 	numchange = poisson(1/poissonMean);
@@ -839,7 +870,7 @@ int SPPrintTreeTitle (int curGen, FILE *fout)
 {
 
 	int				i;
-	char			name[200], spfilename[100];
+	char			*name, spfilename[100];
 	FILE			*sumt;
 
 	/* print the translate block information and the top of the file */
@@ -852,10 +883,10 @@ int SPPrintTreeTitle (int curGen, FILE *fout)
 		fprintf (fout, "   translate\n");
 		for (i=0; i<sptree.nSpecies-1; i++)
 			{
-			GetNameFromString (taxaSetNames, name, i+1);			
+			name = taxaSetNames[i];
 			fprintf (fout, "      %2d %s,\n", i+1, name);
 			}
-		GetNameFromString (taxaSetNames, name, i+1);
+		name = taxaSetNames[i];
 		fprintf (fout, "      %2d %s;\n", i+1, name);
 		}
 
@@ -876,7 +907,7 @@ int SPPrintTreeTitle (int curGen, FILE *fout)
 		fprintf (sumt, "FORMAT DATATYPE = dna gap=-  MISSING=?  interleave=yes;\nMatrix\n");
 		for (i=0; i<sptree.nSpecies; i++)
 			{
-			GetNameFromString (taxaSetNames, name, i+1);			
+			name = taxaSetNames[i];
 			fprintf (sumt, " %s A\n", name);
 			}
 		fprintf (sumt, "\n;\nEND;\n");
@@ -890,6 +921,7 @@ int SPPrintTreeTitle (int curGen, FILE *fout)
 }
 
 
+#if 0
 int SPAddToPrintString (char *tempStr)
 {
 	size_t			len1, len2;
@@ -915,6 +947,7 @@ int SPAddToPrintString (char *tempStr)
 	errorExit:
 		return (ERROR);
 }
+#endif
 
 void SPPreparePrintFiles (void)
 {
@@ -925,9 +958,9 @@ void SPPreparePrintFiles (void)
 
 	/* Prepare the .p, .t */
 	sprintf (fileName, "%s.p", localFileName);
-	fpparm =(FILE*)gfopen(fileName,"w");
+	fpparm =(FILE*)OpenTextFileW(fileName);
        sprintf (fileName, "%s.t", localFileName);
-	fptree =(FILE*)gfopen(fileName,"w");
+	fptree =(FILE*)OpenTextFileW(fileName);
 }
 
 void InitiateParam(void)
@@ -1069,16 +1102,20 @@ int ReadControlfile(FILE *fdata)
 
 	 
   	/* parameters for MCMC */
-	seed=swapSeed;
+    /*
+    seed=swapSeed;
    	SetSeed(seed);
+    */
 
    	/* parameters for prior */
-	if(!strcmp(modelParams[0].thetaPr,"Gamma"))
+    /*
+	if(!strcmp(modelParams[0].popSizePr,"Gamma"))
   		modelParam.thetainvgamma = 0;
 	else
 		modelParam.thetainvgamma = 1;
 	modelParam.thetaprior[0] = modelParams[0].thetaGamma[0];
 	modelParam.thetaprior[1] = modelParams[0].thetaGamma[1];	
+    */
 
 	/* get information for gene trees  */
   	nGene = numCurrentDivisions;  
@@ -1108,7 +1145,7 @@ int ReadControlfile(FILE *fdata)
 
   	FOR(i,nGene)
       		FOR(j,gtree[i].nTaxa) 
-			GetNameFromString (taxaNames, gtree[i].taxaName[j], j+1);
+			strcpy(gtree[i].taxaName[j], taxaNames[j]);
 
   	FOR(i,nGene) 
 	{
@@ -1136,7 +1173,7 @@ int ReadControlfile(FILE *fdata)
 	   species[i] = 0;
 	   FOR(k,numTaxa)
 		{
-		if(taxaInfo[k].taxaSet[i] == 1)
+		if (IsBitSet(k, taxaSet[i]) == YES)
 			species[i]++;
 		}
 	  
@@ -1185,7 +1222,7 @@ int ReadControlfile(FILE *fdata)
 		m = 1;
 		FOR(k,numTaxa)
 		{
-			if(taxaInfo[k].taxaSet[i] == 1)
+			if(IsBitSet(k, taxaSet[i]) == YES)
 			{
 				spnode[k] = i;
 				sptree.speciesIndex[i][m] = k;
@@ -1198,7 +1235,7 @@ int ReadControlfile(FILE *fdata)
 		printf("\n");*/
    	}  
    	FOR(i,sptree.nTaxa)   
-		GetNameFromString (taxaNames, sptree.taxaName[i], i+1);		
+		strcpy(sptree.taxaName[i], taxaNames[i]);		
 
 	sptree.nPop = 0;
    	FOR(i,sptree.nSpecies)
@@ -1475,10 +1512,11 @@ void ReadGeneTree(FILE *fTree)
   
 int SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int showMu, int isRooted)
 {
+#if 0
     char			*tempStr;
 	int             tempStrSize, i;
 	FILE			*sumt;
-	char			name[200], spfilename[100];
+	char			*name, spfilename[100];
 
 	/* allocate the print string */
 	printStringSize = 200;
@@ -1512,11 +1550,11 @@ int SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int sho
 		if (SPAddToPrintString (tempStr) == ERROR) return(ERROR);
 		for (i=0; i<sptree.nSpecies-1; i++)
 			{
-			GetNameFromString (taxaSetNames, name, i+1);			
+			name = taxaSetNames[i];
 			sprintf (tempStr, "      %2d %s,\n", i+1, name);
 			if (SPAddToPrintString (tempStr) == ERROR) return(ERROR);
 			}
-		GetNameFromString (taxaSetNames, name, i+1);
+		name = taxaSetNames[i];
 		sprintf (tempStr, "      %2d %s;\n", i+1, name);
         if (SPAddToPrintString (tempStr) == ERROR) return(ERROR);
 
@@ -1539,7 +1577,7 @@ int SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int sho
 		fprintf (sumt, "FORMAT DATATYPE = dna gap=-  MISSING=?  interleave=yes;\nMatrix\n");
 		for (i=0; i<sptree.nSpecies; i++)
 			{
-			GetNameFromString (taxaSetNames, name, i+1);			
+			name = taxaSetNames[i];
 			fprintf (sumt, " %s A\n", name);
 			}
 		fprintf (sumt, "\n;\nEND;\n");
@@ -1567,13 +1605,16 @@ int SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int sho
 	SPAddToPrintString (tempStr);
 	free (tempStr); 
 
+#endif
+
 	return (NO_ERROR);					
 }
 
 void SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted)
 
 {
-		char			*tempStr;
+#if 0
+        char			*tempStr;
 		int                      tempStrSize = 200;
 
 		tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
@@ -1650,7 +1691,7 @@ void SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, 
 				}
 			}
 	free (tempStr);
-		
+#endif
 }
 
 
@@ -1750,7 +1791,9 @@ double CalNodeAge(int node, SPTree *tree)
        
 int StartSptree(SPTree *speciestree, int numchange) { //*speciestree is the address of the global sptree
    int i, j;
-   Distance onetreeConstraint[speciestree->nSpecies];
+   Distance* onetreeConstraint;
+   
+   onetreeConstraint = (Distance *) calloc (speciestree->nSpecies, sizeof(Distance));
 
 	//CNKA 10/10 we don't want all cophenetic distances for all genes, just the min across genes
 	speciestree->mindist = (double*)malloc(speciestree->nSpecies*speciestree->nSpecies*sizeof(double));
@@ -1776,7 +1819,10 @@ int StartSptree(SPTree *speciestree, int numchange) { //*speciestree is the addr
   	// initial theta
   	FOR(i, 2*speciestree->nSpecies-1) speciestree->nodes[i].theta = -1.0;
   	FOR(i, speciestree->nPop) speciestree->nodes[speciestree->popIndex[i]].theta = 0.1;
-  	return(NO_ERROR); 
+
+    free (onetreeConstraint);
+
+    return(NO_ERROR); 
 }
 
 int CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints) {
@@ -1809,8 +1855,8 @@ int ChangeConstraint(Distance *dist, int nconstraints)
 	int i;
 	double window=0.0001;
 
-	i = (int)(rndu()*nconstraints);
-	dist[i].dist -= rndu()*window;
+	i = (int)(RandomNumber(&globalSeed)*nconstraints);
+	dist[i].dist -= RandomNumber(&globalSeed)*window;
 	
   	if(dist[i].dist < 1e-10) 
      	{ 
@@ -1907,12 +1953,15 @@ int SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nco
 
 //loads constraints on the species tree given that s->mindist is already set
 int GetConstraints(SPTree *s, Distance *constr) {
-	bool trace=0;
+	int trace=0;
 	int i,j,k=0,nsp=s->nSpecies;
-	int node[nsp], index[2];
+	int *node, index[2];
+    Distance *minimumdistance;
+
+    node = (int *) calloc (nsp, sizeof(int));
+    minimumdistance = (Distance *) calloc (nsp*(nsp-1)/2, sizeof(Distance));
 
 	//convert s->mindist to a distance structure
-	Distance minimumdistance[nsp*(nsp-1)/2];
 	for(i=0; i<nsp; i++) for(j=i+1;j<nsp;j++) {
 		minimumdistance[k].dist=s->mindist[i*nsp+j];
 		minimumdistance[k].nodes[0]=i;
@@ -1953,7 +2002,10 @@ int GetConstraints(SPTree *s, Distance *constr) {
   	}
   	if(trace) for(i=0;i<nsp-1;i++)
 	  printf("\n%d. (%d.%d:%f)",i+1,constr[i].nodes[0],constr[i].nodes[1],constr[i].dist);
-	return(NO_ERROR);
+
+    free (minimumdistance);
+    free (node);
+    return(NO_ERROR);
 }
 
 
@@ -2450,7 +2502,7 @@ MrBFlt Prob_sptree(Distance *tau,int ntime)
     
      /*generate a random roottime */
      roottime = tau[ntime-1].dist*0.5;
-     randomroottime = (1-exp(-roottime))*rndu();
+     randomroottime = (1-exp(-roottime))*RandomNumber(&globalSeed);
      
      /* given the randomroottime, calculate the density function */
      for(j=0;j<ntime-1;j++)
@@ -2483,6 +2535,7 @@ MrBFlt Prob_sptree(Distance *tau,int ntime)
 }
 
 #define TARGETLENDELTA (100)
+
 
 int SPSaveSprintf(char **target, int *targetLen, char *fmt, ...) {
   va_list    argp;

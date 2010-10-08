@@ -128,6 +128,7 @@ extern int				*sympiIndex;							/* sympi state freq index for multistate chars 
 extern TaxaInformation	*taxaInfo;								/* holds critical information about taxa         */
 extern char				**taxaNames;                            /* holds name of taxa                            */
 extern char				**taxaSetNames;                         /* holds names of taxa sets                      */
+extern SafeLong         **taxaSet;                              /* holds information about defined taxasets      */
 extern int              *tempActiveConstraints;                 /* info on the active constraints in prset       */
 extern int              *tempLinkUnlink[NUM_LINKED];            /* for changing parameter linkage                */
 extern int              *tempLinkUnlinkVec;                     /* for changing parameter linkage                */

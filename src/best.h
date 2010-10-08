@@ -111,10 +111,7 @@ typedef struct
 
 
 /* tool functions*/
-FILE *gfopen(char *filename, char *mode);
-void SetSeed (unsigned int seed);
 double Lngamma (double x);
-double rndu (void);
 
 /*prior for joint gene tree*/
 typedef struct {
