@@ -35,6 +35,7 @@
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include "mb.h"
 #include "globals.h"
 #include "mbbeagle.h"
