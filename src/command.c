@@ -6718,7 +6718,11 @@ int DoShowUserTrees (void)
 int DoShowBeagleResources (void)
 
 {
-    BeaglePrintResources();    
+#if defined (BEAGLE_ENABLED)
+    BeaglePrintResources(); 
+#else
+	BeagleNotLinked();
+#endif	   
     return (NO_ERROR);
 }
 

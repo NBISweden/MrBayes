@@ -211,8 +211,6 @@ int InitBeagleInstance (ModelInfo *m)
 
     return NO_ERROR;
 }
-#endif
-
 
 
 /*-----------------------------------------------------------------
@@ -327,17 +325,6 @@ void BeaglePrintResources()
 	BeagleNotLinked();
 #endif
 }
-
-void BeagleNotLinked()
-{
-    MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
-}
-
-void BeagleThreadsNotLinked()
-{
-	MrBayesPrint("%s   Pthreads library is not linked to this executable.\n", spacer);
-}
-    
 
 int BeagleCheckFlagCompatability(long inFlags) {
 #if defined (BEAGLE_ENABLED)    
@@ -674,3 +661,15 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
 
     return NO_ERROR;
 }
+
+#endif // BEAGLE_ENABLED
+
+void BeagleNotLinked()
+{
+    MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
+}
+
+void BeagleThreadsNotLinked()
+{
+	MrBayesPrint("%s   Pthreads library is not linked to this executable.\n", spacer);
+} 
