@@ -49,8 +49,12 @@ void    CopySiteScalers (ModelInfo *m, int chain);
 int     TreeCondLikes_Beagle (Tree *t, int division, int chain);
 int     TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
+
+int		TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain);
+int		TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain);
 extern int *chainId;
 
+int myFirstTime = YES;
 
 /*-----------------------------------------------------------------
 |
@@ -58,19 +62,39 @@ extern int *chainId;
 |		of the new state of the chain for a single division
 |
 -----------------------------------------------------------------*/
-void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL) 
-{	
+void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)  {	
+    
+    if (beagleDynamicScaling == NO) {
+        /* Flip and copy or reset site scalers */
+        FlipSiteScalerSpace(m, chain);
+        if (m->upDateAll == YES)
+            ResetSiteScalers(m, chain);
+        else
+            CopySiteScalers(m, chain);
 
-	/* Flip and copy or reset site scalers */
-	FlipSiteScalerSpace(m, chain);
-	if (m->upDateAll == YES)
-		ResetSiteScalers(m, chain);
-	else
-		CopySiteScalers(m, chain);
+        TreeTiProbs_Beagle(tree, d, chain);
+        TreeCondLikes_Beagle(tree, d, chain);
+        TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+    } else {
+        m->rescaleBeagleAll = NO;
+        
+        TreeTiProbs_Beagle(tree, d, chain);
+        if (myFirstTime == YES) {
+            TreeCondLikes_Beagle_Rescale_All(tree, d, chain);
+            myFirstTime = NO;
+        } else {
+            TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
+        }
 
-	TreeTiProbs_Beagle(tree, d, chain);
-	TreeCondLikes_Beagle(tree, d, chain);
-	TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+        if (TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT) {
+            m->rescaleBeagleAll = YES;
+            FlipSiteScalerSpace(m, chain);
+            ResetSiteScalers(m, chain);
+            TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
+            TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+        } 
+        
+    }
 }
 
 
@@ -316,3 +340,164 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {
 	return chainLnLike;
 }
 #endif
+
+/*----------------------------------------------------------------
+ |
+ |	TreeCondLikes_Beagle: This routine updates all conditional
+ |       (partial) likelihoods of a beagle instance while doing no rescaling.
+ |		That potentialy can make final liklihood bad then calculation with rescaling needs to be done.
+ |
+ -----------------------------------------------------------------*/
+int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
+{
+    int                 i, j, cumulativeScaleIndex;
+    BeagleOperation     operations;
+    TreeNode            *p;
+    ModelInfo           *m;
+	unsigned			chil1Step, chil2Step;
+    
+    m = &modelSettings[division];
+    
+    for (i=0; i<t->nIntNodes; i++)
+    {
+        p = t->intDownPass[i];
+        
+        /* check if conditional likelihoods need updating */
+        if (p->upDateCl == YES)
+        {
+            /* flip to the new workspace */
+            FlipCondLikeSpace (m, chain, p->index);
+            
+            /* update conditional likelihoods */
+            operations.destinationPartials    = m->condLikeIndex[chain][p->index       ];
+            operations.child1Partials         = m->condLikeIndex[chain][p->left->index ];
+            operations.child1TransitionMatrix = m->tiProbsIndex [chain][p->left->index ];
+            operations.child2Partials         = m->condLikeIndex[chain][p->right->index];
+            operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
+            
+			/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+			if(p->left->left== NULL && p->left->right== NULL)
+				chil1Step=0;
+			else
+				chil1Step=1;
+            
+			if(p->right->left== NULL && p->right->right== NULL)
+				chil2Step=0;
+			else
+				chil2Step=1;
+            
+            operations.destinationScaleWrite = BEAGLE_OP_NONE;
+            cumulativeScaleIndex  = BEAGLE_OP_NONE;
+            operations.destinationScaleRead  = m->nodeScalerIndex[chain][p->index];
+            
+            for (j=0; j<m->nCijkParts; j++)
+            {
+                beagleUpdatePartials(m->beagleInstance,
+                                     &operations,
+                                     1,
+                                     cumulativeScaleIndex);
+                
+                operations.destinationPartials++;
+                operations.child1Partials+=chil1Step;
+                operations.child1TransitionMatrix++;
+                operations.child2Partials+=chil2Step;
+                operations.child2TransitionMatrix++;
+                
+                operations.destinationScaleRead++;
+            }
+        }
+    }
+    
+    return NO_ERROR;
+}
+
+
+
+
+/*----------------------------------------------------------------
+ |
+ |	TreeCondLikes_Beagle: This routine updates all conditional
+ |       (partial) likelihoods of a beagle instance while rescaling at every node.
+ Note: all nodes get recalculated, not only tached by move.
+ |
+ -----------------------------------------------------------------*/
+int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
+{
+    int                 i, j, cumulativeScaleIndex;
+    BeagleOperation     operations;
+    TreeNode            *p;
+    ModelInfo           *m;
+	unsigned			chil1Step, chil2Step;
+    
+    m = &modelSettings[division];
+    
+    for (i=0; i<t->nIntNodes; i++)
+    {
+        p = t->intDownPass[i];
+        
+        FlipNodeScalerSpace (m, chain, p->index);
+        if (p->upDateCl == NO ) {
+			p->upDateCl = YES;
+            /* flip to the new workspace */
+            FlipCondLikeSpace (m, chain, p->index);
+        }
+        
+        {
+            /* update conditional likelihoods */
+            operations.destinationPartials    = m->condLikeIndex[chain][p->index       ];
+            operations.child1Partials         = m->condLikeIndex[chain][p->left->index ];
+            operations.child1TransitionMatrix = m->tiProbsIndex [chain][p->left->index ];
+            operations.child2Partials         = m->condLikeIndex[chain][p->right->index];
+            operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
+            
+			/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+			if(p->left->left== NULL && p->left->right== NULL)
+				chil1Step=0;
+			else
+				chil1Step=1;
+            
+			if(p->right->left== NULL && p->right->right== NULL)
+				chil2Step=0;
+			else
+				chil2Step=1;
+            
+            
+			//if ( 1 || p->scalerNode == YES)
+            //             {
+            //             //m->scalersSet[chain][p->index] = YES;
+            //             operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
+            //             cumulativeScaleIndex  = m->siteScalerIndex[chain];
+            //             }
+            //         else
+            //             {
+            //             operations.destinationScaleWrite = BEAGLE_OP_NONE;
+            //             cumulativeScaleIndex  = BEAGLE_OP_NONE;
+            //             }
+			operations.destinationScaleRead = BEAGLE_OP_NONE;
+			operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
+            cumulativeScaleIndex  = m->siteScalerIndex[chain];
+            
+            
+            
+            for (j=0; j<m->nCijkParts; j++)
+            {
+                beagleUpdatePartials(m->beagleInstance,
+                                     &operations,
+                                     1,
+                                     cumulativeScaleIndex);
+                
+                operations.destinationPartials++;
+                operations.child1Partials+=chil1Step;
+                operations.child1TransitionMatrix++;
+                operations.child2Partials+=chil2Step;
+                operations.child2TransitionMatrix++;
+                
+                operations.destinationScaleWrite++;
+                cumulativeScaleIndex++;
+
+                }
+            }
+        }
+
+    return NO_ERROR;
+}

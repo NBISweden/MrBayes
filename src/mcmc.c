@@ -10562,7 +10562,10 @@ int InitBeagleInstance (ModelInfo *m)
 		preferedFlags = beagleFlags;		
 		}
 	
-	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
+    requiredFlags = 0L;
+    
+    if (beagleDynamicScaling == NO)
+        requiredFlags |= BEAGLE_FLAG_SCALERS_LOG;
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
     /* create beagle instance */
@@ -38475,41 +38478,46 @@ void ResetFlips (int chain)
     ModelInfo   *m;
     TreeNode    *p;
     Tree        *tree;
-
+    
     for (d=0; d<numCurrentDivisions; d++)
-        {
+    {
         m = &modelSettings[d];
-
+        
         if (m->upDateCl != YES)
             continue;
-
-        FlipSiteScalerSpace (m, chain);
+        
+#if defined(BEAGLE_ENABLED)
+		if( m->rescaleBeagleAll == YES )
+#endif
+			FlipSiteScalerSpace (m, chain);
         
         if (m->upDateCijk == YES && m->nCijkParts > 0)
             FlipCijkSpace (m, chain);
-
+        
         /* cycle over tree */
         tree = GetTree (m->brlens, chain, state[chain]);
         for (i=0; i<tree->nNodes; i++)
-            {
+        {
             p = tree->allDownPass[i];
             if (p->upDateTi == YES)
                 FlipTiProbsSpace (m, chain, p->index);
             if (p->right != NULL)    /* do not flip terminals in case these flags are inappropriately set by moves */
-                {
+            {
                 if (p->upDateCl == YES)
-                    {
+                {
                     FlipCondLikeSpace (m, chain, p->index);
-                    FlipNodeScalerSpace (m, chain, p->index);
-                    }
+#if defined(BEAGLE_ENABLED)
+                    if( m->rescaleBeagleAll == YES )
+#endif
+                        FlipNodeScalerSpace (m, chain, p->index);
                 }
             }
-
+        }
+        
         /* reset division flag; tree node flags are reset when trees are copied */
         m->upDateCl = NO;
     }
 }
-
 
 
 
@@ -43423,7 +43431,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
 int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats)
 
 {
-    int         i, j, c, nStates, hasPInvar;
+    int         i, j, c, nStates, hasPInvar, beagleReturn;
     MrBFlt      *swr, s01, s10, probOn, probOff, covBF[40], pInvar=0.0, *bs, freq, likeI, lnLikeI, diff, *omegaCatFreq;
     CLFlt       *clInvar=NULL, *nSitesOfPat;
     double      *nSitesOfPat_Beagle;
@@ -43543,7 +43551,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     /* get root log likelihoods */
     if (t->isRooted == YES)
         {        
-        beagleCalculateRootLogLikelihoods(m->beagleInstance,
+        beagleReturn = beagleCalculateRootLogLikelihoods(m->beagleInstance,
                                           m->bufferIndices,
                                           m->eigenIndices,
                                           m->eigenIndices,
@@ -43554,7 +43562,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
         }
     else
         {
-        beagleCalculateEdgeLogLikelihoods(m->beagleInstance,
+        beagleReturn = beagleCalculateEdgeLogLikelihoods(m->beagleInstance,
                                           m->bufferIndices,
                                           m->childBufferIndices,
                                           m->childTiProbIndices,
@@ -43569,6 +43577,11 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           NULL);       
         }
 
+	if( beagleReturn == BEAGLE_ERROR_FLOATING_POINT )
+    {
+        return beagleReturn;
+    }
+    
     /* accumulate logs across sites */
 	if (hasPInvar == NO)
 		{

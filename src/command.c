@@ -242,6 +242,7 @@ char			**transTo;             /* translation block information                 *
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
 #if defined (BEAGLE_ENABLED)
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
+int             beagleDynamicScaling;  /* BEAGLE dynamic scaling                        */
 long            beagleFlags;           /* BEAGLE required resource flags                */
 int             *beagleResource;       /* BEAGLE resource choice list                   */
 int			    beagleResourceCount;   /* BEAGLE resource choice list length            */

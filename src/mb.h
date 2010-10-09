@@ -1184,6 +1184,7 @@ typedef struct modelinfo
     int*        childBufferIndices;         /* array of child partial indices (unrooted)    */
     int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
+    int			rescaleBeagleAll;			/* set to rescale all nodes                     */	
 #endif
 
     } ModelInfo;
