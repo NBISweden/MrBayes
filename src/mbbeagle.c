@@ -39,6 +39,39 @@
 #include "globals.h"
 #include "mbbeagle.h"
 #include "utils.h"
+#include "mcmc.h"
+
+void    FlipSiteScalerSpace (ModelInfo *m, int chain);
+void    ResetSiteScalers (ModelInfo *m, int chain);
+void    CopySiteScalers (ModelInfo *m, int chain);
+
+int     TreeCondLikes_Beagle (Tree *t, int division, int chain);
+int     TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
+int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
+extern int *chainId;
+
+
+/*-----------------------------------------------------------------
+|
+|	LaunchBEAGLELogLikeForDivision: calculate the log likelihood  
+|		of the new state of the chain for a single division
+|
+-----------------------------------------------------------------*/
+void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL) 
+{	
+
+	/* Flip and copy or reset site scalers */
+	FlipSiteScalerSpace(m, chain);
+	if (m->upDateAll == YES)
+		ResetSiteScalers(m, chain);
+	else
+		CopySiteScalers(m, chain);
+
+	TreeTiProbs_Beagle(tree, d, chain);
+	TreeCondLikes_Beagle(tree, d, chain);
+	TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+}
+
 
 void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {
 #if defined (BEAGLE_ENABLED)		

@@ -14312,6 +14312,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     return (NO_ERROR);
 }
 
+
 /*-----------------------------------------------------------------
 |
 |	LaunchLogLikeForDivision: calculate the log likelihood of the 
@@ -14328,11 +14329,19 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 	tree = GetTree(m->brlens, chain, state[chain]);
 	
 	if (m->upDateCijk == YES)
-	{
+		{
 		UpDateCijk(d, chain);
 		m->upDateAll = YES;
-	}
+		}
 	
+#if defined (BEAGLE_ENABLED)
+	if (m->useBeagle == YES)
+		{
+		LaunchBEAGLELogLikeForDivision(chain, d, m, tree, lnL);
+		return;
+		}
+#endif
+		
 	/* Flip and copy or reset site scalers */
 	FlipSiteScalerSpace(m, chain);
 	if (m->upDateAll == YES)
@@ -14340,79 +14349,63 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 	else
 		CopySiteScalers(m, chain);
 	
-#if defined (BEAGLE_ENABLED)
-	if (m->useBeagle == YES)
+	if (m->parsModelId == NO)
 	{
-		TreeTiProbs_Beagle(tree, d, chain);
-		TreeCondLikes_Beagle(tree, d, chain);
-	}
-	else
-#endif
-		if (m->parsModelId == NO)
+		for (i=0; i<tree->nIntNodes; i++)
 		{
-			for (i=0; i<tree->nIntNodes; i++)
+			p = tree->intDownPass[i];
+			
+			if (p->left->upDateTi == YES)
 			{
-				p = tree->intDownPass[i];
-				
-				if (p->left->upDateTi == YES)
+				/* shift state of ti probs for node */
+				FlipTiProbsSpace (m, chain, p->left->index);
+				m->TiProbs (p->left, d, chain);
+			}
+			
+			if (p->right->upDateTi == YES)
+			{
+				/* shift state of ti probs for node */
+				FlipTiProbsSpace (m, chain, p->right->index);
+				m->TiProbs (p->right, d, chain);
+			}
+			
+			if (tree->isRooted == NO)
+			{
+				if (p->anc->anc == NULL /* && p->upDateTi == YES */)
 				{
 					/* shift state of ti probs for node */
-					FlipTiProbsSpace (m, chain, p->left->index);
-					m->TiProbs (p->left, d, chain);
-				}
-				
-				if (p->right->upDateTi == YES)
-				{
-					/* shift state of ti probs for node */
-					FlipTiProbsSpace (m, chain, p->right->index);
-					m->TiProbs (p->right, d, chain);
-				}
-				
-				if (tree->isRooted == NO)
-				{
-					if (p->anc->anc == NULL /* && p->upDateTi == YES */)
-					{
-						/* shift state of ti probs for node */
-						FlipTiProbsSpace (m, chain, p->index);
-						m->TiProbs (p, d, chain);
-					}
-				}
-				
-				if (p->upDateCl == YES)
-				{
-					if (tree->isRooted == NO)
-					{
-						if (p->anc->anc == NULL)
-							m->CondLikeRoot (p, d, chain);
-						else
-							m->CondLikeDown (p, d, chain);
-					}
-					else
-						m->CondLikeDown (p, d, chain);
-					
-					if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
-#if defined (SSE_ENABLED)
-						RemoveNodeScalers_SSE (p, d, chain);
-#else
-					RemoveNodeScalers (p, d, chain);
-#endif
-					FlipNodeScalerSpace (m, chain, p->index);
-					m->scalersSet[chain][p->index] = NO;
-					
-					if (p->scalerNode == YES)
-						m->CondLikeScaler (p, d, chain);
+					FlipTiProbsSpace (m, chain, p->index);
+					m->TiProbs (p, d, chain);
 				}
 			}
-		}
-	
-#if defined (BEAGLE_ENABLED)
-	if (m->useBeagle == YES)
-		TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
-	else
-		m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+			
+			if (p->upDateCl == YES)
+			{
+				if (tree->isRooted == NO)
+				{
+					if (p->anc->anc == NULL)
+						m->CondLikeRoot (p, d, chain);
+					else
+						m->CondLikeDown (p, d, chain);
+				}
+				else
+					m->CondLikeDown (p, d, chain);
+				
+				if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
+#if defined (SSE_ENABLED)
+					RemoveNodeScalers_SSE (p, d, chain);
 #else
-	m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+				RemoveNodeScalers (p, d, chain);
 #endif
+				FlipNodeScalerSpace (m, chain, p->index);
+				m->scalersSet[chain][p->index] = NO;
+				
+				if (p->scalerNode == YES)
+					m->CondLikeScaler (p, d, chain);
+			}
+		}
+	}
+	m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
 }
 
 
@@ -14525,8 +14518,7 @@ MrBFlt LogLike (int chain)
 			}
 		}
 
-	return (chainLnLike);
-	
+	return (chainLnLike);	
 }
 
 
