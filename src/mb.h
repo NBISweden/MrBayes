@@ -572,6 +572,17 @@ typedef struct param
 	} Param;
 
 
+#if defined(THREADS_ENABLED)
+#include <pthread.h>
+
+typedef struct s_launch_struct 
+	{
+	int chain;
+	int division;
+	MrBFlt* lnL;					
+	} LaunchStruct;	
+#endif
+
 /* parameter ID values */
 /* identifies unique model parameter x prior combinations */
 #define TRATIO_DIR						1

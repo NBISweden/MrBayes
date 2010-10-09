@@ -59,7 +59,7 @@
 
 #define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						254
+#define	NUMPARAMS						255
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -240,11 +240,16 @@ Calibration     *tipCalibration;       /* holds information about node calibrati
 char			**transFrom;           /* translation block information                 */
 char			**transTo;             /* translation block information                 */
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
+#if defined (BEAGLE_ENABLED)
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
 long            beagleFlags;           /* BEAGLE required resource flags                */
 int             *beagleResource;       /* BEAGLE resource choice list                   */
 int			    beagleResourceCount;   /* BEAGLE resource choice list length            */
 int             beagleInstanceCount;   /* total number of BEAGLE instances              */
+#endif
+#if defined (THREADS_ENABLED)
+int             tryToUseThreads;       /* try to use pthreads with BEAGLE library       */
+#endif
 
 
 /* local (to this file) */
@@ -319,7 +324,7 @@ CmdType			commands[] =
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet, 17,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 18,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -6506,10 +6511,45 @@ int DoSetParm (char *parmName, char *tkn)
             }
 			else
 				return (ERROR);
-        }            
+        }   
+		else if (!strcmp(parmName, "Beaglethreads"))
+        {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+            {
+#if defined (BEAGLE_ENABLED) && defined (THREADS_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                {                                        
+					if (!strcmp(tempStr, "Yes"))
+                    {                      
+						tryToUseThreads = YES;
+                    }
+					else
+                    {  
+                        tryToUseThreads = NO;						
+                    }             
+                    
+					if (tryToUseThreads == YES)
+						MrBayesPrint ("%s   Setting beaglethreads to Yes\n", spacer);
+					else
+						MrBayesPrint ("%s   Setting beaglethreads to No\n", spacer);                    
+                }
+				else
+                {
+					MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
+					return (ERROR);
+                }				
+#else
+                BeagleThreadsNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        } 		         
 		else
-			return (ERROR);
-			
+			return (ERROR);			
 			
 		}
 
@@ -10669,11 +10709,18 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   to compute the phylogenetic likelihood on a variety of high-  \n");
         MrBayesPrint ("                   performance hardware including multicore CPUs and GPUs. Some  \n"); 
         MrBayesPrint ("                   models in MrBayes are not yet supported by BEAGLE.  If you    \n");
-        MrBayesPrint ("                   employ BEAGLE please, reference [INSERT REFERENCE HERE].      \n");
+        MrBayesPrint ("                   employ BEAGLE please, reference [INSERT REFERENCE HERE].      \n");				
         MrBayesPrint ("   Beagledevice -- Set this option to 'GPU' or 'CPU' to select processor.        \n"); 
         MrBayesPrint ("   Beagleprecision   -- Selection 'Single' or 'Double' precision computation.    \n");
         MrBayesPrint ("   Beaglesse    -- Use SSE instructions on Intel CPU processors.                 \n");
         MrBayesPrint ("   Beagleopenmp -- Use OpenMP to parallelize across multi-core CPU processors.   \n");
+#endif
+#if defined (THREADS_ENABLED)
+		MrBayesPrint ("   Beaglethreads -- Set this option to 'Yes' to employ multiple threads to drive \n");
+		MrBayesPrint ("                    multiple BEAGLE resource simultaneously. This is highly      \n");
+		MrBayesPrint ("                    recommended for more than one GPU, and for sufficiently large\n");
+		MrBayesPrint ("                    data partitions, multi-core CPUs should also demonstrate     \n");
+		MrBayesPrint ("                    speed-ups.                                                   \n");		
 #endif
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
@@ -10696,6 +10743,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Beagledevice    CPU/GPU                  %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
         MrBayesPrint ("   Beaglesse       Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
         MrBayesPrint ("   Beagleopenmp    Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
+#endif
+#if defined (THREADS_ENABLED)
+		MrBayesPrint ("   Beaglethreads   Yes/No                   %s                                   \n", tryToUseThreads == YES ? "Yes" : "No");
 #endif
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -13035,6 +13085,7 @@ void SetUpParms (void)
     PARAM   (235, "Beagleprecision",DoSetParm,         "Single|Double|\0");
     PARAM   (236, "Beaglesse",      DoSetParm,         "Yes|No|\0");
     PARAM   (237, "Beagleopenmp",   DoSetParm,         "Yes|No|\0");
+	PARAM	(238, "Beaglethreads",  DoSetParm,		   "Yes|No|\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you

@@ -14312,7 +14312,108 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     return (NO_ERROR);
 }
 
-
+/*-----------------------------------------------------------------
+|
+|	LaunchLogLikeForDivision: calculate the log likelihood of the 
+|		new state of the chain for a single division
+|
+-----------------------------------------------------------------*/
+void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
+	int i;
+	TreeNode		*p;
+	ModelInfo		*m;
+	Tree			*tree;
+	
+	m = &modelSettings[d];
+	tree = GetTree(m->brlens, chain, state[chain]);
+	
+	if (m->upDateCijk == YES)
+	{
+		UpDateCijk(d, chain);
+		m->upDateAll = YES;
+	}
+	
+	/* Flip and copy or reset site scalers */
+	FlipSiteScalerSpace(m, chain);
+	if (m->upDateAll == YES)
+		ResetSiteScalers(m, chain);
+	else
+		CopySiteScalers(m, chain);
+	
+#if defined (BEAGLE_ENABLED)
+	if (m->useBeagle == YES)
+	{
+		TreeTiProbs_Beagle(tree, d, chain);
+		TreeCondLikes_Beagle(tree, d, chain);
+	}
+	else
+#endif
+		if (m->parsModelId == NO)
+		{
+			for (i=0; i<tree->nIntNodes; i++)
+			{
+				p = tree->intDownPass[i];
+				
+				if (p->left->upDateTi == YES)
+				{
+					/* shift state of ti probs for node */
+					FlipTiProbsSpace (m, chain, p->left->index);
+					m->TiProbs (p->left, d, chain);
+				}
+				
+				if (p->right->upDateTi == YES)
+				{
+					/* shift state of ti probs for node */
+					FlipTiProbsSpace (m, chain, p->right->index);
+					m->TiProbs (p->right, d, chain);
+				}
+				
+				if (tree->isRooted == NO)
+				{
+					if (p->anc->anc == NULL /* && p->upDateTi == YES */)
+					{
+						/* shift state of ti probs for node */
+						FlipTiProbsSpace (m, chain, p->index);
+						m->TiProbs (p, d, chain);
+					}
+				}
+				
+				if (p->upDateCl == YES)
+				{
+					if (tree->isRooted == NO)
+					{
+						if (p->anc->anc == NULL)
+							m->CondLikeRoot (p, d, chain);
+						else
+							m->CondLikeDown (p, d, chain);
+					}
+					else
+						m->CondLikeDown (p, d, chain);
+					
+					if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
+#if defined (SSE_ENABLED)
+						RemoveNodeScalers_SSE (p, d, chain);
+#else
+					RemoveNodeScalers (p, d, chain);
+#endif
+					FlipNodeScalerSpace (m, chain, p->index);
+					m->scalersSet[chain][p->index] = NO;
+					
+					if (p->scalerNode == YES)
+						m->CondLikeScaler (p, d, chain);
+				}
+			}
+		}
+	
+#if defined (BEAGLE_ENABLED)
+	if (m->useBeagle == YES)
+		TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+	else
+		m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+#else
+	m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+#endif
+}
 
 
 
@@ -14327,11 +14428,11 @@ MrBFlt LogLike (int chain)
 {
 
 	int				i, d;
-	TreeNode		*p;
+	//TreeNode		*p;
 	ModelInfo		*m;
-	Tree			*tree;
+	//Tree			*tree;
 	MrBFlt			chainLnLike, lnL;
-
+						
 	/* initialize chain cond like */
 	chainLnLike = 0.0;
 	
@@ -14342,113 +14443,42 @@ MrBFlt LogLike (int chain)
 #	if defined (DEBUG_RUN_WITHOUT_DATA)
 	return (chainLnLike);
 #	endif
-	
+
+#if defined (THREADS_ENABLED)
+    if (tryToUseThreads && ScheduleLogLikeForAllDivisions()) 
+		{
+		/* Launch all divisions that require updating simultaneously */
+		chainLnLike = LaunchLogLikeForAllDivisionsInParallel(chain);
+		} 
+		else 
+		{
+		/* Launch divisions in series */
+#endif
+		
 	/* Cycle through divisions and recalculate tis and cond likes as necessary. */
 	/* Code below does not try to avoid recalculating ti probs for divisions    */
 	/* that could share ti probs with other divisions.                          */
 	for (d=0; d<numCurrentDivisions; d++)
 		{
+		
 #if defined (BEST_MPI_ENABLED)
         if (isDivisionActive[d] == NO)
             continue;
 #endif
 		m = &modelSettings[d];
 		
-		if (m->upDateCl == YES)
-			{
-			tree = GetTree(m->brlens, chain, state[chain]);
-
-            if (m->upDateCijk == YES)
-                {
-                UpDateCijk(d, chain);
-                m->upDateAll = YES;
-                }
-
-            /* Flip and copy or reset site scalers */
-            FlipSiteScalerSpace(m, chain);
-            if (m->upDateAll == YES)
-                ResetSiteScalers(m, chain);
-            else
-                CopySiteScalers(m, chain);
-
-#if defined (BEAGLE_ENABLED)
-            if (m->useBeagle == YES)
-                {
-                TreeTiProbs_Beagle(tree, d, chain);
-                TreeCondLikes_Beagle(tree, d, chain);
-                }
-            else
-#endif
-            if (m->parsModelId == NO)
-				{
-				for (i=0; i<tree->nIntNodes; i++)
-					{
-					p = tree->intDownPass[i];
-					
-					if (p->left->upDateTi == YES)
-						{
-						/* shift state of ti probs for node */
-						FlipTiProbsSpace (m, chain, p->left->index);
-						m->TiProbs (p->left, d, chain);
-						}
-
-					if (p->right->upDateTi == YES)
-						{
-						/* shift state of ti probs for node */
-						FlipTiProbsSpace (m, chain, p->right->index);
-						m->TiProbs (p->right, d, chain);
-						}
-
-					if (tree->isRooted == NO)
-						{
-						if (p->anc->anc == NULL /* && p->upDateTi == YES */)
-							{
-							/* shift state of ti probs for node */
-							FlipTiProbsSpace (m, chain, p->index);
-							m->TiProbs (p, d, chain);
-							}
-						}
-
-					if (p->upDateCl == YES)
-						{
-						if (tree->isRooted == NO)
-							{
-							if (p->anc->anc == NULL)
-								m->CondLikeRoot (p, d, chain);
-							else
-								m->CondLikeDown (p, d, chain);
-							}
-						else
-							m->CondLikeDown (p, d, chain);
-
-                        if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
-#if defined (SSE_ENABLED)
-                            RemoveNodeScalers_SSE (p, d, chain);
-#else
-                            RemoveNodeScalers (p, d, chain);
-#endif
-                        FlipNodeScalerSpace (m, chain, p->index);
-                        m->scalersSet[chain][p->index] = NO;
-
-                        if (p->scalerNode == YES)
-                            m->CondLikeScaler (p, d, chain);
-						}
-					}
-				}
-				
-			lnL = 0.0;
-#if defined (BEAGLE_ENABLED)
-            if (m->useBeagle == YES)
-                TreeLikelihood_Beagle(tree, d, chain, &lnL, (chainId[chain] % chainParams.numChains));
-            else
-    			m->Likelihood (tree->root->left, d, chain, &lnL, (chainId[chain] % chainParams.numChains));
-#else
-			m->Likelihood (tree->root->left, d, chain, &lnL, (chainId[chain] % chainParams.numChains));
-#endif
-			m->lnLike[2*chain + state[chain]] =  lnL;
+		if (m->upDateCl == YES)	
+			{	
+			/* Work has been delegated to a separate function so we can wrap    */
+			/* a thread around it                                               */				
+			LaunchLogLikeForDivision(chain, d, &(m->lnLike[2 * chain + state[chain]]));							
 			}
-		chainLnLike += m->lnLike[2*chain + state[chain]];
+		chainLnLike += m->lnLike[2*chain + state[chain]];	
 		}
+		
+#if defined (THREADS_ENABLED)
+		}
+#endif				
 
 	/* unmark all divisions */
 	if (chainHasAdgamma == YES)
@@ -14498,8 +14528,6 @@ MrBFlt LogLike (int chain)
 	return (chainLnLike);
 	
 }
-
-
 
 
 

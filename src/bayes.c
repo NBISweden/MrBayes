@@ -524,6 +524,9 @@ int InitializeMrBayes (void)
 	beagleResourceCount = 0;						 /* default has no list */
 	beagleInstanceCount = 0;						 /* no BEAGLE instances */
 #endif
+#if defined (THREADS_ENABLED)
+	tryToUseThreads = NO;							 /* try to use pthread with BEAGLE library        */
+#endif
 
 	/* set the proposal information */
 	SetUpMoveTypes ();

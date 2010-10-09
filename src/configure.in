@@ -43,6 +43,8 @@ AC_ARG_WITH([cuda],
    [AS_HELP_STRING([--with-cuda=PATH],[optionally set prefix where cuda is installed (only applies for beagle) @<:@default=/usr/local/cuda@:>@])],
    [],
    [with_cuda=/usr/local/cuda])
+   
+AC_ARG_ENABLE(threads, [  --enable-threads=[no/yes]     enable thread-support in BEAGLE [default="no"]],,enable_threads="no")  
 
 if test "x$with_beagle" != "xno"
 then
@@ -64,6 +66,14 @@ then
 	AC_DEFINE(BEAGLE_ENABLED)
 	CFLAGS="${CFLAGS} ${BEAGLE_CFLAGS} "
 	LDFLAGS="${LDFLAGS}  ${BEAGLE_LIBS} ${CUDA_LIBS} "
+	
+	# ----- Check for pthreads compatibility -------
+	
+	if test "x$enable_threads" == "xyes"
+	then					
+		AC_CHECK_LIB(pthread,pthread_create,[THREAD_LIB="-lpthread"],[AC_MSG_ERROR([pthreads library not found])])
+		AC_DEFINE(THREADS_ENABLED)		
+	fi
 fi
 # ------------------------------------------------------------------------------
 

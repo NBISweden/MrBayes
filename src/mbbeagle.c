@@ -101,6 +101,11 @@ void BeagleNotLinked()
 {
     MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
 }
+
+void BeagleThreadsNotLinked()
+{
+	MrBayesPrint("%s   Pthreads library is not linked to this executable.\n", spacer);
+}
     
 
 int BeagleCheckFlagCompatability(long inFlags) {
@@ -178,3 +183,102 @@ void BeaglePrintFlags(long inFlags)
 	// Do nothing
 #endif
 }
+    
+int ScheduleLogLikeForAllDivisions() {
+	int d;
+	int divisionsToLaunch = 0;
+	ModelInfo		*m;
+		
+	if (numCurrentDivisions < 2) {
+		return 0;
+	}
+
+	for (d=0; d<numCurrentDivisions; d++) {		
+		m = &modelSettings[d];		
+		if (m->upDateCl == YES)	{
+			divisionsToLaunch++;
+		}
+	}
+	return (divisionsToLaunch > 1);
+}
+
+#if defined(THREADS_ENABLED)
+void *LaunchThreadLogLikeForDivision(void *arguments) {
+	int d, chain;
+	MrBFlt *lnL;
+	LaunchStruct* launchStruct;
+	
+	launchStruct = (LaunchStruct*) arguments;
+	chain = launchStruct->chain;
+	d = launchStruct->division;
+	lnL = launchStruct->lnL;
+	LaunchLogLikeForDivision(chain, d, lnL);	
+	return 0;
+}
+
+MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {	
+	int d;
+	int threadError;
+	pthread_t* threads;
+	LaunchStruct* launchValues;
+	int* wait;
+	ModelInfo* m;
+	MrBFlt chainLnLike;
+	
+	chainLnLike = 0.0;
+
+	/* TODO Initialize only once */
+	threads = (pthread_t*) malloc(sizeof(pthread_t) * numCurrentDivisions);
+	launchValues = (LaunchStruct*) malloc(sizeof(LaunchStruct) * numCurrentDivisions);
+	wait = (int*) malloc(sizeof(int) * numCurrentDivisions);
+	
+	/* Cycle through divisions and recalculate tis and cond likes as necessary. */
+	/* Code below does not try to avoid recalculating ti probs for divisions    */
+	/* that could share ti probs with other divisions.                          */
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		
+#if defined (BEST_MPI_ENABLED)
+        if (isDivisionActive[d] == NO)
+            continue;
+#endif
+		m = &modelSettings[d];
+		
+		if (m->upDateCl == YES)	
+			{					
+			launchValues[d].chain = chain;
+			launchValues[d].division = d;
+			launchValues[d].lnL = &(m->lnLike[2*chain + state[chain]]);
+			/* Fork */
+			threadError = pthread_create(&threads[d], NULL, 
+										 LaunchThreadLogLikeForDivision, 
+										 (void*) &launchValues[d]);
+			assert(0 == threadError);
+			wait[d] = 1;					
+			}			
+		else 
+			{
+			wait[d] = 0;
+			}
+		}
+	
+	for (d = 0; d < numCurrentDivisions; d++)
+		{
+		/* Join */
+		if (wait[d]) 
+			{
+			threadError = pthread_join(threads[d], NULL);
+			assert(0 == threadError);
+			}				
+		m = &modelSettings[d];
+		chainLnLike += m->lnLike[2*chain + state[chain]];
+		}
+			
+	/* TODO Free these once */
+	free(threads);
+	free(launchValues);
+	free(wait);
+	
+	return chainLnLike;
+}
+#endif

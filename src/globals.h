@@ -150,6 +150,9 @@ extern int*				beagleResource;						    /* BEAGLE resource list                 
 extern int				beagleResourceCount;					/* BEAGLE resource list length                   */
 extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
 #endif
+#if defined (THREADS_ENABLED)
+extern int			    tryToUseThreads;						/* try to use pthreads with BEAGLE library       */
+#endif
 
 /* Aamodel parameters */
 extern MrBFlt			aaJones[20][20];	         /* rates for Jones model                        */
