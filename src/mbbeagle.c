@@ -42,6 +42,8 @@
 #include "utils.h"
 #include "mcmc.h"
 
+void    FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
+void    FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
 void    FlipSiteScalerSpace (ModelInfo *m, int chain);
 void    ResetSiteScalers (ModelInfo *m, int chain);
 void    CopySiteScalers (ModelInfo *m, int chain);
@@ -52,9 +54,166 @@ int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
 
 int		TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain);
 int		TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain);
-extern int *chainId;
 
-int myFirstTime = YES;
+extern int *chainId;
+extern int numLocalChains;
+
+//#define DEBUG_MB_BEAGLE_FLOW
+
+#if defined (BEAGLE_ENABLED)
+/*------------------------------------------------------------------------
+|
+|	InitBeagleInstance: create and initialize a beagle instance
+|
+-------------------------------------------------------------------------*/
+int InitBeagleInstance (ModelInfo *m)
+{
+    int                     i, j, k, c, s, *inStates, numPartAmbigTips;
+    double                  *inPartials;
+    SafeLong                *charBits;
+    BeagleInstanceDetails   details;
+    long preferedFlags, requiredFlags;
+	int resource;
+    
+    if (m->useBeagle == NO)
+        return ERROR;
+    
+    /* at least one eigen buffer needed */
+    if (m->nCijkParts == 0)
+        m->nCijkParts = 1;
+
+    /* allocate memory used by beagle */
+    m->logLikelihoods          = (MrBFlt *) calloc ((numLocalChains)*m->numChars, sizeof(MrBFlt));
+    m->inRates                 = (MrBFlt *) calloc (m->numGammaCats, sizeof(MrBFlt));
+    m->branchLengths           = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
+    m->tiProbIndices           = (int *) calloc (2*numLocalTaxa, sizeof(int));
+    m->inWeights               = (MrBFlt *) calloc (m->numGammaCats*m->nCijkParts, sizeof(MrBFlt));
+    m->bufferIndices           = (int *) calloc (m->nCijkParts, sizeof(int));
+    m->eigenIndices            = (int *) calloc (m->nCijkParts, sizeof(int));
+    m->childBufferIndices      = (int *) calloc (m->nCijkParts, sizeof(int));
+    m->childTiProbIndices      = (int *) calloc (m->nCijkParts, sizeof(int));
+    m->cumulativeScaleIndices  = (int *) calloc (m->nCijkParts, sizeof(int));
+
+    numPartAmbigTips = 0;
+    if (m->numStates != m->numModelStates)
+        numPartAmbigTips = numLocalTaxa;
+    else
+        {
+        for (i=0; i<numLocalTaxa; i++)
+            {
+            if (m->isPartAmbig[i] == YES)
+                numPartAmbigTips++;
+            }
+        }
+
+	if (beagleResourceCount == 0) 
+		{
+		preferedFlags = beagleFlags;
+		} 
+		else 
+		{
+		resource = beagleResource[beagleInstanceCount % beagleResourceCount];
+		preferedFlags = beagleFlags;		
+		}
+	
+    requiredFlags = 0L;
+    
+    if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
+        requiredFlags |= BEAGLE_FLAG_SCALERS_LOG;
+
+    /* TODO: allocate fewer buffers when nCijkParts > 1 */
+    /* create beagle instance */
+    m->beagleInstance = beagleCreateInstance(numLocalTaxa,
+                                             m->numCondLikes * m->nCijkParts,
+                                             numLocalTaxa - numPartAmbigTips,
+                                             m->numModelStates,
+                                             m->numChars,
+                                            (numLocalChains + 1) * m->nCijkParts,
+                                             m->numTiProbs*m->nCijkParts,
+                                             m->numGammaCats,
+                                             m->numScalers * m->nCijkParts,
+											 (beagleResourceCount == 0 ? NULL : &resource),
+                                             (beagleResourceCount == 0 ? 0 : 1),                                             
+                                             preferedFlags,
+                                             requiredFlags,
+                                             &details);
+
+    if (m->beagleInstance < 0)
+        {
+        MrBayesPrint ("%s   Failed to start beagle instance\n", spacer);
+        return (ERROR);
+        }
+    else
+        {
+		MrBayesPrint( "\n   Using BEAGLE resource %i:", details.resourceNumber);
+#if defined (THREADS_ENABLED)
+        MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded", "non-threaded"));
+#else
+		MrBayesPrint( " (non-threaded)\n");
+#endif
+    	MrBayesPrint( "\tRsrc Name : %s\n", details.resourceName);
+    	MrBayesPrint( "\tImpl Name : %s\n", details.implName);    
+    	MrBayesPrint( "\tFlags:");
+    	BeaglePrintFlags(details.flags);
+    	MrBayesPrint( "\n");
+		beagleInstanceCount++;
+		m->beagleComputeCount = (long*) calloc(sizeof(long), numLocalChains); // TODO Need to free.				
+        }
+
+    /* initialize tip data */
+    inStates = (int *) SafeMalloc (m->numChars * sizeof(int));
+    if (!inStates)
+        return ERROR;
+    inPartials = (double *) SafeMalloc (m->numChars * m->numModelStates * sizeof(double));
+    if (!inPartials)
+        return ERROR;
+    for (i=0; i<numLocalTaxa; i++)
+        {
+        if (m->isPartAmbig[i] == NO)
+            {
+            charBits = m->parsSets[i];
+            for (c=0; c<m->numChars; c++)
+                {
+                for (s=j=0; s<m->numModelStates; s++)
+                    {
+                    if (IsBitSet(s, charBits))
+                        {
+                        inStates[c] = s;
+                        j++;
+                        }
+                    }
+                if (j == m->numModelStates)
+                    inStates[c] = j;
+                charBits += m->nParsIntsPerSite;
+                }
+            beagleSetTipStates(m->beagleInstance, i, inStates);
+            }
+        else /* if (m->isPartAmbig == YES) */
+            {
+            k = 0;
+            charBits = m->parsSets[i];
+            for (c=0; c<m->numChars; c++)
+                {
+                for (s=0; s<m->numModelStates; s++)
+                    {
+                    if (IsBitSet(s%m->numStates, charBits))
+                        inPartials[k++] = 1.0;
+                    else
+                        inPartials[k++] = 0.0;
+                    }
+                charBits += m->nParsIntsPerSite;
+                }
+            beagleSetTipPartials(m->beagleInstance, i, inPartials);
+            }
+        }
+    free (inStates);
+    free (inPartials);
+
+    return NO_ERROR;
+}
+#endif
+
+
 
 /*-----------------------------------------------------------------
 |
@@ -64,7 +223,11 @@ int myFirstTime = YES;
 -----------------------------------------------------------------*/
 void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)  {	
     
-    if (beagleDynamicScaling == NO) {
+    if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) {
+	
+#if defined (DEBUG_MB_BEAGLE_FLOW)
+		printf("ALWAYS RESCALING\n");
+#endif
         /* Flip and copy or reset site scalers */
         FlipSiteScalerSpace(m, chain);
         if (m->upDateAll == YES)
@@ -75,26 +238,36 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         TreeTiProbs_Beagle(tree, d, chain);
         TreeCondLikes_Beagle(tree, d, chain);
         TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
-    } else {
+    } else { /* MB_BEAGLE_SCALE_DYNAMIC */
+	
+		/* This flag is only valid within this block */
         m->rescaleBeagleAll = NO;
         
         TreeTiProbs_Beagle(tree, d, chain);
-        if (myFirstTime == YES) {
-            TreeCondLikes_Beagle_Rescale_All(tree, d, chain);
-            myFirstTime = NO;
+        if (m->beagleComputeCount[chain] % beagleScalingFrequency == 0) { // Force recompute
+#if defined (DEBUG_MB_BEAGLE_FLOW)
+			printf("FORCED RESCALING\n");
+#endif		
+            TreeCondLikes_Beagle_Rescale_All(tree, d, chain);           
         } else {
             TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
         }
 
+		/* Check if likelihood is valid */
         if (TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT) {
+#if defined (DEBUG_MB_BEAGLE_FLOW)
+			printf("NUMERICAL RESCALING\n");
+#endif
             m->rescaleBeagleAll = YES;
             FlipSiteScalerSpace(m, chain);
             ResetSiteScalers(m, chain);
             TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
             TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
-        } 
-        
+        }         
     }
+	
+	/* Count number of evaluations */
+	m->beagleComputeCount[chain]++;
 }
 
 

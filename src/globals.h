@@ -149,7 +149,8 @@ extern long             beagleFlags;                            /* BEAGLE requir
 extern int*				beagleResource;						    /* BEAGLE resource list                          */
 extern int				beagleResourceCount;					/* BEAGLE resource list length                   */
 extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
-extern int              beagleDynamicScaling;                   /* BEAGLE dynamic scaling                        */
+extern int              beagleScalingScheme;                   /* BEAGLE dynamic scaling                        */
+extern int				beagleScalingFrequency;					/* BEAGLE rescaling frequency                    */
 #endif
 #if defined (THREADS_ENABLED)
 extern int			    tryToUseThreads;						/* try to use pthreads with BEAGLE library       */

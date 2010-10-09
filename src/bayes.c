@@ -519,11 +519,12 @@ int InitializeMrBayes (void)
 	strcpy(workingDir,"");				             /* working directory		                      */
 #if defined (BEAGLE_ENABLED)
     tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
-    beagleDynamicScaling = NO;                       /* use BEAGLE dynamic scaling                    */
+    beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
 	beagleResource = NULL;
 	beagleResourceCount = 0;						 /* default has no list */
 	beagleInstanceCount = 0;						 /* no BEAGLE instances */
+	beagleScalingFrequency = 1000;
 #endif
 #if defined (THREADS_ENABLED)
 	tryToUseThreads = NO;							 /* try to use pthread with BEAGLE library        */

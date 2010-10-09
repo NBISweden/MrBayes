@@ -717,6 +717,11 @@ typedef struct s_launch_struct
 #define SPECIESTREE_UNIFORM             138
 #define TOPOLOGY_SPECIESTREE            139
 
+#if defined (BEAGLE_ENABLED)
+#define	MB_BEAGLE_SCALE_ALWAYS			0
+#define MB_BEAGLE_SCALE_DYNAMIC			1
+#endif
+
 
 /* typedef for a MoveFxn */
 typedef int (MoveFxn)(Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
@@ -1184,7 +1189,8 @@ typedef struct modelinfo
     int*        childBufferIndices;         /* array of child partial indices (unrooted)    */
     int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
-    int			rescaleBeagleAll;			/* set to rescale all nodes                     */	
+    int			rescaleBeagleAll;			/* set to rescale all nodes                     */
+	long*		beagleComputeCount;			/* count of number of calls to likelihood       */
 #endif
 
     } ModelInfo;
