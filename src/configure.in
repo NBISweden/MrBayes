@@ -1,10 +1,19 @@
 AC_INIT(mrbayes, 3.2, http://www.mrbayes.net)
 AC_CONFIG_SRCDIR(mb.c)
 AC_CONFIG_HEADER(config.h)
+
+AC_ARG_ENABLE(debug, [ --enable-debug=[no/yes]     compile with debug support [default="no"]],,enable_debug="no")
+if test "x$enable_debug" == "xyes"; then
+: ${CFLAGS="-ggdb"}
+else
+: ${CFLAGS="-O3 -ffast-math -Wall -DNDEBUG"}
+fi
 AC_PROG_CC
+
 AC_HEADER_STDC
 AC_CHECK_LIB([m], [exp])
 AC_PROG_INSTALL
+
 
 NOMPICC="No compiler for mpi has been found. If this is incorrect, please adjust your path and rerun configure."
 AC_ARG_ENABLE(mpi, [  --enable-mpi=[no/yes]     compile the parallel version of mrbayes [default="no"]],,enable_mpi="no")
@@ -105,13 +114,6 @@ int main() { return sizeof(long)==4?1:0; }
 dnl finish
 if test "x$enable_mpi" == "xyes"; then
 	CC=mpicc
-fi
-
-AC_ARG_ENABLE(debug, [ --enable-debug=[no/yes]     compile with debug support [default="no"]],,enable_debug="no")
-if test "x$enable_debug" == "xyes"; then
-	CFLAGS="${CFLAGS} -ggdb"
-else
-	CFLAGS="${CFLAGS} -O3 -ffast-math -Wall -DNDEBUG"
 fi
 
 AC_CONFIG_FILES([Makefile])
