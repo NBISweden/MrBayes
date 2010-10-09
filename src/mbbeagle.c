@@ -40,19 +40,19 @@
 #include "mbbeagle.h"
 #include "utils.h"
 
-void BeagleAddGPUDevicesToList(int **beagleResource, int *beagleResourceCount) {
+void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {
 #if defined (BEAGLE_ENABLED)		
 	BeagleResourceList* beagleResources;
 	int i, gpuCount;
 	
 	beagleResources = beagleGetResourceList();
-	if (*beagleResource == NULL) {
-		*beagleResource = (int*) calloc(sizeof(int), beagleResources->length);
+	if (*newResourceList == NULL) {
+		*newResourceList = (int*) calloc(sizeof(int), beagleResources->length);
 	}
 	gpuCount = 0;
 	for (i = 0; i < beagleResources->length; i++) {
 		if (beagleResources->list[i].supportFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
-			*beagleResource[gpuCount] = i;
+			(*newResourceList)[gpuCount] = i;
 			gpuCount++;
 		}
 	}
