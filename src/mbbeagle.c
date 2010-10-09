@@ -62,7 +62,7 @@ void BeagleAddGPUDevicesToList(int **beagleResource, int *beagleResourceCount) {
 #endif		
 }
 
-BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount) {
+void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount) {
 	*beagleResourceCount = 0;
 }
 
