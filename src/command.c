@@ -6355,19 +6355,13 @@ int DoSetParm (char *parmName, char *tkn)
                         {
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_CPU;
 						beagleFlags |= BEAGLE_FLAG_PROCESSOR_GPU;
-						BeagleAddGPUDevicesToList(&beagleResource, &beagleResourceCount);
-							MrBayesPrint("Made a GPU list with %d GPUs\n", beagleResourceCount);
+						BeagleAddGPUDevicesToList(&beagleResource, &beagleResourceCount);						
                         }
 					else
                         {  
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_GPU;
 						beagleFlags |= BEAGLE_FLAG_PROCESSOR_CPU;
-						if (beagleResource) 
-							{
-							free(beagleResource);
-							beagleResourceCount = 0;
-							}
-								
+						BeagleRemoveGPUDevicesFromList(&beagleResource, &beagleResourceCount);
                         }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
