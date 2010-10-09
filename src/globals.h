@@ -146,6 +146,9 @@ extern char			    workingDir[100];                        /* working directory  
 #if defined (BEAGLE_ENABLED)
 extern int              tryToUseBEAGLE;                         /* try to use the BEAGLE library                 */
 extern long             beagleFlags;                            /* BEAGLE requirement flags                      */
+extern int*				beagleResource;						    /* BEAGLE resource list                          */
+extern int				beagleResourceCount;					/* BEAGLE resource list length                   */
+extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
 #endif
 
 /* Aamodel parameters */

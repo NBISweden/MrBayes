@@ -520,6 +520,9 @@ int InitializeMrBayes (void)
 #if defined (BEAGLE_ENABLED)
     tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
+	beagleResource = NULL;
+	beagleResourceCount = 0;						 /* default has no list */
+	beagleInstanceCount = 0;						 /* no BEAGLE instances */
 #endif
 
 	/* set the proposal information */

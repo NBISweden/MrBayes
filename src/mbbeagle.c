@@ -40,6 +40,32 @@
 #include "mbbeagle.h"
 #include "utils.h"
 
+void BeagleAddGPUDevicesToList(int **beagleResource, int *beagleResourceCount) {
+#if defined (BEAGLE_ENABLED)		
+	BeagleResourceList* beagleResources;
+	int i, gpuCount;
+	
+	beagleResources = beagleGetResourceList();
+	if (*beagleResource == NULL) {
+		*beagleResource = (int*) calloc(sizeof(int), beagleResources->length);
+	}
+	gpuCount = 0;
+	for (i = 0; i < beagleResources->length; i++) {
+		if (beagleResources->list[i].supportFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
+			*beagleResource[gpuCount] = i;
+			gpuCount++;
+		}
+	}
+	*beagleResourceCount = gpuCount;	
+#else		
+	BeagleNotLinked();
+#endif		
+}
+
+BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount) {
+	*beagleResourceCount = 0;
+}
+
 /*-----
 |
 | BeaglePrintResources: outputs the available BEAGLE resources

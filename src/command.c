@@ -242,6 +242,9 @@ char			**transTo;             /* translation block information                 *
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
 long            beagleFlags;           /* BEAGLE required resource flags                */
+int             *beagleResource;       /* BEAGLE resource choice list                   */
+int			    beagleResourceCount;   /* BEAGLE resource choice list length            */
+int             beagleInstanceCount;   /* total number of BEAGLE instances              */
 
 
 /* local (to this file) */
@@ -6352,11 +6355,19 @@ int DoSetParm (char *parmName, char *tkn)
                         {
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_CPU;
 						beagleFlags |= BEAGLE_FLAG_PROCESSOR_GPU;
+						BeagleAddGPUDevicesToList(&beagleResource, &beagleResourceCount);
+							MrBayesPrint("Made a GPU list with %d GPUs\n", beagleResourceCount);
                         }
 					else
                         {  
                         beagleFlags &= ~BEAGLE_FLAG_PROCESSOR_GPU;
 						beagleFlags |= BEAGLE_FLAG_PROCESSOR_CPU;
+						if (beagleResource) 
+							{
+							free(beagleResource);
+							beagleResourceCount = 0;
+							}
+								
                         }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;

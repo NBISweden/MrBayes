@@ -1161,6 +1161,7 @@ typedef struct modelinfo
 #if defined (BEAGLE_ENABLED)
     /* Beagle variables */
     int         useBeagle;                  /* use Beagle for this partition?               */
+	int         useBeagleResource;			/* try to use this BEAGLE resource number       */
     MrBFlt*     branchLengths;              /* array of branch lengths for Beagle           */
     MrBFlt*     inRates;                    /* array of category rates for Beagle           */
     int*        tiProbIndices;              /* array of trans prob indices for Beagle       */

@@ -10519,6 +10519,7 @@ int InitBeagleInstance (ModelInfo *m)
     SafeLong                *charBits;
     BeagleInstanceDetails   details;
     long preferedFlags, requiredFlags;
+	int resource;
     
     if (m->useBeagle == NO)
         return ERROR;
@@ -10551,8 +10552,16 @@ int InitBeagleInstance (ModelInfo *m)
             }
         }
 
-
-	preferedFlags = beagleFlags;
+	if (beagleResourceCount == 0) 
+		{
+		preferedFlags = beagleFlags;
+		} 
+		else 
+		{
+		resource = beagleResource[beagleInstanceCount % beagleResourceCount];
+		preferedFlags = beagleFlags;		
+		}
+	
 	requiredFlags = BEAGLE_FLAG_SCALERS_LOG;
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
@@ -10566,8 +10575,8 @@ int InitBeagleInstance (ModelInfo *m)
                                              m->numTiProbs*m->nCijkParts,
                                              m->numGammaCats,
                                              m->numScalers * m->nCijkParts,
-                                             NULL,
-                                             0,
+											 (beagleResourceCount == 0 ? NULL : &resource),
+                                             (beagleResourceCount == 0 ? 0 : 1),                                             
                                              preferedFlags,
                                              requiredFlags,
                                              &details);
@@ -10585,6 +10594,7 @@ int InitBeagleInstance (ModelInfo *m)
     	MrBayesPrint( "\tFlags:");
     	BeaglePrintFlags(details.flags);
     	MrBayesPrint( "\n");
+		beagleInstanceCount++;
         }
 
     /* initialize tip data */
