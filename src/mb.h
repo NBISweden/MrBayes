@@ -1173,6 +1173,10 @@ typedef struct modelinfo
     int*        childBufferIndices;         /* array of child partial indices (unrooted)    */
     int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
+	int			rescaleBeagleAll;			/* set to Yes if rescaling of all nodes is done 
+											   it means that all nodes scalers and cumulutive
+											   sclere are fliped and need to fliped again if
+											   move is not accepted							*/
 #endif
 
     } ModelInfo;
