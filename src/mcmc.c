@@ -38336,8 +38336,8 @@ void ResetFlips (int chain)
         if (m->upDateCl != YES)
             continue;
         
-#if defined(BEAGLE_ENABLED)
-		if( m->rescaleBeagleAll == YES )
+#if defined (BEAGLE_ENABLED)
+		if( m->useBeagle == YES && m->rescaleBeagleAll == YES )
 #endif
 			FlipSiteScalerSpace (m, chain);
         
@@ -38356,8 +38356,8 @@ void ResetFlips (int chain)
                 if (p->upDateCl == YES)
                 {
                     FlipCondLikeSpace (m, chain, p->index);
-#if defined(BEAGLE_ENABLED)
-                    if( m->rescaleBeagleAll == YES )
+#if defined (BEAGLE_ENABLED)
+                    if( m->useBeagle == YES && m->rescaleBeagleAll == YES )
 #endif
                         FlipNodeScalerSpace (m, chain, p->index);
                 }

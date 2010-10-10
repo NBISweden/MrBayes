@@ -147,7 +147,7 @@ int InitBeagleInstance (ModelInfo *m)
         {
 		MrBayesPrint( "\n   Using BEAGLE resource %i:", details.resourceNumber);
 #if defined (THREADS_ENABLED)
-        MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded", "non-threaded"));
+        MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
 #else
 		MrBayesPrint( " (non-threaded)\n");
 #endif
@@ -269,8 +269,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 }
 
 
-void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {
-#if defined (BEAGLE_ENABLED)		
+void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {		
 	BeagleResourceList* beagleResources;
 	int i, gpuCount;
 	
@@ -285,10 +284,7 @@ void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) 
 			gpuCount++;
 		}
 	}
-	*beagleResourceCount = gpuCount;	
-#else		
-	BeagleNotLinked();
-#endif		
+	*beagleResourceCount = gpuCount;			
 }
 
 void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount) {
@@ -303,7 +299,6 @@ void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCou
 
 void BeaglePrintResources() 
 {
-#if defined (BEAGLE_ENABLED)
 	int i;
 	BeagleResourceList* beagleResources;
 	
@@ -321,14 +316,9 @@ void BeaglePrintResources()
         BeaglePrintFlags(beagleResources->list[i].supportFlags);
 		MrBayesPrint("\n\n");
 		}
-#else
-	BeagleNotLinked();
-#endif
 }
 
 int BeagleCheckFlagCompatability(long inFlags) {
-#if defined (BEAGLE_ENABLED)    
-#if defined (BEAGLE_ENABLED)
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
         if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
             MrBayesPrint("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
@@ -339,13 +329,8 @@ int BeagleCheckFlagCompatability(long inFlags) {
             return NO;
         }
     }
-#endif
 
     return YES;
-#else
-    BeagleNotLinked();
-    return 0;
-#endif
 }
 
 
@@ -356,7 +341,7 @@ int BeagleCheckFlagCompatability(long inFlags) {
 ______________________*/
 void BeaglePrintFlags(long inFlags) 
 {
-#if defined (BEAGLE_ENABLED)
+
     if (inFlags & BEAGLE_FLAG_PROCESSOR_CPU)      
     	MrBayesPrint( " PROCESSOR_CPU", spacer);
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU)      
@@ -397,9 +382,7 @@ void BeaglePrintFlags(long inFlags)
     	MrBayesPrint( " THREADING_NONE", spacer);
     if (inFlags & BEAGLE_FLAG_THREADING_OPENMP)   
     	MrBayesPrint( " THREADING_OPENMP", spacer);
-#else
-	// Do nothing
-#endif
+
 }
     
 int ScheduleLogLikeForAllDivisions() {
