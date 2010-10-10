@@ -247,6 +247,9 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 			printf("FORCED RESCALING\n");
 #endif		
+			m->rescaleBeagleAll = YES;
+            FlipSiteScalerSpace(m, chain);
+            ResetSiteScalers(m, chain);
             TreeCondLikes_Beagle_Rescale_All(tree, d, chain);           
         } else {
             TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
