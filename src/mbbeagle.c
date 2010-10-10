@@ -237,8 +237,12 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 #endif
         /* Flip and copy or reset site scalers */
         FlipSiteScalerSpace(m, chain);
-        if (m->upDateAll == YES)
-            ResetSiteScalers(m, chain);
+        if (m->upDateAll == YES) {
+            //ResetSiteScalers(m, chain);
+			for (i=0; i<m->nCijkParts; i++) {			
+				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
+			}
+		}
         else
             CopySiteScalers(m, chain);
 
