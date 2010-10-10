@@ -226,7 +226,9 @@ int InitBeagleInstance (ModelInfo *m)
 |		of the new state of the chain for a single division
 |
 -----------------------------------------------------------------*/
-void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)  {	
+void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)  {
+
+	int i;	
     
     if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) {
 	
@@ -262,7 +264,11 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 			
             m->rescaleBeagleAll = YES;
             FlipSiteScalerSpace(m, chain);
-            ResetSiteScalers(m, chain);
+            //ResetSiteScalers(m, chain);		 
+			for (i=0; i<m->nCijkParts; i++) {			
+				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
+			}
+			
             TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
             TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
         }		        
