@@ -43621,7 +43621,7 @@ int UpDateCijk (int whichPart, int whichChain)
 
 {
 
-	int			c, i, j, k, u, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
+	int			c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
 	MrBFlt		**q[100], **eigvecs, **inverseEigvecs;
 	MrBFlt		*eigenValues, *eigvalsImag, *cijk;
 	MrBFlt		*bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
@@ -43629,6 +43629,7 @@ int UpDateCijk (int whichPart, int whichChain)
 	ModelInfo	*m;
 	Param		*p;
 #if defined (BEAGLE_ENABLED)
+	int			u;
 	double      *beagleEigvecs=NULL, *beagleInverseEigvecs=NULL;
 #endif
 

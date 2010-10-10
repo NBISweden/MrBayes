@@ -6480,6 +6480,7 @@ int DoSetParm (char *parmName, char *tkn)
 				expecting = Expecting(NUMBER);
 			else if (expecting == Expecting(NUMBER))
 				{
+#if defined (BEAGLE_ENABLED)
 				sscanf (tkn, "%d", &tempI);
                 if (tempI < 0)
                     {
@@ -6488,6 +6489,9 @@ int DoSetParm (char *parmName, char *tkn)
                     }
 				beagleScalingFrequency= tempI;
 				MrBayesPrint ("%s   Setting Beaglefreq to %d\n", spacer, beagleScalingFrequency);
+#else
+				BeagleNotLinked();
+#endif
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 

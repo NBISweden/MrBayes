@@ -42,6 +42,9 @@
 #include "utils.h"
 #include "mcmc.h"
 
+/* Functions and variables defined in mcmc.c that are not exported in mcmc.h */
+void	LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL);
+
 void    FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
 void    FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
 void    FlipSiteScalerSpace (ModelInfo *m, int chain);
