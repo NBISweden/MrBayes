@@ -829,7 +829,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                      m->inWeights);
             }
         }
-    else
+    else if (hasPInvar == YES)
         {
         for (i=0; i<m->numGammaCats; i++)
             m->inWeights[i] = freq;

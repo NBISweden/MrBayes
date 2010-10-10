@@ -10531,6 +10531,7 @@ int InitChainCondLikes (void)
 #endif
 #if defined (BEAGLE_ENABLED)
     double      *nSitesOfPat;
+    MrBFlt      freq;
 #endif
 
     /* Figure out how large cond like array is needed, and how many cond like, scaler and tiprob arrays are needed.
@@ -10679,25 +10680,6 @@ int InitChainCondLikes (void)
         else if (useBeagle == NO && useSSE == YES)
             MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d\n", spacer, d+1);
 
-#if defined (BEAGLE_ENABLED)
-        /* Set up nSitesOfPat for Beagle */
-        if (m->useBeagle == YES)
-            {
-            nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
-            for (c=0; c<m->numChars; c++)
-                nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-            beagleSetPatternWeights(m->beagleInstance,
-                                    nSitesOfPat);
-            SafeFree ((void **)(&nSitesOfPat));
-            }
-
-        /* Set up scalers for Beagle */
-        if (m->useBeagle == YES)
-            {
-            for (i=0; i<m->numScalers*m->nCijkParts; i++)
-                beagleResetScaleFactors(m->beagleInstance, i);
-            }
-#endif
 
         if (useBeagle == NO)
             {
@@ -10960,6 +10942,46 @@ int InitChainCondLikes (void)
             m->cijkScratchIndex = numLocalChains*indexStep;
             }
 
+#if defined (BEAGLE_ENABLED)
+            /* Set up nSitesOfPat for Beagle */
+            if (m->useBeagle == YES)
+            {
+                nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
+                for (c=0; c<m->numChars; c++)
+                    nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
+                beagleSetPatternWeights(m->beagleInstance,
+                                        nSitesOfPat);
+                SafeFree ((void **)(&nSitesOfPat));
+
+                /* find category frequencies */
+                if (m->pInvar == NO)
+                {
+                    freq =  1.0 /  m->numGammaCats;
+                    
+                    /* set category frequencies in beagle instance */
+                    if (m->numOmegaCats <= 1)
+                    {
+                        for (i=0; i<m->numGammaCats; i++)
+                            m->inWeights[i] = freq;
+                        for (i=0; i< (numLocalChains); i++) {
+                            beagleSetCategoryWeights(m->beagleInstance,
+                                                     m->cijkIndex[i],
+                                                     m->inWeights);
+                        }
+                        beagleSetCategoryWeights(m->beagleInstance,
+                                                 m->cijkScratchIndex,
+                                                 m->inWeights);
+                    }
+                }
+                
+                /* Set up scalers for Beagle */
+                for (i=0; i<m->numScalers*m->nCijkParts; i++)
+                    beagleResetScaleFactors(m->beagleInstance, i);
+            }
+#endif
+            
+            
+            
         /* fill in tip conditional likelihoods */
         if (m->dataType == STANDARD)
 			{
