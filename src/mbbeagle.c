@@ -750,7 +750,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
 int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats)
 
 {
-    int         i, j, c, nStates, hasPInvar, beagleReturn;
+    int         i, j, c = 0, nStates, hasPInvar, beagleReturn;
     MrBFlt      *swr, s01, s10, probOn, probOff, covBF[40], pInvar=0.0, *bs, freq, likeI, lnLikeI, diff, *omegaCatFreq;
     CLFlt       *clInvar=NULL, *nSitesOfPat;
     double      *nSitesOfPat_Beagle;
@@ -775,10 +775,10 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 		pInvar =  *(GetParamVals (m->pInvar, chain, state[chain]));
 		clInvar = m->invCondLikes;
 		}
-
+	
 	/* find base frequencies */
 	bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-
+	
 	/* if covarion model, adjust base frequencies */
 	if (m->switchRates != NULL)
 		{
@@ -800,12 +800,14 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 		bs = covBF;
 		}
 
-    /* TODO: frequencies only need to be set when they change */
-    /* set base frequencies in beagle instance */
-    for (i=0; i<m->nCijkParts; i++)
-        beagleSetStateFrequencies(m->beagleInstance,
-                                  m->cijkIndex[chain] + i,
-                                  bs);
+	if (m->upDateCijk == YES) { /* TODO Really only need to check if state frequencies have changed */
+		
+		/* set base frequencies in BEAGLE instance */
+		for (i=0; i<m->nCijkParts; i++)
+			beagleSetStateFrequencies(m->beagleInstance,
+									  m->cijkIndex[chain] + i,
+									  bs);									  
+	}
 
     /* find category frequencies */
 	if (hasPInvar == NO)
