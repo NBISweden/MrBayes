@@ -9463,6 +9463,7 @@ void FreeChainMemory (void)
         SafeFree((void **)(&m->childBufferIndices));
         SafeFree((void **)(&m->childTiProbIndices));
         SafeFree((void **)(&m->cumulativeScaleIndices));
+		SafeFree((void **)(&m->beagleComputeCount));
 #endif
         }
 
@@ -35416,10 +35417,10 @@ int PrintStates (int curGen, int coldId)
 		p = &params[i];
 
 		if (p->paramType == P_BRLENS)
-			{
-			if (p->tree[0]->isCalibrated == YES)
-				{
-				tree = GetTree (p, coldId, state[coldId]);
+			{	
+            tree = GetTree (p, coldId, state[coldId]);																	
+			if (tree->isCalibrated == YES)
+				{				
                 clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, coldId, state[coldId]);
 				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(clockRate));
 				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
