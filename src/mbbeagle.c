@@ -242,7 +242,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         m->rescaleBeagleAll = NO;
         
         TreeTiProbs_Beagle(tree, d, chain);
-        if (m->beagleComputeCount[chain] % beagleScalingFrequency == 0) { // Force recompute
+        if (beagleScalingFrequency != 0 && 
+			m->beagleComputeCount[chain] % beagleScalingFrequency == 0) { // Force recompute
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 			printf("FORCED RESCALING\n");
 #endif		
@@ -256,12 +257,13 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 			printf("NUMERICAL RESCALING\n");
 #endif
+			
             m->rescaleBeagleAll = YES;
             FlipSiteScalerSpace(m, chain);
             ResetSiteScalers(m, chain);
             TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
             TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
-        }         
+        }		        
     }
 	
 	/* Count number of evaluations */

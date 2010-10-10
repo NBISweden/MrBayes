@@ -59,7 +59,7 @@
 
 #define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						256
+#define	NUMPARAMS						241
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -326,7 +326,7 @@ CmdType			commands[] =
 			{ 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
 			{ 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
 			{ 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-			{ 38,             "Set",  NO,             DoSet, 19,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+			{ 38,             "Set",  NO,             DoSet, 20,                                               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
 			{ 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
 			{ 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
 			{ 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
@@ -6473,7 +6473,26 @@ int DoSetParm (char *parmName, char *tkn)
             }
 			else
 				return (ERROR);
-        } 
+        }
+		else if (!strcmp(parmName, "Beaglefreq"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%d", &tempI);
+                if (tempI < 0)
+                    {
+                    MrBayesPrint ("%s   Beaglefreq must be greater than 0\n", spacer);
+                    return ERROR;
+                    }
+				beagleScalingFrequency= tempI;
+				MrBayesPrint ("%s   Setting Beaglefreq to %d\n", spacer, beagleScalingFrequency);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				return (ERROR);
+			}		 
 		else if (!strcmp(parmName, "Beaglesse"))
         {
 			if (expecting == Expecting(EQUALSIGN))
@@ -13131,6 +13150,7 @@ void SetUpParms (void)
     PARAM   (237, "Beagleopenmp",   DoSetParm,         "Yes|No|\0");
 	PARAM	(238, "Beaglethreads",  DoSetParm,		   "Yes|No|\0");
 	PARAM   (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
+	PARAM   (240, "Beaglefreq",    DoSetParm,         "\0");
 
 
 	/* NOTE: If a change is made to the parameter table, make certain you
