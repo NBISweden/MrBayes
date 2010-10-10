@@ -608,18 +608,6 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
 			else
 				chil2Step=1;
             
-            
-			//if ( 1 || p->scalerNode == YES)
-            //             {
-            //             //m->scalersSet[chain][p->index] = YES;
-            //             operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
-            //             cumulativeScaleIndex  = m->siteScalerIndex[chain];
-            //             }
-            //         else
-            //             {
-            //             operations.destinationScaleWrite = BEAGLE_OP_NONE;
-            //             cumulativeScaleIndex  = BEAGLE_OP_NONE;
-            //             }
 			operations.destinationScaleRead = BEAGLE_OP_NONE;
 			operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
             cumulativeScaleIndex  = m->siteScalerIndex[chain];
@@ -888,7 +876,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           m->eigenIndices,
                                           m->cumulativeScaleIndices,
                                           m->nCijkParts,
-                                          m->logLikelihoods);
+                                          lnL);
 
         }
     else
@@ -916,12 +904,10 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     /* accumulate logs across sites */
 	if (hasPInvar == NO)
 		{
-        /* TODO: site likelihoods not necessary in every case */
-        beagleGetSiteLogLikelihoods(m->beagleInstance, m->logLikelihoods);
-        (*lnL) = 0.0;
-		c=0;
 		if( m->dataType == RESTRICTION )
 			{
+            beagleGetSiteLogLikelihoods(m->beagleInstance, m->logLikelihoods);
+            (*lnL) = 0.0;
 			pUnobserved = 0.0;
 			for (; c<m->numDummyChars; c++)
 				{
@@ -930,10 +916,6 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 			/* correct for absent characters */
 			(*lnL) -= log( 1-pUnobserved ) * (m->numUncompressedChars);
 			}
-        for (; c<m->numChars; c++)
-            {
-            (*lnL) += m->logLikelihoods[c] * nSitesOfPat[c];
-            }
 		/* already done, just check for numerical errors */
 		if ((*lnL) != (*lnL))
 			{
