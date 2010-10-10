@@ -239,24 +239,16 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
     } else { /* MB_BEAGLE_SCALE_DYNAMIC */
 	
 		/* This flag is only valid within this block */
-        m->rescaleBeagleAll = NO;
-        
+        m->rescaleBeagleAll = NO;        
         TreeTiProbs_Beagle(tree, d, chain);
-        if (beagleScalingFrequency != 0 && 
-			m->beagleComputeCount[chain] % beagleScalingFrequency == 0) { // Force recompute
-#if defined (DEBUG_MB_BEAGLE_FLOW)
-			printf("FORCED RESCALING\n");
-#endif		
-			m->rescaleBeagleAll = YES;
-            FlipSiteScalerSpace(m, chain);
-            ResetSiteScalers(m, chain);
-            TreeCondLikes_Beagle_Rescale_All(tree, d, chain);           
-        } else {
-            TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
-        }
+		TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
 
-		/* Check if likelihood is valid */
-        if (TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT) {
+		/* Check if likelihood is valid */		
+        if (
+			((beagleScalingFrequency != 0 && 
+			m->beagleComputeCount[chain] % beagleScalingFrequency == 0)) ||		
+			TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) 
+				== BEAGLE_ERROR_FLOATING_POINT ) {
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 			printf("NUMERICAL RESCALING\n");
 #endif
