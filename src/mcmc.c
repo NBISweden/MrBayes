@@ -38337,9 +38337,14 @@ void ResetFlips (int chain)
             continue;
         
 #if defined (BEAGLE_ENABLED)
-		if( m->useBeagle == YES && m->rescaleBeagleAll == YES )
+		if( m->useBeagle == NO || 
+			beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+			m->rescaleBeagleAll == YES )
+				FlipSiteScalerSpace (m, chain);
+#else
+		FlipSiteScalerSpace (m, chain);
 #endif
-			FlipSiteScalerSpace (m, chain);
+			
         
         if (m->upDateCijk == YES && m->nCijkParts > 0)
             FlipCijkSpace (m, chain);
@@ -38352,14 +38357,18 @@ void ResetFlips (int chain)
             if (p->upDateTi == YES)
                 FlipTiProbsSpace (m, chain, p->index);
             if (p->right != NULL)    /* do not flip terminals in case these flags are inappropriately set by moves */
-            {
+			{
                 if (p->upDateCl == YES)
                 {
                     FlipCondLikeSpace (m, chain, p->index);
 #if defined (BEAGLE_ENABLED)
-                    if( m->useBeagle == YES && m->rescaleBeagleAll == YES )
+					if( m->useBeagle == NO || 
+						beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+						m->rescaleBeagleAll == YES )
+							FlipNodeScalerSpace (m, chain, p->index);
+#else
+					FlipNodeScalerSpace (m, chain, p->index);
 #endif
-                        FlipNodeScalerSpace (m, chain, p->index);
                 }
             }
         }
