@@ -143,7 +143,7 @@ int InitBeagleInstance (ModelInfo *m)
 
     if (m->beagleInstance < 0)
         {
-        MrBayesPrint ("%s   Failed to start beagle instance\n", spacer);
+        MrBayesPrint ("%s   Failed to start BEAGLE instance\n", spacer);
         return (ERROR);
         }
     else
@@ -160,7 +160,7 @@ int InitBeagleInstance (ModelInfo *m)
     	BeaglePrintFlags(details.flags);
     	MrBayesPrint( "\n");
 		beagleInstanceCount++;
-		m->beagleComputeCount = (long*) calloc(sizeof(long), numLocalChains); // TODO Need to free.				
+		m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains); // Freed in mcmc.c::FreeChainMemory				
         }
 
     /* initialize tip data */

@@ -12,3 +12,7 @@ void *LaunchThreadLogLikeForDivision(void *arguments);
 MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain);
 
 int InitBeagleInstance (ModelInfo *m);
+
+int TreeCondLikes_Beagle (Tree *t, int division, int chain);
+int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
+int TreeTiProbs_Beagle (Tree *t, int division, int chain);
