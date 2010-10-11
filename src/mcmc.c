@@ -10573,7 +10573,9 @@ int InitChainCondLikes (void)
 				m->condLikeLength = m->numChars * m->numGammaCats * m->numOmegaCats * m->numModelStates;
 #if defined (BEAGLE_ENABLED)
             /* tentatively decide on whether to use Beagle */
-            if (m->gibbsGamma == NO)
+            if (inferPosSel == YES)
+                m->useBeagle = NO;
+            else if (m->gibbsGamma == NO)
                 m->useBeagle = tryToUseBEAGLE;
             else
                 m->useBeagle = NO;
