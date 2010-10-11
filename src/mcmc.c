@@ -42318,13 +42318,6 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 			correctionFactor = 3.0;
 		}
 
-	/* update cijk if necessary */
-	if (m->upDateCijk == YES)
-		{
-		if (UpDateCijk (division, chain) == ERROR)
-			return (ERROR);
-		}
-
 	/* find transition probabilities */
 	tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     		
@@ -43004,6 +42997,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 			/* first update cijk if necessary */
 			if (m->cijkLength > 0 && m->upDateCijk == YES)
 				{
+                /* TODO: (IMPORTANT) This UpDateCijk is probably a bug */
 				if (UpDateCijk (division, chain) == ERROR)
 					return (ERROR);
 				}
