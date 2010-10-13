@@ -47,6 +47,7 @@
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
+#include "best.h"
 #include "mcmc.h"
 #include "model.h"
 #include "command.h"
@@ -266,9 +267,6 @@ int     LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio);
 MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
-int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int     LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
-MrBFlt  LnUniformPriorPr (Tree *t);
 MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
 void    MarkClsBelow (TreeNode *p);
@@ -3613,7 +3611,6 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 				nCats = m->numBetaCats;
 			else
 				nCats = 1;
-			
 
 			tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
 			tiPL = pL + m->tiIndex[c] + tmp;
@@ -5848,7 +5845,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 	pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
 
 	/* calculate ancestral probabilities */
-		for (k=h=0; k<m->numGammaCats; k++)
+	for (k=h=0; k<m->numGammaCats; k++)
 		{
 		/* calculate ancestral probabilities */
 		for (c=0; c<m->numChars; c++)
@@ -5861,7 +5858,6 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 				nCats = m->numBetaCats;
 			else
 				nCats = 1;
-			}
 
 			tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
 			tiPL = pL + m->tiIndex[c] + tmp;
@@ -5890,6 +5886,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 				tiPR += tmp;
 				tiPA += tmp;
 				}
+            }
 		}
 
 	return NO_ERROR;
@@ -9598,6 +9595,11 @@ void FreeChainMemory (void)
 		chainParams.treeList = NULL;
 		memAllocs[ALLOC_TREELIST] = NO;
 		}
+    if (memAllocs[ALLOC_BEST] == YES)
+        {
+        FreeBestChainVariables();
+        memAllocs[ALLOC_BEST] = NO;
+        }
 }
 
 
@@ -10590,14 +10592,15 @@ int InitChainCondLikes (void)
         m->numCondLikes = (numLocalChains + 1) * (nIntNodes);
         m->numCondLikes += numLocalTaxa;
 		/*
-#if !defined (DEBUG_NOSHORTCUTS) && !defined (SSE_ENABLED)
+#if !defined (DEBUG_NOSHORTCUTS)
         for (i=0; i<numLocalTaxa; i++)
             {
-            if (m->isPartAmbig[i] == NO)
+            if (m->isPartAmbig[i] == NO && m->dataType != STANDARD)
                 m->numCondLikes--;
             }
 #endif
 		*/
+
         /* figure out number of node and site scalers */
         m->numScalers = (numLocalChains + 1) * (nIntNodes + 1);   /* add 1 for site scalers */
 
@@ -10809,7 +10812,7 @@ int InitChainCondLikes (void)
         for (i=0; i<numLocalTaxa; i++)
             {
 #if !defined (DEBUG_NOSHORTCUTS)
-            if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO)
+            if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
                 continue;
 #endif
             for (j=0; j<numLocalChains; j++)
@@ -10990,10 +10993,6 @@ int InitChainCondLikes (void)
             clIndex = 0;
 			for (i=0; i<numLocalTaxa; i++)
 				{
-#if !defined (DEBUG_NOSHORTCUTS)
-                if (m->isPartAmbig[i] == NO)
-                    continue;
-#endif
 				cL = m->condLikes[clIndex++];
 				for(t=0; t<m->numGammaCats;t++)
 					{
@@ -13633,7 +13632,6 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         clP[k] = clPtr;
         clPtr += numReps;
         }
-
 	
 	/* find base frequencies */
 	bsBase = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
@@ -37884,7 +37882,7 @@ int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
 	int			i, j;
 	TreeNode	*p;
 
-    extern int ShowParts (FILE *,SafeLong *,int);
+    extern void ShowParts (FILE *,SafeLong *,int);
 
 	for (i=0; i<tree->nIntNodes-1; i++)
 		{

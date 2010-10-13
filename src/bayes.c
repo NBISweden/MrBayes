@@ -724,6 +724,11 @@ int InitializeMrBayes (void)
 	defaultModel.popSizeUni[0] = 0.0;
 	defaultModel.popSizeUni[1] = 10.0;
 	defaultModel.popSizeExp = 1.0;
+	strcpy(defaultModel.popVarPr, "Equal");         /* prior on pop. size variation across tree      */
+	defaultModel.popSizeFix = 1.0;
+	defaultModel.popSizeUni[0] = 0.0;
+	defaultModel.popSizeUni[1] = 10.0;
+	defaultModel.popSizeExp = 1.0;
 	strcpy(defaultModel.growthPr, "Fixed");        /* prior on coalescence growth rate prior      */
 	defaultModel.growthFix = 0.0;
 	defaultModel.growthUni[0] = 0.0;

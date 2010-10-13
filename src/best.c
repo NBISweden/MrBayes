@@ -15,65 +15,74 @@
  *  liuliang@stat.ohio-state.edu
  */
 
+#include    <assert.h>
+
 #include	"best.h"
 #include	"command.h"
 #include    "globals.h"
 #include    "mb.h"
 #include    "mbmath.h"
+#include    "mcmc.h"
 #include    "model.h"
+#include    "sumt.h"
 #include    "tree.h"
 #include    "utils.h"
 
-double      NodeDistance(SPTree *tree, int inode, int jnode);
-int	        ReadaTree (FILE *fTree,SPTree *tree);
-void        ReadGeneTree(FILE *fTree);
-void        SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted);
 int         Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
 double      CalNodeAge(int node, SPTree *tree);
-double      PopNodeDistance(int inode, int jnode, SPTree *tree);
-int         FindaPosition(int nodenumber,int root,double currentdistance,double *position,SPTree *speciestree);  
-int         StartSptree(SPTree *speciestree, int numchange);
-void        quick_struct(Distance *item,int count);
-void        qs_struct(Distance *item,int left,int right);
-int         GetCoaltime(SPTree *genetree,SPTree *speciestree, CoalTime *coal);
-int         GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, CoalTime *coal_t,int *index);
-void        SPMrBayesPrint (char *format, ...);
-void        PrintInf(FILE *fp);
-int         SPLogLike(SPTree *genetree, SPTree *speciestree, double *lnl);
-int         LnLikehood1Tree(SPTree *genetree, SPTree *speciestree, double *lnp);
-void        SPPrintToScreen (int curGen, time_t endingT, time_t startingT);
-int         SPLogPrior(SPTree *speciestree, double *lnprior);
-int         Move_SPSpeciation (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-int         Move_SPExtinction (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-double 	    SPLnP1 (double t, double l, double m, double r);
-double 	    SPLnVt (double t, double l, double m, double r);
+double 	    ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
+int         ChangeConstraint(Distance *dist, int nconstraints);
+int 	    CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints);
+long int    ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist);
 void        CopyParam(int chn);
-int         SPPickProposal (void);
-void        SPPreparePrintFiles (void);
 void        DelAllmissingspecies(int nummissing,int *missnode, SPTree *speciestree);
 void        DeleteaSpecies(int inode,SPTree *speciestree);
-double 	    Toclocktree(SPTree *t, int node);
-void        ToGenetree(Tree *file[], int *updatedtreeid, int nfile, double *GeneMu);
-double 	    TreeL(Tree *t);
-MrBFlt 	    Prob_sptree(Distance *tau,int ntime);
-int         LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
-int         SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
-int         poisson(double x);
-double 	    ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
+void        FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index);
 int         FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p);
 int         FindspNodeBelow(SPTree *speciestree, int spnode, double dis_gene);
-int         SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nconstraints, int nspecies);
+int         FindaPosition(int nodenumber,int root,double currentdistance,double *position,SPTree *speciestree);  
+int         GetCoaltime(SPTree *genetree,SPTree *speciestree, CoalTime *coal);
+int         GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, CoalTime *coal_t,int *index);
+int         GetConstraints(double **distanceMatrix, Distance *constr);
+long int    GetMinDists(SPTree *geneTrees, int numGeneTrees, double **distanceMatrix);
+int         LnLikehood1Tree(SPTree *genetree, SPTree *speciestree, double *lnp);
+int         LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
+int         Move_SPSpeciation (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
+int         Move_SPExtinction (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
 int         MaximumTree(Distance *dist, SPTree *speciestree, int nconstraints);
-int         ChangeConstraint(Distance *dist, int nconstraints);
-void        ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
-void        FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index);
-long int    ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist);
-int 	    CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints);
+double      NodeDistance(SPTree *tree, int inode, int jnode);
 long int    OneClockTreeNodeDist(SPTree *clocktree, Distance *dist);
+double      PopNodeDistance(int inode, int jnode, SPTree *tree);
 int 		populationMutation (Tree *genetree, SPTree *speciestree, MrBFlt genemu);
+MrBFlt 	    Prob_sptree(Distance *tau,int ntime);
+int         poisson(double x);
+void        PrintInf(FILE *fp);
+void        quick_struct(Distance *item,int count);
+void        qs_struct(Distance *item,int left,int right);
+int	        ReadaTree (FILE *fTree,SPTree *tree);
+void        ReadGeneTree(FILE *fTree);
+int         StartSptree(SPTree *speciestree, int numchange);
+double 	    SPLnP1 (double t, double l, double m, double r);
+double 	    SPLnVt (double t, double l, double m, double r);
+int         SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
+int         SPPickProposal (void);
+void        SPPreparePrintFiles (void);
 int			SPSaveSprintf(char **target, int *targetLen, char *fmt, ...);
-int         GetConstraints(SPTree *s, Distance *constr);
-long int    GetMinDists(SPTree *clocktree, int ngene, double **md);
+void        SPMrBayesPrint (char *format, ...);
+int         SPLogLike(SPTree *genetree, SPTree *speciestree, double *lnl);
+int         SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nconstraints, int nspecies);
+void        SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted);
+void        SPPrintToScreen (int curGen, time_t endingT, time_t startingT);
+int         SPLogPrior(SPTree *speciestree, double *lnprior);
+double 	    Toclocktree(SPTree *t, int node);
+void        ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
+void        ToGenetree(Tree *file[], int *updatedtreeid, int nfile, double *GeneMu);
+double 	    TreeL(Tree *t);
+
+/****************************** Local functions converted by Fredrik from best code *****************************/
+double      LnCoalescenceProb (TreeNode *geneTreeNode, TreeNode *speciesTreeNode, int *nEvents, double *coalTimes, int ploidy);
+double      LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr);
+
 
 McmcPara 	mcmc;
 SPTree 	    sptree;
@@ -94,12 +103,71 @@ int		spMupr = 0; 		/*non-clock species tree or clock species tree*/
 int		spMupralpha = 5; 		/*for non-clock species tree model, gamma(spMupralpha,r/spMupralpha) for mutation rate ratio r*/
 int		speciestreePr = 0; 	/*birth-death prior or uniform prior*/
 double 	poissonMean = 1.0; 	/*the number of nodes changed for proposing a new species tree*/
+double  ***speciesTreeDistanceMatrix;      // distance matrixces for species trees
+double  ***geneTreeDistanceMatrix[];         // distance matrices for gene trees
 
 
 
 /**************************** Functions that interact directly with MrBayes ****************************/
 
-/*------------------------------------------------------------------
+// TODO: Set the global variables below in main mrbayes code
+
+/* Global best variables */
+SafeLong    **speciesPairSets;
+int         numSpecies;
+double      *depthMatrix;
+int         numSpecies=0;
+int         *speciesPartition;
+char        **speciesNames = NULL;
+// P_GENERATE, P_PARTRATE
+// Check consistency of best model
+
+
+/* Allocate variables used by best code during mcmc */
+void AllocateBestChainVariables (void)
+{
+    int     i, j, index, numUpperTriang, nLongsNeeded;
+
+    // Free if by mistake variables are already allocated
+    if (memAllocs[ALLOC_BEST] == YES)
+        FreeBestChainVariables ();
+
+    // Allocate space for upper triangular pair sets
+    numUpperTriang     = (numSpecies * (numSpecies-1)) / 2;
+    nLongsNeeded       = ((numSpecies - 1) / nBitsInALong) + 1;
+    speciesPairSets    = (SafeLong **) calloc (numUpperTriang, sizeof(SafeLong *));
+    speciesPairSets[0] = (SafeLong *)  calloc (numUpperTriang*nLongsNeeded, sizeof(int));
+    for (i=1; i<numUpperTriang; i++)
+        speciesPairSets[i] = speciesPairSets[0] + i*nLongsNeeded;
+
+    // Set upper triangular pair partitions once and for all
+    index = 0;
+    for (i=0; i<numSpecies; i++) {
+        for (j=i+1; j<numSpecies; j++) {
+            SetBit(i, speciesPairSets[index]);
+            SetBit(j, speciesPairSets[index]);
+            index++;
+        }
+    }
+
+    memAllocs[ALLOC_BEST] = YES;
+}
+
+
+
+
+
+/** Convert nonclock gene trees to clock gene trees */
+int ConvertToClockTrees(Tree **geneTrees, int numGeneTrees)
+{
+    return (NO_ERROR);
+}
+
+
+
+
+
+/**-----------------------------------------------------------------
 |
 |	FillSpeciesTreeParams: Fill in species trees (start value)
 |
@@ -107,72 +175,395 @@ double 	poissonMean = 1.0; 	/*the number of nodes changed for proposing a new sp
 int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
-
-    // TODO: BEST Build an appropriate starting tree
-
-    int			k, chn;
+    int			i, k, chn, numGeneTrees, geneTreesAreClock;
 	Param		*p;
-	Tree		*tree;
+	Tree		*speciesTree, **geneTrees;
 
-	/* Build species trees for state 0 */
+    // Use global variable numTopologies to calculate number of gene trees
+    // There is one topology for the species tree, the other ones are gene trees
+    // The number of current divisions is not safe because one gene tree can have
+    // several partitions, for instance if we model the different genes on the
+    // mitochondrion differently, or if we assign different rates to the codon
+    // site positions in a sequence
+    numGeneTrees = numTopologies - 1;
+    geneTrees   = (Tree **) calloc (numGeneTrees, sizeof(Tree*));
+
+    // Build species trees for state 0
 	for (chn=fromChain; chn<toChain; chn++)
 		{
 		for (k=0; k<numParams; k++)
 			{
 			p = &params[k];
 			if (p->paramType == P_SPECIESTREE && p->fill == YES)
-				{
-                tree = GetTree(p, chn, 0);
-                BuildRandomRTopology(tree, seed);
-                InitClockBrlens(tree);
-				if (LabelTree (tree, localTaxonNames) == ERROR)
+	            {
+                // Find species tree and gene trees
+                speciesTree = GetTree(p, chn, 0);
+                for (i=0; i<p->nSubParams; i++)
+                    geneTrees[i] = GetTree(p->subParams[i], chn, 0);
+
+                // If gene trees are non-clock, convert them to clock trees
+                if (geneTrees[0]->isClock == NO)
+                    geneTreesAreClock = NO;
+                else
+                    geneTreesAreClock = YES;
+                if (geneTreesAreClock == NO)
+                    ConvertToClockTrees(geneTrees, numGeneTrees);
+
+                // Get minimum depth matrix for species tree
+                GetMinDepthMatrix (geneTrees, numGeneTrees, depthMatrix);
+
+                // Get a species tree from min depth matrix
+                GetSpeciesTreeFromMinDepths(speciesTree, depthMatrix);
+
+                // Label the tips
+                if (LabelTree (speciesTree, speciesNames) == ERROR)
 					return (ERROR);
-				if (chn == toChain-1)	/* last chain to fill */
+
+                // Flip fill flag to NO if last chain to fill
+                if (chn == toChain-1)	/* last chain to fill */
 					p->fill = NO;
+
+                // Free converted trees
+                if (geneTreesAreClock == NO)
+                    {
+                    for (i=0; i<numGeneTrees; i++)
+                        FreeTree(geneTrees[i]);
+                    }
                 }
             }
         }
 
-	return (NO_ERROR);
+    // Free gene trees
+    free (geneTrees);
+
+    return (NO_ERROR);
 }
 
 
 
 
 
-/*------------------------------------------------------------------
+/**-----------------------------------------------------------------
+|
+|	FreeBestChainVariables: Free best variables used during an mcmc
+|   run.
+|
+------------------------------------------------------------------*/
+void FreeBestChainVariables(void)
+{
+
+    if (memAllocs[ALLOC_BEST] == YES) {
+        free (speciesPairSets[0]);
+        free (speciesPairSets);
+    }
+
+    memAllocs[ALLOC_BEST] = NO;
+}
+
+
+
+
+
+/**---------------------------------------------------------------------------------------
+|
+|   LnCoalescenceProb: recursive function to calculate coalescence ln probability. The
+|   time complexity is O(n), where n is the number of nodes in the gene tree.
+|
+-----------------------------------------------------------------------------------------*/
+double LnCoalescenceProb (TreeNode *geneTreeNode, TreeNode *speciesTreeNode, int *nEvents, double *coalTimes, int ploidy)
+{
+    int     i, k, nLongsNeeded, nRemaining, nIn, nOut;
+    double  lnProb, theta, timeInterval;
+
+    lnProb = 0.0;
+
+    if (geneTreeNode->nodeDepth <= speciesTreeNode->nodeDepth) {
+        // climb up species tree (or stop)
+        if (speciesTreeNode->left == NULL) {
+            assert (geneTreeNode->left == NULL);
+            speciesTreeNode->x++;       // increase number of lineages in == starting lineages
+            (*nEvents) = 0;
+            return 0.0;
+        }
+        else /* if (speciesTreeNode->left != NULL) */ {
+            nLongsNeeded = (numSpecies - 1) / nBitsInALong + 1;
+            speciesTreeNode->x++;   // increase number of lineages in
+            if (IsPartNested(geneTreeNode->partition, speciesTreeNode->left->partition, nLongsNeeded))
+                return LnCoalescenceProb (geneTreeNode, speciesTreeNode->left, nEvents, coalTimes, ploidy);
+            else
+                return LnCoalescenceProb (geneTreeNode, speciesTreeNode->right, nEvents, coalTimes, ploidy);
+        }
+    }
+    else {
+        // climb up gene tree
+        lnProb += LnCoalescenceProb (geneTreeNode->left , speciesTreeNode, nEvents, coalTimes, ploidy);
+        lnProb += LnCoalescenceProb (geneTreeNode->right, speciesTreeNode, nEvents, coalTimes, ploidy);
+
+        // Add current coalescent event
+        coalTimes[(*nEvents)] = geneTreeNode->nodeDepth;
+        (*nEvents)++;
+        
+        // If the last coalescent event, we add to probability and reset nEvents
+        nIn = speciesTreeNode->x;
+        nRemaining = nIn  - (*nEvents);
+        if (speciesTreeNode->anc->anc == NULL)
+            nOut = 1;
+        else
+            nOut = speciesTreeNode->anc->x;
+
+        if (nRemaining == nOut) {
+
+            // Get theta and adjust if not diploid gene
+            theta = speciesTreeNode->y;
+            if (ploidy == HAPLOID)
+                theta *= 0.25;      // Shouldn't this be 0.50 ?? -- Fredrik
+            else if (ploidy == ZLINKED)
+                theta *= 0.75;
+
+            // Sort coalescent times
+            //qsort((void *)(coalTimes), (size_t)(*nEvents), sizeof(double), CompareDoubles);
+
+            // Adjust probability
+            lnProb += (*nEvents) * log (2.0 / theta);
+            for (k=nIn, i=0; k>nOut; k--, i++) {
+                if (i == 0)
+                    timeInterval = coalTimes[0] - speciesTreeNode->nodeDepth;
+                else
+                    timeInterval = coalTimes[i] - coalTimes[i-1];
+                lnProb -= (k * (k - 1)) / (theta * timeInterval);
+            }
+
+            if (nOut > 1) {
+                timeInterval = speciesTreeNode->anc->nodeDepth - coalTimes[(*nEvents)-1];
+                lnProb -= (nOut * (nOut - 1)) / (theta * timeInterval);
+            }
+
+            // Reset number of events
+            (*nEvents) = 0;
+        }
+    }
+
+    return lnProb;
+}
+
+
+
+
+
+/**-----------------------------------------------------------------
+|
+|	LnJointGeneTreeSpeciesTreePr: Converted from LnJointGenetreePr,
+|   SPLogLike, SPLogPrior.
+|
+|   In this function we calculate the entire probability of the species
+|   tree, including its probability given its priors, and the probability
+|   of the gene trees given the species tree.
+|
+------------------------------------------------------------------*/
+double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *speciesTree, int chain, int state)
+{
+    double      lnPrior, lnLike, clockRate, mu, *popSizePtr, sR, eR, sF;
+    int         i;
+    ModelInfo   *m;
+    ModelParams *mp;
+
+    // Get model info for species tree
+    m = &modelSettings[speciesTree->relParts[0]];
+
+    // Get model params for species tree
+    mp = &modelParams[speciesTree->relParts[0]];
+
+    // Get popSize ptr
+    popSizePtr = GetParamVals(m->popSize, chain, state);
+
+    // Get clock rate
+    if (speciesTree->isCalibrated == YES)
+        clockRate = *GetParamVals(m->clockRate, chain, state);
+    else
+        clockRate = 1.0;
+
+    // Calculate probability of gene trees given species tree
+    lnLike = 0.0;
+    for (i=0; i<numGeneTrees; i++) {
+        // Get mu for the gene tree
+        m = &modelSettings[geneTrees[i]->relParts[0]];
+        mu = *GetParamVals(m->geneTreeRateMult, chain, state);
+        mu *= clockRate;
+        lnLike += LnPriorProbGeneTree(geneTrees[i], mu, speciesTree, popSizePtr);
+    }
+
+    // Calculate probability of species tree given its priors
+    if (strcmp(mp->speciesTreeBrlensPr, "Birthdeath") == 0) {
+        sR = *GetParamVals(m->speciationRates, chain, state);
+        eR = *GetParamVals(m->extinctionRates, chain, state);
+        sF = mp->sampleProb;
+        lnPrior = 0.0;
+        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, sF);
+    }
+    else
+        lnPrior = 0.0;
+
+    // The population size is taken care of elsewhere
+
+    return lnLike + lnPrior;
+}
+
+
+
+
+
+/**-----------------------------------------------------------------
+|
+|	LnPriorProbGeneTree: Calculate the prior probability of a gene
+|   tree.
+|
+------------------------------------------------------------------*/
+double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr)
+{ 
+   	int         i, j, nLongsNeeded, nEvents, ploidy;
+   	double      N, *coalTimes, lnProb;
+    TreeNode    *p;
+    ModelInfo   *m;
+    ModelParams *mp;
+
+    // Get model info
+    m = &modelSettings[speciesTree->relParts[0]];
+
+    // Get model params
+    mp = &modelParams[speciesTree->relParts[0]];
+
+    // Initialize species tree with # lineages in in x (initially 0) and diploid theta in d
+    for (i=0; i<speciesTree->nNodes-1; i++) {
+        p = speciesTree->allDownPass[i];
+        p->x = 0;
+        if (strcmp(mp->popVarPr, "equal") == 0)
+            N = popSizePtr[p->index];
+        else
+            N = popSizePtr[0];
+        p->d = 4.0 * N * mu;
+    }
+    
+    // Initialize species partitions for both gene tree and species tree */
+    AllocateTreePartitions(geneTree);
+    AllocateTreePartitions(speciesTree);
+    nLongsNeeded = (numSpecies - 1) / nBitsInALong + 1;
+    for (i=0; i<geneTree->nNodes; i++) {
+        p = geneTree->allDownPass[i];
+        if (p->left == NULL)
+            SetBit(speciesPartition[p->index], p->partition);
+        else {
+            for (j=0; j<nLongsNeeded; j++)
+                p->partition[j] = p->left->partition[j] | p->right->partition[j];
+        }
+    }
+    for (i=0; i<speciesTree->nNodes; i++) {
+        p = geneTree->allDownPass[i];
+        if (p->left == NULL)
+            SetBit(p->index, p->partition);
+        else {
+            for (j=0; j<nLongsNeeded; j++)
+                p->partition[j] = p->left->partition[j] | p->right->partition[j];
+        }
+        
+    }
+
+    // Allocate space for coalescence times, number of int nodes in gene tree in the worst case
+    coalTimes = (double *) calloc (geneTree->nIntNodes, sizeof(double));
+
+    // Find ploidy setting
+    if (strcmp(mp->ploidy, "Diploid"))
+        ploidy = DIPLOID;
+    else if (strcmp(mp->ploidy, "Haploid"))
+        ploidy = HAPLOID;
+    else
+        ploidy = ZLINKED;
+
+    // Finally call recursive function to calculate ln probability
+    nEvents = 0;
+    lnProb = LnCoalescenceProb (geneTree->root->left, speciesTree->root->left, &nEvents, coalTimes, ploidy);
+
+    // Free space
+    FreeTreePartitions(speciesTree);
+    FreeTreePartitions(geneTree);
+    free (coalTimes);
+
+    return lnProb;
+}
+
+
+
+
+
+/**-----------------------------------------------------------------
 |
 |	Move_GeneTree: Propose a new gene tree
 |
+|   @param param            The parameter to change
+|   @param chain            The chain number
+|   @param seed             Pointer to the seed of the random number gen.
+|   @param lnPriorRatio     Pointer to the log prior ratio (out)
+|   @param lnProposalRatio  Pointer to the log proposal (Hastings) ratio (out)
+|   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
 int Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
-    Tree			*t, *spt;
+    int             i, numGeneTrees;
+    double          extSprClockTuningParam, newLnProb, oldLnProb;
+    Tree			*newSpeciesTree, *oldSpeciesTree, **newGeneTrees, **oldGeneTrees;
     ModelInfo       *m;
     ModelParams     *mp;
 
-	/* get model params */
+    /* calculate number of gene trees */
+    numGeneTrees = numTopologies - 1;
+
+    /* set tuning param for extending SPR clock move */
+    extSprClockTuningParam = 0.5;
+
+    /* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
 	/* get model settings */
     m = &modelSettings[param->relParts[0]];
 
-    /* get gene tree */
-    t = GetTree (param, chain, state[chain]);
+    /* get new and old species trees */
+    newSpeciesTree = GetTree (m->speciesTree, chain, state[chain]);
+    oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
-    /* get species tree */
-    spt = GetTree (m->speciestree, chain, state[chain]);
+    // Get new and old gene trees
+    newGeneTrees = (Tree **) calloc (2*numGeneTrees, sizeof(Tree *));
+    oldGeneTrees = newGeneTrees + numGeneTrees;
+    for (i=0; i<param->nSubParams; i++) {
+        newGeneTrees[i] = GetTree(param->subParams[i], chain, state[chain]);
+        oldGeneTrees[i] = GetTree(param->subParams[i], chain, state[chain]^1);
+    }
 
-    // TODO: BEST Modify gene tree.
-    //printf ("Proposing new gene tree, index = %d\n", param->treeIndex);
+    // Modify the picked gene tree using code from a regular MrBayes move
+    Move_ExtSPRClock(param, chain, seed, lnPriorRatio, lnProposalRatio, &extSprClockTuningParam);
 
-    // TODO: BEST Calculate proposal ratio
-    (*lnProposalRatio) = 0.0;
+    // Update the min depth matrix
+    GetMinDepthMatrix(newGeneTrees, numTopologies-1, depthMatrix);
 
-    // TODO: BEST Calculate prior ratio taking species tree into account
-    (*lnPriorRatio) = 0.0;
+    // Modify the min depth matrix
+
+    // Get a new species tree
+    GetSpeciesTreeFromMinDepths(newSpeciesTree, depthMatrix);
     
+    // Calculate joint probability of new gene trees and new species tree
+    newLnProb = LnJointGeneTreeSpeciesTreePr(newGeneTrees, numGeneTrees, newSpeciesTree, chain, state[chain]);
+
+    // Calculate joint probability of old gene trees and old species tree
+    oldLnProb = LnJointGeneTreeSpeciesTreePr(oldGeneTrees, numGeneTrees, oldSpeciesTree, chain, state[chain]^1);
+
+    // Update prior ratio taking species tree into account
+    (*lnPriorRatio) += (newLnProb - oldLnProb);
+        
+    // Update proposal ratio based on this move (it should be 0.0)
+    (*lnProposalRatio) += 0.0;
+
+    // Free allocated memory
+    free (newGeneTrees);
+
     return (NO_ERROR);
 }
 
@@ -186,35 +577,42 @@ int Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 |
 ------------------------------------------------------------------*/
 int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
-    /* Move species tree */
-
-    int             i;
-    Tree			*t, *genetree;
+    int             i, numGeneTrees;
+    double          newLnProb, oldLnProb;
+    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
     ModelParams     *mp;
 
-	/* get model params */
+    /* calculate number of gene trees */
+    numGeneTrees = numTopologies - 1;
+
+    /* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
 	/* get model settings */
     m = &modelSettings[param->relParts[0]];
 
-    /* get species tree */
-    t = GetTree (param, chain, state[chain]);
+    /* get new and old species trees */
+    newSpeciesTree = GetTree (m->speciesTree, chain, state[chain]);
+    oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
-    /* cycle over gene trees */
+    // get gene trees
+    geneTrees = (Tree **) calloc (numGeneTrees, sizeof(Tree*));
     for (i=0; i<param->nSubParams; i++)
-        genetree = GetTree(param->subParams[i], chain, state[chain]);
+        geneTrees[i] = GetTree(param->subParams[i], chain, state[chain]);
 
-    // TODO: BEST code needed here::
-    // printf ("Modifying species tree...\n");
-    
     // Modify the species tree, given info on the gene trees
+    // Based on the current minimum distance matrix, find a Poisson
+    // distributed number of distances and modify them using
+    GetMinDepthMatrix(geneTrees, numGeneTrees, depthMatrix);
 
-    // Calculate proposal ratio
+    // ChangeConstraint();
+
+    // Construct a new species tree from the new constraints
+    GetSpeciesTreeFromMinDepths(newSpeciesTree, depthMatrix);
+    
+    // Calculate proposal ratio, should be 0.0
     (*lnProposalRatio) = 0.0;
 
 #if defined (BEST_MPI_ENABLED)
@@ -222,6 +620,7 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 #endif
 
     // Calculate the ln prior probability ratio of the new to old species trees from hyperpriors
+    // Should be 0.0 for the uniform
     (*lnPriorRatio) = 0.0;
 
 #if defined (BEST_MPI_ENABLED)
@@ -232,21 +631,290 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 #else
     // Calculate the ln probability ratio of the current gene trees
     //    given the new and old species trees
-
+    newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain, state[chain]);
+    oldLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, oldSpeciesTree, chain, state[chain]);
 #endif
 
     // Add ln probability ratio to (*lnPriorRatio)
-    (*lnPriorRatio) += 0.0;
+    (*lnPriorRatio) += (newLnProb - oldLnProb);
     
-    return (NO_ERROR);
+    // Free allocated space
+    free (geneTrees);
 
+    return (NO_ERROR);
 }
 
 
 
 
 
-/*************************** best functions ***********************************/
+/******************** best functions converted by Fredrik *********************/
+
+
+/* Compare function for qsort */
+int CompareDepths (Depth x, Depth y) {
+
+    if (x.depth < y.depth)
+        return YES;
+    else
+        return NO;
+}
+
+
+/**---------------------------------------------------------------------
+|
+|   GetSpeciesTreeFromMinDepths: converted from GetConstraints, Startsptree,
+|   and MaximumTree.
+|
+|   This is a clustering algorithm based on minimum depths for species pairs.
+|   It reduces an n choose 2 upper triangular min depth matrix to an array
+|   of n-1 node depths, which fit onto a tree.
+|
+|   @param      speciesTree     The species tree to be filled  (out)
+|   @param      depthMatrix     The min depth matrix, upper triangular array (in)
+|   @returns    Returns NO_ERROR
+----------------------------------------------------------------------*/
+int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
+
+    int         i, j, numUpperTriang, nLongsNeeded, index, nextNodeIndex;
+    Depth       *minDepth;
+    PolyTree    *polyTree;
+    PolyNode    *p, *q, *r, *u;
+
+    nLongsNeeded    = ((numSpecies - 1) / nBitsInALong) + 1;
+    numUpperTriang  = numSpecies*(numSpecies - 1) / 2;
+    minDepth        = (Depth *) calloc (numUpperTriang, sizeof(Depth));
+
+	// Convert depthMatrix to an array of Depth structs
+    index = 0;
+    for(i=0; i<numSpecies; i++) {
+        for(j=i+1; j<numSpecies; j++) {
+            minDepth[index].depth   = depthMatrix[index];
+            minDepth[index].pairSet = speciesPairSets[index];
+            index++;
+        }
+	}
+
+    // Sort the array of distance structs (O(log n^2))
+    //qsort((void *)(minDepth), (size_t)(numUpperTriang), sizeof(Depth), CompareDepths);
+
+    // The algorithm below reduces the upper triangular matrix (n choose 2) to an n-1
+    // array in O(n^2log(n)) time. We build the tree at the same time, since we can
+    // find included pairs in the tree in log(n) time. We use a polytomous tree for this.
+    
+    // Allocate space for polytomous tree and set up partitions
+    polyTree = AllocatePolyTree(numSpecies);
+    AllocatePolyTreePartitions(polyTree);
+
+    // Build initial tree (a bush)
+    polyTree->root = &polyTree->nodes[numSpecies];
+    for (i=0; i<numSpecies; i++) {
+        p = &polyTree->nodes[i];
+        p->index = i;
+        p->depth = 0.0;
+        p->left = NULL;
+        if (i<numSpecies-1)
+            p->sib = &polyTree->nodes[i+1];
+        else
+            p->sib = NULL;
+        p->anc = polyTree->root;
+    }
+    p = polyTree->root;
+    p->left = &polyTree->nodes[0];
+    p->sib = NULL;
+    p->anc = NULL;
+    p->depth = -1.0;
+
+    // Resolve bush using sorted depth structs
+    nextNodeIndex = numSpecies+1;
+    for(i=0; i<numUpperTriang; i++) {
+            
+        // Find tip corresponding to first taxon in pair
+        p = &polyTree->nodes[FirstTaxonInPartition(minDepth[i].pairSet, nLongsNeeded)];
+        
+        // Descend tree until we find a node within which the pair set is nested
+        do {
+            p = p->anc;
+        } while (!IsPartNested(minDepth[i].pairSet, p->partition, nLongsNeeded));
+
+        if (p == polyTree->root && p->depth < 0.0) {
+
+            // This is the first time we hit the root of the tree
+            p->depth = minDepth[i].depth;
+
+        }
+        else if (p->left->sib->sib != NULL) {
+
+            // This node is still a polytomy
+            
+            // Find left and right descendants of new node
+            for (q=p->left; IsSectionEmpty(q->partition, minDepth[i].pairSet, nLongsNeeded); q=q->sib)
+                ;
+            for (r=q->sib;  IsSectionEmpty(r->partition, minDepth[i].pairSet, nLongsNeeded); r=r->sib)
+                ;
+            
+            // Introduce the new node
+            u = &polyTree->nodes[nextNodeIndex++];
+            u->left = q;
+            u->anc = p;
+            if (q->sib == r)
+                u->sib = r->sib;
+            else
+                u->sib = q->sib;
+
+            // Create new taxon set with bitfield operations
+            for (j=0; j<nLongsNeeded; j++)
+                u->partition[j] = q->partition[j] | r->partition[j];
+
+            // Patch the tree together with the new node added
+            q->sib  = r;
+            r->sib = NULL;
+            q->anc = u;
+            r->anc = u;
+            if (p->left == q)
+                p->left = u;
+            else {
+                // we need to find the former upstream sibling to q
+                for (r=p->left; r!=q; r=r->sib)
+                    ;
+                r->sib = u;
+            }
+        }
+        // other cases should not be added to tree
+    }
+
+    // Set traversal sequences
+    GetPolyDownPass(polyTree);
+
+    // Set branch lengths from node depths (not done automatically for us)
+    for (i=0; i<polyTree->nNodes; i++) {
+        p = polyTree->allDownPass[i];
+        if (p->anc == NULL)
+            p->length = 0.0;
+        else
+            p->length = p->anc->depth - p->depth;
+    }
+
+    // Copy to species tree from polytomous tree
+    CopyToTreeFromPolyTree (speciesTree, polyTree);
+
+    // Free locally allocated variables
+    FreePolyTree(polyTree);
+    free (minDepth);
+
+    return(NO_ERROR);
+}
+
+
+
+
+
+/**---------------------------------------------------------------------
+|
+|   GetMinDepthMatrix: converted from GetMinDists (the copy of GetMinDists
+|   below is mangled, sorry about that).
+|
+|   This algorithm scans the gene trees and calculates the minimum depth
+|   (height) separating species across gene trees. The complexity of the
+|   original algorithm was O(mn^3), where m is the number of gene trees and
+|   n is the number of taxa in each gene tree. I think this algorithm has
+|   complexity that is better on average, but the difference is small.
+|
+|   I have rewritten the algorithm also to show alternative techniques that
+|   could be used in this and other best algorithms.
+|
+|   @param      geneTrees       The gene trees (in)
+|   @param      depthMatrix     The minimum depth matrix, upper triangular array (out)
+|   @returns    Returns ERROR or NO_ERROR
+----------------------------------------------------------------------*/
+int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) {
+
+    int         trace=0;
+	int         i, j, w, nLongsNeeded, numUpperTriang, index;
+    double      maxDepth;
+    TreeNode    *p;
+    SafeLong    **speciesSets;
+
+    // Allocate space for species partitions
+    nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
+    speciesSets    = (SafeLong **) calloc ((numLocalTaxa - 1), sizeof(SafeLong *));
+    speciesSets[0] = (SafeLong *)  calloc ((numLocalTaxa - 1)*nLongsNeeded, sizeof(int));
+    for (i=1; i<numLocalTaxa-1; i++)
+        speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
+
+    // Set tip species partitions once and for all
+    for (i=0; i<numLocalTaxa; i++)
+        SetBit(i, speciesSets[i]);
+
+    // Set initial max depth for upper triangular matrix
+    numUpperTriang = (numSpecies * (numSpecies - 1)) / 2;
+    maxDepth       = geneTrees[0]->root->left->nodeDepth;
+    for (i=0; i<numUpperTriang; i++)
+        depthMatrix[i] = maxDepth;
+
+    // Now we are ready to cycle over gene trees
+	for (w=0; w<numGeneTrees; w++) {
+		if (trace) {
+            printf("\nGene %d\n",w);
+            ShowTree(geneTrees[w]);
+        }
+
+        // Set species sets for interior nodes. O(n)
+        for (i=0; i<geneTrees[w]->nIntNodes; i++) {
+            p = geneTrees[w]->intDownPass[i];
+            for (j=0; j<nLongsNeeded; j++)
+                speciesSets[p->index][j] = speciesSets[p->left->index][j] | speciesSets[p->right->index][j];       
+        }
+
+        // Now order the interior nodes in terms of node depth. We rely on the fact that the
+        // ordered sequence is a valid downpass sequence. O(log n).
+        // qsort(geneTrees[w]->intDownPass, geneTrees[w]->nIntNodes, sizeof(TreeNode *), CompareDepths);
+
+        // Finally find the minimum for each cell in the upper triangular matrix
+        // This is the time critical step with complexity O(n^3) in the simplest
+        // applications. This algorithm should do a little better but not much.
+        for (i=0; i<numUpperTriang; i++) {
+            
+            // Find shallowest node that has the pair
+            for (j=0; j<geneTrees[w]->nIntNodes; j++) {
+                p = geneTrees[w]->intDownPass[j];
+                
+                // Because nodes are ordered in time, if this test is true then we cannot beat the minimum
+                if (p->nodeDepth > depthMatrix[i])
+                    break;
+
+                // Check whether the node is a candidate minimum for the species pair
+                // If the test is true, we know from the test above that p->nodeDepth is
+                // either a tie or the new minimum
+                if (IsPartNested(speciesPairSets[i], speciesSets[p->index], nLongsNeeded) == YES) {
+                    depthMatrix[i] = p->nodeDepth;
+                    break;
+                }
+            }
+        }
+    }   // Next gene tree
+
+    if(trace) {
+        index = 0;
+        for(i=0;i<numSpecies;i++) {
+            printf("\n");
+	        for(j=i+1;j<numSpecies;j++) {
+	            printf("%05f ",depthMatrix[index]);
+	            if(depthMatrix[index]<.000001) system("PAUSE");
+            }
+        }
+    }
+
+    free (speciesSets[0]);
+    free (speciesSets);
+
+    return (NO_ERROR);
+}
+
+
+
+
+/**************************original  best functions **************************/
 
 //recursive function that loads the IDs of the (index) tips descending from inode into taxa
 void FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index) {
@@ -572,45 +1240,57 @@ void PrintMinMat(double **md, int nsp) {
 }
 
 /*Scans across the ngene clocktrees to find mindist between all species*/
-long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
-	int trace=0;
-	int i, j, k, w, nR, nL, son0, son1, nsp=sptree.nSpecies;
-	long int indexc=0;
-	int *taxa0, *taxa1;
+long int GetMinDists(SPTree *geneTrees, int numGeneTrees, double **distanceMatrix) {
 
-    taxa0 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
-    taxa1 = (int *) calloc (clocktree[0].nTaxa, sizeof(int));
+    int         trace=0;
+	int         i, j, w;
+    TreeNode    *father, *son0, *son1;
+	long        indexc=0;
 
-    
-    for(i=0; i<nsp;i++) for(j=0;j<nsp;j++) md[0][i*nsp+j]=0.0;
+    // TODO
+    int         numSpecies=0;
+    int         *speciesPartition = NULL;
 
-	for(w=0; w<ngene; w++) {
-		if(trace)
-        {
+    for (i=0; i<numSpecies; i++)
+        for (j=0;j<numSpecies; j++)
+            distanceMatrix[0][i*numSpecies+j]=0.0;
+
+	for (w=0; w<numGeneTrees; w++) {
+		if (trace) {
             printf("\nGene %d\n",w);
-            // PrintSPTree(&(clocktree[w]),clocktree[0].root);
+            //ShowTree(&geneTrees[w]);
         }
-		for(j=clocktree[w].nTaxa; j<2*clocktree[w].nTaxa-1;j++) { //for each internode
-			son0 = clocktree[w].nodes[j].sons[0];
-			son1 = clocktree[w].nodes[j].sons[1];
-			nR = 0;
-			FindDescendantTaxa(&clocktree[w], son0, taxa0, &nR);
-			nL = 0;
-			FindDescendantTaxa(&clocktree[w], son1, taxa1, &nL);
-			if(trace) for(i=0; i<nR; i++) for(k=0; k<nL; k++) printf("%dx%d ",taxa0[i],taxa1[k]);
+
+        // AllocateTreePartitions(&geneTrees[w]);
+		for (j=0; j<0 /*geneTrees[w].nIntNodes */; j++) {
+
+            //for each internode
+            //father = geneTrees[w].intDownPass[j];
+            father = NULL;
+			son0   = father->left;
+			son1   = father->right;
+
+            if(trace) {
+                ShowParts(stdout, son0->partition, numLocalTaxa);
+                ShowParts(stdout, son1->partition, numLocalTaxa);
+            }
 			
-			for(i=0; i<nR; i++) for(k=0; k<nL; k++)
+			/*
+            for(i=0; i<nR; i++) for(k=0; k<nL; k++)
 				if(spnode[taxa0[i]] != spnode[taxa1[k]]) { //if from different species
 				   if(spnode[taxa0[i]]<spnode[taxa1[k]]) indexc=spnode[taxa0[i]]*nsp+spnode[taxa1[k]];
 				   else indexc=spnode[taxa1[k]]*nsp+spnode[taxa0[i]]; //figure out where to put this min
-				   if((w==0 && md[0][indexc]==0.0) || 2*(clocktree[w].nodes[j].age)<md[0][indexc]) {
-						md[0][indexc] = 2*(clocktree[w].nodes[j].age);
-						if(trace) PrintMinMat(md,nsp);
-						if(md[0][indexc]<.000001) printf("\n0 BL ERROR: Gene %d %ld.%ld",w,indexc/nsp,indexc%nsp);
+				   if((w==0 && distanceMatrix[indexc]==0.0) || 2*(clocktree[w].nodes[j].age)<distanceMatrix[0][indexc]) {
+						distanceMatrix[indexc] = 2*(clocktree[w].nodes[j].age);
+						if(trace) PrintMinMat(distanceMatrix,nsp);
+						if(distanceMatrix[indexc]<.000001) printf("\n0 BL ERROR: Gene %d %ld.%ld",w,indexc/nsp,indexc%nsp);
 					}
 				}
+            */
 		}
 	}
+
+    /*
 	if(trace) for(i=0;i<nsp;i++) { printf("\n");
 		for(j=i+1;j<nsp;j++) {
 			printf("%05f ",md[0][i*nsp+j]);
@@ -618,8 +1298,27 @@ long int GetMinDists(SPTree *clocktree, int ngene, double **md) {
 		}
 	}
 
-    free (taxa0);
-    free (taxa1);
+    				    if ((w==0 && distanceMatrix[0][indexc] == 0.0) || 2.0*(father->nodeDepth) < distanceMatrix[0][indexc])
+    						distanceMatrix[0][indexc] = 2*(father->nodeDepth);
+						if (trace) PrintMinMat(distanceMatrix, numSpecies);
+						assert (distanceMatrix[0][indexc]>.000001);
+                    }
+                }
+            }
+            // FreeTreePartitions(&geneTrees[w]);
+        }
+    }
+
+    if(trace) {
+        for(i=0;i<numSpecies;i++) {
+            printf("\n");
+	        for(j=i+1;j<numSpecies;j++) {
+	            printf("%05f ",distanceMatrix[0][i*numSpecies+j]);
+	            if(distanceMatrix[0][i*numSpecies+j]<.000001) system("PAUSE");
+            }
+        }
+    }
+    */
 
     return (NO_ERROR);
 }
@@ -1798,7 +2497,7 @@ int StartSptree(SPTree *speciestree, int numchange) { //*speciestree is the addr
 	//CNKA 10/10 we don't want all cophenetic distances for all genes, just the min across genes
 	speciestree->mindist = (double*)malloc(speciestree->nSpecies*speciestree->nSpecies*sizeof(double));
    GetMinDists(gtree, nGene, &speciestree->mindist);
-   GetConstraints(speciestree, onetreeConstraint);
+   //GetConstraints(speciestree, onetreeConstraint);
 
 	/*jiggle polytomys*/
   	for(i=0;i<sptree.nSpecies-2;i++)
@@ -1952,9 +2651,10 @@ int SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nco
 }
 
 //loads constraints on the species tree given that s->mindist is already set
-int GetConstraints(SPTree *s, Distance *constr) {
+int GetConstraints (double **distanceMatrix, Distance *constr) {
+
 	int trace=0;
-	int i,j,k=0,nsp=s->nSpecies;
+	int i,j,k=0,nsp=numSpecies;
 	int *node, index[2];
     Distance *minimumdistance;
 
@@ -1963,10 +2663,13 @@ int GetConstraints(SPTree *s, Distance *constr) {
 
 	//convert s->mindist to a distance structure
 	for(i=0; i<nsp; i++) for(j=i+1;j<nsp;j++) {
-		minimumdistance[k].dist=s->mindist[i*nsp+j];
+		minimumdistance[k].dist=distanceMatrix[0][i*nsp+j];
 		minimumdistance[k].nodes[0]=i;
 		minimumdistance[k++].nodes[1]=j;
 	}
+	/*for(i=0; i<nsp*(nsp-1)/2; i++) {
+		printf("min %lf ",minimumdistance[i].dist);
+	}*/
 	quick_struct(minimumdistance, nsp*(nsp-1)/2);
 
   	constr[0].dist = minimumdistance[0].dist;

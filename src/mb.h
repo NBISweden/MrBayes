@@ -326,6 +326,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_PRINTPARAM		 85
 #define ALLOC_TREELIST			 86
 #define ALLOC_TFILEPOS           87
+#define ALLOC_BEST               88
 
 
 #define	LINKED					0
@@ -921,6 +922,7 @@ typedef struct model
 	int         brlensFix;         /* user tree index for fixed brlens             */
 	MrBFlt		brlensUni[2];
 	MrBFlt		brlensExp;
+	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
 	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, mb(rateautocorr))   */
@@ -948,6 +950,7 @@ typedef struct model
 	MrBFlt		popSizeFix;
 	MrBFlt		popSizeUni[2];
 	MrBFlt		popSizeExp;
+	char		popVarPr[100];        /* prior on pop. size variation across tree    */
 	char		growthPr[100];        /* prior on coalescence growth rate            */
 	MrBFlt		growthFix;
 	MrBFlt		growthUni[2];
@@ -1058,14 +1061,15 @@ typedef struct modelinfo
 	Param		*pInvar;					/* ptr to pInvar used in model				*/
 	Param		*correlation;				/* ptr to correlation used in model			*/
 	Param		*switchRates;				/* ptr to switchRates (off<->on)            */
-	Param		*rateMult;					/* ptr to rateMult used in model			*/
+	Param		*rateMult;					/* ptr to parition rateMult used in model   */
+	Param		*geneTreeRateMult;          /* ptr to gene tree rateMult used in model  */
 	Param		*speciationRates;			/* ptr to speciationRates used in model		*/
 	Param		*extinctionRates;			/* ptr to extinctionRates used in model		*/
 	Param		*popSize;			        /* ptr to population size used in model		*/
 	Param		*growthRate;				/* ptr to growth rate used in model			*/
 	Param		*topology;					/* ptr to topology used in model			*/
 	Param		*brlens;					/* ptr to brlens (and tree) used in model	*/
-	Param		*speciestree;			    /* ptr to species tree used in model        */
+	Param		*speciesTree;			    /* ptr to species tree used in model        */
 	Param		*aaModel;					/* ptr to amino acid matrix used            */
 	Param		*psiGamma;				    /* ptr to psigamma shape used in model      */
 	Param		*cppRate;				    /* ptr to CPP rate used in model            */

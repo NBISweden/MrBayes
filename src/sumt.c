@@ -122,7 +122,6 @@ void     PrintSumtTaxaInfo (void);
 void     Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max);
 void     ResetTaxonSet (void);
 int		 ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth);
-void     ShowParts (FILE *fp, SafeLong *p, int nTaxaToShow);
 void     ShowSomeParts (FILE *fp, SafeLong *p, int offset, int nTaxaToShow);
 void     SortPartCtr (PartCtr **item, int left, int right);
 void     SortTerminalPartCtr (PartCtr **item, int len);

@@ -534,6 +534,22 @@ int IsPartNested (SafeLong *smaller, SafeLong *larger, int length)
 
 
 
+/* IsSectionEmpty: Test whether section of two bitfields is empty */
+int IsSectionEmpty (SafeLong *bitField1, SafeLong *bitField2, int length)
+{
+	int i;
+
+	for (i=0; i<length; i++)
+		if ((bitField1[i] & bitField2[i]) != 0)
+			return NO;
+		
+	return YES;
+}
+
+
+
+
+
 /* LastBlock: Return file position of last block in file */
 SafeLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
 {

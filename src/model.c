@@ -770,7 +770,7 @@ int AllocateTreeParams (void)
 			}
         else if (params[k].paramType == P_TOPOLOGY)
             {
-            q = modelSettings[p->relParts[0]].speciestree;
+            q = modelSettings[p->relParts[0]].speciesTree;
             if (q != NULL)
                 q->nSubParams++;
             }
@@ -1165,9 +1165,14 @@ int ChangeNumChains (int from, int to)
 
 	/* then do the trees (they cannot be done before the parameters because otherwise FillTreeParams will overwrite
        relaxed clock parameters that need to be saved) */
-	/* reallocate trees */
-	tempTrees = mcmcTree;
-	mcmcTree = (Tree **) calloc (2*numGlobalChains*numTrees, sizeof(Tree*));
+
+    /* reallocate trees */
+	tempTrees = (Tree **) calloc (2*nRuns*from*numTrees, sizeof(Tree *));
+    for (i=0; i<2*nRuns*from*numTrees; i++)
+        tempTrees[i] = mcmcTree[i];
+	mcmcTree = (Tree **) realloc ((void *)(mcmcTree), (size_t)(2*numGlobalChains*numTrees*sizeof(Tree*)));
+    for (i=0; i<2*nRuns*to*numTrees; i++)
+        mcmcTree[i] = NULL;
 
     /* move the old trees over */
     for (run=0; run<nRuns; run++)
@@ -6963,6 +6968,39 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(RIGHTPAR))
 				{
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
+			}
+		/* set Popsizepr (popSizePr) **************************************************************/
+		else if (!strcmp(parmName, "Popsizepr"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					nApplied = NumActiveParts ();
+					for (i=0; i<numCurrentDivisions; i++)
+						{
+						if (activeParts[i] == YES || nApplied == 0)
+							strcpy(modelParams[i].popVarPr, tempStr);
+						}
+			        if (nApplied == 0 && numCurrentDivisions == 1)
+				        MrBayesPrint ("%s   Setting Popvarpr to %s\n", spacer, modelParams[i].popVarPr);
+                    else for (i=0; i<numCurrentDivisions; i++)
+                        {
+                        if (activeParts[i] == YES)
+    				        MrBayesPrint ("%s   Setting Popsizepr to %s for partition %d\n", spacer, modelParams[i].popVarPr, i+1);
+                        }
+			        expecting  = Expecting(PARAMETER) | Expecting(SEMICOLON);
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid Popvarpr argument\n", spacer);
+					return (ERROR);
+					}
 				}
 			else
 				return (ERROR);
@@ -16212,7 +16250,7 @@ int SetModelParams (void)
             p->max = NEG_INFINITY;  /* NA */
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
-					modelSettings[i].speciestree = p;
+					modelSettings[i].speciesTree = p;
 
             p->paramTypeName = "Species tree";
 			strcpy (p->name, "Spt");
