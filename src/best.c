@@ -1762,7 +1762,8 @@ int ReadaTree (FILE *fTree,SPTree *tree)
          cfather=cnode;
       }
       else if (ch==')') { level--;  inodeb=cfather; cfather=tree->nodes[cfather].father; }
-      else if (ch==':') fscanf(fTree,"%lf",&tree->nodes[inodeb].brlens); 
+	  else if (ch==':') if( fscanf(fTree,"%lf",&tree->nodes[inodeb].brlens) < 1 ) 
+							{ printf("Error in treefile: unexpected charactor after : in place where floating point number representing branch length should be"); exit(-1); } 
       else if (ch==',') ;
       else if (ch==';' && level!=0) 
          {
@@ -1772,7 +1773,8 @@ int ReadaTree (FILE *fTree,SPTree *tree)
       else if (isdigit(ch))
       { 
          ungetc(ch, fTree); 
-         fscanf(fTree,"%d",&inodeb); 
+         if( fscanf(fTree,"%d",&inodeb) < 1 )  //practicly should not happend but put it here to avoid compiler warning
+		 { printf("Error in treefile."); exit(-1); }
          inodeb--;
          tree->nodes[inodeb].father=cfather;
          tree->nodes[cfather].sons[tree->nodes[cfather].nson++]=inodeb;
@@ -1783,7 +1785,8 @@ int ReadaTree (FILE *fTree,SPTree *tree)
    for ( ; ; ) {
       while(isspace(ch=fgetc(fTree)) && ch!=';' ) 
          ;
-      if (ch==':')       fscanf(fTree, "%lf", &tree->nodes[tree->root].brlens);
+      if (ch==':')       if( fscanf(fTree, "%lf", &tree->nodes[tree->root].brlens) < 1 ) 
+							{ printf("Error in treefile: unexpected charactor after : in place where floating point number representing branch length should be"); exit(-1); }
       else if (ch==';')  break;
       else  { ungetc(ch,fTree);  break; }
    }

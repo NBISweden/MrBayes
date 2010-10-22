@@ -107,6 +107,7 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
+#define BEAGLE_RESCALE_FREQ			256
 #define RESCALE_FREQ				1			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ			100			/* generations between gibbs sampling of gamma cats */
@@ -149,6 +150,7 @@ typedef void (*sighandler_t)(int);
 
 
 #define TNODE TreeNode
+//#define TOPOLOGY_MOVE_STATS
 
 /* local (to this file) data types */
 typedef struct pfnode
@@ -385,6 +387,10 @@ MrBFlt			*stdStateFreqs;				 /* std char state frequencies					 */
 int				*stdType;				     /* compressed std char type: ord, unord, irrev  */
 int				*tiIndex;				     /* compressed std char ti index                 */
 
+#if defined (BEAGLE_ENABLED)
+int				rescaleFreqOld;				 /* holds rescale frequency of current state	*/
+#endif
+
 /* local (to this file) variables */
 int				numLocalChains;              /* number of Markov chains                      */
 int				*chainId = NULL;             /* information on the id (0 ...) of the chain   */
@@ -447,7 +453,6 @@ int             gTopologyHasChanged;         /* flag whether topology has change
 int				lowestLocalRunId;			 /* lowest local run Id                          */
 int				highestLocalRunId;			 /* highest local run Id                         */
 #endif
-
 
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
 PFNODE *AddPartition (PFNODE *r, SafeLong *p, int runId)
@@ -9277,11 +9282,20 @@ void FlipNodeScalerSpace (ModelInfo* m, int chain, int nodeIndex)
 /* FlipSiteScalerSpace: Flip space for ln site scalers */
 void FlipSiteScalerSpace (ModelInfo *m, int chain)
 {
-    int         temp;
+    int  temp,*tempp;
 
     temp = m->siteScalerIndex[chain];
     m->siteScalerIndex[chain] = m->siteScalerScratchIndex;
     m->siteScalerScratchIndex = temp;
+
+#if defined (BEAGLE_ENABLED)
+	if ( m->useBeagle == YES )
+		{
+		tempp = m->isScalerNode[chain];
+		m->isScalerNode[chain] = m->isScalerNodeScratch ;
+		m->isScalerNodeScratch = tempp;
+		}
+#endif
 }
 
 
@@ -9337,15 +9351,15 @@ void FreeChainMemory (void)
     /* free parsimony sets and node lens */
     for (i=0; i<numCurrentDivisions; i++)
         {
-        m = &modelSettings[i];
+        m = &modelSettings[i];	
         if (m->parsSets)
             {
             for (j=0; j<m->numParsSets; j++)
-	      SafeFree ((void **)(&m->parsSets[j]));
+				SafeFree ((void **)(&m->parsSets[j]));
             SafeFree ((void **)(&m->parsSets));
             }
         if (m->parsNodeLens)
-	  SafeFree((void **)(&m->parsNodeLens));
+			SafeFree((void **)(&m->parsNodeLens));
         }
 
     /* free model variables for conditional likelihoods */
@@ -9354,32 +9368,32 @@ void FreeChainMemory (void)
         m = &modelSettings[i];
         if (m->condLikes)
             {
-            for (i=0; i<m->numCondLikes; i++)
+            for (j=0; j<m->numCondLikes; j++)
 #if defined (SSE_ENABLED)
-                AlignedSafeFree (&m->condLikes[i]);
+                AlignedSafeFree (&m->condLikes[j]);
 #else
-	    SafeFree ((void **)(&m->condLikes[i]));
+				SafeFree ((void **)(&m->condLikes[j]));
 #endif
             SafeFree (((void **)(&m->condLikes)));
             }
 
         if (m->scalers)
             {
-            for (i=0; i<m->numScalers; i++)
+            for (j=0; j<m->numScalers; j++)
 #if defined (SSE_ENABLED)
-                AlignedSafeFree (&m->scalers[i]);
+                AlignedSafeFree (&m->scalers[j]);
 #else
-	    SafeFree ((void **)(&m->scalers[i]));
+				SafeFree ((void **)(&m->scalers[j]));
 
 #endif
             SafeFree (((void **)(&m->scalers)));
             }
 
         if (m->clP)
-	  SafeFree ((void **)(&m->clP));
+			SafeFree ((void **)(&m->clP));
 #if defined (SSE_ENABLED)
         if (m->clP_SSE)
-	  SafeFree ((void **)(&m->clP_SSE));
+			SafeFree ((void **)(&m->clP_SSE));
         if (m->lnL_SSE)
             AlignedSafeFree (&m->lnL_SSE);
         if (m->lnLI_SSE)
@@ -9388,63 +9402,63 @@ void FreeChainMemory (void)
 
         if (m->tiProbs)
             {
-            for (i=0; i<m->numTiProbs; i++)
-	      SafeFree ((void **)(&m->tiProbs[i]));
+            for (j=0; j<m->numTiProbs; j++)
+				SafeFree ((void **)(&m->tiProbs[j]));
             SafeFree ((void **)(&m->tiProbs));
             }
                 
         if (m->cijks)
             {
-            for (i=0; i<numLocalChains+1; i++)
-	      SafeFree ((void **)(&m->cijks[i]));
+            for (j=0; j<numLocalChains+1; j++)
+				SafeFree ((void **)(&m->cijks[j]));
             SafeFree ((void **)(&m->cijks));
             }
 
         if (m->condLikeIndex)
             {
-            for (i=0; i<numLocalChains; i++)
-	      SafeFree ((void **)(&m->condLikeIndex[i]));
+            for (j=0; j<numLocalChains; j++)
+				SafeFree ((void **)(&m->condLikeIndex[j]));
             SafeFree ((void **)(&m->condLikeIndex));
             }
 
         if (m->condLikeScratchIndex)
-	  SafeFree ((void **)(&m->condLikeScratchIndex));
+			SafeFree ((void **)(&m->condLikeScratchIndex));
 
         if (m->tiProbsIndex)
             {
-            for (i=0; i<numLocalChains; i++)
-	      SafeFree ((void **)(&m->tiProbsIndex[i]));
+            for (j=0; j<numLocalChains; j++)
+				SafeFree ((void **)(&m->tiProbsIndex[j]));
             SafeFree ((void **)&(m->tiProbsIndex));
             }
         if (m->tiProbsScratchIndex)
-	  SafeFree ((void **)(&m->tiProbsScratchIndex));
+			SafeFree ((void **)(&m->tiProbsScratchIndex));
 
         if (m->nodeScalerIndex)
             {
-            for (i=0; i<numLocalChains; i++)
-	      SafeFree ((void **)(&m->nodeScalerIndex[i]));
+            for (j=0; j<numLocalChains; j++)
+				SafeFree ((void **)(&m->nodeScalerIndex[j]));
             SafeFree ((void **)&(m->nodeScalerIndex));
             }
         if (m->nodeScalerScratchIndex)
-	  SafeFree ((void **)(&m->nodeScalerScratchIndex));
+			SafeFree ((void **)(&m->nodeScalerScratchIndex));
 
         if (m->scalersSet)
             {
-            for (i=0; i<numLocalChains; i++)
-	      SafeFree ((void **)(&m->scalersSet[i]));
+            for (j=0; j<numLocalChains; j++)
+				SafeFree ((void **)(&m->scalersSet[j]));
             SafeFree ((void **)(&m->scalersSet));
             }
         if (m->scalersSetScratch)
-	  SafeFree ((void **)(&m->scalersSetScratch));
+			SafeFree ((void **)(&m->scalersSetScratch));
 
         if (m->siteScalerIndex)
-	  SafeFree ((void **)(&m->siteScalerIndex));
+			SafeFree ((void **)(&m->siteScalerIndex));
 
         if (m->cijkIndex)
-	  SafeFree ((void **)(&m->cijkIndex));
+			SafeFree ((void **)(&m->cijkIndex));
 
         if (m->ancStateCondLikes)
-	  SafeFree ((void **)(&m->ancStateCondLikes));
+			SafeFree ((void **)(&m->ancStateCondLikes));
 
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == NO)
@@ -9461,6 +9475,15 @@ void FreeChainMemory (void)
         SafeFree((void **)(&m->childTiProbIndices));
         SafeFree((void **)(&m->cumulativeScaleIndices));
 		SafeFree((void **)(&m->beagleComputeCount));
+
+		m->isScalerNodeScratch += numLocalTaxa;
+		SafeFree((void **)&(m->isScalerNodeScratch)); 
+		for (j=0; j<numLocalChains; j++)
+			{
+			m->isScalerNode[j] += numLocalTaxa;
+			SafeFree((void **)&(m->isScalerNode[j]));
+			}
+		SafeFree((void **)(&m->isScalerNode));
 #endif
         }
 
@@ -10748,17 +10771,25 @@ int InitChainCondLikes (void)
                 }
 
             /* allocate stuff for facilitating scaling and accumulation of cond likes */
-            m->clP = (CLFlt **) SafeMalloc(m->numTiCats * sizeof(CLFlt *));
-            if (!m->clP)
-                return (ERROR);
+			if (m->dataType == STANDARD)
+				{
+				m->clP = (CLFlt **) SafeMalloc(m->numGammaCats * sizeof(CLFlt *));
+				if (!m->clP)
+					return (ERROR);
+				}
+			else
+				{
+				m->clP = (CLFlt **) SafeMalloc(m->numTiCats * sizeof(CLFlt *));
+				if (!m->clP)
+					return (ERROR);
 #if defined (SSE_ENABLED)
-            m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
-            if (!m->clP_SSE)
-                return (ERROR);
-            m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-            m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+				m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
+				if (!m->clP_SSE)
+					return (ERROR);
+				m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+				m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
 #endif
-
+				}
             /* allocate tiprob space */
             m->tiProbs = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
             if (!m->tiProbs)
@@ -10935,6 +10966,27 @@ int InitChainCondLikes (void)
             scalerIndex += indexStep;
             }
         m->siteScalerScratchIndex = scalerIndex;
+
+#if defined (BEAGLE_ENABLED)
+        /* we use only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
+        if ( m->useBeagle == YES )
+			{
+			m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
+			for (i=0; i<numLocalChains+1; i++)
+			   {
+			   m->rescaleFreq[i] = BEAGLE_RESCALE_FREQ;
+			   }
+			m->isScalerNode = (int**) SafeMalloc((numLocalChains) * sizeof(int*));
+			/* we will use m->isScalerNode[chain][node->index] to determine whether the node is scaled or not. We do it only for internal nodes whose indexes start from numLocalTaxa thus we skew the pointer */
+			m->isScalerNodeScratch = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa; 
+			assert( NO == 0 ); /* SafeMalloc set the allocated memmory to 0 while we need to set it to NO */
+			for (i=0; i<numLocalChains; i++)
+			   {
+			   m->isScalerNode[i] = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa; //m->isScalerNodeScratch + i * nIntNodes;
+			   }
+			}
+#endif
+
 
         /* allocate and set up cijk indices */
         if (m->nCijkParts > 0)
@@ -14335,7 +14387,6 @@ MrBFlt LogLike (int chain)
             continue;
 #endif
 		m = &modelSettings[d];
-		
 		if (m->upDateCl == YES)	
 			{	
 			/* Work has been delegated to a separate function so we can wrap    */
@@ -38351,11 +38402,17 @@ void ResetFlips (int chain)
     ModelInfo   *m;
     TreeNode    *p;
     Tree        *tree;
+#if defined (BEAGLE_ENABLED)
+	int			*isScalerNode;
+#endif    
     
     for (d=0; d<numCurrentDivisions; d++)
     {
         m = &modelSettings[d];
-        
+#if defined (BEAGLE_ENABLED)
+		if ( m->useBeagle == YES )
+			isScalerNode = m->isScalerNode[chain];
+#endif
         if (m->upDateCl != YES)
             continue;
         
@@ -38363,7 +38420,11 @@ void ResetFlips (int chain)
 		if( m->useBeagle == NO || 
 			beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
 			m->rescaleBeagleAll == YES )
+				{
 				FlipSiteScalerSpace (m, chain);
+				if (m->rescaleBeagleAll == YES )
+					m->rescaleFreq[chain] = rescaleFreqOld;
+				}
 #else
 		FlipSiteScalerSpace (m, chain);
 #endif
@@ -38387,7 +38448,7 @@ void ResetFlips (int chain)
 #if defined (BEAGLE_ENABLED)
 					if( m->useBeagle == NO || 
 						beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-						m->rescaleBeagleAll == YES )
+						( m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES ))
 							FlipNodeScalerSpace (m, chain, p->index);
 #else
 					FlipNodeScalerSpace (m, chain, p->index);
@@ -38404,6 +38465,75 @@ void ResetFlips (int chain)
 
 
 
+
+
+/*-------------------------------------------------------------------
+|
+|	ResetScalersPartition: reset scaler nodes of the given tree by appropriatly setting isScalerNode array.
+| @param isScalerNode	is an array which gets set with information about scaler node. 
+|						For each internal node isScalerNode[node->index] is set to YES if it has to be scaler node.
+|						Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for ellemnts in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
+|
+| @param rescaleFreq	effectively represent gabs between rescaling, higher number means more sparse choice of rescaling nodes 
+|
+--------------------------------------------------------------------*/
+int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
+
+{
+	int			n;
+	TreeNode	*p;
+		
+	/* set the node depth value of terminal nodes to zero; reset scalerNode */
+	for (n=0; n<t->nNodes; n++)
+		{
+		p = t->allDownPass[n];
+		if (p->left == NULL)
+			p->x = 0;
+		}
+
+	/* loop over interior nodes */
+	for (n=0; n<t->nIntNodes; n++)
+		{
+		p = t->intDownPass[n];
+		assert( ((p->index - numLocalTaxa) >= 0) && ((p->index - numLocalTaxa) < t->nIntNodes) );
+		p->x = p->left->x + p->right->x + 1;
+
+		if (p->x > 2 * (int)rescaleFreq )
+			{
+			assert (p->left->left != NULL && p->right->left != NULL);
+			isScalerNode[p->left->index] = YES;
+			p->left->x = 0;
+			isScalerNode[p->right->index] = YES;
+			p->right->x = 0;
+			p->x = 1;
+			}
+		else if (p->x > (int)rescaleFreq )
+			{
+			if (p->left->x > p->right->x)
+				{
+				assert (p->left->left != NULL);
+				isScalerNode[p->left->index] = YES;
+				p->left->x = 0;
+				}
+			else
+				{
+				assert (p->right->left != NULL);
+				isScalerNode[p->right->index] = YES;
+				p->right->x = 0;
+				}
+			p->x = p->left->x + p->right->x + 1;
+			}
+		else
+			isScalerNode[p->index] = NO;
+		}
+
+	return NO_ERROR;
+}
+
+
+
+
+
 /*-------------------------------------------------------------------
 |
 |	ResetScalers: reset scaler nodes of all trees of all chains
@@ -38412,7 +38542,6 @@ void ResetFlips (int chain)
 |
 --------------------------------------------------------------------*/
 int ResetScalers (void)
-
 {
 	int			i, n, chn;
 	Tree		*t;
@@ -38444,7 +38573,7 @@ int ResetScalers (void)
 
 				p->x = p->left->x + p->right->x + 1;
 
-				if (p->x > 2 * RESCALE_FREQ)
+				if (p->x > 2 * RESCALE_FREQ )
 					{
                     assert (p->left->left != NULL && p->right->left != NULL);
 					p->left->scalerNode = YES;
@@ -38453,7 +38582,7 @@ int ResetScalers (void)
 					p->right->x = 0;
 					p->x = 1;
 					}
-				else if (p->x > RESCALE_FREQ)
+				else if (p->x > RESCALE_FREQ )
 					{
 					if (p->left->x > p->right->x)
 						{
@@ -38644,6 +38773,23 @@ int RunChain (SafeLong *seed)
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
+	int			beagleScalingSchemeOld;
+
+#if defined (BEAGLE_ENABLED)
+	int			ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
+	ModelInfo	*m;
+	ResetScalersNeeded = NO;
+
+	for (i=0; i<numCurrentDivisions; i++)
+		{
+		m = &modelSettings[i];
+		if(m->useBeagle == NO || beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS )
+			{
+			ResetScalersNeeded =YES;
+			break;
+			}
+		}
+#endif
 
 #				if defined (MPI_ENABLED)
 	int			ierror, sumErrors;
@@ -38931,7 +39077,12 @@ int RunChain (SafeLong *seed)
    
     /* initialize likelihoods and prior                  */
 	/* touch everything and calculate initial cond likes */
-	ResetScalers ();
+#if defined (BEAGLE_ENABLED)
+		if ( ResetScalersNeeded )
+			ResetScalers();
+#else
+			ResetScalers();
+#endif
 	TouchAllPartitions ();
 	for (chn=0; chn<numLocalChains; chn++)
 		{
@@ -39112,8 +39263,14 @@ int RunChain (SafeLong *seed)
         /* Refresh scalers every SCALER_REFRESH_FREQ generations.                */
 		/* It is done before copying so we know it will take effect immediately. */
 		/* However, the actual scalers are recalculated only when really needed. */
+#if defined (BEAGLE_ENABLED)
+		if ( ResetScalersNeeded && n % SCALER_REFRESH_FREQ == 0)
+			ResetScalers();
+#else
 		if (n % SCALER_REFRESH_FREQ == 0)
 			ResetScalers();
+#endif
+
 
         for (chn=0; chn<numLocalChains; chn++)
 			{
@@ -39245,7 +39402,8 @@ int RunChain (SafeLong *seed)
             if (acceptMove == NO)
 				{
 				/* the new state did not work out so shift chain back */
-                ResetFlips(chn);
+				if (abortMove == NO)
+					ResetFlips(chn);
 				state[chn] ^= 1;
 				}
 			else
@@ -39530,6 +39688,8 @@ int RunChain (SafeLong *seed)
 
 #ifndef NDEBUG 
 	ResetScalers ();
+	beagleScalingSchemeOld = beagleScalingScheme;
+	beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;
 	for (chn=0; chn<numLocalChains; chn++)
 		{
 		if (chn % chainParams.numChains == 0)
@@ -39550,6 +39710,7 @@ int RunChain (SafeLong *seed)
 		MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, curLnL[chn], curLnPr[chn]);
 		MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, LogLike(chn), LogPrior(chn));
 		}
+	beagleScalingScheme = beagleScalingSchemeOld;
 #endif
 
     /* Make sure current state is reset and values copied back to state 0.

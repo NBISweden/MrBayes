@@ -365,7 +365,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define CPPi                    1       /* CPP independent rates */
 
 #define MAX_NUM_USERTREES		200     /* maximum number of user trees MrBayes will read */
-#define	MAX_CHAINS				256     /* maximum numbder of chains you can run */
+#define	MAX_CHAINS				256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
 
 typedef void * VoidPtr;
 typedef int (*CmdFxn)(void);
@@ -721,6 +721,7 @@ typedef struct s_launch_struct
 #if defined (BEAGLE_ENABLED)
 #define	MB_BEAGLE_SCALE_ALWAYS			0
 #define MB_BEAGLE_SCALE_DYNAMIC			1
+#define MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT
 #endif
 
 
@@ -1194,6 +1195,9 @@ typedef struct modelinfo
     int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int			rescaleBeagleAll;			/* set to rescale all nodes                     */
+	int*		rescaleFreq;				/* rescale frequency for each chain's tree		*/
+	int**		isScalerNode;				/* for each node and chain set to YES if scaled node */
+	int*		isScalerNodeScratch;		/* scratch space to hold isScalerNode of proposed state*/
 	long*		beagleComputeCount;			/* count of number of calls to likelihood       */
 #endif
 

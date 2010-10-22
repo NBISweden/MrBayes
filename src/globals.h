@@ -151,6 +151,7 @@ extern int				beagleResourceCount;					/* BEAGLE resource list length           
 extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
 extern int              beagleScalingScheme;                   /* BEAGLE dynamic scaling                        */
 extern int				beagleScalingFrequency;					/* BEAGLE rescaling frequency                    */
+extern int				rescaleFreqOld;							/* holds rescale frequency of current state		*/
 #endif
 #if defined (THREADS_ENABLED)
 extern int			    tryToUseThreads;						/* try to use pthreads with BEAGLE library       */
@@ -180,8 +181,8 @@ extern MrBFlt			blosPi[20];                  /* stationary frequencies for Blosu
 #						if defined (MPI_ENABLED)
 extern int 				proc_id;                                /* process ID (0, 1, ..., num_procs-1)                        */
 extern int 				num_procs;                              /* number of active processors                                */
-extern MrBFlt			myStateInfo[5];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
-extern MrBFlt			partnerStateInfo[5];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
+extern MrBFlt			myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
+extern MrBFlt			partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #						endif
 
 #if defined (FAST_LOG)

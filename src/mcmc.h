@@ -82,4 +82,5 @@ int     Move_TreeHeight (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 int     Move_TreeHeightM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 FILE	*OpenNewMBPrintFile (char *fileName);
+int		ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq);
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);

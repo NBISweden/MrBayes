@@ -59,7 +59,7 @@
 
 #define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						241
+#define	NUMPARAMS						242
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
