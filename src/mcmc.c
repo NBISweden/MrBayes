@@ -36048,8 +36048,12 @@ int PrintStatesToFiles (int curGen)
 				tree = GetTree (param, coldId, state[coldId]);
 				if (param->paramType == P_TOPOLOGY)
 					{
-					if (PrintTree (curGen, tree, NO) == ERROR)
-						nErrors++;
+					if (tree->isClock == YES)
+                        clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
+                    else
+                        clockRate = 0.0;
+			        if (PrintTree (curGen, tree, NO, clockRate) == ERROR)
+				        nErrors++;
 					}
 				else if (param->nPrintSubParams > 0)
 					{
@@ -36058,7 +36062,11 @@ int PrintStatesToFiles (int curGen)
 					}
 				else
 					{
-					if (PrintTree (curGen, tree, YES) == ERROR)
+					if (tree->isClock == YES)
+                        clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
+                    else
+                        clockRate = 0.0;
+					if (PrintTree (curGen, tree, YES, clockRate) == ERROR)
 						nErrors++;
 					}
 				}
@@ -38403,7 +38411,7 @@ void ResetFlips (int chain)
     TreeNode    *p;
     Tree        *tree;
 #if defined (BEAGLE_ENABLED)
-	int			*isScalerNode;
+	int			*isScalerNode=NULL;
 #endif    
     
     for (d=0; d<numCurrentDivisions; d++)
@@ -38773,7 +38781,10 @@ int RunChain (SafeLong *seed)
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
+
+#ifndef NDEBUG
 	int			beagleScalingSchemeOld;
+#endif
 
 #if defined (BEAGLE_ENABLED)
 	int			ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
