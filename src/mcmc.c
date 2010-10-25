@@ -10843,12 +10843,12 @@ int InitChainCondLikes (void)
         for (i=0; i<numLocalTaxa; i++)
             {
 #if !defined (DEBUG_NOSHORTCUTS)
-            if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
-                continue;
+            //if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
+                //continue;
 #endif
             for (j=0; j<numLocalChains; j++)
                 m->condLikeIndex[j][i] = clIndex;
-            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of canditioonal lokilihood for all chains.
+            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of canditioonal likelihoods  for terminals for all chains.
             }
 
         /* reserve private space for parsimony-based moves if parsimony model is used */
@@ -10871,6 +10871,8 @@ int InitChainCondLikes (void)
             return (ERROR);
         for (i=0; i<nNodes; i++)
             m->condLikeScratchIndex[i] = -1;
+		//for (i=0; i<numLocalTaxa; i++) //we do not need it becouse condLike space never get fliped for taxa nodes
+			//m->condLikeScratchIndex[i] = m->condLikeIndex[0][i];
         for (i=0; i<nIntNodes; i++)
             {
             m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
@@ -10934,7 +10936,7 @@ int InitChainCondLikes (void)
             m->nodeScalerScratchIndex[i] = -1;
         for (i=0; i<nIntNodes; i++)
             {
-            m->nodeScalerScratchIndex[numTaxa + i] = scalerIndex;
+            m->nodeScalerScratchIndex[i+numLocalTaxa] = scalerIndex;
             scalerIndex += indexStep;
             }
 
@@ -11080,8 +11082,8 @@ int InitChainCondLikes (void)
 			for (i=0; i<numLocalTaxa; i++)
 				{
 #if !defined (DEBUG_NOSHORTCUTS) && !defined (SSE_ENABLED)
-                if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
-                    continue;
+                //if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
+                    //continue;
 #endif
 				cL = m->condLikes[clIndex++];
 #if defined (SSE_ENABLED)
