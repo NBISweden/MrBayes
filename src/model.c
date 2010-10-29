@@ -1065,7 +1065,8 @@ int ChangeNumChains (int from, int to)
 	MCMCMove	**tempMoves, *fromMove, *toMove;
 	Tree		**tempTrees;
 	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition;
-    Param       *p, *cppEventParams = NULL;
+    Param       *p, *q, *cppEventParams = NULL;
+	Tree		**oldMcmcTree;
 
 	/* set new number of chains */
 	chainParams.numChains = to;
@@ -1170,6 +1171,7 @@ int ChangeNumChains (int from, int to)
 	tempTrees = (Tree **) calloc (2*nRuns*from*numTrees, sizeof(Tree *));
     for (i=0; i<2*nRuns*from*numTrees; i++)
         tempTrees[i] = mcmcTree[i];
+	oldMcmcTree = mcmcTree;
 	mcmcTree = (Tree **) realloc ((void *)(mcmcTree), (size_t)(2*numGlobalChains*numTrees*sizeof(Tree*)));
     for (i=0; i<2*nRuns*to*numTrees; i++)
         mcmcTree[i] = NULL;
@@ -1197,8 +1199,33 @@ int ChangeNumChains (int from, int to)
     /* remove any remaining old trees */
     for (i=0; i<2*nRuns*from*numTrees; i++)
         if (tempTrees[i] != NULL)
-            free (tempTrees[i]);
+			FreeTree (tempTrees[i]);
+            //free (tempTrees[i]);
     free (tempTrees);
+
+
+		/* now fill in the tree parameters */
+    for (i=0; i<numParams; i++)
+		{
+		p = &params[i];
+		if (p->paramType == P_TOPOLOGY)
+			{
+			p->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
+			for (j=0; j<p->nSubParams; j++)
+				{
+				q = p->subParams[j];
+				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
+				if (to > from)
+					for (run=0; run<nRuns; run++)
+						{
+						InitializeChainTrees (q, run*to + from, run*to + to , GetTree (q, 0, 0)->isRooted);
+						}
+				}
+			}
+        else if (p->paramType == P_CPPEVENTS || p->paramType == BMBRANCHRATES)
+            p->tree += (mcmcTree - oldMcmcTree);
+		}
+
     
 	/* fill new tree parameters */
 	if (to > from)
@@ -1313,7 +1340,7 @@ int ChangeNumRuns (int from, int to)
 	nChains = chainParams.numChains;
 	numGlobalChains = chainParams.numRuns * chainParams.numChains;
 
-	/* do the trees */
+	/* do the trees, free tree's memory if we reduce number of trees. */
 	for (i=to*2*nChains*numTrees; i<from*2*nChains*numTrees; i++)
 		{
 		FreeTree (mcmcTree[i]);
@@ -1326,7 +1353,11 @@ int ChangeNumRuns (int from, int to)
 		MrBayesPrint ("%s   Problem reallocating mcmcTree\n", spacer);
 		return (ERROR);
 		}
-    
+
+  	for (i=from*2*nChains*numTrees; i<to*2*nChains*numTrees; i++)
+		{
+		mcmcTree[i]=NULL;
+		}  
     /* then the cppevents parameters */
     for (i1=0; i1<numParams; i1++)
         {
@@ -1390,6 +1421,13 @@ int ChangeNumRuns (int from, int to)
 		params[i].subValues += (paramValues - oldParamValues);
 		}
 
+    /* fill new chains paramiters with appropriate values */
+    if (to > from)
+		{
+		TouchAllNormalParams ();
+		FillNormalParams (&globalSeed, from*nChains, to*nChains);
+		}
+
 	/* now fill in the tree parameters */
     for (i=0; i<numParams; i++)
 		{
@@ -1407,49 +1445,54 @@ int ChangeNumRuns (int from, int to)
         else if (p->paramType == P_CPPEVENTS || p->paramType == BMBRANCHRATES)
             p->tree += (mcmcTree - oldMcmcTree);
 		}
+
 	TouchAllTreeParams ();
 	FillTreeParams (&globalSeed, from*nChains, to*nChains);
 
-    /* finally fill new chains with new values */
-    if (to > from)
-		{
-		TouchAllNormalParams ();
-		FillNormalParams (&globalSeed, from*nChains, to*nChains);
-		}
+
+	/* Process standard characters (calculates bsIndex, tiIndex, and more). We need it here to setup stdStateFreqs STANDARD devisions */
+	if (ProcessStdChars(&globalSeed) == ERROR)
+		return (ERROR);
+
+
+	/* Set the applicable moves that could be used by the chain. */
+	if (SetMoves () == ERROR)
+		return (ERROR);
 
 	/* do the moves */
-	for (i=0; i<numApplicableMoves; i++)
-		{
-		mvt = moves[i]->moveType;
-		moves[i]->tuningParam = (MrBFlt **) realloc ((void *) moves[i]->tuningParam, (size_t) (numGlobalChains * sizeof (MrBFlt *)));
-		moves[i]->tuningParam[0] = (MrBFlt *) realloc ((void *) moves[i]->tuningParam[0], (size_t) (numGlobalChains * mvt->numTuningParams * sizeof (MrBFlt)));
-		for (j=1; j<numGlobalChains; j++)
-			moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
-		moves[i]->relProposalProb = (MrBFlt *) realloc ((void *) moves[i]->relProposalProb, (size_t) (4 * numGlobalChains * sizeof (MrBFlt)));
-		moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
-        moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
-        moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
-		moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
-		moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
-		moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
-        moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
-        moves[i]->nTotTried    = moves[i]->nAccepted + 4*numGlobalChains;
-		/* initialize all values to default */
-		for (j=0; j<numGlobalChains; j++)
-			{
-			moves[i]->nAccepted[j] = 0;
-			moves[i]->nTried[j] = 0;
-            moves[i]->nBatches[j] = 0;
-            moves[i]->nTotAccepted[j] = 0;
-            moves[i]->nTotTried[j] = 0;
-			moves[i]->relProposalProb[j] = mvt->relProposalProb;
-			moves[i]->cumProposalProb[j] = 0.0;
-            moves[i]->lastAcceptanceRate[j] = 0.0;
-			for (k=0; k<mvt->numTuningParams; k++)
-				moves[i]->tuningParam[j][k] = mvt->tuningParam[k];
-            moves[i]->targetRate[j] = mvt->targetRate;
-			}
-		}
+	//for (i=0; i<numApplicableMoves; i++)
+	//	{
+	//	mvt = moves[i]->moveType;
+	//	moves[i]->tuningParam = (MrBFlt **) realloc ((void *) moves[i]->tuningParam, (size_t) (numGlobalChains * sizeof (MrBFlt *)));
+	//	moves[i]->tuningParam[0] = (MrBFlt *) realloc ((void *) moves[i]->tuningParam[0], (size_t) (numGlobalChains * mvt->numTuningParams * sizeof (MrBFlt)));
+	//	for (j=1; j<numGlobalChains; j++)
+	//		moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
+	//	moves[i]->relProposalProb = (MrBFlt *) realloc ((void *) moves[i]->relProposalProb, (size_t) (4 * numGlobalChains * sizeof (MrBFlt)));
+	//	moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
+ //       moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
+ //       moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
+	//	moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
+	//	moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
+	//	moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
+ //       moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
+ //       moves[i]->nTotTried    = moves[i]->nAccepted + 4*numGlobalChains;
+	//	/* initialize all values to default */
+	//	for (j=0; j<numGlobalChains; j++)
+	//		{
+	//		moves[i]->nAccepted[j] = 0;
+	//		moves[i]->nTried[j] = 0;
+ //           moves[i]->nBatches[j] = 0;
+ //           moves[i]->nTotAccepted[j] = 0;
+ //           moves[i]->nTotTried[j] = 0;
+	//		moves[i]->relProposalProb[j] = mvt->relProposalProb;
+	//		moves[i]->cumProposalProb[j] = 0.0;
+ //           moves[i]->lastAcceptanceRate[j] = 0.0;
+	//		for (k=0; k<mvt->numTuningParams; k++)
+	//			moves[i]->tuningParam[j][k] = mvt->tuningParam[k];
+ //           moves[i]->targetRate[j] = mvt->targetRate;
+	//		}
+	//	}
+
 
 #if 0
     for (i=0; i<numParams; i++)
@@ -1736,9 +1779,9 @@ int CheckExpandedModels (void)
 				
 				/* check that the number of characters in partition is divisible by 3 */
 				numCharsInPart = 0;
-				for (c=0; c<numChar; c++)
+				for (c=firstChar; c<=lastChar; c++)
 					{
-					if (partitionId[c][partitionNum] != d+1)
+					if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != d+1)
 						continue;
 					numCharsInPart++;
 					}
@@ -1748,15 +1791,14 @@ int CheckExpandedModels (void)
 					if (numCurrentDivisions == 1)
 						{
 						MrBayesPrint ("%s   The number of characters is not divisible by three.\n", spacer);
-						MrBayesPrint ("%s   You specified a codon model which requires triplets\n", spacer);
-						MrBayesPrint ("%s   (codons) as the input. However, you only have %d \n", spacer, numCharsInPart);
-						MrBayesPrint ("%s   characters.  \n", spacer);
+						MrBayesPrint ("%s   You specified a %s model which requires triplets\n", spacer, mp->nucModel);
+						MrBayesPrint ("%s   However, you only have %d characters.\n", spacer, numCharsInPart);
 						}
 					else
 						{
 						MrBayesPrint ("%s   The number of characters in partition %d is not\n", spacer, d+1);
-						MrBayesPrint ("%s   divisible by three. You specified a codon model\n", spacer);
-						MrBayesPrint ("%s   which requires triplets (codons) as the input. \n", spacer);
+						MrBayesPrint ("%s   divisible by three. You specified a %s model\n", spacer, mp->nucModel);
+						MrBayesPrint ("%s   which requires triplets. \n", spacer);
 						MrBayesPrint ("%s   However, you only have %d characters in this  \n", spacer, numCharsInPart);
 						MrBayesPrint ("%s   partition \n", spacer);
 						}
@@ -1774,7 +1816,7 @@ int CheckExpandedModels (void)
 				if (contiguousPart == NO)
 					{
 					MrBayesPrint ("%s   Partition %d is not contiguous. You specified that\n", spacer, d+1);
-					MrBayesPrint ("%s   a codon model be used for this partition. However, there\n", spacer);
+					MrBayesPrint ("%s   a %s model be used for this partition. However, there\n", spacer, mp->nucModel);
 					MrBayesPrint ("%s   is another partition that is between some of the characters\n", spacer);
 					MrBayesPrint ("%s   in this partition. \n", spacer);
 					free (tempStr);
@@ -9989,6 +10031,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 /*------------------------------------------------------------------
 |
 |	FillTreeParams: Fill in trees and branch lengths
+|					Note: should be run after FillNormalParams becouse clockrate needs to be set if calibrated tree needs to be filled
 |
 ------------------------------------------------------------------*/
 int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
@@ -10825,8 +10868,11 @@ int InitializeTreeCalibrations (Tree *t)
 				p->age = p->calibration->age;
 			else if (p->calibration->prior == uniform)
 				p->age = p->calibration->min;
-			else /* if (p->calibration->prior == offsetExponential) */
+			else
+				{
+				assert(p->calibration->prior == offsetExponential);
 				p->age = p->calibration->offset;
+				}
 			}
 		}
 
@@ -12820,6 +12866,7 @@ int PrintMatrix (void)
 /*--------------------------------------------------------------
 |
 |	ProcessStdChars: process standard characters
+|   Needs to be executeed if number of chains increases to reallocate stdStateFreqs, etc
 |
 ---------------------------------------------------------------*/
 int ProcessStdChars (SafeLong *seed)

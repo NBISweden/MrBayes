@@ -9335,9 +9335,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                \"doublet\" (a model appropriate for modelling the stem regions  \n");
 		MrBayesPrint ("                of ribosomal genes where the state space is the 16 doublets of   \n");
 		MrBayesPrint ("                nucleotides), \"codon\" (the substitution model is expanded      \n");
-		MrBayesPrint ("                around triplets of nucleotides--a codon), and \"Aa\" (triplets   \n");
-		MrBayesPrint ("                of nucleotides are translated to amino acids, which form the     \n");
-		MrBayesPrint ("                basis of the substitution model).                                \n");
+		MrBayesPrint ("                around triplets of nucleotides--a codon), and \"Protein\"        \n");
+		MrBayesPrint ("                (triplets of nucleotides are translated to amino acids, which    \n");
+		MrBayesPrint ("                form the basis of the substitution model).                       \n");
 		MrBayesPrint ("   Nst       -- Sets the number of substitution types: \"1\" constrains all of   \n");
 		MrBayesPrint ("                the rates to be the same (e.g., a JC69 or F81 model); \"2\" all- \n");
 		MrBayesPrint ("                ows transitions and transversions to have potentially different  \n");
@@ -9472,7 +9472,7 @@ int GetUserHelp (char *helpTkn)
 	    	MrBayesPrint ("                                                                                 \n");
 			MrBayesPrint ("   Parameter    Options                               Current Setting            \n");
 			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
-			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Aa                 %s                         \n", mp->nucModel);
+			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Protein            %s                         \n", mp->nucModel);
 			MrBayesPrint ("   Nst          1/2/6                                 %s                         \n", mp->nst);
 			MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
 			MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
@@ -11604,9 +11604,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                \"doublet\" (a model appropriate for modelling the stem regions  \n");
 		MrBayesPrint ("                of ribosomal genes where the state space is the 16 doublets of   \n");
 		MrBayesPrint ("                nucleotides), \"codon\" (the substitution model is expanded      \n");
-		MrBayesPrint ("                around triplets of nucleotides--a codon), and \"Aa\" (triplets   \n");
-		MrBayesPrint ("                of nucleotides are translated to amino acids, which form the     \n");
-		MrBayesPrint ("                basis of the substitution model).                                \n");
+		MrBayesPrint ("                around triplets of nucleotides--a codon), and \"Protein\"	    \n");
+		MrBayesPrint ("                (triplets of nucleotides are translated to amino acids, which    \n");
+		MrBayesPrint ("                form the basis of the substitution model).                       \n");
 		MrBayesPrint ("   Nst       -- Sets the number of substitution types: \"1\" constrains all of   \n");
 		MrBayesPrint ("                the rates to be the same (e.g., a JC69 or F81 model); \"2\" all- \n");
 		MrBayesPrint ("                ows transitions and transversions to have potentially different  \n");
@@ -11712,7 +11712,7 @@ int GetUserHelp (char *helpTkn)
 	    	MrBayesPrint ("                                                                                 \n");
 			MrBayesPrint ("   Parameter    Options                               Current Setting            \n");
 			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
-			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Aa                 %s                         \n", mp->nucModel);
+			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Protein            %s                         \n", mp->nucModel);
 			MrBayesPrint ("   Nst          1/2/6                                 %s                         \n", mp->nst);
 			MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
 			MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);

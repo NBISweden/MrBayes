@@ -2189,10 +2189,12 @@ MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
 
 	if( r>l )
 		{
+		assert( calibrUp - r > 0.0 );
 		return node->age = r + ( calibrUp - r )/levUp;
 		}
 	else
 		{
+		assert( calibrUp - l> 0.0 );
 		return node->age = l + ( calibrUp - l )/levUp;
 		}
 
