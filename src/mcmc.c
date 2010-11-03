@@ -39486,11 +39486,13 @@ int RunChain (SafeLong *seed)
 				if (abortMove == NO)
 					ResetFlips(chn);
 				state[chn] ^= 1;
+#if defined (BEAGLE_ENABLED)
 				if ( recalcScalers == YES )
 					{
 					recalculateScalers( chn );
 					recalcScalers = NO;
 					}
+#endif
 				}
 			else
 				{

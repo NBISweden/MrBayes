@@ -1456,42 +1456,42 @@ int ChangeNumRuns (int from, int to)
 
 
 	/* Set the applicable moves that could be used by the chain. */
-	if (SetMoves () == ERROR)
-		return (ERROR);
+	//if (SetMoves () == ERROR)
+	//	return (ERROR);
 
 	/* do the moves */
-	//for (i=0; i<numApplicableMoves; i++)
-	//	{
-	//	mvt = moves[i]->moveType;
-	//	moves[i]->tuningParam = (MrBFlt **) realloc ((void *) moves[i]->tuningParam, (size_t) (numGlobalChains * sizeof (MrBFlt *)));
-	//	moves[i]->tuningParam[0] = (MrBFlt *) realloc ((void *) moves[i]->tuningParam[0], (size_t) (numGlobalChains * mvt->numTuningParams * sizeof (MrBFlt)));
-	//	for (j=1; j<numGlobalChains; j++)
-	//		moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
-	//	moves[i]->relProposalProb = (MrBFlt *) realloc ((void *) moves[i]->relProposalProb, (size_t) (4 * numGlobalChains * sizeof (MrBFlt)));
-	//	moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
- //       moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
- //       moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
-	//	moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
-	//	moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
-	//	moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
- //       moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
- //       moves[i]->nTotTried    = moves[i]->nAccepted + 4*numGlobalChains;
-	//	/* initialize all values to default */
-	//	for (j=0; j<numGlobalChains; j++)
-	//		{
-	//		moves[i]->nAccepted[j] = 0;
-	//		moves[i]->nTried[j] = 0;
- //           moves[i]->nBatches[j] = 0;
- //           moves[i]->nTotAccepted[j] = 0;
- //           moves[i]->nTotTried[j] = 0;
-	//		moves[i]->relProposalProb[j] = mvt->relProposalProb;
-	//		moves[i]->cumProposalProb[j] = 0.0;
- //           moves[i]->lastAcceptanceRate[j] = 0.0;
-	//		for (k=0; k<mvt->numTuningParams; k++)
-	//			moves[i]->tuningParam[j][k] = mvt->tuningParam[k];
- //           moves[i]->targetRate[j] = mvt->targetRate;
-	//		}
-	//	}
+	for (i=0; i<numApplicableMoves; i++)
+		{
+		mvt = moves[i]->moveType;
+		moves[i]->tuningParam = (MrBFlt **) realloc ((void *) moves[i]->tuningParam, (size_t) (numGlobalChains * sizeof (MrBFlt *)));
+		moves[i]->tuningParam[0] = (MrBFlt *) realloc ((void *) moves[i]->tuningParam[0], (size_t) (numGlobalChains * mvt->numTuningParams * sizeof (MrBFlt)));
+		for (j=1; j<numGlobalChains; j++)
+			moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
+		moves[i]->relProposalProb = (MrBFlt *) realloc ((void *) moves[i]->relProposalProb, (size_t) (4 * numGlobalChains * sizeof (MrBFlt)));
+		moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
+        moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
+        moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
+		moves[i]->nAccepted = (int *) realloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
+		moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
+		moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
+        moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
+        moves[i]->nTotTried    = moves[i]->nAccepted + 4*numGlobalChains;
+		/* initialize all values to default */
+		for (j=0; j<numGlobalChains; j++)
+			{
+			moves[i]->nAccepted[j] = 0;
+			moves[i]->nTried[j] = 0;
+            moves[i]->nBatches[j] = 0;
+            moves[i]->nTotAccepted[j] = 0;
+            moves[i]->nTotTried[j] = 0;
+			moves[i]->relProposalProb[j] = mvt->relProposalProb;
+			moves[i]->cumProposalProb[j] = 0.0;
+            moves[i]->lastAcceptanceRate[j] = 0.0;
+			for (k=0; k<mvt->numTuningParams; k++)
+				moves[i]->tuningParam[j][k] = mvt->tuningParam[k];
+            moves[i]->targetRate[j] = mvt->targetRate;
+			}
+		}
 
 
 #if 0
@@ -13340,6 +13340,99 @@ int ProcessStdChars (SafeLong *seed)
 	return (NO_ERROR);
 	
 }
+
+
+
+
+
+//void fillStdStateFreqs()
+//{
+//
+//	int		chn, n, i, j, index;
+//	MrBFlt	*subValue;
+//
+//	for (chn=0; chn<numGlobalChains; chn++)
+//		{
+//		for (k=0; k<numParams; k++)
+//			{
+//			p = &params[k];
+//			if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+//				continue;
+//			subValue = GetParamStdStateFreqs (p, chn, 0);
+//			if (p->paramId == SYMPI_EQUAL)
+//				{
+//				for (n=index=0; n<9; n++)
+//					{
+//					for (i=0; i<p->nRelParts; i++)
+//						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+//							break;
+//					if (i < p->nRelParts)
+//						{
+//						for (j=0; j<(n+2); j++)
+//							{
+//							subValue[index++] =  (1.0 / (n + 2));
+//							}
+//						}
+//					}
+//				for (n=9; n<13; n++)
+//					{
+//					for (i=0; i<p->nRelParts; i++)
+//						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
+//							break;
+//					if (i < p->nRelParts)
+//						{
+//						for (j=0; j<(n-6); j++)
+//							{
+//							subValue[index++] =  (1.0 / (n - 6));
+//							}
+//						}
+//					}
+//				}
+//
+//			/* Deal with transition asymmetry for standard characters */
+//			/* First, fill in stationary frequencies for beta categories if needed; */
+//			/* discard category frequencies (assume equal) */
+//			if (p->paramId == SYMPI_FIX || p->paramId == SYMPI_UNI || p->paramId == SYMPI_EXP
+//				|| p->paramId == SYMPI_FIX_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_EXP_MS)
+//				{
+//				if (p->hasBinaryStd == YES)
+//					{
+//					BetaBreaks (p->values[0], p->values[0], subValue, mp->numBetaCats);
+//					b = 2*mp->numBetaCats;
+//					for (i=b-2; i>0; i-=2)
+//						{
+//						subValue[i] = subValue[i/2];
+//						}
+//					for (i=1; i<b; i+=2)
+//						{
+//						subValue[i] =  (1.0 - subValue[i-1]);
+//						}
+//					subValue += (2 * mp->numBetaCats);
+//					}
+//				
+//				/* Then fill in state frequencies for multistate chars, one set for each */
+//				for (i=0; i<10; i++)
+//					symDir[i] = p->values[0];
+//			
+//				for (c=0; c<p->nSympi; c++)
+//					{
+//					/* now fill in subvalues */
+//					DirichletRandomVariable (symDir, subValue, p->sympinStates[c], seed);
+//					sum = 0.0;
+//					for (i=0; i<p->sympinStates[c]; i++)
+//						{
+//						if (subValue[i] < 0.0001)
+//							subValue[i] =  0.0001;
+//						sum += subValue[i];
+//						}
+//					for (i=0; i<mp->nStates; i++)
+//						subValue[i] /= sum;
+//					subValue += p->sympinStates[c];
+//					}
+//				}		
+//			}	/* next parameter */
+//		}	/* next chain */
+//}
 
 
 
