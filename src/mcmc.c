@@ -107,7 +107,8 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define BEAGLE_RESCALE_FREQ			256
+#define BEAGLE_RESCALE_FREQ			160
+#define BEAGLE_RESCALE_FREQ_DOUBLE	10			/* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
 #define RESCALE_FREQ				1			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ			100			/* generations between gibbs sampling of gamma cats */
@@ -182,35 +183,83 @@ int     CheckTemperature (void);
 void	CloseMBPrintFiles (void);
 PFNODE *CompactTree (PFNODE *p);
 int     CondLikeDown_Bin (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
 int     CondLikeDown_Gen (TreeNode *p, int division, int chain);
+#		else
+int		CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain);
+#		endif
+
 int     CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain);
+
 #		if !defined (SSE_ENABLED)
 int	    CondLikeDown_NUC4 (TreeNode *p, int division, int chain);
 #		else
 int	    CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain);
 #		endif
+
 int		CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
 int	    CondLikeDown_NY98 (TreeNode *p, int division, int chain);
+#		else
+int	    CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain);
+#		endif
+
 int     CondLikeDown_Std (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
 int     CondLikeRoot_Bin (TreeNode *p, int division, int chain);
+#		else
+int		CondLikeRoot_Bin_SSE (TreeNode *p, int division, int chain);
+#		endif
+
+#		if !defined (SSE_ENABLED)
 int     CondLikeRoot_Gen (TreeNode *p, int division, int chain);
+#		else
+int		CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain);
+#		endif
+
 int     CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain);
+
 #		if !defined (SSE_ENABLED)
 int	    CondLikeRoot_NUC4 (TreeNode *p, int division, int chain);
 #		else
-int	    CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain);
 int	    CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain);
+#		endif
+
+int	    CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
+int	    CondLikeRoot_NY98 (TreeNode *p, int division, int chain);
+#		else
 int		CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain);
+#		endif
+
+int     CondLikeRoot_Std (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
+int	    CondLikeScaler_Gen (TreeNode *p, int division, int chain);
+#		else
+int	    CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain);
+#		endif
+
+int	    CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
+int	    CondLikeScaler_NUC4 (TreeNode *p, int division, int chain);
+#		else
+int	    CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain);
+#		endif
+
+int	    CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain);
+
+#		if !defined (SSE_ENABLED)
+int	    CondLikeScaler_NY98 (TreeNode *p, int division, int chain);
+#		else
 int		CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain);
 #		endif
-int	    CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain);
-int	    CondLikeRoot_NY98 (TreeNode *p, int division, int chain);
-int     CondLikeRoot_Std (TreeNode *p, int division, int chain);
-int	    CondLikeScaler_Gen (TreeNode *p, int division, int chain);
-int	    CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain);
-int	    CondLikeScaler_NUC4 (TreeNode *p, int division, int chain);
-int	    CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain);
-int	    CondLikeScaler_NY98 (TreeNode *p, int division, int chain);
+
 int     CondLikeScaler_Std (TreeNode *p, int division, int chain);
 int     CondLikeUp_Bin (TreeNode *p, int division, int chain);
 int     CondLikeUp_Gen (TreeNode *p, int division, int chain);
@@ -388,7 +437,7 @@ int				*stdType;				     /* compressed std char type: ord, unord, irrev  */
 int				*tiIndex;				     /* compressed std char ti index                 */
 
 #if defined (BEAGLE_ENABLED)
-int				rescaleFreqOld;				 /* holds rescale frequency of current state	*/
+int				recalcScalers;			 /* shoud we recalculate scalers for current state YES/NO */
 #endif
 
 /* local (to this file) variables */
@@ -1969,7 +2018,7 @@ PFNODE *CompactTree (PFNODE *p)
 
 
 
-
+#if !defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |	CondLikeDown_Bin: binary model with or without rate
@@ -2021,7 +2070,7 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
 	return NO_ERROR;
 	
 }
-
+#endif
 
 
 
@@ -2102,6 +2151,9 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
 	
 }
 #endif
+
+
+
 
 
 /*----------------------------------------------------------------
@@ -2286,6 +2338,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
 	return NO_ERROR;
 	
 }
+
 
 
 
@@ -3215,6 +3268,7 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 
 
 
+#if !defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |	CondLikeDown_NY98: codon model with omega variation
@@ -3371,7 +3425,7 @@ int CondLikeDown_NY98 (TreeNode *p, int division, int chain)
 	return NO_ERROR;
 	
 }
-
+#endif
 
 
 
@@ -3650,7 +3704,7 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 
 
 
-
+#if !defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_Bin: binary model with or without rate
@@ -3708,6 +3762,7 @@ int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
 	return NO_ERROR;
 	
 }
+#endif
 
 
 
@@ -5320,7 +5375,7 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
 
 
 
-
+#if !defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_NY98: codon model with omega variation
@@ -5536,6 +5591,7 @@ int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
 
 	return NO_ERROR;
 }
+#endif
 
 
 
@@ -6787,6 +6843,7 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
 
 
+#if !defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |	CondLikeScaler_NY98: codon model with omega variation
@@ -6862,6 +6919,7 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
 	return (NO_ERROR);
 
 }
+#endif
 
 
 
@@ -9351,7 +9409,7 @@ void FreeChainMemory (void)
     /* free parsimony sets and node lens */
     for (i=0; i<numCurrentDivisions; i++)
         {
-        m = &modelSettings[i];	
+        m = &modelSettings[i];
         if (m->parsSets)
             {
             for (j=0; j<m->numParsSets; j++)
@@ -9463,6 +9521,7 @@ void FreeChainMemory (void)
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == NO)
             continue;
+
         beagleFinalizeInstance(m->beagleInstance);
         SafeFree((void **)(&m->logLikelihoods));
         SafeFree((void **)(&m->inRates));
@@ -9474,7 +9533,6 @@ void FreeChainMemory (void)
         SafeFree((void **)(&m->childBufferIndices));
         SafeFree((void **)(&m->childTiProbIndices));
         SafeFree((void **)(&m->cumulativeScaleIndices));
-		SafeFree((void **)(&m->beagleComputeCount));
 
 		m->isScalerNodeScratch += numLocalTaxa;
 		SafeFree((void **)&(m->isScalerNodeScratch)); 
@@ -9484,6 +9542,11 @@ void FreeChainMemory (void)
 			SafeFree((void **)&(m->isScalerNode[j]));
 			}
 		SafeFree((void **)(&m->isScalerNode));
+
+		SafeFree((void **)(&m->beagleComputeCount));
+		SafeFree((void **)(&m->succesCount));
+		SafeFree((void **)(&m->rescaleFreq));
+
 #endif
         }
 
@@ -10973,10 +11036,15 @@ int InitChainCondLikes (void)
         /* we use only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
         if ( m->useBeagle == YES )
 			{
+			m->succesCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
 			m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
-			for (i=0; i<numLocalChains+1; i++)
+			m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains);
+			t=BEAGLE_RESCALE_FREQ/m->numModelStates;
+			if ( beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE ) /*if double presition is used*/
+				t*=BEAGLE_RESCALE_FREQ_DOUBLE;
+			for (i=0; i<numLocalChains; i++)
 			   {
-			   m->rescaleFreq[i] = BEAGLE_RESCALE_FREQ;
+			   m->rescaleFreq[i] = t;
 			   }
 			m->isScalerNode = (int**) SafeMalloc((numLocalChains) * sizeof(int*));
 			/* we will use m->isScalerNode[chain][node->index] to determine whether the node is scaled or not. We do it only for internal nodes whose indexes start from numLocalTaxa thus we skew the pointer */
@@ -38433,7 +38501,7 @@ void ResetFlips (int chain)
 				{
 				FlipSiteScalerSpace (m, chain);
 				if (m->rescaleBeagleAll == YES )
-					m->rescaleFreq[chain] = rescaleFreqOld;
+					m->rescaleFreq[chain] = m->rescaleFreqOld;
 				}
 #else
 		FlipSiteScalerSpace (m, chain);
@@ -38482,7 +38550,7 @@ void ResetFlips (int chain)
 |	ResetScalersPartition: reset scaler nodes of the given tree by appropriatly setting isScalerNode array.
 | @param isScalerNode	is an array which gets set with information about scaler node. 
 |						For each internal node isScalerNode[node->index] is set to YES if it has to be scaler node.
-|						Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for ellemnts in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
+|						Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for elemnts in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
 |
 | @param rescaleFreq	effectively represent gabs between rescaling, higher number means more sparse choice of rescaling nodes 
 |
@@ -39418,6 +39486,11 @@ int RunChain (SafeLong *seed)
 				if (abortMove == NO)
 					ResetFlips(chn);
 				state[chn] ^= 1;
+				if ( recalcScalers == YES )
+					{
+					recalculateScalers( chn );
+					recalcScalers = NO;
+					}
 				}
 			else
 				{

@@ -98,7 +98,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #ifdef RELEASE
 #define	VERSION_NUMBER			"3.2"
 #else
-#define VERSION_NUMBER          "3.2-cvs"
+#define VERSION_NUMBER          "3.2-svn"
 #endif
 
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
@@ -721,7 +721,9 @@ typedef struct s_launch_struct
 #if defined (BEAGLE_ENABLED)
 #define	MB_BEAGLE_SCALE_ALWAYS			0
 #define MB_BEAGLE_SCALE_DYNAMIC			1
+#if defined (_DEBUG)
 #define MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT
+#endif
 #endif
 
 
@@ -1196,6 +1198,9 @@ typedef struct modelinfo
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int			rescaleBeagleAll;			/* set to rescale all nodes                     */
 	int*		rescaleFreq;				/* rescale frequency for each chain's tree		*/
+	int			rescaleFreqOld;				 /* holds rescale frequency of current state	 */
+	int			recalculateScalers;			 /* shoud we recalculate scalers for current state YES/NO */
+	int*		succesCount;				/* count number of succesful computation since last reset of scalers */
 	int**		isScalerNode;				/* for each node and chain set to YES if scaled node */
 	int*		isScalerNodeScratch;		/* scratch space to hold isScalerNode of proposed state*/
 	long*		beagleComputeCount;			/* count of number of calls to likelihood       */

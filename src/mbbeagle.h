@@ -10,6 +10,7 @@ int ScheduleLogLikeForAllDivisions(void);
 void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL);
 void *LaunchThreadLogLikeForDivision(void *arguments);
 MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain);
+void recalculateScalers(int chain );
 
 int InitBeagleInstance (ModelInfo *m);
 

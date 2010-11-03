@@ -163,8 +163,7 @@ int InitBeagleInstance (ModelInfo *m)
     	MrBayesPrint( "\tFlags:");
     	BeaglePrintFlags(details.flags);
     	MrBayesPrint( "\n");
-		beagleInstanceCount++;
-		m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains); // Freed in mcmc.c::FreeChainMemory				
+		beagleInstanceCount++;			
         }
 
     /* initialize tip data */
@@ -220,6 +219,8 @@ int InitBeagleInstance (ModelInfo *m)
 }
 
 
+
+
 /*-----------------------------------------------------------------
 |
 |	LaunchBEAGLELogLikeForDivision: calculate the log likelihood  
@@ -255,14 +256,62 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 		/* This flag is only valid within this block */
         m->rescaleBeagleAll = NO;        
         TreeTiProbs_Beagle(tree, d, chain);
+		if( m->succesCount[chain] > 1000 )
+			{
+			m->succesCount[chain] = 10;
+			m->rescaleFreq[chain]++; /* increase rescaleFreq independent of whether we accept or reject new state*/
+			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
+			for (i=0; i<tree->nIntNodes; i++)
+				{
+		        tree->intDownPass[i]->upDateCl = NO;
+				}
+			goto rescale_all;
+			}
+
+		if(	beagleScalingFrequency != 0 && 
+			m->beagleComputeCount[chain] % beagleScalingFrequency == 0 )
+			{
+			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
+			for (i=0; i<tree->nIntNodes; i++)
+				{
+		        tree->intDownPass[i]->upDateCl = NO;
+				}
+			goto rescale_all;
+			}
+
 		TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
 
 		/* Check if likelihood is valid */		
-        if (
-			((beagleScalingFrequency != 0 && 
-			m->beagleComputeCount[chain] % beagleScalingFrequency == 0)) ||		
-			TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) 
-				== BEAGLE_ERROR_FLOATING_POINT ) {
+        if( TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT ) 
+			{
+			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
+			if(rescaleFreqNew > 1 && m->succesCount[chain] < 40)
+				{
+				if( m->succesCount[chain] < 10 )
+					{
+					if( m->succesCount[chain] < 4 )
+						{
+						rescaleFreqNew-= rescaleFreqNew >> 3; /* <== we cut up to 12,5% of rescaleFreq */
+						if( m->succesCount[chain] < 2 )
+							{
+							rescaleFreqNew-= rescaleFreqNew >> 3;
+							/* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low liklihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
+							/* basicaly the higher probobility of proposing of low liklihood state which needs smaler rescaleFreq would leed to higher probability of hiting this code which should reduce rescaleFreqOld thus reduce further probobility of hiting this code */
+							/* at some point this negative feedback mechanism should get in balance with the mechanism of pereodicaly increasing rescaleFreq when long sequance of successes is achived*/
+							m->rescaleFreqOld-= m->rescaleFreqOld >> 3;
+							}
+						m->rescaleFreqOld-= m->rescaleFreqOld >> 3;
+						m->rescaleFreqOld--;
+						m->rescaleFreqOld = ( m->rescaleFreqOld ? m->rescaleFreqOld:1);
+						m->recalculateScalers = YES; 
+						recalcScalers = YES;
+						}
+					}
+				rescaleFreqNew--;
+				rescaleFreqNew = ( rescaleFreqNew ? rescaleFreqNew:1);
+				}
+			m->succesCount[chain] = 0;
+	rescale_all:
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 			printf("NUMERICAL RESCALING\n");
 #endif
@@ -270,9 +319,6 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             m->rescaleBeagleAll = YES;
             FlipSiteScalerSpace(m, chain);
 			isScalerNode = m->isScalerNode[chain];
-			rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
-			//rescaleFreqNew >>=1;
-			//rescaleFreqNew = ( rescaleFreqNew ? rescaleFreqNew:1);
 	while_loop:
 			ResetScalersPartition ( isScalerNode, tree, rescaleFreqNew );
 			for (i=0; i<m->nCijkParts; i++) {			
@@ -291,8 +337,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 						if ( isScalerNode[p->index] == YES)
 							FlipNodeScalerSpace (m, chain, p->index);
 						}
-
-					rescaleFreqNew--;
+					rescaleFreqNew -= rescaleFreqNew >> 3; /*<== we cut up to 12,5% of rescaleFreq */
+					rescaleFreqNew--;					   /* we cut extra 1 of rescaleFreq */
 					goto while_loop;
 					}
 				}
@@ -304,6 +350,34 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 	m->beagleComputeCount[chain]++;
 }
 
+
+void recalculateScalers(int chain)
+{
+	int			i, d, rescaleFreqNew;
+	int			*isScalerNode;
+	ModelInfo*	m;
+	Tree		*tree;
+
+	for (d=0; d<numCurrentDivisions; d++)
+		{
+		m = &modelSettings[d];
+		if( m->recalculateScalers == YES)
+			{
+			m->recalculateScalers = NO;
+			tree = GetTree(m->brlens, chain, state[chain]);
+
+			rescaleFreqNew = m->rescaleFreq[chain];
+			isScalerNode = m->isScalerNode[chain];
+
+			ResetScalersPartition ( isScalerNode, tree, rescaleFreqNew );
+			for (i=0; i<m->nCijkParts; i++) {			
+				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
+			}
+			
+			TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
+			}
+		}
+}
 
 void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {		
 	BeagleResourceList* beagleResources;
@@ -557,12 +631,12 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
             
 			/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
-			if(p->left->left== NULL && p->left->right== NULL)
+			if(p->left->left== NULL )
 				chil1Step=0;
 			else
 				chil1Step=1;
             
-			if(p->right->left== NULL && p->right->right== NULL)
+			if(p->right->left== NULL )
 				chil2Step=0;
 			else
 				chil2Step=1;
@@ -640,12 +714,12 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
         operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
         
 		/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
-		if(p->left->left== NULL && p->left->right== NULL)
+		if(p->left->left== NULL)
 			chil1Step=0;
 		else
 			chil1Step=1;
         
-		if(p->right->left== NULL && p->right->right== NULL)
+		if(p->right->left== NULL)
 			chil2Step=0;
 		else
 			chil2Step=1;
@@ -955,8 +1029,9 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           NULL,
                                           NULL);       
         }
-
+#if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
 	countALL++;
+#endif
 	if( beagleReturn == BEAGLE_ERROR_FLOATING_POINT )
     {
 #if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
@@ -965,6 +1040,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #endif
         return beagleReturn;
     }
+	m->succesCount[chain]++;
     
     /* accumulate logs across sites */
 	if (hasPInvar == NO)
