@@ -216,7 +216,7 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 
     /* get some handy numbers */
     numTaxa = pt->memNodes/2;
-	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+	nLongsNeeded = (numTaxa -1) / nBitsInALong + 1;
 
     /* allocate space */
     pt->bitsets = (SafeLong *) realloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(SafeLong));
@@ -383,7 +383,7 @@ int AllocateTreePartitions (Tree *t)
 		numTaxa = t->nNodes - t->nIntNodes - 1;
 	else
 		numTaxa = t->nNodes - t->nIntNodes;
-	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+	nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
 	/* reallocate space */
     t->bitsets = (SafeLong *) realloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(SafeLong)));
@@ -434,7 +434,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 		nTaxa = t1->nNodes - t1->nIntNodes;
 	
     /* allocate space */
-    nLongsNeeded = (nTaxa / nBitsInALong) + 1;
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
     bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
@@ -529,7 +529,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 		nTaxa = t1->nNodes - t1->nIntNodes;
 	
 	/* allocate space */
-    nLongsNeeded = (nTaxa / nBitsInALong) + 1;
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
     bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
@@ -611,18 +611,14 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 
 {
 
-	int				i, k, constraintId, nLongsNeeded, nextNode;
+	int				i, j, k, constraintId, nLongsNeeded, nextNode;
 	SafeLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
     char            constrName[100];
 	
 	pt->isRooted = t->isRooted;
-	if (t->isRooted == NO)
-		numTaxa = t->nNodes - t->nIntNodes;
-	else
-		numTaxa = t->nNodes - t->nIntNodes - 1;
 
-	nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+    nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
 	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
@@ -695,9 +691,17 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 		if (t->constraints[constraintId] == NO)
 			continue;
 
-        /* initialize bits in partition to add */
-		for (i=0; i<nLongsNeeded; i++)
-			constraintPartition[i] = definedConstraint[constraintId][i];
+        /* initialize bits in partition to add; get rid of deleted taxa in the process */
+        ClearBits(constraintPartition, nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+            {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            if (IsBitSet(i, definedConstraint[constraintId]) == YES)
+                SetBit(j, constraintPartition);
+            j++;
+            }
+        assert (j == numLocalTaxa);
 				
 		/* make sure outgroup is outside constrained partition if the tree is unrooted */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
@@ -705,15 +709,23 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 
 		/* check that partition should be included */
         k = NumBits(constraintPartition, nLongsNeeded);
-        if (k == 1 || k == numLocalTaxa)
+        if (k == 1)
 			{
-			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a tip or the whole tree and will be disregarded\n", spacer, constrName);
+			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a tip and will be disregarded\n", spacer, constrName);
 			t->constraints[i] = NO;
 			continue;
             }
 
+		/* check if root in rooted tree */
+        if (k == numLocalTaxa && t->isRooted == YES)
+            {
+            pt->root->isLocked = YES;
+            pt->root->lockID = constraintId;
+            continue;
+            }
+
 		/* check if interior root in unrooted tree */
-        if (k == numLocalTaxa - 1 && t->isRooted == NO)
+        if ((k == numLocalTaxa - 1 || k == numLocalTaxa) && t->isRooted == NO)
             {
             pt->root->isLocked = YES;
             pt->root->lockID = constraintId;
@@ -956,7 +968,7 @@ int CheckConstraints (Tree *t)
 
 {
 
-	int				a, i, j, nLongsNeeded;
+	int				a, i, j, k, nLongsNeeded;
 	SafeLong		*constraintPartition, *mask;
 	TreeNode		*p=NULL;
 	   	
@@ -964,7 +976,7 @@ int CheckConstraints (Tree *t)
 		return (NO_ERROR);
 
 	/* allocate space */
-	nLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
+	nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
 	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
@@ -972,7 +984,8 @@ int CheckConstraints (Tree *t)
 		return (ERROR);
 		}
 	mask = constraintPartition + nLongsNeeded;
-	/* set mask (needed to reset unused bits when flipping partitions) */
+
+    /* set mask (needed to reset unused bits when flipping partitions) */
 	for (i=0; i<numLocalTaxa; i++) 
 	  SetBit (i, mask); 
 	
@@ -988,8 +1001,15 @@ int CheckConstraints (Tree *t)
 			continue;
 
 		/* set bits in partition to check */
-		for (j=0; j<nLongsNeeded; j++)
-			constraintPartition[j] = definedConstraint[a][j];
+        ClearBits(constraintPartition, nLongsNeeded);
+		for (j=k=0; j<numTaxa; j++)
+            {
+            if (taxaInfo[j].isDeleted == YES)
+                continue;
+            if (IsBitSet(j, definedConstraint[a]) == YES)
+                SetBit(k, constraintPartition);
+            k++;
+            }
 
 		/* make sure outgroup is outside constrained partition if unrooted tree */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
@@ -1043,12 +1063,12 @@ int CheckSetConstraints (Tree *t)
 
 {
 
-	int				a, i, j, nTaxa, nLongsNeeded, foundIt;
+	int				a, i, j, nLongsNeeded, foundIt;
 	SafeLong		*constraintPartition, *mask;
 	TreeNode		*p;
 	   	
     if (t->checkConstraints == NO)
-	return (ERROR);
+	    return (NO_ERROR);
 
     /* reset all existing locks, if any */
     for (i=0; i<t->nNodes; i++)
@@ -1065,12 +1085,7 @@ int CheckSetConstraints (Tree *t)
 		return ERROR;
 		}
 
-	if (t->isRooted == YES)
-		nTaxa = t->nNodes - t->nIntNodes - 1;
-	else
-		nTaxa = t->nNodes - t->nIntNodes;
-	nLongsNeeded = nTaxa / nBitsInALong + 1;
-
+	nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
 	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
@@ -1080,7 +1095,7 @@ int CheckSetConstraints (Tree *t)
 		}
 	mask = constraintPartition + nLongsNeeded;
 
-	/* set mask (needed to take care of unused bits when flipping partitions) */
+    /* set mask (needed to take care of unused bits when flipping partitions) */
 	for (i=0; i<numLocalTaxa; i++)
 		SetBit (i, mask);
 	
@@ -1090,11 +1105,18 @@ int CheckSetConstraints (Tree *t)
 			continue;
 
 		/* set bits in partition to add */
-		for (j=0; j<nLongsNeeded; j++)
-			constraintPartition[j] = definedConstraint[a][j];
+        ClearBits(constraintPartition, nLongsNeeded);
+		for (i=j=0; i<numTaxa; i++)
+            {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            if (IsBitSet(i, definedConstraint[a]) == YES)
+                SetBit(j, constraintPartition);
+            j++;
+            }
 
 		/* make sure outgroup is outside constrained partition (marked 0) */
-		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition))
+		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition) == YES)
 			FlipBits(constraintPartition, nLongsNeeded, mask);
 
 		/* find the node that should be locked */
@@ -1421,8 +1443,6 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
             }
         assert (j != from->nNodes);
         assert (!(p->left == NULL && p->index >= numLocalTaxa));
-        if (j == from->nNodes)
-            return (ERROR);
         }
                 
 	/* deal with root */
@@ -1938,10 +1958,11 @@ void GetDatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths)
 {
     int index = 0;
     
-    if (p != NULL)
+    assert (p != NULL);
+
+    nodeDepths[index++] = p->nodeDepth;     /* include root node depth */
+    if (p->left != NULL)
         {
-        if (p->left == NULL || p->isDated == YES)
-            nodeDepths[index++] = p->nodeDepth;
         DatedNodeDepths (p->left, nodeDepths, &index);
         DatedNodeDepths (p->right, nodeDepths, &index);
         }
@@ -1961,7 +1982,9 @@ void GetDatedNodes (TreeNode *p, TreeNode **datedNodes)
 {
     int     index = 0;
     
-    if (p != NULL)
+    assert (p != NULL);
+
+    if (p->left!= NULL)
         {
         DatedNodes (p->left,  datedNodes, &index);
         DatedNodes (p->right, datedNodes, &index);
@@ -2029,7 +2052,7 @@ void GetPolyAges (PolyTree *t)
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        p->age = t->clockRate * p->depth;
+        p->age = p->depth / t->clockRate;
         }
 }
 
@@ -2218,8 +2241,10 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 
 {
 
-	int				i;
+	int				i, treeAgeFixed;
 	TreeNode		*p;
+    Model           *mp;
+    MrBFlt          treeAge;
 
 #if 0
     printf ("Before initializing calibrated brlens\n");
@@ -2231,6 +2256,19 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 		MrBayesPrint ("%s   Tree is unrooted\n", spacer);
 		return (ERROR);
 		}
+
+    /* Check whether root is fixed indirectly */
+    mp = &modelParams[t->relParts[0]];
+    if (!strcmp(mp->clockPr, "Uniform") && !strcmp(mp->treeAgePr,"Fixed"))
+        {
+        treeAgeFixed = YES;
+        treeAge = mp->treeAgeFix;
+        }
+    else
+        {
+        treeAgeFixed = NO;
+        treeAge = -1.0;
+        }
 	
 	/* date all nodes from top to bottom with min. age as nodeDepth*/
 	for (i=0; i<t->nNodes; i++)
@@ -2261,9 +2299,19 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 					p->nodeDepth = p->left->nodeDepth;
 				else
 					p->nodeDepth = p->right->nodeDepth;
-				if (p->isDated == YES)
+				if (p->isDated == YES || (p->anc->anc == NULL && treeAgeFixed))
 					{
-					if (p->calibration->prior == fixed)
+                    if (p->isDated == NO)
+                        {
+                        if (treeAge <= p->nodeDepth)
+                            {
+						    MrBayesPrint ("%s   Calibration inconsistency for root node\n", spacer);
+                            return (ERROR);
+                            }
+                        else
+                            p->age = p->nodeDepth = treeAge;
+                        }
+					else if (p->calibration->prior == fixed)
 						{
 						if (p->calibration->age <= p->nodeDepth)
 							{
@@ -2308,12 +2356,12 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 
 	/* try to make root node deeper than minimum age */
     p = t->root->left;
-    if (p->calibration == NULL)
+    if (p->calibration == NULL && treeAgeFixed == NO)
         {
 		if( p->nodeDepth==0.0 ) p->nodeDepth = 1.0;
         p->age = p->nodeDepth *= 1.5;
         }
-    else if (p->calibration->prior == fixed)
+    else if (treeAgeFixed == YES || p->calibration->prior == fixed)
         {
         /* can't do much ... */
         }
@@ -3225,10 +3273,7 @@ int NumDatedTips (TreeNode *p)
 {
     int     i = 0;
 
-    if (p == NULL)
-        return i;
-    if (p->left == NULL)
-        return 1;
+    assert (p != NULL && p->left != NULL);
 
     i += NDatedTips (p->left);
     i += NDatedTips (p->right);
@@ -3245,17 +3290,16 @@ int NDatedTips (TreeNode *p)
 {
     int     i=0;
     
-    if (p!=NULL)
+    assert(p!=NULL);
+
+    if (p->left == NULL || p->isDated == YES)
+        return 1;
+    else
         {
-        if (p->left == NULL || p->isDated == YES)
-            return 1;
-        else
-            {
-            i += NDatedTips (p->left);
-            i += NDatedTips (p->right);
-            }
+        i += NDatedTips (p->left);
+        i += NDatedTips (p->right);
+        return i;
         }
-    return i;
 }
 
 
@@ -3853,7 +3897,7 @@ void ResetPolyTree (PolyTree *pt)
     if (pt->bitsets)
         {
         maxTaxa = pt->memNodes / 2;
-        nLongsNeeded = (maxTaxa / nBitsInALong) + 1;
+        nLongsNeeded = (maxTaxa - 1) / nBitsInALong + 1;
         for (i=0; i<pt->memNodes*nLongsNeeded; i++)
             pt->bitsets[i] = 0;
         for (i=0; i<pt->memNodes; i++)
@@ -3876,7 +3920,7 @@ void ResetPolyTreePartitions (PolyTree *pt)
 
     /* get some handy numbers */
     numTaxa = pt->nNodes - pt->nIntNodes;
-    nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
     
     /* reset bits describing partitions */
     for (i=0; i<pt->memNodes*nLongsNeeded; i++)
@@ -4128,7 +4172,7 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
 	AllocateTreePartitions (vTree);
 	AllocateTreePartitions (tree);
 	numTips = tree->nNodes - tree->nIntNodes - (tree->isRooted == YES ? 1 : 0);
-	nLongsNeeded = (int) (numTips / nBitsInALong) + 1;
+	nLongsNeeded = (int) ((numTips - 1) / nBitsInALong) + 1;
 
 	for (i=0; i<vTree->nNodes; i++)
 		{
@@ -4176,6 +4220,21 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
 	
 	return (NO_ERROR);
 		
+}
+
+
+
+
+
+/* ResetIntNodeIndices: Set int node indices in downpass order from numTaxa to 2*numTaxa-2 */
+void ResetIntNodeIndices (PolyTree *t)
+{
+    int i, index;
+
+    index = t->nNodes - t->nIntNodes;
+
+    for (i=0; i<t->nIntNodes; i++)
+        t->intDownPass[i]->index = index++;
 }
 
 
@@ -4365,7 +4424,7 @@ void ResetTreePartitions (Tree *t)
 
     /* get some handy numbers */
     numTaxa = t->nNodes - t->nIntNodes - (t->isRooted == YES ? 1 : 0);
-    nLongsNeeded = (numTaxa / nBitsInALong) + 1;
+    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
     
     /* reset bits describing partitions */
     for (i=0; i<t->nNodes; i++)

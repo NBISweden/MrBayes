@@ -60,6 +60,7 @@ int       PrunePolyTree (PolyTree *pt);
 int       RandPerturb (Tree *t, int nPert, SafeLong *seed);
 int       RandResolve (PolyTree *t, SafeLong *seed, int destinationIsRooted);
 int       ResetBrlensFromTree (Tree *tree, Tree *vTree);
+void      ResetIntNodeIndices(PolyTree *t);
 void      ResetPolyTree (PolyTree *t);
 void      ResetPolyTreePartitions (PolyTree *pt);
 void      ResetPolyTreeRelClockParams (PolyTree *pt);

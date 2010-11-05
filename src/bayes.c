@@ -695,11 +695,11 @@ int InitializeMrBayes (void)
 	defaultModel.brlensExp = 10.0;
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
-	strcpy(defaultModel.treeHeightPr, "Exponential");   /* prior on tree height                         */
-	defaultModel.treeHeightGamma[0] = 1.0;
-	defaultModel.treeHeightGamma[1] = 1.0;
-	defaultModel.treeHeightExp = 1.0;
-	defaultModel.treeHeightFix = 1.0;
+	strcpy(defaultModel.treeAgePr, "Exponential");      /* prior on tree age                            */
+	defaultModel.treeAgeGamma[0] = 1.0;
+	defaultModel.treeAgeGamma[1] = 1.0;
+	defaultModel.treeAgeExp = 1.0;
+	defaultModel.treeAgeFix = 1.0;
 	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
 	defaultModel.clockRateNormal[0] = 1.0;
 	defaultModel.clockRateNormal[1] = 1.0;
@@ -741,11 +741,8 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.cppRatePr, "Exponential") ;	    /* prior on rate of CPP for relaxed clock     */
 	defaultModel.cppRateExp = 0.1;
 	defaultModel.cppRateFix = 1.0;
-	strcpy(defaultModel.psiGammaPr, "Fixed") ;	/* prior on psigamma shape for CPP rel clock */
-	defaultModel.psiGammaExp = 1.0;
-	defaultModel.psiGammaFix = 1.0;
-	defaultModel.psiGammaUni[0] = ALPHA_MIN;
-	defaultModel.psiGammaUni[1] = ALPHA_MAX;
+	strcpy(defaultModel.cppMultDevPr, "Fixed") ;	/* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
+	defaultModel.cppMultDevFix = 1.0;
 	strcpy(defaultModel.nuPr, "Fixed") ;	/* prior on nu parameter for BM rel clock */
 	defaultModel.nuExp = 1.0;
 	defaultModel.nuFix = 1.0;

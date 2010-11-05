@@ -357,9 +357,6 @@ PartCtr *AllocPartCtr ()
         r->height = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
             r->height[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
-        }
-    if (sumtParams.isCalibrated)
-        {
         r->age = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
             r->age[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
@@ -809,7 +806,7 @@ treeConstruction:
 		{
 		MrBayesPrint ("\n");
 		if (sumtParams.isClock == YES)
-			MrBayesPrint ("%s   Phylogram (based on average node depths):\n", spacer);
+			MrBayesPrint ("%s   Phylogram (based on median node depths):\n", spacer);
 		else
 			MrBayesPrint ("%s   Phylogram (based on average branch lengths):\n", spacer);
 		if( isInterapted )
@@ -2404,7 +2401,10 @@ int DoSumt (void)
 		    MrBayesPrint ("\n");
 
 		    /* now print header to file */
-		    MrBayesPrintf (fpTstat, "ID\t#obs\tProbability(=s)\tStddev(s)\tMin(s)\tMax(s)\tNruns\n");
+            if (sumtParams.numRuns > 1)
+		        MrBayesPrintf (fpTstat, "ID\t#obs\tProbability(=s)\tStddev(s)\tMin(s)\tMax(s)\tNruns\n");
+            else
+		        MrBayesPrintf (fpTstat, "ID\t#obs\tProbability(=s)\n");
             }
 
         /* now, show informative partitions that were found on screen; print to .tstat file simultaneously */
@@ -2830,8 +2830,9 @@ int DoSumtParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
-				strcpy (sumtParams.sumtFileName, tkn);
-				MrBayesPrint ("%s   Setting sumt filename to %s\n", spacer, sumtParams.sumtFileName);
+			    strcpy (sumtParams.sumtFileName, tkn);
+                strcpy(sumtParams.sumtOutfile, tkn);
+				MrBayesPrint ("%s   Setting sumt filename and outputname to %s\n", spacer, sumtParams.sumtFileName);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -3446,7 +3447,7 @@ int DoSumtTree (void)
             if (sumtParams.isCalibrated != t->isCalibrated)
                 {
 	            if (sumtParams.isCalibrated == YES)
-                    MrBayesPrint ("%s   Expected calibrated (dated) tree but tree '%s' in file '%s' is not calibrated\n",
+                    MrBayesPrint ("%s   Expected calibrated tree but tree '%s' in file '%s' is not calibrated\n",
                         spacer, t->name, sumtParams.curFileName);
 	            else if (sumtParams.isCalibrated == NO)
                     MrBayesPrint ("%s   Expected noncalibrated tree but tree '%s' in file '%s' is calibrated\n",
@@ -4490,7 +4491,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
 		p = t->allDownPass[i];
         /* find distance to root in relevant units */
         if (sumtParams.isClock == YES && sumtParams.isCalibrated == NO)
-    		p->f = t->root->depth - p->depth;
+            p->f = t->root->depth - p->depth;
         else if (sumtParams.isClock == YES && sumtParams.isCalibrated == YES)
             p->f = t->root->age - p->age;
         else

@@ -384,13 +384,16 @@ int DoSump (void)
 		}
 
 	if (sumpParams.numRuns == 1)
-		MrBayesPrint ("%s      Based on a total of %d samples out of a total of %d samples from this analysis.\n\n", spacer, numRows, numRows + burnin);
+        {
+		MrBayesPrint ("%s      Based on a total of %d samples out of a total of %d samples\n", spacer, numRows, numRows + burnin);
+		MrBayesPrint ("%s         from this analysis.\n", spacer);
+        }
 	else
 		{
 		MrBayesPrint ("%s      Summaries are based on a total of %d samples from %d runs.\n", spacer, sumpParams.numRuns*numRows, sumpParams.numRuns);
 		MrBayesPrint ("%s      Each run produced %d samples of which %d samples were included.\n", spacer, numRows + burnin, numRows);
 		}
-	MrBayesPrint ("%s      Parameter summaries are saved to file \"%s.pstat\".\n", spacer, sumpParams.sumpOutfile);
+	MrBayesPrint ("%s      Parameter summaries saved to file \"%s.pstat\".\n", spacer, sumpParams.sumpOutfile);
 
     if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
 		goto errorExit;
@@ -458,8 +461,10 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
-				strcpy (sumpParams.sumpFileName, tkn);
-				MrBayesPrint ("%s   Setting sump filename to %s\n", spacer, sumpParams.sumpFileName);
+				sscanf (tkn, "%s", tempStr);
+				strcpy (sumpParams.sumpFileName, tempStr);
+				strcpy (sumpParams.sumpOutfile, tempStr);
+				MrBayesPrint ("%s   Setting sump filename and output file name to %s\n", spacer, sumpParams.sumpFileName);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -1053,7 +1058,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
         MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c     Mean     Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
 		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
@@ -1061,7 +1066,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
 	MrBayesPrint ("%s   ", spacer);
 	for (j=0; j<longestHeader+1; j++)
 		MrBayesPrint ("-");
-	MrBayesPrint ("----------------------------------------------------------");
+	MrBayesPrint ("-----------------------------------------------------------");
 	if (nRuns > 1)
 		MrBayesPrint ("----------");
 	MrBayesPrint ("\n");
@@ -1112,7 +1117,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
 	MrBayesPrint ("%s   ", spacer);
 	for (j=0; j<longestHeader+1; j++)
 		MrBayesPrint ("-");
-	MrBayesPrint ("----------------------------------------------------------");
+	MrBayesPrint ("-----------------------------------------------------------");
 	if (nRuns > 1)
 		MrBayesPrint ("----------");
 	MrBayesPrint ("\n");
@@ -1526,7 +1531,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c    Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
 		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
@@ -1594,6 +1599,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
 		MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge.\n", spacer);
 		}
+	MrBayesPrint ("\n\n");
 
     fclose (fp);
     free (sampleCounts);

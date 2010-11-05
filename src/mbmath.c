@@ -4293,7 +4293,7 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
     newZ = (log(newX) - params[0]) / params[1];
     oldZ = (log(oldX) - params[0]) / params[1];
 
-    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldZ) - log(newZ);
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX) - log(newX);
 }
 
 
@@ -4341,16 +4341,14 @@ MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 
 
 /* Log probability for a value drawn from a lognormal distribution */
-MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt var, MrBFlt x)
+MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
 
 {
-	MrBFlt		mu, sqdev, lnProb;
+	MrBFlt		z, lnProb;
 
-	mu = log (exp) - (var * var / 2.0);
-	sqdev = log(x) - mu;
-	sqdev *= sqdev;
+    z = (log(x) - exp) / sd;
 
-	lnProb = - log (x * var * sqrt (2.0 * PI)) - (sqdev / (2.0*var*var));
+	lnProb = - log (x * sd * sqrt (2.0 * PI)) - (z*z / 2.0);
 
 	return lnProb;
 }
@@ -4375,21 +4373,15 @@ MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
 
 
 /* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
 
 {
-	MrBFlt		mu, sqdev, sqdevNew, lnRatio;
+    MrBFlt  newZ, oldZ;
 
-	mu = log (exp) - (var * var / 2.0);
-	sqdev = log (xOld) - mu;
-	sqdev *= sqdev;
-	sqdevNew = log (xNew) - mu;
-	sqdevNew *= sqdevNew;
+    newZ = (log(xNew) - exp) / sd;
+    oldZ = (log(xOld) - exp) / sd;
 
-	lnRatio = log (xOld) - log (xNew);
-	lnRatio += (sqdev - sqdevNew) / (2.0 * var * var);
-
-	return lnRatio;
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
 }
 
 
@@ -4430,16 +4422,16 @@ int LogBase2Plus1 (MrBFlt x)
 |   Draw a random variable from a lognormal distribution.
 |      
 ---------------------------------------------------------------------------------*/
-MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt var, SafeLong *seed)
+MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, SafeLong *seed)
 
 {
 
 	MrBFlt      x;
     
     x = PointNormal(RandomNumber(seed));
-    
-    x*= var;
-    x += log(mean);
+
+    x*= sd;
+    x += mean;
     
     return exp(x);
 }

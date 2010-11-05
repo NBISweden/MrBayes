@@ -262,9 +262,11 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define IBRSHAPE_MAX            100000.0f
 #define OMEGA_MAX               1000000.0f
 
-#define POS_MIN                 1E-25f;
-#define POS_INFINITY            1E25f;
+#define POS_MIN                 1E-25f
+#define POS_INFINITY            1E25f
 #define NEG_INFINITY			-1000000.0f
+#define POSREAL_MIN				1E-25f
+#define POSREAL_MAX				1E25f
 
 #define	CMD_STRING_LENGTH		100000
 
@@ -332,7 +334,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	LINKED					0
 #define	UNLINKED				1
 
-#define	NUM_LINKED				27
+#define	NUM_LINKED				28
 #define	P_TRATIO				0
 #define	P_REVMAT				1
 #define	P_OMEGA					2
@@ -341,7 +343,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_PINVAR				5
 #define	P_CORREL				6
 #define	P_SWITCH				7
-#define	P_RATEMULT				8
+#define	P_RATEMULT              8
 #define	P_TOPOLOGY				9
 #define	P_BRLENS				10
 #define	P_SPECRATE				11
@@ -351,7 +353,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_BRCORR				15
 #define	P_BRSIGMA				16
 #define	P_GROWTH				17
-#define P_PSIGAMMASHAPE         18
+#define P_CPPMULTDEV            18
 #define P_CPPRATE               19
 #define P_NU                    20
 #define P_CPPEVENTS				21
@@ -359,7 +361,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_IBRSHAPE              23
 #define P_IBRBRANCHRATES        24
 #define P_CLOCKRATE             25
-#define P_SPECIESTREE           26      /* NOTE: If you add another parameter, change NUM_LINKED */
+#define P_SPECIESTREE           26
+#define P_GENETREERATE          27
+
+/* NOTE: If you add another parameter, change NUM_LINKED */
 
 #define CPPm                    0       /* CPP rate multipliers */
 #define CPPi                    1       /* CPP independent rates */
@@ -614,8 +619,8 @@ typedef struct s_launch_struct
 #define SWITCH_UNI						26
 #define SWITCH_EXP						27
 #define SWITCH_FIX						28
-#define RATEMULT_DIR					29
-#define RATEMULT_FIX					30
+#define RATEMULT_DIR                    29
+#define RATEMULT_FIX                    30
 #define TOPOLOGY_NCL_UNIFORM			31
 #define TOPOLOGY_NCL_CONSTRAINED		32
 #define TOPOLOGY_NCL_FIXED              33
@@ -634,12 +639,14 @@ typedef struct s_launch_struct
 #define	TOPOLOGY_PARSIMONY_UNIFORM		46
 #define	TOPOLOGY_PARSIMONY_CONSTRAINED	47
 #define TOPOLOGY_PARSIMONY_FIXED        48
-#define BRLENS_CLOCK_UNI				51
-#define BRLENS_CLOCK_COAL				52
-#define BRLENS_CLOCK_BD					53
-#define BRLENS_UNI						57
-#define BRLENS_EXP						58
-#define	BRLENS_PARSIMONY				59
+#define BRLENS_UNI						49
+#define BRLENS_EXP						50
+#define BRLENS_FIXED                    51
+#define BRLENS_CLOCK_UNI                52
+#define BRLENS_CLOCK_COAL				53
+#define BRLENS_CLOCK_BD					54
+#define BRLENS_CLOCK_FIXED              55
+#define	BRLENS_PARSIMONY				56
 #define SPECRATE_UNI					60
 #define SPECRATE_EXP					61
 #define SPECRATE_FIX					62
@@ -690,9 +697,7 @@ typedef struct s_launch_struct
 #define	OMEGA_10FFF						108
 #define CPPRATE_FIX						109
 #define CPPRATE_EXP						110
-#define PSIGAMMASHAPE_FIX				111
-#define PSIGAMMASHAPE_UNI				112
-#define PSIGAMMASHAPE_EXP				113
+#define CPPMULTDEV_FIX				    111
 #define NU_FIX				            114
 #define NU_EXP				            115
 #define NU_UNI				            116
@@ -702,10 +707,10 @@ typedef struct s_launch_struct
 #define TOPOLOGY_RCCL_UNIFORM   		121
 #define TOPOLOGY_RCCL_CONSTRAINED   	122
 #define TOPOLOGY_RCCL_FIXED             123
+#define TOPOLOGY_SPECIESTREE            124
 #define CPPEVENTS						125
 #define BMBRANCHRATES					126
 #define TOPOLOGY_FIXED                  127
-#define BRLENS_FIXED                    128
 #define IBRSHAPE_FIX                    129
 #define IBRSHAPE_EXP                    130
 #define IBRSHAPE_UNI                    131
@@ -716,7 +721,7 @@ typedef struct s_launch_struct
 #define CLOCKRATE_GAMMA                 136
 #define CLOCKRATE_EXP                   137
 #define SPECIESTREE_UNIFORM             138
-#define TOPOLOGY_SPECIESTREE            139
+
 
 #if defined (BEAGLE_ENABLED)
 #define	MB_BEAGLE_SCALE_ALWAYS			0
@@ -939,10 +944,10 @@ typedef struct model
 	MrBFlt		extinctionBeta[2];
 	MrBFlt		extinctionExp;
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
-	char		treeHeightPr[100];    /* prior on tree height for uniform clock prior */
-	MrBFlt		treeHeightGamma[2];
-	MrBFlt		treeHeightExp;
-	MrBFlt		treeHeightFix;
+	char		treeAgePr[100];       /* prior on tree age for uniform clock prior */
+	MrBFlt		treeAgeGamma[2];
+	MrBFlt		treeAgeExp;
+	MrBFlt		treeAgeFix;
 	char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
 	MrBFlt		clockRateNormal[2];
 	MrBFlt		clockRateLognormal[2];
@@ -962,11 +967,9 @@ typedef struct model
 	char		cppRatePr[100];     /* prior on CPP rate                           */
 	MrBFlt		cppRateFix;
 	MrBFlt		cppRateExp;
-	char		psiGammaPr[100];  /* prior on CPP rate multiplier Psigamma shape */
-	MrBFlt		psiGammaFix;
-	MrBFlt		psiGammaUni[2];
-	MrBFlt		psiGammaExp;
-	char		nuPr[100];		   /* prior on BM lognormal rate variance             */
+	char		cppMultDevPr[100];  /* prior on CPP rate multiplier Lognormal variance */
+	MrBFlt		cppMultDevFix;
+	char		nuPr[100];		    /* prior on BM lognormal rate variance             */
 	MrBFlt		nuFix;
 	MrBFlt		nuUni[2];
 	MrBFlt		nuExp;
@@ -1074,7 +1077,7 @@ typedef struct modelinfo
 	Param		*brlens;					/* ptr to brlens (and tree) used in model	*/
 	Param		*speciesTree;			    /* ptr to species tree used in model        */
 	Param		*aaModel;					/* ptr to amino acid matrix used            */
-	Param		*psiGamma;				    /* ptr to psigamma shape used in model      */
+	Param		*cppMultDev;                /* ptr to cpp ratemult lognormal variance   */
 	Param		*cppRate;				    /* ptr to CPP rate used in model            */
 	Param		*cppEvents;					/* ptr to CPP events                        */
 	Param		*nu;						/* ptr to variance for BM relaxed clock     */

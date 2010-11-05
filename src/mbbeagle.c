@@ -152,15 +152,15 @@ int InitBeagleInstance (ModelInfo *m)
         }
     else
         {
-		MrBayesPrint( "\n   Using BEAGLE resource %i:", details.resourceNumber);
+		MrBayesPrint( "\n%s   Using BEAGLE resource %i:", spacer, details.resourceNumber);
 #if defined (THREADS_ENABLED)
         MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
 #else
 		MrBayesPrint( " (non-threaded)\n");
 #endif
-    	MrBayesPrint( "\tRsrc Name : %s\n", details.resourceName);
-    	MrBayesPrint( "\tImpl Name : %s\n", details.implName);    
-    	MrBayesPrint( "\tFlags:");
+    	MrBayesPrint( "%s      Rsrc Name : %s\n", spacer, details.resourceName);
+    	MrBayesPrint( "%s      Impl Name : %s\n", spacer, details.implName);    
+    	MrBayesPrint( "%s      Flags:", spacer);
     	BeaglePrintFlags(details.flags);
     	MrBayesPrint( "\n");
 		beagleInstanceCount++;			
@@ -451,48 +451,60 @@ int BeagleCheckFlagCompatability(long inFlags) {
 ______________________*/
 void BeaglePrintFlags(long inFlags) 
 {
+    int     i, k;
+    char *names[] = { "PROCESSOR_CPU",
+                      "PROCESSOR_GPU",
+                      "PROCESSOR_FPGA",
+                      "PROCESSOR_CELL",
+                      "PRECISION_DOUBLE",
+                      "PRECISION_SINGLE",
+                      "COMPUTATION_ASYNCH",
+                      "COMPUTATION_SYNCH",
+                      "EIGEN_REAL",
+                      "EIGEN_COMPLEX",
+                      "SCALING_MANUAL",
+                      "SCALING_AUTO",
+                      "SCALING_ALWAYS",
+                      "SCALING_DYNAMIC",
+                      "SCALERS_RAW",
+                      "SCALERS_LOG",
+                      "VECTOR_NONE",
+                      "VECTOR_SSE",
+                      "THREADING_NONE",
+                      "THREADING_OPENMP"
+                    };
+    long flags[] = { BEAGLE_FLAG_PROCESSOR_CPU,
+                     BEAGLE_FLAG_PROCESSOR_GPU,
+                     BEAGLE_FLAG_PROCESSOR_FPGA,
+                     BEAGLE_FLAG_PROCESSOR_CELL,
+                     BEAGLE_FLAG_PRECISION_DOUBLE,
+                     BEAGLE_FLAG_PRECISION_SINGLE,
+                     BEAGLE_FLAG_COMPUTATION_ASYNCH,
+                     BEAGLE_FLAG_COMPUTATION_SYNCH,
+                     BEAGLE_FLAG_EIGEN_REAL,
+                     BEAGLE_FLAG_EIGEN_COMPLEX,
+                     BEAGLE_FLAG_SCALING_MANUAL,
+                     BEAGLE_FLAG_SCALING_AUTO,
+                     BEAGLE_FLAG_SCALING_ALWAYS,
+                     BEAGLE_FLAG_SCALING_DYNAMIC,
+                     BEAGLE_FLAG_SCALERS_RAW,
+                     BEAGLE_FLAG_SCALERS_LOG,
+                     BEAGLE_FLAG_VECTOR_NONE,
+                     BEAGLE_FLAG_VECTOR_SSE,
+                     BEAGLE_FLAG_THREADING_NONE,
+                     BEAGLE_FLAG_THREADING_OPENMP
+                    };
 
-    if (inFlags & BEAGLE_FLAG_PROCESSOR_CPU)      
-    	MrBayesPrint( " PROCESSOR_CPU", spacer);
-    if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU)      
-    	MrBayesPrint( " PROCESSOR_GPU", spacer);
-    if (inFlags & BEAGLE_FLAG_PROCESSOR_FPGA)     
-    	MrBayesPrint( " PROCESSOR_FPGA", spacer);
-    if (inFlags & BEAGLE_FLAG_PROCESSOR_CELL)     
-    	MrBayesPrint( " PROCESSOR_CELL", spacer);
-    if (inFlags & BEAGLE_FLAG_PRECISION_DOUBLE)   
-    	MrBayesPrint( " PRECISION_DOUBLE", spacer);
-    if (inFlags & BEAGLE_FLAG_PRECISION_SINGLE)   
-    	MrBayesPrint( " PRECISION_SINGLE", spacer);
-    if (inFlags & BEAGLE_FLAG_COMPUTATION_ASYNCH) 
-    	MrBayesPrint( " COMPUTATION_ASYNCH", spacer);
-    if (inFlags & BEAGLE_FLAG_COMPUTATION_SYNCH)  
-    	MrBayesPrint( " COMPUTATION_SYNCH", spacer);
-    if (inFlags & BEAGLE_FLAG_EIGEN_REAL)         
-    	MrBayesPrint( " EIGEN_REAL", spacer);
-    if (inFlags & BEAGLE_FLAG_EIGEN_COMPLEX)      
-    	MrBayesPrint( " EIGEN_COMPLEX", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALING_MANUAL)     
-    	MrBayesPrint( " SCALING_MANUAL", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALING_AUTO)       
-    	MrBayesPrint( " SCALING_AUTO", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALING_ALWAYS)     
-    	MrBayesPrint( " SCALING_ALWAYS", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALING_DYNAMIC)    
-    	MrBayesPrint( " SCALING_DYNAMIC", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALERS_RAW)        
-    	MrBayesPrint( " SCALERS_RAW", spacer);
-    if (inFlags & BEAGLE_FLAG_SCALERS_LOG)        
-    	MrBayesPrint( " SCALERS_LOG", spacer);
-    if (inFlags & BEAGLE_FLAG_VECTOR_NONE)        
-    	MrBayesPrint( " VECTOR_NONE", spacer);
-    if (inFlags & BEAGLE_FLAG_VECTOR_SSE)         
-    	MrBayesPrint( " VECTOR_SSE", spacer);
-    if (inFlags & BEAGLE_FLAG_THREADING_NONE)     
-    	MrBayesPrint( " THREADING_NONE", spacer);
-    if (inFlags & BEAGLE_FLAG_THREADING_OPENMP)   
-    	MrBayesPrint( " THREADING_OPENMP", spacer);
-
+    for (i=k=0; i<20; i++)
+        {
+        if (inFlags & flags[i])
+            {
+            if (k%4 == 0 && k > 0)
+                MrBayesPrint("\n%s            ", spacer);
+            MrBayesPrint (" %s", names[i]);
+            k++;
+            }
+        }
 }
     
 int ScheduleLogLikeForAllDivisions() {

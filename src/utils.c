@@ -53,7 +53,7 @@ int AddBitfield (SafeLong ***list, int listLen, int *set, int setLen)
 {
     int     i, nLongsNeeded;
 
-    nLongsNeeded = (setLen / nBitsInALong) + 1;
+    nLongsNeeded = (setLen - 1) / nBitsInALong + 1;
 
     (*list) = (SafeLong **) SafeRealloc ((void *)(*list), (size_t)((listLen+1)*sizeof(SafeLong *)));
     if (!(*list))

@@ -1,6 +1,7 @@
 int		AreDoublesEqual (MrBFlt x, MrBFlt y, MrBFlt tol);
 int		ChangeNumRuns (int from, int to);
 int		ChangeNumChains (int from, int to);
+int		CheckModel (void);
 int		DoLink (void);
 int		DoLinkParm (char *parmName, char *tkn);
 int		DoLset (void);
