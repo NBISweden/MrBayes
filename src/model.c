@@ -1738,7 +1738,7 @@ int CheckModel (void)
     
     if (i < numTrees)
         {
-        if (!strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed"))
+        if (!strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
             {
             MrBayesPrint("%s   WARNING: You have calibrated the tree but the clock rate is fixed to 1.0.\n", spacer);
             MrBayesPrint("%s      This means that time is measured in expected changes per time unit. If\n", spacer);
@@ -20191,7 +20191,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 							{
 							if (mp->activeConstraints[a] == YES && nodeCalibration[a].prior != unconstrained)
 								{
-								MrBayesPrint ("%s                         -- The age of constrained node '%s' is %s\n", spacer,
+								MrBayesPrint ("%s                         -- The age of node '%s' is %s\n", spacer,
                                     constraintNames[a], nodeCalibration[a].name);
 								for (k=0; k<numTaxa; k++)
                                     if (taxaInfo[k].isDeleted == NO && IsBitSet(k,definedConstraint[a]) == NO)
