@@ -3533,6 +3533,9 @@ int DoExclude (void)
 		
 	foundFirst = NO;
 
+    /* reset analysis to recompress data */
+    SetUpAnalysis(&globalSeed);
+
 	return (NO_ERROR);
 	
 }
