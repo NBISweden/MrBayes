@@ -7339,7 +7339,11 @@ int DoTreeParm (char *parmName, char *tkn)
 	char				tempName[100];
 	static char 		tempCppEventString[150]; /* Contains multiple tokens which form CppEvents string */
 	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundFirst,
-						foundClockrate, foundCppEvent, eSetIndex, bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
+                        foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
+						foundClockrate, 
+                        foundCppEvent, /*is set to YES when CppEvent token is found and set to NO once full CppEvents name is processed*/
+                        eSetIndex, /* is set in the begining of reading CppEvent for a node/branch to the index of cureently processing CppEventt set */
+                        bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
 	static PolyNode		*pp, *qq;
 	static PolyTree		*t;
 	
@@ -7491,9 +7495,9 @@ int DoTreeParm (char *parmName, char *tkn)
 				}
 			foundAmpersand = NO;
 			}
-		else if (foundE == YES)
+		else if (foundE == YES) /* We have seen &E */
 			{
-			if( foundCppEvent == YES)
+			if( foundCppEvent == YES) /* We have seen &E CppEvents */
 				{
 				if ( IsSame("all",tkn) == SAME)
 					{
@@ -7510,7 +7514,7 @@ int DoTreeParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				}
-			else if (foundEqual == NO)
+			else if (foundEqual == NO) /* We have not seen CppEvents before and we are in header */
 				{
 				sumtParams.nESets++;
 				t->nESets++;
@@ -7528,25 +7532,27 @@ int DoTreeParm (char *parmName, char *tkn)
 					{
 					strcpy (tempCppEventString,tkn);
 					foundCppEvent = YES;
-					expecting = Expecting(LEFTCURL);
+					expecting = Expecting(LEFTCURL) | Expecting(RIGHTCOMMENT);
 					}
 				else
-					{
+					{ /* We have seen &E before but not CppEvents and current token is not CppEvents. We treat the token as a complite event name, i.e. do not expect any further details of the name */
 					expecting = Expecting(RIGHTCOMMENT);
 					foundE = NO;
 					t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
 					strcpy (t->eSetName[t->nESets-1],tkn);
 					}
 				}
-			else if (strcmp("CppEvents",tkn) == 0)
+			else if (strcmp("CppEvents",tkn) == 0) /* We have not seen CppEvents before but current token is CppEvents. We are not in the header. Thus we are processing node events name */
 				{
 				strcpy (tempCppEventString,tkn);
 				foundCppEvent = YES;
-				expecting = Expecting(LEFTCURL);
+				expecting = Expecting(LEFTCURL) | Expecting(NUMBER);
 				}
 			else
 				{
 				/* find the right event set */
+                /* We are not in the header. We have seen &E before but not CppEvents and current token is not CppEvents. */
+                /* We treat the token as a complite event name, i.e. do not expect any further details of the name. So we try to match it. */
 				for (i=0; i<t->nESets; i++)
 					if (strcmp(t->eSetName[i],tkn) == 0)
 						break;
@@ -7778,13 +7784,30 @@ int DoTreeParm (char *parmName, char *tkn)
 			if (foundColon == NO)
 				{
 
-				if( foundCppEvent == YES)
+				if( foundCppEvent == YES && foundCurly == YES )
 					{
 					expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
 					strcat(tempCppEventString,tkn);		
 					}
 				else 
 					{
+		            if( foundCppEvent == YES )
+			            {/* foundCurly == NO */
+                        /* We are here if we are reading CppEvent for a node/branch, so we have to match the name against existent set of names stored in t->eSetName array */
+			            foundCppEvent = NO;
+			            for (i=0; i<t->nESets; i++)
+				            if (strcmp(t->eSetName[i],tempCppEventString) == 0)
+					            break;
+			            if (i == t->nESets)
+				            {
+				            MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
+				            if (inSumtCommand == NO && inComparetreeCommand == NO)
+                                FreePolyTree (userTree[treeIndex]);
+				            return (ERROR);
+				            }
+			            eSetIndex = i;
+                        }
+
 					sscanf (tkn, "%d", &tempInt);
 					if (tempInt <= 0)
 						{
@@ -7801,14 +7824,14 @@ int DoTreeParm (char *parmName, char *tkn)
 					}
                 }
 			else if (foundFirst == NO)
-				{
+				{ /* processing the first number in the cpp event pair <position rate>*/
 				sscanf (tkn, "%lf", &tempD);
 				t->position[eSetIndex][pp->index][eventIndex] = tempD;
 				expecting = Expecting(NUMBER);
 				foundFirst = YES;
 				}
 			else
-				{
+				{ /* processing the second number in the cpp event pair <position rate>*/
 				foundFirst = NO;
 				sscanf (tkn, "%lf", &tempD);
 				t->rateMult[eSetIndex][pp->index][eventIndex] = tempD;
@@ -7932,8 +7955,16 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		foundE = foundB = NO;
         expecting = Expecting(LEFTCOMMENT);
-		if (foundEqual == NO)
+        if (foundEqual == NO)
+            {
 			expecting |= Expecting(EQUALSIGN);
+		    if( foundCppEvent == YES)
+			    {/* We are here if we are processing header of a tree, thus we only collecting CppEvent name by putting it at the end of t->eSetName array  */
+			    foundCppEvent = NO;
+				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempCppEventString)+1,sizeof(char));
+				strcat(t->eSetName[t->nESets-1],tempCppEventString);
+				}
+            }
 		else
 			{
 			if (pp->anc == NULL)
@@ -7959,6 +7990,7 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		if( foundCppEvent == YES)
 			{
+            foundCurly=YES;
 			strcat(tempCppEventString,"{");				
 			expecting = Expecting(NUMBER) | Expecting(ALPHA);
 			}
@@ -7969,28 +8001,15 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		if( foundCppEvent == YES)
 			{
-			foundCppEvent = NO;
 			strcat(tempCppEventString,"}");
+            foundCurly=NO;
 			if (foundEqual == NO)
-				{
-				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempCppEventString)+1,sizeof(char));
-				strcat(t->eSetName[t->nESets-1],tempCppEventString);
+				{ /* We are here if we are processing CppEvent name in the header of a tree.  */
 				expecting = Expecting(RIGHTCOMMENT);
 				}
 			else
 				{
-				/* find the right event set */
-				for (i=0; i<t->nESets; i++)
-					if (strcmp(t->eSetName[i],tempCppEventString) == 0)
-						break;
-				if (i == t->nESets)
-					{
-					MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
-					if (inSumtCommand == NO && inComparetreeCommand == NO)
-                        FreePolyTree (userTree[treeIndex]);
-					return (ERROR);
-					}
-				eSetIndex = i;
+                /* We are here if we are processing CppEvent name not in the header of a tree. Thus next we expect number of events.  */
 				expecting = Expecting(NUMBER);
 				}
 			}
@@ -9955,11 +9974,13 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset cppratepr = exponential(<number>)                   \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    For instance, if you fix the rate to 2, you expect to see,   \n");
-		MrBayesPrint ("                    on average, two rate-modifying events on any path leading    \n");
-		MrBayesPrint ("                    from the root of the tree to an extant terminal (a terminal  \n");
-		MrBayesPrint ("                    of age 0). If you put an exponential(0.1) on the rate, you   \n");
-		MrBayesPrint ("                    will be estimating the rate against a prior probability      \n");
-		MrBayesPrint ("                    distribution where the expected rate is 10 (= 1/0.1).        \n");
+		MrBayesPrint ("                    on average, two rate-modifying events  per time unit. Thus   \n");
+ 		MrBayesPrint ("					   on any path leading from the root of the tree to an extant   \n");
+		MrBayesPrint ("                    terminal (a terminal of age 0) you expect to see, on avarage,\n");
+		MrBayesPrint ("                    2*(length of the path in time units) rate-modifying events.  \n");
+		MrBayesPrint ("                    If you put an exponential(0.1) on the rate, you will be      \n");
+		MrBayesPrint ("                    estimating the rate against a prior probability distribution \n");
+		MrBayesPrint ("                    where the expected rate is 10 (= 1/0.1).						\n");
 		MrBayesPrint ("   Cppmultdevpr  -- This parameter allows you to specify the standard deviation  \n");
 		MrBayesPrint ("                    of the log-normal distribution from which the rate multi-    \n");
 		MrBayesPrint ("                    pliers of the CPP relaxed clock model are drawn. The standard\n");

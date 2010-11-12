@@ -5794,7 +5794,8 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 					rateMult = param->rateMult[2*chain+state[chain]][p->index];
 					for (j=0; j<nEvents; j++)
 						{
-						printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+						printf ("%s", MbPrintNum(position[j]) );
+                        printf (" %s", MbPrintNum(rateMult[j]) );
 						if (j != nEvents-1)
 							printf (", ");
 						}
@@ -5829,7 +5830,8 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 					        rateMult = param->rateMult[2*chain+state[chain]][p->index];
 					        for (j=0; j<nEvents; j++)
 						        {
-						        printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+                                printf ("%s", MbPrintNum(position[j]) );
+                                printf (" %s", MbPrintNum(rateMult[j]) );
 						        if (j != nEvents-1)
 							        printf (", ");
 						        }
@@ -5885,7 +5887,9 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 						rateMult = param->subParams[i]->rateMult[2*chain+state[chain]][p->index];
 						for (j=0; j<nEvents; j++)
 							{
-						    SafeSprintf (&tempStr, &tempStrSize, "%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+						    SafeSprintf (&tempStr, &tempStrSize, "%s", MbPrintNum(position[j]));
+							AddToPrintString (tempStr);
+                            SafeSprintf (&tempStr, &tempStrSize, " %s",  MbPrintNum(rateMult[j]));
 							AddToPrintString (tempStr);
 							if (j != nEvents-1)
 								AddToPrintString (", ");
@@ -5929,7 +5933,9 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 								rateMult = param->subParams[i]->rateMult[2*chain+state[chain]][p->index];
 								for (j=0; j<nEvents; j++)
 									{
-                                    SafeSprintf (&tempStr, &tempStrSize, "%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+                                    SafeSprintf (&tempStr, &tempStrSize, "%s", MbPrintNum(position[j]));
+									AddToPrintString (tempStr);
+                                    SafeSprintf (&tempStr, &tempStrSize, " %s", MbPrintNum(rateMult[j]));
 									AddToPrintString (tempStr);
 									if (j != nEvents-1)
 										AddToPrintString (",");
