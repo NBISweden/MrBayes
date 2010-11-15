@@ -58,6 +58,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #undef ICC_SSE
 #endif
 
+//#define PRINT_RATEMULTIPLIERS_CPP
+
 
 #if defined GCC_SSE			/* gcc compiler */
 #define ALIGNED_MALLOC memalign

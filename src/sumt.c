@@ -95,6 +95,11 @@ typedef struct
 #define	MAX_TREES				1000
 #define ALLOC_LEN               100     /* number of values to allocate each time in partition counter nodes */
 
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
+FILE     *rateMultfp=NULL;
+#endif
+
+
 #undef	DEBUG_CONTREE
 
 /* local prototypes */
@@ -2073,6 +2078,17 @@ int DoSumt (void)
 				}
 
 
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
+            sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
+            if ( (rateMultfp=OpenNewMBPrintFile (tempName)) == NULL )
+                {
+                printf("Error oppening file: %s to write", tempName);
+                goto errorExit;
+                }
+            fprintf(rateMultfp,"rateMult_CPP\n");
+#endif
+
+
 			/* Set up cheap status bar. */
 			if (sumtParams.runId == 0)
 				{
@@ -2679,6 +2695,10 @@ int DoSumt (void)
 		SafeFclose (&fpCon);
 		SafeFclose (&fpTrees);
 
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
+        SafeFclose (&rateMultfp);
+#endif
+
         /* free pointer array to partitions */
         free (treeParts);
         treeParts = NULL;
@@ -2725,6 +2745,10 @@ int DoSumt (void)
         SafeFclose (&fpVstat);
 		SafeFclose (&fpCon);
 		SafeFclose (&fpTrees);
+
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
+        SafeFclose (&rateMultfp);
+#endif
 
         /* free pointer array to partitions, part and tree counters */
         free (treeParts);
@@ -4021,7 +4045,7 @@ int OpenSumtFiles (int treeNo)
 		sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
 		sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
 		}
-	
+
     /* open files checking for over-write as appropriate */
 	if ((fpParts = OpenNewMBPrintFile(pFilename)) == NULL)
 		return ERROR;

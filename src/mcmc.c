@@ -32716,9 +32716,10 @@ int PreparePrintFiles (void)
     strcat (bkupName, "~");
     remove (bkupName);
     rename (fileName, bkupName);
-	
+
     return (NO_ERROR);
 }
+
 
 
 

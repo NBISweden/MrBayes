@@ -7835,6 +7835,10 @@ int DoTreeParm (char *parmName, char *tkn)
 				foundFirst = NO;
 				sscanf (tkn, "%lf", &tempD);
 				t->rateMult[eSetIndex][pp->index][eventIndex] = tempD;
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
+                if(rateMultfp!=NULL)
+                    fprintf(rateMultfp,"%s\n",tkn);
+#endif
 				eventIndex++;
 				if (eventIndex == t->nEvents[eSetIndex][pp->index])
 					{
