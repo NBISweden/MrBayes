@@ -741,7 +741,7 @@ typedef int (MoveFxn)(Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 typedef int (ApplicFxn)(Param *param);
 
 /* typedef for an AutotuneFxn */
-typedef void (AutotuneFxn)(MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *tuningParameter);
+typedef void (AutotuneFxn)(MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *tuningParameter, MrBFlt minTuning, MrBFlt maxTuning);
 
 /* struct holding info on each move type that the program handles */
 typedef struct

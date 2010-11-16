@@ -1287,9 +1287,9 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 
 
 /* Autotune Dirichlet move */
-void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *alphaPi)
+void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *alphaPi, MrBFlt minTuning, MrBFlt maxTuning)
 {
-    MrBFlt delta, logTuning;
+    MrBFlt delta, logTuning, newTuning;
 
     delta = 1.0 / sqrt(batch);
     delta = 0.01 < delta ? 0.01 : delta;
@@ -1301,8 +1301,9 @@ void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrB
     else
         logTuning += delta;
 
-    if (fabs(logTuning) < MAXLOGTUNINGPARAM)
-        *alphaPi = exp(logTuning);
+    newTuning = exp(logTuning);
+    if (newTuning > minTuning && newTuning > maxTuning)
+        *alphaPi = newTuning;
 }
 
 
@@ -1310,9 +1311,9 @@ void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrB
 
 
 /* Autotune multiplier move */
-void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *lambda)
+void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *lambda, MrBFlt minTuning, MrBFlt maxTuning)
 {
-    MrBFlt delta, logTuning;
+    MrBFlt delta, logTuning, newTuning;
 
     delta = 1.0 / sqrt(batch);
     delta = 0.01 < delta ? 0.01 : delta;
@@ -1324,8 +1325,9 @@ void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, Mr
     else
         logTuning -= delta;
 
-    if (fabs(logTuning) < MAXLOGTUNINGPARAM)
-        *lambda = exp(logTuning);
+    newTuning = exp(logTuning);
+    if (newTuning > minTuning && newTuning > maxTuning)
+        *lambda = newTuning;
 }
 
 
@@ -1333,9 +1335,9 @@ void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, Mr
 
 
 /* Autotune sliding window move */
-void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *width)
+void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *width, MrBFlt minTuning, MrBFlt maxTuning)
 {
-    MrBFlt delta, logTuning;
+    MrBFlt delta, logTuning, newTuning;
 
     delta = 1.0 / sqrt(batch);
     delta = 0.01 < delta ? 0.01 : delta;
@@ -1347,8 +1349,9 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
     else
         logTuning -= delta;
 
-    if (fabs(logTuning) < MAXLOGTUNINGPARAM)
-       *width = exp(logTuning);
+    newTuning = exp(logTuning);
+    if (newTuning > minTuning && newTuning > maxTuning)
+        *width = newTuning;
 }
 
 
@@ -15139,26 +15142,33 @@ MrBFlt LogPrior (int chain)
 |   species, n. We assume rho-sampling, that is, a constant sampling pro-
 |   bability rho, which is known, across tips of the tree. Variables:
 |
-|   b: birth (speciation) rate
-|   d: death (extintion) rate
-|   f: sampling fraction
+|   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
+|        speciation times from a point process
+|   tau: the labeled unoriented tree
+|   b:   birth (speciation) rate
+|   d:   death (extintion) rate
+|   f:   sampling fraction
+|   n:   number of species in the sampled tree
 |
 |   See:
 |   Tanja Stadler (2009) On incomplete sampling under birth-death models and
 |   connections to the sampling-based coalescent. Journal of Theoretical Biology
 |   261: 58-66.
 |
-|   We have the following distribution for ordered bifurcation times (cf. equation
-|   2 in Stadler, 2009):
+|   We use f(T|n), which is derived from f(T|n,t_or) using Stadler's approach,
+|   in which the time of origin of the tree is associated with a uniform prior
+|   and integrated out of the density. We then have:
+|
+|   We have the following distribution for ordered bifurcation times (cf.
+|   equation 5 in Stadler, 2009, simplified here using the p0 and p1 functions):
 |
 |
-|                            n-1       (b-d) * p1(t_i)
-|   f(t|n, t_1) = (n - 2)! * prod --------------------------
-|                            i=2   (1-p0(t)) * (1 - e(t_1))
+|              n! * p1(t_1)    n-1
+|   f(T|n) = --------------- * prod (b * p1(t_i))
+|             (1 - p0(t_1))    i=1
 |
 |
-|                    -(b-d)*t
-|   where   e(t)  = e
+|   where   t_1   = time of most recent common ancestor
 |           p0(t) = prob. of no descendants surviving and being sampled after time t (see LnP0 function below)
 |           p1(t) = prob. of one descendant surviving and being sampled after time t (see LnP1 function below)
 |
@@ -15167,27 +15177,20 @@ MrBFlt LogPrior (int chain)
 |   the bifurcation times corresponds to a distinct oriented tree. The result is the following
 |   density on oritented trees:
 |
-|                   1     n-1       (b-d) * p1(t_i)
-|   f(T|n, t_1) = ----- * prod ----------------------------
-|                 (n-1)   i=2   (1-p0(t_1)) * (1 - e(t_1))
+|              n * p1(t_1)     n-1
+|   f(T|n) = --------------- * prod (b * p1(t_i))
+|             (1 - p0(t_1))    i=1
 |
 |
 |   To translate this to a density on distinct labeled trees, the density needs to be multiplied by
 |   (2^(n-1) / n!).
 |
 |   For the critical process where the speciation and extinction rates are equal, we obtain the
-|   following result in the limit:
+|   following result in the limit (cf. equation 6 in Stadler (2009)):
 |
-|                   1     n-1   (1/t_1 + f*b)
-|   f(T|n, t_1) = ----- * prod -----------------
-|                 (n-1)   i=2   (1 + f*b*t_i)^2
-|
-|   All these densities are expressed in terms of raw birth and death rates, lambda and mu.
-|   However, we use the slightly different parameterization involving net birth and relative
-|   death rates, corresponding to b' = (b - d) and d' = (d/b), in the specification of the
-|   priors. This gives rise to a variable transformation factor, a Jacobian, which is
-|
-|   J = (1 + d')*b' / (1 - d')^3
+|                  n          n-1          1        
+|   f(T|n) = -------------- * prod -----------------
+|            (1 + f*b*t_1)    i=1   (1 + f*b*t_i)^2
 |
 ---------------------------------------------------------------------------------*/
 
@@ -15223,12 +15226,12 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 	/* calculate probability of tree using standard variables */
 	if (AreDoublesEqual(sR,eR,ETA)==NO)
 		{
-		// birth rate != death rate, see equation (2) in Stadler (2009) and above
+		// birth rate != death rate, see equation (5) in Stadler (2009) and above
     	et_1  = exp(-(lambda - mu)*nt[t->nIntNodes-1]);
         p0t_1 = (rho*mu     + (lambda*(1.0 - rho) - mu)*et_1) /
                 (rho*lambda + (lambda*(1.0 - rho) - mu)*et_1);
-        (*prob) = - log(nTaxa - 1.0);
-        (*prob) += (nTaxa - 2.0) * (log(lambda - mu) - log(1.0 - p0t_1) - log(1.0 - et_1));
+        (*prob) = log(nTaxa) + LnP1(nt[t->nIntNodes-1], lambda, mu, rho);
+        (*prob) -= log(1.0 - p0t_1);
 		for (i=0; i<t->nIntNodes-1; i++)
 			(*prob) += lambda * LnP1(nt[i], lambda, mu, rho);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
@@ -15236,16 +15239,12 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 	else
 		{
 		// birth rate == death rate -> the critical branching process
-        (*prob) = - log(nTaxa - 1.0);
-    	(*prob) += (nTaxa - 2.0) * (log((1.0 / nt[t->nIntNodes-1]) + rho*lambda));
+        (*prob) = log(nTaxa/(1.0 + rho*lambda*nt[t->nIntNodes-1]));
         for (i=0; i<t->nIntNodes-1; i++)
             (*prob) -= 2.0 * log(1.0 + rho*lambda*nt[i]);
-        (*prob) = (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
+        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
 
-    /* Jacobian because of variable transformation */
-    (*prob) += log(sR * (1.0 + eR)) - 3.0 * log(1.0 - eR);
-		
 	/* free memory */
 	free (nt);
 	
@@ -17983,7 +17982,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             brlens [a->index] = brlens[a->index] * (1.0 - y);
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
-            if (brlens[u->index] < 0.0 || brlens[a->index] < 0.0)
+            if (v->length <= 0.0 || u->length <= 0.0 || a->length <= 0.0 ||
+                brlens[v->index] || brlens[u->index] <= 0.0 || brlens[a->index] <= 0.0)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
@@ -17993,6 +17993,12 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) += LnProbGamma (a->length/ibrshape, 1.0/ibrshape, brlens[a->index]);
 			(*lnPriorRatio) += LnProbGamma (v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrshape, 1.0/ibrshape, brlens[u->index]);
+            if (a->length <= 0.0 || v->length <= 0.0 || u->length <= 0.0)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+
 
             /* adjust proposal ratio */
             (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])*(1.0 + brlens[oldA->index]*origBrlenProp));
@@ -18704,13 +18710,16 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             {
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
-			(*lnPriorRatio) -= LnProbScaledGamma(ibrshape*a->length, ibrRate[a->index]);
-			(*lnPriorRatio) -= LnProbScaledGamma(ibrshape*v->length, ibrRate[v->index]);
-			(*lnPriorRatio) -= LnProbScaledGamma(ibrshape*u->length, ibrRate[u->index]);
-			(*lnPriorRatio) += LnProbScaledGamma(ibrshape*(a->length+u->length), ibrRate[a->index]);
-			/* adjust effective branch lengths */
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-			brlens[a->index] = ibrRate[a->index]*(a->length+u->length);
+			(*lnPriorRatio) -= LnProbGamma(a->length/ibrshape, 1.0/ibrshape, brlens[a->index]);
+			(*lnPriorRatio) -= LnProbGamma(v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
+			(*lnPriorRatio) -= LnProbGamma(u->length/ibrshape, 1.0/ibrshape, brlens[u->index]);
+			
+            /* adjust effective branch lengths */
+            brlens[a->index] = brlens[a->index] + brlens[u->index];
+            ibrRate[a->index] = brlens[a->index] / (a->length + u->length);
+
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
             }
 		}	/* next subparameter */
 
@@ -18802,7 +18811,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	else
 		x = b->nodeDepth - v->nodeDepth;
 	newBrlen = x;
-    if (x < 0.0)
+    if (x <= 0.0)
         {
         abortMove = YES;
         return (NO_ERROR);
@@ -18921,19 +18930,26 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 			ibrshape = *GetParamVals (modelSettings[subParm->relParts[0]].ibrshape, chain, state[chain]);
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            if (a->length <= 0.0 || v->length <= 0.0 || u->length <= 0.0)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+
+            /* adjust prior ratio (step 1) */
+			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrshape, 1.0/ibrshape, brlens[a->index]);
 
             /* no proposal ratio effect */
-
-            /* adjust prior ratio */
-			(*lnPriorRatio) -= LnProbScaledGamma (ibrshape*(a->length+u->length), ibrRate[a->index]);
-			(*lnPriorRatio) += LnProbScaledGamma (ibrshape*a->length, ibrRate[a->index]);
-			(*lnPriorRatio) += LnProbScaledGamma (ibrshape*v->length, ibrRate[v->index]);
-			(*lnPriorRatio) += LnProbScaledGamma (ibrshape*u->length, ibrRate[u->index]);
 
             /* update effective evolutionary lengths */
             brlens[a->index] = a->length * ibrRate[a->index];
 			brlens[v->index] = v->length * ibrRate[v->index];
 			brlens[u->index] = u->length * ibrRate[u->index];
+
+            /* adjust prior ratio (step 2) */
+			(*lnPriorRatio) += LnProbGamma (a->length/ibrshape, 1.0/ibrshape, brlens[a->index]);
+			(*lnPriorRatio) += LnProbGamma (v->length/ibrshape, 1.0/ibrshape, brlens[v->index]);
+			(*lnPriorRatio) += LnProbGamma (u->length/ibrshape, 1.0/ibrshape, brlens[u->index]);
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
 
@@ -18964,6 +18980,8 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		(*lnProposalRatio) += log (2.0*(1.0 - extensionProb));
 	else if (isStartLocked == YES && isStopLocked == NO)
 		(*lnProposalRatio) -= log (2.0*(1.0 - extensionProb));
+
+    assert ((*lnPriorRatio) == (*lnPriorRatio));
 
     return (NO_ERROR);
 	
@@ -23988,7 +24006,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             ibrRate[c->index] = brlens[c->index] / c->length;
 
             /* if brlens[c->index] is smaller than or equal to 0.0, the prior ratio is 0 */
-            if (brlens[c->index] <= 0.0)
+            if (a->length <= 0.0 || c->length <= 0.0 || brlens[c->index] <= 0.0)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
@@ -26390,8 +26408,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             }
 		}	/* next subparameter */
 
-    if (*lnPriorRatio != *lnPriorRatio)
-        getchar();
+    assert (*lnPriorRatio == *lnPriorRatio);
 
     /* cut tree */
 	a->anc = b;
@@ -26586,8 +26603,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	v4 = c->length;
 	v5 = u->length;
 
-    if (*lnPriorRatio != *lnPriorRatio)
-        getchar();
+    assert (*lnPriorRatio == *lnPriorRatio);
 
     /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
 	for (i=0; i<param->subParams[0]->nSubParams; i++)
@@ -26691,8 +26707,9 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             brlens [a->index] = brlens[a->index] * (1.0 - y);
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
-            if (brlens[u->index] < 0.0 || brlens[a->index] < 0.0)
+            if (brlens[u->index] <= 0.0 || brlens[a->index] <= 0.0 || a->length <= 0.0 || u->length <= 0.0 || v->length <= 0.0)
                 {
+                free (nSitesOfPat);
                 abortMove = YES;
                 return (NO_ERROR);
                 }
@@ -26708,8 +26725,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             }   /* end ibr branch rate parameter */
 		}	/* next subparameter */
 
-    if (*lnPriorRatio != *lnPriorRatio)
-        getchar();
+    assert (*lnPriorRatio == *lnPriorRatio);
 
 	/* set tiprobs update flags */
 	c->upDateTi = YES;
@@ -26740,11 +26756,13 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 	/* calculate and adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
+        {
+        free (nSitesOfPat);
         return (ERROR);
+        }
     (*lnPriorRatio) += x;
 	
-    if (*lnPriorRatio != *lnPriorRatio)
-        getchar();
+    assert (*lnPriorRatio == *lnPriorRatio);
 
 #	if defined (DEBUG_ParsSPRClock)
 	printf ("After:\n");
@@ -38710,6 +38728,7 @@ int RunChain (SafeLong *seed)
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
+                //printf("lnPrior = %.15lf -- LogPrior = %.15lf\n", lnPrior, LogPrior(chn));
                 assert (fabs((lnPrior-LogPrior(chn))/lnPrior) < 0.0001);
 
                 /* heat */
@@ -38768,7 +38787,12 @@ int RunChain (SafeLong *seed)
                 theMove->nAccepted[i] = 0;
                 theMove->nBatches[i]++;
                 if (chainParams.autotune == YES && theMove->moveType->Autotune != NULL)
-                    theMove->moveType->Autotune(theMove->lastAcceptanceRate[i], theMove->targetRate[i], theMove->nBatches[i], &theMove->tuningParam[i][0]);
+                    theMove->moveType->Autotune(theMove->lastAcceptanceRate[i],
+                                                theMove->targetRate[i],
+                                                theMove->nBatches[i],
+                                                &theMove->tuningParam[i][0],
+                                                theMove->moveType->minimum[0],
+                                                theMove->moveType->maximum[0]);
                 }
 
             /*ShowValuesForChain (chn); */
