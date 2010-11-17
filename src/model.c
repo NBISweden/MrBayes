@@ -11955,7 +11955,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 					{
 					if (strcmp(modelParams[part1].nodeAgePr,modelParams[part2].nodeAgePr) != 0)
 						isSame = NO;
-					if (!strcmp(modelParams[part1].nodeAgePr,"Calibrated"))
+					if (!strcmp(modelParams[part1].nodeAgePr,"Calibrated") && strcmp(modelParams[part1].clockPr,"Fixed") != 0)
 						{
 						/* check the calibrations; if the constraints are the same, the calibrations are also */
 				        nDiff = 0;
@@ -11965,8 +11965,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 				        if (nDiff != 0)
 					        isSame = NO;
 				        }
+                    /* If fixed clock brlens, check if the brlens come from the same tree */
+			        if (!strcmp(modelParams[part1].clockPr, "Fixed") && !strcmp(modelParams[part2].clockPr, "Fixed"))
+				        {
+				        if (modelParams[part1].brlensFix != modelParams[part2].brlensFix)
+					        isSame = NO;
+				        }
 					}
-				}
+                }
 			/* If fixed brlens, check if the brlens come from the same tree */
 			if (!strcmp(modelParams[part1].brlensPr, "Fixed") && !strcmp(modelParams[part2].brlensPr, "Fixed"))
 				{
