@@ -17464,29 +17464,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-	/* Move_ClockRate_S */
-	mt = &moveTypes[i++];
-	mt->name = "Sliding window";
-	mt->shortName = "Slider";
-	mt->tuningName[0] = "Sliding window size";
-	mt->shortTuningName[0] = "delta";
-	mt->applicableTo[0] = CLOCKRATE_NORMAL;
-	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
-	mt->applicableTo[2] = CLOCKRATE_GAMMA;
-	mt->applicableTo[3] = CLOCKRATE_EXP;
-	mt->nApplicable = 4;
-	mt->moveFxn = &Move_ClockRate;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 0.5;  /* window size */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 100.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneSlider;
-    mt->targetRate = 0.25;
-
-	/* Move_ClockRate_M */
+	/* Move_ClockRateM */
 	mt = &moveTypes[i++];
 	mt->name = "Multiplier";
 	mt->shortName = "Multiplier";
@@ -17501,28 +17479,6 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
-	mt->parsimonyBased = NO;
-	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
-
-	/* Move_ClockRate_L */
-	mt = &moveTypes[i++];
-	mt->name = "Lognormal";
-	mt->shortName = "Lognormal";
-	mt->tuningName[0] = "Log normal proposal standard deviation";
-	mt->shortTuningName[0] = "sd";
-	mt->applicableTo[0] = CLOCKRATE_NORMAL;
-	mt->applicableTo[1] = CLOCKRATE_LOGNORMAL;
-	mt->applicableTo[2] = CLOCKRATE_GAMMA;
-	mt->applicableTo[3] = CLOCKRATE_EXP;
-	mt->nApplicable = 4;
-	mt->moveFxn = &Move_RealNormal;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 0.1;  /* sd */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
