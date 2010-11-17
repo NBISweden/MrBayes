@@ -3390,7 +3390,7 @@ int DoSumtTree (void)
                     }
                 }
             numLocalTaxa = sumtParams.numTaxa;
-            sumtParams.SafeLongsNeeded = (numLocalTaxa / nBitsInALong) + 1;
+            sumtParams.SafeLongsNeeded = ((numLocalTaxa-1) / nBitsInALong) + 1;
             if (t->isRooted == YES)
                 sumtParams.orderLen = numLocalTaxa - 2;
             else
