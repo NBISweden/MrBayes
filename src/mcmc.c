@@ -107,7 +107,7 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define BEAGLE_RESCALE_FREQ			160
+#define BEAGLE_RESCALE_FREQ			1600
 #define BEAGLE_RESCALE_FREQ_DOUBLE	10			/* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
 #define RESCALE_FREQ				1			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
@@ -37710,7 +37710,7 @@ void ResetFlips (int chain)
 			m->rescaleBeagleAll == YES )
 				{
 				FlipSiteScalerSpace (m, chain);
-				if (m->rescaleBeagleAll == YES )
+				if (m->rescaleBeagleAll == YES );
 					m->rescaleFreq[chain] = m->rescaleFreqOld;
 				}
 #else
@@ -37724,14 +37724,14 @@ void ResetFlips (int chain)
         /* cycle over tree */
         tree = GetTree (m->brlens, chain, state[chain]);
         for (i=0; i<tree->nNodes; i++)
-        {
+            {
             p = tree->allDownPass[i];
             if (p->upDateTi == YES)
                 FlipTiProbsSpace (m, chain, p->index);
             if (p->right != NULL)    /* do not flip terminals in case these flags are inappropriately set by moves */
-			{
+			    {
                 if (p->upDateCl == YES)
-                {
+                    {
                     FlipCondLikeSpace (m, chain, p->index);
 #if defined (BEAGLE_ENABLED)
 					if( m->useBeagle == NO || 
@@ -37741,9 +37741,17 @@ void ResetFlips (int chain)
 #else
 					FlipNodeScalerSpace (m, chain, p->index);
 #endif
+                    }
+#if defined (BEAGLE_ENABLED)
+                else if( m->rescaleBeagleAll == YES )
+                    {
+                    FlipCondLikeSpace (m, chain, p->index);
+                    if( isScalerNode[p->index] == YES )
+						FlipNodeScalerSpace (m, chain, p->index);
+                    }
+#endif
                 }
             }
-        }
         
         /* reset division flag; tree node flags are reset when trees are copied */
         m->upDateCl = NO;

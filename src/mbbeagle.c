@@ -262,19 +262,27 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 			m->rescaleFreq[chain]++; /* increase rescaleFreq independent of whether we accept or reject new state*/
 			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
 			for (i=0; i<tree->nIntNodes; i++)
-				{
-		        tree->intDownPass[i]->upDateCl = NO;
-				}
+			{
+            p = tree->intDownPass[i];
+            if ( p->upDateCl == YES ) {
+                 /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it*/
+                FlipCondLikeSpace (m, chain, p->index);
+               }
+			}
 			goto rescale_all;
 			}
 
 		if(	beagleScalingFrequency != 0 && 
-			m->beagleComputeCount[chain] % beagleScalingFrequency == 0 )
+			m->beagleComputeCount[chain] % (beagleScalingFrequency) == 0 )
 			{
 			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
 			for (i=0; i<tree->nIntNodes; i++)
 				{
-		        tree->intDownPass[i]->upDateCl = NO;
+                p = tree->intDownPass[i];
+                if ( p->upDateCl == YES ) {
+                     /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it*/
+                    FlipCondLikeSpace (m, chain, p->index);
+                   }
 				}
 			goto rescale_all;
 			}
@@ -373,7 +381,7 @@ void recalculateScalers(int chain)
 			for (i=0; i<m->nCijkParts; i++) {			
 				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
 			}
-			
+			/* here it does not metter if we flip CL space or not */
 			TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
 			}
 		}
@@ -713,7 +721,7 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
         p = t->intDownPass[i];
         
         if (p->upDateCl == NO ) {
-			p->upDateCl = YES;
+			//p->upDateCl = YES;
             /* flip to the new workspace */
             FlipCondLikeSpace (m, chain, p->index);
         }
