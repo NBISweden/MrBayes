@@ -37710,7 +37710,7 @@ void ResetFlips (int chain)
 			m->rescaleBeagleAll == YES )
 				{
 				FlipSiteScalerSpace (m, chain);
-				if (m->rescaleBeagleAll == YES );
+				if (m->rescaleBeagleAll == YES )
 					m->rescaleFreq[chain] = m->rescaleFreqOld;
 				}
 #else
