@@ -265,7 +265,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 			{
             p = tree->intDownPass[i];
             if ( p->upDateCl == YES ) {
-                 /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it*/
+                 /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for
+					(p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it */
                 FlipCondLikeSpace (m, chain, p->index);
                }
 			}
@@ -381,7 +382,7 @@ void recalculateScalers(int chain)
 			for (i=0; i<m->nCijkParts; i++) {			
 				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
 			}
-			/* here it does not metter if we flip CL space or not */
+			/* here it does not matter if we flip CL space or not */
 			TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
 			}
 		}
@@ -1192,7 +1193,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
                 }
             else if (m->bmBranchRates != NULL)
                 {
-                length = GetParamSubVals (m->nu, chain, state[chain])[p->index];
+                length = GetParamSubVals (m->bmvar, chain, state[chain])[p->index];
                 }
             else
                 length = p->length;

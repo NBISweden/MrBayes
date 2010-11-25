@@ -258,10 +258,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define TREEAGE_MAX             1000000.0f
 #define CPPLAMBDA_MIN           0.00001f
 #define CPPLAMBDA_MAX           100.0f
-#define NU_MIN	            	0.00001f
-#define NU_MAX                  100000.0f
-#define IBRSHAPE_MIN	       	0.00001f
-#define IBRSHAPE_MAX            100000.0f
+#define BMVAR_MIN	          	0.00001f
+#define BMVAR_MAX               100000.0f
+#define IBRVAR_MIN	         	0.00001f
+#define IBRVAR_MAX              100000.0f
 #define OMEGA_MAX               1000000.0f
 
 #define POS_MIN                 1E-25f
@@ -274,7 +274,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #define	pos(i,j,n)				((i)*(n)+(j))
 
-#define	NUM_ALLOCS				 90
+#define	NUM_ALLOCS				 91
 
 #define	ALLOC_MATRIX			 0
 #define	ALLOC_CHARINFO			 2
@@ -331,6 +331,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_TREELIST			 86
 #define ALLOC_TFILEPOS           87
 #define ALLOC_BEST               88
+#define	ALLOC_SPECIESPARTITIONS	 89
 
 
 #define	LINKED					0
@@ -357,10 +358,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_GROWTH				17
 #define P_CPPMULTDEV            18
 #define P_CPPRATE               19
-#define P_NU                    20
+#define P_BMVAR                 20
 #define P_CPPEVENTS				21
 #define P_BMBRANCHRATES			22
-#define P_IBRSHAPE              23
+#define P_IBRVAR                23
 #define P_IBRBRANCHRATES        24
 #define P_CLOCKRATE             25
 #define P_SPECIESTREE           26
@@ -700,9 +701,9 @@ typedef struct s_launch_struct
 #define CPPRATE_FIX						109
 #define CPPRATE_EXP						110
 #define CPPMULTDEV_FIX				    111
-#define NU_FIX				            114
-#define NU_EXP				            115
-#define NU_UNI				            116
+#define BMVAR_FIX				        114
+#define BMVAR_EXP				        115
+#define BMVAR_UNI				        116
 #define TOPOLOGY_RCL_UNIFORM		    117
 #define TOPOLOGY_RCL_CONSTRAINED		118
 #define TOPOLOGY_RCL_FIXED          	119
@@ -713,9 +714,9 @@ typedef struct s_launch_struct
 #define CPPEVENTS						125
 #define BMBRANCHRATES					126
 #define TOPOLOGY_FIXED                  127
-#define IBRSHAPE_FIX                    129
-#define IBRSHAPE_EXP                    130
-#define IBRSHAPE_UNI                    131
+#define IBRVAR_FIX                      129
+#define IBRVAR_EXP                      130
+#define IBRVAR_UNI                      131
 #define IBRBRANCHRATES					132
 #define CLOCKRATE_FIX                   133
 #define CLOCKRATE_NORMAL                134
@@ -971,14 +972,14 @@ typedef struct model
 	MrBFlt		cppRateExp;
 	char		cppMultDevPr[100];  /* prior on CPP rate multiplier Lognormal variance */
 	MrBFlt		cppMultDevFix;
-	char		nuPr[100];		    /* prior on BM lognormal rate variance             */
-	MrBFlt		nuFix;
-	MrBFlt		nuUni[2];
-	MrBFlt		nuExp;
-	char		ibrshapePr[100];   /* prior on IBR gamma distribution shape           */
-	MrBFlt		ibrshapeFix;
-	MrBFlt		ibrshapeUni[2];
-	MrBFlt		ibrshapeExp;
+	char		bmvarPr[100];		/* prior on BM lognormal rate variance             */
+	MrBFlt		bmvarFix;
+	MrBFlt		bmvarUni[2];
+	MrBFlt		bmvarExp;
+	char		ibrvarPr[100];      /* prior on IBR gamma distribution variance        */
+	MrBFlt		ibrvarFix;
+	MrBFlt		ibrvarUni[2];
+	MrBFlt		ibrvarExp;
 
 	char		tratioFormat[30];      /* format used to report tratio				   */
 	char		revmatFormat[30];      /* format used to report revmat				   */
@@ -1082,9 +1083,9 @@ typedef struct modelinfo
 	Param		*cppMultDev;                /* ptr to cpp ratemult lognormal variance   */
 	Param		*cppRate;				    /* ptr to CPP rate used in model            */
 	Param		*cppEvents;					/* ptr to CPP events                        */
-	Param		*nu;						/* ptr to variance for BM relaxed clock     */
+	Param		*bmvar;						/* ptr to variance for BM relaxed clock     */
 	Param		*bmBranchRates;				/* ptr to branch rates for BM relaxed clock */
-	Param		*ibrshape;				    /* ptr to gamma shape for IBR relaxed clock */
+	Param		*ibrvar;				    /* ptr to gamma var for IBR relaxed clock   */
 	Param		*ibrBranchRates;			/* ptr to branch rates for IBR relaxed clock*/
     Param       *clockRate;                 /* ptr to clock rate parameter              */
 
@@ -1368,5 +1369,12 @@ typedef struct
 	int		allavailable;
 	}
 	ShowmovesParams;
+
+typedef struct
+    {
+    int     numNames;
+    char    **names;
+    }
+    NameSet;
 
 #endif

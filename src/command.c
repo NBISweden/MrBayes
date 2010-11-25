@@ -34,6 +34,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -57,9 +58,9 @@
 #endif
 
 
-#define	NUMCOMMANDS					    57  /* Note: NUMCOMMANDS gives the total number  */
+#define	NUMCOMMANDS					    58  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						242
+#define	NUMPARAMS						246
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -72,6 +73,7 @@
 #undef ECHO_PROCESSED_COMMANDS
 
 /* Local function prototypes */
+int      AddNameSet(NameSet **nameSetList, int numNameSets, char **nameSet, int numNames);
 int      AddToSet (int i, int j, int k, int id);
 int      AllocCharacters (void);
 int      AllocMatrix (void);
@@ -130,7 +132,9 @@ int      DoSet (void);
 int      DoSetParm (char *parmName, char *tkn);
 int      DoShowMatrix (void);
 int      DoShowUserTrees (void);
-int      DoShowBeagleResources (void);
+int      DoShowBeagle (void);
+int      DoSpeciespartition (void);
+int      DoSpeciespartitionParm (char *parmName, char *tkn);
 int      DoTaxaset (void);
 int      DoTaxasetParm (char *parmName, char *tkn);
 int      DoTaxaStat (void);
@@ -158,6 +162,7 @@ void     PrintSettings (char *command, ModelInfo *mp);
 void     PrintYesNo (int yn, char s[4]);
 int      ProtID (char aa);
 int      SetPartition (int part);
+int      SetSpeciespartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
 void     WhatVariableExp (SafeLong exp, char *st);
@@ -211,8 +216,10 @@ int				numCharSets;           /* number of character sets                      *
 int				numComments;		   /* counts how deeply nested a comment is         */
 int				numDefinedConstraints; /* number of constraints defined                 */
 int				numDefinedPartitions;  /* number of partitions defined                  */
+int				numDefinedSpeciespartitions;  /* number of speciespartitions defined    */
 int				numNamedTaxa;          /* number of named taxa during parsing of cmd    */
 int				numOpenExeFiles;       /* number of execute files open                  */
+int				numSpecies;            /* number of species in current speciespartition */
 int				numTaxa;               /* number of taxa in character matrix            */
 int				numTaxaSets;           /* number of taxa sets                           */
 int				numTranslates;         /* number of taxa in active translate block      */
@@ -227,6 +234,10 @@ int				quitOnError;		   /* quit on error?					            */
 int				replaceLogFile;        /* should logfile be replace/appended to         */
 int 			scientific;            /* use scientific format for samples ?           */
 char			spacer[10];            /* holds blanks for printing indentations        */
+NameSet		    *speciesNameSets;      /* hold species name sets, one for each speciespartition */
+int             **speciespartitionId;  /* holds info about defined speciespartitions    */
+char            **speciespartitionNames;    /* hold names of speciespartitions (first is "default") */
+int				speciespartitionNum;   /* index of current speciespartition             */
 Sump			sumpParams;            /* holds parameters for sump command             */
 Sumt			sumtParams;            /* holds parameters for sumt command             */
 TaxaInformation *taxaInfo;             /* holds critical information about taxa         */
@@ -240,6 +251,7 @@ Calibration     *tipCalibration;       /* holds information about node calibrati
 char			**transFrom;           /* translation block information                 */
 char			**transTo;             /* translation block information                 */
 int				userBrlensDef;         /* are the branch lengths on user tree defined   */
+
 #if defined (BEAGLE_ENABLED)
 int             tryToUseBEAGLE;        /* try to use the BEAGLE library                 */
 int             beagleScalingScheme;   /* BEAGLE dynamic scaling                        */
@@ -249,6 +261,7 @@ int             *beagleResource;       /* BEAGLE resource choice list           
 int			    beagleResourceCount;   /* BEAGLE resource choice list length            */
 int             beagleInstanceCount;   /* total number of BEAGLE instances              */
 #endif
+
 #if defined (THREADS_ENABLED)
 int             tryToUseThreads;       /* try to use pthreads with BEAGLE library       */
 #endif
@@ -307,7 +320,7 @@ CmdType			commands[] =
             { 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                      "Defines character format in data block", IN_FILE, SHOW },
             { 20,            "Help", YES,            DoHelp,  1,                                                                                             {50},    16416,                  "Provides detailed description of commands",  IN_CMD, SHOW },
             { 21,         "Include", YES,         DoInclude,  1,                                                                                             {46},    49152,                                             "Includes sites",  IN_CMD, SHOW },
-            { 22,            "Link",  NO,            DoLink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
+            { 22,            "Link",  NO,            DoLink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
             { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,	       "Manual",  NO,          DoManual,  1,								    														{126},       36,				  "Prints a command reference to a text file",  IN_CMD, SHOW },
@@ -326,25 +339,26 @@ CmdType			commands[] =
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
             { 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-            { 38,             "Set",  NO,             DoSet, 20,                       {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
-            { 39,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
-            { 40,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
-            { 41,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
-            { 42,       "Showmoves",  NO,       DoShowMoves,  1,                                                                                            {180},       36,                              "Shows moves for current model",  IN_CMD, SHOW },
-            { 43,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
-            { 44,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
-            { 45,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-            { 46,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 47,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
-            { 48,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
-            { 49,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
-            { 50,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
-            { 51,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
-            { 52,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-            { 53,          "Unlink",  NO,          DoUnlink, 21,                          {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
-            { 54,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
-            { 55,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
-            { 56, "Showbeagleresources",  NO, DoShowBeagleResources, 0,                                                                                          {-1},       32, "Show available BEAGLE resources",  IN_CMD, SHOW },
+            { 38,             "Set",  NO,             DoSet, 21,                   {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+            { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
+            { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
+            { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
+            { 42,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
+            { 43,       "Showmoves",  NO,       DoShowMoves,  1,                                                                                            {180},       36,                              "Shows moves for current model",  IN_CMD, SHOW },
+            { 44,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
+            { 45,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
+            { 46,"Speciespartition",  NO,DoSpeciespartition,  1,                                                                                            {244},        4,                   "Defines a partition of tips into species",  IN_CMD, SHOW },
+            { 47,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
+            { 48,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+            { 49,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+            { 50,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
+            { 51,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
+            { 52,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
+            { 53,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
+            { 54,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
+            { 55,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+            { 56,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
+            { 57,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
 		    { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
 		};
@@ -352,7 +366,7 @@ int					inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRead, isFirstIn
 					taxonCount, fromI, toJ, everyK, foundDash, foundSlash, foundFirst, isMixed, whichPartition,
 					isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
 					pairId, firstPair, inTaxaBlock, inCharactersBlock, foundEqual;
-char				gapId, missingId, matchId, tempSetName[100];
+char				gapId, missingId, matchId, tempSetName[100], **tempNames;
 CmdType 			*commandPtr; /*Points to the commands array entery which corresponds to currently processed command*/
 ParmInfoPtr			paramPtr;	 /*Points to paramTable table array entery which corresponds to currently processed parameter of current command*/
 TreeNode			*pPtr, *qPtr;
@@ -426,6 +440,28 @@ int AddToSet (int i, int j, int k, int id)
 
 	return (NO_ERROR);
 	
+}
+
+
+
+
+
+/* AddNameSet: Push a name set onto the end of a list of name sets, with reallocation
+      of list to hold the extra element. The calling function needs to keep track of
+      the counter holding the length of the list. */
+int AddNameSet (NameSet **nameSetList, int numNameSets, char **nameSet, int numNames)
+{
+    int     i;
+
+    (*nameSetList) = (NameSet*) SafeRealloc ((void*)(*nameSetList), (size_t)(((numNameSets+1)*sizeof(NameSet))));
+
+    (*nameSetList)[numNameSets].names    = NULL;
+    (*nameSetList)[numNameSets].numNames = numNames;
+
+    for (i=0; i<numNames; i++)
+        AddString(&((*nameSetList)[numNameSets].names), i, nameSet[i]);
+    
+	return NO_ERROR;
 }
 
 
@@ -506,7 +542,7 @@ int AllocCharacters (void)
     partitionId = (int**) SafeMalloc ((size_t)(numChar*sizeof(int*)));
     for (i=0; i<numChar; i++)
         partitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
-    numDefinedPartitions = 0;   /* number of user-defined partitions */
+    numDefinedPartitions = 0;   /* number of defined partitions */
     memAllocs[ALLOC_PARTITIONS] = YES;  /* safe to do free */
 
     if (memAllocs[ALLOC_PARTITIONVARS] == YES)
@@ -611,6 +647,20 @@ int AllocTaxa (void)
     taxaSet = NULL;
     numTaxaSets = 0;
     memAllocs[ALLOC_TAXASETS] = YES;    /* safe to free */
+
+    /* species partitions; allocate space and set default species partition */
+    if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
+		goto errorExit;
+	speciespartitionNames = NULL;
+    speciesNameSets = NULL;
+    speciespartitionId = (int**) SafeMalloc ((size_t)(numTaxa*sizeof(int*)));
+    for (i=0; i<numTaxa; i++)
+        {
+        speciespartitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
+        speciespartitionId[i][0] = i;
+        }
+    numDefinedSpeciespartitions = 0;   /* number of defined species partitions */
+    memAllocs[ALLOC_SPECIESPARTITIONS] = YES;  /* safe to do free */
 
 	/* constraints */
     if (memAllocs[ALLOC_CONSTRAINTS] == YES)
@@ -4884,7 +4934,7 @@ int DoMatrix (void)
 		if (hasMissingAmbig == YES)
 			charInfo[i].isMissAmbig = YES;
 		}
-		
+
 	MrBayesPrint ("%s   Successfully read matrix\n", spacer);
 	if (matrixHasPoly == YES)
 		MrBayesPrint ("%s   Matrix  contains polymorphisms, interpreted as ambiguity\n", spacer);
@@ -4899,7 +4949,26 @@ int DoMatrix (void)
 		}
 	numDefinedPartitions = 1;
 
+    if (numDefinedSpeciespartitions == 0)   /* the default species partition could have been added already in DoTaxLabels */
+        {
+        /* add default speciespartition name to list of valid speciespartitions */
+	    if (AddString (&speciespartitionNames, 0, "Default") == ERROR)
+		    {
+		    MrBayesPrint ("%s   Problem adding Default speciespartition to list\n", spacer);
+		    return (ERROR);
+            }
+
+        /* add default species name set */
+        AddNameSet(&speciesNameSets, 0, taxaNames, numTaxa);
+
+        /* set number of defined speciespartitions to 1 */
+        numDefinedSpeciespartitions = 1;
+        }
+		
     if (SetPartition (0) == ERROR)
+        return ERROR;
+
+    if (SetSpeciespartition (0) == ERROR)
         return ERROR;
 
 	if (numCurrentDivisions == 1)
@@ -6238,13 +6307,13 @@ int DoSetParm (char *parmName, char *tkn)
 				sscanf (tkn, "%d", &index);
 				if (index > numDefinedPartitions) 
 					{
-					MrBayesPrint ("%s   Partition number %d is not a valid parition. Only %d partitions\n", spacer, index, numDefinedPartitions);
+					MrBayesPrint ("%s   Partition number %d is not a valid partition. Only %d partitions\n", spacer, index, numDefinedPartitions);
 					MrBayesPrint ("%s   have been defined.\n", spacer);
 					return (ERROR);
 					}
 				if (index < 1)
 					{
-					MrBayesPrint ("%s   Partition number %d is not a valid parition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
+					MrBayesPrint ("%s   Partition number %d is not a valid partition. Must be between 1 and %d.\n", spacer, index+1, numDefinedPartitions);
 					return (ERROR);
 					}
 				if (SetPartition (index) == ERROR)
@@ -6253,6 +6322,59 @@ int DoSetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Setting %s as the partition (does not divide up characters).\n", spacer, partitionNames[index]);
 				else
 					MrBayesPrint ("%s   Setting %s as the partition, dividing characters into %d parts.\n", spacer, partitionNames[index], numCurrentDivisions);
+				if (SetModelDefaults () == ERROR)
+					return (ERROR);
+				if (SetUpAnalysis (&globalSeed) == ERROR)
+					return (ERROR);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
+			}
+		/* set Speciespartition (speciespartitionNum) *******************************************************/
+		else if (!strcmp(parmName, "Speciespartition"))
+			{
+			if (defTaxa == NO)
+				{
+				MrBayesPrint ("%s   A taxaset must be defined first\n", spacer);
+				return (ERROR);
+				}
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA) | Expecting(NUMBER);
+			else if (expecting == Expecting(ALPHA))
+				{
+				/* first check to see if name is there */
+				if (CheckString (speciespartitionNames, numDefinedSpeciespartitions, tkn, &index) == ERROR)
+					{
+					MrBayesPrint ("%s   Could not find \"%s\" as a defined speciespartition\n", spacer, tkn);
+					return (ERROR);
+					}
+				if (SetSpeciespartition (index) == ERROR)
+                    return ERROR;
+				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, tkn, numSpecies);
+				if (SetModelDefaults () == ERROR)
+					return (ERROR);
+				if (SetUpAnalysis (&globalSeed) == ERROR)
+					return (ERROR);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%d", &index);
+				if (index > numDefinedSpeciespartitions) 
+					{
+					MrBayesPrint ("%s   Speciespartition number %d is not valid. Only %d speciespartitions\n", spacer, index, numDefinedSpeciespartitions);
+					MrBayesPrint ("%s   have been defined.\n", spacer);
+					return (ERROR);
+					}
+				if (index < 1)
+					{
+					MrBayesPrint ("%s   Speciespartition number %d is not valid. Must be between 1 and %d.\n", spacer, index+1, numDefinedSpeciespartitions);
+					return (ERROR);
+					}
+				if (SetSpeciespartition (index) == ERROR)
+                    return ERROR;
+				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, partitionNames[index], numSpecies);
 				if (SetModelDefaults () == ERROR)
 					return (ERROR);
 				if (SetUpAnalysis (&globalSeed) == ERROR)
@@ -6740,7 +6862,11 @@ int DoShowUserTrees (void)
 	
 }
 
-int DoShowBeagleResources (void)
+
+
+
+
+int DoShowBeagle (void)
 
 {
 #if defined (BEAGLE_ENABLED)
@@ -6754,11 +6880,26 @@ int DoShowBeagleResources (void)
 
 
 
+
 int DoTaxlabels (void)
 
 {
 
     isTaxsetDef = YES;
+
+    /* add default speciespartition name to list of valid speciespartitions */
+	if (AddString (&speciespartitionNames, 0, "Default") == ERROR)
+		{
+		MrBayesPrint ("%s   Problem adding Default speciespartition to list\n", spacer);
+		return (ERROR);
+        }
+
+    /* add default species name set */
+    AddNameSet(&speciesNameSets, 0, taxaNames, numTaxa);
+
+    /* set number of defined speciespartitions to 1 */
+    numDefinedSpeciespartitions = 1;
+		
     return (NO_ERROR);
 
 }
@@ -6829,6 +6970,389 @@ int DoTaxlabelsParm (char *parmName, char *tkn)
     return (NO_ERROR);
 	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
 	MrBayesPrint ("%s", tkn); 
+
+}
+
+
+
+
+
+int DoSpeciespartition (void)
+
+{
+
+	int		i, *partCount;
+		
+	/* add set to tempSet */
+	if (fromI >= 0)
+		if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
+            {
+	        for (i=0; i<numDivisions; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+			return (ERROR);
+            }
+
+    /* set numDivisions; not set while reading the speciespartition */
+    numDivisions = whichPartition + 1;
+    
+    /* check that all species are included */
+	for (i=0; i<numTaxa; i++)
+		{
+		if (tempSet[i] == 0)
+			{
+			MrBayesPrint ("%s   Tip %d not included in speciespartition\n", spacer, i+1);
+	        for (i=0; i<numDivisions; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+			return (ERROR);
+			}
+		/*MrBayesPrint ("%4d %4d \n", i, tempSet[i]);*/
+        }
+
+	partCount = (int *) SafeCalloc (numDivisions, sizeof(int));
+    if (!partCount)
+        {
+        for (i=0; i<numDivisions; i++)
+            free(tempNames[i]);
+        free (tempNames);
+        tempNames = NULL;
+        return ERROR;
+        }
+
+	/* make certain that the partition labels go from 1 - numTaxa, inclusive */
+	for (i=0; i<numTaxa; i++)
+        {
+        if (tempSet[i] < 1 || tempSet[i] > numTaxa)
+			{
+			MrBayesPrint ("%s   Speciespartition index for tip %d out of bound (%d)\n", spacer, i+1, tempSet[i]);
+            free (partCount);
+	        for (i=0; i<numDivisions; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+			return (ERROR);
+			}
+		partCount[tempSet[i] - 1]++;
+        }
+	for (i=0; i<numDivisions; i++)
+		{
+		if (partCount[i] == 0)
+			{
+			MrBayesPrint ("%s   Could not find a single tip for species %d\n", spacer, i+1);
+            free (partCount);
+	        for (i=0; i<numDivisions; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+			return (ERROR);
+			}
+		}
+    free (partCount);
+
+    /* add name to list of valid partitions */
+	if (AddString (&speciespartitionNames, numDefinedSpeciespartitions, tempSetName) == ERROR)
+		{
+		MrBayesPrint ("%s   Problem adding speciespartition %s to list\n", spacer, tempSetName);
+        for (i=0; i<numDivisions; i++)
+            free(tempNames[i]);
+        free (tempNames);
+        tempNames = NULL;
+		return (ERROR);
+        }
+
+    /* add new partition */
+    for (i=0; i<numTaxa; i++)
+        {
+        speciespartitionId[i] = (int *) SafeRealloc ((void *)(speciespartitionId[i]), (size_t)((numDefinedSpeciespartitions + 1) * sizeof(int)));
+        if (!speciespartitionId[i])
+            {
+	        for (i=0; i<numDivisions; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+            return ERROR;
+            }
+        }
+
+    /* set new partition */
+	for (i=0; i<numTaxa; i++)
+		speciespartitionId[i][numDefinedSpeciespartitions] = tempSet[i];
+
+    /* add new set of species names */
+    AddNameSet(&speciesNameSets, numDefinedSpeciespartitions, tempNames, numDivisions);
+
+    /* free species names */
+	for (i=0; i<numDivisions; i++)
+        free(tempNames[i]);
+    free (tempNames);
+    tempNames = NULL;
+
+    /* increment number of defined partitions */
+	numDefinedSpeciespartitions++;
+	
+    return (NO_ERROR);
+
+}
+
+
+
+
+
+int DoSpeciespartitionParm (char *parmName, char *tkn)
+
+{
+
+	int		        i, index, tempInt;
+	
+    if (defTaxa == NO || numTaxa == 0)
+		{
+		MrBayesPrint ("%s   A matrix or taxaset must be specified before partitions can be defined\n", spacer);
+		return (ERROR);
+		}
+
+	if (expecting == Expecting(PARAMETER))
+		{
+		/* set Speciespartition name ******************************************************************/
+		if (!strcmp(parmName, "Xxxxxxxxxx"))
+			{
+			/* check size of partition name */
+			if (strlen(tkn) > 99)
+				{
+				MrBayesPrint ("%s   Partition name is too long. Max 100 characters\n", spacer);
+				return (ERROR);
+				}
+				
+			/* check to see if the name has already been used as a partition */
+			if (numDefinedSpeciespartitions > 0)
+				{
+				if (CheckString (speciespartitionNames, numDefinedSpeciespartitions, tkn, &index) == ERROR)
+					{
+					/* if the partition name has not been used, then we should have an ERROR returned */
+					/* we _want_ to be here */
+
+					}
+				else
+					{
+					MrBayesPrint ("%s   Speciespartition name '%s' has been used previously\n", spacer, tkn);
+					return (ERROR);
+					}
+				}
+				
+			/* add the name temporarily to tempSetName */
+			strcpy (tempSetName, tkn);
+			
+			/* clear tempSet */
+			for (i=0; i<numTaxa; i++)
+				tempSet[i] = 0;
+    
+            /* make sure tempNames is NULL */
+            assert (tempNames == NULL);
+
+            fromI = toJ = everyK = -1;
+			foundDash = foundSlash = NO;
+			whichPartition = 0;
+			foundFirst = NO;
+			numDivisions = 0;
+			MrBayesPrint ("%s   Defining speciespartition called %s\n", spacer, tkn);
+			expecting = Expecting(EQUALSIGN);
+			}
+		else
+			return (ERROR);
+		}
+	else if (expecting == Expecting(EQUALSIGN))
+		{
+		expecting = Expecting(ALPHA);
+		}
+	else if (expecting == Expecting(ALPHA))
+		{
+        if (foundFirst == NO)
+            {
+            AddString(&tempNames, whichPartition, tkn);
+            foundFirst = YES;
+            expecting = Expecting(COLON);
+            }
+        else
+            {
+		    /* We are defining a species partition in terms of a tip name (called tkn, here). We should be able
+		       to find tkn in the list of tip names. If we cannot, then we have a problem and
+		       return an error. */
+		    if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
+			    {
+			    MrBayesPrint ("%s   Could not find a tip called %s\n", spacer, tkn);
+			    return (ERROR);
+			    }
+		    /* add index of the tip named tkn to new tempSet */
+		    tempSet[index] = whichPartition + 1;
+		    fromI = toJ = everyK = -1;
+
+		    expecting  = Expecting(ALPHA);
+		    expecting |= Expecting(NUMBER);
+		    expecting |= Expecting(SEMICOLON);
+		    expecting |= Expecting(COMMA);
+            }
+		}
+	else if (expecting == Expecting(NUMBER))
+		{
+		if (strlen(tkn) == 1 && tkn[0] == '.')
+			tempInt = numChar;
+		else
+			sscanf (tkn, "%d", &tempInt);
+		if (tempInt <= 0 || tempInt > numTaxa)
+			{
+			MrBayesPrint ("%s   Tip number %d is out of range (should be between %d and %d)\n", spacer, tempInt, 1, numTaxa);
+			for (i=0; i<whichPartition; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+            return (ERROR);
+			}
+		tempInt--;
+		if (foundDash == YES)
+			{
+			if (fromI >= 0)
+				toJ = tempInt;
+			else
+				{
+				MrBayesPrint ("%s   Improperly formatted speciespartition\n", spacer);
+			    for (i=0; i<whichPartition; i++)
+                    free(tempNames[i]);
+                free (tempNames);
+                tempNames = NULL;
+				return (ERROR);
+				}
+			foundDash = NO;
+			}
+		else if (foundSlash == YES)
+			{
+			tempInt++;
+			if (tempInt <= 1)
+				{
+				MrBayesPrint ("%s   Improperly formatted speciespartition\n", spacer);
+			    for (i=0; i<whichPartition; i++)
+                    free(tempNames[i]);
+                free (tempNames);
+                tempNames = NULL;
+				return (ERROR);
+				}
+			if (fromI >= 0 && toJ >= 0 && fromI < toJ)
+				everyK = tempInt;
+			else
+				{
+				MrBayesPrint ("%s   Improperly formatted speciespartition\n", spacer);
+			    for (i=0; i<whichPartition; i++)
+                    free(tempNames[i]);
+                free (tempNames);
+                tempNames = NULL;
+				return (ERROR);
+				}
+			foundSlash = NO;
+			}
+		else
+			{
+			if (fromI >= 0 && toJ < 0)
+				{
+				if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
+                    {
+			        for (i=0; i<whichPartition; i++)
+                        free(tempNames[i]);
+                    free (tempNames);
+                    tempNames = NULL;
+					return (ERROR);
+                    }
+				fromI = tempInt;
+				}
+			else if (fromI < 0 && toJ < 0)
+				{
+				fromI = tempInt;
+				}
+			else if (fromI >= 0 && toJ >= 0 && everyK < 0)
+				{
+				if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
+					return (ERROR);
+				fromI = tempInt;
+				toJ = everyK = -1;
+				}
+			else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
+				{
+				if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
+					return (ERROR);
+				fromI = tempInt;
+				toJ = everyK = -1;
+				}
+			else
+				{
+				MrBayesPrint ("%s   Improperly formatted speciespartition\n", spacer);
+					{
+			        for (i=0; i<whichPartition; i++)
+                        free(tempNames[i]);
+                    free (tempNames);
+                    tempNames = NULL;
+					return (ERROR);
+					}
+				}
+            }
+	    expecting  = Expecting(ALPHA);
+	    expecting |= Expecting(NUMBER);
+	    expecting |= Expecting(SEMICOLON);
+	    expecting |= Expecting(DASH);
+	    expecting |= Expecting(BACKSLASH);
+	    expecting |= Expecting(COMMA);
+		}
+	else if (expecting == Expecting(COMMA))
+		{
+		/* add set to tempSet */
+		if (fromI >= 0)
+			if (AddToSet (fromI, toJ, everyK, whichPartition+1) == ERROR)
+                {
+			    for (i=0; i<whichPartition; i++)
+                    free(tempNames[i]);
+                free (tempNames);
+                tempNames = NULL;
+				return (ERROR);
+                }
+
+		fromI = toJ = everyK = -1;
+		foundDash = foundSlash = foundFirst = NO;
+		whichPartition++;
+		if (whichPartition > numTaxa)
+			{
+			MrBayesPrint ("%s   Too many speciespartitions (expecting maximum %d speciespartitions)\n", spacer, numTaxa);
+			for (i=0; i<whichPartition; i++)
+                free(tempNames[i]);
+            free (tempNames);
+            tempNames = NULL;
+			return (ERROR);
+			}
+		expecting  = Expecting(ALPHA);
+		}
+	else if (expecting == Expecting(COLON))
+		{
+		expecting  = Expecting(NUMBER);
+		expecting |= Expecting(ALPHA);
+		}
+	else if (expecting == Expecting(DASH))
+		{
+		foundDash = YES;
+		expecting = Expecting(NUMBER);
+		}
+	else if (expecting == Expecting(BACKSLASH))
+		{
+		foundSlash = YES;
+		expecting = Expecting(NUMBER);
+		}
+	else
+        {
+		for (i=0; i<whichPartition; i++)
+            free(tempNames[i]);
+        free (tempNames);
+        tempNames = NULL;
+		return (ERROR);
+        }
+
+	return (NO_ERROR);
 
 }
 
@@ -8231,7 +8755,7 @@ int FindValidParam (char *tk, int *numMatches)
 			(*numMatches)++;
 			paramPtr = q;
 			}
-		if (tkLen <= targetLen)
+		else if (tkLen <= targetLen)
 			{
 			for (j=0, numDiff=0; j<tkLen; j++)
 				{
@@ -8422,6 +8946,18 @@ int FreeTaxa (void)
         SafeFree ((void **) &taxaSet);
         numTaxaSets = 0;
 		memAllocs[ALLOC_TAXASETS] = NO;
+		memoryLetFree = YES;
+		}
+	if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
+		{
+        for (i=0; i<numDefinedSpeciespartitions; i++)
+            SafeFree ((void **) &speciespartitionNames[i]);
+        SafeFree ((void **)&speciespartitionNames);
+        for (i=0; i<numTaxa; i++)
+            SafeFree ((void **) &(speciespartitionId[i]));
+        SafeFree ((void**)(&speciespartitionId));
+        numDefinedSpeciespartitions = 0;
+		memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_CONSTRAINTS] == YES)
@@ -9965,8 +10501,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    the tree in the prior, the Independent Branch Rate (IBR)     \n");
         MrBayesPrint ("                    model (LePage et al., 2007). Each of the relaxed clock models\n");
 		MrBayesPrint ("                    has additional parameters with priors. For the CPP model, it \n");
-		MrBayesPrint ("                    is 'cppratepr' and 'cppmultvarpr'; for the BM model, it is   \n");
-        MrBayesPrint ("                    'nupr'; for the IBR  model, it is 'ibrshapepr'. The          \n");
+		MrBayesPrint ("                    is 'cppratepr' and 'cppmultdevpr'; for the BM model, it is   \n");
+        MrBayesPrint ("                    'bmvarpr'; for the IBR  model, it is 'ibrvarpr'. The         \n");
 		MrBayesPrint ("                    'clockvarpr' parameter is only relevant for clock trees.     \n");
 		MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
 		MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
@@ -9998,24 +10534,44 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset cppmultdevpr = fixed(<number>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    where <number> is the standard deviation on the log scale.   \n");
-		MrBayesPrint ("   Nupr          -- This parameter allows you to specify the prior probability   \n");
-		MrBayesPrint ("                    distribution for the variance in the Brownian motion relaxed \n");
-        MrBayesPrint ("                    clock model. You can only set the nu parameter to a fixed    \n");
-        MrBayesPrint ("                    value:                                                       \n");
+		MrBayesPrint ("   Bmvarpr       -- This parameter allows you to specify the prior probability   \n");
+		MrBayesPrint ("                    distribution for the variance of the rate multiplier in the  \n");
+        MrBayesPrint ("                    Thorne-Kishino ('Brownian motion') relaxed clock model.      \n");
+		MrBayesPrint ("                    Specifically, the parameter specifies the rate at which the  \n");
+        MrBayesPrint ("                    variance increases with respect to the base rate of the      \n");
+		MrBayesPrint ("                    clock. If you have a branch of a length corresponding to 0.4 \n");
+		MrBayesPrint ("                    expected changes per site according to the base rate of the  \n");
+		MrBayesPrint ("                    clock, and the bmvar parameter has a value of 2.0, then the  \n");
+		MrBayesPrint ("                    rate multiplier at the end of the branch will be drawn from a\n");
+		MrBayesPrint ("                    lognormal distribution with a variance of 0.4*2.0 (on the    \n");
+		MrBayesPrint ("                    linear, not the logarithm scale). The mean is the same as the\n");
+		MrBayesPrint ("                    rate multiplier at the start of the branch (again on the     \n");
+		MrBayesPrint ("                    linear scale).                                               \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset nupr = fixed(<number>)                              \n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Ibrshapepr    -- This parameter allows you to specify the shape parameter of  \n");
-        MrBayesPrint ("                    the scaled gamma distribution from which the branch rates are\n");
+		MrBayesPrint ("                       prset bmvarpr = fixed(<number>)                           \n");
+		MrBayesPrint ("                       prset bmvarpr = exponential(<number>)                     \n");
+		MrBayesPrint ("                       prset bmvarpr = uniform(<number>,<number>)                \n");
+		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Ibrvarpr      -- This parameter allows you to specify a prior on the variance \n");
+        MrBayesPrint ("                    of the gamma distribution from which the branch lengths are  \n");
 		MrBayesPrint ("                    drawn in the independent branch rate (IBR) relaxed clock     \n");
-		MrBayesPrint ("                    model. This allows you to control the variance of the        \n");
-        MrBayesPrint ("                    effective tree height, which is the inverse of the shape     \n");
-        MrBayesPrint ("                    parameter. The shape parameter refers to a tree height dis-  \n");
-		MrBayesPrint ("                    tribution with an expectation of 1.0, such that this prior   \n");
-		MrBayesPrint ("                    has no effect on the prior expectation of the tree height.   \n");
-        MrBayesPrint ("                    You can only set the shape parameter to a fixed value:       \n");
+		MrBayesPrint ("                    model. Specifically, the parameter specifies the rate at     \n");
+        MrBayesPrint ("                    which the variance increases with respect to the base rate of\n");
+		MrBayesPrint ("                    the clock. If you have a branch of a length corresponding to \n");
+		MrBayesPrint ("                    0.4 expected changes per site according to the base rate of  \n");
+		MrBayesPrint ("                    the clock, and the ibrvar parameter has a value of 2.0, then \n");
+		MrBayesPrint ("                    the effective branch length will be drawn from a distribution\n");
+		MrBayesPrint ("                    with a variance of 0.4*2.0.                                  \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset ibrshapepr = fixed(<number>)                        \n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                       prset ibrvarpr = fixed(<number>)                          \n");
+		MrBayesPrint ("                       prset ibrvarpr = exponential(<number>)                    \n");
+		MrBayesPrint ("                       prset ibrvarpr = uniform(<number>,<number>)               \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Ratepr        -- This parameter allows you to specify the site specific rates \n");
 		MrBayesPrint ("                    model or any other model that allows different partitions to \n");
@@ -10328,13 +10884,13 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Cppmultdevpr     Fixed                        %s", mp->cppMultDevPr);
 			MrBayesPrint ("(%1.2lf)\n", mp->cppMultDevFix);
 
-			MrBayesPrint ("   Nupr             Fixed/Exponential/Uniform    %s", mp->nuPr);
-			if (!strcmp(mp->nuPr, "Fixed"))
-				MrBayesPrint ("(%1.2lf)\n", mp->nuFix);
-			else if (!strcmp(mp->nuPr,"Exponential"))
-				MrBayesPrint ("(%1.2lf)\n", mp->nuExp);
-			else /*if (!strcmp(mp->nuPr,"Uniform")) */
-				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->nuUni[0], mp->nuUni[1]);
+			MrBayesPrint ("   Bmvarpr          Fixed/Exponential/Uniform    %s", mp->bmvarPr);
+			if (!strcmp(mp->bmvarPr, "Fixed"))
+				MrBayesPrint ("(%1.2lf)\n", mp->bmvarFix);
+			else if (!strcmp(mp->bmvarPr,"Exponential"))
+				MrBayesPrint ("(%1.2lf)\n", mp->bmvarExp);
+			else /*if (!strcmp(mp->bmvarPr,"Uniform")) */
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->bmvarUni[0], mp->bmvarUni[1]);
 
 			MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
 			if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -10829,19 +11385,23 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
         else
             MrBayesPrint ("   Partition       <name>                   \"\"\n");
-        MrBayesPrint ("   Autoclose       Yes/No                   %s                                   \n", autoClose == YES ? "Yes" : "No");
-        MrBayesPrint ("   Nowarnings      Yes/No                   %s                                   \n", noWarn == YES ? "Yes" : "No");
-        MrBayesPrint ("   Autoreplace     Yes/No                   %s                                   \n", autoOverwrite == YES ? "Yes" : "No");
-        MrBayesPrint ("   Quitonerror     Yes/No                   %s                                   \n", quitOnError == YES ? "Yes" : "No");
-        MrBayesPrint ("   Sientific       Yes/No                   %s                                   \n", scientific == YES ? "Yes" : "No");
-        MrBayesPrint ("   Precision       <number>                 %d                                   \n", precision);
+        if (defTaxa == YES)
+            MrBayesPrint ("   Speciespartition   <name>                %s\n", speciespartitionNames[speciespartitionNum]);
+        else
+            MrBayesPrint ("   Speciespartition   <name>                \"\"\n");
+        MrBayesPrint ("   Autoclose          Yes/No                %s                                   \n", autoClose == YES ? "Yes" : "No");
+        MrBayesPrint ("   Nowarnings         Yes/No                %s                                   \n", noWarn == YES ? "Yes" : "No");
+        MrBayesPrint ("   Autoreplace        Yes/No                %s                                   \n", autoOverwrite == YES ? "Yes" : "No");
+        MrBayesPrint ("   Quitonerror        Yes/No                %s                                   \n", quitOnError == YES ? "Yes" : "No");
+        MrBayesPrint ("   Sientific          Yes/No                %s                                   \n", scientific == YES ? "Yes" : "No");
+        MrBayesPrint ("   Precision          <number>              %d                                   \n", precision);
 #if defined (BEAGLE_ENABLED)
-        MrBayesPrint ("   Usebeagle       Yes/No                   %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
-        MrBayesPrint ("   Beagledevice    CPU/GPU                  %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
-		MrBayesPrint ("   Beagleprecision Single/Double            %s                                   \n", beagleFlags & BEAGLE_FLAG_PRECISION_SINGLE ? "Single" : "Double");
-		MrBayesPrint ("   Beaglescaling   Always/Dynamic           %s                                   \n", beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ? "Always" : "Dynamic");
-        MrBayesPrint ("   Beaglesse       Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
-        MrBayesPrint ("   Beagleopenmp    Yes/No                   %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
+        MrBayesPrint ("   Usebeagle          Yes/No                %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
+        MrBayesPrint ("   Beagledevice       CPU/GPU               %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
+		MrBayesPrint ("   Beagleprecision    Single/Double         %s                                   \n", beagleFlags & BEAGLE_FLAG_PRECISION_SINGLE ? "Single" : "Double");
+		MrBayesPrint ("   Beaglescaling      Always/Dynamic        %s                                   \n", beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ? "Always" : "Dynamic");
+        MrBayesPrint ("   Beaglesse          Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
+        MrBayesPrint ("   Beagleopenmp       Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
 #endif
 #if defined (THREADS_ENABLED)
 		MrBayesPrint ("   Beaglethreads   Yes/No                   %s                                   \n", tryToUseThreads == YES ? "Yes" : "No");
@@ -11184,8 +11744,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
 		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
-		MrBayesPrint ("      Nu              -- Nu (variance, per branch length unit, in branch rates)  \n"); 
-		MrBayesPrint ("      Branchrates     -- Branch rates of Brownian Motion relaxed clock           \n"); 
+		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
+		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
+		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
+		MrBayesPrint ("      Ibrbranchrates  -- Branch rates of IBR relaxed clock model                 \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11226,8 +11788,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
 		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
-		MrBayesPrint ("      Nu              -- Nu (variance, per branch length unit, in branch rates)  \n"); 
-		MrBayesPrint ("      Branchrates     -- Branch rates of Brownian Motion relaxed clock           \n"); 
+		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
+		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
+		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
+		MrBayesPrint ("      Ibrbranchrates  -- Branch rates of IBR relaxed clock model                 \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -12920,6 +13484,31 @@ int SetPartition (int part)
 
 
 
+/* SetSpeciespartition: Set speciespartition */
+int SetSpeciespartition (int part)
+
+{
+	int		i, j;
+	
+    /* Set model partition */
+	speciespartitionNum = part;
+	numSpecies = 0;
+
+	/* Set numSpecies to maximum species a taxon belongs to in partition part */
+	for (i=0; i<numTaxa; i++)
+		{
+		j = speciespartitionId[i][part];
+		if (j > numSpecies)
+			numSpecies = j;
+		}
+
+    return (NO_ERROR);
+}
+
+
+
+
+
 int SetTaxaFromTranslateTable (void)
 {
     int     i;
@@ -13120,7 +13709,7 @@ void SetUpParms (void)
 	PARAM   (171, "Npthreads",      DoSetParm,         "\0");
 	PARAM   (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
 	PARAM   (173, "Cppmultdevpr",   DoPrsetParm,       "Fixed|\0");
-	PARAM   (174, "Nupr",           DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (174, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (175, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (176, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (177, "Autocomplete",   DoSumtParm,        "Yes|No|\0");
@@ -13142,8 +13731,8 @@ void SetUpParms (void)
 	PARAM   (193, "Cpprate",        DoLinkParm,        "\0");
 	PARAM   (194, "Cppmultdev",     DoLinkParm,        "\0");
 	PARAM   (195, "Cppevents",      DoLinkParm,        "\0");
-	PARAM   (196, "Nu",             DoLinkParm,        "\0");
-	PARAM   (197, "Branchrates",    DoLinkParm,        "\0");
+	PARAM   (196, "Bmvar",          DoLinkParm,        "\0");
+	PARAM   (197, "Bmbranchrates",  DoLinkParm,        "\0");
 	PARAM   (198, "Savetrees",      DoMcmcParm,        "Yes|No|\0");
 	PARAM   (199, "Diagnstat",      DoMcmcParm,        "Avgstddev|Maxstddev|\0");
 	PARAM   (200, "Startparams",    DoMcmcParm,        "Reset|Current|\0");
@@ -13164,7 +13753,7 @@ void SetUpParms (void)
 	PARAM   (215, "Tunefreq",	    DoMcmcParm,        "\0");
 	PARAM   (216, "Scientific",	    DoSetParm,         "Yes|No|\0");
 	PARAM   (217, "Siteomega",      DoReportParm,      "Yes|No|\0");
-	PARAM   (218, "Ibrshapepr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (218, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (219, "Symbols",        DoFormatParm,      "\0");
 	PARAM   (220, "Equate",         DoFormatParm,      "\0");
 	PARAM   (221, "Relburnin",	    DoCompareTreeParm, "Yes|No|\0");
@@ -13188,10 +13777,14 @@ void SetUpParms (void)
 	PARAM   (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Branchspecific|\0");
+	PARAM   (242, "Ibrvar",         DoLinkParm,        "\0");
+	PARAM   (243, "Ibrbranchrates", DoLinkParm,        "\0");
+	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
+	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary 
-	         and at the top of this file). */
+	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary) 
+	         and at the top of this file. */
 
 }
 

@@ -14,6 +14,7 @@
 #define DIPLOID 1
 #define ZLINKED 2
 
+#if 0
 #define LSPNAME  30
 #define ERROR 1
 #define NO_ERROR 0
@@ -123,12 +124,6 @@ typedef struct {
 	double dist;
 } Distance;
 
-/* struct for constraints */
-typedef struct {
-	double      depth;
-    SafeLong*   pairSet;
-} Depth;
-
 typedef struct treenode {
 	int father, nson, sons[2];
 	double brlens, age, theta,mu;
@@ -166,6 +161,17 @@ int		SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int sh
 /*species tree mutation rate*/
 int		populationMutation (Tree *genetree,SPTree *speciestree, MrBFlt genemu);
 
+#endif
+
+/**************** typedefs used by Fredrik's code, from best code *******************/
+
+/* struct for constraints */
+typedef struct {
+	double      depth;
+    SafeLong*   pairSet;
+} Depth;
+
+
 
 /**************** Declaration of functions that are called from MrBayes **************/
 void    AllocateBestVariables(void);
@@ -175,10 +181,3 @@ int     Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 int     Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
 /* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */
-
-
-/**************** Declaration of modified best functions called by the MrBayes functions **************/
-int     ConvertToClockTrees(Tree **geneTrees, int numGeneTrees);
-int     GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix);
-int     GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix);
-double  LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *speciesTree, int chain, int state);

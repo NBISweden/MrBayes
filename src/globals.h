@@ -76,6 +76,7 @@ extern int				numCompressedChars;                     /* number of compressed ch
 extern int				numCurrentDivisions;                    /* number of partitions of data                  */
 extern int				numDefinedConstraints;                  /* number of constraints defined                 */
 extern int				numDefinedPartitions;                   /* number of partitions defined                  */
+extern int				numDefinedSpeciespartitions;            /* number of species partitions defined          */
 extern int				numGlobalChains;						/* number of global chains						 */
 extern int				numLocalTaxa;						    /* number of non-excluded taxa                   */
 extern int				numLocalChar;							/* number of non-excluded characters             */
@@ -86,6 +87,7 @@ extern int				numDivisions;                           /* number of current divis
 extern int				numPrintParams;						    /* number of substitution model parameters to print */
 extern int				numPrintTreeParams;						/* number of tree model parameters to print      */
 extern CLFlt			*numSitesOfPat;		                    /* no. sites of each pattern					 */
+extern int				numSpecies;                             /* number of species in current speciespartition */
 extern int				numTaxa;                                /* number of taxa in character matrix            */
 extern int				numTaxaSets;                            /* holds number of taxa sets                     */
 extern int				numTopologies;						    /* number of topologies for one chain and state	 */
@@ -113,7 +115,11 @@ extern SafeLong			runIDSeed;                              /* seed used only for 
 extern int 				scientific;                             /* use scientific format for samples ?           */
 extern ShowmovesParams	showmovesParams;					    /* holds parameters for Showmoves command        */
 extern char				spacer[10];                             /* holds blanks for printing indentations        */
-extern char			    stamp[11];                              /* holds a unique identifier for each analysis  */
+extern NameSet		    *speciesNameSets;                       /* hold species name sets, one for each speciespartition */
+extern int              **speciespartitionId;                   /* holds info about defined speciespartitions    */
+extern char				**speciespartitionNames;                /* hold names of speciespartitions (first is "default") */
+extern int				speciespartitionNum;                    /* index of current species partition            */
+extern char			    stamp[11];                              /* holds a unique identifier for each analysis   */
 extern SafeLong			swapSeed;                               /* seed used only for determining which to swap  */
 extern int				state[MAX_CHAINS];						/* state of chain								 */
 extern MrBFlt			*stdStateFreqs;				            /* std char state frequencies					 */

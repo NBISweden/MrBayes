@@ -28,6 +28,7 @@
 #include    "tree.h"
 #include    "utils.h"
 
+#if 0
 int         Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
 double      CalNodeAge(int node, SPTree *tree);
 double 	    ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
@@ -78,12 +79,18 @@ double 	    Toclocktree(SPTree *t, int node);
 void        ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
 void        ToGenetree(Tree *file[], int *updatedtreeid, int nfile, double *GeneMu);
 double 	    TreeL(Tree *t);
+#endif
 
 /****************************** Local functions converted by Fredrik from best code *****************************/
+int         ConvertToClockTrees(Tree **geneTrees, int numGeneTrees);
+int         GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix);
+int         GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix);
+double      LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *speciesTree, int chain, int state);
 double      LnCoalescenceProb (TreeNode *geneTreeNode, TreeNode *speciesTreeNode, int *nEvents, double *coalTimes, int ploidy);
 double      LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr);
 
 
+#if 0
 McmcPara 	mcmc;
 SPTree 	    sptree;
 SPTree	    *gtree;
@@ -105,6 +112,7 @@ int		speciestreePr = 0; 	/*birth-death prior or uniform prior*/
 double 	poissonMean = 1.0; 	/*the number of nodes changed for proposing a new species tree*/
 double  ***speciesTreeDistanceMatrix;      // distance matrixces for species trees
 double  ***geneTreeDistanceMatrix[];         // distance matrices for gene trees
+#endif
 
 
 
@@ -114,13 +122,11 @@ double  ***geneTreeDistanceMatrix[];         // distance matrices for gene trees
 
 /* Global best variables */
 SafeLong    **speciesPairSets;
-int         numSpecies;
 double      *depthMatrix;
-int         numSpecies=0;
-int         *speciesPartition;
-char        **speciesNames = NULL;
+
 // P_GENERATE, P_PARTRATE
-// Check consistency of best model
+
+// Check consistency of best model in CheckModel
 
 
 /* Allocate variables used by best code during mcmc */
@@ -150,6 +156,9 @@ void AllocateBestChainVariables (void)
         }
     }
 
+    /* allocate species for depthMatrix */
+    depthMatrix = SafeCalloc (numUpperTriang, sizeof(double));
+
     memAllocs[ALLOC_BEST] = YES;
 }
 
@@ -175,9 +184,16 @@ int ConvertToClockTrees(Tree **geneTrees, int numGeneTrees)
 int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
-    int			i, k, chn, numGeneTrees, geneTreesAreClock;
+    int			i, k, chn, numGeneTrees, geneTreesAreClock, numUpperTriang;
 	Param		*p;
 	Tree		*speciesTree, **geneTrees;
+    double      *depthMatrix;
+
+    // Allocate space for the temporary depthMatrix variable used in this function.
+    // We cannot use the global depthMatrix variable because it is not allocated until
+    // the chain is run.
+    numUpperTriang     = (numSpecies * (numSpecies-1)) / 2;
+    depthMatrix = (double *) calloc (numUpperTriang, sizeof(double));
 
     // Use global variable numTopologies to calculate number of gene trees
     // There is one topology for the species tree, the other ones are gene trees
@@ -216,9 +232,12 @@ int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
                 GetSpeciesTreeFromMinDepths(speciesTree, depthMatrix);
 
                 // Label the tips
-                if (LabelTree (speciesTree, speciesNames) == ERROR)
+                if (LabelTree (speciesTree, speciesNameSets[speciespartitionNum].names) == ERROR)
+                    {
+                    free (depthMatrix);
 					return (ERROR);
-
+                    }
+    
                 // Flip fill flag to NO if last chain to fill
                 if (chn == toChain-1)	/* last chain to fill */
 					p->fill = NO;
@@ -235,6 +254,9 @@ int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
 
     // Free gene trees
     free (geneTrees);
+
+    // Free depthMatrix
+    free (depthMatrix);
 
     return (NO_ERROR);
 }
@@ -255,7 +277,10 @@ void FreeBestChainVariables(void)
     if (memAllocs[ALLOC_BEST] == YES) {
         free (speciesPairSets[0]);
         free (speciesPairSets);
+        speciesPairSets = NULL;
     }
+
+    SafeFree (&depthMatrix);    // sets depthMatrix to NULL
 
     memAllocs[ALLOC_BEST] = NO;
 }
@@ -450,7 +475,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
     for (i=0; i<geneTree->nNodes; i++) {
         p = geneTree->allDownPass[i];
         if (p->left == NULL)
-            SetBit(speciesPartition[p->index], p->partition);
+            SetBit(speciespartitionId[p->index][speciespartitionNum]-1, p->partition);
         else {
             for (j=0; j<nLongsNeeded; j++)
                 p->partition[j] = p->left->partition[j] | p->right->partition[j];
@@ -651,10 +676,20 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 /******************** best functions converted by Fredrik *********************/
 
 
-/* Compare function for qsort */
-int CompareDepths (Depth x, Depth y) {
+/* Compare function (Depth struct) for qsort */
+int CompareDepths (const Depth *x, const Depth *y) {
 
-    if (x.depth < y.depth)
+    if (x->depth < y->depth)
+        return YES;
+    else
+        return NO;
+}
+
+
+/* Compare function (TreeNode struct) for qsort */
+int CompareNodes (const TreeNode *x, const TreeNode *y) {
+
+    if (x->nodeDepth < y->nodeDepth)
         return YES;
     else
         return NO;
@@ -837,9 +872,9 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
     // Allocate space for species partitions
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
-    speciesSets    = (SafeLong **) calloc ((numLocalTaxa - 1), sizeof(SafeLong *));
-    speciesSets[0] = (SafeLong *)  calloc ((numLocalTaxa - 1)*nLongsNeeded, sizeof(int));
-    for (i=1; i<numLocalTaxa-1; i++)
+    speciesSets    = (SafeLong **) calloc (2*numLocalTaxa-1, sizeof(SafeLong *));
+    speciesSets[0] = (SafeLong *)  calloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
+    for (i=1; i<2*numLocalTaxa-1; i++)
         speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
 
     // Set tip species partitions once and for all
@@ -868,11 +903,11 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
         // Now order the interior nodes in terms of node depth. We rely on the fact that the
         // ordered sequence is a valid downpass sequence. O(log n).
-        // qsort(geneTrees[w]->intDownPass, geneTrees[w]->nIntNodes, sizeof(TreeNode *), CompareDepths);
+        qsort((void *)(geneTrees[w]->intDownPass), (size_t) geneTrees[w]->nIntNodes, sizeof(TreeNode *), CompareNodes);
 
         // Finally find the minimum for each cell in the upper triangular matrix
         // This is the time critical step with complexity O(n^3) in the simplest
-        // applications. This algorithm should do a little better but not much.
+        // algorithm version. This algorithm should do a little better in most cases.
         for (i=0; i<numUpperTriang; i++) {
             
             // Find shallowest node that has the pair
@@ -915,7 +950,7 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
 
 /**************************original  best functions **************************/
-
+#if 0
 //recursive function that loads the IDs of the (index) tips descending from inode into taxa
 void FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index) {
 	if(inode < tree->nTaxa) {
@@ -3271,3 +3306,4 @@ int SPSaveSprintf(char **target, int *targetLen, char *fmt, ...) {
   return retval;
 }
 
+#endif

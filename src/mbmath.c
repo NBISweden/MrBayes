@@ -4325,6 +4325,27 @@ MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
 
 
+/* Log probability for a value drawn from a lognormal distribution; parameters are
+   mean and variance of value (not of log value) */
+MrBFlt LnProbBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
+
+{
+	MrBFlt		z, lnProb, mu, sigma;
+
+    sigma = sqrt(log(1.0 + (var / (mean*mean))));
+    mu    = log(mean) - sigma * sigma / 2.0;
+
+    z = (log(x) - mu) / sigma;
+
+	lnProb = - log (x * sigma * sqrt (2.0 * PI)) - (z*z / 2.0);
+
+	return lnProb;
+}
+
+
+
+
+
 /* Log probability for a value drawn from a gamma distribution */
 MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 
@@ -4366,6 +4387,25 @@ MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
     lnProb = (alpha - 1.0) * log(x) - LnGamma(alpha) + alpha*log(alpha) - x*alpha;
 
     return lnProb;
+}
+
+
+
+
+
+/* Log ratio for two values drawn from a lognormal distribution */
+MrBFlt LnRatioBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+
+{
+    MrBFlt  newZ, oldZ, mu, sigma;
+
+    sigma = sqrt(log(1.0 + (var / (mean*mean))));
+    mu    = log(mean) - sigma * sigma / 2.0;
+
+    newZ = (log(xNew) - mu) / sigma;
+    oldZ = (log(xOld) - mu) / sigma;
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
 }
 
 
