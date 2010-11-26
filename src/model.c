@@ -13055,8 +13055,8 @@ int ProcessStdChars (SafeLong *seed)
 			/* check ctype settings */
 			if (m->nStates[c] < 2)
 				{
-				MrBayesPrint ("%s   WARNING: Compressed character %d of division %d has less than two observed\n", spacer, c+m->compCharStart, d+1);
-				MrBayesPrint ("%s            states; it will be assumed to have two states.\n", spacer);
+				MrBayesPrint ("%s   WARNING: Compressed character %d (original character %d) of division %d has less \n", spacer, c+m->compCharStart,origChar[c+m->compCharStart]+1, d+1);
+				MrBayesPrint ("%s            than two observed states; it will be assumed to have two states.\n", spacer);
 				m->nStates[c] = 2;
 				}
 			if (m->nStates[c] > 6 && m->cType[c] != UNORD)

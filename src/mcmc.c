@@ -107,7 +107,7 @@ typedef void (*sighandler_t)(int);
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
 #define BRLEN_EPSILON				1.0e-8
-#define BEAGLE_RESCALE_FREQ			1600
+#define BEAGLE_RESCALE_FREQ			160
 #define BEAGLE_RESCALE_FREQ_DOUBLE	10			/* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
 #define RESCALE_FREQ				1			/* node cond like rescaling frequency */
 #define	SCALER_REFRESH_FREQ			1			/* generations between refreshing scaler nodes */
@@ -1471,7 +1471,7 @@ int BuildParsTrees (SafeLong *seed)
 	Param		*p, *q;
 	Tree		*tree;
 
-	/* Build starting trees for state 0 */
+	/* Build starting trees for state 0 TODO: check that numLocalChains is used correctly here(may be numGlobalChains is needed instead)*/
 	for (chn=0; chn<numLocalChains; chn++)
 		{
 		for (k=0; k<numParams; k++)
