@@ -1162,10 +1162,10 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
         				myStateInfo[0] = usedMoves[i]->nAccepted[tempIdB];
         				myStateInfo[1] = usedMoves[i]->nTried[tempIdB];
 		        		myStateInfo[2] = usedMoves[i]->nBatches[tempIdB];
-        				myStateInfo[0] = usedMoves[i]->nTotAccepted[tempIdB];
-        				myStateInfo[1] = usedMoves[i]->nTotTried[tempIdB];
-				        myStateInfo[3] = usedMoves[i]->lastAcceptanceRate[tempIdB];
-                        myStateInfo[4] = usedMoves[i]->tuningParam[tempIdB][0];
+        				myStateInfo[3] = usedMoves[i]->nTotAccepted[tempIdB];
+        				myStateInfo[4] = usedMoves[i]->nTotTried[tempIdB];
+				        myStateInfo[5] = usedMoves[i]->lastAcceptanceRate[tempIdB];
+                        myStateInfo[6] = usedMoves[i]->tuningParam[tempIdB][0];
 
                         ierror = MPI_Isend (&myStateInfo, 7, MPI_DOUBLE, procIdForA, 0, MPI_COMM_WORLD, &request[0]);
 				        if (ierror != MPI_SUCCESS)

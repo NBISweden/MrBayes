@@ -5170,8 +5170,9 @@ MrBFlt RndGamma (MrBFlt s, SafeLong *seed)
 
 	MrBFlt  r=0.0;
 	
-	if (s <= 0.0)      
+	if (s <= 0.0)    
 		puts ("Gamma parameter less than zero\n");
+
 	else if (s < 1.0)  
 		r = RndGamma1 (s, seed);
 	else if (s > 1.0)  
