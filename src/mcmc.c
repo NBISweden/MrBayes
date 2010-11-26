@@ -15232,7 +15232,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
                 (rho*lambda + (lambda*(1.0 - rho) - mu)*et_1);
         (*prob) = log(nTaxa) + LnP1(nt[t->nIntNodes-1], lambda, mu, rho);
         (*prob) -= log(1.0 - p0t_1);
-		for (i=0; i<t->nIntNodes-1; i++)
+		for (i=0; i<t->nIntNodes; i++)
 			(*prob) += lambda * LnP1(nt[i], lambda, mu, rho);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
@@ -15240,7 +15240,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 		{
 		// birth rate == death rate -> the critical branching process
         (*prob) = log(nTaxa/(1.0 + rho*lambda*nt[t->nIntNodes-1]));
-        for (i=0; i<t->nIntNodes-1; i++)
+        for (i=0; i<t->nIntNodes; i++)
             (*prob) -= 2.0 * log(1.0 + rho*lambda*nt[i]);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
@@ -16669,7 +16669,7 @@ int Move_CPPRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 			sumEvents += nEvents[p->index];
 			treeLength += p->length;
 			}
-		(*lnPriorRatio) += (oldLambda - newLambda) * (treeLength/t->root->left->nodeDepth);
+		(*lnPriorRatio) += (oldLambda - newLambda) * treeLength;
 		(*lnPriorRatio) += sumEvents * log (newLambda / oldLambda);
 		}
 
@@ -38555,18 +38555,6 @@ int RunChain (SafeLong *seed)
 #				endif
 				}
 
-            /*
-            for (i=0; i<numPrintTreeParams; i++)
-                {
-                printf ("Eventtree after move:\n");
-                WriteEventTree(GetTree(printTreeParam[i],0,state[0])->root->left,0,printTreeParam[i]->subParams[0]);
-                printf ("\nEvoltree after move:\n");
-                WriteEvolTree(GetTree(printTreeParam[i],0,state[0])->root->left,0,printTreeParam[i]->subParams[0]);
-                printf("\n");
-                getchar();
-                }
-		    */
-
             /* calculate likelihood ratio */            
             if (abortMove == NO)
 				{
@@ -38575,7 +38563,6 @@ int RunChain (SafeLong *seed)
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
-                //printf("lnPrior = %.15lf -- LogPrior = %.15lf\n", lnPrior, LogPrior(chn));
                 assert (fabs((lnPrior-LogPrior(chn))/lnPrior) < 0.0001);
 
                 /* heat */

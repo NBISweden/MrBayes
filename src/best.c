@@ -82,6 +82,9 @@ double 	    TreeL(Tree *t);
 #endif
 
 /****************************** Local functions converted by Fredrik from best code *****************************/
+int         CompareDepths (const void *x, const void *y);
+int         CompareDoubles (const void *x, const void *y);
+int         CompareNodes (const void *x, const void *y);
 int         ConvertToClockTrees(Tree **geneTrees, int numGeneTrees);
 int         GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix);
 int         GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix);
@@ -346,7 +349,7 @@ double LnCoalescenceProb (TreeNode *geneTreeNode, TreeNode *speciesTreeNode, int
                 theta *= 0.75;
 
             // Sort coalescent times
-            //qsort((void *)(coalTimes), (size_t)(*nEvents), sizeof(double), CompareDoubles);
+            qsort((void *)(coalTimes), (size_t)(*nEvents), sizeof(double), CompareDoubles);
 
             // Adjust probability
             lnProb += (*nEvents) * log (2.0 / theta);
@@ -677,9 +680,19 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
 
 /* Compare function (Depth struct) for qsort */
-int CompareDepths (const Depth *x, const Depth *y) {
+int CompareDepths (const void *x, const void *y) {
 
-    if (x->depth < y->depth)
+    if (((Depth *)(x))->depth < ((Depth *)(y))->depth)
+        return YES;
+    else
+        return NO;
+}
+
+
+/* Compare function (doubles) for qsort */
+int CompareDoubles (const void *x, const void *y) {
+
+    if (*((double *)(x)) < *((double *)(y)))
         return YES;
     else
         return NO;
@@ -731,7 +744,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 	}
 
     // Sort the array of distance structs (O(log n^2))
-    //qsort((void *)(minDepth), (size_t)(numUpperTriang), sizeof(Depth), CompareDepths);
+    qsort((void *)(minDepth), (size_t)(numUpperTriang), sizeof(Depth), CompareDepths);
 
     // The algorithm below reduces the upper triangular matrix (n choose 2) to an n-1
     // array in O(n^2log(n)) time. We build the tree at the same time, since we can
