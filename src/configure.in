@@ -2,7 +2,7 @@ AC_INIT(mrbayes, 3.2, http://www.mrbayes.net)
 AC_CONFIG_SRCDIR(mb.c)
 AC_CONFIG_HEADER(config.h)
 
-AC_ARG_ENABLE(debug, [ --enable-debug=[no/yes]     compile with debug support [default="no"]],,enable_debug="no")
+AC_ARG_ENABLE(debug, [  --enable-debug=[no/yes]   compile with debug support [default="no"]],,enable_debug="no")
 if test "x$enable_debug" == "xyes"; then
 : ${CFLAGS="-ggdb"}
 else
@@ -25,7 +25,7 @@ if test "x$enable_mpi" == "xyes"; then
 	AC_DEFINE(MPI_ENABLED)
 fi
 
-AC_ARG_ENABLE(fastlog, [  --enable-fastlog=[no/yes]     enable fast log operations [default="no"]],,enable_fastlog="no")
+AC_ARG_ENABLE(fastlog, [  --enable-fastlog=[no/yes] enable fast log operations [default="no"]],,enable_fastlog="no")
 if test "x$enable_fastlog" == "xyes"; then
 	AC_DEFINE(FAST_VERSION)
 fi
@@ -39,7 +39,7 @@ AC_ARG_WITH([beagle],
    [],
    [with_beagle=yes])
    
-AC_ARG_ENABLE(threads, [  --enable-threads=[no/yes]     enable thread-support in BEAGLE [default="no"]],,enable_threads="no")  
+AC_ARG_ENABLE(threads, [  --enable-threads=[no/yes] enable thread-support in BEAGLE [default="no"]],,enable_threads="no")  
 
 if test "x$with_beagle" != "xno"
 then

@@ -26130,7 +26130,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     SafeLong    *pA, *pV, *pP, y;
 	MrBFlt		x, newPos, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, *bmRate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
-                ibrvar, *ibrRate, nu, origProp, minLength=0.0, curLength=0.0, length = 0.0,
+                ibrvar, *ibrRate, nu, origProp, newProp, minLength=0.0, curLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, sum, ran, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, v_typical;
 	CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
@@ -26423,7 +26423,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	else
 		d->right = u;
 
-	/* insert u randomly/proportionally on branch below c */
+	/* insert u randomly on branch below c */
 	if (c->nodeDepth > v->nodeDepth)
 		x = d->nodeDepth - c->nodeDepth;
 	else
@@ -26436,7 +26436,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
         free (nSitesOfPat);
         return (NO_ERROR);
         }
-    newPos = RandomNumber(seed) * x;
+	newProp = RandomNumber(seed);
+    newPos = newProp * x;
 
 	/* adjust lengths */
 	u->nodeDepth = d->nodeDepth - newPos;
@@ -26541,16 +26542,16 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* adjust prior ratio for old branch length */
-			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index]);
+			(*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/ibrvar, 1.0/ibrvar, brlens[c->index]);
 
             /* adjust effective branch lengths and rates */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
-            brlens [u->index] = brlens[a->index] * y;
-            brlens [a->index] = brlens[a->index] * (1.0 - y);
+            brlens [u->index] = brlens[c->index] * newProp;
+            brlens [c->index] = brlens[c->index] - brlens[u->index];
             ibrRate[u->index] = brlens[u->index] / u->length;
-            ibrRate[a->index] = brlens[a->index] / a->length;
-            if (brlens[u->index] <= 0.0 || brlens[a->index] <= 0.0 || a->length <= 0.0 || u->length <= 0.0 || v->length <= 0.0)
+            ibrRate[c->index] = brlens[c->index] / c->length;
+            if (brlens[u->index] <= 0.0 || brlens[c->index] <= 0.0 || brlens[v->index] <= 0.0 || u->length <= 0.0 || c->length <= 0.0 || v->length <= 0.0)
                 {
                 free (nSitesOfPat);
                 abortMove = YES;
@@ -26558,13 +26559,12 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
                 }
 
             /* adjust prior ratio for new branch lengths */
-			(*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
+			(*lnPriorRatio) += LnProbGamma (c->length/ibrvar, 1.0/ibrvar, brlens[c->index]);
 			(*lnPriorRatio) += LnProbGamma (v->length/ibrvar, 1.0/ibrvar, brlens[v->index]);
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
 
             /* adjust proposal ratio */
-            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])*(1.0 + brlens[oldA->index]*origProp));
-            (*lnProposalRatio) -= log (brlens[oldA->index]*brlens[oldA->index]);
+            (*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
             }   /* end ibr branch rate parameter */
 		}	/* next subparameter */
 

@@ -280,7 +280,7 @@ void FreeBestChainVariables(void)
         speciesPairSets = NULL;
     }
 
-    SafeFree (&depthMatrix);    // sets depthMatrix to NULL
+    SafeFree ((void**)(&depthMatrix));    // sets depthMatrix to NULL
 
     memAllocs[ALLOC_BEST] = NO;
 }
@@ -687,9 +687,9 @@ int CompareDepths (const Depth *x, const Depth *y) {
 
 
 /* Compare function (TreeNode struct) for qsort */
-int CompareNodes (const TreeNode *x, const TreeNode *y) {
+int CompareNodes (const void *x, const void *y) {
 
-    if (x->nodeDepth < y->nodeDepth)
+    if (((TreeNode *)(x))->nodeDepth < ((TreeNode*)(y))->nodeDepth)
         return YES;
     else
         return NO;
