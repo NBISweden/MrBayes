@@ -600,9 +600,9 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
 			temp->tuningParam[i][j] = moveType->tuningParam[j];
 		}
 	return (temp);
-}				
-				
-				
+}
+
+
 
 
 
@@ -955,6 +955,7 @@ int AllocateTreeParams (void)
                 else
                     {
                     MrBayesPrint ("%s   A clock tree cannot have more than one set of branch lengths\n", spacer);
+		    printf("nparam:%d paramid:%d",p->nSubParams,p->paramId);
                     return (ERROR);
                     }
 				}

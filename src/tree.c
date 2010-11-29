@@ -512,6 +512,8 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	int			i, j, k, nLongsNeeded, nTaxa, revertBits;
 	SafeLong	*bitsets, *mask;
 	TreeNode	*p, *q;
+
+	extern void ShowNodes(TreeNode*, int, int);
 	
 	if (t1->nNodes != t2->nNodes)
 		return (NO);
@@ -573,8 +575,10 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	for (i=0; i<t1->nNodes; i++)
 		{
 		p = t1->allDownPass[i];
+		if (p->anc == NULL && t1->isRooted == YES)
+			continue;
 		if (t1->isRooted == NO && IsBitSet(t2->root->index,p->partition))
-                    FlipBits(p->partition,nLongsNeeded, mask);
+            FlipBits(p->partition,nLongsNeeded, mask);
 		for (j=0; j<t2->nNodes; j++)
 			{
 			q = t2->allDownPass[j];
@@ -583,13 +587,18 @@ int AreTreesSame (Tree *t1, Tree *t2)
 				if (p->partition[k] != q->partition[k])
 					break;
 				}
-			if (k == nLongsNeeded && AreDoublesEqual (p->length, q->length, 0.000001) == YES)
+			if (k == nLongsNeeded)
 				break;
 			}
 		if (j == t2->nNodes)
 			{
 			free (bitsets);
 			return (NO);			
+			}
+ 		if (AreDoublesEqual (p->length, q->length, 0.000001) == NO)
+			{
+			free (bitsets);
+			return (NO);
 			}
 		}
 	free (bitsets);
@@ -4543,6 +4552,7 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 	/* make sure that root has index 2*numTaxa-1 */
 	q = t->allDownPass[t->nNodes-1];
 	q->anc = q->right = NULL;
+	q->length = 0.0;
 	t->root = q;
 
 	/* connect the first three tips */
@@ -4573,7 +4583,13 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 		else
 			r->anc->right = q;
 		r->anc = q;
-		q->length = *(brlens++);
+		if (q->anc->anc != NULL)
+			q->length = *(brlens++);
+		else
+			{
+			r->length = *(brlens++);
+			q->length = 0.0;
+			}
 		p->length = *(brlens++);
 		}
 
@@ -4746,7 +4762,7 @@ void SetNodeDepths (Tree *t)
 			{
 			d1 = p->left->nodeDepth  + p->left->length;
 			d2 = p->right->nodeDepth + p->right->length;
-			assert (!(t->isCalibrated == NO && AreDoublesEqual(d1,d2,0.00001)==NO));
+            assert (!(t->isCalibrated == NO && AreDoublesEqual(d1,d2,0.00001)==NO));
 			if (d1 > d2)
 				p->nodeDepth = d1;
 			else
@@ -5286,9 +5302,12 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 		p = t->allDownPass[order[numTaxa-3-i]];
 		q = p->anc;
 		brlens[j--] = p->length;
-		brlens[j--] = q->length;
 		if (q->left == p)
 			{
+			if (q->anc->anc != NULL)
+				brlens[j--] = q->length;
+			else
+				brlens[j--] = q->right->length;
 			order[numTaxa-3-i] = q->right->x;
 			q->right->anc = q->anc;
 			if (q->anc->left == q)
@@ -5298,6 +5317,10 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 			}
 		else
 			{
+			if (q->anc->anc != NULL)
+				brlens[j--] = q->length;
+			else
+				brlens[j--] = q->left->length;
 			order[numTaxa-3-i] = q->left->x;
 			q->left->anc = q->anc;
 			if (q->anc->left == q)

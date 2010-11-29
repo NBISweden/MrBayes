@@ -36746,11 +36746,11 @@ int RedistributeParamVals (void)
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,0);
-	            if (tree->isRooted == YES)
+					if (tree->isRooted == YES)
                         StoreRTree(tree, order, brlens);
                     else
                         StoreUTree(tree, order, brlens);
-                    ierror = MPI_Isend (order, orderLen, MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
+					ierror = MPI_Isend (order, orderLen, MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
                     if (ierror != MPI_SUCCESS)
                         {
                         return (ERROR);
@@ -36794,7 +36794,6 @@ int RedistributeParamVals (void)
                         {
                         return (ERROR);
                         }
-			
                     if (tree->isRooted == YES)
                         RetrieveRTree(tree, order, brlens);
                     else
@@ -36962,7 +36961,7 @@ int RedistributeTuningParams (void)
 
     for (i=lower; i<numGlobalChains; i++)
         {
-        for (j=0; j<numLocalChains; j++)
+		for (j=0; j<numLocalChains; j++)
             {
             if (chainId[j] == i)
                 break;
@@ -36970,7 +36969,7 @@ int RedistributeTuningParams (void)
 
         for (k=0; k<numUsedMoves; k++)
             {
-            if (proc_id == 0) /* we have the tuning parameter of interest */
+			if (proc_id == 0 && usedMoves[k]->moveType->numTuningParams > 0) /* we have the tuning parameter of interest */
                 x[k] = usedMoves[k]->tuningParam[i][0];
             else
                 x[k] = 0.0;
@@ -36986,7 +36985,10 @@ int RedistributeTuningParams (void)
         if (j != numLocalChains)   /* we have the chain of interest */
             {
             for (k=0; k<numUsedMoves; k++)
-                usedMoves[k]->tuningParam[i][0] = sum[k];
+				{
+				if (usedMoves[k]->moveType->numTuningParams > 0)
+                	usedMoves[k]->tuningParam[i][0] = sum[k];
+				}
             }
         }
 
@@ -41104,7 +41106,7 @@ int SetUsedMoves (void)
 		return (ERROR);
 		}
 	memAllocs[ALLOC_USEDMOVES] = YES;
-	
+		
 	/* set move pointers */
 	moveIndex = 0;
 	for (i=0; i<numApplicableMoves; i++)
