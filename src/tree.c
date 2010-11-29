@@ -587,18 +587,18 @@ int AreTreesSame (Tree *t1, Tree *t2)
 				if (p->partition[k] != q->partition[k])
 					break;
 				}
-			if (k == nLongsNeeded)
+			if (k == nLongsNeeded && AreDoublesEqual (p->length, q->length, 0.000001) == YES)
 				break;
+            else if (k == nLongsNeeded)
+                {
+                free (bitsets);
+                return (NO);
+                }
 			}
 		if (j == t2->nNodes)
 			{
 			free (bitsets);
 			return (NO);			
-			}
- 		if (AreDoublesEqual (p->length, q->length, 0.000001) == NO)
-			{
-			free (bitsets);
-			return (NO);
 			}
 		}
 	free (bitsets);
