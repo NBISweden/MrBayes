@@ -12019,9 +12019,15 @@ int IsTreeConsistent (Param *param, int chain, int state)
 
     /* check that the last few indices are not taken in a rooted tree */
     if (tree->isRooted == YES && tree->root->index != tree->nNodes - 1)
+		{
+		printf("Problem with root index on proc %d; index is %d and should be %d\n", proc_id, tree->root->index, tree->nNodes-1); 
         return NO;
+		}
     if (tree->isRooted == YES && tree->root->left->index != tree->nNodes - 2)
-        return NO;
+        {
+		printf("Problem with interior root index on proc %d; index is %d and should be %d\n", proc_id, tree->root->left->index, tree->nNodes-2);
+		return NO;
+		}
 
     if (tree->isClock == NO)
         return YES;

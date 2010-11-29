@@ -4521,6 +4521,10 @@ int RetrieveRTopology (Tree *t, int *order)
 	/* get downpass */
 	GetDownPass (t);
 
+	/* relabel interior nodes (root is correctly labeled already) */
+	for (i=0; i<t->nIntNodes; i++)
+		t->intDownPass[i]->index = i+numTaxa;
+
 	return (NO_ERROR);
 }
 
@@ -4596,6 +4600,10 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 	/* get downpass */
 	GetDownPass (t);
 
+	/* relabel interior nodes (root is correctly labeled already) */
+	for (i=0; i<t->nIntNodes; i++)
+		t->intDownPass[i]->index = i+numTaxa;
+
 	/* set the node depths */
 	SetNodeDepths (t);
 	
@@ -4665,6 +4673,10 @@ int RetrieveUTopology (Tree *t, int *order)
 	/* get downpass */
 	GetDownPass (t);
 	
+	/* relabel interior nodes (root is correctly labeled already) */
+	for (i=0; i<t->nIntNodes; i++)
+		t->intDownPass[i]->index = i+numTips;
+
 	return (NO_ERROR);
 }
 
@@ -4735,6 +4747,10 @@ int RetrieveUTree (Tree *t, int *order, MrBFlt *brlens)
 
 	/* get downpass */
 	GetDownPass (t);
+
+	/* relabel interior nodes (root is correctly labeled already) */
+	for (i=0; i<t->nIntNodes; i++)
+		t->intDownPass[i]->index = i+numTips;
 
 	return (NO_ERROR);
 }
