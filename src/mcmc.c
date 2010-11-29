@@ -12020,17 +12020,30 @@ int IsTreeConsistent (Param *param, int chain, int state)
     /* check that the last few indices are not taken in a rooted tree */
     if (tree->isRooted == YES && tree->root->index != tree->nNodes - 1)
 		{
-		printf("Problem with root index on proc %d; index is %d and should be %d\n", proc_id, tree->root->index, tree->nNodes-1); 
+		printf("Problem with root index\n"); 
         return NO;
 		}
     if (tree->isRooted == YES && tree->root->left->index != tree->nNodes - 2)
         {
-		printf("Problem with interior root index on proc %d; index is %d and should be %d\n", proc_id, tree->root->left->index, tree->nNodes-2);
+		printf("Problem with interior root index\n");
 		return NO;
 		}
 
     if (tree->isClock == NO)
+        {
+        for (i=0; i<tree->nNodes-1; i++)
+            {
+            p = tree->allDownPass[i];
+            if (p->length < 0.0)
+                {
+                printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                return NO;
+                }
+            }
         return YES;
+        }
+
+    /* Clock trees */
 
     /* Check that lengths and depths are consistent */
     for (i=0; i<tree->nNodes-2; i++) {

@@ -187,16 +187,12 @@ int ConvertToClockTrees(Tree **geneTrees, int numGeneTrees)
 int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
-    int			i, k, chn, numGeneTrees, geneTreesAreClock, numUpperTriang;
+    int			i, k, chn, numGeneTrees, geneTreesAreClock;
 	Param		*p;
 	Tree		*speciesTree, **geneTrees;
-    double      *depthMatrix;
 
-    // Allocate space for the temporary depthMatrix variable used in this function.
-    // We cannot use the global depthMatrix variable because it is not allocated until
-    // the chain is run.
-    numUpperTriang     = (numSpecies * (numSpecies-1)) / 2;
-    depthMatrix = (double *) calloc (numUpperTriang, sizeof(double));
+    // Allocate space for global best model variables used in this function.
+    AllocateBestChainVariables();
 
     // Use global variable numTopologies to calculate number of gene trees
     // There is one topology for the species tree, the other ones are gene trees
@@ -258,8 +254,8 @@ int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
     // Free gene trees
     free (geneTrees);
 
-    // Free depthMatrix
-    free (depthMatrix);
+    // Free best model variables
+    FreeBestChainVariables();
 
     return (NO_ERROR);
 }
