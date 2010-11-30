@@ -24451,6 +24451,12 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			
+            if (p->length <= 0.0 || p->left->length <= 0.0 || p->right->length <= 0.0)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+
             if (p->left != NULL)
                 {
                 (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /ibrvar, 1.0/ibrvar, brlens[p->left->index ]);
@@ -24458,11 +24464,12 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 }
 			(*lnPriorRatio) -= LnProbGamma (oldPLength/ibrvar, 1.0/ibrvar, brlens[p->index]);
 
+            /*
             if (p->left != NULL)
                 {
-                brlens[p->left->index]  += (newDepth - oldDepth);
+                brlens[p->left->index ] += (newDepth - oldDepth);
                 brlens[p->right->index] += (newDepth - oldDepth);
-                if (brlens[p->left->index] < 0.0 || brlens[p->right->index] < 0.0)
+                if (brlens[p->left->index] <= 0.0 || brlens[p->right->index] <= 0.0)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
@@ -24471,10 +24478,19 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
                 }
             brlens[p->index] -= (newDepth - oldDepth);
-            if (brlens[p->index] < 0.0)
+            if (brlens[p->index] <= 0.0)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
+                }
+            ibrRate[p->index] = brlens[p->index] / p->length;
+            */
+
+            /* update ibr rates */
+            if (p->left != NULL)
+                {
+                ibrRate[p->left->index] = brlens[p->left->index] / p->left->length;
+                ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
                 }
             ibrRate[p->index] = brlens[p->index] / p->length;
 
