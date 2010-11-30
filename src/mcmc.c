@@ -9437,7 +9437,7 @@ void FreeChainMemory (void)
             {
             for (j=0; j<m->numCondLikes; j++)
 #if defined (SSE_ENABLED)
-                AlignedSafeFree (&m->condLikes[j]);
+                AlignedSafeFree ((void **)(&m->condLikes[j]));
 #else
 				SafeFree ((void **)(&m->condLikes[j]));
 #endif
@@ -9448,7 +9448,7 @@ void FreeChainMemory (void)
             {
             for (j=0; j<m->numScalers; j++)
 #if defined (SSE_ENABLED)
-                AlignedSafeFree (&m->scalers[j]);
+                AlignedSafeFree ((void **)(&m->scalers[j]));
 #else
 				SafeFree ((void **)(&m->scalers[j]));
 
@@ -9462,9 +9462,9 @@ void FreeChainMemory (void)
         if (m->clP_SSE)
 			SafeFree ((void **)(&m->clP_SSE));
         if (m->lnL_SSE)
-            AlignedSafeFree (&m->lnL_SSE);
+            AlignedSafeFree ((void **)(&m->lnL_SSE));
         if (m->lnLI_SSE)
-            AlignedSafeFree (&m->lnLI_SSE);
+            AlignedSafeFree ((void **)(&m->lnLI_SSE));
 #endif
 
         if (m->tiProbs)
@@ -10801,7 +10801,12 @@ int InitChainCondLikes (void)
                     else
                         numReps = m->numGammaCats * m->numOmegaCats;
                     k = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates * numReps;
-                    m->condLikes[i] = (CLFlt*) ALIGNED_MALLOC(k * sizeof(CLFlt), 16);
+                    
+#if defined (MS_VCPP_SSE)
+					m->condLikes[i] = (CLFlt*) ALIGNED_MALLOC(k * sizeof(CLFlt), 16);
+#else
+					ALIGNED_MALLOC((void **)(&m->condLikes[i]), 16, k * sizeof(CLFlt));
+#endif
                     if (!m->condLikes[i])
                         return (ERROR);
 
@@ -10830,7 +10835,11 @@ int InitChainCondLikes (void)
                 {
 #if defined (SSE_ENABLED)
                 /* allocate space with padding */
-                m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
+#if defined (MS_VCPP_SSE)
+                m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt));
+#else
+                ALIGNED_MALLOC((void **)(&m->scalers[i]), m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
+#endif
                 if (!m->scalers[i])
                     return (ERROR);
                 for (j=0; j<m->numSSEChars*FLOATS_PER_VEC; j++)
@@ -10858,8 +10867,13 @@ int InitChainCondLikes (void)
 				m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
 				if (!m->clP_SSE)
 					return (ERROR);
+#if defined (MS_VCPP_SSE)
 				m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
 				m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+#else
+				ALIGNED_MALLOC ((void **)(&m->lnL_SSE) , 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
+				ALIGNED_MALLOC ((void **)(&m->lnLI_SSE), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
+#endif
 #endif
 				}
             /* allocate tiprob space */
@@ -11422,7 +11436,11 @@ int InitInvCondLikes (void)
         usingInvCondLikes = YES;
 #if defined (SSE_ENABLED)
         c1 = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates;
+#if defined (MS_VCPP_SSE)
         m->invCondLikes = (CLFlt *) ALIGNED_MALLOC (c1 * sizeof(CLFlt), 16);
+#else
+        ALIGNED_MALLOC ((void **)(&m->invCondLikes), 16, c1 * sizeof(CLFlt));
+#endif
         for (i=0; i<c1; i++)
             m->invCondLikes[i] = 0.0f;
 #else
