@@ -1052,7 +1052,10 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 					    myStateInfo[3] = usedMoves[i]->nTotAccepted[tempIdA];
         				myStateInfo[4] = usedMoves[i]->nTotTried[tempIdA];
 				        myStateInfo[5] = usedMoves[i]->lastAcceptanceRate[tempIdA];
-                        myStateInfo[6] = usedMoves[i]->tuningParam[tempIdA][0];
+                        if (usedMoves[i]->moveType->numTuningParams > 0)
+							myStateInfo[6] = usedMoves[i]->tuningParam[tempIdA][0];
+						else
+							myStateInfo[6] = 0.0;
 
                         ierror = MPI_Isend (&myStateInfo, 7, MPI_DOUBLE, procIdForB, 0, MPI_COMM_WORLD, &request[0]);
 				        if (ierror != MPI_SUCCESS)
@@ -1076,7 +1079,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				        usedMoves[i]->nTotAccepted[tempIdB]       = (int)partnerStateInfo[3];
 				        usedMoves[i]->nTotTried[tempIdB]          = (int)partnerStateInfo[4];
 				        usedMoves[i]->lastAcceptanceRate[tempIdB] = partnerStateInfo[5];
-				        usedMoves[i]->tuningParam[tempIdB][0]     = partnerStateInfo[6];
+						if (usedMoves[i]->moveType->numTuningParams > 0)
+				        	usedMoves[i]->tuningParam[tempIdB][0]     = partnerStateInfo[6];
 
                         usedMoves[i]->nAccepted[tempIdA]          = 0;
 				        usedMoves[i]->nTried[tempIdA]             = 0;
@@ -1165,7 +1169,10 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
         				myStateInfo[3] = usedMoves[i]->nTotAccepted[tempIdB];
         				myStateInfo[4] = usedMoves[i]->nTotTried[tempIdB];
 				        myStateInfo[5] = usedMoves[i]->lastAcceptanceRate[tempIdB];
-                        myStateInfo[6] = usedMoves[i]->tuningParam[tempIdB][0];
+                        if (usedMoves[i]->moveType->numTuningParams > 0)
+							myStateInfo[6] = usedMoves[i]->tuningParam[tempIdB][0];
+                        else
+							myStateInfo[6] = 0.0; 
 
                         ierror = MPI_Isend (&myStateInfo, 7, MPI_DOUBLE, procIdForA, 0, MPI_COMM_WORLD, &request[0]);
 				        if (ierror != MPI_SUCCESS)
@@ -1189,7 +1196,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				        usedMoves[i]->nTotAccepted[tempIdA]       = (int)partnerStateInfo[3];
 				        usedMoves[i]->nTotTried[tempIdA]          = (int)partnerStateInfo[4];
 				        usedMoves[i]->lastAcceptanceRate[tempIdA] = partnerStateInfo[5];
-				        usedMoves[i]->tuningParam[tempIdA][0]     = partnerStateInfo[6];
+                        if (usedMoves[i]->moveType->numTuningParams > 0)
+				        	usedMoves[i]->tuningParam[tempIdA][0]     = partnerStateInfo[6];
 
                         usedMoves[i]->nAccepted[tempIdB]          = 0;
 				        usedMoves[i]->nTried[tempIdB]             = 0;
@@ -36658,14 +36666,14 @@ int ReassembleTuningParams (void)
 
         for (k=0; k<numUsedMoves; k++)
             {
-            if (j != numLocalChains) /* we have the tuning parameter of interest */
+            if (j != numLocalChains && usedMoves[k]->moveType->numTuningParams > 0) /* we have the tuning parameter of interest */
                 x[k] = usedMoves[k]->tuningParam[i][0];
             else
                 x[k] = 0.0;
             }
 
         ierror = MPI_Allreduce (x, sum, numUsedMoves, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-	if (ierror != MPI_SUCCESS)
+		if (ierror != MPI_SUCCESS)
             {
             free (x);
             return (ERROR);
@@ -36674,8 +36682,11 @@ int ReassembleTuningParams (void)
         if (proc_id == 0)
             {
             for (k=0; k<numUsedMoves; k++)
-                usedMoves[k]->tuningParam[i][0] = sum[k];
-            }
+				{
+				if (usedMoves[k]->moveType->numTuningParams > 0)
+                	usedMoves[k]->tuningParam[i][0] = sum[k];
+            	}
+			}
         }
 
     free (x);
