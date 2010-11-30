@@ -22,6 +22,9 @@
 /* Define to 1 if you want to compile the parallel version */
 #undef MPI_ENABLED
 
+/* Define to 1 if you want to compile SSE-enabled version */
+#undef SSE_ENABLED
+
 /* Define one of the UNIX, MAC or WINDOWS */
 #undef UNIX_VERSION
 #undef MAC_VERSION

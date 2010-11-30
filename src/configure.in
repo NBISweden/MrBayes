@@ -30,7 +30,7 @@ if test "x$enable_fastlog" == "xyes"; then
 	AC_DEFINE(FAST_VERSION)
 fi
 
-AC_ARG_ENABLE(sse, [  --enable-sse=[no/yes] enable sse instructions [default="no"]],,enable_sse="no")
+AC_ARG_ENABLE(sse, [  --enable-sse=[no/yes]     enable sse instructions [default="no"]],,enable_sse="no")
 if test "x$enable_sse" == "xyes"; then
 	AC_DEFINE(SSE_ENABLED)
 fi
