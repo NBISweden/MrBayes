@@ -17828,7 +17828,9 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
 	/* adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
+        {
         return (ERROR);
+        }
     (*lnPriorRatio) += x;
 
     /* adjust events, prior ratio and proposal ratio for relaxed clock models */
@@ -17936,7 +17938,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
             if (v->length <= 0.0 || u->length <= 0.0 || a->length <= 0.0 ||
-                brlens[v->index] || brlens[u->index] <= 0.0 || brlens[a->index] <= 0.0)
+                brlens[v->index] <= 0.0 || brlens[u->index] <= 0.0 || brlens[a->index] <= 0.0)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
@@ -18025,13 +18027,6 @@ int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 	
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-	if (CheckConstraints (t) == ERROR)
-		{
-		printf ("Constraint error in input tree to eSS\n");
-		getchar();
-		}
-#endif
 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
