@@ -23913,18 +23913,9 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             (*lnPriorRatio) -= LnProbGamma (oldALength/ibrvar, 1.0/ibrvar, brlens[a->index]);
             (*lnPriorRatio) -= LnProbGamma (oldCLength/ibrvar, 1.0/ibrvar, brlens[c->index]);
 
-            /* adjust b lens as t lens */
-            brlens[a->index] += brlens[v->index];
-            brlens[c->index] -= brlens[v->index];
+            /* keep b lens constant, adjusting rates (one of many possibilities) */
             ibrRate[a->index] = brlens[a->index] / a->length;
             ibrRate[c->index] = brlens[c->index] / c->length;
-
-            /* if brlens[c->index] is smaller than or equal to 0.0, the prior ratio is 0 */
-            if (a->length <= 0.0 || c->length <= 0.0 || brlens[c->index] <= 0.0)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
 
             /* adjust for prior (part 2) */
             (*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
@@ -24486,36 +24477,26 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 }
 			(*lnPriorRatio) -= LnProbGamma (oldPLength/ibrvar, 1.0/ibrvar, brlens[p->index]);
 
-            /*
             if (p->left != NULL)
                 {
-                brlens[p->left->index ] += (newDepth - oldDepth);
-                brlens[p->right->index] += (newDepth - oldDepth);
+                brlens[p->left->index ] = ibrRate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = ibrRate[p->right->index] * p->right->length;
                 if (brlens[p->left->index] <= 0.0 || brlens[p->right->index] <= 0.0)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
                     }
-                ibrRate[p->left->index] = brlens[p->left->index] / p->left->length;
-                ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
+                (*lnProposalRatio) += log(p->left->length  / oldLeftLength);
+                (*lnProposalRatio) += log(p->right->length / oldRightLength);
                 }
-            brlens[p->index] -= (newDepth - oldDepth);
+            brlens[p->index] = ibrRate[p->index] * p->length;
             if (brlens[p->index] <= 0.0)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
                 }
-            ibrRate[p->index] = brlens[p->index] / p->length;
-            */
-
-            /* update ibr rates */
-            if (p->left != NULL)
-                {
-                ibrRate[p->left->index] = brlens[p->left->index] / p->left->length;
-                ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
-                }
-            ibrRate[p->index] = brlens[p->index] / p->length;
-
+            (*lnProposalRatio) += log(p->length / oldPLength);
+            
             if (p->left != NULL)
                 {
                 (*lnPriorRatio) += LnProbGamma (p->left->length /ibrvar, 1.0/ibrvar, brlens[p->left->index ]);
