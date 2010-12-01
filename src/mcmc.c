@@ -17928,10 +17928,10 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             /* adjust prior ratio for old branch length */
 			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index]);
 
-            /* adjust effective branch lengths and rates */
+            /* adjust effective branch lengths and rates; use random number from above to subdivide  */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
-            brlens [u->index] = brlens[a->index] * y;
+            brlens [u->index] = brlens[a->index] * y;   /* y is random number from above */
             brlens [a->index] = brlens[a->index] * (1.0 - y);
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
@@ -17946,16 +17946,9 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
 			(*lnPriorRatio) += LnProbGamma (v->length/ibrvar, 1.0/ibrvar, brlens[v->index]);
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
-            if (a->length <= 0.0 || v->length <= 0.0 || u->length <= 0.0)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
 
-
-            /* adjust proposal ratio */
-            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])*(1.0 + brlens[oldA->index]*origBrlenProp));
-            (*lnProposalRatio) -= log (brlens[oldA->index]*brlens[oldA->index]);
+            /* adjust proposal ratio (prop. to ratio between new and old brlen that is being split) */
+            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])/ brlens[oldA->index]);
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
 
@@ -23782,7 +23775,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-		} while (p->anc->anc == NULL || p->isLocked == YES || p->nodeDepth < q->nodeDepth);
+		} while (p->isLocked == YES || p->nodeDepth < q->nodeDepth);
 		
     /* set up pointers for nodes around the picked branch */
 	if (RandomNumber(seed) < 0.5)
@@ -26589,7 +26582,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             brlens [c->index] = brlens[c->index] - brlens[u->index];
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[c->index] = brlens[c->index] / c->length;
-            if (brlens[u->index] <= 0.0 || brlens[c->index] <= 0.0 || brlens[v->index] <= 0.0 || u->length <= 0.0 || c->length <= 0.0 || v->length <= 0.0)
+            if (brlens[u->index] <= 0.0 || brlens[c->index] <= 0.0 || brlens[v->index] <= 0.0
+                || u->length <= 0.0 || c->length <= 0.0 || v->length <= 0.0)
                 {
                 free (nSitesOfPat);
                 abortMove = YES;
