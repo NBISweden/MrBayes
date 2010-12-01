@@ -10332,6 +10332,11 @@ int FreeModel (void)
 		free (origChar);
 		memAllocs[ALLOC_ORIGCHAR] = NO;
 		}
+	if (memAllocs[ALLOC_STDTYPE] == YES)
+		{
+		free (stdType);
+		memAllocs[ALLOC_STDTYPE] = NO;
+		}
 	if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
 		{
 		free (stdStateFreqs);
@@ -13007,7 +13012,7 @@ int ProcessStdChars (SafeLong *seed)
 	/* first allocate space for stdType, stateSize, tiIndex, bsIndex */
 	if (memAllocs[ALLOC_STDTYPE] == YES)
 		{
-		  SafeFree ((void **)(&stdType));
+		SafeFree ((void **)(&stdType));
 		memAllocs[ALLOC_STDTYPE] = NO;
 		}
 	stdType = (int *)calloc((size_t) (4 * numStandardChars), sizeof(int));

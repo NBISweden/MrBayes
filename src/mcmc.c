@@ -9623,11 +9623,6 @@ void FreeChainMemory (void)
 		FreeSquareDoubleMatrix(markovTiN);
 		memAllocs[ALLOC_MARKOVTIS] = NO;
 		}
-	if (memAllocs[ALLOC_STDTYPE] == YES)
-		{
-		free (stdType);
-		memAllocs[ALLOC_STDTYPE] = NO;
-		}
 	if (memAllocs[ALLOC_SWAPINFO] == YES)
 		{
 		for (i=0; i<chainParams.numRuns; i++)
@@ -38492,14 +38487,14 @@ int RunChain (SafeLong *seed)
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	if (sumErrors > 0)
 		{
-		MrBayesPrint ("%s    Error preparing print files on at least one processor\n", spacer);
+		MrBayesPrint ("%s   Error preparing print files on at least one processor\n", spacer);
         CloseMBPrintFiles();
 		return ERROR;
 		}
 #	else
 	if (nErrors > 0)
 		{
-		MrBayesPrint ("%s    Error preparing print files on at least one processor\n", spacer);
+		MrBayesPrint ("%s   Error preparing print files\n", spacer);
         CloseMBPrintFiles();
         return ERROR;
 		}
