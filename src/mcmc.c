@@ -1205,7 +1205,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
                         usedMoves[i]->nTotAccepted[tempIdB]       = 0;
                         usedMoves[i]->nTotTried[tempIdB]          = 0;
 				        usedMoves[i]->lastAcceptanceRate[tempIdB] = 0.0;
-                        usedMoves[i]->tuningParam[tempIdB][0]     = 0.0;
+                        if (usedMoves[i]->moveType->numTuningParams > 0)
+							usedMoves[i]->tuningParam[tempIdB][0]     = 0.0;
                         }
                     }
                 }
