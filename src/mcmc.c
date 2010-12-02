@@ -17702,7 +17702,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) -= LnProbGamma(u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
 
             /* adjust effective branch lengths and rates */
-            brlens[a->index] += brlens[u->index];
+            //brlens[a->index] += brlens[u->index];
             ibrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
             /* adjust prior ratio for new branch lengths */
@@ -17933,8 +17933,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             /* adjust effective branch lengths and rates; use random number from above to subdivide  */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
-            brlens [u->index] = brlens[a->index] * y;   /* y is random number from above */
-            brlens [a->index] = brlens[a->index] * (1.0 - y);
+            //brlens [u->index] = brlens[a->index] * y;   /* y is random number from above */
+            //brlens [a->index] = brlens[a->index] * (1.0 - y);
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[a->index] = brlens[a->index] / a->length;
             if (v->length <= 0.0 || u->length <= 0.0 || a->length <= 0.0 ||
@@ -17950,7 +17950,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
 
             /* adjust proposal ratio (prop. to ratio between new and old brlen that is being split) */
-            (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])/ brlens[oldA->index]);
+            //(*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index])/ brlens[oldA->index]);
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
 
@@ -26273,7 +26273,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			(*lnPriorRatio) -= LnProbGamma(u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
 
             /* adjust effective branch lengths and rates */
-            brlens[a->index] += brlens[u->index];
+            //brlens[a->index] += brlens[u->index];
             ibrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
             /* adjust prior ratio for new branch lengths */
@@ -26573,8 +26573,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             /* adjust effective branch lengths and rates */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
-            brlens [u->index] = brlens[c->index] * newProp;
-            brlens [c->index] = brlens[c->index] - brlens[u->index];
+            //brlens [u->index] = brlens[c->index] * newProp;
+            //brlens [c->index] = brlens[c->index] - brlens[u->index];
             ibrRate[u->index] = brlens[u->index] / u->length;
             ibrRate[c->index] = brlens[c->index] / c->length;
             if (brlens[u->index] <= 0.0 || brlens[c->index] <= 0.0 || brlens[v->index] <= 0.0
@@ -26591,7 +26591,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			(*lnPriorRatio) += LnProbGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
 
             /* adjust proposal ratio */
-            (*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
+            //(*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
             }   /* end ibr branch rate parameter */
 		}	/* next subparameter */
 
