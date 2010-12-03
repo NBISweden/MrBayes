@@ -146,7 +146,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_MOVE_TREEAGE
 #undef  DEBUG_LNLIKELIHOODRATIO
 #undef  DEBUG_NNIClock
-#undef  SHOW_MOVE
+#undef 	SHOW_MOVE
 
 
 #define TNODE TreeNode
@@ -23904,6 +23904,12 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             /* keep b lens constant, adjusting rates (one of many possibilities) */
             ibrRate[a->index] = brlens[a->index] / a->length;
             ibrRate[c->index] = brlens[c->index] / c->length;
+
+			if (a->length <= 0.0 || c->length <= 0.0)
+				{
+				abortMove = YES;
+				return (NO_ERROR);
+				}
 
             /* adjust for prior (part 2) */
             (*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
