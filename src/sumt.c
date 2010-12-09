@@ -1877,6 +1877,22 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 
 
 
+void DELETE_ME_dump_depth(PolyNode *p)
+{
+
+  if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
+        fprintf(rateMultfp,"%f\n",p->depth);
+    }
+
+    p=p->left;
+    while(p != NULL){
+        DELETE_ME_dump_depth(p);
+        p=p->sib;
+    }
+}
+
+
+
 
 
 int DoSumt (void)
@@ -1902,6 +1918,7 @@ int DoSumt (void)
 	if (proc_id == 0)
 		{
 #	endif
+
 
 	/* Ensure that we read trees with sumt code and not user tree code */
     inSumtCommand = YES;
@@ -3322,6 +3339,17 @@ int DoSumtTree (void)
     PolyTree        *t;
     PolyNode        *p;
 
+    #if defined (PRINT_RATEMULTIPLIERS_CPP)
+
+    		/* get depths if relevant */
+        if (sumtParams.tree->isClock)
+            GetPolyDepths (sumtParams.tree);
+
+                    if(rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
+                        DELETE_ME_dump_depth(sumtParams.tree->root);
+                        //fprintf(rateMultfp,"%s\n",tkn);
+    #endif
+
     /* increment number of trees read in */
 	sumtParams.numFileTrees[sumtParams.runId]++;
     sumtParams.numTreesEncountered++;
@@ -3970,7 +3998,7 @@ int OpenSumtFiles (int treeNo)
                 sprintf (pFilename, "%s.tree%d.parts", sumtParams.sumtOutfile, i+1);
                 sprintf (sFilename, "%s.tree%d.tstat", sumtParams.sumtOutfile, i+1);
                 sprintf (vFilename, "%s.tree%d.vstat", sumtParams.sumtOutfile, i+1);
-		        sprintf (cFilename, "%s.tree%d.con", sumtParams.sumtOutfile, i+1);
+		        sprintf (cFilename, "%s.tree%d.con.tre", sumtParams.sumtOutfile, i+1);
 		        sprintf (tFilename, "%s.tree%d.trprobs", sumtParams.sumtOutfile, i+1);
 		        }
 	        else
@@ -3978,7 +4006,7 @@ int OpenSumtFiles (int treeNo)
 		        sprintf (pFilename, "%s.parts", sumtParams.sumtOutfile);
                 sprintf (sFilename, "%s.tstat", sumtParams.sumtOutfile);
                 sprintf (vFilename, "%s.vstat", sumtParams.sumtOutfile);
-		        sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
+		        sprintf (cFilename, "%s.con.tre", sumtParams.sumtOutfile);
 		        sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
 		        }
 	        if ((fpTemp = TestOpenTextFileR(pFilename)) != NULL)
@@ -4034,7 +4062,7 @@ int OpenSumtFiles (int treeNo)
         sprintf (pFilename, "%s.tree%d.parts", sumtParams.sumtOutfile, treeNo+1);
         sprintf (sFilename, "%s.tree%d.tstat", sumtParams.sumtOutfile, treeNo+1);
         sprintf (vFilename, "%s.tree%d.vstat", sumtParams.sumtOutfile, treeNo+1);
-		sprintf (cFilename, "%s.tree%d.con", sumtParams.sumtOutfile, treeNo+1);
+		sprintf (cFilename, "%s.tree%d.con.tre", sumtParams.sumtOutfile, treeNo+1);
 		sprintf (tFilename, "%s.tree%d.trprobs", sumtParams.sumtOutfile, treeNo+1);
 		}
 	else
@@ -4042,7 +4070,7 @@ int OpenSumtFiles (int treeNo)
 		sprintf (pFilename, "%s.parts", sumtParams.sumtOutfile);
         sprintf (sFilename, "%s.tstat", sumtParams.sumtOutfile);
         sprintf (vFilename, "%s.vstat", sumtParams.sumtOutfile);
-		sprintf (cFilename, "%s.con", sumtParams.sumtOutfile);
+		sprintf (cFilename, "%s.con.tre", sumtParams.sumtOutfile);
 		sprintf (tFilename, "%s.trprobs", sumtParams.sumtOutfile);
 		}
 

@@ -8360,8 +8360,8 @@ int DoTreeParm (char *parmName, char *tkn)
 				sscanf (tkn, "%lf", &tempD);
 				t->rateMult[eSetIndex][pp->index][eventIndex] = tempD;
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
-                if(rateMultfp!=NULL)
-                    fprintf(rateMultfp,"%s\n",tkn);
+                //if(rateMultfp!=NULL)
+                //    fprintf(rateMultfp,"%s\n",tkn);
 #endif
 				eventIndex++;
 				if (eventIndex == t->nEvents[eSetIndex][pp->index])
@@ -10513,11 +10513,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset cppratepr = fixed(<number>)                         \n");
 		MrBayesPrint ("                       prset cppratepr = exponential(<number>)                   \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    For instance, if you fix the rate to 2, you expect to see,   \n");
-		MrBayesPrint ("                    on average, two rate-modifying events  per time unit. Thus   \n");
- 		MrBayesPrint ("					   on any path leading from the root of the tree to an extant   \n");
-		MrBayesPrint ("                    terminal (a terminal of age 0) you expect to see, on avarage,\n");
-		MrBayesPrint ("                    2*(length of the path in time units) rate-modifying events.  \n");
+		MrBayesPrint ("                    For instance, if you fix the rate to 2, then on a branch     \n");
+		MrBayesPrint ("                    with the length equual to one expresed in terms of average   \n");
+ 		MrBayesPrint ("                    expected number of substitution per site, you expect to see, \n"); 
+		MrBayesPrint ("                    on average, two rate-modifying events.                       \n");
 		MrBayesPrint ("                    If you put an exponential(0.1) on the rate, you will be      \n");
 		MrBayesPrint ("                    estimating the rate against a prior probability distribution \n");
 		MrBayesPrint ("                    where the expected rate is 10 (= 1/0.1).						\n");
@@ -11995,12 +11994,12 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   file with the suffix '.tstat', and the statistics pertaining to branch or node\n");
 	    MrBayesPrint ("   parameters are output to a file with the suffix '.vstat'.                     \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   A consensus tree is also printed to a file with the suffix '.con' and         \n");
+	    MrBayesPrint ("   A consensus tree is also printed to a file with the suffix '.con.tre' and     \n");
 	    MrBayesPrint ("   printed to the screen as a cladogram, and as a phylogram if branch lengths    \n");
 	    MrBayesPrint ("   have been saved. The consensus tree is either a 50 percent majority rule tree \n");
 	    MrBayesPrint ("   or a majority rule tree showing all compatible partitions. If branch lengths  \n");
-	    MrBayesPrint ("   have been recorded during the run, the '.con' file will contain a consensus  \n");
-	    MrBayesPrint ("   tree with branch lengths and interior nodes labelled with support values.     \n");
+	    MrBayesPrint ("   have been recorded during the run, the '.con.tre' file will contain a consen- \n");
+	    MrBayesPrint ("   sus tree with branch lengths and interior nodes labelled with support values. \n");
 	    MrBayesPrint ("   By default, the consensus tree will also contain other summary information in \n");
 	    MrBayesPrint ("   a format understood by the program 'FigTree'. To use a simpler format under-  \n");
 	    MrBayesPrint ("   stood by other tree-drawing programs, such as 'TreeView', set 'Conformat' to  \n");
