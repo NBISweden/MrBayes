@@ -18511,15 +18511,14 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
        the two chosen branches are swapped. Since 2010-11-01, the move is Metropolized for
        increased efficiency. */
 	
-	int		    i, j, nRootNodes, directionUp, n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents,
-                isStartLocked, isStopLocked;
-	MrBFlt		x, y, oldBrlen=0.0, newBrlen=0.0, extensionProb, ibrvar, *ibrRate=NULL,
-			    v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda, *bmRate=NULL,
-				**position=NULL, **rateMultiplier=NULL, *brlens, nu, origProp;
-    TreeNode	*p, *a, *b, *u, *v, *oldA;
+	int		    i, *nEvents, numFreeOld, numFreeNew;
+	MrBFlt		x, oldALength, oldCLength, extensionProb, ibrvar, *ibrRate,
+			    lambda, *bmRate, *brlens, nu, ran, cumulativeProb, forwardProb,
+                backwardProb;
+    TreeNode	*p, *q, *a, *c;
 	Tree		*t;
 	ModelParams *mp;
-	ModelInfo	*m = NULL;
+	ModelInfo	*m;
 	Param		*subParm;
 
     extensionProb = mvp[0];	/* extension probability */
@@ -18533,357 +18532,364 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	mp = &modelParams[param->relParts[0]];
 	m = &modelSettings[param->relParts[0]];
 	
-	/* pick a branch */
+    /* calculate the number of free nodes */
+    numFreeOld = t->nNodes-2;
+    if (t->nConstraints > 1)
+        {
+        numFreeOld = 0;
+        for (i=0; i<t->nNodes-2; i++)
+            {
+    		p = t->allDownPass[i];
+            if (p->anc->left == p)
+                q = p->anc->right;
+            else
+                q = p->anc->left;
+            if (p->anc->isLocked == NO || q->isLocked == NO)
+                numFreeOld++;
+            }
+        }
+
+    /* pick a branch */
 	do
 		{
-		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
-		} while (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL);
-		
+		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
+        if (p->anc->left == p)
+            q = p->anc->right;
+        else
+            q = p->anc->left;
+		} while (p->anc->isLocked == YES && q->isLocked == YES);    /* choose subtree that can be swapped */
+
 	/* set up pointers for nodes around the picked branch */
-	v = p;
-	u = p->anc;
-	if (u->left == v)
-		a = u->right;
-	else
-		a = u->left;
-	b = u->anc;
-	oldA = a;
+	a = p;
+    if (p->anc->left == p)
+        q = p->anc->right;
+    else
+        q = p->anc->left;
+    if (p->anc->anc->left == p->anc)
+        c = p->anc->anc->right;
+    else
+        c = p->anc->anc->left;
 
-	/* record branch length for insertion in back move */
-	if (v->nodeDepth > a->nodeDepth)
-		oldBrlen = b->nodeDepth - v->nodeDepth;
-	else
-		oldBrlen = b->nodeDepth - a->nodeDepth;
+	/* record branch length */
+	oldALength = a->length;
 
-	v1 = a->length;
-	v2 = u->length;
-	v3 = v->length;
-
-    origProp = u->length / oldBrlen;
-
-    /* reassign events for CPP */
-	for (i=0; i<param->subParams[0]->nSubParams; i++)
-		{
-		subParm = param->subParams[0]->subParams[i];
-		if (subParm->paramType == P_CPPEVENTS)
-			{
-            /* get pointers to CPP events */
-			nEvents = subParm->nEvents[2*chain+state[chain]];
-			position = subParm->position[2*chain+state[chain]];
-			rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-			n1 = nEvents[a->index];
-			n2 = nEvents[u->index];
-			n3 = nEvents[v->index];
-			if (n2 > 0)
-				{
-				position[a->index] = (MrBFlt *) realloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
-				rateMultiplier[a->index] = (MrBFlt *) realloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
-				}
-			for (j=0; j<n1; j++)
-				position[a->index][j] *= v1 / (v1+v2);
-			for (j=n1; j<n1+n2; j++)
-				{
-				position[a->index][j] = (position[u->index][j-n1] * v2 + v1) / (v1+v2);
-				rateMultiplier[a->index][j] = rateMultiplier[u->index][j-n1];
-				}
-			nEvents[a->index] = n1+n2;
-			nEvents[u->index] = 0;
-			if (n2 > 0)
-				{
-				free (position[u->index]);
-				free (rateMultiplier[u->index]);
-				position[u->index] = rateMultiplier[u->index] = NULL;
-				}
-			}	/* end CPP events parm */
-		else if (subParm->paramType == P_BMBRANCHRATES)
-			{
-			/* adjust prior ratio */
-			nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
-			bmRate = GetParamVals (subParm, chain, state[chain]);
-			(*lnPriorRatio) -= LnProbBmLogNormal(bmRate[a->anc->index], nu*a->length, bmRate[a->index]);
-			(*lnPriorRatio) -= LnProbBmLogNormal(bmRate[v->anc->index], nu*v->length, bmRate[v->index]);
-			(*lnPriorRatio) -= LnProbBmLogNormal(bmRate[u->anc->index], nu*u->length, bmRate[u->index]);
-			(*lnPriorRatio) += LnProbBmLogNormal(bmRate[u->anc->index], nu*(a->length+u->length), bmRate[a->index]);
-			/* adjust effective branch lengths */
-			brlens = GetParamSubVals (subParm, chain, state[chain]);
-			brlens[a->index] = ((bmRate[a->index] + bmRate[b->index])/2.0)*(a->length + u->length);
-			}	/* end bm branch rate parameter */
-        else if (subParm->paramType == P_IBRBRANCHRATES)
-            {
-			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
-			ibrRate = GetParamVals (subParm, chain, state[chain]);
-			brlens = GetParamSubVals (subParm, chain, state[chain]);
-			(*lnPriorRatio) -= LnProbGamma(a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
-			(*lnPriorRatio) -= LnProbGamma(v->length/ibrvar, 1.0/ibrvar, brlens[v->index]);
-			(*lnPriorRatio) -= LnProbGamma(u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
-			
-            /* adjust effective branch lengths */
-            brlens[a->index] = brlens[a->index] + brlens[u->index];
-            ibrRate[a->index] = brlens[a->index] / (a->length + u->length);
-
-            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index]);
-            }
-		}	/* next subparameter */
-
-    /* cut tree */
-	a->anc = b;
-	if (b->left == u)
-		b->left = a;
-	else
-		b->right = a;
-	a->length += u->length;
-	a->upDateTi = YES;
-
-	/* determine initial direction of move and whether the reverse move would be stopped by constraints */
-	isStartLocked = NO;
-	if (a->left == NULL || a->isLocked == YES || a->nodeDepth <= v->nodeDepth)
+    /* reset scratch variables */
+    for (i=0; i<t->nNodes-1; i++)
         {
-        directionUp = NO;
-        isStartLocked = YES;
+        p = t->allDownPass[i];
+        p->x = -1;
+        p->y = NO;
         }
-    /* not constrained */
-    else if (RandomNumber(seed) < 0.5)
-		directionUp = YES;
-	else
-		directionUp = NO;
-		
-	/* move around in root subtree */
-	for (nRootNodes=0; nRootNodes == 0 || RandomNumber(seed)<extensionProb; nRootNodes++) 
-		{
-		if (directionUp == YES) 
-			{	/* going up tree */
-			if (a->left == NULL || a->isLocked == YES || a->nodeDepth <= v->nodeDepth)
-				break;		/* can't go farther */
-			b = a;
-			if (RandomNumber(seed) < 0.5)
-				a = a->left;
-			else
-				a = a->right;
-			}
-		else 
-			{	/* going down tree */
-			if (RandomNumber(seed)<0.5 || b->anc->anc == NULL || b->isLocked == YES)
-				{
-				directionUp = YES; /* switch direction */
-				/* find sister of a */
-				if (b->left == a) 
-					{
-					a = b->right;
-					}
-				else 
-					{  
-					a = b->left;
-					}
-				/* as long as we are moving upwards
-	     		the cond likes to update will be
-				flagged by the last pass from u to the root */
-				}	
-			else 
-				{	/* continue down */
-				a = b;
-				b = b->anc;
-				a->upDateCl = YES;
-				}
-			}
-		}
-		
-	/* determine whether the forward move was or would have been stopped by constraints */
-	isStopLocked = NO;
-	if (directionUp == YES)
-		{
-		if (a->left == NULL || a->isLocked == YES || a->nodeDepth <= v->nodeDepth)
-			isStopLocked = YES;
-		}
 
-	/* reattach u */
-	if (u->left == v)
-		u->right = a;
-	else
-		u->left = a;
-	a->anc = u;
-	u->anc = b;
-	if (b->left == a)
-		b->left = u;
-	else
-		b->right = u;
+    /* calculate distance from picked node */
+    p = a->anc;
+    p->x = 0;
+    while (p->isLocked == NO && p->anc != NULL)
+        {
+        p->anc->x = p->x + 1;
+        p = p->anc;
+        }
+    for (i=t->nIntNodes-2; i>=0; i--)
+        {
+        p = t->intDownPass[i];
+        if (p->x < 0 && p->anc->x >= 0 && p != a && p->isLocked == NO)
+            p->x = p->anc->x + 1;
+        }
 
-	/* insert u randomly on branch below a */
-	if (a->nodeDepth > v->nodeDepth)
-		x = b->nodeDepth - a->nodeDepth;
-	else
-		x = b->nodeDepth - v->nodeDepth;
-	newBrlen = x;
-    if (x <= 0.0)
+    /* mark the free nodes and calculate the total score */
+    cumulativeProb = 0.0; 
+    for (i=0; i<t->nNodes-2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p != a && p->anc->x > 0 && a->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > a->nodeDepth)
+            {
+            p->y = YES;
+            p->d = pow(0.5 * extensionProb, p->anc->x);
+            cumulativeProb += p->d;
+            }
+        else
+            p->d = 0.0;
+        }
+
+    /* find the target node */
+    ran = RandomNumber(seed) * cumulativeProb;
+    x = 0.0;
+    for (i=0; i<t->nNodes-2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->y == YES)
+            {
+            x += p->d;
+            if (x > ran)
+                break;
+            }
+        }
+    if (i == t->nNodes - 2)
         {
         abortMove = YES;
         return (NO_ERROR);
         }
 
-    y = RandomNumber(seed) * x;
+    /* record first forward prob */
+    forwardProb = p->d / cumulativeProb;
+
+    /* record partner swap branch */
+    c = p;
+    oldCLength = c->length;
+
+    /* calculate second forward prob */
+
+    /* reset scratch variables */
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        p->x = -1;
+        p->y = NO;
+        }
+
+    /* calculate distance from picked node */
+    p = c->anc;
+    p->x = 0;
+    while (p->isLocked == NO && p->anc != NULL)
+        {
+        p->anc->x = p->x + 1;
+        p = p->anc;
+        }
+    for (i=t->nIntNodes-1; i>=0; i--)
+        {
+        p = t->intDownPass[i];
+        if (p->x < 0 && p != c && p->anc->x >= 0 && p->isLocked == NO)
+            p->x = p->anc->x + 1;
+        }
+
+    /* mark the free nodes and calculate the total score */
+    cumulativeProb = 0.0; 
+    for (i=0; i<t->nNodes-2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > c->nodeDepth)
+            {
+            p->y = YES;
+            p->d = pow(0.5 * extensionProb, p->anc->x);
+            cumulativeProb += p->d;
+            }
+        else
+            p->d = 0.0;
+        }
+
+    /* now we can calculate second forward prob */
+    forwardProb += a->d / cumulativeProb;
+
+    /* swap subtrees */
+	if (a->anc->left == a)
+		a->anc->left = c;
+	else
+		a->anc->right = c;
+	if (c->anc->left == c)
+        c->anc->left = a;
+    else
+        c->anc->right = a;
+    p = a->anc;
+    a->anc = c->anc;
+    c->anc = p;
+    a->length = a->anc->nodeDepth - a->nodeDepth;
+    c->length = c->anc->nodeDepth - c->nodeDepth;
 
 	/* get down pass sequence */
 	GetDownPass (t);
 
-	/* adjust lengths */
-	u->nodeDepth = b->nodeDepth - y;
-    u->length = b->nodeDepth - u->nodeDepth;
-	a->length = u->nodeDepth - a->nodeDepth;
-    v->length = u->nodeDepth - v->nodeDepth;
-	
-	v3new = v->length;
-	v4 = a->length;
-	v5 = u->length;
+    /* set tiprobs update flags */
+	a->upDateTi = YES;
+	c->upDateTi = YES;
+
+	/* set flags for update of cond likes from a->anc and down to root */
+	p = a->anc;
+	while (p->anc != NULL)
+		{
+		p->upDateCl = YES; 
+		p = p->anc;
+		}
+
+	/* set flags for update of cond likes from c->anc and down to root */
+	p = c->anc;
+	while (p->anc != NULL)
+		{
+		p->upDateCl = YES; 
+		p = p->anc;
+		}
 
 	/* adjust prior ratio for clock tree */
 	if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
         return (ERROR);
     (*lnPriorRatio) += x;
 
-    /* adjust events, prior ratio and proposal ratio for relaxed clock models */
+    /* calculate first backward prob */
+
+    /* reset scratch variables */
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        p->x = -1;
+        p->y = NO;
+        }
+
+    /* calculate distance from picked node */
+    p = a->anc;
+    p->x = 0;
+    while (p->isLocked == NO && p->anc != NULL)
+        {
+        p->anc->x = p->x + 1;
+        p = p->anc;
+        }
+    for (i=t->nIntNodes-1; i>=0; i--)
+        {
+        p = t->intDownPass[i];
+        if (p->x < 0 && p != a && p->anc->x >= 0 && p->isLocked == NO)
+            p->x = p->anc->x + 1;
+        }
+
+    /* mark the free nodes and calculate the total score */
+    cumulativeProb = 0.0; 
+    for (i=0; i<t->nNodes-2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p != a && p->anc->x > 0 && a->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > a->nodeDepth)
+            {
+            p->y = YES;
+            p->d = pow(0.5 * extensionProb, p->anc->x);
+            cumulativeProb += p->d;
+            }
+        else
+            p->d = 0.0;
+        }
+
+    /* calculate first backward prob */
+    backwardProb = c->d / cumulativeProb;
+
+    /* calculate second backward prob */
+
+    /* reset scratch variables */
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        p->x = -1;
+        p->y = NO;
+        }
+
+    /* calculate distance from picked node */
+    p = c->anc;
+    p->x = 0;
+    while (p->isLocked == NO && p->anc != NULL)
+        {
+        p->anc->x = p->x + 1;
+        p = p->anc;
+        }
+    for (i=t->nIntNodes-1; i>=0; i--)
+        {
+        p = t->intDownPass[i];
+        if (p->x < 0 && p != c && p->anc->x >= 0 && p->isLocked == NO)
+            p->x = p->anc->x + 1;
+        }
+
+    /* mark the free nodes and calculate the total score */
+    cumulativeProb = 0.0; 
+    for (i=0; i<t->nNodes-2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > c->nodeDepth)
+            {
+            p->y = YES;
+            p->d = pow(0.5 * extensionProb, p->anc->x);
+            cumulativeProb += p->d;
+            }
+        else
+            p->d = 0.0;
+        }
+
+    /* calculate second backward prob */
+    backwardProb += a->d / cumulativeProb;
+
+    /* now we can calculate proposal ratio */
+    (*lnProposalRatio) += log (backwardProb / forwardProb);
+
+    /* adjust for number of free nodes */
+    numFreeNew = t->nNodes-2;
+    if (t->nConstraints > 1)
+        {
+        numFreeNew = 0;
+        for (i=0; i<t->nNodes-2; i++)
+            {
+    		p = t->allDownPass[i];
+            if (p->anc->left == p)
+                q = p->anc->right;
+            else
+                q = p->anc->left;
+            if (p->anc->isLocked == NO || q->isLocked == NO)
+                numFreeNew++;
+            }
+        (*lnProposalRatio) += log(numFreeOld / numFreeNew);
+        }
+
+    /* adjust proposal and prior ratio for relaxed clock models */
 	for (i=0; i<param->subParams[0]->nSubParams; i++)
-		{
-		subParm = param->subParams[0]->subParams[i];
-		if (subParm->paramType == P_CPPEVENTS)
+        {
+        subParm = param->subParams[0]->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
 			{
-            /* reassign events for CPP */
-            nEvents = subParm->nEvents[2*chain+state[chain]];
-			position = subParm->position[2*chain+state[chain]];
-			rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-			for (j=0; j<nEvents[a->index]; j++)
-				{
-				if (position[a->index][j] > v4 / (v4+v5))
-					break;
-				}
-			n4 = j;
-			n5 = nEvents[a->index] - j;
-			nEvents[u->index] = n5;
-			if (n5 > 0)
-				{
-				position[u->index] = (MrBFlt *) realloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
-				rateMultiplier[u->index] = (MrBFlt *) realloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));			
-				for (j=n4; j<nEvents[a->index]; j++)
-					{
-					position[u->index][j-n4] = (position[a->index][j] * (v4+v5) - v4) / v5;
-					rateMultiplier[u->index][j-n4] = rateMultiplier[a->index][j];
-					}
-				if (n4 > 0)
-					{
-					position[a->index] = (MrBFlt *) realloc ((void *) position[a->index], n4 * sizeof (MrBFlt));
-					rateMultiplier[a->index] = (MrBFlt *) realloc ((void *) rateMultiplier[a->index], n4 * sizeof (MrBFlt));
-					for (j=0; j<n4; j++)
-						position[a->index][j] *= ((v4+v5) / v4);
-					}
-				else
-					{
-					free (position[a->index]);
-					free (rateMultiplier[a->index]);
-					position[a->index] = rateMultiplier[a->index] = NULL;
-					}
-				nEvents[a->index] = n4;
-                }
-			else
-				{
-				for (j=0; j<nEvents[a->index]; j++)
-					position[a->index][j] *= ((v4+v5) / v4);
-				}
-
-            /* adjust proposal ratio for length change in v branch*/
-			(*lnProposalRatio) += n3 * log (v3new / v3);
-
-			/* adjust prior ratio for length change */
+			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-			(*lnPriorRatio) += lambda * (v3 - v3new);
 
-			/* update effective branch lengths */
-			if (UpdateCppEvolLengths (subParm, oldA, chain) == ERROR)
+            /* proposal ratio */
+            (*lnProposalRatio) += nEvents[a->index] * log (a->length / oldALength);
+		    (*lnProposalRatio) += nEvents[c->index] * log (c->length / oldCLength);
+
+            /* prior ratio: no effect because tree length is the same */
+
+            /* update effective evolutionary lengths */
+            if (UpdateCppEvolLengths (subParm, a, chain) == ERROR || UpdateCppEvolLengths (subParm, c, chain) == ERROR)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
                 }
-			if (UpdateCppEvolLengths (subParm, u, chain) == ERROR)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
-            }	/* end cpp events parameter */
+			}
 		else if (subParm->paramType == P_BMBRANCHRATES)
 			{
-            /* get relevant parameters */
-            nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
+			nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
 			bmRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* no proposal ratio effect */
 
-            /* adjust prior ratio */
-			(*lnPriorRatio) -= LnProbBmLogNormal(bmRate[u->anc->index], nu*(a->length+u->length), bmRate[a->index]);
-			(*lnPriorRatio) += LnProbBmLogNormal(bmRate[a->anc->index], nu*a->length, bmRate[a->index]);
-			(*lnPriorRatio) += LnProbBmLogNormal(bmRate[v->anc->index], nu*v->length, bmRate[v->index]);
-			(*lnPriorRatio) += LnProbBmLogNormal(bmRate[u->anc->index], nu*u->length, bmRate[u->index]);
-
-			/* adjust effective branch lengths */
-            brlens[a->index] = a->length * (bmRate[a->index] + bmRate[a->anc->index]) / 2.0;
-			brlens[v->index] = v->length * (bmRate[v->index] + bmRate[v->anc->index]) / 2.0;
-			brlens[u->index] = u->length * (bmRate[u->index] + bmRate[u->anc->index]) / 2.0;
-            }	/* end bm branch rate parameter */
+            /* prior ratio and update of effective evolutionary lengths */
+			(*lnPriorRatio) -= LnProbBmLogNormal (bmRate[c->anc->index], nu*oldALength, bmRate[a->index]);
+			(*lnPriorRatio) += LnProbBmLogNormal (bmRate[a->anc->index], nu*a->length, bmRate[a->index]);
+            (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[a->anc->index], nu*oldCLength, bmRate[c->index]);
+		    (*lnPriorRatio) += LnProbBmLogNormal (bmRate[c->anc->index], nu*c->length, bmRate[c->index]);
+			brlens[a->index] = a->length * (bmRate[a->index] + bmRate[a->anc->index])/2.0;
+			brlens[c->index] = c->length * (bmRate[c->index] + bmRate[c->anc->index])/2.0;
+			}
 		else if (subParm->paramType == P_IBRBRANCHRATES)
 			{
             /* get relevant parameters */
-			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
-			ibrRate = GetParamVals (subParm, chain, state[chain]);
+            ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
+            ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-            if (a->length <= 0.0 || v->length <= 0.0 || u->length <= 0.0)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
 
-            /* adjust prior ratio (step 1) */
-			(*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index]);
+            /* adjust for prior (part 1) */
+            (*lnPriorRatio) -= LnProbGamma (oldALength/ibrvar, 1.0/ibrvar, brlens[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldCLength/ibrvar, 1.0/ibrvar, brlens[c->index]);
 
-            /* no proposal ratio effect */
+            /* keep b lens constant, adjusting rates (one of many possibilities) */
+            ibrRate[a->index] = brlens[a->index] / a->length;
+            ibrRate[c->index] = brlens[c->index] / c->length;
 
-            /* update effective evolutionary lengths */
-            brlens[a->index] = a->length * ibrRate[a->index];
-			brlens[v->index] = v->length * ibrRate[v->index];
-			brlens[u->index] = u->length * ibrRate[u->index];
-
-            /* adjust prior ratio (step 2) */
-			(*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
-			(*lnPriorRatio) += LnProbGamma (v->length/ibrvar, 1.0/ibrvar, brlens[v->index]);
-			(*lnPriorRatio) += LnProbGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index]);
-            }   /* end ibr branch rate parameter */
-        }	/* next subparameter */
-
-    /* set tiprobs update flags */
-	a->upDateTi = YES;
-	u->upDateTi = YES;
-	v->upDateTi = YES;
-
-	/* set flags for update of cond likes from u and down to root */
-	p = u;
-	while (p->anc != NULL)
-		{
-		p->upDateCl = YES; 
-		p = p->anc;
+            /* adjust for prior (part 2) */
+            (*lnPriorRatio) += LnProbGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length/ibrvar, 1.0/ibrvar, brlens[c->index]);
+            }
 		}
-
-	/* set flags for update of cond likes from oldA and down to root */
-	p = oldA->anc;
-	while (p->anc != NULL)
-		{
-		p->upDateCl = YES; 
-		p = p->anc;
-		}
-
-	/* calculate proposal ratio for tree change */
-	(*lnProposalRatio) += log (newBrlen / oldBrlen);
-	if (isStartLocked == NO && isStopLocked == YES)
-		(*lnProposalRatio) += log (2.0*(1.0 - extensionProb));
-	else if (isStartLocked == YES && isStopLocked == NO)
-		(*lnProposalRatio) -= log (2.0*(1.0 - extensionProb));
-
-    assert ((*lnPriorRatio) == (*lnPriorRatio));
+	
+    assert(*lnPriorRatio == *lnPriorRatio);
 
     return (NO_ERROR);
 	
@@ -21827,7 +21833,7 @@ int Move_IbrBranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	mp = &modelParams[param->relParts[0]];
 	m = &modelSettings[param->relParts[0]];
 
-	/* get the BM branch rate and effective branch length data */
+    /* get the BM branch rate and effective branch length data */
 	ibrRate = GetParamVals (param, chain, state[chain]);
 	brlens = GetParamSubVals (param, chain, state[chain]);
 
@@ -23902,6 +23908,11 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             (*lnPriorRatio) -= LnProbGamma (oldCLength/ibrvar, 1.0/ibrvar, brlens[c->index]);
 
             /* keep b lens constant, adjusting rates (one of many possibilities) */
+            /*
+            brlens[a->index] = a->length;
+            brlens[c->index] = c->length;
+            */
+
             ibrRate[a->index] = brlens[a->index] / a->length;
             ibrRate[c->index] = brlens[c->index] / c->length;
 
@@ -36771,19 +36782,19 @@ int RedistributeParamVals (void)
         
         /* mcmc trees */
         brlens = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
-        order  = (int *)    calloc (numLocalTaxa,   sizeof(int));
+        order  = (int *)    calloc (2*numLocalTaxa,   sizeof(int));
         for (i=lower; i<upper; i++)
             {
             for (j=0; j<numTrees; j++)
                 {
                 tree = GetTreeFromIndex(j,0,0);
-                orderLen = tree->nIntNodes - 1;
+                orderLen = 2*(tree->nIntNodes - 1);
                 nBrlens = tree->nNodes - 1;
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,0);
 					if (tree->isRooted == YES)
-                        StoreRTree(tree, order, brlens);
+                        StoreRTreeWithIndices(tree, order, brlens);
                     else
                         StoreUTree(tree, order, brlens);
 					ierror = MPI_Isend (order, orderLen, MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
@@ -36831,13 +36842,14 @@ int RedistributeParamVals (void)
                         return (ERROR);
                         }
                     if (tree->isRooted == YES)
-                        RetrieveRTree(tree, order, brlens);
+                        RetrieveRTreeWithIndices(tree, order, brlens);
                     else
                         {    
                         RetrieveUTree(tree, order, brlens);
                         if (localOutGroup != 0)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
+                    CheckSetConstraints(tree);
                     }
                 }
             }

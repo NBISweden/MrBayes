@@ -4616,6 +4616,85 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 
 /*-------------------------------------------------------
 |
+|   RetrieveRTreeWithIndices: This routine will rebuild a rooted
+|      tree from the arrays created by StoreRTreeWithIndices.
+|      All tree information except the structure, branch lengths
+|      and node indices will remain unaltered.
+|
+--------------------------------------------------------*/
+int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
+
+{
+	int			i, numTaxa;
+	TreeNode	*p, *q, *r;
+
+	numTaxa = t->nNodes - t->nIntNodes - 1;
+	
+	/* sort the tips in the t->allDownPass array */
+	p = t->nodes;
+	for (i=0; i<t->nNodes; i++, p++)
+		t->allDownPass[p->index] = p;
+
+	/* make sure that root has index 2*numTaxa-1 */
+	q = t->allDownPass[t->nNodes-1];
+	q->anc = q->right = NULL;
+	q->length = 0.0;
+	t->root = q;
+
+	/* connect the first three 'tips' with interior node, index 2*numTaxa - 2*/
+	p = t->allDownPass[2*numTaxa-2];
+	p->anc = q;
+	q->left = p;
+	p->length = 0.0;
+	q = t->allDownPass[0];
+	r = t->allDownPass[1];
+	p->left = q;
+	p->right = r;
+	q->anc = r->anc = p;
+	q->length = *(brlens++);
+	r->length = *(brlens++);
+
+	/* add one tip at a time */
+	for (i=2; i<numTaxa; i++)
+		{
+		p = t->allDownPass[i];
+        assert (*order >= numTaxa && *order < 2*numTaxa - 2);
+		q = t->allDownPass[*(order++)];
+		r = t->allDownPass[*(order++)];
+		p->anc = q;
+		q->left = p;
+		q->right = r;
+		q->anc = r->anc;
+		if (r->anc->left == r)
+			r->anc->left = q;
+		else
+			r->anc->right = q;
+		r->anc = q;
+		if (q->anc->anc != NULL)
+			q->length = *(brlens++);
+		else
+			{
+			r->length = *(brlens++);
+			q->length = 0.0;
+			}
+		p->length = *(brlens++);
+		}
+
+	/* get downpass */
+	GetDownPass (t);
+
+	/* set the node depths */
+	SetNodeDepths (t);
+	
+	return (NO_ERROR);
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
 |   RetrieveUTopology: This routine will rebuild an unrooted
 |      tree from the order array created by StoreUTopology.
 |      All tree information except the structure
@@ -5338,6 +5417,109 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 			else
 				brlens[j--] = q->left->length;
 			order[numTaxa-3-i] = q->left->x;
+			q->left->anc = q->anc;
+			if (q->anc->left == q)
+				q->anc->left = q->left;
+			else
+				q->anc->right = q->left;
+			}
+		}
+
+    /* store the final two branch lengths in the right order; they have indices 0 and 1 */
+    p = t->root->left;
+    brlens[p->left->index] = p->left->length;
+    brlens[p->right->index] = p->right->length;
+
+    return (NO_ERROR);
+}
+
+
+
+
+
+/*-------------------------------------------------------
+|
+|   StoreRTreeWithIndices: This routine will break a rooted
+|      tree into an array of ints describing the structure
+|      of the tree and the interior node indices, and an array
+|      of doubles storing the branch lengths. The tree will be
+|      destroyed in the process (the node pointers,
+|      that is). However, the tree is not deleted.
+|
+--------------------------------------------------------*/
+int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
+
+{
+	int			i, j, k, numTaxa;
+	TreeNode	*p, *q;
+
+	extern void ShowNodes (TreeNode *p, int indent, int isRooted);
+
+	/* find number of taxa */
+	numTaxa = t->nNodes - t->nIntNodes - 1;
+
+	/* first get the terminal taxon positions and store
+	   them in the order array. */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		/* we do not need to worry about the first two taxa */
+		if (p->index > 1 && p->index < numTaxa)
+			order[p->index-2] = i;
+		}
+
+	/* label the interior nodes with the correct index */
+	for (i=0; i<t->nNodes; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->left == NULL)
+			p->x = p->y = p->index;
+		else if (p->right != NULL)
+			{
+			if (p->left->y < p->right->y)
+				{
+				p->y = p->left->y;
+				p->x = p->right->y + numTaxa - 1;
+				}
+			else
+				{
+				p->y = p->right->y;
+				p->x = p->left->y + numTaxa - 1;
+				}
+			}
+		}
+
+	/* break the tree into pieces */
+	j = 2 * numTaxa - 3;
+    k = 2*(numTaxa - 2) - 1;
+	for (i=0; i<numTaxa-2; i++)
+		{
+		/* find the next node to remove */
+		p = t->allDownPass[order[numTaxa-3-i]];
+		q = p->anc;
+		brlens[j--] = p->length;
+		if (q->left == p)
+			{
+			if (q->anc->anc != NULL)
+				brlens[j--] = q->length;
+			else
+				brlens[j--] = q->right->length;
+			order[k--] = q->right->x;
+            order[k--] = q->index;
+			q->right->anc = q->anc;
+			if (q->anc->left == q)
+				q->anc->left = q->right;
+			else
+				q->anc->right = q->right;
+			}
+		else
+			{
+			if (q->anc->anc != NULL)
+				brlens[j--] = q->length;
+			else
+				brlens[j--] = q->left->length;
+			order[k--] = q->left->x;
+            order[k--] = q->index;
 			q->left->anc = q->anc;
 			if (q->anc->left == q)
 				q->anc->left = q->left;
