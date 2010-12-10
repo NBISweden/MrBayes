@@ -36406,18 +36406,18 @@ int ReassembleParamVals (int *curId)
         
         /* mcmc trees */
         brlens = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
-        order  = (int *)    calloc (numLocalTaxa,   sizeof(int));
+        order  = (int *)    calloc (2*numLocalTaxa,   sizeof(int));
         for (i=lower; i<upper; i++)
             {
             for (j=0; j<numTrees; j++)
                 {
                 tree = GetTreeFromIndex(j,0,0);
-                orderLen = tree->nIntNodes - 1;
+                orderLen = 2*tree->nIntNodes - 1;
                 nBrlens = tree->nNodes - 1;
                 if (proc_id == 0)
                     {
-		    tree = GetTreeFromIndex(j,i,state[i]);
-			ierror = MPI_Irecv (order, orderLen, MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
+		            tree = GetTreeFromIndex(j,i,state[i]);
+			        ierror = MPI_Irecv (order, orderLen, MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
 			        if (ierror != MPI_SUCCESS)
 				        {
 				        return (ERROR);
@@ -36438,19 +36438,20 @@ int ReassembleParamVals (int *curId)
 				        return (ERROR);
 				        }
 			        if (tree->isRooted == YES)
-                        RetrieveRTree(tree, order, brlens);
+                        RetrieveRTreeWithIndices(tree, order, brlens);
                     else
                         {
                         RetrieveUTree(tree, order, brlens);
                         if (localOutGroup!=0)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
+                    CheckSetConstraints(tree);
                     }
                 else if (proc_id == proc)
                     {
         		    tree = GetTreeFromIndex(j,i-lower,state[i-lower]);
 			        if (tree->isRooted == YES)
-                        StoreRTree(tree, order, brlens);
+                        StoreRTreeWithIndices(tree, order, brlens);
                     else
                         StoreUTree(tree, order, brlens);
                     ierror = MPI_Isend (order, orderLen, MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
@@ -36476,8 +36477,8 @@ int ReassembleParamVals (int *curId)
                     }
                 }
             }
-	free (brlens);
-	free (order);
+        free (brlens);
+        free (order);
 
         /* CPP event parameters */
         for(i=lower; i<upper; i++)
@@ -36788,12 +36789,12 @@ int RedistributeParamVals (void)
             for (j=0; j<numTrees; j++)
                 {
                 tree = GetTreeFromIndex(j,0,0);
-                orderLen = 2*(tree->nIntNodes - 1);
+                orderLen = 2*tree->nIntNodes - 1;
                 nBrlens = tree->nNodes - 1;
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,0);
-					if (tree->isRooted == YES)
+                    if (tree->isRooted == YES)
                         StoreRTreeWithIndices(tree, order, brlens);
                     else
                         StoreUTree(tree, order, brlens);

@@ -1877,6 +1877,9 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 
 
 
+
+
+#if defined (PRINT_RATEMULTIPLIERS_CPP)
 void DELETE_ME_dump_depth(PolyNode *p)
 {
 
@@ -1890,6 +1893,7 @@ void DELETE_ME_dump_depth(PolyNode *p)
         p=p->sib;
     }
 }
+#endif
 
 
 

@@ -13800,7 +13800,7 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 		printf ("   ");
 		if (p->left == NULL && p->right == NULL && p->anc != NULL)
 			{
-			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d", 
+			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d ", 
 			indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode);
 			}
 		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
@@ -13808,15 +13808,15 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 			if (isThisTreeRooted == NO)
 				{
 				if (p->label[0] == '\0' || p->label[0] == '\n' || p->label[0] == ' ')
-					printf("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d", 
+					printf("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d ", 
 					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				else
-					printf("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d", 
+					printf("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d ", 
 					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label, p->scalerNode);
 				}
 			else
 				{
-				printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d", 
+				printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ", 
 				indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				}
 			}
@@ -13825,10 +13825,10 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 			if (p->anc != NULL)
 				{
 				if (p->anc->anc == NULL && isThisTreeRooted == YES)
-					printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d", 
+					printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ", 
 					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
 				else	
-					printf("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d", 
+					printf("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d ", 
 					indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->scalerNode);
 				}
 			}

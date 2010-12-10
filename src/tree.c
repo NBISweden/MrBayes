@@ -4628,6 +4628,8 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 	int			i, numTaxa;
 	TreeNode	*p, *q, *r;
 
+    extern void ShowNodes (TreeNode *, int, int);
+
 	numTaxa = t->nNodes - t->nIntNodes - 1;
 	
 	/* sort the tips in the t->allDownPass array */
@@ -4641,9 +4643,10 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 	q->length = 0.0;
 	t->root = q;
 
-	/* connect the first three 'tips' with interior node, index 2*numTaxa - 2*/
-	p = t->allDownPass[2*numTaxa-2];
-	p->anc = q;
+	/* connect the first three 'tips' with interior node, index from order array */
+	p = t->allDownPass[numTaxa];
+	p->x = *(order++);
+    p->anc = q;
 	q->left = p;
 	p->length = 0.0;
 	q = t->allDownPass[0];
@@ -4658,8 +4661,9 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 	for (i=2; i<numTaxa; i++)
 		{
 		p = t->allDownPass[i];
-        assert (*order >= numTaxa && *order < 2*numTaxa - 2);
-		q = t->allDownPass[*(order++)];
+        assert (*order >= numTaxa && *order < 2*numTaxa - 1);
+		q = t->allDownPass[numTaxa-1+i];
+		q->x = *(order++);
 		r = t->allDownPass[*(order++)];
 		p->anc = q;
 		q->left = p;
@@ -4682,6 +4686,13 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 
 	/* get downpass */
 	GetDownPass (t);
+
+    /* relabel interior nodes using labels in scratch variable x */
+    for (i=0; i<t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        p->index = p->x;
+        }
 
 	/* set the node depths */
 	SetNodeDepths (t);
@@ -5491,7 +5502,7 @@ int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 
 	/* break the tree into pieces */
 	j = 2 * numTaxa - 3;
-    k = 2*(numTaxa - 2) - 1;
+    k = 2*(numTaxa - 2);
 	for (i=0; i<numTaxa-2; i++)
 		{
 		/* find the next node to remove */
@@ -5530,6 +5541,7 @@ int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 
     /* store the final two branch lengths in the right order; they have indices 0 and 1 */
     p = t->root->left;
+    order[k] = p->index;
     brlens[p->left->index] = p->left->length;
     brlens[p->right->index] = p->right->length;
 
