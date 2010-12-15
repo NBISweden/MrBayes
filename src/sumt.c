@@ -478,7 +478,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 
 
 
-/* ConTree: Construct consensus tree */
+/* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
 	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
@@ -1877,16 +1877,50 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 
 
 
-
-
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
+int DELETE_ME_count_taxa(PolyNode *p)
+{
+    int sum=0;
+
+    if(p->left==NULL){
+        if( p->depth > 0.1 )
+            return 1;
+        else
+            return 0;
+    }
+
+    p=p->left;
+    while(p != NULL){
+        sum+=DELETE_ME_count_taxa(p);
+        p=p->sib;
+    }
+    return sum;
+}
+
+
+
+
 void DELETE_ME_dump_depth(PolyNode *p)
 {
 
-  if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
+  /*print depth of two taxa clade*/
+  /*if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
         fprintf(rateMultfp,"%f\n",p->depth);
     }
-
+   */
+/*
+    if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
+        if( p->left->depth > 0.1 && p->left->sib->depth > 0.1 )
+            fprintf(rateMultfp,"%f\n",p->depth);
+    }
+*/
+  /*print depth of three taxa clade*/
+  if( ((p->left != NULL && p->left->left == NULL) && p->left->sib != NULL && p->left->sib->left != NULL &&  p->left->sib->left->left == NULL && p->left->sib->left->sib->left == NULL) ||
+       (p->left != NULL && p->left->left != NULL && p->left->left->left == NULL && p->left->left->sib->left == NULL && (p->left->sib->left == NULL)) ){
+           if( DELETE_ME_count_taxa(p)==2 )
+            fprintf(rateMultfp,"%f\n",p->depth);
+    }
+ 
     p=p->left;
     while(p != NULL){
         DELETE_ME_dump_depth(p);
@@ -1903,7 +1937,7 @@ int DoSumt (void)
 
 {
 
-    int		        i, j=0, k, n, len, longestName, treeNo, numTreePartsToPrint,
+    int		        i, j=0, k, n, len, min, longestName, treeNo, numTreePartsToPrint,
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
 			        longestHeader;
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
@@ -1911,7 +1945,7 @@ int DoSumt (void)
 	PartCtr 	    *x;
 	char		    *s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], divString[100];
 	FILE		    *fp=NULL;
-    PartCtr         **treeParts=NULL;
+    PartCtr         **treeParts=NULL,*tmp;
     SumtFileInfo    sumtFileInfo;
     Stat            theStats;
     SafeLong        *mask;
@@ -2200,8 +2234,31 @@ int DoSumt (void)
         i = 0;
         PartCtrUppass(partCtrRoot, treeParts, &i);
 
+        min = (int) (sumtParams.minPartFreq * (sumtParams.numTreesSampled/sumtParams.numRuns));
+        numTreePartsToPrint=numUniqueSplitsFound;
+		for (i=0; i<numTreePartsToPrint;)
+			{
+            for (j=0; j<sumtParams.numRuns;j++)
+                {
+                if(treeParts[i]->count[j]>=min)
+                    break;
+                }
+            if( j==sumtParams.numRuns )
+                {
+                numTreePartsToPrint--;
+                tmp=treeParts[numTreePartsToPrint];
+                treeParts[numTreePartsToPrint]=treeParts[i];
+                treeParts[i]=tmp;
+                }
+            else
+                {
+                i++;
+                }
+			}
+
+
         /* Sort taxon partitions (clades, splits) ... */
-		SortPartCtr (treeParts, 0, numUniqueSplitsFound-1);
+		SortPartCtr (treeParts, 0, numTreePartsToPrint-1);
 
         /* Sort root and tips among those splits always present */
         SortTerminalPartCtr (treeParts, numUniqueSplitsFound);
@@ -2239,15 +2296,17 @@ int DoSumt (void)
 			    MrBayesPrint ("%s   the tree.  Taxa that are included in each clade are denoted using '*', and    \n", spacer);
 			    MrBayesPrint ("%s   taxa that are not included are denoted using the '.' symbol.                  \n", spacer);
 			    MrBayesPrint ("                                                                                   \n");
-                MrBayesPrint ("%s   The output first includes a key to all the bipartitions. This is followed by  \n", spacer);
-			    MrBayesPrint ("%s   a table with statistics for the informative bipartitions (those including at  \n", spacer);
-                MrBayesPrint ("%s   least two taxa), sorted from highest to lowest probability. For each biparti- \n", spacer);
-                MrBayesPrint ("%s   tion, the table gives the number of times the partition or split was observed \n", spacer);
-			    MrBayesPrint ("%s   (#obs) and the posterior probability of the bipartition (Probab.), which is   \n", spacer);
-                MrBayesPrint ("%s   the same as the split frequency. If several runs are summarized, this is fol- \n", spacer);
-			    MrBayesPrint ("%s   lowed by the minimum split frequency (Min(s)), the maximum frequency (Max(s)),\n", spacer);
-			    MrBayesPrint ("%s   and the standard deviation of frequencies (Stddev(s)) across runs. The latter \n", spacer);
-			    MrBayesPrint ("%s   value should approach 0 for all bipartitions as MCMC runs converge.           \n", spacer);
+                MrBayesPrint ("%s   The output first includes a key to all the bipartitions with frequency larger \n", spacer);
+                MrBayesPrint ("%s   or equual to (Minpartfreq) in at least one run. Minpartfreq is a paramiter to \n", spacer);
+                MrBayesPrint ("%s   sumt command and currently it is set to %1.2lf.  This is followed by a table  \n", spacer, sumtParams.minPartFreq);
+			    MrBayesPrint ("%s   with statistics for the informative bipartitions (those including at least    \n", spacer);
+                MrBayesPrint ("%s   two taxa), sorted from highest to lowest probability. For each bipartition,   \n", spacer);
+                MrBayesPrint ("%s   the table gives the number of times the partition or split was observed in all\n", spacer);
+			    MrBayesPrint ("%s   runs (#obs) and the posterior probability of the bipartition (Probab.), which \n", spacer);
+                MrBayesPrint ("%s   is the same as the split frequency. If several runs are summarized, this is   \n", spacer);
+			    MrBayesPrint ("%s   followed by the minimum split frequency (Min(s)), the maximum frequency       \n", spacer);
+			    MrBayesPrint ("%s   (Max(s)), and the standard deviation of frequencies (Stddev(s)) across runs.  \n", spacer);
+			    MrBayesPrint ("%s   The latter value should approach 0 for all bipartitions as MCMC runs converge.\n", spacer);
 			    MrBayesPrint ("                                                                                   \n");
                 MrBayesPrint ("%s   This is followed by a table summarizing branch lengths, node heights (if a    \n", spacer);
 			    MrBayesPrint ("%s   clock model was used) and relaxed clock parameters (if a relaxed clock model  \n", spacer);
@@ -2296,12 +2355,13 @@ int DoSumt (void)
             }
 
 		/* calculate a couple of numbers that are handy to have */
-		numTreePartsToPrint = 0;
+		/*numTreePartsToPrint = 0;
 		for (i=0; i<numUniqueSplitsFound; i++)
 			{
             if ((MrBFlt)treeParts[i]->totCount/(MrBFlt)sumtParams.numTreesSampled >= sumtParams.minPartFreq)
 				numTreePartsToPrint++;
 			}
+            */
 		maxWidthID = (int) (log10 (numTreePartsToPrint)) + 1;
 		if (maxWidthID < 2)
 			maxWidthID = 2;
@@ -2393,12 +2453,13 @@ int DoSumt (void)
             }
 
 		/* calculate a couple of numbers that are handy to have */
-		numTreePartsToPrint = 0;
+		/*numTreePartsToPrint = 0;
 		for (i=0; i<numUniqueSplitsFound; i++)
 			{
             if ((MrBFlt)treeParts[i]->totCount/(MrBFlt)sumtParams.numTreesSampled >= sumtParams.minPartFreq)
 				numTreePartsToPrint++;
 			}
+            */
 		maxWidthID = (int) (log10 (numTreePartsToPrint)) + 1;
 		if (maxWidthID < 2)
 			maxWidthID = 2;
@@ -2678,7 +2739,7 @@ int DoSumt (void)
             }
             
             /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
-            avgStdDev = sumStdDev / (numUniqueSplitsFound-sumtParams.numTaxa-1);
+            avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
             avgPSRF   = sumPSRF / numPSRFSamples;
 
             if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
@@ -2697,8 +2758,10 @@ int DoSumt (void)
                 }
             MrBayesPrint ("\n");
             
+
+        SortPartCtr (treeParts, 0, numUniqueSplitsFound-1); /* We sort again but this time we sort all partitions instead of just first numTreePartsToPrintNow */
         /* make the majority rule consensus tree */
-        if (sumtParams.showConsensus == YES && ConTree (treeParts, numUniqueSplitsFound) == ERROR)
+        if (sumtParams.showConsensus == YES && ConTree (treeParts, numUniqueSplitsFound) == ERROR) 
 			goto errorExit;
 			
 		/* get probabilities of individual trees */

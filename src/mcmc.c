@@ -1810,16 +1810,18 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 	n = chainParams.numRuns;
 	min = (int) (chainParams.minPartFreq * stat->numSamples);
 
+    /*recursevly compute partition frequencies for all subpartitions*/
 	if (p->left != NULL) 
 		CalcPartFreqStats (p->left, stat);
 	if (p->right != NULL)
 		CalcPartFreqStats (p->right, stat);
 
 	for (i=0; i<n; i++)
-		{
-		if (p->count[i] >= min)
-			break;
-		}
+	    {
+	    if (p->count[i] >= min)
+		    break;
+	    }
+
 	if (i == n)
 		return;
 

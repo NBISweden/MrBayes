@@ -34,6 +34,8 @@
    Davide Cittaro - daweonline(at)gmail.com
 */
 
+#define SSE_ENABLED
+
 /* This is a configuration option from the configure script. */
 #ifdef _64BIT
 typedef int SafeLong;
