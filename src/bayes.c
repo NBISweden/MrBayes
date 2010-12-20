@@ -46,6 +46,10 @@
 #include "mcmc.h"
 #include "model.h"
 #include "utils.h"
+#include "svnver.h"
+
+#define QUOTEME(x) #x
+#define QUOTE(x) QUOTEME(x)
 
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
@@ -815,7 +819,7 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		printf ("\n\n");
 #		endif
-		printf ("                               MrBayes v%s\n\n", VERSION_NUMBER);
+		printf ("                            MrBayes v%s(r%s)\n\n", VERSION_NUMBER,QUOTE(SVN_REVISION));
 		printf ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		printf ("                             (Parallel version)\n");
@@ -847,7 +851,7 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		MrBayesPrint ("\n\n");
 #		endif
-		MrBayesPrint ("                               MrBayes v%s\n\n", VERSION_NUMBER);
+        MrBayesPrint ("                           MrBayes v%s(r%s)\n\n", VERSION_NUMBER,QUOTE(SVN_REVISION));
 		MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		MrBayesPrint ("                             (Parallel version)\n");
