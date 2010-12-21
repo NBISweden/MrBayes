@@ -53,10 +53,11 @@
 #include "sumt.h"
 #include "tree.h"
 #include "utils.h"
-
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
+
+const char* const svnRevisionSumtC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 typedef struct partctr
 	{

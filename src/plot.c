@@ -51,6 +51,7 @@
 #include "SIOUX.h"
 #endif
 
+const char* const svnRevisionPlotC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 /* local (to this file) */
 int		foundCurly;

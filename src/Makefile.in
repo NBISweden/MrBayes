@@ -21,11 +21,8 @@ distclean: clean
 
 showdep:
 	@$(CC) -MM $(SRC)
-
-svnver.h: $(SRC)
-	if svnversion | grep "^[0-9]*";then echo "#define SVN_REVISION `svnversion`" > svnver.h;else touch svnver.h; fi
 	
-bayes.o: svnver.h bayes.c mb.h globals.h bayes.h command.h mcmc.h model.h utils.h
+bayes.o: bayes.c mb.h globals.h bayes.h command.h mcmc.h model.h utils.h
 command.o: command.c mb.h globals.h command.h bayes.h model.h mcmc.h \
   plot.h sump.h sumt.h tree.h utils.h
 mbmath.o: mbmath.c mb.h globals.h mbmath.h bayes.h model.h utils.h

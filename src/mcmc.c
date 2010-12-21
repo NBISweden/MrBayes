@@ -58,6 +58,8 @@
 #include "tree.h"
 #include "utils.h"
 
+char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+
 #if defined(BEAGLE_ENABLED)
 #include "mbbeagle.h"
 #endif

@@ -51,6 +51,8 @@
 #include "SIOUX.h"
 #endif
 
+const char* const svnRevisionSumpC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+
 /* local prototypes */
 int		 PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples);
 int		 PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRows, int nSamples);

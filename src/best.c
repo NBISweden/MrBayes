@@ -28,6 +28,8 @@
 #include    "tree.h"
 #include    "utils.h"
 
+const char* const svnRevisionBestC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+
 #if 0
 int         Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
 double      CalNodeAge(int node, SPTree *tree);

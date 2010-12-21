@@ -46,10 +46,21 @@
 #include "mcmc.h"
 #include "model.h"
 #include "utils.h"
-#include "svnver.h"
+         
+       const char* const svnRevisionBayesC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+extern const char* const svnRevisionBestC;
+extern const char* const svnRevisionCommandC;
+extern const char* const svnRevisionMbC;
+extern const char* const svnRevisionMbbeagleC;
+extern const char* const svnRevisionMbmathC;
+extern const char* const svnRevisionMcmcC;
+extern const char* const svnRevisionModelC;
+extern const char* const svnRevisionPlotC;
+extern const char* const svnRevisionSumpC;
+extern const char* const svnRevisionSumtC;
+extern const char* const svnRevisionTreeC;
+extern const char* const svnRevisionUtilsC;
 
-#define QUOTEME(x) #x
-#define QUOTE(x) QUOTEME(x)
 
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
@@ -808,18 +819,38 @@ int InitializeMrBayes (void)
 
 
 
+unsigned FindMaxRevision ( unsigned amount, ...)
+{
+  const char* cur;
+  char tmp[20];
+  unsigned val,i,max;
+
+  va_list vl;
+  va_start(vl,amount);
+  max=0;
+  for (i=0;i<amount;i++)
+  {
+    cur=va_arg(vl,const char*);
+    sscanf(svnRevisionBayesC,"%s %d",tmp,&val);
+    max=(max>val)?max:val;
+  }
+  va_end(vl);
+  return max;
+}
+
 
 
 void PrintHeader (void)
 
 {
+    unsigned rev=FindMaxRevision ( 13, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionPlotC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC); 
 
 #	if defined (MAC_VERSION)
 
 #		if !defined (MPI_ENABLED)
 		printf ("\n\n");
 #		endif
-		printf ("                            MrBayes v%s(r%s)\n\n", VERSION_NUMBER,QUOTE(SVN_REVISION));
+		printf ("                            MrBayes v%s(r%s)\n\n", VERSION_NUMBER,rev);
 		printf ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		printf ("                             (Parallel version)\n");
@@ -851,7 +882,7 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		MrBayesPrint ("\n\n");
 #		endif
-        MrBayesPrint ("                           MrBayes v%s(r%s)\n\n", VERSION_NUMBER,QUOTE(SVN_REVISION));
+        MrBayesPrint ("                           MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
 		MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		MrBayesPrint ("                             (Parallel version)\n");

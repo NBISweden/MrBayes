@@ -44,9 +44,7 @@
 #include "globals.h"
 #include "utils.h"
 
-
-
-
+const char* const svnRevisionUtilsC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 /* AddBitfield: Add bitfield to list of bitfields */
 int AddBitfield (SafeLong ***list, int listLen, int *set, int setLen)

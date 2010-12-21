@@ -50,6 +50,8 @@
 #include "tree.h"
 #include "utils.h"
 
+const char* const svnRevisionTreeC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+
 /* local prototypes */
 void    DatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths, int *index);
 void    DatedNodes (TreeNode *p, TreeNode **datedTips, int *index);

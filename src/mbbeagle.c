@@ -43,6 +43,8 @@
 #include "mcmc.h"
 #include "model.h"
 
+const char* const svnRevisionMbbeagleC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+
 /* Functions and variables defined in mcmc.c that are not exported in mcmc.h */
 void	LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL);
 
