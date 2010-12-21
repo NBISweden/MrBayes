@@ -726,7 +726,7 @@ int AllocateTreeParams (void)
 			numSubParamPtrs += 3;
 		else if (params[k].paramType == P_BMBRANCHRATES)
 			numSubParamPtrs += 2;
-		else if (params[k].paramType == P_IBRBRANCHRATES)
+		else if (params[k].paramType == P_IBRBRANCHLENS)
 			numSubParamPtrs += 2;
 		}
 		
@@ -805,7 +805,7 @@ int AllocateTreeParams (void)
 			q = modelSettings[p->relParts[0]].brlens;
 			q->nSubParams++;
 			}
-		else if (p->paramType == P_IBRBRANCHRATES)
+		else if (p->paramType == P_IBRBRANCHLENS)
 			{
 			q = modelSettings[p->relParts[0]].ibrvar;
 			q->nSubParams++;
@@ -1024,7 +1024,7 @@ int AllocateTreeParams (void)
 			if (p->printParam == YES)
 				q->nPrintSubParams++;
 			}
-		else if (p->paramType == P_IBRBRANCHRATES)
+		else if (p->paramType == P_IBRBRANCHLENS)
 			{
 			q = modelSettings[p->relParts[0]].ibrvar;
 			q->subParams[q->nSubParams++] = p;
@@ -2747,15 +2747,15 @@ int DoLinkParm (char *parmName, char *tkn)
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_BMBRANCHRATES][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Ibr_shape"))
+		else if (!strcmp(parmName, "Ibr_var"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_IBRVAR][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Ibr_rates"))
+		else if (!strcmp(parmName, "Ibr_lens"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
-				tempLinkUnlink[P_IBRBRANCHRATES][i] = tempLinkUnlinkVec[i];
+				tempLinkUnlink[P_IBRBRANCHLENS][i] = tempLinkUnlinkVec[i];
 			}
 		else
 			{
@@ -7476,7 +7476,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 								MrBayesPrint ("%s   Ibrvar must be in the range %f - %f\n", spacer, IBRVAR_MIN, IBRVAR_MAX);
 								return (ERROR);
 								}
-							modelParams[i].bmvarFix = tempD;
+							modelParams[i].ibrvarFix = tempD;
 							if (nApplied == 0 && numCurrentDivisions == 1)
 								MrBayesPrint ("%s   Setting Ibrvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].ibrvarFix);
 							else
@@ -8799,7 +8799,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							}
 						FillBrlensSubParams (param, j, 0);
 						}
-					else if (param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHRATES)
+					else if (param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHLENS)
 						{
 						if (IsClockSatisfied (usrTree, 0.0001) == NO)
 							{
@@ -9111,7 +9111,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			MrBayesPrint ("%s   The parameter '%s' is fixed so the starting value cannot be set\n", spacer, param->name);
 			return (ERROR);
 			}
-		if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHRATES)
+		if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHLENS)
 			{
 			/* all these parameters are set from a tree */
 			expecting = Expecting (ALPHA);
@@ -9887,7 +9887,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 				else if (p->paramId == IBRVAR_FIX)
 					value[0] = mp->ibrvarFix;
 				}
-			else if (p->paramType == P_IBRBRANCHRATES)
+			else if (p->paramType == P_IBRBRANCHLENS)
 				{
 				/* We fill in these when we fill in tree params **************************************************************************/
 				}
@@ -10100,7 +10100,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 				brlen[p->index] = p->length;
 				}
 			}
-		else if (q->paramType == P_BMBRANCHRATES || q->paramType == P_IBRBRANCHRATES)
+		else if (q->paramType == P_BMBRANCHRATES || q->paramType == P_IBRBRANCHLENS)
 			{
 			branchRate = GetParamVals (q, chn, state);
 			brlen = GetParamSubVals (q, chn, state);
@@ -12543,7 +12543,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 	
 		}
-	else if (whichParam == P_IBRBRANCHRATES)
+	else if (whichParam == P_IBRBRANCHLENS)
 		{
 		/* Check IBR relaxed clock branch rates for partitions 1 and 2. */
 	
@@ -16785,8 +16785,8 @@ int SetModelParams (void)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrvar = p;
 
-            p->paramTypeName = "Shape of ibr model scaled gamma distribution of branch rates";
-			strcpy (p->name, "Ibr_shape");
+            p->paramTypeName = "Variance increase of ibr model branch lenths";
+			strcpy (p->name, "Ibr_var");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
@@ -16802,10 +16802,10 @@ int SetModelParams (void)
 			SafeStrcat (&p->paramHeader, "ibr_var");
 			SafeStrcat (&p->paramHeader, partString);
 			}
-		else if (j == P_IBRBRANCHRATES)
+		else if (j == P_IBRBRANCHLENS)
 			{
 			/* Set up ibr relaxed clock rates parameter *****************************************************************************************/
-			p->paramType = P_IBRBRANCHRATES;
+			p->paramType = P_IBRBRANCHLENS;
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
             p->min = 0.0;
@@ -16814,12 +16814,12 @@ int SetModelParams (void)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrBranchRates = p;
 			
-			p->paramTypeName = "Branch rates of IBR relaxed clock";
-			strcpy (p->name, "Ibrbranchrates");
+			p->paramTypeName = "Branch lengths of IBR relaxed clock";
+			strcpy (p->name, "Ibrbranchlens");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
-			p->paramId = IBRBRANCHRATES;
+			p->paramId = IBRBRANCHLENS;
 			
 			/* should we print the events? */
 			for (i=0; i<p->nRelParts; i++)
@@ -16830,7 +16830,7 @@ int SetModelParams (void)
 			else
 				p->printParam = NO;
 
-			SafeStrcat (&p->paramHeader, "ibr_branchrates");
+			SafeStrcat (&p->paramHeader, "ibr_branchlens");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_CLOCKRATE)
@@ -17050,7 +17050,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 		bmBranchRateP = pt->branchRate[i];
 		bmBranchRate = GetParamVals (param, chn, state);
 		}
-	else if (param->paramType == P_IBRBRANCHRATES)
+	else if (param->paramType == P_IBRBRANCHLENS)
 		{
 		/* find the right branch rate set */
 		for (i=0; i<pt->nBSets; i++)
@@ -17105,7 +17105,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 			{
 			bmBranchRate[p->index] = bmBranchRateP[pp->index];
 			}
-		else if (param->paramType == P_IBRBRANCHRATES)
+		else if (param->paramType == P_IBRBRANCHLENS)
 			{
 			ibrBranchRate[p->index] = ibrBranchRateP[pp->index];
 			}
@@ -17121,7 +17121,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
         if (UpdateBmEvolLengths (param, t, chn) == ERROR)
             return (ERROR);
         }
-    else if (param->paramType == P_IBRBRANCHRATES)
+    else if (param->paramType == P_IBRBRANCHLENS)
         {
         if (UpdateIbrEvolLengths (param, t, chn) == ERROR)
             return (ERROR);
@@ -18827,7 +18827,7 @@ void SetUpMoveTypes (void)
 	mt->shortName = "Multiplier";
 	mt->tuningName[0] = "Multiplier tuning parameter";
 	mt->shortTuningName[0] = "lambda";
-	mt->applicableTo[0] = IBRBRANCHRATES;
+	mt->applicableTo[0] = IBRBRANCHLENS;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_IbrBranchRate;
 	mt->relProposalProb = 1.0;
@@ -19826,9 +19826,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Ibrvar         ", spacer);
 			}
-		else if (j == P_IBRBRANCHRATES)
+		else if (j == P_IBRBRANCHLENS)
 			{
-			MrBayesPrint ("%s      Ibrbranchrates ", spacer);
+			MrBayesPrint ("%s      Ibrbranchlens  ", spacer);
 			}
 		else if (j == P_CLOCKRATE)
 			{
@@ -20320,12 +20320,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			if (!strcmp(mp->ibrvarPr,"Uniform"))
 				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->ibrvarUni[0], mp->ibrvarUni[1]);
-			else if (!strcmp(mp->bmvarPr,"Exponential"))
+			else if (!strcmp(mp->ibrvarPr,"Exponential"))
 				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->ibrvarExp);
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->ibrvarFix);
 			}
-		else if (j == P_IBRBRANCHRATES)
+		else if (j == P_IBRBRANCHLENS)
 			{
 			MrBayesPrint ("%s            Prior      = Scaledgamma (variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].ibrvar->name);
 			MrBayesPrint ("%s                            [where v is branch length]\n", spacer);

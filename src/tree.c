@@ -6130,7 +6130,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 						AddToPrintString (")]");
 						}
 					}
-				else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHRATES)
+				else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHLENS)
 					{
 					rate = GetParamVals (param->subParams[i], chain, state[chain])[p->index];
 					SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(rate));
@@ -6176,7 +6176,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 								AddToPrintString (")]");
 								}
 							}
-						else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHRATES)
+						else if (param->subParams[i]->paramType == P_BMBRANCHRATES || param->subParams[i]->paramType == P_IBRBRANCHLENS)
 							{
 							rate = GetParamVals (param->subParams[i], chain, state[chain])[p->index];
                             SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(rate));

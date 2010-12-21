@@ -12141,7 +12141,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (param->subParams[i]->paramId == IBRBRANCHRATES)
+        else if (param->subParams[i]->paramId == IBRBRANCHLENS)
             {
             for (j=0; j<tree->nNodes-2; j++)
                 {
@@ -15113,7 +15113,7 @@ MrBFlt LogPrior (int chain)
 				lnPrior += (- log (mp->ibrvarUni[1] - mp->ibrvarUni[0]));
 				}
 			}
-		else if (p->paramType == P_IBRBRANCHRATES)
+		else if (p->paramType == P_IBRBRANCHLENS)
 			{
 			/* branch rates of independent branch rate model */
 			t = GetTree (p, chain, state[chain]);
@@ -16465,7 +16465,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                         brlens[p->index] = p->length * (bmRate[p->anc->index]+bmRate[p->index])/2.0;
                         }
 			        }
-    		    else if (subParm->paramType == P_IBRBRANCHRATES)
+    		    else if (subParm->paramType == P_IBRBRANCHLENS)
 	    		    {
 		    	    ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
 			        ibrRate = GetParamVals (subParm, chain, state[chain]);
@@ -17689,7 +17689,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			brlens[a->index] = ((bmRate[a->index] + bmRate[b->index])/2.0)*(a->length + u->length);
 			}	/* end bm branch rate parameter */
-        else if (subParm->paramType == P_IBRBRANCHRATES)
+        else if (subParm->paramType == P_IBRBRANCHLENS)
             {
             ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
@@ -17922,7 +17922,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			brlens[v->index] = v->length * (bmRate[v->index] + bmRate[v->anc->index]) / 2.0;
 			brlens[u->index] = u->length * (bmRate[u->index] + bmRate[u->anc->index]) / 2.0;
             }	/* end bm branch rate parameter */
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
             /* get relevant parameters */
 			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
@@ -18870,7 +18870,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 			brlens[a->index] = a->length * (bmRate[a->index] + bmRate[a->anc->index])/2.0;
 			brlens[c->index] = c->length * (bmRate[c->index] + bmRate[c->anc->index])/2.0;
 			}
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
             /* get relevant parameters */
             ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
@@ -23898,7 +23898,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 			brlens[a->index] = a->length * (bmRate[a->index] + bmRate[a->anc->index])/2.0;
 			brlens[c->index] = c->length * (bmRate[c->index] + bmRate[c->anc->index])/2.0;
 			}
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
             /* get relevant parameters */
             ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
@@ -24465,7 +24465,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 }
 			brlens[p->index] = p->length * (bmRate[p->index]+bmRate[p->anc->index])/2.0;
 			}
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
 			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
@@ -26280,7 +26280,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			brlens[a->index] = ((bmRate[a->index] + bmRate[b->index]) / 2.0)*(a->length + u->length);
 			}	/* end bm branch rate parameter */
-        else if (subParm->paramType == P_IBRBRANCHRATES)
+        else if (subParm->paramType == P_IBRBRANCHLENS)
             {
             ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
             ibrRate = GetParamVals (subParm, chain, state[chain]);
@@ -26579,7 +26579,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			brlens[v->index] = v->length * (bmRate[v->index] + bmRate[v->anc->index]) / 2.0;
 			brlens[u->index] = u->length * (bmRate[u->index] + bmRate[u->anc->index]) / 2.0;
 			}	/* end bm branch rate parameter */
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
             /* get relevant parameters */
 			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
@@ -31173,7 +31173,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 brlens[p->index] = p->length * (bmRate[p->anc->index]+bmRate[p->index])/2.0;
                 }
 			}
-		else if (subParm->paramType == P_IBRBRANCHRATES)
+		else if (subParm->paramType == P_IBRBRANCHLENS)
 			{
 			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
@@ -33273,7 +33273,7 @@ int PrintCheckPoint (int gen)
                         {
                     	if (SafeSprintf (&tempString, &tempStrSize, " [&E %s]", subParm->name) == ERROR) nErrors++;
                         }
-                    else if (subParm->paramType == P_BMBRANCHRATES || subParm->paramType == P_IBRBRANCHRATES)
+                    else if (subParm->paramType == P_BMBRANCHRATES || subParm->paramType == P_IBRBRANCHLENS)
                         {
             	        if (SafeSprintf (&tempString, &tempStrSize, " [&B %s]", subParm->name) == ERROR) nErrors++;
                         }
@@ -36981,7 +36981,7 @@ int RedistributeParamVals (void)
                         tree = GetTree (p, i, 0);
                         UpdateBmEvolLengths (p, tree, i);
                         }
-                    else if (p->paramType == P_IBRBRANCHRATES)
+                    else if (p->paramType == P_IBRBRANCHLENS)
                         {
                         tree = GetTree(p, i, 0);
                         UpdateIbrEvolLengths (p, tree, i);

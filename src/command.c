@@ -9343,8 +9343,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    The proportion to be discarded is set with Burninfrac (see   \n");
 		MrBayesPrint ("                    Burninfrac below). When the Relburnin option is set to 'No', \n");
 		MrBayesPrint ("                    then a specific number of samples is discarded instead. This \n");
-		MrBayesPrint ("                    number is set by Burnin (see below). Note that the burnin is \n");
-		MrBayesPrint ("                    set separately for the 'comparetree', 'sump' and 'sumt'      \n");
+		MrBayesPrint ("                    number is set by Burnin (see below). Note that the burnin    \n");
+		MrBayesPrint ("                    setting is shared across the 'comparetree', 'sump' and 'sumt'\n");
 		MrBayesPrint ("                    commands.                                                    \n");
 		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
 		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
@@ -9365,9 +9365,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                      Current Setting                  \n");
 		MrBayesPrint ("   ------------------------------------------------------------                  \n");
-        MrBayesPrint ("   Relburnin       Yes/No                       %s                               \n", plotParams.relativeBurnin == YES ? "Yes" : "No");
-		MrBayesPrint ("   Burnin          <number>                     %d                               \n", plotParams.plotBurnIn);
-        MrBayesPrint ("   Burninfrac      <number>                     %1.2lf                           \n", plotParams.plotBurnInFrac);
+        MrBayesPrint ("   Relburnin       Yes/No                       %s                               \n", chainParams.relativeBurnin == YES ? "Yes" : "No");
+		MrBayesPrint ("   Burnin          <number>                     %d                               \n", chainParams.chainBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                     %1.2lf                           \n", chainParams.burninFraction);
 		MrBayesPrint ("   Filename        <name>                       %s                               \n", plotParams.plotFileName);
 		MrBayesPrint ("   Parameter       <name>                       %s                               \n", plotParams.parameter);
 		MrBayesPrint ("   Match           Perfect/Consistentwith/All   %s                               \n", plotParams.match);
@@ -11746,7 +11746,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
 		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
 		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
-		MrBayesPrint ("      Ibrbranchrates  -- Branch rates of IBR relaxed clock model                 \n"); 
+		MrBayesPrint ("      Ibrbranchlens   -- Branch lengths of IBR relaxed clock model               \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11790,7 +11790,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
 		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
 		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
-		MrBayesPrint ("      Ibrbranchrates  -- Branch rates of IBR relaxed clock model                 \n"); 
+		MrBayesPrint ("      Ibrbrlens       -- Branch lengths of IBR relaxed clock model               \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11847,18 +11847,17 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   When running 'Sump' you typically want to discard a specified number or       \n");
 		MrBayesPrint ("   fraction of samples from the beginning of the chain as the burn in. This is   \n");
-	    MrBayesPrint ("   done using a mechanism similar to but independent of the 'mcmc' command.      \n");
-		MrBayesPrint ("   This means that if you issue                                                  \n");
+	    MrBayesPrint ("   done using the same mechanism used by the 'mcmc' command. That is, if you     \n");
+		MrBayesPrint ("   run an mcmc analysis with a relative burn in of 25 %% of samples for con-     \n");
+		MrBayesPrint ("   vergence diagnostics, then the same burn in will be used for a subsequent     \n");
+		MrBayesPrint ("   sump command, unless a different burn in is specified. That is, issuing       \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   sump burnin = 4000                                                            \n");
-		MrBayesPrint ("   sumt burnin = 2000                                                            \n");
 		MrBayesPrint ("   sump                                                                          \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   the burnin of the last 'Sump' command is 4000 and not 2000, and this absolute \n");
-		MrBayesPrint ("   burnin value is only used if 'Relburnin' is set to 'No' for 'Sump'. All burnin\n");
-		MrBayesPrint ("   values are reset to the default values every time a new matrix is read in. The\n");
-		MrBayesPrint ("   default for 'Sump' is relative burnin ('relburnin=yes') with 0 %% of samples  \n");
-		MrBayesPrint ("   (no samples) discarded ('burninfrac = 0.0').                                  \n");
+		MrBayesPrint ("   immediately after 'mcmc', will result in using the same burn in settings as   \n");
+        MrBayesPrint ("   for the 'mcmc' command. All burnin settings are reset to default values every \n");
+		MrBayesPrint ("   time a new matrix is read in, namely relative burnin ('relburnin=yes') with   \n");
+		MrBayesPrint ("   25 %% of samples discarded ('burninfrac = 0.25').                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -11868,8 +11867,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                   'Burninfrac' (see below). When the 'Relburnin' option is set  \n");
 		MrBayesPrint ("                   to 'No', then a specific number of samples is discarded       \n");
 		MrBayesPrint ("                   instead. This number is set by 'Burnin' (see below). Note that\n");
-		MrBayesPrint ("                   burnin is set separately for the 'sumt', 'sump', and 'mcmc'   \n");
-		MrBayesPrint ("                   commands.                                                     \n");
+		MrBayesPrint ("                   the burnin setting is shared across the 'sumt', 'sump', and   \n");
+		MrBayesPrint ("                   'mcmc' commands.                                              \n");
 		MrBayesPrint ("   Burnin       -- Determines the number of samples (not generations) that will  \n");
 		MrBayesPrint ("                   be discarded when summary statistics are calculated. The      \n");
 		MrBayesPrint ("                   value of this option is only applicable when 'Relburnin' is   \n");
@@ -11897,9 +11896,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", sumpParams.relativeBurnin == YES ? "Yes" : "No");
-		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", sumpParams.sumpBurnIn);
-        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", sumpParams.sumpBurnInFraction);
+        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", chainParams.relativeBurnin == YES ? "Yes" : "No");
+		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", chainParams.chainBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", chainParams.burninFraction);
 		MrBayesPrint ("   Nruns           <number>                 %d                                   \n", sumpParams.numRuns);
 		if (sumpParams.numRuns == 1)
 			MrBayesPrint ("   Filename        <name>                   %s<.p>\n", sumpParams.sumpFileName);
@@ -11938,7 +11937,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
 		MrBayesPrint ("                    'No', then a specific number of samples is discarded instead.\n");
 		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-		MrBayesPrint ("                    burnin is set separately for the 'comparetree' command.      \n");
+		MrBayesPrint ("                    burnin setting is shared with the 'mcmc', 'sumt', 'sump' and \n");
+		MrBayesPrint ("                    'plot' commands.                                             \n");
 		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
 		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
 		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
@@ -11959,9 +11959,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", comptreeParams.relativeBurnin == YES ? "Yes" : "No");
-		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", comptreeParams.comptBurnIn);
-        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", comptreeParams.comptBurnInFrac);
+        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", chainParams.relativeBurnin == YES ? "Yes" : "No");
+		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", chainParams.chainBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", chainParams.burninFraction);
         MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", comptreeParams.minPartFreq);
 		MrBayesPrint ("   Filename1       <name>                   %s                                   \n", comptreeParams.comptFileName1);
 		MrBayesPrint ("   Filename2       <name>                   %s                                   \n", comptreeParams.comptFileName2);
@@ -12020,9 +12020,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   When calculating summary statistics you probably want to skip those trees that\n");
 	    MrBayesPrint ("   were sampled in the initial part of the run, the so-called burn-in period. The\n");
 	    MrBayesPrint ("   number of skipped samples is controlled by the 'Relburnin', 'Burnin', and     \n");
-	    MrBayesPrint ("   'Burninfrac' settings, just as for the 'Mcmc' command. Note that the burn-in  \n");
-	    MrBayesPrint ("   is controlled independently for 'Mcmc' and 'Sumt', that is, changing the set- \n");
-	    MrBayesPrint ("   ting for one will not affect the setting of the other.                        \n");
+	    MrBayesPrint ("   'Burninfrac' settings, just as for the 'Mcmc' command. Since version 3.2.0,   \n");
+	    MrBayesPrint ("   the burn-in settings are shared across the 'Sumt', 'Sump' and 'Mcmc' commands.\n");
+	    MrBayesPrint ("   That is, changing the burn-in setting for one command will change the settings\n");
+	    MrBayesPrint ("   for subsequent calls to any of the other commands.                            \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   If you are summarizing the trees sampled in several independent analyses,     \n");
 	    MrBayesPrint ("   such as those resulting from setting the 'Nruns' option of the 'Mcmc' command \n");
@@ -12050,8 +12051,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
 		MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
 		MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-		MrBayesPrint ("                    burnin is set separately for the 'sumt', 'sump', and 'mcmc'  \n");
-		MrBayesPrint ("                    commands.                                                    \n");
+		MrBayesPrint ("                    burnin setting is shared across the 'sumt', 'sump', and      \n");
+		MrBayesPrint ("                    'mcmc' commands.                                             \n");
 		MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
 		MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
 		MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
@@ -12097,9 +12098,9 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", sumtParams.relativeBurnin == YES ? "Yes" : "No");
-		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", sumtParams.sumtBurnIn);
-        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", sumtParams.sumtBurnInFraction);
+        MrBayesPrint ("   Relburnin       Yes/No                   %s                                   \n", chainParams.relativeBurnin == YES ? "Yes" : "No");
+		MrBayesPrint ("   Burnin          <number>                 %d                                   \n", chainParams.chainBurnIn);
+        MrBayesPrint ("   Burninfrac      <number>                 %1.2lf                               \n", chainParams.burninFraction);
 		MrBayesPrint ("   Nruns           <number>                 %d                                   \n", sumtParams.numRuns);
 		MrBayesPrint ("   Ntrees          <number>                 %d                                   \n", sumtParams.numTrees);
 		if (sumtParams.numRuns == 1 && sumtParams.numTrees == 1)
@@ -13777,7 +13778,7 @@ void SetUpParms (void)
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Branchspecific|\0");
 	PARAM   (242, "Ibrvar",         DoLinkParm,        "\0");
-	PARAM   (243, "Ibrbranchrates", DoLinkParm,        "\0");
+	PARAM   (243, "Ibrbranchlens",  DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
 

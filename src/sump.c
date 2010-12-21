@@ -122,12 +122,12 @@ int DoSump (void)
 		}
 	MrBayesPrint ("%s   Writing summary statistics to file %s.pstat\n", spacer, sumpParams.sumpFileName);
 
-    if (sumpParams.relativeBurnin == YES)
+    if (chainParams.relativeBurnin == YES)
         MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of sampled trees\n",
-            spacer, sumpParams.sumpBurnInFraction*100.0, sumpParams.sumpBurnInFraction);
+            spacer, chainParams.burninFraction*100.0, chainParams.burninFraction);
     else
         MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d sampled trees\n",
-            spacer, sumpParams.sumpBurnIn, sumpParams.sumpBurnIn);
+            spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
 
     /* Initialize to silence warning. */
 	firstFileInfo.numRows = 0;
@@ -488,7 +488,7 @@ int DoSumpParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Relburnin (sumpParams.relativeBurnin) ********************************************************/
+		/* set Relburnin (chainParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -498,16 +498,16 @@ int DoSumpParm (char *parmName, char *tkn)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
 					if (!strcmp(tempStr, "Yes"))
-						sumpParams.relativeBurnin = YES;
+						chainParams.relativeBurnin = YES;
 					else
-						sumpParams.relativeBurnin = NO;
+						chainParams.relativeBurnin = NO;
 					}
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
 					return (ERROR);
 					}
-				if (sumpParams.relativeBurnin == YES)
+				if (chainParams.relativeBurnin == YES)
 					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
 				else
 					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
@@ -518,7 +518,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
-		/* set Burnin (sumpParams.sumpBurnIn) ***********************************************************/
+		/* set Burnin (chainParams.chainBurnIn) ***********************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -526,8 +526,8 @@ int DoSumpParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-                sumpParams.sumpBurnIn = tempI;
-				MrBayesPrint ("%s   Setting sump burn-in to %d\n", spacer, sumpParams.sumpBurnIn);
+                chainParams.chainBurnIn = tempI;
+				MrBayesPrint ("%s   Setting burn-in to %d\n", spacer, chainParams.chainBurnIn);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -535,7 +535,7 @@ int DoSumpParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
-		/* set Burninfrac (sumpParams.sumpBurnInFraction) ************************************************************/
+		/* set Burninfrac (chainParams.burninFraction) ************************************************************/
 		else if (!strcmp(parmName, "Burninfrac"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -553,8 +553,8 @@ int DoSumpParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
 					return (ERROR);
 					}
-                sumpParams.sumpBurnInFraction = tempD;
-				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, sumpParams.sumpBurnInFraction);
+                chainParams.burninFraction = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, chainParams.burninFraction);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -779,10 +779,10 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		}
 
     /* calculate burnin */
-    if (sumpParams.relativeBurnin == YES)
-        burnin = (int) (sumpParams.sumpBurnInFraction * numParamLines);
+    if (chainParams.relativeBurnin == YES)
+        burnin = (int) (chainParams.burninFraction * numParamLines);
     else
-        burnin = sumpParams.sumpBurnIn;
+        burnin = chainParams.chainBurnIn;
     
 	/* check against burnin */
 	if (burnin > numParamLines)

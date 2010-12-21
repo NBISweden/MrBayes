@@ -940,9 +940,6 @@ int ReinitializeMrBayes (void)
 
 	/* sumt parameters */
 	strcpy(sumtParams.sumtFileName, "temp.t");       /* input name for sumt command                   */
-    sumtParams.relativeBurnin = YES;                 /* should relative burnin be used?               */
-    sumtParams.sumtBurnInFraction = 0.0;             /* relative burnin fraction for sumt command     */
-    sumtParams.sumtBurnIn = 0;                       /* absolute burnin for sumt command              */
 	strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
 	sumtParams.calcTreeprobs = YES;                  /* should individual tree probs be calculated    */
 	sumtParams.showSumtTrees = NO;                   /* should the individual tree probs be shown     */
@@ -961,9 +958,6 @@ int ReinitializeMrBayes (void)
 
 	/* sump parameters */
 	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
-	sumpParams.relativeBurnin = YES;                 /* use relative burnin for sump command ?        */
-    sumpParams.sumpBurnInFraction = 0.0;             /* burnin fraction for sump command              */
-	sumpParams.sumpBurnIn = 0;                       /* burnin for sump command                       */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
 	sumpParams.HPD = YES;                            /* use Highest Posterior Density?                */
 
@@ -971,18 +965,12 @@ int ReinitializeMrBayes (void)
 	strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */
 	strcpy(comptreeParams.comptOutfile, "temp.comp");/* input name for comparetree command            */
-	comptreeParams.relativeBurnin = YES;             /* use relative burnin for comparetree command ? */
-	comptreeParams.comptBurnIn = 0;                  /* burnin for comparetree command                */
-	comptreeParams.comptBurnInFrac = 0.0;            /* burnin fraction for comparetree command       */
     comptreeParams.minPartFreq = 0.0;                /* minimum frequency of partitions to include    */
 
 	/* plot parameters */
 	strcpy(plotParams.plotFileName, "temp.p");       /* input name for plot command                   */
 	strcpy(plotParams.parameter, "lnL");             /* plotted parameter plot command                */
 	strcpy(plotParams.match, "Perfect");             /* matching for plot command                     */
-	plotParams.relativeBurnin = YES;                 /* use relative burnin for plot command ? */
-	plotParams.plotBurnIn = 0;                       /* burnin for plot command                       */
-	plotParams.plotBurnInFrac = 0.0;                 /* burnin fraction for plot command       */
 	
     return (NO_ERROR);
 

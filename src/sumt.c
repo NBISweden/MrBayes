@@ -1024,15 +1024,15 @@ int DoCompareTree (void)
 		}
 
     /* Allocate space for packed trees */
-    if (comptreeParams.relativeBurnin == YES)
+    if (chainParams.relativeBurnin == YES)
         {
-        numPackedTrees[0] = numTreesInLastBlock[0] - (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[0]);
-        numPackedTrees[1] = numTreesInLastBlock[1] - (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[1]);
+        numPackedTrees[0] = numTreesInLastBlock[0] - (int)(chainParams.burninFraction * numTreesInLastBlock[0]);
+        numPackedTrees[1] = numTreesInLastBlock[1] - (int)(chainParams.burninFraction * numTreesInLastBlock[1]);
         }
     else
         {
-        numPackedTrees[0] = numTreesInLastBlock[0] - comptreeParams.comptBurnIn;
-        numPackedTrees[1] = numTreesInLastBlock[1] - comptreeParams.comptBurnIn;
+        numPackedTrees[0] = numTreesInLastBlock[0] - chainParams.chainBurnIn;
+        numPackedTrees[1] = numTreesInLastBlock[1] - chainParams.chainBurnIn;
         }
 	if (memAllocs[ALLOC_PACKEDTREES] == YES)
 		{
@@ -1053,12 +1053,12 @@ int DoCompareTree (void)
         comptreeParams.comptFileName1,
         comptreeParams.comptFileName2);
 	
-    if (comptreeParams.relativeBurnin == YES)
+    if (chainParams.relativeBurnin == YES)
         MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% ('burninfrac=%1.2f') of sampled trees\n",
-            spacer, comptreeParams.comptBurnInFrac*100.0, comptreeParams.comptBurnInFrac);
+            spacer, chainParams.burninFraction*100.0, chainParams.burninFraction);
     else
         MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
-            spacer, comptreeParams.comptBurnIn, comptreeParams.comptBurnIn);
+            spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
 
     MrBayesPrint ("%s   Writing statistics to file %s\n", spacer, comptreeParams.comptOutfile);
 
@@ -1083,10 +1083,10 @@ int DoCompareTree (void)
 		}
 		
     /* Calculate burnin */
-    if (comptreeParams.relativeBurnin == YES)
-        comptreeParams.burnin = (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[0]);
+    if (chainParams.relativeBurnin == YES)
+        comptreeParams.burnin = (int)(chainParams.burninFraction * numTreesInLastBlock[0]);
     else
-        comptreeParams.burnin = comptreeParams.comptBurnIn;
+        comptreeParams.burnin = chainParams.chainBurnIn;
 
     /* Initialize sumtParams struct */
     numUniqueSplitsFound = numUniqueTreesFound = 0;
@@ -1153,10 +1153,10 @@ int DoCompareTree (void)
     strcpy (sumtParams.curFileName, comptreeParams.comptFileName2);
 
     /* Calculate burnin */
-    if (comptreeParams.relativeBurnin == YES)
-        comptreeParams.burnin = (int)(comptreeParams.comptBurnInFrac * numTreesInLastBlock[1]);
+    if (chainParams.relativeBurnin == YES)
+        comptreeParams.burnin = (int)(chainParams.burninFraction * numTreesInLastBlock[1]);
     else
-        comptreeParams.burnin = comptreeParams.comptBurnIn;
+        comptreeParams.burnin = chainParams.chainBurnIn;
 
     /* ... and parse the file */
 	expecting = Expecting(COMMAND);
@@ -1411,7 +1411,7 @@ int DoCompareTree (void)
 	maxX = maxY = -1000000000.0;
 	for (i=0; i<minNumTrees; i++)
 		{
-		xVal = (MrBFlt) (i + comptreeParams.comptBurnIn);
+		xVal = (MrBFlt) (i + chainParams.chainBurnIn);
 		yVal = dT1[i];
 		if (xVal < minX)
 			minX = xVal;
@@ -1429,7 +1429,7 @@ int DoCompareTree (void)
 		}
 	for (i=0; i<minNumTrees; i++)
 		{
-		xVal = (MrBFlt) (i + comptreeParams.comptBurnIn);
+		xVal = (MrBFlt) (i + chainParams.chainBurnIn);
 		yVal = dT1[i];
 		k = (int)(((xVal - minX) / (maxX - minX)) * screenWidth);
 		if (k >= screenWidth)
@@ -1775,7 +1775,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Relburnin (comptreeParams.relativeBurnin) ********************************************************/
+		/* set Relburnin (chainParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -1785,17 +1785,16 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
 					if (!strcmp(tempStr, "Yes"))
-						comptreeParams.relativeBurnin = YES;
+						chainParams.relativeBurnin = YES;
 					else
-						comptreeParams.relativeBurnin = NO;
+						chainParams.relativeBurnin = NO;
 					}
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
-				if (comptreeParams.relativeBurnin == YES)
+				if (chainParams.relativeBurnin == YES)
 					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
 				else
 					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
@@ -1807,7 +1806,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
-		/* set Burnin (comptreeParams.comptBurnIn) *******************************************************/
+		/* set Burnin (chainParams.chainBurnIn) *******************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -1815,14 +1814,14 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-				comptreeParams.comptBurnIn = tempI;
-				MrBayesPrint ("%s   Setting comparetree burnin to %ld\n", spacer, comptreeParams.comptBurnIn);
+				chainParams.chainBurnIn = tempI;
+				MrBayesPrint ("%s   Setting burnin to %ld\n", spacer, chainParams.chainBurnIn);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
 				return (ERROR);
 			}
-		/* set Burninfrac (comptreeParams.comptBurnInFrac) ************************************************************/
+		/* set Burninfrac (chainParams.burninFraction) ************************************************************/
 		else if (!strcmp(parmName, "Burninfrac"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -1833,22 +1832,19 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
-                comptreeParams.comptBurnInFrac = tempD;
-				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, comptreeParams.comptBurnInFrac);
+                chainParams.burninFraction = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, chainParams.burninFraction);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
 				{
-				//free(tempStr);
 				return (ERROR);
 				}
 			}
@@ -2017,12 +2013,12 @@ int DoSumt (void)
 		else if (sumtParams.numRuns > 2)
 			MrBayesPrint ("%s   Summarizing trees in files \"%s.run1.t\", \"%s.run2.t\",...,\"%s.run%d.t\"\n", spacer, fileName, fileName,fileName,sumtParams.numRuns);
 
-        if (sumtParams.relativeBurnin == YES)
+        if (chainParams.relativeBurnin == YES)
             MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of sampled trees\n",
-                spacer, sumtParams.sumtBurnInFraction*100.0, sumtParams.sumtBurnInFraction);
+                spacer, chainParams.burninFraction*100.0, chainParams.burninFraction);
         else
             MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d sampled trees\n",
-                spacer, sumtParams.sumtBurnIn, sumtParams.sumtBurnIn);
+                spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
         
 	    MrBayesPrint ("%s   Writing statistics to files %s.<parts|tstat|vstat|trprobs|con>\n", spacer, sumtParams.sumtOutfile);
 
@@ -2059,7 +2055,7 @@ int DoSumt (void)
             if (sumtParams.runId == 0)
 
             /* catch lack of sampled trees */
-            if (sumtParams.relativeBurnin == NO && sumtParams.sumtBurnIn > sumtFileInfo.numTreesInLastBlock)
+            if (chainParams.relativeBurnin == NO && chainParams.chainBurnIn > sumtFileInfo.numTreesInLastBlock)
 		        {
 		        MrBayesPrint ("%s   No trees are sampled as the burnin exceeds the number of trees in last block\n", spacer);
 		        MrBayesPrint ("%s   Try setting burnin to a number less than %d\n", spacer, sumtFileInfo.numTreesInLastBlock);
@@ -2081,10 +2077,10 @@ int DoSumt (void)
                 sumtParams.numTreesInLastBlock = sumtFileInfo.numTreesInLastBlock;
                 if (sumtParams.numRuns > 1)
 					MrBayesPrint ("%s   Expecting the same number of trees in the last tree block of all files\n", spacer);
-                if (sumtParams.relativeBurnin == NO)
-                    sumtParams.burnin = sumtParams.sumtBurnIn;
+                if (chainParams.relativeBurnin == NO)
+                    sumtParams.burnin = chainParams.chainBurnIn;
                 else
-                    sumtParams.burnin = (int) (sumtFileInfo.numTreesInLastBlock * sumtParams.sumtBurnInFraction);
+                    sumtParams.burnin = (int) (sumtFileInfo.numTreesInLastBlock * chainParams.burninFraction);
 				}
 			else
 				{
@@ -2946,7 +2942,7 @@ int DoSumtParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Relburnin (sumtParams.relativeBurnin) ********************************************************/
+		/* set Relburnin (chainParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -2956,16 +2952,16 @@ int DoSumtParm (char *parmName, char *tkn)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
 					if (!strcmp(tempStr, "Yes"))
-						sumtParams.relativeBurnin = YES;
+						chainParams.relativeBurnin = YES;
 					else
-						sumtParams.relativeBurnin = NO;
+						chainParams.relativeBurnin = NO;
 					}
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
 					return (ERROR);
 					}
-				if (sumtParams.relativeBurnin == YES)
+				if (chainParams.relativeBurnin == YES)
 					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
 				else
 					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
@@ -2976,7 +2972,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
-		/* set Burnin (sumtParams.sumtBurnIn) ***********************************************************/
+		/* set Burnin (chainParams.chainBurnIn) ***********************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -2984,8 +2980,8 @@ int DoSumtParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-                sumtParams.sumtBurnIn = tempI;
-				MrBayesPrint ("%s   Setting sumt burn-in to %d\n", spacer, sumtParams.sumtBurnIn);
+                chainParams.chainBurnIn = tempI;
+				MrBayesPrint ("%s   Setting urn-in to %d\n", spacer, chainParams.chainBurnIn);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -2993,7 +2989,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
-		/* set Burninfrac (sumtParams.sumtBurnInFraction) ************************************************************/
+		/* set Burninfrac (chainParams.burninFraction) ************************************************************/
 		else if (!strcmp(parmName, "Burninfrac"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -3011,8 +3007,8 @@ int DoSumtParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
 					return (ERROR);
 					}
-                sumtParams.sumtBurnInFraction = tempD;
-				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, sumtParams.sumtBurnInFraction);
+                chainParams.burninFraction = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, chainParams.burninFraction);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 

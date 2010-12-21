@@ -368,7 +368,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_CPPEVENTS				21
 #define P_BMBRANCHRATES			22
 #define P_IBRVAR                23
-#define P_IBRBRANCHRATES        24
+#define P_IBRBRANCHLENS         24
 #define P_CLOCKRATE             25
 #define P_SPECIESTREE           26
 #define P_GENETREERATE          27
@@ -723,7 +723,7 @@ typedef struct s_launch_struct
 #define IBRVAR_FIX                      129
 #define IBRVAR_EXP                      130
 #define IBRVAR_UNI                      131
-#define IBRBRANCHRATES					132
+#define IBRBRANCHLENS					132
 #define CLOCKRATE_FIX                   133
 #define CLOCKRATE_NORMAL                134
 #define CLOCKRATE_LOGNORMAL             135
@@ -1229,9 +1229,6 @@ typedef struct sumt
 	char		sumtFileName[100];     /* name of input file                            */
     char        sumtOutfile[100];      /* name of output file                           */
     char        curFileName[100];      /* name of file being processed                  */
-    int         relativeBurnin;        /* should burnin fraction be used?               */
-	int			sumtBurnIn;            /* absolute burn in setting                      */
-    MrBFlt      sumtBurnInFraction;    /* relative burn in fraction                     */
 	int			burnin;                /* actual burnin when parsing tree files         */
 	char		sumtConType[100];      /* consensus tree type                           */
 	int			calcTreeprobs;         /* should the individual tree probs be calculated*/
@@ -1275,9 +1272,6 @@ typedef struct comptree
 	char		comptFileName1[100];    /* name of first input file                      */
 	char		comptFileName2[100];    /* name of second input file                     */
 	char		comptOutfile[100];      /* name of output file                           */
-	int			relativeBurnin;         /* is relative burnin used ?                     */
-	int			comptBurnIn;            /* absolute burn in                              */
-	MrBFlt	    comptBurnInFrac;        /* relative burnin fraction                      */
 	int			burnin;                 /* actual burnin used when parsing tree files    */
     MrBFlt      minPartFreq;            /* use partitions with frequency >= minPartFreq  */
 	} Comptree;
@@ -1286,9 +1280,6 @@ typedef struct sump
 	{
 	char		sumpFileName[100];     /* name of input file                            */
 	char		sumpOutfile[100];      /* name of output file                            */
-    int         relativeBurnin;        /* should burnin fraction be used?               */
-	int			sumpBurnIn;            /* absolute burn in                              */
-    MrBFlt      sumpBurnInFraction;    /* relative burn in fraction                     */
 	int			plot;                  /* output plot (y/n)?                            */
 	int			table;                 /* output table (y/n)?                           */
 	int			margLike;              /* output marginal likelihood (y/n)?             */
@@ -1300,9 +1291,6 @@ typedef struct sump
 
 typedef struct plot
 	{
-	int			relativeBurnin;        /* is relative burnin used ?                     */
-	int			plotBurnIn;            /* absolute burnin                               */
-	MrBFlt	    plotBurnInFrac;        /* relative burnin fraction                      */
 	char		plotFileName[100];     /* name of input file                            */
 	char		parameter[100];        /* parameter(s) to be plotted                    */
 	char		match[100];            /* whether the match needs to be perfect         */

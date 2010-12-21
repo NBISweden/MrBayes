@@ -234,7 +234,7 @@ int DoPlotParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Relburnin (plotParams.relativeBurnin) ********************************************************/
+		/* set Relburnin (chainParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -244,17 +244,16 @@ int DoPlotParm (char *parmName, char *tkn)
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
 					if (!strcmp(tempStr, "Yes"))
-						plotParams.relativeBurnin = YES;
+						chainParams.relativeBurnin = YES;
 					else
-						plotParams.relativeBurnin = NO;
+						chainParams.relativeBurnin = NO;
 					}
 				else
 					{
 					MrBayesPrint ("%s   Invalid argument for Relburnin\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
-				if (plotParams.relativeBurnin == YES)
+				if (chainParams.relativeBurnin == YES)
 					MrBayesPrint ("%s   Using relative burnin (a fraction of samples discarded).\n", spacer);
 				else
 					MrBayesPrint ("%s   Using absolute burnin (a fixed number of samples discarded).\n", spacer);
@@ -262,11 +261,10 @@ int DoPlotParm (char *parmName, char *tkn)
 				}
 			else
 				{
-				//free (tempStr);
 				return (ERROR);
 				}
 			}
-		/* set Burnin (plotParams.plotBurnIn) *******************************************************/
+		/* set Burnin (chainParams.chainBurnIn) *******************************************************/
 		else if (!strcmp(parmName, "Burnin"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -274,14 +272,14 @@ int DoPlotParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-				plotParams.plotBurnIn = tempI;
-				MrBayesPrint ("%s   Setting plot burnin to %d\n", spacer, plotParams.plotBurnIn);
+				chainParams.chainBurnIn = tempI;
+				MrBayesPrint ("%s   Setting burnin to %d\n", spacer, chainParams.chainBurnIn);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
 				return (ERROR);
 			}
-		/* set Burninfrac (plotParams.plotBurnInFrac) ************************************************************/
+		/* set Burninfrac (chainParams.burninFraction) ************************************************************/
 		else if (!strcmp(parmName, "Burninfrac"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -292,22 +290,19 @@ int DoPlotParm (char *parmName, char *tkn)
 				if (tempD < 0.01)
 					{
 					MrBayesPrint ("%s   Burnin fraction too low (< 0.01)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
 				if (tempD > 0.50)
 					{
 					MrBayesPrint ("%s   Burnin fraction too high (> 0.50)\n", spacer);
-					//free(tempStr);
 					return (ERROR);
 					}
-                plotParams.plotBurnInFrac = tempD;
-				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, plotParams.plotBurnInFrac);
+                chainParams.burninFraction = tempD;
+				MrBayesPrint ("%s   Setting burnin fraction to %.2f\n", spacer, chainParams.burninFraction);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
 				{
-				//free(tempStr);
 				return (ERROR);
 				}
 			}
