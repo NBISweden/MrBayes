@@ -1181,7 +1181,7 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 
 {
     int             i, numGeneTrees, numUpperTriang;
-    double          extSprClockTuningParam, newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
+    double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
     Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
@@ -1189,9 +1189,6 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
-
-    // Get tuning param for extending SPR clock move
-    extSprClockTuningParam = mvp[0];
 
     // Get model params
 	mp = &modelParams[param->relParts[0]];
@@ -1229,7 +1226,7 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
     oldLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, oldSpeciesTree, chain);
 
     // Modify the picked gene tree using code from a regular MrBayes move
-    Move_ExtSPRClock(param, chain, seed, lnPriorRatio, lnProposalRatio, &extSprClockTuningParam);
+    Move_ExtSPRClock(param, chain, seed, lnPriorRatio, lnProposalRatio, mvp);
 
     // Update the min depth matrix
     GetMinDepthMatrix(geneTrees, numTopologies-1, depthMatrix);
@@ -1276,7 +1273,7 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 
 /**-----------------------------------------------------------------
 |
-|	Move_GeneTree2: Propose a new gene tree using ExtSPRClock
+|	Move_GeneTree2: Propose a new gene tree using NNIClock
 |
 |   @param param            The parameter to change
 |   @param chain            The chain number
@@ -1335,6 +1332,111 @@ int Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 
     // Modify the picked gene tree using code from a regular MrBayes move (no tuning parameter, so passing on mvp is OK)
     Move_NNIClock(param, chain, seed, lnPriorRatio, lnProposalRatio, mvp);
+
+    // Update the min depth matrix
+    GetMinDepthMatrix(geneTrees, numTopologies-1, depthMatrix);
+
+    // Copy the min depth matrix
+    for (i=0; i<numUpperTriang; i++)
+        modMinDepths[i] = depthMatrix[i];
+
+    // Modify the min depth matrix
+    ModifyDepthMatrix (forwardLambda, modMinDepths, seed);
+
+    // Get a new species tree
+    GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths);
+    
+    // Calculate joint probability of new gene trees and new species tree
+    newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
+
+    // Get backward lambda
+    GetMeanDist(newSpeciesTree, depthMatrix, &mean);
+    backwardLambda = 1.0 / mean;
+
+    // Get proposal probability of old species tree
+    backwardLnProposalProb = LnProposalProbSpeciesTree (oldSpeciesTree, oldMinDepths, backwardLambda);
+
+    // Get proposal probability of new species tree
+    forwardLnProposalProb = LnProposalProbSpeciesTree (newSpeciesTree, depthMatrix, forwardLambda);
+
+    // Update prior ratio taking species tree into account
+    (*lnPriorRatio) += (newLnProb - oldLnProb);
+        
+    // Update proposal ratio based on this move
+    (*lnProposalRatio) += (backwardLnProposalProb - forwardLnProposalProb);
+
+    // Free allocated memory
+    free (geneTrees);
+    free (oldMinDepths);
+
+    return (NO_ERROR);
+}
+
+
+
+
+
+/**-----------------------------------------------------------------
+|
+|	Move_GeneTree3: Propose a new gene tree using ParsSPRClock
+|
+|   @param param            The parameter to change
+|   @param chain            The chain number
+|   @param seed             Pointer to the seed of the random number gen.
+|   @param lnPriorRatio     Pointer to the log prior ratio (out)
+|   @param lnProposalRatio  Pointer to the log proposal (Hastings) ratio (out)
+|   @param mvp              Pointer to tuning parameter(s)
+------------------------------------------------------------------*/
+int Move_GeneTree3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+    int             i, numGeneTrees, numUpperTriang;
+    double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
+                    *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
+    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
+    ModelInfo       *m;
+    ModelParams     *mp;
+
+    // Calculate number of gene trees
+    numGeneTrees = numTopologies - 1;
+
+    // Get model params
+	mp = &modelParams[param->relParts[0]];
+	
+	// Get model settings
+    m = &modelSettings[param->relParts[0]];
+
+    // Get species tree (this trick is possible because we always copy tree params)
+    newSpeciesTree = GetTree (m->speciesTree, chain, state[chain]);
+    oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
+
+    // Get gene trees
+    geneTrees = (Tree **) calloc (2*numGeneTrees, sizeof(Tree *));
+    for (i=0; i<m->speciesTree->nSubParams; i++) {
+        geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
+    }
+
+    // Allocate space for depth matrix copy
+    numUpperTriang = numSpecies * (numSpecies - 1) / 2;
+    oldMinDepths   = (double *) calloc (2*numUpperTriang, sizeof(double));
+    modMinDepths   = oldMinDepths + numUpperTriang;
+
+    // Get min depth matrix for old gene trees
+    GetMinDepthMatrix(geneTrees, numTopologies-1, depthMatrix);
+
+    // Save a copy
+    for (i=0; i<numUpperTriang; i++)
+        oldMinDepths[i] = depthMatrix[i];
+
+    // Get forward lambda
+    GetMeanDist(oldSpeciesTree, depthMatrix, &mean);
+    forwardLambda = 1.0 / mean;
+
+    // Calculate joint probability of old gene trees and old species tree
+    oldLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, oldSpeciesTree, chain);
+
+    // Modify the picked gene tree using code from a regular MrBayes move (no tuning parameter here, so passing on mvp is OK)
+    Move_ParsSPRClock(param, chain, seed, lnPriorRatio, lnProposalRatio, mvp);
 
     // Update the min depth matrix
     GetMinDepthMatrix(geneTrees, numTopologies-1, depthMatrix);

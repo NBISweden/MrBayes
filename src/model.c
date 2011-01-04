@@ -18299,6 +18299,30 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
 
+	/* Move_GeneTree3 */
+	mt = &moveTypes[i++];
+	mt->name = "Parsimony-biased SPR for gene trees in species trees";
+	mt->shortName = "ParsSPRClockGS";
+    mt->subParams = YES;
+	mt->tuningName[0] = "parsimony warp factor";
+	mt->shortTuningName[0] = "warp";
+	mt->tuningName[1] = "reweighting probability";
+	mt->shortTuningName[1] = "r";
+	mt->applicableTo[0] = TOPOLOGY_SPECIESTREE;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_GeneTree3;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 2;
+	mt->tuningParam[0] = 0.1; /* warp */
+	mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
+	mt->minimum[0] = 0.01;
+	mt->maximum[0] = 10.0;
+	mt->minimum[1] = 0.0;
+	mt->maximum[1] = 0.30;
+	mt->parsimonyBased = YES;
+	mt->level = STANDARD_USER;
+
+
 	/* Move_Growth */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -18768,7 +18792,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
 	mt->nApplicable = 8;
 	mt->moveFxn = &Move_ParsSPRClock;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 2;
 	mt->tuningParam[0] = 0.1; /* warp */
 	mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
