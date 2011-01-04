@@ -9459,11 +9459,16 @@ void FreeChainMemory (void)
         if (m->condLikes)
             {
             for (j=0; j<m->numCondLikes; j++)
+                {
 #if defined (SSE_ENABLED)
-                AlignedSafeFree ((void **)(&m->condLikes[j]));
+                if (m->dataType != STANDARD)
+                    AlignedSafeFree ((void **)(&m->condLikes[j]));
+                else
+                    SafeFree ((void **)(&m->condLikes[j]));
 #else
 				SafeFree ((void **)(&m->condLikes[j]));
 #endif
+                }
             SafeFree (((void **)(&m->condLikes)));
             }
 
@@ -10802,7 +10807,7 @@ int InitChainCondLikes (void)
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == YES)
             {
-            if (InitBeagleInstance(m) != ERROR)
+            if (InitBeagleInstance(m, d) != ERROR)
                 useBeagle = YES;
             else
                 m->useBeagle = NO;
@@ -10874,7 +10879,7 @@ int InitChainCondLikes (void)
 #if defined (SSE_ENABLED)
                 /* allocate space with padding */
 #if defined (MS_VCPP_SSE)
-                m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt));
+                m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
 #else
                 ALIGNED_MALLOC((void **)(&m->scalers[i]), m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
 #endif
@@ -14170,7 +14175,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     ModelInfo       *m;
     Tree            *newTree, *oldTree;
     TreeNode        *p, *q;
-    int             i;
+    int             i, j;
 
     (*lnPriorRatio) = 0.0;
     
@@ -14243,7 +14248,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
         // Defer this calculation to the BEST code
         }
 
-    assert (*lnPriorRatio > -1E10);
+    assert (*lnPriorRatio > NEG_INFINITY);
 
     /* take care of calibrations */
     if (newTree->isCalibrated == YES)
@@ -14251,7 +14256,15 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
         for (i=0; i<newTree->nNodes-1; i++)
             {
             p = newTree->allDownPass[i];
-            q = oldTree->allDownPass[i];
+            if (p->isDated == NO)
+                continue;
+            for (j=0; j<oldTree->nNodes-1; j++)
+                {
+                q = oldTree->allDownPass[j];
+                if (p->lockID == q->lockID)
+                    break;
+                }
+            assert (j != oldTree->nNodes-1);
             if (p->isDated == YES && p->calibration->prior != fixed)
                 {
                 if (p->calibration->prior == offsetExponential)
@@ -14259,9 +14272,6 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
                 }
             }
         }
-
-    if (*lnPriorRatio < -1E10)
-        getchar();
 
     return (NO_ERROR);
 }
@@ -23757,10 +23767,6 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
-
-#if defined (DEBUG_CONSTRAINTS)
-	CheckConstraints (t);
-#endif
 
 	/* get model params and model info */
 	mp = &modelParams[param->relParts[0]];

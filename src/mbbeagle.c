@@ -75,7 +75,7 @@ extern int numLocalChains;
 |	InitBeagleInstance: create and initialize a beagle instance
 |
 -------------------------------------------------------------------------*/
-int InitBeagleInstance (ModelInfo *m)
+int InitBeagleInstance (ModelInfo *m, int division)
 {
     int                     i, j, k, c, s, *inStates, numPartAmbigTips;
     double                  *inPartials;
@@ -154,7 +154,7 @@ int InitBeagleInstance (ModelInfo *m)
         }
     else
         {
-		MrBayesPrint( "\n%s   Using BEAGLE resource %i:", spacer, details.resourceNumber);
+		MrBayesPrint( "\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
 #if defined (THREADS_ENABLED)
         MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
 #else

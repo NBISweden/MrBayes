@@ -30,59 +30,6 @@
 
 const char* const svnRevisionBestC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
-#if 0
-int         Constraint(SPTree *genetree, int numgenetree, SPTree *speciestree, Distance *constraint);
-double      CalNodeAge(int node, SPTree *tree);
-double 	    ChangeBrlen(SPTree *speciestree, int spnode, Tree *genetree, TreeNode *p);
-int         ChangeConstraint(Distance *dist, int nconstraints);
-int 	    CheckConstraint(SPTree *genetrees, int ngene, Distance *constraint, int nconstraints);
-long int    ClockTreeNodeDist(SPTree *clocktree, int ngene, Distance *dist);
-void        CopyParam(int chn);
-void        DelAllmissingspecies(int nummissing,int *missnode, SPTree *speciestree);
-void        DeleteaSpecies(int inode,SPTree *speciestree);
-void        FindDescendantTaxa(SPTree *tree, int inode, int *taxa, int *index);
-int         FindSpnodeDownGenenode(SPTree *speciestree, int spnode, TreeNode *p);
-int         FindspNodeBelow(SPTree *speciestree, int spnode, double dis_gene);
-int         FindaPosition(int nodenumber,int root,double currentdistance,double *position,SPTree *speciestree);  
-int         GetCoaltime(SPTree *genetree,SPTree *speciestree, CoalTime *coal);
-int         GetNcoal(int inode, CoalTime *coal, SPTree *genetree, SPTree *speciestree, CoalTime *coal_t,int *index);
-int         GetConstraints(double **distanceMatrix, Distance *constr);
-long int    GetMinDists(SPTree *geneTrees, int numGeneTrees, double **distanceMatrix);
-int         LnLikehood1Tree(SPTree *genetree, SPTree *speciestree, double *lnp);
-int         LnLikehood1Tree_invgamma(SPTree *genetree, SPTree *speciestree, double *a, double *b);
-int         Move_SPSpeciation (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-int         Move_SPExtinction (SParam *param, int chain, long *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-int         MaximumTree(Distance *dist, SPTree *speciestree, int nconstraints);
-double      NodeDistance(SPTree *tree, int inode, int jnode);
-long int    OneClockTreeNodeDist(SPTree *clocktree, Distance *dist);
-double      PopNodeDistance(int inode, int jnode, SPTree *tree);
-int 		populationMutation (Tree *genetree, SPTree *speciestree, MrBFlt genemu);
-MrBFlt 	    Prob_sptree(Distance *tau,int ntime);
-int         poisson(double x);
-void        PrintInf(FILE *fp);
-void        quick_struct(Distance *item,int count);
-void        qs_struct(Distance *item,int left,int right);
-int	        ReadaTree (FILE *fTree,SPTree *tree);
-void        ReadGeneTree(FILE *fTree);
-int         StartSptree(SPTree *speciestree, int numchange);
-double 	    SPLnP1 (double t, double l, double m, double r);
-double 	    SPLnVt (double t, double l, double m, double r);
-int         SPLogLike_invgamma(SPTree *genetree, SPTree *speciestree, double *lnl);
-int         SPPickProposal (void);
-void        SPPreparePrintFiles (void);
-int			SPSaveSprintf(char **target, int *targetLen, char *fmt, ...);
-void        SPMrBayesPrint (char *format, ...);
-int         SPLogLike(SPTree *genetree, SPTree *speciestree, double *lnl);
-int         SPTreeConstraint(Distance *minimumdistance, Distance *distance, long int nconstraints, int nspecies);
-void        SPWriteTreeToFile (SPTree *tree, int inode, int showBrlens, int showTheta, int showMu, int isRooted);
-void        SPPrintToScreen (int curGen, time_t endingT, time_t startingT);
-int         SPLogPrior(SPTree *speciestree, double *lnprior);
-double 	    Toclocktree(SPTree *t, int node);
-void        ToSingleGenetree(Tree *file,int i,MrBFlt GeneMu);
-void        ToGenetree(Tree *file[], int *updatedtreeid, int nfile, double *GeneMu);
-double 	    TreeL(Tree *t);
-#endif
-
 /****************************** Local functions converted by Fredrik from BEST code *****************************/
 int         CompareDepths (const void *x, const void *y);
 int         CompareDoubles (const void *x, const void *y);
@@ -94,9 +41,9 @@ int         GetMeanDist (Tree *speciesTree, double *depthMatrix, double *mean);
 int         GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix);
 void        LineagesIn (TreeNode* geneTreeNode, TreeNode* speciesTreeNode);
 double      LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr);
+double      LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate);
 void        MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree);
 int         ModifyDepthMatrix (double expRate, double *depthMatrix, SafeLong *seed);
-double      LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate);
 
 
 /* Global BEST variables */
