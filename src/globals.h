@@ -1,4 +1,5 @@
 /* global variables */
+extern int				abortMove;					            /* flag determining whether to abort move        */
 extern int				*activeParams[NUM_LINKED];              /* a table holding the parameter status          */
 extern int              *activeParts;                           /* partitions changes should apply to            */
 extern int				autoClose;                              /* autoclose                                     */
@@ -43,6 +44,7 @@ extern int  			isMixed;			                    /* flags whether dataset is mixed 
 extern int				inMrbayesBlock;                         /* flag for whether we are in a mrbayes block    */
 extern int				isTaxsetDef;							/* is a taxon set defined                        */
 extern int				isTranslateDef;							/* is a translation block defined                */
+extern int				isTranslateDiff;					    /* is translate different from current taxaset?  */
 extern int              *linkTable[NUM_LINKED];                 /* how parameters are linked across parts        */
 extern int				localOutGroup;				            /* outgroup for non-excluded taxa                */
 extern char				**localTaxonNames;						/* points to names of non-excluded taxa          */
@@ -112,6 +114,7 @@ extern int				readWord;							    /* should we read a word next?                
 extern ReassembleInfo	reassembleParams;		                /* holds parameters for reassemble command       */
 extern int				replaceLogFile;                         /* should logfile be replace/appended to         */
 extern SafeLong			runIDSeed;                              /* seed used only for generating run ID [stamp]  */
+extern SafeLong			safeLongWithAllBitsSet;                 /* a SafeLong with all bits set, for bit ops     */
 extern int 				scientific;                             /* use scientific format for samples ?           */
 extern ShowmovesParams	showmovesParams;					    /* holds parameters for Showmoves command        */
 extern char				spacer[10];                             /* holds blanks for printing indentations        */

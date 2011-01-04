@@ -94,12 +94,11 @@ int	      PrintCompMatrix (void);
 int	      PrintMatrix (void);
 int       ProcessStdChars (SafeLong *seed);
 int		  SetModelParams (void);
+int       SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt);
 int       SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
 int		  SetUpLinkTable (void);
 int		  ShowMoves (int used);
 int		  ShowParameters (int showStartVals, int showMoves, int showAllAvailable);
-void	  TouchAllNormalParams (void);
-void	  TouchAllTreeParams (void);
 int 	  UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *evolLength, TreeNode *p, MrBFlt baseRate);
 
 
@@ -159,7 +158,7 @@ int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
             foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar,
             tempNumStates, isNegative;
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
-char		colonPr[100], clockPr[20];
+char		colonPr[100], clockPr[30];
 
 /* other local variables (this file) */
 MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition      */
@@ -1113,7 +1112,6 @@ int ChangeNumChains (int from, int to)
 		return (ERROR);
 
     /* then fill all params */
-	TouchAllNormalParams ();
 	FillNormalParams (&globalSeed, 0, numGlobalChains);
 	
 	/* finally overwrite with old values if present */
@@ -1238,7 +1236,6 @@ int ChangeNumChains (int from, int to)
             for (chn=from; chn<to; chn++)
                 {
                 toIndex = run*to + chn;
-                TouchAllTreeParams ();
                 FillTreeParams (&globalSeed, toIndex, toIndex+1);
                 }
             }
@@ -1426,10 +1423,7 @@ int ChangeNumRuns (int from, int to)
 
     /* fill new chains paramiters with appropriate values */
     if (to > from)
-		{
-		TouchAllNormalParams ();
 		FillNormalParams (&globalSeed, from*nChains, to*nChains);
-		}
 
 	/* now fill in the tree parameters */
     for (i=0; i<numParams; i++)
@@ -1449,7 +1443,6 @@ int ChangeNumRuns (int from, int to)
             p->tree += (mcmcTree - oldMcmcTree);
 		}
 
-	TouchAllTreeParams ();
 	FillTreeParams (&globalSeed, from*nChains, to*nChains);
 
 
@@ -1728,8 +1721,9 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 -------------------------------------------------------------*/
 int CheckModel (void)
 {
-    int     i, nGenetrees, answer;
-    Tree    *t;
+    int         i, j, k, answer;
+    Tree        *t;
+    TreeNode    *p;
     
     /* there should only be one calibrated tree */
     for (i=0; i<numTrees; i++)
@@ -1764,21 +1758,95 @@ int CheckModel (void)
             }
         }
 
-    /* check consistency of best model */
-    t = GetTreeFromIndex(0,0,0);
-    if (!strcmp(modelParams[t->relParts[0]].topologyPr,"Speciestree"))
+    /* check coalescence model */
+    for (i=0; i<numTrees; i++)
         {
-        nGenetrees = 1;
-        for (i=1; i<numTrees; i++)
+        t = GetTreeFromIndex(i, 0, 0);
+        if ((!strcmp(modelParams[t->relParts[0]].clockPr,"Coalescence") || !strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence"))
+            && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
+            {
+            MrBayesPrint("%s   WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.\n", spacer);
+            MrBayesPrint("%s      This is likely to be incorrect unless you have set the population size prior\n", spacer);
+            MrBayesPrint("%s      ('prset popsizepr') to reflect an appropriate prior on theta. \n", spacer);
+
+            if (noWarn == NO)
+                {
+                answer = WantTo("Do you want to continue with the run regardless");
+                if (answer == YES)
+                    {
+                    MrBayesPrint("%s   Continuing with the run...\n\n", spacer);
+                    }
+                else
+                    {
+                    MrBayesPrint("%s   Stopping the run...\n\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            }
+        }
+
+
+    /* Check consistency of best model. First we guarantee that if one topology has
+       a species tree prior, then all topologies have the same prior. Then we make
+       sure that all clock trees have a coalescence prior. */
+
+    j = 0;
+    for (i=0; i<numCurrentDivisions; i++)
+        {
+        if (!strcmp(modelParams[i].topologyPr, "Speciestree"))
+            j++;
+        }
+
+    if (j > 0)
+        {
+        if (j != numCurrentDivisions)
+            {
+            MrBayesPrint("%s   ERROR: If one gene tree has a speciestree prior then all\n", spacer);
+            MrBayesPrint("%s          gene trees must have the same prior.\n", spacer);
+            return (ERROR);
+            }
+        for (i=0; i<numTrees-1; i++)
             {
             t = GetTreeFromIndex(i,0,0);
-            if (!strcmp(modelParams[t->relParts[0]].topologyPr,"Speciestree"))
-                nGenetrees++;
+            if (strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence") != 0)
+                {
+                MrBayesPrint("%s   ERROR: All gene trees must have a speciestreecoalescence prior\n", spacer);
+                MrBayesPrint("%s          if they fold into a species tree.\n", spacer);
+                return (ERROR);
+                }
+            if (t->isCalibrated == YES)
+                {
+                for (k=0; k<t->nNodes-1; k++)
+                    {
+                    p = t->allDownPass[k];
+                    if (p->calibration != NULL)
+                        {
+                        MrBayesPrint("%s   ERROR: Gene trees cannot be individually calibrated\n", spacer);
+                        MrBayesPrint("%s          if they fold into a species tree.\n", spacer);
+                        return (ERROR);
+                        }
+                    }
+                }
             }
-        if (nGenetrees != numTrees)
+        }
+    else
+        {
+        for (i=0; i<numTrees; i++)
             {
-            MrBayesPrint("%s   ERROR: All topologies need to have a speciestree prior\n", spacer);
-            return (ERROR);
+            t = GetTreeFromIndex(i,0,0);
+            if (t->isCalibrated == YES && strcmp(modelParams[t->relParts[0]].clockPr, "Uniform") != 0)
+                {
+                for (k=0; k<t->nNodes-1; k++)
+                    {
+                    p = t->allDownPass[k];
+                    if (p->calibration != NULL)
+                        {
+                        MrBayesPrint("%s   ERROR: MrBayes does not yet suppport calibration of tips or\n", spacer);
+                        MrBayesPrint("%s          interior nodes under the %s clock prior.\n", spacer, modelParams[t->relParts[0]].clockPr);
+                        return (ERROR);
+                        }
+                    }
+                }
             }
         }
 
@@ -2112,11 +2180,16 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 
 {
 
-	int	i, j, st, isCalibrated, isClock;
+	int     i, j, st, isCalibrated, isClock, nTaxa;
 	Tree	*tree, **treeHandle;
 	Model	*mp;
 	
 	mp = &modelParams[p->relParts[0]];
+
+    if (p->paramType == P_SPECIESTREE)
+        nTaxa = numSpecies;
+    else
+        nTaxa = numLocalTaxa;
 
 	/* figure out whether the trees are clock */
 	if (!strcmp(mp->brlensPr,"Clock"))
@@ -2138,7 +2211,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 		treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
 		if (*treeHandle)
             free(*treeHandle);
-		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
+		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
@@ -2146,7 +2219,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 		treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
         if (*treeHandle)
             free(*treeHandle);
-		if ((*treeHandle = AllocateTree (numLocalTaxa)) == NULL)
+		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
 			return (ERROR);
@@ -2174,7 +2247,12 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
             tree->isRooted = isRooted;
 			tree->isClock = isClock;
 			tree->isCalibrated = isCalibrated;
-            if (tree->isRooted == YES)
+            if (p->paramType == P_SPECIESTREE)
+                {
+                tree->nNodes = 2*numSpecies;
+                tree->nIntNodes = numSpecies - 1;
+                }
+            else if (tree->isRooted == YES)
                 {
                 tree->nNodes = 2*numLocalTaxa;
                 tree->nIntNodes = numLocalTaxa - 1;
@@ -6466,6 +6544,20 @@ int DoPrsetParm (char *parmName, char *tkn)
 								}
 						    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 							}
+						else if (IsSame ("Speciestreecoalescence", tkn) == SAME || IsSame ("Speciestreecoalescence", tkn) == CONSISTENT_WITH)
+							{
+					        strcpy (clockPr, "Speciestreecoalescence");
+							for (i=0; i<numCurrentDivisions; i++)
+								{
+								if (activeParts[i] == YES || nApplied == 0)
+									strcpy(modelParams[i].clockPr, "Speciestreecoalescence");
+								if (nApplied == 0 && numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Brlenspr to Clock:Speciestreecoalescence\n", spacer);
+								else
+									MrBayesPrint ("%s   Setting Brlenspr to Clock:Speciestreecoalescence for partition %d\n", spacer, i+1);
+								}
+						    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+							}
 						else if (IsSame ("Fixed", tkn) == SAME || IsSame ("Fixed", tkn) == CONSISTENT_WITH)
 							{
 					        strcpy (clockPr, "Fixed");
@@ -6949,9 +7041,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 							else
 								{
 								if (nApplied == 0 || numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
+									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
 								else
-									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
+									MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
@@ -6965,9 +7057,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 							else
 								{
 								if (nApplied == 0 || numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1]);
+									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1]);
 								else
-									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1], i+1);
+									MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
@@ -6982,9 +7074,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 							modelParams[i].clockRateExp = tempD;
 							numVars[i]++;
 							if (nApplied == 0 || numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].clockRateExp);
+								MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.6lf)\n", spacer, modelParams[i].clockRateExp);
 							else
-								MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateExp, i+1);
+								MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
 						else if (!strcmp(modelParams[i].clockRatePr,"Gamma"))
@@ -7005,9 +7097,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 							else
 								{
 								if (nApplied == 0 || numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1]);
+									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1]);
 								else
-									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1], i+1);
+									MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1], i+1);
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
@@ -7022,9 +7114,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 							modelParams[i].clockRateFix = tempD;
 							numVars[i]++;
 							if (nApplied == 0 || numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.2lf)\n", spacer, modelParams[i].clockRateFix);
+								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.6lf)\n", spacer, modelParams[i].clockRateFix);
 							else
-								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateFix, i+1);
+								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateFix, i+1);
 							expecting  = Expecting(RIGHTPAR);
 							}
 						}
@@ -7082,12 +7174,19 @@ int DoPrsetParm (char *parmName, char *tkn)
 							sscanf (tkn, "%lf", &tempD);
 							modelParams[i].popSizeUni[numVars[i]++] = tempD;
 							if (numVars[i] == 1)
+                                {
+							    if (tempD <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Lower value for Uniform must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
 								expecting  = Expecting(COMMA);
+                                }
 							else
 								{
 								if (modelParams[i].popSizeUni[0] >= modelParams[i].popSizeUni[1])
 									{
-									MrBayesPrint ("%s   Lower value for uniform should be greater than upper value\n", spacer);
+									MrBayesPrint ("%s   Lower value for Uniform should be greater than upper value\n", spacer);
 									return (ERROR);
 									}
 								if (nApplied == 0 && numCurrentDivisions == 1)
@@ -7097,15 +7196,81 @@ int DoPrsetParm (char *parmName, char *tkn)
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
-						else if (!strcmp(modelParams[i].popSizePr,"Exponential"))
+						else if (!strcmp(modelParams[i].popSizePr,"Lognormal"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].popSizeExp = tempD;
-							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Popsizepr to Exponential(%1.2lf)\n", spacer, modelParams[i].popSizeExp);
+                            modelParams[i].popSizeLognormal[numVars[i]++] = tempD;
+							if (numVars[i] == 1)
+                                {
+								expecting  = Expecting(COMMA);
+                                }
 							else
-								MrBayesPrint ("%s   Setting Popsizepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeExp, i+1);
-							expecting  = Expecting(RIGHTPAR);
+								{
+								if (modelParams[i].popSizeLognormal[1] <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Standard deviation of Lognormal must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
+								if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Popsizepr to Lognormal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].popSizeLognormal[0], modelParams[i].popSizeLognormal[1]);
+								else
+									MrBayesPrint ("%s   Setting Popsizepr to Lognormal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeLognormal[0], modelParams[i].popSizeLognormal[1], i+1);
+								expecting  = Expecting(RIGHTPAR);
+								}
+							}
+						else if (!strcmp(modelParams[i].popSizePr,"Normal"))
+							{
+							sscanf (tkn, "%lf", &tempD);
+                            modelParams[i].popSizeNormal[numVars[i]++] = tempD;
+							if (numVars[i] == 1)
+                                {
+								if (modelParams[i].popSizeNormal[0] <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Mean of Truncated Normal must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
+								expecting  = Expecting(COMMA);
+                                }
+							else
+								{
+								if (modelParams[i].popSizeNormal[1] <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Standard deviation of Truncated Normal must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
+								if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Popsizepr to Truncated Normal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].popSizeNormal[0], modelParams[i].popSizeNormal[1]);
+								else
+									MrBayesPrint ("%s   Setting Popsizepr to Truncated Normal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeNormal[0], modelParams[i].popSizeNormal[1], i+1);
+								expecting  = Expecting(RIGHTPAR);
+								}
+							}
+						else if (!strcmp(modelParams[i].popSizePr,"Gamma"))
+							{
+							sscanf (tkn, "%lf", &tempD);
+                            modelParams[i].popSizeLognormal[numVars[i]++] = tempD;
+							if (numVars[i] == 1)
+                                {
+								if (modelParams[i].popSizeGamma[0] <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Shape (alpha) of Gamma must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
+								expecting  = Expecting(COMMA);
+                                }
+							else
+								{
+								if (modelParams[i].popSizeGamma[1] <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Rate (beta) of Gamma must be a positive number\n", spacer);
+                                    return (ERROR);
+                                    }
+								if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Popsizepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].popSizeGamma[0], modelParams[i].popSizeGamma[1]);
+								else
+									MrBayesPrint ("%s   Setting Popsizepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeGamma[0], modelParams[i].popSizeGamma[1], i+1);
+								expecting  = Expecting(RIGHTPAR);
+								}
 							}
 						else if (!strcmp(modelParams[i].popSizePr,"Fixed"))
 							{
@@ -7136,8 +7301,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Popsizepr (popSizePr) **************************************************************/
-		else if (!strcmp(parmName, "Popsizepr"))
+		/* set Popvarpr (popVarPr) **************************************************************/
+		else if (!strcmp(parmName, "Popvarpr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -7156,7 +7321,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     else for (i=0; i<numCurrentDivisions; i++)
                         {
                         if (activeParts[i] == YES)
-    				        MrBayesPrint ("%s   Setting Popsizepr to %s for partition %d\n", spacer, modelParams[i].popVarPr, i+1);
+    				        MrBayesPrint ("%s   Setting Popvarpr to %s for partition %d\n", spacer, modelParams[i].popVarPr, i+1);
                         }
 			        expecting  = Expecting(PARAMETER) | Expecting(SEMICOLON);
 					}
@@ -8633,9 +8798,11 @@ int DoReportParm (char *parmName, char *tkn)
 int DoStartvals (void)
 
 {
+    int     i;
 
-	MrBayesPrint ("%s   Successfully set starting values\n", spacer);
-	
+    MrBayesPrint ("%s   Successfully set starting values\n", spacer);
+    for (i=0; i<numParams; i++)
+        assert (IsTreeConsistent(&params[i], 0, 0) == YES);
 	return (NO_ERROR);
 	
 }
@@ -8648,7 +8815,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 
 {
 
-	int                 i, j, k, nMatches, tempInt, treeIndex;
+	int                 i, j, k, nMatches, tempInt, treeIndex, chainId;
 	char		        temp[100];
 	MrBFlt				tempFloat, *value, *subValue;
 	Tree				*theTree, *usrTree;
@@ -8731,16 +8898,56 @@ int DoStartvalsParm (char *parmName, char *tkn)
 					{
 					if (chainIndex != -1 && j != chainIndex)
 						continue;
-					theTree = GetTree (param, i*chainParams.numChains+j, 0);
-					usrTree = GetTree (param, i*chainParams.numChains+j, 1); /* use as scratch space */
-					CopyToTreeFromTree (usrTree, theTree);
-                    thePolyTree = AllocatePolyTree (numTaxa);
-					CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
-					PrunePolyTree (thePolyTree);
-                    ResetTipIndices(thePolyTree);
-					RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
-					CopyToTreeFromPolyTree (usrTree, thePolyTree);
-					FreePolyTree (thePolyTree);
+                    chainId = i*chainParams.numChains + j;
+                    if (param->paramType != P_POPSIZE)
+                        {
+                        if (param->paramType == P_TOPOLOGY || param->paramType == P_BRLENS || param->paramType == P_SPECIESTREE)
+                            {
+                            /* topology or brlens or speciestree params */
+					        theTree = GetTree (param, chainId, 0);
+					        usrTree = GetTree (param, chainId, 1); /* use as scratch space */
+                            }
+                        else
+                            {
+                            /* relaxed clock params */
+                            theTree = GetTree (modelSettings[param->relParts[0]].brlens, chainId, 0);
+                            usrTree = GetTree (modelSettings[param->relParts[0]].brlens, chainId, 1);
+                            }
+					    CopyToTreeFromTree (usrTree, theTree);
+                        if (param->paramType == P_SPECIESTREE)
+                            thePolyTree = AllocatePolyTree(numSpecies);
+                        else
+                            thePolyTree = AllocatePolyTree (numTaxa);
+					    CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
+					    if (param->paramType == P_SPECIESTREE)
+                            {
+                            ResetIntNodeIndices(thePolyTree);
+                            }
+                        else
+                            {
+                            PrunePolyTree (thePolyTree);
+                            ResetTipIndices(thePolyTree);
+                            }
+					    RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
+                        if (param->paramType == P_SPECIESTREE)
+                            CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
+					    else
+                            CopyToTreeFromPolyTree (usrTree, thePolyTree);
+					    FreePolyTree (thePolyTree);
+                        }
+                    else
+                        {
+                        /* param->paramType == P_POPSIZE */
+                        theTree = GetTree (modelSettings[param->relParts[0]].speciesTree, chainId, 0);
+                        usrTree = GetTree (modelSettings[param->relParts[0]].speciesTree, chainId, 1);
+					    CopyToTreeFromTree (usrTree, theTree);
+                        thePolyTree = AllocatePolyTree(numSpecies);
+					    CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
+                        ResetIntNodeIndices(thePolyTree);
+					    RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
+                        CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
+					    FreePolyTree (thePolyTree);
+                        }
 					if (param->paramType == P_TOPOLOGY)
 						{
 						if (theTree->checkConstraints == YES && CheckSetConstraints (usrTree) == ERROR)
@@ -8758,7 +8965,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Could not set the constraints for topology parameter '%s'\n", spacer, param->name);
 							return (ERROR);
 							}
-                        FillTopologySubParams (param, j, 0, &globalSeed);
+                        FillTopologySubParams (param, chainId, 0, &globalSeed);
+                        if (param->paramId == TOPOLOGY_SPECIESTREE)
+                            FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
 					else if (param->paramType == P_BRLENS)
 						{
@@ -8783,6 +8993,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Topology of user tree '%s' wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
                         if (ResetBrlensFromTree (theTree, usrTree) == ERROR)
 							{
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
@@ -8799,19 +9010,23 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Problem setting calibrated tree parameters\n", spacer);
 							return (ERROR);
 							}
-						FillBrlensSubParams (param, j, 0);
+						FillBrlensSubParams (param, chainId, 0);
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        if (param->paramId == BRLENS_CLOCK_SPCOAL)
+                            FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
 					else if (param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHLENS)
 						{
 						if (IsClockSatisfied (usrTree, 0.0001) == NO)
 							{
-							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex], param->name);
+							MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex], param->name);
 							ShowNodes(usrTree->root,0,YES);
 							return (ERROR);
 							}
                         if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.0001) == NO)
 							{
-							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
+							MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
 						if (AreTopologiesSame (theTree, usrTree) == NO)
@@ -8819,13 +9034,43 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Topology of user tree '%s' is wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
-						if (SetRelaxedClockParam (param, j, 0, userTree[treeIndex]) == ERROR)
+						if (SetRelaxedClockParam (param, chainId, 0, userTree[treeIndex]) == ERROR)
 							{
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
 							return (ERROR);
 							}
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
+                    else if (param->paramType == P_POPSIZE)
+                        {
+                        if (AreTopologiesSame (theTree, usrTree) == NO)
+							{
+							MrBayesPrint ("%s   Topology of user tree '%s' is wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
+							return (ERROR);
+							}
+						if (SetPopSizeParam (param, chainId, 0, userTree[treeIndex]) == ERROR)
+							{
+							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
+							return (ERROR);
+							}
+                        }
+                    else if (param->paramType == P_SPECIESTREE)
+                        {
+                        if (IsSpeciesTreeConsistent (usrTree, chainId) == NO)
+							{
+							MrBayesPrint ("%s   User-specified species tree '%s' is inconsistent with gene trees\n", spacer, userTree[treeIndex]->name);
+							return (ERROR);
+							}
+						if (CopyToTreeFromTree (theTree, usrTree) == ERROR)
+							{
+							MrBayesPrint ("%s   Could not set the species tree parameter '%s'\n", spacer, param->name);
+							return (ERROR);
+							}
+                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        }
 					}
+                for (j=0; j<numParams; j++)
+                    assert (IsTreeConsistent(&params[j],0,0) == YES);
 				}
 			expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 			}
@@ -9108,12 +9353,16 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		param = &params[j];
 		if (param->printParam == NO && !(param->paramType == P_TOPOLOGY && strcmp(modelParams[param->relParts[0]].topologyPr,"Fixed")!=0)
                                     && !param->paramType == P_CPPEVENTS
-                                    && !param->paramType == P_BMBRANCHRATES)
+                                    && !param->paramType == P_BMBRANCHRATES
+                                    && !param->paramType == P_IBRBRANCHLENS
+                                    && !(param->paramType == P_POPSIZE && param->nValues > 1))
 			{
 			MrBayesPrint ("%s   The parameter '%s' is fixed so the starting value cannot be set\n", spacer, param->name);
 			return (ERROR);
 			}
-		if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS || param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHLENS)
+		if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS ||
+            param->paramType == P_BMBRANCHRATES || param->paramType == P_IBRBRANCHLENS || param->paramType == P_SPECIESTREE ||
+            (param->paramType == P_POPSIZE && param->nValues > 1))
 			{
 			/* all these parameters are set from a tree */
 			expecting = Expecting (ALPHA);
@@ -9361,7 +9610,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 	int			i, j, k, chn, tempInt;
 	MrBFlt		*bs, *value, *subValue, scaler;
-
+    Tree        *tree;
 	Param		*p;
 	ModelInfo	*m;
 	ModelParams	*mp;
@@ -9733,6 +9982,26 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 						}
 					}
 				}
+			else if (p->paramType == P_GENETREERATE)
+				{
+				/* Fill in division rates *****************************************************************************/
+				for (j=0; j<p->nValues; j++)
+					{
+					value[j] = 1.0;
+
+				    /* Dirichlet parameters fixed to 1.0 for now */
+				    subValue[p->nValues + j] = 1.0;
+
+                    /* Get number of uncompressed chars from tree */
+                    tree = GetTreeFromIndex(j, 0, 0);
+                    subValue[j] = 0.0;
+					for (i=0; i<tree->nRelParts; i++)
+						{
+						/* num uncompressed chars */
+						subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
+						}
+					}
+				}
 			else if (p->paramType == P_SPECRATE)
 				{
 				/* Fill in speciation rates *****************************************************************************/
@@ -9752,14 +10021,19 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 			else if (p->paramType == P_POPSIZE)
 				{
 				/* Fill in population size ****************************************************************************************/
-				if (p->paramId == POPSIZE_UNI)
-					value[0] = RandomNumber(seed) * (mp->popSizeUni[1] - mp->popSizeUni[0]) + mp->popSizeUni[0];
-
-				else if (p->paramId == POPSIZE_EXP)
-					value[0] =   (-(1.0/mp->popSizeExp) * log(1.0 - RandomNumber(seed)));
-
-				else if (p->paramId == POPSIZE_FIX)
-					value[0] = mp->popSizeFix;
+				for (j=0; j<p->nValues; j++)
+                    {
+                    if (p->paramId == POPSIZE_UNI)
+    					value[j] = RandomNumber(seed) * (mp->popSizeUni[1] - mp->popSizeUni[0]) + mp->popSizeUni[0];
+    				else if (p->paramId == POPSIZE_LOGNORMAL)
+                        value[j] =   exp(mp->popSizeLognormal[0]);
+    				else if (p->paramId == POPSIZE_NORMAL)
+                        value[j] =   mp->popSizeNormal[0];
+    				else if (p->paramId == POPSIZE_GAMMA)
+                        value[j] =   mp->popSizeGamma[0] / mp->popSizeGamma[1];
+				    else if (p->paramId == POPSIZE_FIX)
+					    value[j] = mp->popSizeFix;
+                    }
 				}
 			else if (p->paramType == P_AAMODEL)
 				{
@@ -9908,7 +10182,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
                     value[0] = mp->clockRateGamma[0]/mp->clockRateGamma[1];
 				}
 			}	/* next param */
-		}	/* next chain */
+        }	/* next chain */
 
 	return NO_ERROR;
 }
@@ -10126,7 +10400,9 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 /*------------------------------------------------------------------
 |
 |	FillTreeParams: Fill in trees and branch lengths
-|					Note: should be run after FillNormalParams becouse clockrate needs to be set if calibrated tree needs to be filled
+|					Note: should be run after FillNormalParams becouse
+|                   clockrate needs to be set if calibrated tree needs
+|                   to be filled.
 |
 ------------------------------------------------------------------*/
 int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
@@ -10144,9 +10420,9 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 		for (k=0; k<numParams; k++)
 			{
 			p = &params[k];
-			if (p->paramType == P_TOPOLOGY && p->fill == YES)
+			if (p->paramType == P_TOPOLOGY)
 				{
-                assert (p->nSubParams == 1);
+                // assert (p->nSubParams == 1); // this assert seems to be wrong -- FR 2010-12-25
 				q = p->subParams[0];
 				tree = GetTree (q, chn, 0);
 				if (tree->isRooted == YES)
@@ -10234,14 +10510,15 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 					return (ERROR);
 				if (FillTopologySubParams(p, chn, 0, seed)== ERROR)
 					return (ERROR);
-				if (chn == toChain-1)	/* last chain to fill */
-					p->fill = NO;
 				}
 			}
 		}
 
-    if (FillSpeciesTreeParams(seed, fromChain, toChain) == ERROR)
-        return (ERROR);
+    if (numTopologies > 1 && !strcmp(modelParams[0].topologyPr,"Speciestree"))
+        {
+        if (FillSpeciesTreeParams(seed, fromChain, toChain) == ERROR)
+            return (ERROR);
+        }
 
 	return (NO_ERROR);
 }
@@ -11925,7 +12202,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						if (AreDoublesEqual (modelParams[part1].sampleProb, modelParams[part2].sampleProb, 0.00001) == NO)
                             isSame = NO;
                         }
-					else if (!strcmp(modelParams[part1].clockPr, "Coalescence"))
+					else if (!strcmp(modelParams[part1].clockPr, "Coalescence") || !strcmp(modelParams[part1].clockPr, "Speciestreecoalescence"))
 						{
 						if (!strcmp(modelParams[part1].popSizePr,"Uniform") && !strcmp(modelParams[part2].popSizePr,"Uniform"))
 							{
@@ -11934,9 +12211,25 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 							if (AreDoublesEqual (modelParams[part1].popSizeUni[1], modelParams[part2].popSizeUni[1], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
-						else if (!strcmp(modelParams[part1].popSizePr,"Exponential") && !strcmp(modelParams[part2].popSizePr,"Exponential"))
+						else if (!strcmp(modelParams[part1].popSizePr,"Lognormal") && !strcmp(modelParams[part2].popSizePr,"Lognormal"))
 							{
-							if (AreDoublesEqual (modelParams[part1].popSizeExp, modelParams[part2].popSizeExp, (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].popSizeLognormal[0], modelParams[part2].popSizeLognormal[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].popSizeLognormal[1], modelParams[part2].popSizeLognormal[1], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							}
+						else if (!strcmp(modelParams[part1].popSizePr,"Normal") && !strcmp(modelParams[part2].popSizePr,"Normal"))
+							{
+							if (AreDoublesEqual (modelParams[part1].popSizeNormal[0], modelParams[part2].popSizeNormal[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].popSizeNormal[1], modelParams[part2].popSizeNormal[1], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							}
+						else if (!strcmp(modelParams[part1].popSizePr,"Gamma") && !strcmp(modelParams[part2].popSizePr,"Gamma"))
+							{
+							if (AreDoublesEqual (modelParams[part1].popSizeGamma[0], modelParams[part2].popSizeGamma[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].popSizeGamma[1], modelParams[part2].popSizeGamma[1], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
 						else if (!strcmp(modelParams[part1].popSizePr,"Fixed") && !strcmp(modelParams[part2].popSizePr,"Fixed"))
@@ -12104,14 +12397,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (!strcmp(modelParams[part2].parsModel, "Yes"))
 			*isApplic2 = NO; 
 			
-		/* Check that the branch length prior is a clock:coalescence for both partitions. */
+		/* Check that the branch length prior is a clock:coalescence or clock:speciestreecoalescence for both partitions. */
 		if (strcmp(modelParams[part1].brlensPr, "Clock"))
 			*isApplic1 = NO;
 		if (strcmp(modelParams[part2].brlensPr, "Clock"))
 			*isApplic2 = NO;
-		if (strcmp(modelParams[part1].clockPr, "Coalescence"))
+		if (strcmp(modelParams[part1].clockPr, "Coalescence") != 0 && strcmp(modelParams[part1].clockPr, "Speciestreecoalescence") != 0)
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockPr, "Coalescence"))
+		if (strcmp(modelParams[part2].clockPr, "Coalescence") != 0 && strcmp(modelParams[part2].clockPr, "Speciestreecoalescence") != 0)
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on population size is the same. */
@@ -12122,9 +12415,25 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			if (AreDoublesEqual (modelParams[part1].popSizeUni[1], modelParams[part2].popSizeUni[1], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
 			}
-		else if (!strcmp(modelParams[part1].popSizePr,"Exponential") && !strcmp(modelParams[part2].popSizePr,"Exponential"))
+		else if (!strcmp(modelParams[part1].popSizePr,"Lognormal") && !strcmp(modelParams[part2].popSizePr,"Lognormal"))
 			{
-			if (AreDoublesEqual (modelParams[part1].popSizeExp, modelParams[part2].popSizeExp, (MrBFlt) 0.00001) == NO)
+			if (AreDoublesEqual (modelParams[part1].popSizeLognormal[0], modelParams[part2].popSizeLognormal[0], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			if (AreDoublesEqual (modelParams[part1].popSizeLognormal[1], modelParams[part2].popSizeLognormal[1], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			}
+		else if (!strcmp(modelParams[part1].popSizePr,"Normal") && !strcmp(modelParams[part2].popSizePr,"Normal"))
+			{
+			if (AreDoublesEqual (modelParams[part1].popSizeNormal[0], modelParams[part2].popSizeNormal[0], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			if (AreDoublesEqual (modelParams[part1].popSizeNormal[1], modelParams[part2].popSizeNormal[1], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			}
+		else if (!strcmp(modelParams[part1].popSizePr,"Gamma") && !strcmp(modelParams[part2].popSizePr,"Gamma"))
+			{
+			if (AreDoublesEqual (modelParams[part1].popSizeGamma[0], modelParams[part2].popSizeGamma[0], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			if (AreDoublesEqual (modelParams[part1].popSizeGamma[1], modelParams[part2].popSizeGamma[1], (MrBFlt) 0.00001) == NO)
 				isSame = NO;
 			}
 		else if (!strcmp(modelParams[part1].popSizePr,"Fixed") && !strcmp(modelParams[part2].popSizePr,"Fixed"))
@@ -12409,11 +12718,21 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* Now, check that the cpp parameter is the same */
 		if (IsModelSame (P_CPPRATE, part1, part2, &temp1, &temp2) == NO)
 			isSame = NO;
+        if (linkTable[P_CPPRATE][part1] != linkTable[P_CPPRATE][part2])
+            isSame = NO;
 	
 		/* ... and that the psigamma parameter is the same */
 		if (IsModelSame (P_CPPMULTDEV, part1, part2, &temp1, &temp2) == NO)
 			isSame = NO;
+        if (linkTable[P_CPPMULTDEV][part1] != linkTable[P_CPPRATE][part2])
+            isSame = NO;
 	
+        /* Not same if branch lengths are not the same */
+        if (IsModelSame(P_BRLENS, part1, part2, &temp1, &temp2) == NO)
+            isSame = NO;
+        if (linkTable[P_BRLENS][part1] != linkTable[P_BRLENS][part2])
+            isSame = NO;
+
 		/* Set isSame to NO if cpp events are inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
@@ -12492,7 +12811,15 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* Now, check that the bm variance parameter is the same */
 		if (IsModelSame (P_BMVAR, part1, part2, &temp1, &temp2) == NO)
 			isSame = NO;
-	
+        if (linkTable[P_BMVAR][part1] != linkTable[P_BMVAR][part2])
+            isSame = NO;
+
+        /* Not same if branch lengths are not the same */
+        if (IsModelSame(P_BRLENS, part1, part2, &temp1, &temp2) == NO)
+            isSame = NO;
+        if (linkTable[P_BRLENS][part1] != linkTable[P_BRLENS][part2])
+            isSame = NO;
+
 		/* Set isSame to NO if bm branch rates are inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
@@ -12568,10 +12895,18 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (strcmp(modelParams[part2].clockVarPr, "Ibr"))
 			*isApplic2 = NO;
 		
-		/* Now, check that the ibr gamma shape parameter is the same */
+        /* Now, check that the ibr gamma shape parameter is the same */
 		if (IsModelSame (P_IBRVAR, part1, part2, &temp1, &temp2) == NO)
 			isSame = NO;
+        if (linkTable[P_IBRVAR][part1] != linkTable[P_IBRVAR][part2])
+            isSame = NO;
 	
+        /* Not same if branch lengths are not the same */
+        if (IsModelSame(P_BRLENS, part1, part2, &temp1, &temp2) == NO)
+            isSame = NO;
+        if (linkTable[P_BRLENS][part1] != linkTable[P_BRLENS][part2])
+            isSame = NO;
+
 		/* Set isSame to NO if ibr branch rates are inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
@@ -12580,10 +12915,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		{
 		/* Check base substitution rates of clock tree for partitions 1 and 2. */
 	
-        /* Check that the topology parameter is the same for both partitions; then we overwrite isApplic. */
-		if (IsModelSame(P_TOPOLOGY, part1, part2, isApplic1, isApplic2) == NO)
-            isSame = NO;
-
         /* Check if the model is parsimony for either partition. If so, then branch lengths do not apply (as parsimony is very
 		silly and doesn't take this information into account) and clock branch rates are inapplicable. */
 		if (!strcmp(modelParams[part1].parsModel, "Yes"))
@@ -12620,10 +12951,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic1 = NO;
         if (strcmp(modelParams[part2].topologyPr, "Speciestree") != 0)
             *isApplic2 = NO;
-
-        /* Not same if topologies are not the same */
-        if (IsModelSame(P_TOPOLOGY, part1, part2, &temp1, &temp2) == NO)
-            isSame = NO;
 
         /* Not same if inapplicable to either partition */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
@@ -14962,7 +15289,7 @@ int SetLocalTaxa (void)
             j++;
 			}
 		}
-	
+
 #	if 0
 	/* show non-excluded taxa */
 	for (i=0; i<numLocalTaxa; i++)
@@ -15552,9 +15879,6 @@ int SetModelParams (void)
 		/* set index number of parameter */
 		p->index = k;
 		
-		/* set fill to yes */
-		p->fill = YES;
-
         /* set prior function to NULL */
         p->LnPriorRatio = NULL;
 
@@ -16263,6 +16587,42 @@ int SetModelParams (void)
 					}
 				}
 			}
+		else if (j == P_GENETREERATE)
+			{
+			/* Set up rateMult for partition specific rates ***********************************************************/
+			p->paramType = P_GENETREERATE;
+		    p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
+            p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
+												     /* also keep Dirichlet prior parameters here		  		   */
+            p->min = 0.0;
+            p->max = POS_INFINITY;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+                    modelSettings[i].geneTreeRateMult = p;
+
+            p->paramTypeName = "Gene-specific rate multiplier";
+			strcpy (p->name, "Generatemult");
+			strcat (p->name, partString);
+
+			/* find the parameter x prior type */
+			p->paramId = GENETREERATEMULT_DIR;
+
+			p->printParam = YES;
+			for (i=0; i<numCurrentDivisions; i++)
+				{
+				if (isPartTouched[i] == YES)
+					{
+					sprintf (tempMult, "g_m{%d}", i+1);
+					if (i == 0)
+						SafeStrcat (&p->paramHeader, tempMult);
+					else
+						{
+						SafeStrcat (&p->paramHeader, "\t");
+						SafeStrcat (&p->paramHeader, tempMult);
+						}
+					}
+				}
+			}
 		else if (j == P_TOPOLOGY)
 			{
 			/* Set up topology **************************************************************************************/
@@ -16434,6 +16794,8 @@ int SetModelParams (void)
 						p->paramId = BRLENS_CLOCK_COAL;
 					else if (!strcmp(mp->clockPr,"Birthdeath"))
 						p->paramId = BRLENS_CLOCK_BD;
+					else if (!strcmp(mp->clockPr,"Speciestreecoalescence"))
+						p->paramId = BRLENS_CLOCK_SPCOAL;
                     else if (!strcmp(mp->clockPr,"Fixed"))
                         p->paramId = BRLENS_CLOCK_FIXED;
 					}
@@ -16549,7 +16911,10 @@ int SetModelParams (void)
 			{
 			/* Set up population size *****************************************************************************************/
 			p->paramType = P_POPSIZE;
-			p->nValues = 1;
+			if (!strcmp(mp->topologyPr,"Speciestree") && !strcmp(mp->popVarPr, "Variable"))
+                p->nValues = 2 * numSpecies - 1;
+            else
+                p->nValues = 1;
 			p->nSubValues = 0;
             p->min = POS_MIN;
             p->max = POS_INFINITY;
@@ -16558,20 +16923,49 @@ int SetModelParams (void)
 					modelSettings[i].popSize = p;
 
             p->paramTypeName = "Coalescent process population size parameter";
-			strcpy (p->name, "N_e");
+			strcpy (p->name, "Popsize");
 			strcat (p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->popSizePr,"Uniform"))
-				p->paramId = POPSIZE_UNI;
-			else if (!strcmp(mp->popSizePr,"Exponential"))
-				p->paramId = POPSIZE_EXP;
+				{
+				p->paramId      = POPSIZE_UNI;
+                p->LnPriorRatio = &LnProbRatioUniform;
+                p->priorParams  = mp->popSizeUni;
+                p->LnPriorProb  = &LnPriorProbUniform;
+				}
+			else if (!strcmp(mp->popSizePr,"Normal"))
+				{
+				p->paramId      = POPSIZE_NORMAL;
+                p->LnPriorRatio = &LnProbRatioTruncatedNormal;
+                p->priorParams  = mp->popSizeNormal;
+                p->LnPriorProb  = &LnPriorProbTruncatedNormal;
+				}
+			else if (!strcmp(mp->popSizePr,"Lognormal"))
+				{
+				p->paramId      = POPSIZE_LOGNORMAL;
+                p->LnPriorRatio = &LnProbRatioLognormal;
+                p->priorParams  = mp->popSizeLognormal;
+                p->LnPriorProb  = &LnPriorProbLognormal;
+				}
+			else if (!strcmp(mp->popSizePr,"Gamma"))
+				{
+				p->paramId      = POPSIZE_GAMMA;
+                p->LnPriorRatio = &LnProbRatioGamma;
+                p->priorParams  = mp->popSizeGamma;
+                p->LnPriorProb  = &LnPriorProbGamma;
+				}
 			else
-				p->paramId = POPSIZE_FIX;
+                {
+				p->paramId      = POPSIZE_FIX;
+                p->LnPriorRatio = NULL;
+                p->priorParams  = &mp->popSizeFix;
+                p->LnPriorProb  = &LnPriorProbFix;
+                }
 
-			if (p->paramId != POPSIZE_FIX)
+			if (p->paramId != POPSIZE_FIX && p->nValues == 1)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "N_e");
+			SafeStrcat (&p->paramHeader, "Popsize");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_GROWTH)
@@ -16659,37 +17053,6 @@ int SetModelParams (void)
 			SafeStrcat (&p->paramHeader, "cppRate");
 			SafeStrcat (&p->paramHeader, partString);
 			}
-		else if (j == P_CPPEVENTS)
-			{
-			/* Set up cpp events parameter *****************************************************************************************/
-			p->paramType = P_CPPEVENTS;
-			p->nValues = 0;
-			p->nSubValues = 2*numLocalTaxa;		/* keep effective branch lengths here (for all nodes to be on the safe side) */
-            p->min = 1E-6;
-            p->max = POS_INFINITY;
-			for (i=0; i<numCurrentDivisions; i++)
-				if (isPartTouched[i] == YES)
-					modelSettings[i].cppEvents = p;
-
-            p->paramTypeName = "Events of rate-multiplying compound Poisson process";
-			strcpy (p->name, "CppEvents");
-			strcat (p->name, partString);
-			
-			/* find the parameter x prior type */
-			p->paramId = CPPEVENTS;
-			
-			/* should we print the events? */
-			for (i=0; i<p->nRelParts; i++)
-				if (!strcmp(modelParams[p->relParts[i]].treeFormat,"Events"))
-					break;
-			if (i < p->nRelParts)
-				p->printParam = YES;
-			else
-				p->printParam = NO;
-			
-			SafeStrcat (&p->paramHeader, "cppEvents");
-			SafeStrcat (&p->paramHeader, partString);
-			}
 		else if (j == P_CPPMULTDEV)
 			{
 			/* Set up sigma of cpp rate multipliers *****************************************************************************************/
@@ -16713,6 +17076,31 @@ int SetModelParams (void)
 			if (p->paramId != CPPMULTDEV_FIX)
 				p->printParam = YES;
 			SafeStrcat (&p->paramHeader, "sigma_cpp");
+			SafeStrcat (&p->paramHeader, partString);
+			}
+		else if (j == P_CPPEVENTS)
+			{
+			/* Set up cpp events parameter *****************************************************************************************/
+			p->paramType = P_CPPEVENTS;
+			p->nValues = 0;
+			p->nSubValues = 2*numLocalTaxa;		/* keep effective branch lengths here (for all nodes to be on the safe side) */
+            p->min = 1E-6;
+            p->max = POS_INFINITY;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].cppEvents = p;
+
+            p->paramTypeName = "Events of rate-multiplying compound Poisson process";
+			strcpy (p->name, "Cpp");
+			strcat (p->name, partString);
+			
+			/* find the parameter x prior type */
+			p->paramId = CPPEVENTS;
+			
+			/* should we print values to .p file? */
+			p->printParam = NO;
+			
+			SafeStrcat (&p->paramHeader, "cppEvents");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_BMVAR)
@@ -16756,21 +17144,15 @@ int SetModelParams (void)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].bmBranchRates = p;
 			
-			p->paramTypeName = "Branch rates of BM relaxed clock";
-			strcpy (p->name, "Bmbranchrates");
+			p->paramTypeName = "Branch rates of relaxed clock";
+			strcpy (p->name, "Bm");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
 			p->paramId = BMBRANCHRATES;
 			
-			/* should we print the events? */
-			for (i=0; i<p->nRelParts; i++)
-				if (!strcmp(modelParams[p->relParts[i]].treeFormat,"Events"))
-					break;
-			if (i < p->nRelParts)
-				p->printParam = YES;
-			else
-				p->printParam = NO;
+			/* should we print values to .p file? */
+			p->printParam = NO;
 
 			SafeStrcat (&p->paramHeader, "bm_branchrates");
 			SafeStrcat (&p->paramHeader, partString);
@@ -16816,21 +17198,15 @@ int SetModelParams (void)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].ibrBranchRates = p;
 			
-			p->paramTypeName = "Branch lengths of IBR relaxed clock";
-			strcpy (p->name, "Ibrbranchlens");
+			p->paramTypeName = "Branch lengths of relaxed clock";
+			strcpy (p->name, "Ibr");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
 			p->paramId = IBRBRANCHLENS;
 			
-			/* should we print the events? */
-			for (i=0; i<p->nRelParts; i++)
-				if (!strcmp(modelParams[p->relParts[i]].treeFormat,"Events"))
-					break;
-			if (i < p->nRelParts)
-				p->printParam = YES;
-			else
-				p->printParam = NO;
+			/* should we print values to .p file? */
+			p->printParam = NO;
 
 			SafeStrcat (&p->paramHeader, "ibr_branchlens");
 			SafeStrcat (&p->paramHeader, partString);
@@ -17008,20 +17384,77 @@ int SetMoves (void)
 
 
 
+/** SetPopSizeParam: Set population size values for a species tree from an input tree */
+int SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt)
+
+{
+	int			i, j, k, nLongsNeeded;
+	MrBFlt		*values;
+	Tree		*speciesTree;
+	PolyNode	*pp;
+	TreeNode	*p;
+
+    nLongsNeeded = 1 + (pt->nNodes - pt->nIntNodes - 1) / nBitsInALong;
+
+    /* Get pointer to values to be set */
+    values = GetParamVals (param, chn, state);
+
+    /* Get species tree */
+    speciesTree = GetTree (modelSettings[param->relParts[0]].speciesTree, chn, state);
+
+    /* Set them based on index of matching partitions */
+    AllocatePolyTreePartitions(pt);
+    AllocateTreePartitions(speciesTree);
+    for (i=0; i<pt->nNodes; i++)
+        {
+        pp = pt->allDownPass[i];
+        for (j=0; j<speciesTree->nNodes-1; j++)
+            {
+            p = speciesTree->allDownPass[j];
+            for (k=0; k<nLongsNeeded; k++)
+                {
+                if (pp->partition[k] != p->partition[k])
+                    break;
+                }
+            if (k == nLongsNeeded)
+                break;
+            }
+        if (j == speciesTree->nNodes - 1)
+            {
+            MrBayesPrint ("%s   Non-matching partitions when setting population size parameter", spacer);
+            FreePolyTreePartitions(pt);
+            FreeTreePartitions(speciesTree);
+            return (ERROR);
+            }
+        values[p->index] = pt->popSize[pp->index];
+    }
+
+    FreePolyTreePartitions(pt);
+    FreeTreePartitions(speciesTree);
+    
+    return (NO_ERROR);
+}
+
+
+
+
+
 /* SetRelaxedClockParam: set values for a relaxed clock param from an input tree */
 int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 
 {
-	int			i, j, k, *nEvents=NULL, *nEventsP=NULL, nLongsNeeded;
-	MrBFlt		*bmBranchRate=NULL, *bmBranchRateP=NULL, *ibrBranchRate=NULL, *ibrBranchRateP=NULL,
-                **position=NULL, **rateMult=NULL, **positionP=NULL, **rateMultP=NULL;
+	int			i, j, k, *nEvents=NULL, *nEventsP=NULL, nLongsNeeded, isEventSet;
+	MrBFlt		 *effectiveBranchLengthP=NULL, *bmBranchRate=NULL, *ibrBranchLen =NULL,
+                **position=NULL, **rateMult=NULL, **positionP=NULL, **rateMultP=NULL,
+                baseRate;
 	Tree		*t;
 	PolyNode	*pp;
-	TreeNode	*p=NULL;
+	TreeNode	*p=NULL, *q;
 
     nLongsNeeded = 1 + (numLocalTaxa - 1) / nBitsInALong;
 
 	/* set pointers to the right set of values */
+    isEventSet = NO;
 	if (param->paramType == P_CPPEVENTS)
 		{
 		/* find the right event set */
@@ -17031,45 +17464,62 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 			    break;
             }
 		if (i == pt->nESets)
-			return (NO_ERROR);
-	
-		nEventsP = pt->nEvents[i];
-		positionP = pt->position[i];
-		rateMultP = pt->rateMult[i];
-		nEvents = param->nEvents[2*chn+state];
-		position = param->position[2*chn+state];
-		rateMult = param->rateMult[2*chn+state];
+            {
+		    for (i=0; i<pt->nBSets; i++)
+    		    if (!strcmp(param->name,pt->bSetName[i]))
+	    		    break;
+
+            if (i == pt->nBSets)
+			    return (NO_ERROR);
+            else
+                isEventSet = NO;
+            }
+        else
+            isEventSet = YES;
+
+        if (isEventSet == YES)
+            {
+            nEventsP  = pt->nEvents[i];
+		    positionP = pt->position[i];
+		    rateMultP = pt->rateMult[i];
+            }
+        else
+            effectiveBranchLengthP = pt->effectiveBrLen[i];
+
+        nEvents  = param->nEvents[2*chn+state];
+        position = param->position[2*chn+state];
+        rateMult = param->rateMult[2*chn+state];
 		}
 	else if (param->paramType == P_BMBRANCHRATES)
 		{
-		/* find the right branch rate set */
+		/* find the right effective branch length set */
 		for (i=0; i<pt->nBSets; i++)
-		if (!strcmp(param->name,pt->bSetName[i]))
-			break;
+    		if (!strcmp(param->name,pt->bSetName[i]))
+	    		break;
 		if (i == pt->nBSets)
 			return (NO_ERROR);
 
-		bmBranchRateP = pt->branchRate[i];
-		bmBranchRate = GetParamVals (param, chn, state);
+        effectiveBranchLengthP = pt->effectiveBrLen[i];
+		bmBranchRate           = GetParamVals (param, chn, state);
 		}
 	else if (param->paramType == P_IBRBRANCHLENS)
 		{
-		/* find the right branch rate set */
+		/* find the right effective branch length set */
 		for (i=0; i<pt->nBSets; i++)
 		if (!strcmp(param->name,pt->bSetName[i]))
 			break;
 		if (i == pt->nBSets)
 			return (NO_ERROR);
 
-		ibrBranchRateP = pt->branchRate[i];
-		ibrBranchRate = GetParamVals (param, chn, state);
+		effectiveBranchLengthP = pt->effectiveBrLen[i];
+		ibrBranchLen           = GetParamSubVals (param, chn, state);
 		}
 
 	t = GetTree (param, chn, state);
 	AllocatePolyTreePartitions (pt);
 	AllocateTreePartitions (t);
 	
-	for (i=0; i<pt->nNodes; i++)
+	for (i=pt->nNodes-1; i>=0; i--)
 		{
 		pp = pt->allDownPass[i];
 		for (j=0; j<t->nNodes; j++)
@@ -17083,33 +17533,62 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 			}
 		if (param->paramType == P_CPPEVENTS)
 			{
-			if (nEvents[p->index] != nEventsP[pp->index])
-				{
-				if (nEventsP[pp->index] == 0)
-					{
-					free (position[p->index]);
-					free (rateMult[p->index]);
-					}
-				else
-					{
-					position[p->index] = (MrBFlt *) realloc ((void *) position[p->index], nEventsP[pp->index]*sizeof(MrBFlt));
-					rateMult[p->index] = (MrBFlt *) realloc ((void *) rateMult[p->index], nEventsP[pp->index]*sizeof(MrBFlt));
-					}
-				nEvents[p->index] = nEventsP[pp->index];
-				}
-			for (j=0; j<nEventsP[pp->index]; j++)
-				{
-				position[p->index][j] = positionP[pp->index][j];
-				rateMult[p->index][j] = rateMultP[pp->index][j];
-				}
+			if (isEventSet == NO)
+                {
+                if (nEvents[p->index] != 1)
+				    {
+				    position[p->index] = (MrBFlt *) realloc ((void *) position[p->index], 1*sizeof(MrBFlt));
+				    rateMult[p->index] = (MrBFlt *) realloc ((void *) rateMult[p->index], 1*sizeof(MrBFlt));
+				    nEvents [p->index] = 1;
+				    }
+			    position[p->index][0] = 0.5;
+                if (p->anc->anc == NULL)
+			        rateMult[p->index][j] = 1.0;
+                else
+                    {
+                    baseRate = 1.0;
+	                q = p->anc;
+	                while (q->anc != NULL)
+		                {
+		                baseRate *= rateMult[q->index][0];
+		                q = q->anc;
+		                }
+			        rateMult[p->index][j] = 2.0 * effectiveBranchLengthP[pp->index] / (p->length * baseRate) - 1.0;
+                    }
+                }
+            else
+                {
+                if (nEvents[p->index] != nEventsP[pp->index])
+				    {
+				    if (nEventsP[pp->index] == 0)
+					    {
+					    free (position[p->index]);
+					    free (rateMult[p->index]);
+					    }
+				    else
+					    {
+					    position[p->index] = (MrBFlt *) realloc ((void *) position[p->index], nEventsP[pp->index]*sizeof(MrBFlt));
+					    rateMult[p->index] = (MrBFlt *) realloc ((void *) rateMult[p->index], nEventsP[pp->index]*sizeof(MrBFlt));
+					    }
+				    nEvents[p->index] = nEventsP[pp->index];
+				    }
+			    for (j=0; j<nEventsP[pp->index]; j++)
+				    {
+				    position[p->index][j] = positionP[pp->index][j];
+				    rateMult[p->index][j] = rateMultP[pp->index][j];
+				    }
+                }
 			}
 		else if (param->paramType == P_BMBRANCHRATES)
 			{
-			bmBranchRate[p->index] = bmBranchRateP[pp->index];
+			if (p->anc->anc == NULL)
+                bmBranchRate[p->index] = 1.0;
+            else
+                bmBranchRate[p->index] = 2.0 * effectiveBranchLengthP[pp->index] / p->length - bmBranchRate[p->anc->index];
 			}
 		else if (param->paramType == P_IBRBRANCHLENS)
 			{
-			ibrBranchRate[p->index] = ibrBranchRateP[pp->index];
+			ibrBranchLen[p->index] = effectiveBranchLengthP[pp->index];
 			}
 		}
     
@@ -17125,7 +17604,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
         }
     else if (param->paramType == P_IBRBRANCHLENS)
         {
-        if (UpdateIbrEvolLengths (param, t, chn) == ERROR)
+        if (UpdateIbrBranchRates (param, t, chn) == ERROR)
             return (ERROR);
         }
 
@@ -17772,21 +18251,51 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-	/* Move_GeneTree */
-    // TODO: BEST set this struct to appropriate values for the gene tree move
+	/* Move_GeneRate_Dir */
 	mt = &moveTypes[i++];
-	mt->name = "Gene tree move";
-	mt->shortName = "Genetreemove";
-	mt->tuningName[0] = "Long name of tuning parameter";
-	mt->shortTuningName[0] = "shortname";
+	mt->name = "Dirichlet proposal";
+	mt->shortName = "Dirichlet";
+	mt->tuningName[0] = "Dirichlet parameter";
+	mt->shortTuningName[0] = "alpha";
+	mt->applicableTo[0] = GENETREERATEMULT_DIR;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_GeneRate_Dir;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 1000.0; /* alphaPi */
+	mt->minimum[0] = 0.00000001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneDirichlet;
+    mt->targetRate = 0.25;
+
+	/* Move_GeneTree1 */
+	mt = &moveTypes[i++];
+	mt->name = "Extending SPR move for gene trees in species trees";
+	mt->shortName = "ExtSPRClockGS";
+	mt->tuningName[0] = "Extension probability";
+	mt->shortTuningName[0] = "prob";
 	mt->applicableTo[0] = TOPOLOGY_SPECIESTREE;
 	mt->nApplicable = 1;
-	mt->moveFxn = &Move_GeneTree;
-	mt->relProposalProb = 5.0;
+	mt->moveFxn = &Move_GeneTree1;
+	mt->relProposalProb = 10.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;       /* Tuning parameter value */
+	mt->tuningParam[0] = 0.5;       /* Tuning parameter value */
 	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
 	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
+	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
+	mt->level = STANDARD_USER;
+
+	/* Move_GeneTree2 */
+	mt = &moveTypes[i++];
+	mt->name = "NNI move for gene trees in species trees";
+	mt->shortName = "NNIClockGS";
+	mt->applicableTo[0] = TOPOLOGY_SPECIESTREE;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_GeneTree2;
+	mt->relProposalProb = 10.0;
+	mt->numTuningParams = 0;        /* No tuning parameters */
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
 
@@ -17943,7 +18452,7 @@ void SetUpMoveTypes (void)
 	/* Move_NodeSliderClock */
 	mt = &moveTypes[i++];
 	mt->name = "Node depth window slider (clock-constrained)";
-	mt->shortName = "NodesliderClock";
+	mt->shortName = "Nodeslider";
 	mt->tuningName[0] = "Window size";
 	mt->shortTuningName[0] = "delta";
 	mt->applicableTo[0] = BRLENS_CLOCK_UNI;
@@ -17951,6 +18460,25 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[2] = BRLENS_CLOCK_BD;
 	mt->nApplicable = 3;
 	mt->moveFxn = &Move_NodeSliderClock;
+	mt->relProposalProb = 10.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 0.05; /* window size */
+	mt->minimum[0] = 0.00000001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+	/* Move_NodeSliderGeneTree */
+	mt = &moveTypes[i++];
+	mt->name = "Node depth slider for gene trees";
+	mt->shortName = "Nodeslider";
+	mt->tuningName[0] = "Window size";
+	mt->shortTuningName[0] = "delta";
+	mt->applicableTo[0] = BRLENS_CLOCK_SPCOAL;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_NodeSliderGeneTree;
 	mt->relProposalProb = 10.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.05; /* window size */
@@ -18270,16 +18798,18 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-	/* Move_Popsize */
+	/* Move_PopsizeM */
 	mt = &moveTypes[i++];
-	mt->name = "Sliding window";
-	mt->shortName = "Slider";
-	mt->tuningName[0] = "Sliding window size";
-	mt->shortTuningName[0] = "delta";
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = POPSIZE_UNI;
-	mt->applicableTo[1] = POPSIZE_EXP;
-	mt->nApplicable = 2;
-	mt->moveFxn = &Move_PopSize;
+	mt->applicableTo[1] = POPSIZE_LOGNORMAL;
+	mt->applicableTo[1] = POPSIZE_NORMAL;
+	mt->applicableTo[1] = POPSIZE_GAMMA;
+	mt->nApplicable = 4;
+	mt->moveFxn = &Move_PopSizeM;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.0;  /* window size */
@@ -18484,22 +19014,23 @@ void SetUpMoveTypes (void)
     mt->targetRate = 0.25;
 
 	/* Move_SpeciesTree */
-    // TODO: BEST set this struct to appropriate values for the species tree move
 	mt = &moveTypes[i++];
 	mt->name = "Species tree move";
-	mt->shortName = "Speciestreemove";
-	mt->tuningName[0] = "Long name of tuning parameter";
-	mt->shortTuningName[0] = "shortname";
+	mt->shortName = "Distmatrixmove";
+	mt->tuningName[0] = "Divider of rate of truncated exponential";
+	mt->shortTuningName[0] = "lambdadivider";
 	mt->applicableTo[0] = SPECIESTREE_UNIFORM;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_SpeciesTree;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 10.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;       /* Tuning parameter value */
+	mt->tuningParam[0] = 1.2;       /* Default tuning parameter value */
 	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
 	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a mutliplier move (larger is more bold) */
+    mt->targetRate = 0.25;              /* Target acceptance rate */
 
 	/* Move_SPRClock */
 	/* not correctly balanced yet !! */
@@ -18709,7 +19240,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = CPPEVENTS;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_CPPEventPosition;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -18723,7 +19254,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = CPPRATE_EXP;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_CPPRate;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.00001;
@@ -18759,7 +19290,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = CPPEVENTS;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_CPPRateMultiplierRnd;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -18793,7 +19324,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = BMBRANCHRATES;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_BmBranchRate;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.00001;
@@ -18832,9 +19363,9 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = IBRBRANCHLENS;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_IbrBranchRate;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
@@ -19683,6 +20214,8 @@ int ShowMoves (int used)
 
 
 
+
+
 /*------------------------------------------------------------------------------
 |
 |   ShowParameters: Show parameter table and parameter info
@@ -19768,6 +20301,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Ratemultiplier ", spacer);
 			}
+		else if (j == P_GENETREERATE)
+			{
+			MrBayesPrint ("%s      Generatemult   ", spacer);
+			}
 		else if (j == P_TOPOLOGY)
 			{
 			MrBayesPrint ("%s      Topology       ", spacer);
@@ -19822,7 +20359,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 		else if (j == P_BMBRANCHRATES)
 			{
-			MrBayesPrint ("%s      Bmbranchrates  ", spacer);
+			MrBayesPrint ("%s      Bm             ", spacer);
 			}
 		else if (j == P_IBRVAR)
 			{
@@ -19830,7 +20367,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 		else if (j == P_IBRBRANCHLENS)
 			{
-			MrBayesPrint ("%s      Ibrbranchlens  ", spacer);
+			MrBayesPrint ("%s      Ibr            ", spacer);
 			}
 		else if (j == P_CLOCKRATE)
 			{
@@ -19840,6 +20377,11 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Speciestree    ", spacer);
 			}
+        else
+            {
+            MrBayesPrint ("%s      ERROR: Someone forget to name parameter type %d", spacer, j);
+            return (ERROR);
+            }
 		
 		for (i=0; i<numCurrentDivisions; i++)
 			{
@@ -20105,6 +20647,17 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				    }
                 }
 			}
+		else if (j == P_GENETREERATE)
+			{
+		    MrBayesPrint ("%s            Prior      = Dirichlet(", spacer);
+		    for (n=0; n<numTrees-1; n++)
+			    {
+                if (n == numTrees-2)
+    			    MrBayesPrint ("1.00)\n");
+                else
+    			    MrBayesPrint ("1.00,");
+                }
+			}
 		else if (j == P_TOPOLOGY)
 			{
 			if (!strcmp(mp->topologyPr,"Uniform"))
@@ -20233,10 +20786,21 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			if (!strcmp(mp->popSizePr,"Uniform"))
 				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->popSizeUni[0], mp->popSizeUni[1]);
-			else if (!strcmp(mp->popSizePr,"Exponential"))
-				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->popSizeExp);
+			else if (!strcmp(mp->popSizePr,"Lognormal"))
+				MrBayesPrint ("%s            Prior      = Lognormal(%1.2lf,%1.2lf)\n", spacer, mp->popSizeLognormal[0], mp->popSizeLognormal[1]);
+			else if (!strcmp(mp->popSizePr,"Normal"))
+				MrBayesPrint ("%s            Prior      = Truncated Normal(%1.2lf,%1.2lf)\n", spacer, mp->popSizeNormal[0], mp->popSizeNormal[1]);
+			else if (!strcmp(mp->popSizePr,"Gamma"))
+				MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->popSizeGamma[0], mp->popSizeGamma[1]);
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->popSizeFix);
+            if (!strcmp(mp->topologyPr,"Speciestree"))
+                {
+                if (!strcmp(mp->popVarPr,"Equal") || !strcmp(mp->popSizePr,"Fixed"))
+				    MrBayesPrint ("%s                         Population size the same across species tree\n", spacer);
+                else
+				    MrBayesPrint ("%s                         Population size varies across branches in species tree\n", spacer);
+                }
 			}
 		else if (j == P_GROWTH)
 			{
@@ -20335,15 +20899,15 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		else if (j == P_CLOCKRATE)
 			{
 			if (!strcmp(mp->clockRatePr,"Normal"))
-				MrBayesPrint ("%s            Prior      = Normal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
+				MrBayesPrint ("%s            Prior      = Normal(%1.6lf,%1.6lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
 			else if (!strcmp(mp->clockRatePr,"Lognormal"))
-				MrBayesPrint ("%s            Prior      = Lognormal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
+				MrBayesPrint ("%s            Prior      = Lognormal(%1.6lf,%1.6lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
 			else if (!strcmp(mp->clockRatePr,"Gamma"))
-				MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
+				MrBayesPrint ("%s            Prior      = Gamma(%1.6lf,%1.6lf)\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
 			else if (!strcmp(mp->clockRatePr,"Exponential"))
-				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->clockRateExp);
+				MrBayesPrint ("%s            Prior      = Exponential(%1.6lf)\n", spacer, mp->clockRateExp);
 			else
-				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->clockRateFix);
+				MrBayesPrint ("%s            Prior      = Fixed(%1.6lf)\n", spacer, mp->clockRateFix);
 			if (!strcmp(mp->clockVarPr,"Strict"))
 				MrBayesPrint ("%s                         The clock rate is constant (strict clock)\n", spacer);
 			else if (!strcmp(mp->clockVarPr,"Cpp"))
@@ -20811,42 +21375,6 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 
 
 
-void TouchAllNormalParams (void)
-
-{
-	int		i;
-	Param	*p;
-	
-	for (i=0; i<numParams; i++)
-		{
-		p = &params[i];
-		if (p->paramType != P_TOPOLOGY && p->paramType != P_BRLENS)
-			p->fill = YES;
-		}
-}
-
-
-
-
-
-void TouchAllTreeParams (void)
-
-{
-	int		i;
-	Param	*p;
-	
-	for (i=0; i<numParams; i++)
-		{
-		p = &params[i];
-		if (p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS || p->paramType == P_SPECIESTREE)
-			p->fill = YES;
-		}
-}
-
-
-
-
-
 int Unlink (void)
 
 {
@@ -20995,8 +21523,8 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 
 
 
-/* UpdateIbrEvolLengths: update branch lengths for ibr model */
-int UpdateIbrEvolLengths(Param *param, Tree *t, int chain)
+/* UpdateIbrBranchRates: update branch rates for ibr model */
+int UpdateIbrBranchRates(Param *param, Tree *t, int chain)
 {
     int         i;
     MrBFlt      *ibrRate, *brlens;
@@ -21007,7 +21535,7 @@ int UpdateIbrEvolLengths(Param *param, Tree *t, int chain)
 	for (i=0; i<t->nNodes-2; i++)
 		{
 		p = t->allDownPass[i];
-		brlens[p->index] = p->length * ibrRate[p->index];
+		ibrRate[p->index] = brlens[p->index] / p->length;
 		}
 
     return (NO_ERROR);

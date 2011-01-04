@@ -3,7 +3,6 @@ SafeLong    Expecting (int y);
 int         CheckString (char **list, int len, char *token, int *matchIndex);
 int         CheckStringValidity (char *s);
 int         DoExecute (void);
-void        FinishTree (TreeNode *p, int *i, int isThisTreeRooted);
 int         FreeMatrix (void);
 void     	GetToken (char *token, int *tokenType, char **sourceH);
 int      	FindValidCommand (char *tk, int *numMatches);

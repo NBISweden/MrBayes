@@ -19,6 +19,7 @@ int      AddBitfield (SafeLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
 void     AlignedSafeFree(void **ptr);
 #endif
+void     ClearBit (int i, SafeLong *bits);
 void     ClearBits (SafeLong *bits, int nLongs);
 int      CopyResults (FILE *toFile, char *fromFileName, int lastGen);
 int      CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *treeNum);
@@ -41,6 +42,7 @@ int      LongestLine (FILE *fp);
 void     LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var);
+int      NextTaxonInPartition (int currentTaxon, SafeLong *partition, int length);
 int      NumBits (SafeLong *x, int len);
 char    *MbPrintNum (MrBFlt num);
 void     MrBayesPrint (char *format, ...);
@@ -63,4 +65,5 @@ void     SortMrBFlt (MrBFlt *item, int left, int right);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
 FILE    *TestOpenTextFileR (char *name);
+int      UpperTriangIndex(int i, int j, int size);
 int      WantTo (const char *msg);

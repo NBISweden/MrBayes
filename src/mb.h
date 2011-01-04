@@ -520,21 +520,23 @@ typedef struct
 	PolyNode		*root;               /*!< pointer to root (lower for rooted trees     */
 	PolyNode		*nodes;              /*!< array holding the tree nodes                */  
 	SafeLong		*bitsets;            /*!< bits describing partitions (splits)         */
-	int				nBSets;              /*!< number of branch rate sets                  */
+	int				nBSets;              /*!< number of effective branch length sets      */
     int             nESets;              /*!< number of breakpoint rate sets              */
-    char            **bSetName;          /*!< names of branch rate sets                   */
+    char            **bSetName;          /*!< names of effective branch length sets       */
     char			**eSetName;          /*!< names of breakpoint rate sets               */
-    int             *eType;              /*!< type of breakpoint rate sets                */
 	int				**nEvents;           /*!< number of branch events of bp rate set      */
 	MrBFlt			***position;         /*!< position of branch events                   */
 	MrBFlt			***rateMult;         /*!< parameter of branch events                  */
-	MrBFlt			**branchRate;        /*!< branch rates of branch rate set             */
+	MrBFlt			**effectiveBrLen;    /*!< effective branch lengths of ebl set         */
     int             brlensDef;           /*!< are brlens defined ?                        */
     int             isRooted;            /*!< is tree rooted?                             */
     int             isClock;             /*!< is tree clock?                              */
-    int             isCalibrated;        /*!< is tree clock?                              */
+    int             isCalibrated;        /*!< is tree calibrated?                         */
     int             isRelaxed;           /*!< is tree relaxed?                            */
     MrBFlt          clockRate;           /*!< clock rate                                  */
+    int             popSizeSet;          /*!< does tree have a population size set?       */
+    MrBFlt          *popSize;            /*!< the population size                         */
+    char            *popSizeSetName;     /*!< name of the population size set             */
 	}
 	PolyTree;
 
@@ -655,58 +657,61 @@ typedef struct s_launch_struct
 #define BRLENS_CLOCK_COAL				53
 #define BRLENS_CLOCK_BD					54
 #define BRLENS_CLOCK_FIXED              55
-#define	BRLENS_PARSIMONY				56
+#define BRLENS_CLOCK_SPCOAL				56
+#define	BRLENS_PARSIMONY				57
 #define SPECRATE_UNI					60
 #define SPECRATE_EXP					61
 #define SPECRATE_FIX					62
 #define EXTRATE_BETA					63
 #define EXTRATE_FIX						65
 #define POPSIZE_UNI						66
-#define POPSIZE_EXP						67
+#define POPSIZE_GAMMA					67
 #define POPSIZE_FIX						68
-#define	AAMODEL_FIX						69
-#define	AAMODEL_MIX						70
-#define GROWTH_UNI						71
-#define GROWTH_EXP						72
-#define GROWTH_FIX						73
-#define	GROWTH_NORMAL					74
-#define	OMEGA_BUD						75
-#define	OMEGA_BUF						76
-#define	OMEGA_BED						77
-#define	OMEGA_BEF						78
-#define	OMEGA_BFD						79
-#define	OMEGA_BFF						80
-#define	OMEGA_FUD						81
-#define	OMEGA_FUF						82
-#define	OMEGA_FED						83
-#define	OMEGA_FEF						84
-#define	OMEGA_FFD						85
-#define	OMEGA_FFF						86
-#define	OMEGA_ED						87
-#define	OMEGA_EF						88
-#define	OMEGA_FD						89
-#define	OMEGA_FF						90
-#define	OMEGA_10UUB						91
-#define	OMEGA_10UUF						92
-#define	OMEGA_10UEB						93
-#define	OMEGA_10UEF						94
-#define	OMEGA_10UFB						95
-#define	OMEGA_10UFF						96
-#define	OMEGA_10EUB						97
-#define	OMEGA_10EUF						98
-#define	OMEGA_10EEB						99
-#define	OMEGA_10EEF						100
-#define	OMEGA_10EFB						101
-#define	OMEGA_10EFF						102
-#define	OMEGA_10FUB						103
-#define	OMEGA_10FUF						104
-#define	OMEGA_10FEB						105
-#define	OMEGA_10FEF						106
-#define	OMEGA_10FFB						107
-#define	OMEGA_10FFF						108
-#define CPPRATE_FIX						109
-#define CPPRATE_EXP						110
-#define CPPMULTDEV_FIX				    111
+#define POPSIZE_NORMAL                  69
+#define POPSIZE_LOGNORMAL               70
+#define	AAMODEL_FIX						71
+#define	AAMODEL_MIX						72
+#define GROWTH_UNI						73
+#define GROWTH_EXP						74
+#define GROWTH_FIX						75
+#define	GROWTH_NORMAL					76
+#define	OMEGA_BUD						77
+#define	OMEGA_BUF						78
+#define	OMEGA_BED						79
+#define	OMEGA_BEF						80
+#define	OMEGA_BFD						81
+#define	OMEGA_BFF						82
+#define	OMEGA_FUD						83
+#define	OMEGA_FUF						84
+#define	OMEGA_FED						85
+#define	OMEGA_FEF						86
+#define	OMEGA_FFD						87
+#define	OMEGA_FFF						88
+#define	OMEGA_ED						89
+#define	OMEGA_EF						90
+#define	OMEGA_FD						91
+#define	OMEGA_FF						92
+#define	OMEGA_10UUB						93
+#define	OMEGA_10UUF						94
+#define	OMEGA_10UEB						95
+#define	OMEGA_10UEF						96
+#define	OMEGA_10UFB						97
+#define	OMEGA_10UFF						98
+#define	OMEGA_10EUB						99
+#define	OMEGA_10EUF						100
+#define	OMEGA_10EEB						101
+#define	OMEGA_10EEF						102
+#define	OMEGA_10EFB						103
+#define	OMEGA_10EFF						104
+#define	OMEGA_10FUB						105
+#define	OMEGA_10FUF						106
+#define	OMEGA_10FEB						107
+#define	OMEGA_10FEF						108
+#define	OMEGA_10FFB						109
+#define	OMEGA_10FFF						110
+#define CPPRATE_FIX						111
+#define CPPRATE_EXP						112
+#define CPPMULTDEV_FIX				    113
 #define BMVAR_FIX				        114
 #define BMVAR_EXP				        115
 #define BMVAR_UNI				        116
@@ -730,6 +735,7 @@ typedef struct s_launch_struct
 #define CLOCKRATE_GAMMA                 136
 #define CLOCKRATE_EXP                   137
 #define SPECIESTREE_UNIFORM             138
+#define GENETREERATEMULT_DIR            139
 
 
 #if defined (BEAGLE_ENABLED)
@@ -966,7 +972,9 @@ typedef struct model
 	char		popSizePr[100];       /* prior on population size                    */
 	MrBFlt		popSizeFix;
 	MrBFlt		popSizeUni[2];
-	MrBFlt		popSizeExp;
+	MrBFlt		popSizeLognormal[2];
+	MrBFlt		popSizeGamma[2];
+    MrBFlt      popSizeNormal[2];
 	char		popVarPr[100];        /* prior on pop. size variation across tree    */
 	char		growthPr[100];        /* prior on coalescence growth rate            */
 	MrBFlt		growthFix;
@@ -1255,9 +1263,14 @@ typedef struct sumt
     int         isCalibrated;          /* is sumt tree calibrated ?                     */
     int         nESets;                /* number of event sets                          */
     int         nBSets;                /* number of branch rate sets                    */
+    char      **bSetName;              /* name of effective branch length sets          */
+    char      **eSetName;              /* name of event sets                            */
+    int         popSizeSet;            /* do sumt trees have population size set?       */
+    char       *popSizeSetName;        /* name of population size set                   */
     int         SafeLongsNeeded;       /* number of safe longs needed for taxon bits    */
     int         runId;                 /* id of run being processed                     */
     int         numTaxa;               /* number of sumt taxa                           */
+    char      **taxaNames;             /* names of sumt taxa                            */
     int        *numFileTrees;          /* number of trees per file                      */
     int        *numFileTreesSampled;   /* number of trees sampled per file              */
     int         HPD;                   /* use highest posterior density?                */

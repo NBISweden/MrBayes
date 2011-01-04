@@ -45,6 +45,7 @@
 #include "command.h"
 #include "mcmc.h"
 #include "model.h"
+#include "sumt.h"
 #include "utils.h"
          
        const char* const svnRevisionBayesC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
@@ -111,6 +112,7 @@ int			numUserTrees;			     /* number of defined user trees		    	  */
 int			readComment;			     /* should we read comment (looking for &) ?      */
 int			readWord;					 /* should we read word next ?                    */
 SafeLong	runIDSeed;                   /* seed used only for determining run ID [stamp] */
+SafeLong    safeLongWithAllBitsSet;      /* SafeLong with all bits set, for bit ops       */
 SafeLong	swapSeed;                    /* seed used only for determining which to swap  */
 int         userLevel;                   /* user level                                    */
 PolyTree	*userTree[MAX_NUM_USERTREES];/* array of user trees							  */
@@ -177,6 +179,8 @@ int main (int argc, char *argv[])
 	nBitsInALong = sizeof(SafeLong) * 8;
 	if (nBitsInALong > 32) /* Do not use more than 32 bits until we    */
 		nBitsInALong = 32; /* understand how 64-bit longs are handled. */
+    for (i=0; i<nBitsInALong; i++)
+        SetBit(i, &safeLongWithAllBitsSet);
 
 #	if defined (__MWERKS__) & defined (MAC_VERSION)
 	/* Set up interface when using the Metrowerks compiler. This
@@ -718,8 +722,8 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
 	defaultModel.clockRateNormal[0] = 1.0;
 	defaultModel.clockRateNormal[1] = 1.0;
-	defaultModel.clockRateLognormal[0] = 0.0;
-	defaultModel.clockRateLognormal[1] = 0.3;           /* double or half in one standard deviation     */
+	defaultModel.clockRateLognormal[0] = 0.0;           /* mean 0.0 on log scale corresponds to mean rate 1.0 */
+	defaultModel.clockRateLognormal[1] = 0.7;           /* double or half the rate in one standard deviation     */
 	defaultModel.clockRateGamma[0] = 1.0;
 	defaultModel.clockRateGamma[1] = 1.0;
 	defaultModel.clockRateExp = 1.0;
@@ -734,17 +738,18 @@ int InitializeMrBayes (void)
 	defaultModel.extinctionBeta[0] = 1;
 	defaultModel.extinctionBeta[1] = 1;
 	defaultModel.sampleProb = 1.0;                  /* taxon sampling fraction                      */
-	strcpy(defaultModel.popSizePr, "Exponential");  /* prior on coalescence population size         */
-	defaultModel.popSizeFix = 1.0;
-	defaultModel.popSizeUni[0] = 0.0;
-	defaultModel.popSizeUni[1] = 10.0;
-	defaultModel.popSizeExp = 1.0;
+	strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
+	defaultModel.popSizeFix = 10.0;
+	defaultModel.popSizeUni[0] = 1.0;
+	defaultModel.popSizeUni[1] = 1000.0;
+	defaultModel.popSizeNormal[0] = 100.0;
+	defaultModel.popSizeNormal[1] = 30.0;
+	defaultModel.popSizeLognormal[0] = 4.6;         /* mean on log scale corresponds to N_e = 100.0 */
+	defaultModel.popSizeLognormal[1] = 2.3;         /* factor 10 in one standard deviation          */
+	defaultModel.popSizeGamma[0] = 100.0;
+	defaultModel.popSizeGamma[1] = 1000.0;
 	strcpy(defaultModel.popVarPr, "Equal");         /* prior on pop. size variation across tree      */
-	defaultModel.popSizeFix = 1.0;
-	defaultModel.popSizeUni[0] = 0.0;
-	defaultModel.popSizeUni[1] = 10.0;
-	defaultModel.popSizeExp = 1.0;
-	strcpy(defaultModel.growthPr, "Fixed");        /* prior on coalescence growth rate prior      */
+	strcpy(defaultModel.growthPr, "Fixed");         /* prior on coalescence growth rate prior      */
 	defaultModel.growthFix = 0.0;
 	defaultModel.growthUni[0] = 0.0;
 	defaultModel.growthUni[1] = 100.0;
@@ -811,6 +816,9 @@ int InitializeMrBayes (void)
 	for (i=0; i<MAX_NUM_USERTREES; i++)
 		userTree[i] = NULL;
     numUserTrees = 0;
+
+    /* Reset translate table */
+    ResetTranslateTable();
 
     /* finally reset everything dependent on a matrix being defined */
 	return (ReinitializeMrBayes ());
@@ -920,12 +928,12 @@ int ReinitializeMrBayes (void)
 
 	/* chain parameters */
 	chainParams.numGen = 1000000;                    /* number of MCMC cycles                         */
-	chainParams.sampleFreq = 100;                    /* frequency to sample chain                     */
-	chainParams.printFreq = 100;                     /* frequency to print chain                      */
+	chainParams.sampleFreq = 500;                    /* frequency to sample chain                     */
+	chainParams.printFreq = 500;                     /* frequency to print chain                      */
 	chainParams.swapFreq = 1;                        /* frequency of attempting swap of states        */
 	chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
 	chainParams.mcmcDiagn = YES;                     /* write MCMC diagnostics to file ?              */
-	chainParams.diagnFreq = 1000;                    /* diagnostics frequency                         */
+	chainParams.diagnFreq = 5000;                    /* diagnostics frequency                         */
 	chainParams.minPartFreq = 0.10;                  /* min partition frequency for diagnostics       */
 	chainParams.allChains = NO;                      /* calculate diagnostics for all chains ?        */
 	chainParams.allComps = NO;                       /* do not calc diagn for all run comparisons     */

@@ -9,175 +9,27 @@
 #include <stdarg.h>
 #include "mb.h"
 
-/* #define DEBUG */
-#define HAPLOID 0
-#define DIPLOID 1
-#define ZLINKED 2
 
-#if 0
-#define LSPNAME  30
-#define ERROR 1
-#define NO_ERROR 0
-#define YES 1
-#define NO 0
-#define NA -1
+/**************** typedefs used by Fredrik's code, derived from BEST code *******************/
 
-#define NMOVE 4
-#define MOVETREE 1
-#define MOVETHETA 2
-#define MOVESR  3
-#define MOVEER  4
-
-/* parameter ID values */
-#define P_TOP   0
-#define P_POP   1
-#define P_SR 	2
-#define P_ER	3
-#define NSPECIES 200
-#define NGENE 1010
-
-#define FPN(file) fputc('\n', file)
-#define F0 stdout
-#define FOR(i,n) for(i=0; i<n; i++)
-#define PointGamma(prob,alpha,beta) PointChi2(prob,2.0*(alpha))/(2.0*(beta))
-#define CDFGamma(x,alpha,beta) IncompleteGamma((beta)*(x),alpha,LnGamma(alpha))
-
-
-
-
-
-typedef struct spmodel
-	{
-       double thetaprior[2];
-	   int thetainvgamma;
-	int sRprior[2];
-	int eRprior[2];
-        double sF;
-	double treeHeightExp;
-	}
-	ModelParam;
-
-typedef struct MCMCPARAMETERS 
-	{
-	int nchain;
-   	int nsptree;
-       	char chainFileName[100];
-	}  
-	McmcPara; 
-
-typedef struct PARAM
-	{
-	int			paramType;		/* the type of the parameter					*/
-	double			*values;		/* main values of parameter						*/
-	int			nSubParams;		/* number of subparams							*/
-	}
-	SParam; 
-
-#if 0
-/* Struct for an SPMCMCMove */
-typedef struct
-	{
-	char		*name;				/* pointer to the name of the move type         */
-	char		*shortName;	        /* pointer to the short name of the move        */
-	MoveFxn		*moveFxn;			/* pointer to the move function					*/
-	SParam		*parm;				/* ptr to parameter the move applies to			*/
-	double		relProposalProb;	/* the actual proposal probability used			*/
-	double		cumProposalProb;	/* the cumulative proposal probability			*/
-	int			*nAccepted;			/* number of accepted moves						*/
-	int			*nTried;			/* number of tried moves						*/
-	double		proposalParam[2];	/* parameters for the proposal mechanism        */
-	} SPMCMCMove;
-#endif
-
-typedef struct COALPOP 
-	{
-   	int nin[NSPECIES], ncoal[NSPECIES], nout[NSPECIES],nodes[NSPECIES];
-   	double tj[NSPECIES][NSPECIES];
-	}  
-	CoalTime; 
-/* typedef for a MoveFxn */
-typedef int (SPMoveFxn)(SParam *param, int chain, long int *seed, double *lnLikeRatio, double *lnPriorRatio, double *lnProposalRatio, double *mvp);
-
-typedef struct
-	{
-	SPMoveFxn		*moveFxn;			/* pointer to the move function					*/
-	int			nApplicable;		/* number of relevant params					*/
-	int			applicableTo[40];	/* pointer to ID of relevant params				*/
-	char		*name;				/* name of the move type						*/
-	char		shortName[10];		/* abbreviated name of the move type            */
-	double		relProposalProb;	/* this holds the set proposal probability      */
-	double		proposalParam[2];	/* parameters for the proposal mechanism        */
-	double		cumProposalProb;
-       int		nparam;
-	SParam        *para;
-	int         parsimonyBased;     /* this move is based on parsimony (YES/NO)     */
-	} SPMoveType;
-/* max number of move types */
-
-
-/* tool functions*/
-double Lngamma (double x);
-
-/*prior for joint gene tree*/
-typedef struct {
-	int nodes[2];
-	double dist;
-} Distance;
-
-typedef struct treenode {
-	int father, nson, sons[2];
-	double brlens, age, theta,mu;
-} Treenode;
-
-typedef struct SPTree {
-	int root;
-	int haploid;
-	int *hT;
-	int nTaxa;
-	int nmissTaxa;
-	int nSpecies;
-	int nmissSpecies;
-	int nPop;
-	int nmissPop;
-	int nconstraint;
-	int *taxaIndex;
-	int **speciesIndex;
-	int *popIndex;
-	char **taxaName;
-	double *constraint;
-	double *mindist;
-	Distance *treeConstraint;
-	double muratio;
-   Treenode *nodes;
-} SPTree; /*all for the best.c*/
-
-/* functions originally declared in jointprior.h */
-int		LnJointGenetreePr(Tree *t[],int *updatedtreeid, int num_tree, MrBFlt *lnprior, MrBFlt *GeneMu, SPTree *speciestree);
-int		ReadControlfile(FILE *fdata);
-void 	InitiateParam(void);
-int		SPPrintTreeTitle (int curGen, FILE *fout);
-int		SPLnBirthDeathPriorPr (double *prob, double sR, double eR, double sF,SPTree *speciestree);
-int		SPPrintTree(int curGen, SPTree *tree, int showBrlens, int showTheta, int showMu, int isRooted);
-/*species tree mutation rate*/
-int		populationMutation (Tree *genetree,SPTree *speciestree, MrBFlt genemu);
-
-#endif
-
-/**************** typedefs used by Fredrik's code, from best code *******************/
-
-/* struct for constraints */
+/* struct for constraints (similar to Distance in BEST code, except
+   that a bitfield is used to hold info on the taxon pair)           */
 typedef struct {
 	double      depth;
     SafeLong*   pairSet;
 } Depth;
 
 
-
 /**************** Declaration of functions that are called from MrBayes **************/
-void    AllocateBestVariables(void);
+void    AllocateBestChainVariables(void);
 int     FillSpeciesTreeParams (SafeLong* seed, int from, int to);
 void    FreeBestChainVariables(void);
-int     Move_GeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+int     IsSpeciesTreeConsistent (Tree *speciesTree, int chain);
+double  LnSpeciesTreeProb(int chain);
+double  LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *speciesTree, int chain);
+int     Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+int     Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+int     Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
 /* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */

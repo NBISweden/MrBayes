@@ -201,6 +201,7 @@ int				inValidCommand;        /* a useful flag set whenever you enter a cmd    *
 int  			isInAmbig, isInPoly;   /* flags whether we are within () or {}          */
 int				isTaxsetDef;           /* is a taxon set defined                        */
 int				isTranslateDef;        /* is a translation block defined                */
+int				isTranslateDiff;       /* is translate different from current taxaset?  */
 char			logFileName[100];      /* name of the log file                          */
 int				logToFile;             /* should screen output be logged to a file      */
 FILE			*logFileFp;            /* file pointer to log file                      */
@@ -334,7 +335,7 @@ CmdType			commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 36,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+            { 33,           "Prset",  NO,           DoPrset, 37,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
                                                                                                                              168,172,173,174,183,184,185,218,241},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
@@ -6375,7 +6376,7 @@ int DoSetParm (char *parmName, char *tkn)
 					}
 				if (SetSpeciespartition (index) == ERROR)
                     return ERROR;
-				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, partitionNames[index], numSpecies);
+				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, speciespartitionNames[index], numSpecies);
 				if (SetModelDefaults () == ERROR)
 					return (ERROR);
 				if (SetUpAnalysis (&globalSeed) == ERROR)
@@ -7733,7 +7734,8 @@ int DoTranslate (void)
 	numTranslates++;    /* number of taxa in translate table */
 	isTranslateDef = YES;
 
-    if (defMatrix == NO)
+    isTranslateDiff = NO;
+    if (isTaxsetDef == NO)
         SetTaxaFromTranslateTable();
     else
         {
@@ -7742,9 +7744,7 @@ int DoTranslate (void)
             strcpy (token, transFrom[i]);
             if (CheckString (taxaNames, numTaxa, token, &j) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find taxon '%s' in current taxon set\n", spacer, token);
-                MrBayesPrint ("%s   You need to define a set of taxon labels first\n", spacer, token);
-                return (ERROR);
+                isTranslateDiff = YES;
                 }
             }
         }
@@ -7862,12 +7862,12 @@ int DoTreeParm (char *parmName, char *tkn)
 	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
-	static char 		tempCppEventString[150]; /* Contains multiple tokens which form CppEvents string */
-	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundFirst,
+	static char 		tempNameString[150]; /* Contains multiple tokens which form name string of param set*/
+	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundN, foundFirst,
                         foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
 						foundClockrate, 
-                        foundCppEvent, /*is set to YES when CppEvent token is found and set to NO once full CppEvents name is processed*/
-                        eSetIndex, /* is set in the begining of reading CppEvent for a node/branch to the index of cureently processing CppEventt set */
+                        foundName, /*is set to YES when param set name token is found and set to NO once full param set name is processed*/
+                        eSetIndex, /* is set in the begining of reading CppEvent for a node/branch to the index of currently processed CppEvent set */
                         bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
 	static PolyNode		*pp, *qq;
 	static PolyTree		*t;
@@ -7877,7 +7877,7 @@ int DoTreeParm (char *parmName, char *tkn)
           tree <name> = [&R] <newick-description>;
           tree <name> = [&U] <newick-description>;
           tree <name> [&E CppEvents{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents{1,2,5} 2:(0.10 1.11,0.83 3.17)],2:0.021):0.038,3:0.059);
-          tree <name> [&B BmBranchRates{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&B BmBranchRates{1,2,5} 1.12],2:0.021):0.038,3:0.059);
+          tree <name> [&B BmBranchRates{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&B BmBranchRates{1,2,5} 1.12],2:0.021[&B BmBranchRates{1,2,5}...
        
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
@@ -7902,7 +7902,6 @@ int DoTreeParm (char *parmName, char *tkn)
             {
             /* we are reading in a tree to sumt or comparetree counters */
             t = sumtParams.tree;
-			sumtParams.nESets=0;
             ResetPolyTree (t);
             }
         else
@@ -7925,10 +7924,13 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         strncpy (t->name, tkn, 99);
 	    foundColon = foundAmpersand = foundEqual = foundComment = NO;
-        foundE = foundB = foundFirst = foundClockrate = foundCppEvent = NO;
+        foundE = foundB = foundN = foundFirst = foundClockrate = foundName = NO;
 	    eSetIndex = bSetIndex = eventIndex = 0;
 	    nextAvailableNode = 0;
-        nextIntNodeIndex = numTaxa;
+        if (isTranslateDef == YES && isTranslateDiff == YES)
+            nextIntNodeIndex = numTranslates;
+        else
+            nextIntNodeIndex = numLocalTaxa;
 	    pp = &t->nodes[nextAvailableNode++];
 	    t->root = pp;
         t->isRooted = NO;  /* expect unrooted tree */
@@ -7936,6 +7938,7 @@ int DoTreeParm (char *parmName, char *tkn)
         t->isCalibrated = NO;  /* expect uncalibrated tree */
         t->isRelaxed = NO;    /* expect strict clock if clock tree */
         t->clockRate = 0.0;     /* expect no clock rate */
+        t->popSizeSet = NO;     
 		readComment = YES;
 		expecting = Expecting(EQUALSIGN) | Expecting(LEFTCOMMENT);
 		}
@@ -7990,6 +7993,11 @@ int DoTreeParm (char *parmName, char *tkn)
 				foundB = YES;
 				expecting = Expecting(ALPHA);
 				}
+			else if (strcmp(tkn,"N") == 0)
+				{
+				foundN = YES;
+				expecting = Expecting(ALPHA);
+				}
             else if (strcmp(tkn, "R") == 0)
                 {
                 t->isRooted = YES;
@@ -8020,77 +8028,40 @@ int DoTreeParm (char *parmName, char *tkn)
 				}
 			foundAmpersand = NO;
 			}
-		else if (foundE == YES) /* We have seen &E */
-			{
-			if( foundCppEvent == YES) /* We have seen &E CppEvents */
+		else if (foundName == YES && foundCurly == YES)
+            {
+			if( strcmp("all",tkn) == 0 )
 				{
-				if ( IsSame("all",tkn) == SAME)
-					{
-					expecting = Expecting(RIGHTCURL);
-					if (foundEqual == NO)
-						{
-						foundE = NO; //do not need 
-						}
-					strcat(tempCppEventString,"all");
-					}
-				else
-					{
-					MrBayesPrint ("%s   Urecognized argument: '%s' is passed to CppEvents()\n", spacer, tkn);
-					return (ERROR);
-					}
+				strcat(tempNameString,tkn);
+				expecting = Expecting(RIGHTCURL);
 				}
-			else if (foundEqual == NO) /* We have not seen CppEvents before and we are in header */
+			else
 				{
-				sumtParams.nESets++;
+				MrBayesPrint ("%s   Urecognized argument '%s'\n", spacer, tkn);
+				return (ERROR);
+				}
+            }
+        else if (foundE == YES) /* We have seen &E */
+			{
+            if (foundEqual == NO) /* We have not seen name before and we are in header */
+				{
 				t->nESets++;
                 t->isRelaxed = YES;
 				t->nEvents  = (int **) realloc ((void *)t->nEvents, t->nESets*sizeof(int *));
 				t->position = (MrBFlt ***) realloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
 				t->rateMult = (MrBFlt ***) realloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
-				t->eType = (int *) realloc ((void *)t->eType, t->nESets*sizeof(int));
                 t->nEvents[t->nESets-1]  = (int *) calloc ((size_t)(2*numTaxa), sizeof(int));
                 t->position[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
                 t->rateMult[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
-				t->eType[t->nESets-1] = CPPm;
-				t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));				
-				if (strcmp("CppEvents",tkn) == 0)
-					{
-					strcpy (tempCppEventString,tkn);
-					foundCppEvent = YES;
-					expecting = Expecting(LEFTCURL) | Expecting(RIGHTCOMMENT);
-					}
-				else
-					{ /* We have seen &E before but not CppEvents and current token is not CppEvents. We treat the token as a complite event name, i.e. do not expect any further details of the name */
-					expecting = Expecting(RIGHTCOMMENT);
-					foundE = NO;
-					t->eSetName[t->nESets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
-					strcpy (t->eSetName[t->nESets-1],tkn);
-					}
-				}
-			else if (strcmp("CppEvents",tkn) == 0) /* We have not seen CppEvents before but current token is CppEvents. We are not in the header. Thus we are processing node events name */
-				{
-				strcpy (tempCppEventString,tkn);
-				foundCppEvent = YES;
-				expecting = Expecting(LEFTCURL) | Expecting(NUMBER);
-				}
-			else
-				{
-				/* find the right event set */
-                /* We are not in the header. We have seen &E before but not CppEvents and current token is not CppEvents. */
-                /* We treat the token as a complite event name, i.e. do not expect any further details of the name. So we try to match it. */
-				for (i=0; i<t->nESets; i++)
-					if (strcmp(t->eSetName[i],tkn) == 0)
-						break;
-				if (i == t->nESets)
-					{
-					MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
-					if (inSumtCommand == NO && inComparetreeCommand == NO)
-                        FreePolyTree (userTree[treeIndex]);
-					return (ERROR);
-					}
-				eSetIndex = i;
-				expecting = Expecting(NUMBER);
-				}
+                t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));
+                }
+			strcpy (tempNameString,tkn);
+			foundName = YES;
+			expecting = Expecting(LEFTCURL);
+            if (foundEqual == YES)
+                expecting |= Expecting(NUMBER);
+            else
+                expecting |= Expecting(RIGHTCOMMENT);
 			}
 		else if (foundB == YES)
 			{
@@ -8098,32 +8069,45 @@ int DoTreeParm (char *parmName, char *tkn)
 				{
 				t->nBSets++;
                 t->isRelaxed = YES;
-				t->branchRate = (MrBFlt **) realloc ((void *)t->branchRate, (size_t)(t->nBSets*sizeof(MrBFlt *)));
-                t->branchRate[t->nBSets-1] = (MrBFlt *) calloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
+                t->effectiveBrLen = (MrBFlt **) realloc ((void *)t->effectiveBrLen, (size_t)(t->nBSets*sizeof(MrBFlt *)));
+                t->effectiveBrLen[t->nBSets-1] = (MrBFlt *) calloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
                 for (i=0; i<2*numTaxa; i++)
-                    t->branchRate[t->nBSets-1][i] = 1.0;
+                    t->effectiveBrLen[t->nBSets-1][i] = 1.0;
                 t->bSetName = (char **) realloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
 				t->bSetName[t->nBSets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
-				strcpy (t->bSetName[t->nBSets-1],tkn);
-				foundB = NO;
-				expecting = Expecting(RIGHTCOMMENT);
-				}
-			else
+                }
+			strcpy (tempNameString,tkn);
+			foundName = YES;
+			expecting = Expecting(LEFTCURL);
+            if (foundEqual == YES)
+                expecting |= Expecting(NUMBER);
+            else
+                expecting |= Expecting(RIGHTCOMMENT);
+			}
+		else if (foundN == YES)
+			{
+			if (foundEqual == NO)
 				{
-				/* find the right event set */
-				for (i=0; i<t->nBSets; i++)
-					if (strcmp(t->bSetName[i],tkn) == 0)
-						break;
-				if (i == t->nBSets)
-					{
-					MrBayesPrint ("%s   Could not find branch rate set '%s'\n", spacer, tkn);
+				if (t->popSizeSet == YES)
+                    {
+					MrBayesPrint ("%s   Cannot hold more than one population size set\n", spacer);
 					if (inSumtCommand == NO && inComparetreeCommand == NO)
                         FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
-					}
-				bSetIndex = i;
-				expecting = Expecting(NUMBER);
+                    }
+                t->popSizeSet = YES;
+                if (isTranslateDef == YES && isTranslateDiff == YES)
+                    t->popSize = (MrBFlt *) calloc (2*numTranslates-1, sizeof(MrBFlt));
+                else
+                    t->popSize = (MrBFlt *) calloc (2*numLocalTaxa-1, sizeof(MrBFlt));
 				}
+			strcpy (tempNameString,tkn);
+			foundName = YES;
+			expecting = Expecting(LEFTCURL);
+            if (foundEqual == YES)
+                expecting |= Expecting(NUMBER);
+            else
+                expecting |= Expecting(RIGHTCOMMENT);
 			}
 		else   /* taxon name */
 			{
@@ -8137,26 +8121,24 @@ int DoTreeParm (char *parmName, char *tkn)
                         FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
-				else
+				strcpy (tempName, transFrom[index]);
+				if (isTranslateDiff == NO && CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
 					{
-					strcpy (tempName, transFrom[index]);
-					if (CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
-						{
-						MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
-					    if (inSumtCommand == NO && inComparetreeCommand == NO)
-                            FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					if (tempSet[index] == YES)
-						{
-						MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
-					    if (inSumtCommand == NO && inComparetreeCommand == NO)
-                            FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					else
-						tempSet[index] = YES;
+					MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
+				    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
 					}
+				if (tempSet[index] == YES)
+					{
+					MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
+				    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
+					}
+				tempSet[index] = YES;
+		        strcpy (pp->label, tempName);
+		        pp->index = index;
 				}
 			else
 				{
@@ -8175,11 +8157,10 @@ int DoTreeParm (char *parmName, char *tkn)
                         FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
-				else
-					tempSet[index] = YES;
+				tempSet[index] = YES;
+		        strcpy (pp->label, tkn);
+		        pp->index = index;
 				}
-			strcpy (pp->label, tkn);
-			pp->index = index;
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(COLON);
 			expecting |= Expecting(RIGHTPAR);
@@ -8241,8 +8222,16 @@ int DoTreeParm (char *parmName, char *tkn)
 				        numUserTrees++;
 			        MrBayesPrint ("%s   Successfully read tree '%s'\n", spacer, userTree[treeIndex]->name);
                     }
-                readComment = NO;
-			    expecting = Expecting(SEMICOLON);
+                if (t->popSize == NULL)
+                    {
+                    readComment = NO;
+                    expecting = Expecting(SEMICOLON);
+                    }
+                else
+                    {
+                    readComment = YES;
+                    expecting = Expecting(LEFTCOMMENT);
+                    }
                 }
     		else
 	    		{
@@ -8262,13 +8251,14 @@ int DoTreeParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(COMMA))
 		{
-		if (foundE == YES)
+        if (foundName == YES)
+            {
+            strcat(tempNameString,",");
+            expecting = Expecting(NUMBER);
+            }
+		else if (foundE == YES)
 			{
 			expecting = Expecting(NUMBER);
-			if( foundCppEvent == YES)
-				{
-				strcat(tempCppEventString,tkn);					
-				}
 			}
 		else
 			{
@@ -8297,10 +8287,50 @@ int DoTreeParm (char *parmName, char *tkn)
             foundClockrate = NO;
             expecting = Expecting(RIGHTCOMMENT);
             }
+        else if (foundName == YES && foundCurly == YES)
+            {
+            /* still assembling name of a param set */
+			strcat(tempNameString,tkn);		
+			expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
+            }
+        else if (foundN == YES)
+			{
+            /* we only know now that name is complete if it does not have curlies in it */
+            foundName = NO;
+
+			if (strcmp(tempNameString,t->popSizeSetName) != 0)
+				{
+				MrBayesPrint ("%s   Could not find population size set '%s'\n", spacer, tempNameString);
+				if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
+				return (ERROR);
+				}
+
+            sscanf (tkn, "%lf", &tempD);
+            t->popSize[pp->index] = tempD;
+			foundN = NO;
+			expecting = Expecting(RIGHTCOMMENT);
+			}
         else if (foundB == YES)
 			{
-			sscanf (tkn, "%lf", &tempD);
-			t->branchRate[bSetIndex][pp->index] = tempD;
+            /* we only know now that name is complete if it does not have curlies in it */
+            foundName = NO;
+
+			/* find the right effective branch length set */
+			for (i=0; i<t->nBSets; i++)
+				if (strcmp(t->bSetName[i],tempNameString) == 0)
+					break;
+			if (i == t->nBSets)
+				{
+				MrBayesPrint ("%s   Could not find effective branch length set '%s'\n", spacer, tempNameString);
+				if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
+				return (ERROR);
+				}
+			bSetIndex = i;
+
+            sscanf (tkn, "%lf", &tempD);
+            t->effectiveBrLen[bSetIndex][pp->index] = tempD;
 			foundB = NO;
 			expecting = Expecting(RIGHTCOMMENT);
 			}
@@ -8308,55 +8338,54 @@ int DoTreeParm (char *parmName, char *tkn)
 			{
 			if (foundColon == NO)
 				{
+                /* we only know now that name is complete if it does not have curlies in it */
+                foundName = NO;
 
-				if( foundCppEvent == YES && foundCurly == YES )
+                /* find the right event set */
+				for (i=0; i<t->nESets; i++)
+					if (strcmp(t->eSetName[i],tempNameString) == 0)
+						break;
+				if (i == t->nESets)
 					{
-					expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
-					strcat(tempCppEventString,tkn);		
+					MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tempNameString);
+					if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
 					}
-				else 
-					{
-		            if( foundCppEvent == YES )
-			            {/* foundCurly == NO */
-                        /* We are here if we are reading CppEvent for a node/branch, so we have to match the name against existent set of names stored in t->eSetName array */
-			            foundCppEvent = NO;
-			            for (i=0; i<t->nESets; i++)
-				            if (strcmp(t->eSetName[i],tempCppEventString) == 0)
-					            break;
-			            if (i == t->nESets)
-				            {
-				            MrBayesPrint ("%s   Could not find event set '%s'\n", spacer, tkn);
-				            if (inSumtCommand == NO && inComparetreeCommand == NO)
-                                FreePolyTree (userTree[treeIndex]);
-				            return (ERROR);
-				            }
-			            eSetIndex = i;
-                        }
+				eSetIndex = i;
 
-					sscanf (tkn, "%d", &tempInt);
-					if (tempInt <= 0)
-						{
-						MrBayesPrint ("%s   Wrong number of events (%d) for event set '%s'\n", spacer, tempInt, t->eSetName[eSetIndex]);
-			        	if (inSumtCommand == NO && inComparetreeCommand == NO)
-                        	FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					t->nEvents[eSetIndex][pp->index]  = tempInt;
-					t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-					t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-					eventIndex = 0;
-					expecting = Expecting (COLON);
+				sscanf (tkn, "%d", &tempInt);
+				if (tempInt < 0)
+					{
+					MrBayesPrint ("%s   Wrong number of events (%d) for event set '%s'\n", spacer, tempInt, t->eSetName[eSetIndex]);
+		        	if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    	FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
 					}
+				t->nEvents[eSetIndex][pp->index]  = tempInt;
+                if (tempInt > 0)
+                    {
+				    t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+				    t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+                    expecting = Expecting (COLON);
+                    if (inSumtCommand == YES || inComparetreeCommand == YES)
+                        expecting |= Expecting (RIGHTCOMMENT);  /* we allow empty event specifications in sumt and comparetree */
+                    }
+				else
+                    expecting = Expecting (RIGHTCOMMENT);
+                eventIndex = 0;
                 }
 			else if (foundFirst == NO)
-				{ /* processing the first number in the cpp event pair <position rate>*/
+				{
+                /* processing the first number in the cpp event pair <position rate>*/
 				sscanf (tkn, "%lf", &tempD);
 				t->position[eSetIndex][pp->index][eventIndex] = tempD;
 				expecting = Expecting(NUMBER);
 				foundFirst = YES;
 				}
 			else
-				{ /* processing the second number in the cpp event pair <position rate>*/
+				{
+                /* processing the second number in the cpp event pair <position rate>*/
 				foundFirst = NO;
 				sscanf (tkn, "%lf", &tempD);
 				t->rateMult[eSetIndex][pp->index][eventIndex] = tempD;
@@ -8397,29 +8426,24 @@ int DoTreeParm (char *parmName, char *tkn)
                         FreePolyTree (userTree[treeIndex]);
 					return (ERROR);
 					}
-				else
+				strcpy (tempName, transFrom[index]);
+				if (isTranslateDiff == NO && CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
 					{
-					strcpy (tempName, transFrom[index]);
-					if (CheckString (taxaNames, numTaxa, tempName, &index) == ERROR)
-						{
-						MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
-		                if (inSumtCommand == NO && inComparetreeCommand == NO)
-                            FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					if (tempSet[index] == YES)
-						{
-						MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
-		                if (inSumtCommand == NO && inComparetreeCommand == NO)
-                            FreePolyTree (userTree[treeIndex]);
-						return (ERROR);
-						}
-					else
-                        {
-						tempSet[index] = YES;
-                        tempInt = index;
-                        }
+					MrBayesPrint ("%s   Could not find taxon '%s' in list of taxa\n", spacer, tkn);
+	                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
 					}
+				if (tempSet[index] == YES)
+					{
+					MrBayesPrint ("%s   Taxon name '%s' already used in tree\n", spacer, tkn);
+	                if (inSumtCommand == NO && inComparetreeCommand == NO)
+                        FreePolyTree (userTree[treeIndex]);
+					return (ERROR);
+					}
+                tempSet[index] = YES;
+                strcpy (pp->label, tempName);
+                pp->index = index;
 				}
 			else
 				{
@@ -8444,8 +8468,6 @@ int DoTreeParm (char *parmName, char *tkn)
                             FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					else
-						tempSet[index] = YES;
 					}
 				else
 					{
@@ -8464,12 +8486,11 @@ int DoTreeParm (char *parmName, char *tkn)
                             FreePolyTree (userTree[treeIndex]);
 						return (ERROR);
 						}
-					else
-						tempSet[index] = YES;
 					}
+				tempSet[index] = YES;
+			    strcpy (pp->label, taxaNames[index]);
+			    pp->index = index;
 				}
-			strcpy (pp->label, taxaNames[index]);
-			pp->index = index;
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(COLON);
 			expecting |= Expecting(RIGHTPAR);
@@ -8482,27 +8503,46 @@ int DoTreeParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(RIGHTCOMMENT))
 		{
-		foundE = foundB = NO;
-        expecting = Expecting(LEFTCOMMENT);
         if (foundEqual == NO)
             {
-			expecting |= Expecting(EQUALSIGN);
-		    if( foundCppEvent == YES)
-			    {/* We are here if we are processing header of a tree, thus we only collecting CppEvent name by putting it at the end of t->eSetName array  */
-			    foundCppEvent = NO;
-				t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempCppEventString)+1,sizeof(char));
-				strcat(t->eSetName[t->nESets-1],tempCppEventString);
-				}
+            /* We may have a complete name of a set of branch parameters, which needs to be recorded */
+		    if (foundName == YES)
+			    {
+                if (foundE == YES)
+                    {
+				    t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+				    strcat(t->eSetName[t->nESets-1],tempNameString);
+    				}
+                else if (foundB == YES)
+                    {
+				    t->bSetName[t->nBSets-1] = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+				    strcat(t->bSetName[t->nBSets-1],tempNameString);
+                    }
+                else if (foundN == YES)
+                    {
+    				t->popSizeSetName = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+    				strcpy(t->popSizeSetName,tempNameString);
+                    }
+                foundName = NO;
+                }
+			expecting = Expecting(EQUALSIGN);
             }
 		else
 			{
 			if (pp->anc == NULL)
-                expecting |= Expecting(LEFTPAR);
+                {
+                if (pp->left == NULL)
+                    expecting = Expecting(LEFTPAR);
+                else
+                    expecting = Expecting(SEMICOLON);
+                }
             else if (pp == pp->anc->left)
-				expecting |= Expecting(COMMA);
+				expecting = Expecting(COMMA);
 			else
-				expecting |= Expecting(RIGHTPAR);
+				expecting = Expecting(RIGHTPAR);
 			}
+		foundE = foundB = foundN = NO;
+        expecting |= Expecting(LEFTCOMMENT);
 		}
 	else if (expecting == Expecting(AMPERSAND))
 		{
@@ -8517,10 +8557,10 @@ int DoTreeParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(LEFTCURL))
 		{
-		if( foundCppEvent == YES)
+		if( foundName == YES)
 			{
             foundCurly=YES;
-			strcat(tempCppEventString,"{");				
+			strcat(tempNameString,"{");				
 			expecting = Expecting(NUMBER) | Expecting(ALPHA);
 			}
 		else
@@ -8528,17 +8568,18 @@ int DoTreeParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(RIGHTCURL))
 		{
-		if( foundCppEvent == YES)
+		if( foundName == YES)
 			{
-			strcat(tempCppEventString,"}");
+			strcat(tempNameString,"}");
             foundCurly=NO;
 			if (foundEqual == NO)
-				{ /* We are here if we are processing CppEvent name in the header of a tree.  */
+				{
+                /* We are processing a name of a set of branch params in the header of a tree.  */
 				expecting = Expecting(RIGHTCOMMENT);
 				}
 			else
 				{
-                /* We are here if we are processing CppEvent name not in the header of a tree. Thus next we expect number of events.  */
+                /* We are processing a param value of a branch param set  */
 				expecting = Expecting(NUMBER);
 				}
 			}
@@ -8778,39 +8819,6 @@ int FindValidParam (char *tk, int *numMatches)
 	else
 		return (ERROR);
 	
-}
-
-
-
-
-
-void FinishTree (TreeNode *p, int *i, int isThisTreeRooted)
-
-{
-
-	/* We only reindex the internal nodes of the tree. We
-	   assume that the tip nodes have already been indexed
-	   0, 1, 2, ..., numTaxa-1. */
-	   
-	if (p != NULL)
-		{
-		FinishTree (p->left,  i, isThisTreeRooted);
-		FinishTree (p->right, i, isThisTreeRooted);
-		p->marked = NO;
-		if (p->left == NULL && p->right == NULL && p->anc != NULL)
-			{
-			}
-		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
-			{
-			if (isThisTreeRooted == YES)
-				p->index = (*i)++;
-			}
-		else
-			{
-			p->index = (*i)++;
-			}
-		}
-		
 }
 
 
@@ -9910,9 +9918,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                vertebrate mitocondrial DNA, \"mycoplasma\", \"yeast\",          \n");
 		MrBayesPrint ("                \"ciliates\", and \"metmt\" (for metazoan mitochondrial DNA      \n");
 		MrBayesPrint ("                except vertebrates).                                             \n");
-		MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\"    \n");
-		MrBayesPrint ("                or \"Diploid\". This option is used when a coalescence prior     \n");
-		MrBayesPrint ("                is used on trees.                                                \n");
+		MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\",    \n");
+		MrBayesPrint ("                \"Diploid\" or \"Zlinked\". This option is used when a coalescence\n");
+		MrBayesPrint ("                prior is used on trees.                                          \n");
 		MrBayesPrint ("   Rates     -- Sets the model for among-site rate variation. In general, the    \n");
 		MrBayesPrint ("                rate at a site is considered to be an unknown random variable.   \n");
 		MrBayesPrint ("                The valid options are:                                           \n");
@@ -10037,7 +10045,7 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Nst          1/2/6                                 %s                         \n", mp->nst);
 			MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
 			MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
-			MrBayesPrint ("   Ploidy       Haploid/Diploid                       %s                         \n", mp->ploidy);
+			MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked               %s                         \n", mp->ploidy);
 			MrBayesPrint ("   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  %s                         \n", mp->ratesModel);
 			MrBayesPrint ("   Ngammacat    <number>                              %d                         \n", mp->numGammaCats);
 			MrBayesPrint ("   Usegibbs     Yes/No                                %s                         \n", mp->useGibbs);
@@ -10423,6 +10431,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    selected as the prior on branch lengths. Note that the set-  \n");
 		MrBayesPrint ("                    ting of 'ploidy' in 'lset' is important for how this para-   \n");
 		MrBayesPrint ("                    meter is interpreted.                                        \n");
+		MrBayesPrint ("   Popvarpr      -- In a gene tree - species tree model, this parameter deter-   \n");
+		MrBayesPrint ("                    mines whether the population size is the same for the entire \n");
+		MrBayesPrint ("                    species tree ('popvarpr = equal', the default), or varies    \n");
+		MrBayesPrint ("                    across branches of the species tree ('popvarpr=variable').   \n");
 	/*	MrBayesPrint ("   Growthpr      -- This parameter sets the prior on the exponential growth      \n");
 		MrBayesPrint ("                    parameter of the coalescence process. The options are:       \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -10846,15 +10858,20 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
-			MrBayesPrint ("   Popsizepr        Uniform/Exponential/Fixed    %s", mp->popSizePr);
+			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
+			MrBayesPrint ("                    Normal/Fixed                   ");
 			if (!strcmp(mp->popSizePr, "Uniform"))
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeUni[0], mp->popSizeUni[1]);
-			else if (!strcmp(mp->popSizePr, "Exponential"))
-				MrBayesPrint ("(%1.1lf)\n", mp->popSizeExp);
+			else if (!strcmp(mp->popSizePr, "Lognormal"))
+				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeLognormal[0], mp->popSizeLognormal[1]);
+			else if (!strcmp(mp->popSizePr, "Normal"))
+				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeNormal[0], mp->popSizeNormal[1]);
+			else if (!strcmp(mp->popSizePr, "Gamma"))
+				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeGamma[0], mp->popSizeGamma[1]);
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->popSizeFix);
 
-			MrBayesPrint ("   Popvarpr          Equal/Branchspecific        %s\n", mp->popVarPr);
+			MrBayesPrint ("   Popvarpr          Equal/Variable              %s\n", mp->popVarPr);
 
             /*
 			MrBayesPrint ("   Growthpr         Uniform/Exponential/         \n");
@@ -11843,7 +11860,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   the model; and (3) a table with the mean, variance, and 95 percent credible   \n");
 		MrBayesPrint ("   interval for the sampled parameters. All three items are output to screen.    \n");
 		MrBayesPrint ("   The table of marginal likelihoods is also printed to a file with the ending   \n");
-		MrBayesPrint ("   '.mstat' and the parameter table to a file with the ending '.pstat'. For some \n");
+		MrBayesPrint ("   '.lstat' and the parameter table to a file with the ending '.pstat'. For some \n");
 		MrBayesPrint ("   model parameters, there may also be a '.mstat' file.                          \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   When running 'Sump' you typically want to discard a specified number or       \n");
@@ -12148,183 +12165,6 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
-	else if (!strcmp(helpTkn, "Lset"))
-		{
-		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
-		MrBayesPrint ("   Lset                                                                          \n");
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   This command sets the parameters of the likelihood model. The likelihood      \n");
-		MrBayesPrint ("   function is the probability of observing the data conditional on the phylo-   \n");
-		MrBayesPrint ("   genetic model. In order to calculate the likelihood, you must assume a        \n");
-		MrBayesPrint ("   model of character change. This command lets you tailor the biological        \n");
-		MrBayesPrint ("   assumptions made in the phylogenetic model. The correct usage is              \n");
-	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      lset <parameter>=<option> ... <parameter>=<option>                         \n");
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   For example, \"lset nst=6 rates=gamma\" would set the model to a general      \n");
-		MrBayesPrint ("   model of DNA substition (the GTR) with gamma-distributed rate variation       \n");
-		MrBayesPrint ("   across sites.                                                                 \n");
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Options:                                                                      \n");
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Applyto   -- This option allows you to apply the lset commands to specific    \n");
-		MrBayesPrint ("                partitions. This command should be the first in the list of      \n");
-		MrBayesPrint ("                commands specified in lset. Moreover, it only makes sense to     \n");
-		MrBayesPrint ("                be using this command if the data have been partitioned. A       \n");
-		MrBayesPrint ("                default partition is set on execution of a matrix. If the data   \n");
-		MrBayesPrint ("                are homogeneous (i.e., all of the same data type), then this     \n");
-		MrBayesPrint ("                partition will not subdivide the characters. Up to 30 other      \n");
-		MrBayesPrint ("                partitions can be defined, and you can switch among them using   \n");
-		MrBayesPrint ("                \"set partition=<partition name>\". Now, you may want to         \n");
-		MrBayesPrint ("                specify different models to different partitions of the data.    \n");
-		MrBayesPrint ("                Applyto allows you to do this. For example, say you have         \n");
-		MrBayesPrint ("                partitioned the data by codon position, and you want to apply    \n");
-		MrBayesPrint ("                a nst=2 model to the first two partitions and nst=6 to the       \n");
-		MrBayesPrint ("                last. This could be implemented in two uses of lset:             \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                   lset applyto=(1,2) nst=2                                      \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                   lset applyto=(3) nst=6                                        \n");
-		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                The first applies the parameters after \"applyto\" to the        \n");
-		MrBayesPrint ("                first and second partitions. The second lset applies nst=6       \n");
-		MrBayesPrint ("                to the third partition. You can also use applyto=(all), which    \n");
-		MrBayesPrint ("                attempts to apply the parameter settings to all of the data      \n");
-		MrBayesPrint ("                partitions. Importantly, if the option is not consistent with    \n");
-		MrBayesPrint ("                the data in the partition, the program will not apply the        \n");
-		MrBayesPrint ("                lset option to that partition.                                   \n");
-		MrBayesPrint ("   Nucmodel  -- This specifies the general form of the nucleotide substitution   \n");
-		MrBayesPrint ("                model. The options are \"4by4\" [the standard model of DNA       \n");
-		MrBayesPrint ("                substitution in which there are only four states (A,C,G,T/U)],   \n");
-		MrBayesPrint ("                \"doublet\" (a model appropriate for modelling the stem regions  \n");
-		MrBayesPrint ("                of ribosomal genes where the state space is the 16 doublets of   \n");
-		MrBayesPrint ("                nucleotides), \"codon\" (the substitution model is expanded      \n");
-		MrBayesPrint ("                around triplets of nucleotides--a codon), and \"Protein\"	    \n");
-		MrBayesPrint ("                (triplets of nucleotides are translated to amino acids, which    \n");
-		MrBayesPrint ("                form the basis of the substitution model).                       \n");
-		MrBayesPrint ("   Nst       -- Sets the number of substitution types: \"1\" constrains all of   \n");
-		MrBayesPrint ("                the rates to be the same (e.g., a JC69 or F81 model); \"2\" all- \n");
-		MrBayesPrint ("                ows transitions and transversions to have potentially different  \n");
-		MrBayesPrint ("                rates (e.g., a K80 or HKY85 model); \"6\" allows all rates to    \n");
-		MrBayesPrint ("                be different, subject to the constraint of time-reversibility    \n");
-		MrBayesPrint ("                (e.g., a GTR model).                                             \n");
-		MrBayesPrint ("   Code      -- Enforces the use of a particular genetic code. The default       \n");
-		MrBayesPrint ("                is the universal code. Other options include \"vertmt\" for      \n");
-		MrBayesPrint ("                vertebrate mitocondrial DNA, \"mycoplasma\", \"yeast\",          \n");
-		MrBayesPrint ("                \"ciliates\", and \"metmt\" (for metazoan mitochondrial DNA      \n");
-		MrBayesPrint ("                except vertebrates).                                             \n");
-		MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\"    \n");
-		MrBayesPrint ("                or \"Diploid\". This option is used when a coalescence prior     \n");
-		MrBayesPrint ("                is used on trees.                                                \n");
-		MrBayesPrint ("   Rates     -- Sets the model for among-site rate variation. In general, the    \n");
-		MrBayesPrint ("                rate at a site is considered to be an unknown random variable.   \n");
-		MrBayesPrint ("                The valid options are:                                           \n");
-		MrBayesPrint ("                * equal    -- No rate variation across sites.                    \n");
-		MrBayesPrint ("                * gamma    -- Gamma-distributed rates across sites. The rate     \n");
-		MrBayesPrint ("                              at a site is drawn from a gamma distribution.      \n");
-		MrBayesPrint ("                              The gamma distribution has a single parameter      \n");
-		MrBayesPrint ("                              that describes how much rates vary.                \n");
-		MrBayesPrint ("                * adgamma  -- Autocorrelated rates across sites. The marg-       \n");
-		MrBayesPrint ("                              inal rate distribution is gamma, but adjacent      \n");
-		MrBayesPrint ("                              sites have correlated rates.                       \n");
-		MrBayesPrint ("                * propinv  -- A proportion of the sites are invariable.          \n");
-		MrBayesPrint ("                * invgamma -- A proportion of the sites are invariable while     \n");
-		MrBayesPrint ("                              the rate for the remaining sites are drawn from    \n");
-		MrBayesPrint ("                              a gamma distribution.                              \n");
-		MrBayesPrint ("                Note that MrBayes versions 2.0 and earlier supported options     \n");
-		MrBayesPrint ("                that allowed site specific rates (e.g., ssgamma). In versions    \n");
-		MrBayesPrint ("                3.0 and later, site specific rates are allowed, but set using    \n");
-		MrBayesPrint ("                the 'prset ratepr' command for each partition.                   \n");
-		MrBayesPrint ("   Ngammacat -- Sets the number of rate categories for the gamma distribution.   \n");
-		MrBayesPrint ("                The gamma distribution is continuous. However, it is virtually   \n");
-		MrBayesPrint ("                impossible to calculate likelihoods under the continuous gamma   \n");
-		MrBayesPrint ("                distribution. Hence, an approximation to the continuous gamma    \n");
-		MrBayesPrint ("                is used; the gamma distribution is broken into ncat categories   \n");
-		MrBayesPrint ("                of equal weight (1/ncat). The mean rate for each category rep-   \n");
-		MrBayesPrint ("                resents the rate for the entire cateogry. This option allows     \n");
-		MrBayesPrint ("                you to specify how many rate categories to use when approx-      \n");
-		MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
-		MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
-		MrBayesPrint ("                approximating the continuous gamma.                              \n");
-		MrBayesPrint ("   Nbetacat  -- Sets the number of rate categories for the beta distribution.    \n");
-		MrBayesPrint ("                A symmetric beta distribution is used to model the station-      \n");
-		MrBayesPrint ("                ary frequencies when morphological data are used. This option    \n");
-		MrBayesPrint ("                specifies how well the beta distribution will be approx-         \n");
-		MrBayesPrint ("                imated.                                                          \n");
-		MrBayesPrint ("   Omegavar  -- Allows the nonsynonymous/synonymous rate ratio (omega) to vary   \n");
-		MrBayesPrint ("                across codons. Ny98 assumes that there are three classes, with   \n");
-		MrBayesPrint ("                potentially different omega values (omega1, omega2, omega3):     \n");
-		MrBayesPrint ("                omega2 = 1; 0 < omega1 <1; and omega3 > 1. Like the Ny98 model,  \n");
-		MrBayesPrint ("                the M3 model has three omega classes. However, their values are  \n");
-		MrBayesPrint ("                less constrained, with omega1 < omega2 < omega3. The default     \n");
-		MrBayesPrint ("                (omegavar = equal) has no variation on omega across sites.       \n");
-		MrBayesPrint ("   Covarion  -- This forces the use of a covarion-like model of substitution     \n");
-		MrBayesPrint ("                for nucleotide or amino acid data. The valid options are \"yes\" \n");
-		MrBayesPrint ("                and \"no\". The covarion model allows the rate at a site to      \n");
-		MrBayesPrint ("                change over its evolutionary history. Specifically, the site     \n");
-		MrBayesPrint ("                is either on or off. When it is off, no substitutions are poss-  \n");
-		MrBayesPrint ("                ible. When the process is on, substitutions occur according to   \n");
-		MrBayesPrint ("                a specified substitution model (specified using the other        \n");
-		MrBayesPrint ("                lset options).                                                   \n");
-		MrBayesPrint ("   Coding    -- This specifies how characters were sampled. If all site pat-     \n");
-		MrBayesPrint ("                terns had the possibility of being sampled, then \"all\" should  \n");
-		MrBayesPrint ("                be specified (the default). Otherwise \"variable\" (only var-    \n");
-		MrBayesPrint ("                iable characters had the possibility of being sampled),          \n");
-		MrBayesPrint ("                \"noabsence\" (characters for which all taxa were coded as       \n");
-		MrBayesPrint ("                absent were not sampled), and \"nopresence\" (characters for     \n");
-		MrBayesPrint ("                which all taxa were coded as present were not sampled. \"All\"   \n");
-		MrBayesPrint ("                works for all data types. However, the others only work for      \n");
-		MrBayesPrint ("                morphological (all/variable) or restriction site (all/variable/  \n");
-		MrBayesPrint ("                noabsence/nopresence) data.                                      \n");
-		MrBayesPrint ("   Parsmodel -- This forces calculation under the so-called parsimony model      \n");
-		MrBayesPrint ("                described by Tuffley and Steel (1998). The options are \"yes\"   \n");
-		MrBayesPrint ("                or \"no\". Note that the biological assumptions of this model    \n");
-		MrBayesPrint ("                are anything but parsimonious. In fact, this model assumes many  \n");
-		MrBayesPrint ("                more parameters than the next most complicated model imple-      \n");
-		MrBayesPrint ("                mented in this program. If you really believe that the pars-     \n");
-		MrBayesPrint ("                imony model makes the biological assumptions described by        \n");
-		MrBayesPrint ("                Tuffley and Steel, then the parsimony method is miss-named.      \n");
-		/*MrBayesPrint ("   Augment   -- This allows the chain to consider the missing entries of         \n");
-		MrBayesPrint ("                the data matrix as random variables. A Gibbs sampler is          \n");
-		MrBayesPrint ("                used to sample states.                                           \n");*/
-	    MrBayesPrint ("                                                                                 \n");
-	    if (numCurrentDivisions == 0)
-	    	tempInt = 1;
-	    else
-	    	tempInt = numCurrentDivisions;
-	    for (i=0; i<tempInt; i++)
-	    	{
-		    if (numCurrentDivisions == 0)
-				{
-				MrBayesPrint ("   Default model settings:                                                       \n");
-				mp = &defaultModel;
-				}
-			else
-				{
-				MrBayesPrint ("   Model settings for partition %d:                                              \n", i+1);
-				mp = &modelParams[i];
-				}
-	    	MrBayesPrint ("                                                                                 \n");
-			MrBayesPrint ("   Parameter    Options                               Current Setting            \n");
-			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
-			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Protein            %s                         \n", mp->nucModel);
-			MrBayesPrint ("   Nst          1/2/6                                 %s                         \n", mp->nst);
-			MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
-			MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
-			MrBayesPrint ("   Ploidy       Haploid/Diploid                       %s                         \n", mp->ploidy);
-			MrBayesPrint ("   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  %s                         \n", mp->ratesModel);
-			MrBayesPrint ("   Ngammacat    <number>                              %d                         \n", mp->numGammaCats);
-			MrBayesPrint ("   Nbetacat     <number>                              %d                         \n", mp->numBetaCats);
-			MrBayesPrint ("   Omegavar     Equal/Ny98/M3                         %s                         \n", mp->omegaVar);
-			MrBayesPrint ("   Covarion     No/Yes                                %s                         \n", mp->covarionModel);
-			MrBayesPrint ("   Coding       All/Variable/Noabsencesites/                                     \n");
-			MrBayesPrint ("                Nopresencesites                       %s                         \n", mp->coding);
-			MrBayesPrint ("   Parsmodel    No/Yes                                %s                         \n", mp->parsModel);
-			/*MrBayesPrint ("   Augment      No/Yes                                %s                         \n", mp->augmentData);*/
-			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
-	    	MrBayesPrint ("                                                                                 \n");
-			}
-		}
 	else if (!strcmp(helpTkn, "Report"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -12394,13 +12234,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                tion. Finally, if 'dirichlet' is chosen, the rates are given as  \n");
 		MrBayesPrint ("                proportions of the rate sum. The latter is the format used       \n");
 		MrBayesPrint ("                when formulating priors on the rate multiplier.                  \n");
-		MrBayesPrint ("   Tree      -- This specifies the report format used for the tree(s). Three     \n");
-		MrBayesPrint ("                options are available. 'Topology' results in only the topology   \n");
+		MrBayesPrint ("   Tree      -- This specifies the report format used for the tree(s). Two op-   \n");
+		MrBayesPrint ("                tions are available. 'Topology' results in only the topology     \n");
 		MrBayesPrint ("                being printed to file, whereas 'brlens' causes branch lengths to \n");
-		MrBayesPrint ("                to be printed as well. The final option, 'events', is only       \n");
-		MrBayesPrint ("                applicable to relaxed clock models. If selected, it will result  \n");
-		MrBayesPrint ("                in branch rates or rate multipliers being reported in addition to\n");
-		MrBayesPrint ("                branch lengths.                                                  \n");
+		MrBayesPrint ("                to be printed as well.                                           \n");
 		MrBayesPrint ("   Ancstates -- If this option is set to 'yes', MrBayes will print the pro-      \n");
 		MrBayesPrint ("                bability of the ancestral states at all constrained nodes. Typ-  \n");
 		MrBayesPrint ("                ically, you are interested in the ancestral states of only a few \n");
@@ -12446,7 +12283,7 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Tratio          Ratio/Dirichlet          %s                                   \n", mp->tratioFormat);
 			MrBayesPrint ("   Revmat          Ratio/Dirichlet          %s                                   \n", mp->revmatFormat);
 			MrBayesPrint ("   Ratemult        Scaled/Ratio/Dirichlet   %s                                   \n", mp->ratemultFormat);
-			MrBayesPrint ("   Tree            Brlens/Topology/Events   %s                                   \n", mp->treeFormat);
+			MrBayesPrint ("   Tree            Brlens/Topology          %s                                   \n", mp->treeFormat);
 			MrBayesPrint ("   Ancstates       Yes/No                   %s                                   \n", mp->inferAncStates);
 			MrBayesPrint ("   Siterates       Yes/No                   %s                                   \n", mp->inferSiteRates);
 			MrBayesPrint ("   Possel          Yes/No                   %s                                   \n", mp->inferPosSel);
@@ -13014,7 +12851,7 @@ int ParseCommand (char *s)
 								{
 								inError = YES;
 								WhatVariableExp (expecting, errStr);
-								MrBayesPrint ("%s   Expecting %s\n", spacer, errStr+1);  /* there will be an initial space in errStr so print from pos 1 */
+								MrBayesPrint ("%s   Expecting '%s'\n", spacer, errStr+1);  /* there will be an initial space in errStr so print from pos 1 */
 								if (numOpenExeFiles > 0)
 									MrBayesPrint ("%s   Instead found '%s' in command '%s'\n",
 										spacer, token, commandPtr->string);
@@ -13607,7 +13444,7 @@ void SetUpParms (void)
 	PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
 	PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
 	PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
-	PARAM   ( 71, "Popsizepr",      DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+	PARAM   ( 71, "Popsizepr",      DoPrsetParm,       "Lognormal|Uniform|Gamma|Normal|Fixed|\0");
 	PARAM   ( 72, "Topology",       DoLinkParm,        "\0");
 	PARAM   ( 73, "Brlens",         DoLinkParm,        "\0");
 	PARAM   ( 74, "Speciationrate", DoLinkParm,        "\0");
@@ -13667,7 +13504,7 @@ void SetUpParms (void)
 	PARAM   (128, "Filename2",      DoCompareTreeParm, "\0");
 	PARAM   (129, "Outputname",     DoCompareTreeParm, "\0");
 	PARAM   (130, "Burnin",         DoCompareTreeParm, "\0");
-	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|\0");
+	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|Zlinked|\0");
 	PARAM   (132, "Swapadjacent",   DoMcmcParm,        "Yes|No|\0");
 	PARAM   (133, "Treeagepr",      DoPrsetParm,       "Gamma|Exponential|Fixed|\0");
 	PARAM   (134, "Ancstates",      DoReportParm,      "Yes|No|\0");
@@ -13728,12 +13565,12 @@ void SetUpParms (void)
 	PARAM   (189, "Gibbsfreq",      DoLsetParm,        "\0");
     PARAM   (190, "Checkpoint",     DoMcmcParm,        "Yes|No|\0");
 	PARAM   (191, "Checkfreq",      DoMcmcParm,        "\0");
-	PARAM   (192, "Tree",           DoReportParm,      "Topology|Brlens|Events|\0");
+	PARAM   (192, "Tree",           DoReportParm,      "Topology|Brlens|\0");
 	PARAM   (193, "Cpprate",        DoLinkParm,        "\0");
 	PARAM   (194, "Cppmultdev",     DoLinkParm,        "\0");
 	PARAM   (195, "Cppevents",      DoLinkParm,        "\0");
 	PARAM   (196, "Bmvar",          DoLinkParm,        "\0");
-	PARAM   (197, "Bmbranchrates",  DoLinkParm,        "\0");
+	PARAM   (197, "Bm",             DoLinkParm,        "\0");
 	PARAM   (198, "Savetrees",      DoMcmcParm,        "Yes|No|\0");
 	PARAM   (199, "Diagnstat",      DoMcmcParm,        "Avgstddev|Maxstddev|\0");
 	PARAM   (200, "Startparams",    DoMcmcParm,        "Reset|Current|\0");
@@ -13777,9 +13614,9 @@ void SetUpParms (void)
 	PARAM	(238, "Beaglethreads",  DoSetParm,		   "Yes|No|\0");
 	PARAM   (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
-    PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Branchspecific|\0");
+    PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
 	PARAM   (242, "Ibrvar",         DoLinkParm,        "\0");
-	PARAM   (243, "Ibrbranchlens",  DoLinkParm,        "\0");
+	PARAM   (243, "Ibr",            DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
 

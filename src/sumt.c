@@ -68,9 +68,10 @@ typedef struct partctr
 	MrBFlt          **length;
     MrBFlt          **height;
     MrBFlt          **age;
-    MrBFlt          ***eRate; /* eRate[0,numRuns][0,nESets][0,count[RunID]] */
-	int             ***nEvents;
-	MrBFlt          ***bRate;
+	int             ***nEvents; /* nEvents[0,nESets][0,numRuns][0,count[RunID]] */
+	MrBFlt          ***bRate;   /* bRate  [0,nBSets][0,numRuns][0,count[RunID]] */
+    MrBFlt          ***bLen;    /* bLen   [0,nBSets][0,numRuns][0,count[RunID]] */
+    MrBFlt          **popSize;  /* popSize[0,numRuns][0,count[RunID]]           */
 	}
 	PartCtr;
 
@@ -113,6 +114,7 @@ int      ConTree (PartCtr **treeParts, int numTreeParts);
 MrBFlt   CppEvolRate (PolyTree *t, PolyNode *p, int eSet);
 int      ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef);
 void     FreePartCtr (PartCtr *r);
+void     FreeSumtParams (void);
 void     FreeTreeCtr (TreeCtr *r);
 int      Label (PolyNode *p, int addIndex, char *label, int maxLength);
 int		 OpenBrlensFile (int treeNo);
@@ -121,8 +123,8 @@ int      OpenSumtFiles (int treeNo);
 void     PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index);
 int		 PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo);
 void     PrintConTree (FILE *fp, PolyTree *t);
-void     PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts);
-void     PrintRichNodeInfo (FILE *fp, PartCtr *x);
+void     PrintFigTreeConTree (FILE *fp, PolyTree *t, PartCtr **treeParts);
+void     PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length);
 void     PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numPSRFSamples, MrBFlt *maxPSRF, MrBFlt *sumPSRF);
 void     PrintSumtTaxaInfo (void);
 void     Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max);
@@ -136,7 +138,7 @@ int      StoreSumtTree (PackedTree *treeList, int index, PolyTree *t);
 void     TreeCtrUppass (TreeCtr *r, TreeCtr **uppass, int *index);
 int      TreeProb (void);
 void     WriteConTree (PolyNode *p, FILE *fp, int showSupport);
-void     WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts);
+void     WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts);
 
 extern int DoUserTree (void);
 extern int DoUserTreeParm (char *parmName, char *tkn);
@@ -180,13 +182,15 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
             r->height[runId][0]= p->depth;
         if (sumtParams.isCalibrated == YES)
             r->age[runId][0]= p->age;
-        for (i=0; i<t->nESets; i++)
-            {
+        for (i=0; i<sumtParams.nESets; i++)
             r->nEvents[i][runId][0] = t->nEvents[i][p->index];
-            r->eRate[i][runId][0]   = CppEvolRate (t, p, i);
+        for (i=0; i<sumtParams.nBSets; i++)
+            {
+            r->bLen [i][runId][0] = t->effectiveBrLen[i][p->index];
+            r->bRate[i][runId][0] = t->effectiveBrLen[i][p->index] / p->length;
             }
-        for (i=0; i<t->nBSets; i++)
-            r->bRate[i][runId][0] = t->branchRate[i][p->index];
+        if (t->popSizeSet == YES)
+            r->popSize[runId][0] = t->popSize[p->index];
 		r->count[runId] ++;
         r->totCount++;
 		}
@@ -221,16 +225,18 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                 if (sumtParams.nESets > 0)
                     {
                     for (i=0; i<sumtParams.nESets; i++)
-                        {
                         r->nEvents[i][runId] = (int *) realloc ((void *)r->nEvents[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(int));
-                        r->eRate[i][runId]   = (MrBFlt *) realloc ((void *)r->eRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
-                        }
                     }
                 if (sumtParams.nBSets > 0)
                     {
                     for (i=0; i<sumtParams.nBSets; i++)
+                        {
                         r->bRate[i][runId]   = (MrBFlt *) realloc ((void *)r->bRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
+                        r->bLen [i][runId]   = (MrBFlt *) realloc ((void *)r->bLen [i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
+                        }
                     }
+                if (sumtParams.popSizeSet == YES)
+                    r->popSize[runId] = (MrBFlt *) realloc ((void *)r->popSize[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
                 }
             /* record values */
             r->count[runId]++;
@@ -244,16 +250,18 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
             if (sumtParams.nESets > 0)
                 {
                 for (i=0; i<sumtParams.nESets; i++)
-                    {
                     r->nEvents[i][runId][n] = t->nEvents[i][p->index];
-                    r->eRate[i][runId][n]   = CppEvolRate (t, p, i);
-                    }
                 }
             if (sumtParams.nBSets > 0)
                 {
                 for (i=0; i<sumtParams.nBSets; i++)
-                    r->bRate[i][runId][n]   = t->branchRate[i][p->index];
+                    {
+                    r->bLen [i][runId][n]   = t->effectiveBrLen[i][p->index];
+                    r->bRate[i][runId][n]   = t->effectiveBrLen[i][p->index] / p->length;
+                    }
                 }
+            if (sumtParams.popSizeSet == YES)
+                r->popSize[runId][n] = t->popSize[p->index];
             }
 		else if (comp < 0)		/* greater than -> into left subtree */
 			{
@@ -370,27 +378,33 @@ PartCtr *AllocPartCtr ()
 
     /* allocate relaxed clock parameters: eRate, nEvents, bRate */
     if (sumtParams.nESets > 0)
-        {
         r->nEvents = (int    ***) calloc ((size_t) sumtParams.nESets, sizeof(int **));
-        r->eRate   = (MrBFlt ***) calloc ((size_t) sumtParams.nESets, sizeof(MrBFlt **));
-        }
     for (i=0; i<sumtParams.nESets; i++)
         {
         r->nEvents[i] = (int    **) calloc ((size_t) sumtParams.numRuns, sizeof(int *));
-        r->eRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
         for (j=0; j<sumtParams.numRuns; j++)
-        	{
             r->nEvents[i][j] = (int    *) calloc ((size_t) ALLOC_LEN, sizeof(int));
-            r->eRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
-            }
 		}
 	if (sumtParams.nBSets > 0)
+        {
+        r->bLen  = (MrBFlt ***) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
         r->bRate = (MrBFlt ***) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
+        }
 	for (i=0; i<sumtParams.nBSets; i++)
         {
+        r->bLen[i]    = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
         r->bRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
         for (j=0; j<sumtParams.numRuns; j++)
-        	r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));   
+            {
+        	r->bLen[i][j]    = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+        	r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+            }
+        }
+    if (sumtParams.popSizeSet == YES)
+        {
+        r->popSize = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        for (i=0; i<sumtParams.numRuns; i++)
+            r->popSize[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
         }
 
     return r;
@@ -511,29 +525,25 @@ treeConstruction:
     t->isClock = sumtParams.isClock;
     t->isRelaxed = sumtParams.isRelaxed;
 
-	/* initialize terminal consensus nodes */
-	j = 0;
-	for (i=0; i<numTaxa; i++)
+	/* initialize consensus tree nodes */
+    for (i=0; i<sumtParams.numTaxa; i++)
+        {
+		t->nodes[i].left = NULL;
+		t->nodes[i].sib = NULL;
+		t->nodes[i].index = i;
+        t->nodes[i].partitionIndex = -1;     /* partition ID */
+		t->nodes[i].age = 0.0;              /* temporally set to minimum value to allow any insertion in front of the terminal before actual
+                                               values of age and depth are available */
+        strcpy(t->nodes[i].label, sumtParams.taxaNames[i]);
+        t->nodes[i].depth = 0.0;
+        }
+	for (; i<t->memNodes; i++)
 		{
-		if (taxaInfo[i].isDeleted == NO && sumtParams.absentTaxa[i] == NO)
-			{
-			t->nodes[j].left = NULL;
-			t->nodes[j].sib = NULL;
-			t->nodes[j].index = j;
-            t->nodes[j].partitionIndex = -1;     /* partition ID */
-			strcpy(t->nodes[j].label,taxaNames[i]);
-			t->nodes[j].age = 0.0; /* temporally set to minimum value to allow any insertion in front of the terminal before actual values of age and depth are available */
-			t->nodes[j].depth = 0.0;
-			j++;
-			}
-		}
-	for (; j<t->memNodes; j++)
-		{
-		t->nodes[j].left = NULL;
-		t->nodes[j].sib = NULL;
-		t->nodes[j].index = j;
-        t->nodes[j].partitionIndex = -1;     /* partition ID */
-		strcpy (t->nodes[j].label, "");
+		t->nodes[i].left = NULL;
+		t->nodes[i].sib = NULL;
+		t->nodes[i].index = i;
+        t->nodes[i].partitionIndex = -1;     /* partition ID */
+		strcpy (t->nodes[i].label, "");
 		}
 
 	/* create bush 
@@ -857,7 +867,7 @@ treeConstruction:
     if (sumtParams.consensusFormat == SIMPLE)
         PrintConTree(fpCon, t2);
     else if (sumtParams.consensusFormat == FIGTREE)
-        PrintRichConTree(fpCon, t2, treeParts);
+        PrintFigTreeConTree(fpCon, t2, treeParts);
 	MrBayesPrintf (fpCon, "end;\n");
 
 	if( t!=t2 )
@@ -888,8 +898,8 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
 
     /* note that event positions are from top of branch (more recent, descendant tip) */
     ancRate = 1.0;
-    if (t->eType[eSet] == CPPm)
-        {
+//    if (t->eType[eSet] == CPPm)
+//        {
         for (q=p; q->anc != NULL; q=q->anc)
             {
             for (i=0; i<t->nEvents[eSet][p->index]; i++)
@@ -908,7 +918,8 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
             }
         else
             branchRate = ancRate;
-        }
+//        }
+/*
     else if (t->eType[eSet] == CPPi)
         {
         for (q=p; q->anc != NULL; q=q->anc)
@@ -931,11 +942,7 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
         else
             branchRate = ancRate;
         }
-    else
-		{
-    	branchRate = 0.0;
-    	printf("%s line %d: branchRate was not properly evaluated and is set to 0.0", __FILE__, __LINE__);
-		}
+*/
 
     return branchRate;
 }
@@ -1626,11 +1633,7 @@ int DoCompareTree (void)
 		}
 
     /* free sumtParams */
-    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
-    sumtParams.numFileTrees = NULL;
-    FreePolyTree (sumtParams.tree);
-    sumtParams.tree = NULL;
-    memAllocs[ALLOC_SUMTPARAMS] = NO;
+    FreeSumtParams();
 
     /* close files */
 	SafeFclose (&fp);
@@ -1660,11 +1663,7 @@ int DoCompareTree (void)
 	    if (s) free(s);
 
         /* free sumtParams */
-        if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
-        sumtParams.numFileTrees = NULL;
-        FreePolyTree (sumtParams.tree);
-        sumtParams.tree = NULL;
-        memAllocs[ALLOC_SUMTPARAMS] = NO;
+        FreeSumtParams();
 
 		free (dT1);
 	    FreeTree (tree1);
@@ -1970,8 +1969,15 @@ int DoSumt (void)
 
     /* Initialize sumtParams struct */
     sumtParams.numTaxa = 0;
+    sumtParams.taxaNames = NULL;
     sumtParams.SafeLongsNeeded = 0;
     sumtParams.tree = AllocatePolyTree (numTaxa);
+    sumtParams.nESets = 0;
+    sumtParams.nBSets = 0;
+    sumtParams.eSetName = NULL;
+    sumtParams.bSetName = NULL;
+    sumtParams.popSizeSet = NO;
+    sumtParams.popSizeSetName = NULL;
     AllocatePolyTreePartitions (sumtParams.tree);
     sumtParams.numFileTrees = (int *) calloc (2*sumtParams.numRuns+2*numTaxa, sizeof(int));
     sumtParams.numFileTreesSampled = sumtParams.numFileTrees + sumtParams.numRuns;
@@ -2612,13 +2618,19 @@ int DoSumt (void)
                 longestHeader = len;
 	        for (j=0; j<sumtParams.nBSets; j++)
 		        {
-                len = (int) strlen(sumtParams.tree->bSetName[j]) + i;
+                len = (int) strlen(sumtParams.tree->bSetName[j]) + 7 + i;
 		        if (len > longestHeader)
 			        longestHeader = len;
 		        }
 	        for (j=0; j<sumtParams.nESets; j++)
 		        {
-                len = (int) strlen(sumtParams.tree->eSetName[j]) + i;
+                len = (int) strlen(sumtParams.tree->eSetName[j]) + 8 + i;
+		        if (len > longestHeader)
+			        longestHeader = len;
+		        }
+	        if (sumtParams.popSizeSet == YES)
+		        {
+                len = (int) strlen(sumtParams.tree->popSizeSetName) + i;
 		        if (len > longestHeader)
 			        longestHeader = len;
 		        }
@@ -2674,8 +2686,8 @@ int DoSumt (void)
 		            }
                 }
 
-            /* print heights */
-            if (sumtParams.isClock == YES)
+            /* or print heights */
+            else /* if (sumtParams.isClock == YES) */
                 {
                 strcpy (divString, treeName+4);
                 for (i=0; i<numTreePartsToPrint; i++)
@@ -2692,6 +2704,98 @@ int DoSumt (void)
 
 					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
                     }
+                }
+
+            /* print ages */
+            if (sumtParams.isCalibrated == YES)
+                {
+                strcpy (divString, treeName+4);
+                for (i=0; i<numTreePartsToPrint; i++)
+		            {
+                    x = treeParts[i];
+
+		            sprintf (tempStr, "age%s[%d]", divString, i);
+                    len = (int) strlen(tempStr);
+
+                    GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+					MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                    MrBayesPrintf (fpVstat, "%s", tempStr);
+
+					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+					}
+                }
+
+            /* print effective branch lengths */
+            if (sumtParams.isRelaxed == YES)
+                {
+                for (i=0; i<sumtParams.nBSets; i++)
+                    {
+                    for (j=1; j<numTreePartsToPrint; j++)
+		                {
+                        x = treeParts[j];
+
+		                sprintf (tempStr, "%s_length[%d]", sumtParams.bSetName[i], j);
+                        len = (int) strlen(tempStr);
+
+                        GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+					    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                        MrBayesPrintf (fpVstat, "%s", tempStr);
+
+					    PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+					    }
+                    for (j=1; j<numTreePartsToPrint; j++)
+		                {
+                        x = treeParts[j];
+
+		                sprintf (tempStr, "%s_rate[%d]", sumtParams.bSetName[i], j);
+                        len = (int) strlen(tempStr);
+
+                        GetSummary (x->bRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+					    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                        MrBayesPrintf (fpVstat, "%s", tempStr);
+
+					    PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+					    }
+                    }
+                for (i=0; i<sumtParams.nESets; i++)
+                    {
+                    for (j=0; j<numTreePartsToPrint; j++)
+		                {
+                        x = treeParts[j];
+
+		                sprintf (tempStr, "%s_nEvents[%d]", sumtParams.eSetName[i], j);
+                        len = (int) strlen(tempStr);
+
+                        GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+					    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                        MrBayesPrintf (fpVstat, "%s", tempStr);
+
+					    PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+					    }
+                    }
+                }
+
+            /* print population size sets */
+            if (sumtParams.popSizeSet == YES)
+                {
+                for (j=1; j<numTreePartsToPrint; j++)
+	                {
+                    x = treeParts[j];
+
+	                sprintf (tempStr, "%s[%d]", sumtParams.popSizeSetName, j);
+                    len = (int) strlen(tempStr);
+
+                    GetSummary (x->popSize, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+
+				    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                    MrBayesPrintf (fpVstat, "%s", tempStr);
+
+				    PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+				    }
                 }
 
             /* print ages */
@@ -2791,11 +2895,7 @@ int DoSumt (void)
 
 	/* free memory and file pointers */
     if (s) free(s);
-    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
-    sumtParams.numFileTrees = NULL;
-    FreePolyTree (sumtParams.tree);
-    sumtParams.tree = NULL;
-    memAllocs[ALLOC_SUMTPARAMS] = NO;
+    FreeSumtParams();
 
     /* reset numLocalTaxa and localOutGroup */
     ResetTaxonSet();
@@ -2813,11 +2913,7 @@ int DoSumt (void)
 	errorExit:
         /* free sumtParams */
 	    if (s) free(s);
-	    if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
-        sumtParams.numFileTrees = NULL;
-        FreePolyTree (sumtParams.tree);
-        sumtParams.tree = NULL;
-        memAllocs[ALLOC_SUMTPARAMS] = NO;
+	    FreeSumtParams();
         
 		/* close files in case they are open*/
         SafeFclose (&fp);
@@ -3398,7 +3494,7 @@ int DoSumtTree (void)
 
 {
 
-	int			    i, z, printEvery, nAstPerPrint, burnin;
+	int			    i, j, z, printEvery, nAstPerPrint, burnin;
 	MrBFlt		    x, y;
     PolyTree        *t;
     PolyNode        *p;
@@ -3462,56 +3558,91 @@ int DoSumtTree (void)
         /* check taxon set and outgroup */
         if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
             {
-            for (i=0; i<numTaxa; i++)
-                sumtParams.absentTaxa[i] = YES;
-            for (i=0; i<t->nNodes; i++)
-                {
-                p = t->allDownPass[i];
-                if (p->left == NULL)
-                    sumtParams.absentTaxa[p->index] = NO;
-                }
-            sumtParams.numTaxa = 0;
-            localOutGroup = 0;
-            for (i=0; i<numTaxa; i++)
-                {
-                if (sumtParams.absentTaxa[i] == NO && taxaInfo[i].isDeleted == NO)
-                    {
-                    if (i == outGroupNum)
-                        localOutGroup = sumtParams.numTaxa;
-                    sumtParams.numTaxa++;
-                    }
-                }
+            /* set basic parameters */
+            sumtParams.numTaxa = t->nNodes - t->nIntNodes;
             numLocalTaxa = sumtParams.numTaxa;
             sumtParams.SafeLongsNeeded = ((numLocalTaxa-1) / nBitsInALong) + 1;
             if (t->isRooted == YES)
                 sumtParams.orderLen = numLocalTaxa - 2;
             else
                 sumtParams.orderLen = numLocalTaxa - 3;
+
+            /* harvest labels */
+            for (i=0; i<sumtParams.numTaxa; i++)
+                {
+                for (j=0; j<t->nNodes; j++)
+                    {
+                    p = t->allDownPass[j];
+                    if (p->index == i)
+                        AddString(&sumtParams.taxaNames, i, p->label);
+                    }
+                }
+
+            if (isTranslateDef == YES && isTranslateDiff == YES)
+                {
+                /* we are using a translate block with different taxa set */
+                if (sumtParams.numTaxa != numTranslates)
+                    {
+                    MrBayesPrint ("%s   ERROR: Expected %d taxa; found %d taxa\n", spacer, numTranslates, sumtParams.numTaxa);
+                    return (ERROR);
+                    }
+                for (i=0; i<numTaxa; i++)
+                    sumtParams.absentTaxa[i] = NO;
+                localOutGroup = 0;      /* no previous outgroup assignment is valid */
+                }
+            else
+                {
+                /* we are using the current taxa set */
+                for (i=0; i<numTaxa; i++)
+                    sumtParams.absentTaxa[i] = YES;
+                for (i=0; i<t->nNodes; i++)
+                    {
+                    p = t->allDownPass[i];
+                    if (p->left == NULL)
+                        sumtParams.absentTaxa[p->index] = NO;
+                    }
+                localOutGroup = 0;
+                for (i=j=0; i<numTaxa; i++)
+                    {
+                    if (sumtParams.absentTaxa[i] == NO && taxaInfo[i].isDeleted == NO)
+                        {
+                        if (i == outGroupNum)
+                            localOutGroup = j;
+                        j++;
+                        }
+                    }
+                }
             }
         else
             {
-            for (i=0; i<t->nNodes; i++)
+            if (isTranslateDef == NO || isTranslateDiff == NO)
                 {
-                p = t->allDownPass[i];
-                if (p->left == NULL && taxaInfo[p->index].isDeleted == NO && sumtParams.absentTaxa[p->index] == YES)
+                for (i=0; i<t->nNodes; i++)
                     {
-					MrBayesPrint ("%s   Taxon %d should not be in sampled tree\n", spacer, p->index + 1);
-                    return (ERROR);
+                    p = t->allDownPass[i];
+                    if (p->left == NULL && taxaInfo[p->index].isDeleted == NO && sumtParams.absentTaxa[p->index] == YES)
+                        {
+					    MrBayesPrint ("%s   Taxon %d should not be in sampled tree\n", spacer, p->index + 1);
+                        return (ERROR);
+                        }
                     }
                 }
             }
 
         /* prune tree based on taxaInfo[].isDeleted */
-        PrunePolyTree (t);
-        if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
+        if (isTranslateDef == NO || isTranslateDiff == NO)
             {
-			MrBayesPrint ("%s   Expected %d nondeleted taxa in tree, only found %d taxa\n",
-                spacer, numLocalTaxa, t->nNodes - t->nIntNodes);
-            return (ERROR);
-            }
+            PrunePolyTree (t);
+            if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
+                {
+			    MrBayesPrint ("%s   Expected %d nondeleted taxa in tree, only found %d taxa\n",
+                    spacer, numLocalTaxa, t->nNodes - t->nIntNodes);
+                return (ERROR);
+                }
 
-        /* reset tip indices in case some taxa deleted */
-        ResetTipIndices (t);
+            /* reset tip indices in case some taxa deleted */
+            ResetTipIndices (t);
+            }
 
         /* move calculation root for nonrooted trees if necessary */
         MovePolyCalculationRoot (t, localOutGroup);
@@ -3532,6 +3663,20 @@ int DoSumtTree (void)
             sumtParams.isClock = t->isClock;
             sumtParams.isCalibrated = t->isCalibrated;
             sumtParams.isRelaxed = t->isRelaxed;
+            sumtParams.nBSets = 0;
+            sumtParams.nESets = 0;
+            for (i=0; i<t->nBSets; i++)
+                AddString(&sumtParams.bSetName,sumtParams.nBSets++,t->bSetName[i]);
+            for (i=0; i<t->nESets; i++)
+                AddString(&sumtParams.eSetName,sumtParams.nESets++,t->eSetName[i]);
+            if (t->popSizeSet == YES)
+                {
+                sumtParams.popSizeSet = YES;
+                sumtParams.popSizeSetName = (char *) calloc (strlen(t->popSizeSetName)+1, sizeof(char));
+                strcpy(sumtParams.popSizeSetName, t->popSizeSetName);
+                }
+            else
+                sumtParams.popSizeSet = NO;
             }
         else /* if (sumtParams.numTreesSampled > 1) */
             {
@@ -3624,7 +3769,7 @@ int DoSumtTree (void)
 
         /* Display the tree nodes. */
 #		if 0
-        ShowPolyNodes(t->root, 0 , t->isRooted);
+        ShowPolyNodes(t);
 #		endif
 		}
 	
@@ -3838,24 +3983,24 @@ void FreePartCtr (PartCtr *r)
         for (i=0; i<sumtParams.nESets; i++)
             {
             for (j=0; j<sumtParams.numRuns; j++)
-                {
                 free (r->nEvents[i][j]);
-                free (r->eRate[i][j]);
-                }
             free (r->nEvents[i]);
-            free (r->eRate[i]);
             }
         free (r->nEvents);
-        free (r->eRate);
         }
     if (sumtParams.nBSets > 0)
         {
         for (i=0; i<sumtParams.nBSets; i++)
             {
             for (j=0; j<sumtParams.numRuns; j++)
+                {
+                free (r->bLen [i][j]);
                 free (r->bRate[i][j]);
+                }
+            free (r->bLen [i]);
             free (r->bRate[i]);
             }
+        free (r->bLen );
         free (r->bRate);
         }
 
@@ -3869,6 +4014,51 @@ void FreePartCtr (PartCtr *r)
     free (r);
     numUniqueSplitsFound--;
     r = NULL;
+}
+
+
+
+
+
+/* FreeSumtParams: Free parameters allocated in sumtParams struct */
+void FreeSumtParams(void)
+{
+    int     i;
+
+    if (memAllocs[ALLOC_SUMTPARAMS] == YES)
+        {
+        for (i=0; i<sumtParams.numTaxa; i++)
+            free(sumtParams.taxaNames[i]);
+        free (sumtParams.taxaNames);
+        sumtParams.taxaNames = NULL;
+        if (sumtParams.numFileTrees) free (sumtParams.numFileTrees);
+        sumtParams.numFileTrees = NULL;
+        FreePolyTree (sumtParams.tree);
+        sumtParams.tree = NULL;
+        if (sumtParams.nBSets > 0)
+            {
+            for (i=0; i<sumtParams.nBSets; i++)
+                free(sumtParams.bSetName[i]);
+            free (sumtParams.bSetName);
+            sumtParams.bSetName = NULL;
+            sumtParams.nBSets = 0;
+            }
+        if (sumtParams.nESets > 0)
+            {
+            for (i=0; i<sumtParams.nESets; i++)
+                free(sumtParams.eSetName[i]);
+            free (sumtParams.eSetName);
+            sumtParams.eSetName = NULL;
+            sumtParams.nESets = 0;
+            }
+        if (sumtParams.popSizeSet == YES)
+            {
+            free (sumtParams.popSizeSetName);
+            sumtParams.popSizeSetName = NULL;
+            sumtParams.popSizeSet = NO;
+            }
+        memAllocs[ALLOC_SUMTPARAMS] = NO;
+        }
 }
 
 
@@ -4307,8 +4497,8 @@ void PrintConTree (FILE *fp, PolyTree *t)
 
 
 
-/* PrintRichConTree: Print consensus tree in rich format, e.g. for FigTree */
-void PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
+/* PrintFigTreeConTree: Print consensus tree in rich format for FigTree */
+void PrintFigTreeConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
 {
 	if (!strcmp(sumtParams.sumtConType, "Halfcompat"))
 		MrBayesPrintf (fp, "   tree con_50_majrule = ");
@@ -4319,7 +4509,7 @@ void PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
     else
 		MrBayesPrintf (fp, "[&U] ");
 
-	WriteRichConTree (t->root, fp, treeParts);
+	WriteFigTreeConTree (t->root, fp, treeParts);
 	MrBayesPrintf (fp, ";\n");
 }
 
@@ -4327,10 +4517,10 @@ void PrintRichConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
 
 
 
-void PrintRichNodeInfo (FILE *fp, PartCtr *x)
+void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
 
 {
-    int     i;
+    int     i, postProbPercent, postProbSdPercent;
     MrBFlt  *support, mean, var, min, max;
     Stat    theStats;
 
@@ -4343,17 +4533,15 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
         {
         MeanVariance (support, sumtParams.numRuns, &mean, &var);
         Range (support, sumtParams.numRuns, &min, &max);
-        fprintf (fp, "[&prob=%.15le,prob_stddev=%.15le,prob_range={%.15le,%.15le}", mean, sqrt(var), min, max);
+        postProbPercent = (int) (100.0*mean + 0.5);
+        postProbSdPercent = (int) (100.0 * sqrt(var) + 0.5);
+        fprintf (fp, "[&prob=%.15le,prob_stddev=%.15le,prob_range={%.15le,%.15le},prob(percent)=\"%d\",prob+-sd=\"%d+-%d\"",
+            mean, sqrt(var), min, max, postProbPercent, postProbPercent, postProbSdPercent);
         }
     else
-        fprintf (fp, "[&prob=%.15le", support[0]);
-    if (sumtParams.brlensDef == YES)
         {
-        GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
-        if (sumtParams.HPD == YES)
-            fprintf (fp, ",length_mean=%.15le,length_median=%.15le,length_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
-        else
-            fprintf (fp, ",length_mean=%.15le,length_median=%.15le,length_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        postProbPercent = (int) (100.0*support[0] + 0.5);
+        fprintf (fp, "[&prob=%.15le,prob(percent)=\"%d\"", support[0], postProbPercent);
         }
     if (sumtParams.isClock == YES)
         {
@@ -4371,10 +4559,34 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
         else
             fprintf (fp, ",age_mean=%.15le,age_median=%.15le,age_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
+    fprintf (fp, "]");
+    if (length >= 0.0)
+        fprintf (fp, ":%s", MbPrintNum(length));
+    if (sumtParams.brlensDef == YES)
+        {
+        GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+        if (sumtParams.HPD == YES)
+            fprintf (fp, "[&length_mean=%.15le,length_median=%.15le,length_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        else
+            fprintf (fp, "[&length_mean=%.15le,length_median=%.15le,length_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+        }
     if (sumtParams.isClock == YES && sumtParams.isRelaxed == YES)
         {
         for (i=0; i<sumtParams.nBSets; i++)
             {
+            GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+            if (sumtParams.HPD == YES)
+                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%HPD={%lf,%lf}",
+                    sumtParams.tree->bSetName[i], theStats.mean,
+                    sumtParams.tree->bSetName[i], theStats.median,
+                    sumtParams.tree->bSetName[i], theStats.lower,
+                    theStats.upper);
+            else
+                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%CredInt={%lf,%lf}",
+                    sumtParams.tree->bSetName[i], theStats.mean,
+                    sumtParams.tree->bSetName[i], theStats.median,
+                    sumtParams.tree->bSetName[i], theStats.lower,
+                    theStats.upper);
             GetSummary (x->bRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
             if (sumtParams.HPD == YES)
                 fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%HPD={%lf,%lf}",
@@ -4391,19 +4603,6 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
             }
         for (i=0; i<sumtParams.nESets; i++)
             {
-            GetSummary (x->eRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
-            if (sumtParams.HPD == YES)
-                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%HPD={%lf,%lf}",
-                    sumtParams.tree->eSetName[i], theStats.mean,
-                    sumtParams.tree->eSetName[i], theStats.median,
-                    sumtParams.tree->eSetName[i], theStats.lower,
-                    theStats.upper);
-            else
-                fprintf (fp, ",rate%s_mean=%lf,rate%s_median=%lf,rate%s_95%%CredInt={%lf,%lf}",
-                    sumtParams.tree->eSetName[i], theStats.mean,
-                    sumtParams.tree->eSetName[i], theStats.median,
-                    sumtParams.tree->eSetName[i], theStats.lower,
-                    theStats.upper);
             GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
             if (sumtParams.HPD == YES)
                 fprintf (fp, ",nEvents%s_mean=%lf,nEvents%s_median=%lf,nEvents%s_95%%HPD={%lf,%lf}",
@@ -4419,7 +4618,8 @@ void PrintRichNodeInfo (FILE *fp, PartCtr *x)
                     theStats.upper);
             }
         }
-    fprintf (fp, "]");
+    if (sumtParams.brlensDef == YES)
+        fprintf (fp, "]");
 
     free (support);
 }
@@ -4573,6 +4773,7 @@ void ResetTranslateTable (void)
     transTo = NULL;
 	numTranslates = 0;
     isTranslateDef = NO;
+    isTranslateDiff = NO;
 }
 
 
@@ -5479,8 +5680,8 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 
 
 
-/* WriteRichConTree: Include rich information for each node in a consensus tree */
-void WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
+/* WriteFigTreeConTree: Include rich information for each node in a consensus tree */
+void WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
 
 {
 
@@ -5489,30 +5690,33 @@ void WriteRichConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
 	if (p->left == NULL)
 		{
         fprintf (fp, "%d", p->index+1);
-        PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
         if (sumtParams.isClock == NO)
-            fprintf (fp, ":%s", MbPrintNum(p->length));
+            PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->length);
+        else if (sumtParams.isCalibrated == YES)
+            PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->anc->age - p->age);
         else
-            fprintf (fp, ":%s", MbPrintNum(p->anc->depth-p->depth));
+            PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->anc->depth - p->depth);
 		}
     else
         {
         fprintf  (fp, "(");
         for (q = p->left; q != NULL; q = q->sib)
 		    {
-		    WriteRichConTree (q, fp, treeParts);
+		    WriteFigTreeConTree (q, fp, treeParts);
 		    if (q->sib != NULL)
 			    fprintf (fp, ",");
 		    }
         fprintf (fp, ")");
         if (p->partitionIndex >= 0 && p->partitionIndex < numUniqueSplitsFound)
-            PrintRichNodeInfo(fp,treeParts[p->partitionIndex]);
-        if (p->anc != NULL)
             {
-            if (sumtParams.isClock == NO)
-                fprintf (fp, ":%s", MbPrintNum(p->length));
+            if (p->anc == NULL)
+                PrintFigTreeNodeInfo(fp,treeParts[p->partitionIndex], -1.0);
+            else if (sumtParams.isClock == NO)
+                PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->length);
+            else if (sumtParams.isCalibrated == YES)
+                PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->anc->age - p->age);
             else
-                fprintf (fp, ":%s", MbPrintNum(p->anc->depth-p->depth));
+                PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->anc->depth - p->depth);
             }
         }
 }

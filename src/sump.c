@@ -1060,7 +1060,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
         MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c     Mean     Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c      Mean     Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
 		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
@@ -1104,7 +1104,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
 			{
 			if (theStats.PSRF < 0.0)
                 {
-				MrBayesPrint ("       N/A  ");
+				MrBayesPrint ("     NA   ");
                 MrBayesPrintf (fp, "NA");
                 }
 			else
@@ -1533,7 +1533,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c    Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
 		MrBayesPrint ("     PSRF+ ");
 	MrBayesPrint ("\n");
@@ -1577,7 +1577,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 			{
 			if (theStats.PSRF < 0.0)
                 {
-				MrBayesPrint ("       N/A  ");
+				MrBayesPrint ("     NA   ");
                 MrBayesPrintf (fp, "NA");
                 }
 			else

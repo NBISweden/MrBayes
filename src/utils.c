@@ -88,6 +88,23 @@ void AlignedSafeFree (void **ptr)
 
 
 
+/* ClearBit: Clear one bit in a bitfield */
+void ClearBit (int i, SafeLong *bits)
+{
+	SafeLong		x;
+
+	bits += i / nBitsInALong;
+
+	x = 1 << (i % nBitsInALong);
+    x ^= safeLongWithAllBitsSet;
+
+	(*bits) &= x;
+}
+
+
+
+
+
 /* ClearBits: Clear all bits in a bitfield */
 void ClearBits (SafeLong *bits, int nLongs)
 {
@@ -191,12 +208,13 @@ int FirstTaxonInPartition (SafeLong *partition, int length)
 
 {
 
-	int				i, j, nBits, taxon;
-	SafeLong			x;
+    int         i, j, nBits, taxon;
+    SafeLong    x;
 
-	nBits = sizeof(SafeLong) * 8;
+    nBits = sizeof(SafeLong) * 8;
 
-	for (i=taxon=0; i<length; i++)
+    taxon = 0;
+    for (i=0; i<length; i++)
 		{
 		x = 1;
 		for (j=0; j<nBits; j++)
@@ -843,6 +861,42 @@ void MrBayesPrintf (FILE *f, char *format, ...)
 
 
 
+/** Next taxon in partition, for cycling over set bits in bit fields */
+int NextTaxonInPartition(int currentTaxon, SafeLong *partition, int length)
+{
+    int         i, j, taxon;
+    SafeLong    x;
+
+    taxon = currentTaxon + 1;
+    i = taxon / nBitsInALong;
+    x = (1 << taxon % nBitsInALong);
+    for (j=taxon%nBitsInALong; j<nBitsInALong; j++)
+        {
+        if (partition[i] & x)
+            return taxon;
+        taxon++;
+        x <<= 1;
+        }
+
+    for (i++; i<length; i++)
+		{
+		x = 1;
+		for (j=0; j<nBitsInALong; j++)
+			{
+			if (partition[i] & x)
+				return taxon;
+			taxon++;
+			x <<= 1;
+			}
+		}    
+
+    return taxon;
+}
+
+
+
+
+
 /* NumBits: Count bits in a bitfield */
 int NumBits (SafeLong *x, int len)
 {
@@ -1327,6 +1381,18 @@ FILE *TestOpenTextFileR (char *name)
     strncat(fileName, name, 99 - strlen(fileName));
 
     return fopen (fileName, "r");	
+}
+
+
+
+
+
+int UpperTriangIndex(int i, int j, int size)
+{
+    if (i < j)
+        return (2*size - i - 3) * i / 2 + j - 1;
+    else
+        return (2*size - j - 3) * j / 2 + i - 1;
 }
 
 

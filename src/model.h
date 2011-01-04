@@ -45,5 +45,5 @@ int		ShowModel (void);
 int		Unlink (void);
 int	    UpdateBmEvolLengths (Param *param, Tree *t, int chain);
 int 	UpdateCppEvolLengths (Param *param, TreeNode *p, int chain);
-int	    UpdateIbrEvolLengths (Param *param, Tree *t, int chain);
+int	    UpdateIbrBranchRates (Param *param, Tree *t, int chain);
 

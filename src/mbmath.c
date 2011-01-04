@@ -4257,6 +4257,23 @@ MrBFlt LnPriorProbNormal(MrBFlt val, MrBFlt *params)
 
 
 
+/* Calculate probability of a realization for truncated (only positive values) normal random variable */
+MrBFlt LnPriorProbTruncatedNormal(MrBFlt val, MrBFlt *params)
+{
+    MrBFlt z, z_0, normConst;
+
+    z = (val - params[0]) / params[1];
+
+    z_0 = (0.0 - params[0]) / params[1];
+    normConst = CdfNormal(z_0);
+
+    return -log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
+}
+
+
+
+
+
 /* Calculate probability of a realization for uniform random variable */
 MrBFlt LnPriorProbUniform(MrBFlt val, MrBFlt *params)
 {
@@ -4306,6 +4323,26 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  newZ, oldZ;
+
+    newZ = (newX - params[0]) / params[1];
+    oldZ = (oldX - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0;
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for truncated normal random variable */
+MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    if (newX <= 0.0)
+        return NEG_INFINITY;
+    else if (oldX <= 0.0)
+        return (POS_INFINITY);
 
     newZ = (newX - params[0]) / params[1];
     oldZ = (oldX - params[0]) / params[1];
