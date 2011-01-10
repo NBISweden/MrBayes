@@ -35150,16 +35150,18 @@ int PrintStatesToFiles (int curGen)
 
 		/* ****************************************************************************************************/
 		/* print trees ****************************************************************************************/
-		for (i=0; i<numPrintTreeParams; i++)
+
+    	for (i=0; i<numPrintTreeParams; i++)
 			{
 			/* Print trees to file. */
-			
+
 			/* Fill printString with the contents to be printed on proc_id = 0. Note
 			   that printString is allocated in the function. */
 			if (doesThisProcHaveId == YES)
 				{
-				param = printTreeParam[i];
-				if (param->paramType == P_TOPOLOGY)
+                param = printTreeParam[i];
+                tree = GetTree(param, coldId, state[coldId]);
+                if (param->paramType == P_TOPOLOGY)
 					{
 					if (tree->isClock == YES)
                         clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
