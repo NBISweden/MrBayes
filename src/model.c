@@ -6991,7 +6991,10 @@ int DoPrsetParm (char *parmName, char *tkn)
 		else if (!strcmp(parmName, "Clockratepr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
+                {
+                foundDash = NO;
 				expecting = Expecting(ALPHA);
+                }
 			else if (expecting == Expecting(ALPHA))
 				{
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
@@ -7015,9 +7018,21 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(LEFTPAR))
 				{
 				expecting  = Expecting(NUMBER);
+                expecting |= Expecting(DASH);   /* negative numbers possible */
 				}
-			else if (expecting == Expecting(NUMBER))
+            else if (expecting == Expecting(DASH))
+                {
+                foundDash = YES;
+                expecting = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(NUMBER))
 				{
+				sscanf (tkn, "%lf", &tempD);
+                if (foundDash == YES)
+                    {
+                    foundDash = NO;
+                    tempD *= -1.0;
+                    }
 				nApplied = NumActiveParts ();
 				for (i=0; i<numCurrentDivisions; i++)
 					{
@@ -7025,7 +7040,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 						{
 						if (!strcmp(modelParams[i].clockRatePr,"Normal"))
 							{
-							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
 								if (numVars[i] == 0)
@@ -7049,7 +7063,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						else if (!strcmp(modelParams[i].clockRatePr,"Lognormal"))
 							{
-							sscanf (tkn, "%lf", &tempD);
 							modelParams[i].clockRateLognormal[numVars[i]] = tempD;
 							numVars[i]++;
 							if (numVars[i] == 1)
@@ -7065,7 +7078,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						else if (!strcmp(modelParams[i].clockRatePr,"Exponential"))
 							{
-							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
                                 MrBayesPrint ("%s   Rate of the exponential must be positive\n", spacer);
@@ -7081,7 +7093,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						else if (!strcmp(modelParams[i].clockRatePr,"Gamma"))
 							{
-							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
 								if (numVars[i] == 0)
@@ -7105,7 +7116,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						else if (!strcmp(modelParams[i].clockRatePr,"Fixed"))
 							{
-							sscanf (tkn, "%lf", &tempD);
 							if (tempD <= 0.0)
 								{
                                 MrBayesPrint ("%s   Fixed clock rate must be positive\n", spacer);
@@ -18028,8 +18038,8 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_ExtSPR;
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 2;
-	mt->tuningParam[0] = 0.8; /* extension probability */
-	mt->tuningParam[1] = 2.0 * log (1.1); /* lambda */
+	mt->tuningParam[0] = 0.5; /* extension probability */
+	mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
 	mt->minimum[1] = 0.00000001;
@@ -18422,15 +18432,12 @@ void SetUpMoveTypes (void)
 	mt->name = "NNI move";
 	mt->shortName = "NNI";
     mt->subParams = YES;
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
-	mt->moveFxn = &Move_NNI_Hetero;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->moveFxn = &Move_NNI;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 0;
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
@@ -18439,17 +18446,14 @@ void SetUpMoveTypes (void)
 	/* Move_NNI_Hetero */
 	mt = &moveTypes[i++];
 	mt->name = "NNI move for trees with independent brlens";
-	mt->shortName = "hNNI";
+	mt->shortName = "MultNNI";
     mt->subParams = YES;
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HETERO;
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HETERO;
 	mt->nApplicable = 2; /* 3; */
 	mt->moveFxn = &Move_NNI_Hetero;
 	mt->relProposalProb = 15.0;
-	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->numTuningParams = 0;
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
@@ -18762,7 +18766,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 3;
 	mt->tuningParam[0] = 0.1; /* warp */
-	mt->tuningParam[1] = 2.0 * log (1.1); /* multiplier tuning parameter lambda */
+	mt->tuningParam[1] = 2.0 * log (1.01); /* multiplier tuning parameter lambda */
 	mt->tuningParam[2] = 0.05; /* upweight and downweight probability */
 	mt->minimum[0] = 0.0;
 	mt->maximum[0] = 1.0;

@@ -2538,7 +2538,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 		{
 		p = t->allDownPass[i];
 		p->nodeDepth = p->age * clockRate;
-        assert (!(p->left == NULL && p->nodeDepth != 0.0));
+        assert (!(p->left == NULL && p->calibration == NULL && p->nodeDepth != 0.0));
 		}
 
 	/* calculate branch lengths */
