@@ -26121,7 +26121,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
        the move is Metropolized to improve efficiency. */
 	
 	int		    i, j, n, division, n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
-    SafeLong    *pA, *pV, *pP, y;
+    SafeLong    *pA, *pV, *pP, y[2];
 	MrBFlt		x, newPos, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, *bmRate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
                 ibrvar, *ibrRate, nu, origProp, newProp, minLength=0.0, curLength=0.0, length = 0.0,
@@ -26355,12 +26355,26 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			pV   = m->parsSets[v->index     ];
             
 			length = 0.0;
-			for (j=0; j<m->numChars; j++)
-				{
-				y = (pP[j] | pA[j]) & pV[j];
-				if (y == 0)
-					length += nSites[j];
-				}
+            if (m->nParsIntsPerSite == 1)
+                {
+		        for (j=0; j<m->numChars; j++)
+			        {
+			        y[0] = (pP[j] | pA[j]) & pV[j];
+			        if (y[0] == 0)
+				        length += nSites[j];
+			        }
+                }
+            else /* if (m->nParsIntsPerSite == 2) */
+                {
+                for (j=0; j<2*m->numChars; j+=2)
+		            {
+			        y[0] = (pP[j] | pA[j]) & pV[j];
+			        y[1] = (pP[j+1] | pA[j+1]) & pV[j+1];
+			        if ((y[0] | y[1]) == 0)
+                        length += nSites[j/2];
+			        }
+                }
+			p->d += divFactor * length;
 			p->d += divFactor * length;
 			}
 		if (minLength < 0.0)
