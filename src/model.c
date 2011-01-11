@@ -15450,7 +15450,6 @@ int SetModelInfo (void)
 		m->parsimonyBasedMove = NO;
 
 #if defined (BEAGLE_ENABLED)
-        m->useBeagle = NO;                    /* use Beagle for this partition?               */
         m->beagleInstance = -1;               /* beagle instance                              */
         m->logLikelihoods = NULL;             /* array of log likelihoods from Beagle         */
         m->inRates = NULL;                    /* array of category rates for Beagle           */
@@ -15462,6 +15461,10 @@ int SetModelInfo (void)
         m->childTiProbIndices = NULL;         /* array of child ti prob indices (unrooted)    */
         m->cumulativeScaleIndices = NULL;     /* array of cumulative scale indices            */
 #endif
+
+        /* likelihood calculator flags */
+        m->useSSE = NO;                       /* use SSE code for this partition?             */
+        m->useBeagle = NO;                    /* use Beagle for this partition?               */
 
         /* set all memory pointers to NULL */
         m->parsSets = NULL;

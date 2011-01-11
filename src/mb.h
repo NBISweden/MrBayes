@@ -1201,9 +1201,12 @@ typedef struct modelinfo
 	int			printPosSel;                /* should selection be printed (YES/NO)         */
 	int			printSiteOmegas;            /* should site omegas be printed (YES/NO)       */
 
+    /* likelihood calculator flags */
+    int         useBeagle;                  /* use Beagle for this partition?               */
+    int         useSSE;                     /* use SSE for this partition?                  */
+
 #if defined (BEAGLE_ENABLED)
     /* Beagle variables */
-    int         useBeagle;                  /* use Beagle for this partition?               */
 	int         useBeagleResource;			/* try to use this BEAGLE resource number       */
     MrBFlt*     branchLengths;              /* array of branch lengths for Beagle           */
     MrBFlt*     inRates;                    /* array of category rates for Beagle           */

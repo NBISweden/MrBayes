@@ -58,7 +58,7 @@
 #include "tree.h"
 #include "utils.h"
 
-char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update*/
 
 #if defined(BEAGLE_ENABLED)
 #include "mbbeagle.h"
@@ -9465,7 +9465,7 @@ void FreeChainMemory (void)
             for (j=0; j<m->numCondLikes; j++)
                 {
 #if defined (SSE_ENABLED)
-                if (m->dataType != STANDARD)
+                if (m->useSSE == YES)
                     AlignedSafeFree ((void **)(&m->condLikes[j]));
                 else
                     free (m->condLikes[j]);
@@ -9480,7 +9480,7 @@ void FreeChainMemory (void)
             {
             for (j=0; j<m->numScalers; j++)
 #if defined (SSE_ENABLED)
-            if (m->dataType != STANDARD)
+            if (m->useSSE == YES)
                 AlignedSafeFree ((void **)(&m->scalers[j]));
             else
                 free (m->scalers[j]);
@@ -9498,7 +9498,7 @@ void FreeChainMemory (void)
             m->clP = NULL;
             }
 #if defined (SSE_ENABLED)
-        if (m->dataType != STANDARD)
+        if (m->useSSE == YES)
             {
             if (m->clP_SSE)
                 {
@@ -9506,9 +9506,9 @@ void FreeChainMemory (void)
                 m->clP_SSE = NULL;
                 }
             if (m->lnL_SSE)
-                AlignedSafeFree ((void **)(m->lnL_SSE));
+                AlignedSafeFree ((void **)(&m->lnL_SSE));
             if (m->lnLI_SSE)
-                AlignedSafeFree ((void **)(m->lnLI_SSE));
+                AlignedSafeFree ((void **)(&m->lnLI_SSE));
             }
 #endif
 
@@ -10731,7 +10731,7 @@ int InitChainCondLikes (void)
 {
 
 	int			c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
-                useSSE, clIndex, tiIndex, scalerIndex, indexStep;
+                clIndex, tiIndex, scalerIndex, indexStep;
 	SafeLong	*charBits;
 	CLFlt		*cL;
 	ModelInfo	*m;
@@ -10882,14 +10882,14 @@ int InitChainCondLikes (void)
                 m->useBeagle = NO;
             }
 #endif
-        useSSE = NO;
+        m->useSSE = NO;
 #if defined (SSE_ENABLED)
         if (useBeagle == NO && m->dataType != STANDARD)
-            useSSE = YES;
+            m->useSSE = YES;
 #endif
-        if (useBeagle == NO && useSSE == NO)
+        if (useBeagle == NO && m->useSSE == NO)
             MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
-        else if (useBeagle == NO && useSSE == YES)
+        else if (useBeagle == NO && m->useSSE == YES)
             MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d\n", spacer, d+1);
 
 
@@ -10902,7 +10902,7 @@ int InitChainCondLikes (void)
             for (i=0; i<m->numCondLikes; i++)
                 {
 #if defined (SSE_ENABLED)
-                if (useSSE == YES)
+                if (m->useSSE == YES)
                     {
                     /* calculate number SSE chars */
                     m->numSSEChars = ((m->numChars - 1) / FLOATS_PER_VEC) + 1;
@@ -10946,7 +10946,7 @@ int InitChainCondLikes (void)
             for (i=0; i<m->numScalers; i++)
                 {
 #if defined (SSE_ENABLED)
-                if (useSSE == YES)
+                if (m->useSSE == YES)
                     {
                     /* allocate space with padding */
 #if defined (MS_VCPP_SSE)
@@ -10985,7 +10985,7 @@ int InitChainCondLikes (void)
 				if (!m->clP)
 					return (ERROR);
 #if defined (SSE_ENABLED)
-				if (useSSE == YES)
+				if (m->useSSE == YES)
                     {
                     m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
 				    if (!m->clP_SSE)
@@ -11303,7 +11303,7 @@ int InitChainCondLikes (void)
 #endif
 				cL = m->condLikes[clIndex++];
 #if defined (SSE_ENABLED)
-                if (useSSE == YES)
+                if (m->useSSE == YES)
                     {
                     for (k=0; k<numReps; k++)
 					    {
@@ -14465,7 +14465,10 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 				
 				if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
 #if defined (SSE_ENABLED)
-					RemoveNodeScalers_SSE (p, d, chain);
+                    if (m->useSSE == YES)
+    					RemoveNodeScalers_SSE (p, d, chain);
+                    else
+                        RemoveNodeScalers (p, d, chain);
 #else
 				RemoveNodeScalers (p, d, chain);
 #endif
@@ -17740,7 +17743,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	a->upDateTi = YES;
 
 	/* determine initial direction of move and whether the reverse move would be stopped by constraints */
-	if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth)
+	if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + BRLENS_MIN)
         {
 		isStartLocked = YES;
         directionUp = NO;
@@ -17759,7 +17762,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 		{
 		if (directionUp == YES) 
 			{	/* going up tree */
-			if (a->left == NULL || a->isLocked == YES || a->nodeDepth <= v->nodeDepth)
+			if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + BRLENS_MIN)
 				break;		/* can't go farther */
 			topologyHasChanged = YES;
 			b = a;
@@ -17800,7 +17803,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	isStopLocked = NO;
 	if (directionUp == YES)
 		{
-		if (a->left == NULL || a->isLocked == YES || a->nodeDepth <= v->nodeDepth)
+		if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + BRLENS_MIN)
 			isStopLocked = YES;
 		}
 
@@ -17822,7 +17825,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	else
 		x = b->nodeDepth - v->nodeDepth;
 	newBrlen = x;
-    if (x <= 0.0)
+    if (x < BRLENS_MIN)
         {
         abortMove = YES;
         return (NO_ERROR);
@@ -18589,7 +18592,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p != a && p->anc->x > 0 && a->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > a->nodeDepth)
+        if (p != a && p->anc->x > 0 && a->anc->nodeDepth > p->nodeDepth + BRLENS_MIN && p->anc->nodeDepth > a->nodeDepth + BRLENS_MIN)
             {
             p->y = YES;
             p->d = pow(0.5 * extensionProb, p->anc->x);
@@ -18655,7 +18658,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > c->nodeDepth)
+        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth + BRLENS_MIN && p->anc->nodeDepth > c->nodeDepth + BRLENS_MIN)
             {
             p->y = YES;
             p->d = pow(0.5 * extensionProb, p->anc->x);
@@ -18784,7 +18787,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth && p->anc->nodeDepth > c->nodeDepth)
+        if (p != c && p->anc->x > 0 && c->anc->nodeDepth > p->nodeDepth + BRLENS_MIN && p->anc->nodeDepth > c->nodeDepth + BRLENS_MIN)
             {
             p->y = YES;
             p->d = pow(0.5 * extensionProb, p->anc->x);
@@ -23866,7 +23869,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth)
+        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth + BRLENS_MIN)
             numFreeOld++;
         }
 
@@ -23885,7 +23888,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-		} while (p->isLocked == YES || p->nodeDepth < q->nodeDepth);
+		} while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + BRLENS_MIN);
 		
     /* set up pointers for nodes around the picked branch */
 	if (RandomNumber(seed) < 0.5)
@@ -23924,8 +23927,8 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
     /* adjust branch lengths */
     a->length = u->nodeDepth - a->nodeDepth;
     c->length = v->nodeDepth - c->nodeDepth;
-    assert (a->length >= 0.0);
-    assert (c->length >= 0.0);
+    assert (a->length > BRLENS_MIN);
+    assert (c->length > BRLENS_MIN);
 
 	/* no reassignment of CPP events or branch rates necessary */
 
@@ -26371,7 +26374,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 		{
 		p = t->allDownPass[i];
 		if (p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO && p != u &&
-            p->anc->nodeDepth > v->nodeDepth)
+            p->anc->nodeDepth > v->nodeDepth + BRLENS_MIN)
 			p->marked = YES;
 		}		
     
@@ -26513,7 +26516,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 		x = d->nodeDepth - v->nodeDepth;
     newBrlen = x;
 
-    if (x < 0.0)
+    if (x < BRLENS_MIN)
         {
         abortMove = YES;
         free (nSitesOfPat);

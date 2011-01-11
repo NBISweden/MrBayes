@@ -1246,7 +1246,6 @@ int DoCalibrate (void)
         {
         if (!strcmp(modelParams[i].nodeAgePr,"Calibrated"))
             {
-            printf("Setting up analysis\n");
             if (SetUpAnalysis (&globalSeed) == ERROR)
 		        return (ERROR);
             break;
