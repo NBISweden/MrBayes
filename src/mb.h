@@ -407,7 +407,7 @@ enum CALPRIOR
 /* typedef for calibration */
 typedef struct calibration
 	{
-	char			name[65];
+	char			name[100];
 	enum CALPRIOR   prior;
 	MrBFlt			max;
 	MrBFlt			min;

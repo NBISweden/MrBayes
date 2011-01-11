@@ -1288,8 +1288,10 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
             	}
 			}
 
-        SafeFree ((void **) &modelCounts);
-        SafeFree ((void **) &prob);
+        free(modelCounts);
+        modelCounts = NULL;
+        free (prob);
+        prob = NULL;
 		}
 
 	/* print footer */

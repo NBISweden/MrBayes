@@ -632,7 +632,8 @@ int AllocTaxa (void)
     tipCalibration = (Calibration *)SafeMalloc((size_t) (numTaxa * sizeof(Calibration)));
     if (!tipCalibration)
         {
-        SafeFree ((void **)&taxaInfo);
+        free (taxaInfo);
+        taxaInfo = NULL;
         goto errorExit;
         }
 	for (i=0; i<numTaxa; i++)
@@ -1231,20 +1232,21 @@ int DoCalibrate (void)
 	int			i;
 
 	/* show calibration times (for debugging) */
-#	if 0
+#if 0
 	MrBayesPrint ("Taxon ages\n");
 	for (i=0; i<numTaxa; i++)
-		MrBayesPrint ("%4d  --  %s\n", i+1, taxaInfo[i].calibration.name);
+		MrBayesPrint ("%4d  --  %s\n", i+1, tipCalibration[i].name);
 	MrBayesPrint ("Constraint ages\n");
-	for (i=0; i<30; i++)
-		MrBayesPrint ("%4d  --  %s\n", i+1, constraintCalibration[i].name);
-#	endif
+	for (i=0; i<numDefinedConstraints; i++)
+		MrBayesPrint ("%4d  --  %s\n", i+1, nodeCalibration[i].name);
+#endif
 
     /* Update model if calibrations enforced */
     for (i=0; i<numCurrentDivisions; i++)
         {
         if (!strcmp(modelParams[i].nodeAgePr,"Calibrated"))
             {
+            printf("Setting up analysis\n");
             if (SetUpAnalysis (&globalSeed) == ERROR)
 		        return (ERROR);
             break;
@@ -1276,7 +1278,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		
 	if (expecting == Expecting(PARAMETER))
 		{
-		if (strcmp(parmName, "Xxxxxxxxxx") != 0)
+        if (strcmp(parmName, "Xxxxxxxxxx") != 0)
 			{
 			MrBayesPrint ("%s   Unexpected error - Wrong parmName in DoCalibrateParm\n", spacer);
 			return (ERROR);
@@ -1322,7 +1324,13 @@ int DoCalibrateParm (char *parmName, char *tkn)
 			}
 
 		/* reset the values of the calibration */
-		*calibrationPtr = defaultCalibration;
+		calibrationPtr->prior  = defaultCalibration.prior;
+		calibrationPtr->age    = defaultCalibration.age;
+        calibrationPtr->lambda = defaultCalibration.lambda;
+        calibrationPtr->offset = defaultCalibration.offset;
+        calibrationPtr->min    = defaultCalibration.min;
+        calibrationPtr->max    = defaultCalibration.max;
+        strcpy(calibrationPtr->name, defaultCalibration.name);
 
 		/* get ready to find the equal sign */
 		expecting = Expecting(EQUALSIGN);
@@ -1407,11 +1415,6 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		else if (calibrationPtr->prior == offsetExponential)
 			{
 			sscanf (tkn, "%lf", &tempD);
-			if (strlen(tkn) > 20) /*the check is needed in order to prevent overflow of calibrationPtr->name */
-				{
-				MrBayesPrint ("%s   The length of the string specifying the number:%s is too long. You allowed to use at most 20 characters to represent a number as an argument to OffsetExponential(X,Y)\n", spacer, tkn);
-				return (ERROR);
-				}
 			if (calibrationPtr->offset < 0.0)
 				{
 				if (tempD < 0.0)
@@ -2219,17 +2222,27 @@ int DoConstraint (void)
 	
     /* add a default node calibration */
     nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
-    nodeCalibration[numDefinedConstraints] = defaultCalibration;
+    nodeCalibration[numDefinedConstraints].prior  = defaultCalibration.prior;
+    nodeCalibration[numDefinedConstraints].offset = defaultCalibration.offset;
+    nodeCalibration[numDefinedConstraints].lambda = defaultCalibration.lambda;
+    nodeCalibration[numDefinedConstraints].min    = defaultCalibration.min;
+    nodeCalibration[numDefinedConstraints].max    = defaultCalibration.max;
+    nodeCalibration[numDefinedConstraints].age    = defaultCalibration.age;
+    strcpy(nodeCalibration[numDefinedConstraints].name, defaultCalibration.name);
 
     /* increment number of defined constraints */
 	numDefinedConstraints++;
 
-    /* reallocate space for activeConstraints */
+    /* reallocate and initialize space for activeConstraints */
     for (i=0; i<numCurrentDivisions; i++)
+        {
         modelParams[i].activeConstraints = (int *) realloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+        modelParams[i].activeConstraints[numDefinedConstraints-1] = NO;
+        }
 
-    /* reallocate space for tempActiveConstraints */
+    /* reallocate and initialize space for tempActiveConstraints */
     tempActiveConstraints = (int *) realloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+    tempActiveConstraints[numDefinedConstraints-1] = NO;
 
     /* show taxset (for debugging) */
 #	if 0 
@@ -8840,26 +8853,30 @@ int FreeCharacters (void)
         }
     if (memAllocs[ALLOC_MATRIX] == YES)
 		{
-		SafeFree ((void **) &matrix);
+		free (matrix);
+        matrix = NULL;
         defMatrix = NO;
 		memAllocs[ALLOC_MATRIX] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_CHARINFO] == YES)
 		{
-		SafeFree ((void **) &charInfo);
-		memAllocs[ALLOC_CHARINFO] = NO;
+		free (charInfo);
+		charInfo = NULL;
+        memAllocs[ALLOC_CHARINFO] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_CHARSETS] == YES)
 		{
 		for (i=0; i<numCharSets; i++)
             {
-            SafeFree ((void **) &charSetNames[i]);
-            SafeFree ((void **) &charSet[i]);
+            free (charSetNames[i]);
+            free (charSet[i]);
             }
-        SafeFree ((void **) &charSetNames);
-        SafeFree ((void **) &charSet);
+        free (charSetNames);
+        free (charSet);
+        charSetNames = NULL;
+        charSet = NULL;
         numCharSets = 0;
 		memAllocs[ALLOC_CHARSETS] = NO;
 		memoryLetFree = YES;
@@ -8867,21 +8884,26 @@ int FreeCharacters (void)
 	if (memAllocs[ALLOC_PARTITIONS] == YES)
 		{
         for (i=0; i<numDefinedPartitions; i++)
-            SafeFree ((void **) &partitionNames[i]);
-        SafeFree ((void **)&partitionNames);
+            free (partitionNames[i]);
+        free (partitionNames);
+        partitionNames = NULL;
         for (i=0; i<numChar; i++)
-            SafeFree ((void **) &(partitionId[i]));
-        SafeFree ((void**)(&partitionId));
+            free (partitionId[i]);
+        free (partitionId);
         numDefinedPartitions = 0;
 		memAllocs[ALLOC_PARTITIONS] = NO;
 		memoryLetFree = YES;
 		}
     if (memAllocs[ALLOC_PARTITIONVARS] == YES)
         {
-        SafeFree ((void **) &numVars);
-        SafeFree ((void **) &tempNum);
-        SafeFree ((void **) &activeParams[0]);
-        SafeFree ((void **) &linkTable[0]);
+        free (numVars);
+        numVars = NULL;
+        free (tempNum);
+        tempNum = NULL;
+        free (activeParams[0]);
+        activeParams[0] = NULL;
+        free (linkTable[0]);
+        linkTable[0] = NULL;
         tempLinkUnlinkVec = NULL;
         activeParts = NULL;
         tempLinkUnlinkVec = NULL;
@@ -8929,18 +8951,22 @@ int FreeTaxa (void)
 		if (taxaNames)
             {
             for (i=0; i<numTaxa; i++)
-                SafeFree ((void **) &taxaNames[i]);
+                free (taxaNames[i]);
             }
-        SafeFree ((void **) &taxaNames);
-		SafeFree ((void **) &taxaInfo);
-        SafeFree ((void **) &tipCalibration);
+        free (taxaNames);
+        taxaNames = NULL;
+		free (taxaInfo);
+        taxaInfo = NULL;
+        free (tipCalibration);
+        tipCalibration = NULL;
         numTaxa = 0;
 		memAllocs[ALLOC_TAXA] = NO;
 		memoryLetFree = YES;
 		}
 	if (memAllocs[ALLOC_TMPSET] == YES)
 		{
-		SafeFree ((void **) &tempSet);
+		free (tempSet);
+        tempSet = NULL;
 		memAllocs[ALLOC_TMPSET] = NO;
 		memoryLetFree = YES;
 		}
@@ -8948,11 +8974,13 @@ int FreeTaxa (void)
 		{
 		for (i=0; i<numTaxaSets; i++)
             {
-            SafeFree ((void **) &taxaSetNames[i]);
-            SafeFree ((void **) &taxaSet[i]);
+            free (taxaSetNames[i]);
+            free (taxaSet[i]);
             }
-        SafeFree ((void **) &taxaSetNames);
-        SafeFree ((void **) &taxaSet);
+        free (taxaSetNames);
+        taxaSetNames = NULL;
+        free (taxaSet);
+        taxaSet = NULL;
         numTaxaSets = 0;
 		memAllocs[ALLOC_TAXASETS] = NO;
 		memoryLetFree = YES;
@@ -8960,11 +8988,13 @@ int FreeTaxa (void)
 	if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
 		{
         for (i=0; i<numDefinedSpeciespartitions; i++)
-            SafeFree ((void **) &speciespartitionNames[i]);
-        SafeFree ((void **)&speciespartitionNames);
+            free (speciespartitionNames[i]);
+        free (speciespartitionNames);
+        speciespartitionNames = NULL;
         for (i=0; i<numTaxa; i++)
-            SafeFree ((void **) &(speciespartitionId[i]));
-        SafeFree ((void**)(&speciespartitionId));
+            free (speciespartitionId[i]);
+        free (speciespartitionId);
+        speciespartitionId = NULL;
         numDefinedSpeciespartitions = 0;
 		memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
 		memoryLetFree = YES;
@@ -8973,14 +9003,18 @@ int FreeTaxa (void)
 		{
         for (i=0; i<numDefinedConstraints; i++)
             {
-            SafeFree((void **) &definedConstraint[i]);
-            SafeFree ((void **) &constraintNames[i]);
+            free(definedConstraint[i]);
+            free (constraintNames[i]);
             }
-        SafeFree ((void **) &definedConstraint);
-		SafeFree ((void **) &constraintNames);
-        SafeFree ((void **) &nodeCalibration);
+        free (definedConstraint);
+        definedConstraint = NULL;
+		free (constraintNames);
+        constraintNames = NULL;
+        free (nodeCalibration);
+        nodeCalibration = NULL;
         numDefinedConstraints = 0;
-        SafeFree((void **)(&tempActiveConstraints));
+        free (tempActiveConstraints);
+        tempActiveConstraints = NULL;
 		memAllocs[ALLOC_CONSTRAINTS] = NO;
 		memoryLetFree = YES;
 		}
@@ -13253,7 +13287,8 @@ void ResetTaxaFlags (void)
     defTaxa                 = NO;                        /* flag for whether number of taxa is known      */
     isTaxsetDef             = NO;                        /* is a taxlabels set defined                    */
 	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
-	SafeFree((void **)(&tempActiveConstraints));                    /* holds temp info on active constraints         */
+	free (tempActiveConstraints);                        /* holds temp info on active constraints         */
+	tempActiveConstraints   = NULL;          			 /* holds temp info on active constraints        */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
 }
@@ -13261,7 +13296,7 @@ void ResetTaxaFlags (void)
 
 
 
-    
+ 
 /* SetPartition: Set model partition */
 int SetPartition (int part)
 
@@ -13272,9 +13307,11 @@ int SetPartition (int part)
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
 		for (i=0; i<numCurrentDivisions; i++)
-		  SafeFree((void **)(&(modelParams[i].activeConstraints)));
+		  free (modelParams[i].activeConstraints);
         free (modelParams);
 		free (modelSettings);
+        modelParams = NULL;
+        modelSettings = NULL;
 		memAllocs[ALLOC_MODEL] = NO;
 		}
 

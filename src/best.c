@@ -235,7 +235,8 @@ void FreeBestChainVariables(void)
         speciesPairSets = NULL;
     }
 
-    SafeFree ((void**)(&depthMatrix));    // sets depthMatrix to NULL
+    free (depthMatrix);
+    depthMatrix = NULL;
 
     memAllocs[ALLOC_BEST] = NO;
 }
@@ -257,7 +258,7 @@ void FreeBestChainVariables(void)
 ----------------------------------------------------------------------*/
 int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
 
-    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets, trace=0;
+    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets;
     double      maxDepth;
     TreeNode    *p;
 
@@ -325,7 +326,7 @@ int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
 int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
 
     int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets;
-    double      dist, minDist, distSum;
+    double      dist, minDist=0.0, distSum;
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
@@ -880,7 +881,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 { 
    	int         i, k, index, nEvents, trace=0;
    	double      N, lnProb, ploidyFactor, theta, timeInterval;
-    TreeNode    *p, *q, *r;
+    TreeNode    *p, *q=NULL, *r;
     ModelInfo   *m;
     ModelParams *mp;
 
@@ -1005,7 +1006,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 ----------------------------------------------------------------------*/
 double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate) {
 
-    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets, trace=0;
+    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets;
     double      dist, normConst, negLambdaX, eNegLambdaX, density, prob,
                 sumDensRatio, prodProb, lnProb;
     TreeNode    *p;

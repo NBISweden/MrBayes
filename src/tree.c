@@ -1429,7 +1429,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 
 {
 
-	int			i, j;
+	int			i;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
 

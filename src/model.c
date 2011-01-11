@@ -2315,7 +2315,8 @@ int CompressData (void)
 	/* allocate indices pointing from original to compressed matrix */
 	if (memAllocs[ALLOC_COMPCOLPOS] == YES)
         {
-	  SafeFree ((void **)(&compColPos));
+	    free (compColPos);
+        compColPos = NULL;
         memAllocs[ALLOC_COMPCOLPOS] = NO;
         }
 	compColPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
@@ -2330,7 +2331,8 @@ int CompressData (void)
 
 	if (memAllocs[ALLOC_COMPCHARPOS] == YES)
         {
-	  SafeFree ((void **)(&compCharPos));
+	    free (compCharPos);
+        compCharPos = NULL;
         memAllocs[ALLOC_COMPCHARPOS] = NO;
         }
 	compCharPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
@@ -2530,7 +2532,8 @@ int CompressData (void)
 	/* now we know the size, so we can allocate space for the compressed matrix ... */
 	if (memAllocs[ALLOC_COMPMATRIX] == YES)
 		{
-		  SafeFree ((void **)(&compMatrix));
+		free (compMatrix);
+        compMatrix = NULL;
         memAllocs[ALLOC_COMPMATRIX] = NO;
 		}
 	compMatrix = (SafeLong *) calloc (compMatrixRowSize * numLocalTaxa, sizeof(SafeLong));
@@ -2543,7 +2546,8 @@ int CompressData (void)
 	
 	if (memAllocs[ALLOC_NUMSITESOFPAT] == YES)
 		{
-		  SafeFree ((void **)(&numSitesOfPat));
+		free (numSitesOfPat);
+        numSitesOfPat = NULL;
         memAllocs[ALLOC_NUMSITESOFPAT] = NO;
 		}
 	numSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
@@ -2556,7 +2560,8 @@ int CompressData (void)
 
 	if (memAllocs[ALLOC_ORIGCHAR] == YES)
 		{
-		  SafeFree ((void **)(&origChar));
+		free (origChar);
+        origChar = NULL;
         memAllocs[ALLOC_ORIGCHAR] = NO;
 		}
 	origChar = (int *)SafeMalloc((size_t) (compMatrixRowSize * sizeof(int)));
@@ -10582,7 +10587,7 @@ int FreeModel (void)
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
 		for (i=0; i<numCurrentDivisions; i++)
-		  SafeFree ((void **)(&modelParams[i].activeConstraints));
+    		free (modelParams[i].activeConstraints);
         free (modelParams);
 		free (modelSettings);
 		memAllocs[ALLOC_MODEL] = NO;
@@ -12098,6 +12103,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			isSame = NO;
 
 		/* If both partitions have topologies constrained, then we need to make certain that the constraints are the same. */
+		/* This also guarantees that any calibrations will be the same. */
 		if (!strcmp(modelParams[part1].topologyPr, "Constraints") && !strcmp(modelParams[part2].topologyPr, "Constraints"))
 			{
 			if (modelParams[part1].numActiveConstraints != modelParams[part2].numActiveConstraints)
@@ -12276,28 +12282,17 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 							}
 						}
 					}
+
 				/* if the same clock prior, we need to check calibrations */
-				if (isSame == YES)
-					{
-					if (strcmp(modelParams[part1].nodeAgePr,modelParams[part2].nodeAgePr) != 0)
-						isSame = NO;
-					if (!strcmp(modelParams[part1].nodeAgePr,"Calibrated") && strcmp(modelParams[part1].clockPr,"Fixed") != 0)
-						{
-						/* check the calibrations; if the constraints are the same, the calibrations are also */
-				        nDiff = 0;
-				        for (i=0; i<numDefinedConstraints; i++)
-					        if (modelParams[part1].activeConstraints[i] != modelParams[part2].activeConstraints[i])
-						        nDiff++;
-				        if (nDiff != 0)
-					        isSame = NO;
-				        }
-                    /* If fixed clock brlens, check if the brlens come from the same tree */
-			        if (!strcmp(modelParams[part1].clockPr, "Fixed") && !strcmp(modelParams[part2].clockPr, "Fixed"))
-				        {
-				        if (modelParams[part1].brlensFix != modelParams[part2].brlensFix)
-					        isSame = NO;
-				        }
-					}
+				if (strcmp(modelParams[part1].nodeAgePr,modelParams[part2].nodeAgePr) != 0)
+					isSame = NO;
+                
+                /* If fixed clock brlens, check if the brlens come from the same tree */
+			    if (!strcmp(modelParams[part1].clockPr, "Fixed") && !strcmp(modelParams[part2].clockPr, "Fixed"))
+				    {
+				    if (modelParams[part1].brlensFix != modelParams[part2].brlensFix)
+		                isSame = NO;
+				    }
                 }
 			/* If fixed brlens, check if the brlens come from the same tree */
 			if (!strcmp(modelParams[part1].brlensPr, "Fixed") && !strcmp(modelParams[part2].brlensPr, "Fixed"))
@@ -13351,7 +13346,8 @@ int ProcessStdChars (SafeLong *seed)
 	/* first allocate space for stdType, stateSize, tiIndex, bsIndex */
 	if (memAllocs[ALLOC_STDTYPE] == YES)
 		{
-		SafeFree ((void **)(&stdType));
+		free (stdType);
+        stdType = NULL;
 		memAllocs[ALLOC_STDTYPE] = NO;
 		}
 	stdType = (int *)calloc((size_t) (4 * numStandardChars), sizeof(int));
@@ -13680,7 +13676,8 @@ int ProcessStdChars (SafeLong *seed)
 	/* allocate space */
 	if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
 		{
-		  SafeFree ((void **)(&stdStateFreqs));
+		free (stdStateFreqs);
+        stdStateFreqs = NULL;
         memAllocs[ALLOC_STDSTATEFREQS] = NO;
 		}
 	stdStateFreqs = (MrBFlt *) calloc (n * 2 * numGlobalChains, sizeof (MrBFlt));
@@ -17402,7 +17399,7 @@ int SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt)
 	MrBFlt		*values;
 	Tree		*speciesTree;
 	PolyNode	*pp;
-	TreeNode	*p;
+	TreeNode	*p=NULL;
 
     nLongsNeeded = 1 + (pt->nNodes - pt->nIntNodes - 1) / nBitsInALong;
 

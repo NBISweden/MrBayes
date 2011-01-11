@@ -4768,11 +4768,11 @@ void ResetTranslateTable (void)
 
 	for (i=0; i<numTranslates; i++)
         {
-        SafeFree ((void **) &transFrom[i]);
-        SafeFree ((void **) &transTo[i]);
+        free (transFrom[i]);
+        free (transTo[i]);
         }
-	SafeFree ((void **) &transFrom);
-	SafeFree ((void **) &transTo);
+	free (transFrom);
+	free (transTo);
     transFrom = NULL;
     transTo = NULL;
 	numTranslates = 0;

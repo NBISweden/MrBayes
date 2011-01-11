@@ -9445,11 +9445,15 @@ void FreeChainMemory (void)
         if (m->parsSets)
             {
             for (j=0; j<m->numParsSets; j++)
-				SafeFree ((void **)(&m->parsSets[j]));
-            SafeFree ((void **)(&m->parsSets));
+				free (m->parsSets[j]);
+            free (m->parsSets);
+            m->parsSets = NULL;
             }
         if (m->parsNodeLens)
-			SafeFree((void **)(&m->parsNodeLens));
+            {
+			free(m->parsNodeLens);
+            m->parsNodeLens = NULL;
+            }
         }
 
     /* free model variables for conditional likelihoods */
@@ -9464,12 +9468,12 @@ void FreeChainMemory (void)
                 if (m->dataType != STANDARD)
                     AlignedSafeFree ((void **)(&m->condLikes[j]));
                 else
-                    SafeFree ((void **)(&m->condLikes[j]));
+                    free (m->condLikes[j]);
 #else
-				SafeFree ((void **)(&m->condLikes[j]));
+				free (m->condLikes[j]);
 #endif
                 }
-            SafeFree (((void **)(&m->condLikes)));
+            free (m->condLikes);
             }
 
         if (m->scalers)
@@ -9478,82 +9482,108 @@ void FreeChainMemory (void)
 #if defined (SSE_ENABLED)
                 AlignedSafeFree ((void **)(&m->scalers[j]));
 #else
-				SafeFree ((void **)(&m->scalers[j]));
+				free (m->scalers[j]);
 
 #endif
-            SafeFree (((void **)(&m->scalers)));
+            free (m->scalers);
+            m->scalers = NULL;
             }
 
         if (m->clP)
-			SafeFree ((void **)(&m->clP));
+            {
+			free (m->clP);
+            m->clP = NULL;
+            }
 #if defined (SSE_ENABLED)
         if (m->clP_SSE)
-			SafeFree ((void **)(&m->clP_SSE));
+            {
+			free (m->clP_SSE);
+            m->clP_SSE = NULL;
+            }
         if (m->lnL_SSE)
-            AlignedSafeFree ((void **)(&m->lnL_SSE));
+            AlignedSafeFree ((void **)(m->lnL_SSE));
         if (m->lnLI_SSE)
-            AlignedSafeFree ((void **)(&m->lnLI_SSE));
+            AlignedSafeFree ((void **)(m->lnLI_SSE));
 #endif
 
         if (m->tiProbs)
             {
             for (j=0; j<m->numTiProbs; j++)
-				SafeFree ((void **)(&m->tiProbs[j]));
-            SafeFree ((void **)(&m->tiProbs));
+				free (m->tiProbs[j]);
+            free (m->tiProbs);
+            m->tiProbs = NULL;
             }
                 
         if (m->cijks)
             {
             for (j=0; j<numLocalChains+1; j++)
-				SafeFree ((void **)(&m->cijks[j]));
-            SafeFree ((void **)(&m->cijks));
+				free (m->cijks[j]);
+            free (m->cijks);
+            m->cijks = NULL;
             }
 
         if (m->condLikeIndex)
             {
             for (j=0; j<numLocalChains; j++)
-				SafeFree ((void **)(&m->condLikeIndex[j]));
-            SafeFree ((void **)(&m->condLikeIndex));
+				free (m->condLikeIndex[j]);
+            free (m->condLikeIndex);
+            m->condLikeIndex = NULL;
             }
 
         if (m->condLikeScratchIndex)
-			SafeFree ((void **)(&m->condLikeScratchIndex));
+			free (m->condLikeScratchIndex);
 
         if (m->tiProbsIndex)
             {
             for (j=0; j<numLocalChains; j++)
-				SafeFree ((void **)(&m->tiProbsIndex[j]));
-            SafeFree ((void **)&(m->tiProbsIndex));
+				free (m->tiProbsIndex[j]);
+            free (m->tiProbsIndex);
+            m->tiProbsIndex = NULL;
             }
         if (m->tiProbsScratchIndex)
-			SafeFree ((void **)(&m->tiProbsScratchIndex));
-
+            {
+			free (m->tiProbsScratchIndex);
+            m->tiProbsScratchIndex = NULL;
+            }
         if (m->nodeScalerIndex)
             {
             for (j=0; j<numLocalChains; j++)
-				SafeFree ((void **)(&m->nodeScalerIndex[j]));
-            SafeFree ((void **)&(m->nodeScalerIndex));
+				free (m->nodeScalerIndex);
+            free (m->nodeScalerIndex);
+            m->nodeScalerIndex = NULL;
             }
         if (m->nodeScalerScratchIndex)
-			SafeFree ((void **)(&m->nodeScalerScratchIndex));
-
+            {
+			free (m->nodeScalerScratchIndex);
+            m->nodeScalerScratchIndex = NULL;
+            }
         if (m->scalersSet)
             {
             for (j=0; j<numLocalChains; j++)
-				SafeFree ((void **)(&m->scalersSet[j]));
-            SafeFree ((void **)(&m->scalersSet));
+				free (m->scalersSet[j]);
+            free (m->scalersSet);
+            m->scalersSet = NULL;
             }
         if (m->scalersSetScratch)
-			SafeFree ((void **)(&m->scalersSetScratch));
-
+            {
+			free (m->scalersSetScratch);
+            m->scalersSetScratch = NULL;
+            }
         if (m->siteScalerIndex)
-			SafeFree ((void **)(&m->siteScalerIndex));
-
+            {
+			free (m->siteScalerIndex);
+            m->siteScalerIndex = NULL;
+            }
         if (m->cijkIndex)
-			SafeFree ((void **)(&m->cijkIndex));
-
+            {
+			free (m->cijkIndex);
+            m->cijkIndex = NULL;
+            }
         if (m->ancStateCondLikes)
-			SafeFree ((void **)(&m->ancStateCondLikes));
+            {
+			free (m->ancStateCondLikes);
+            m->ancStateCondLikes = NULL;
+            }
 
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == NO)
@@ -9610,28 +9640,33 @@ void FreeChainMemory (void)
 		}
     if (memAllocs[ALLOC_TERMSTATE] == YES)
 		{
-		  SafeFree ((void **)(&termState));
+		free (termState);
+        termState = NULL;  
 		memAllocs[ALLOC_TERMSTATE] = NO;
 		}
     if (memAllocs[ALLOC_ISPARTAMBIG] == YES)
 		{
-		  SafeFree ((void **)(&isPartAmbig));
+		free (isPartAmbig);
+        isPartAmbig = NULL;
 		memAllocs[ALLOC_ISPARTAMBIG] = NO;
 		}
     if (memAllocs[ALLOC_PRELIKES] == YES)
 		{
 		free (preLikeL);
+        preLikeL = NULL;
 		memAllocs[ALLOC_PRELIKES] = NO;
 		}
 	if (memAllocs[ALLOC_RATEPROBS] == YES)
 		{
 		free (rateProbSpace);
 		free (rateProbs);
+        rateProbs = NULL;
 		memAllocs[ALLOC_RATEPROBS] = NO;
 		}
 	if (memAllocs[ALLOC_SITEJUMP] == YES)
 		{
 		free (siteJump);
+        siteJump = NULL;
 		memAllocs[ALLOC_SITEJUMP] = NO;
 		}
 	if (memAllocs[ALLOC_MARKOVTIS] == YES)
@@ -10876,7 +10911,7 @@ int InitChainCondLikes (void)
 #if defined (MS_VCPP_SSE)
 					m->condLikes[i] = (CLFlt*) ALIGNED_MALLOC(k * sizeof(CLFlt), 16);
 #else
-					ALIGNED_MALLOC((void **)(&m->condLikes[i]), 16, k * sizeof(CLFlt));
+					ALIGNED_MALLOC((void **)&(m->condLikes[i]), 16, k * sizeof(CLFlt));
 #endif
                     if (!m->condLikes[i])
                         return (ERROR);
@@ -11172,7 +11207,8 @@ int InitChainCondLikes (void)
                     nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
                 beagleSetPatternWeights(m->beagleInstance,
                                         nSitesOfPat);
-                SafeFree ((void **)(&nSitesOfPat));
+                free (nSitesOfPat);
+                nSitesOfPat = NULL;
 
                 /* find category frequencies */
                 if (m->pInvar == NO)
@@ -12393,7 +12429,7 @@ int PrintOld_SSE (TreeNode *p, int division, int chain){
 	int				c, c1, j, k, nStates;
 	//MrBFlt			*swr, likeI, pInvar=0.0, lnLike;
 	CLFlt			*temp_vector;
-    __m128          *clPtr, **clP, *clInvar=NULL;
+    __m128          *clPtr, **clP;
 	ModelInfo		*m;
 
 	m = &modelSettings[division];
@@ -13172,7 +13208,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 	MrBFlt			freq, *bs, pInvar=0.0, like, likeI;
 	CLFlt			*lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
     __m128          *clPtr, **clP, *clInvar=NULL;
-    __m128          m1, mA, mC, mG, mT, mFreq, mPInvar, mLike;
+    __m128          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm_set1_ps(0.0f), mLike;
 	ModelInfo		*m;
 
 #if defined (FAST_LOG)
@@ -14202,7 +14238,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     Model           *mp;
     ModelInfo       *m;
     Tree            *newTree, *oldTree;
-    TreeNode        *p, *q;
+    TreeNode        *p, *q=NULL;
     int             i, j;
 
     (*lnPriorRatio) = 0.0;
@@ -23986,12 +24022,10 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 {
 
 	int			i, brIndex, moveType;
-	MrBFlt		tuning, minV=0.0, maxV=0.0, brlensExp=0.0;
 	TreeNode	*p, *u, *v, *a, *b, *c;
 	Tree		*t;
 	ModelParams *mp;
 	
-	tuning = mvp[0];
 	(*lnPriorRatio) = (*lnProposalRatio) = 0.0;
 		
 	/* get first tree */
@@ -26731,7 +26765,7 @@ int Move_PopSizeM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 {
 
 	int				isNPriorExp, isValidN, valIndex;
-	MrBFlt			*valPtr, oldN, newN, tuning, minN, maxN, popSizeExp=0.0, ran, oldLnPrior, newLnPrior, growth,
+	MrBFlt			*valPtr, oldN, newN, tuning, minN, maxN, ran, oldLnPrior, newLnPrior, growth,
                     oldT, newT, clockRate;
 	ModelParams 	*mp;
 	ModelInfo		*m;
