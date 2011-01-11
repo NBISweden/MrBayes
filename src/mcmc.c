@@ -9548,7 +9548,7 @@ void FreeChainMemory (void)
         if (m->nodeScalerIndex)
             {
             for (j=0; j<numLocalChains; j++)
-				free (m->nodeScalerIndex);
+				free (m->nodeScalerIndex[j]);
             free (m->nodeScalerIndex);
             m->nodeScalerIndex = NULL;
             }

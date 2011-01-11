@@ -1432,6 +1432,9 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 	int			i;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
+#if !defined (NDEBUG)
+    int         j;
+#endif
 
     /* make sure assumptions are correct */
     assert (from->isRooted == YES);
