@@ -7930,7 +7930,7 @@ int DoTreeParm (char *parmName, char *tkn)
         if (isTranslateDef == YES && isTranslateDiff == YES)
             nextIntNodeIndex = numTranslates;
         else
-            nextIntNodeIndex = numLocalTaxa;
+            nextIntNodeIndex = numTaxa;
 	    pp = &t->nodes[nextAvailableNode++];
 	    t->root = pp;
         t->isRooted = NO;  /* expect unrooted tree */

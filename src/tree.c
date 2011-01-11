@@ -6658,9 +6658,9 @@ void WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlen
 				if (p->anc->anc == NULL && isRooted == NO)
 					{
 					if (showBrlens == YES)
-				        SafeSprintf (&tempStr, &tempStrSize, ",%d:%s", p->anc->index + 1, MbPrintNum(p->length));
+				        SafeSprintf (&tempStr, &tempStrSize, ",%d:%s)", p->anc->index + 1, MbPrintNum(p->length));
 					else
-						SafeSprintf (&tempStr, &tempStrSize, ",%d", p->anc->index + 1);
+						SafeSprintf (&tempStr, &tempStrSize, ",%d)", p->anc->index + 1);
 					AddToPrintString (tempStr);
 					}
                 else if (p->anc->anc != NULL)

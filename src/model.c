@@ -17972,7 +17972,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = BRLENS_EXP;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_BrLen;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.00001;
@@ -18026,7 +18026,7 @@ void SetUpMoveTypes (void)
 	/* Move_ExtSPR */
 	mt = &moveTypes[i++];
 	mt->name = "Extending SPR";
-	mt->shortName = "ExtSpr";
+	mt->shortName = "ExtSPR";
     mt->subParams = YES;
 	mt->tuningName[0] = "Extension probability";
 	mt->shortTuningName[0] = "p_ext";
@@ -18036,7 +18036,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ExtSPR;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 2;
 	mt->tuningParam[0] = 0.5; /* extension probability */
 	mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
@@ -18075,7 +18075,7 @@ void SetUpMoveTypes (void)
 	/* Move_ExtSS */
 	mt = &moveTypes[i++];
 	mt->name = "Extending subtree swapper";
-	mt->shortName = "ExtSs";
+	mt->shortName = "ExtSS";
     mt->subParams = YES;
 	mt->tuningName[0] = "Extension probability";
 	mt->shortTuningName[0] = "p_ext";
@@ -18085,10 +18085,10 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ExtSS;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 2;
-	mt->tuningParam[0] = 0.8; /* extension probability */
-	mt->tuningParam[1] = 2.0 * log (1.1); /* lambda */
+	mt->tuningParam[0] = 0.5; /* extension probability */
+	mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
 	mt->minimum[1] = 0.00000001;
@@ -18124,7 +18124,7 @@ void SetUpMoveTypes (void)
     /* Move_ExtTBR */
 	mt = &moveTypes[i++];
 	mt->name = "Extending TBR";
-	mt->shortName = "eTBR";
+	mt->shortName = "ExtTBR";
     mt->subParams = YES;
 	mt->tuningName[0] = "Extension probability";
 	mt->shortTuningName[0] = "p_ext";
@@ -18134,10 +18134,10 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ExtTBR;
-	mt->relProposalProb = 10.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 2;
-	mt->tuningParam[0] = 0.8;  /* extension probability */
-	mt->tuningParam[1] = 2.0 * log (1.1);  /* lambda */
+	mt->tuningParam[0] = 0.5;  /* extension probability */
+	mt->tuningParam[1] = 2.0 * log (1.05);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99;
 	mt->minimum[1] = 0.00001;
@@ -18397,7 +18397,7 @@ void SetUpMoveTypes (void)
 	/* Move_NNI */
 	mt = &moveTypes[i++];
 	mt->name = "NNI move for parsimony trees";
-	mt->shortName = "pNNI";
+	mt->shortName = "ParsNNI";
 	mt->applicableTo[0] = TOPOLOGY_PARSIMONY_UNIFORM;
 	mt->applicableTo[1] = TOPOLOGY_PARSIMONY_CONSTRAINED;
 	mt->nApplicable = 2;
@@ -18422,7 +18422,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
 	mt->nApplicable = 8;
 	mt->moveFxn = &Move_NNIClock;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 10.0;
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -18462,14 +18462,14 @@ void SetUpMoveTypes (void)
 	/* Move_NodeSlider */
 	mt = &moveTypes[i++];
 	mt->name = "Node slider (uniform on possible positions)";
-	mt->shortName = "Nslider";
+	mt->shortName = "Nodeslider";
 	mt->tuningName[0] = "Multiplier tuning parameter";
 	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = BRLENS_UNI;
 	mt->applicableTo[1] = BRLENS_EXP;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_NodeSlider;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.00001;
@@ -18480,7 +18480,7 @@ void SetUpMoveTypes (void)
 	/* Move_NodeSliderClock */
 	mt = &moveTypes[i++];
 	mt->name = "Node depth window slider (clock-constrained)";
-	mt->shortName = "Nodeslider";
+	mt->shortName = "NodesliderClock";
 	mt->tuningName[0] = "Window size";
 	mt->shortTuningName[0] = "delta";
 	mt->applicableTo[0] = BRLENS_CLOCK_UNI;
@@ -18488,7 +18488,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[2] = BRLENS_CLOCK_BD;
 	mt->nApplicable = 3;
 	mt->moveFxn = &Move_NodeSliderClock;
-	mt->relProposalProb = 10.0;
+	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.05; /* window size */
 	mt->minimum[0] = 0.00000001;
@@ -18507,7 +18507,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = BRLENS_CLOCK_SPCOAL;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_NodeSliderGeneTree;
-	mt->relProposalProb = 10.0;
+	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.05; /* window size */
 	mt->minimum[0] = 0.00000001;
@@ -18751,7 +18751,7 @@ void SetUpMoveTypes (void)
 	/* Move_ParsSPR */
 	mt = &moveTypes[i++];
 	mt->name = "Parsimony-biased SPR";
-	mt->shortName = "pSPR";
+	mt->shortName = "ParsSPR";
     mt->subParams = YES;
 	mt->tuningName[0] = "parsimony warp factor";
 	mt->shortTuningName[0] = "warp";
@@ -18763,10 +18763,10 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_ParsSPR;
-	mt->relProposalProb = 0.0;
+	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 3;
 	mt->tuningParam[0] = 0.1; /* warp */
-	mt->tuningParam[1] = 2.0 * log (1.01); /* multiplier tuning parameter lambda */
+	mt->tuningParam[1] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
 	mt->tuningParam[2] = 0.05; /* upweight and downweight probability */
 	mt->minimum[0] = 0.0;
 	mt->maximum[0] = 1.0;

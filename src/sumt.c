@@ -3567,17 +3567,6 @@ int DoSumtTree (void)
             else
                 sumtParams.orderLen = numLocalTaxa - 3;
 
-            /* harvest labels */
-            for (i=0; i<sumtParams.numTaxa; i++)
-                {
-                for (j=0; j<t->nNodes; j++)
-                    {
-                    p = t->allDownPass[j];
-                    if (p->index == i)
-                        AddString(&sumtParams.taxaNames, i, p->label);
-                    }
-                }
-
             if (isTranslateDef == YES && isTranslateDiff == YES)
                 {
                 /* we are using a translate block with different taxa set */
@@ -3640,8 +3629,9 @@ int DoSumtTree (void)
                 return (ERROR);
                 }
 
-            /* reset tip indices in case some taxa deleted */
+            /* reset tip and int node indices in case some taxa deleted */
             ResetTipIndices (t);
+            ResetIntNodeIndices(t);
             }
 
         /* move calculation root for nonrooted trees if necessary */
@@ -3654,6 +3644,20 @@ int DoSumtTree (void)
                 spacer, sumtParams.numTaxa, t->name, sumtParams.curFileName, t->nNodes-t->nIntNodes);
 	        return ERROR;
 	        }
+
+        if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
+            {
+            /* harvest labels (can only be done safely after pruning) */
+            for (i=0; i<sumtParams.numTaxa; i++)
+                {
+                for (j=0; j<t->nNodes; j++)
+                    {
+                    p = t->allDownPass[j];
+                    if (p->index == i)
+                        AddString(&sumtParams.taxaNames, i, p->label);
+                    }
+                }
+            }
 
         /* check that tree agrees with template */
 	    if (sumtParams.numTreesSampled == 1)
