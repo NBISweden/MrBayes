@@ -14464,6 +14464,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 					m->CondLikeDown (p, d, chain);
 				
 				if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
+                    {
 #if defined (SSE_ENABLED)
                     if (m->useSSE == YES)
     					RemoveNodeScalers_SSE (p, d, chain);
@@ -14472,6 +14473,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 #else
 				RemoveNodeScalers (p, d, chain);
 #endif
+                    }
 				FlipNodeScalerSpace (m, chain, p->index);
 				m->scalersSet[chain][p->index] = NO;
 				
