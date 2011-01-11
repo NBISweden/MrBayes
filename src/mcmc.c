@@ -9480,7 +9480,10 @@ void FreeChainMemory (void)
             {
             for (j=0; j<m->numScalers; j++)
 #if defined (SSE_ENABLED)
+            if (m->dataType != STANDARD)
                 AlignedSafeFree ((void **)(&m->scalers[j]));
+            else
+                free (m->scalers[j]);
 #else
 				free (m->scalers[j]);
 
@@ -9495,15 +9498,18 @@ void FreeChainMemory (void)
             m->clP = NULL;
             }
 #if defined (SSE_ENABLED)
-        if (m->clP_SSE)
+        if (m->dataType != STANDARD)
             {
-			free (m->clP_SSE);
-            m->clP_SSE = NULL;
+            if (m->clP_SSE)
+                {
+			    free (m->clP_SSE);
+                m->clP_SSE = NULL;
+                }
+            if (m->lnL_SSE)
+                AlignedSafeFree ((void **)(m->lnL_SSE));
+            if (m->lnLI_SSE)
+                AlignedSafeFree ((void **)(m->lnLI_SSE));
             }
-        if (m->lnL_SSE)
-            AlignedSafeFree ((void **)(m->lnL_SSE));
-        if (m->lnLI_SSE)
-            AlignedSafeFree ((void **)(m->lnLI_SSE));
 #endif
 
         if (m->tiProbs)
@@ -10864,7 +10870,7 @@ int InitChainCondLikes (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        
+       
         /* allocate space for conditional likelihoods */
         useBeagle = NO;
 #if defined (BEAGLE_ENABLED)
@@ -10911,7 +10917,7 @@ int InitChainCondLikes (void)
 #if defined (MS_VCPP_SSE)
 					m->condLikes[i] = (CLFlt*) ALIGNED_MALLOC(k * sizeof(CLFlt), 16);
 #else
-					ALIGNED_MALLOC((void **)&(m->condLikes[i]), 16, k * sizeof(CLFlt));
+					ALIGNED_MALLOC((void **)(&m->condLikes[i]), 16, k * sizeof(CLFlt));
 #endif
                     if (!m->condLikes[i])
                         return (ERROR);
@@ -10940,16 +10946,25 @@ int InitChainCondLikes (void)
             for (i=0; i<m->numScalers; i++)
                 {
 #if defined (SSE_ENABLED)
-                /* allocate space with padding */
+                if (useSSE == YES)
+                    {
+                    /* allocate space with padding */
 #if defined (MS_VCPP_SSE)
-                m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
+                    m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
 #else
-                ALIGNED_MALLOC((void **)(&m->scalers[i]), m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
+                    ALIGNED_MALLOC((void **)(&(m->scalers[i])), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt));
 #endif
-                if (!m->scalers[i])
-                    return (ERROR);
-                for (j=0; j<m->numSSEChars*FLOATS_PER_VEC; j++)
-                    m->scalers[i][j] = 0.0f;
+                    if (!m->scalers[i])
+                        return (ERROR);
+                    for (j=0; j<m->numSSEChars*FLOATS_PER_VEC; j++)
+                        m->scalers[i][j] = 0.0f;
+                    }
+                else
+                    {
+                    m->scalers[i] = (CLFlt*) SafeMalloc (m->numChars * sizeof(CLFlt));
+                    if (!m->scalers[i])
+                        return (ERROR);
+                    }
 #else
                 m->scalers[i] = (CLFlt*) SafeMalloc (m->numChars * sizeof(CLFlt));
                 if (!m->scalers[i])
@@ -10970,18 +10985,23 @@ int InitChainCondLikes (void)
 				if (!m->clP)
 					return (ERROR);
 #if defined (SSE_ENABLED)
-				m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
-				if (!m->clP_SSE)
-					return (ERROR);
+				if (useSSE == YES)
+                    {
+                    m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
+				    if (!m->clP_SSE)
+					    return (ERROR);
 #if defined (MS_VCPP_SSE)
-				m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-				m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+				    m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+				    m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
 #else
-				ALIGNED_MALLOC ((void **)(&m->lnL_SSE) , 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
-				ALIGNED_MALLOC ((void **)(&m->lnLI_SSE), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
+				    ALIGNED_MALLOC ((void **)(&m->lnL_SSE) , 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
+				    ALIGNED_MALLOC ((void **)(&m->lnLI_SSE), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
 #endif
+                    }
 #endif
 				}
+
+
             /* allocate tiprob space */
             m->tiProbs = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
             if (!m->tiProbs)
@@ -11012,6 +11032,7 @@ int InitChainCondLikes (void)
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
         nNodes = GetTree(m->brlens,0,0)->nNodes;
 
+            
         /* allocate and set indices from tree nodes to cond like arrays */
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
@@ -11063,7 +11084,7 @@ int InitChainCondLikes (void)
             return (ERROR);
         for (i=0; i<nNodes; i++)
             m->condLikeScratchIndex[i] = -1;
-		//for (i=0; i<numLocalTaxa; i++) //we do not need it becouse condLike space never get fliped for taxa nodes
+		//for (i=0; i<numLocalTaxa; i++) //we do not need it becouse condLike space never gets fliped for taxa nodes
 			//m->condLikeScratchIndex[i] = m->condLikeIndex[0][i];
         for (i=0; i<nIntNodes; i++)
             {
@@ -11186,7 +11207,6 @@ int InitChainCondLikes (void)
 			}
 #endif
 
-
         /* allocate and set up cijk indices */
         if (m->nCijkParts > 0)
             {
@@ -11236,9 +11256,7 @@ int InitChainCondLikes (void)
                     beagleResetScaleFactors(m->beagleInstance, i);
             }
 #endif
-            
-            
-            
+
         /* fill in tip conditional likelihoods */
         if (m->dataType == STANDARD)
 			{
@@ -11285,48 +11303,71 @@ int InitChainCondLikes (void)
 #endif
 				cL = m->condLikes[clIndex++];
 #if defined (SSE_ENABLED)
-                for (k=0; k<numReps; k++)
-					{
-                    //charBits = parsMatrix + m->parsMatrixStart + i * parsMatrixRowSize;
-					charBits = m->parsSets[i];
-				    for (c=0; c<m->numChars/FLOATS_PER_VEC; c++)
+                if (useSSE == YES)
+                    {
+                    for (k=0; k<numReps; k++)
 					    {
-                        for (j=0; j<m->numModelStates/m->numStates; j++)
+					    charBits = m->parsSets[i];
+				        for (c=0; c<m->numChars/FLOATS_PER_VEC; c++)
+					        {
+                            for (j=0; j<m->numModelStates/m->numStates; j++)
+                                {
+						        for (s=0; s<m->numStates; s++)
+							        {
+                                    for (j1=0; j1<FLOATS_PER_VEC; j1++)
+                                        {
+							            if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
+								            (*cL) = 1.0;
+                                        cL++;
+                                        }
+							        }
+                                }   
+					        charBits += FLOATS_PER_VEC * m->nParsIntsPerSite;
+						    }
+                        if (m->numChars % FLOATS_PER_VEC > 0)
                             {
-						    for (s=0; s<m->numStates; s++)
-							    {
-                                for (j1=0; j1<FLOATS_PER_VEC; j1++)
-                                    {
-							        if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
+                            /* add last characters and padd */
+                            for (j=0; j<m->numModelStates/m->numStates; j++)
+                                {
+					            for (s=0; s<m->numStates; s++)
+						            {
+                                    for (j1=0; j1<m->numChars%FLOATS_PER_VEC; j1++)
+                                        {
+						                if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
+							                (*cL) = 1.0;
+                                        cL++;
+                                        }
+                                    for (; j1<FLOATS_PER_VEC; j1++)
+                                        {
+						                (*cL) = 1.0;
+                                        cL++;
+                                        }
+						            }
+                                }
+                            }
+					    }
+                    }
+                else
+                    {
+                    for (k=0; k<numReps; k++)
+					    {
+                        charBits = m->parsSets[i];
+				        for (c=0; c<m->numChars; c++)
+					        {
+                            for (j=0; j<m->numModelStates/m->numStates; j++)
+                                {
+						        for (s=0; s<m->numStates; s++)
+							        {
+							        if (IsBitSet(s, charBits))
 								        (*cL) = 1.0;
-                                    cL++;
-                                    }
-							    }
-                            }
-					    charBits += FLOATS_PER_VEC * m->nParsIntsPerSite;
-						}
-                    if (m->numChars % FLOATS_PER_VEC > 0)
-                        {
-                        /* add last characters and padd */
-                        for (j=0; j<m->numModelStates/m->numStates; j++)
-                            {
-					        for (s=0; s<m->numStates; s++)
-						        {
-                                for (j1=0; j1<m->numChars%FLOATS_PER_VEC; j1++)
-                                    {
-						            if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
-							            (*cL) = 1.0;
-                                    cL++;
-                                    }
-                                for (; j1<FLOATS_PER_VEC; j1++)
-                                    {
-						            (*cL) = 1.0;
-                                    cL++;
-                                    }
-						        }
-                            }
-                        }
-					}
+							        cL++;
+							        }
+                                }
+							    charBits += m->nParsIntsPerSite;
+						    }
+					    }
+                    }
+
 #else
                 for (k=0; k<numReps; k++)
 					{
