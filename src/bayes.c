@@ -860,7 +860,7 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		printf ("\n\n");
 #		endif
-		printf ("                            MrBayes v%s(r%s)\n\n", VERSION_NUMBER,rev);
+		printf ("                            MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
 		printf ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		printf ("                             (Parallel version)\n");

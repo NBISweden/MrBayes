@@ -38627,6 +38627,7 @@ int RunChain (SafeLong *seed)
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
+                assert( lnPriorRatio==lnPriorRatio);
                 assert (fabs((lnPrior-LogPrior(chn))/lnPrior) < 0.0001);
 
                 /* heat */

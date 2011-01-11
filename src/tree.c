@@ -3082,9 +3082,12 @@ int IsTreeConsistent (Param *param, int chain, int state)
         for (i=0; i<tree->nNodes-1; i++)
             {
             p = tree->allDownPass[i];
-            if (p->length < 0.0)
+            if (p->length <= 0.0)
                 {
-                printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                if(p->length == 0.0)
+                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
+                else
+                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
                 return NO;
                 }
             }
@@ -3096,8 +3099,11 @@ int IsTreeConsistent (Param *param, int chain, int state)
     /* Check that lengths and depths are consistent */
     for (i=0; i<tree->nNodes-2; i++) {
         p = tree->allDownPass[i];
-        if (p->length < 0.0) {
-            printf ("Node %d has negative branch length %f\n", p->index, p->length);
+        if (p->length <= 0.0) {
+             if(p->length == 0.0)
+                printf ("Node %d has zero branch length %f\n", p->index, p->length);
+             else
+                printf ("Node %d has negative branch length %f\n", p->index, p->length);
             return NO;
         }
         if (fabs(p->anc->nodeDepth - p->nodeDepth - p->length) > 0.000001) {
