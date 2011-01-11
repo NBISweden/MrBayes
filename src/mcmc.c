@@ -24325,14 +24325,14 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
         minDepth = 0.0;
     else
         {
-		minDepth = p->left->nodeDepth + POS_MIN;
+		minDepth = p->left->nodeDepth + BRLENS_MIN;
 		if (p->right->nodeDepth + POS_MIN > minDepth)
-			minDepth = p->right->nodeDepth + POS_MIN;
+			minDepth = p->right->nodeDepth + BRLENS_MIN;
         }
 	if (p->anc->anc == NULL)
         maxDepth = TREEHEIGHT_MAX;
 	else
-    	maxDepth = p->anc->nodeDepth - POS_MIN;
+    	maxDepth = p->anc->nodeDepth - BRLENS_MIN;
 	
     if (p->isDated == YES)
 		{
@@ -31181,7 +31181,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        if (p->length < 0.0)
+        if (p->length < BRLENS_MIN)
             {
             abortMove = YES;
             return NO_ERROR;
