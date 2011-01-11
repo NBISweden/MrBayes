@@ -6,7 +6,7 @@ AC_ARG_ENABLE(debug, [  --enable-debug=[no/yes]   compile with debug support [de
 CFLAGS_DEFINED="
 
 NOTICE: Because the variable \$CFLAGS is defined in your shell, the default MrBayes flags will be overridden.
-To ensure optimal performance, please check that you \$CFLAGS variable is set correctly. Alternatively, unset the
+To ensure optimal performance, please check that your \$CFLAGS variable is set correctly. Alternatively, unset the
 \$CFLAGS variable in your shell in order to use the default MrBayes compiler options.
 "
 if test -n "${CFLAGS+x}"; then AC_MSG_NOTICE([$CFLAGS_DEFINED]); fi
