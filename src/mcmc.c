@@ -23761,14 +23761,9 @@ int Move_NNI (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrB
 
 {
 
-	int			i;
 	TreeNode	*p, *u, *v, *a, *b, *c;
 	Tree		*t;
 	
-	/* no warnings */
-	(*lnPriorRatio) = (*lnProposalRatio) = 0.0;
-	i = (int)mvp[0];
-		
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
@@ -25867,12 +25862,12 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	/* then move down towards root */
 	if (u->isLocked == NO)
 		{
-		p= a;
+		p = a;
 		do {
 			p->marked = YES;
 			q = p;
 			p = p->anc;
-			} while (q->isLocked == NO && q->anc->anc != NULL);
+			} while (p->isLocked == NO && p->anc != NULL);
 		}
 	/* finally move up */
 	for (i=t->nNodes-2; i>=0; i--)

@@ -628,7 +628,6 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 	int				i, j, k, constraintId, nLongsNeeded, nextNode;
 	SafeLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
-    char            constrName[100];
 	
 	pt->isRooted = t->isRooted;
 
@@ -723,14 +722,22 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 
 		/* check that partition should be included */
         k = NumBits(constraintPartition, nLongsNeeded);
+        if (k == 0)
+			{
+			MrBayesPrint ("%s   WARNING: Constraint '%s' refers only to deleted taxa\n", spacer, constraintNames[constraintId]);
+			MrBayesPrint ("%s            and will be disregarded\n", spacer);
+			t->constraints[constraintId] = NO;
+			continue;
+            }
         if (k == 1)
 			{
-			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a tip and will be disregarded\n", spacer, constrName);
-			t->constraints[i] = NO;
+			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a single tip and\n", spacer, constraintNames[constraintId]);
+			MrBayesPrint ("%s            will be disregarded\n", spacer);
+			t->constraints[constraintId] = NO;
 			continue;
             }
 
-		/* check if root in rooted tree */
+		/* check if root in rooted tree (we allow this to enable inference of ancestral states) */
         if (k == numLocalTaxa && t->isRooted == YES)
             {
             pt->root->isLocked = YES;
@@ -738,7 +745,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
             continue;
             }
 
-		/* check if interior root in unrooted tree */
+		/* check if interior root in unrooted tree (we allow this to enable inference of ancestral states) */
         if ((k == numLocalTaxa - 1 || k == numLocalTaxa) && t->isRooted == NO)
             {
             pt->root->isLocked = YES;
@@ -766,7 +773,8 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			}
 		if (i==nLongsNeeded)
 			{
-			MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint and will be ignored\n", spacer, constrName);
+			MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
+			MrBayesPrint ("%s            and will be ignored\n", spacer);
 			t->constraints[i] = NO;
 			continue;
 			}
@@ -1011,8 +1019,8 @@ int CheckConstraints (Tree *t)
 
 	for (a=0; a<numDefinedConstraints; a++)
 		{
-		if (modelParams[t->relParts[0]].activeConstraints[a] == NO)
-			continue;
+        if (t->constraints[a] == NO)
+            continue;
 
 		/* set bits in partition to check */
         ClearBits(constraintPartition, nLongsNeeded);
