@@ -1099,6 +1099,8 @@ int CheckSetConstraints (Tree *t)
         p->isLocked = NO;
         p->lockID = -1;
         p->calibration = NULL;
+        p->isDated = NO;
+        p->age = -1.0;
         }
 
     /* allocate space */
@@ -5161,6 +5163,40 @@ int RetrieveUTree (Tree *t, int *order, MrBFlt *brlens)
 		t->intDownPass[i]->index = i+numTips;
 
 	return (NO_ERROR);
+}
+
+
+
+
+
+void SetDatedNodeAges (Param *param, int chain, int state)
+
+{
+
+	int		    i;
+    MrBFlt      clockRate;
+    ModelInfo   *m;
+	TreeNode	*p;
+    Tree        *t;
+
+	extern void ShowNodes(TreeNode *,int,int);
+
+    t = GetTree (param, chain, state);
+    m = &modelSettings[t->relParts[0]];
+
+    if (m->clockRate == NULL)
+        clockRate = 1.0;
+    else
+        clockRate = *GetParamVals(m->clockRate, chain, state);
+
+    for (i=0; i<t->nNodes-1; i++)
+		{
+		p = t->allDownPass[i];
+		if (p->isDated == YES)
+            p->age = p->nodeDepth / clockRate;
+        else
+            p->age = -1.0;
+        }
 }
 
 

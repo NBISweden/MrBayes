@@ -36489,6 +36489,7 @@ int ReassembleParamVals (int *curId)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
                     CheckSetConstraints(tree);
+                    SetDatedNodeDepths(modelSettings[tree->relParts[0]].brlen, j, i, state[i]);
                     }
                 else if (proc_id == proc)
                     {
@@ -36894,6 +36895,7 @@ int RedistributeParamVals (void)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
                     CheckSetConstraints(tree);
+                    SetDatedNodeDepths(modelSettings[tree->relParts[0]].brlen, j, i, state[i]);
                     }
                 }
             }
