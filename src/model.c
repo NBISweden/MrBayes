@@ -19734,17 +19734,8 @@ int ShowModel (void)
 					{
 					if (modelParams[i].dataType == STANDARD)
 						MrBayesPrint ("%s         # States  = Variable, up to 10\n", spacer);
-					else if (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA)
-						{
-						if (!strcmp(modelParams[i].nucModel, "Doublet"))
-							MrBayesPrint ("%s         # States  = %d\n", spacer, 16);
-						else if (!strcmp(modelParams[i].nucModel, "Codon"))	
-							MrBayesPrint ("%s         # States  = %d\n", spacer, 61);
-						else if (!strcmp(modelParams[i].nucModel, "Protein"))
-							MrBayesPrint ("%s         # States  = %d\n", spacer, 20);
-						else
-							MrBayesPrint ("%s         # States  = %d\n", spacer, 4);
-						}
+					else if (modelSettings[i].numStates != modelSettings[i].numModelStates)
+						MrBayesPrint ("%s         # States  = %d (in the model)\n", spacer, modelSettings[i].numModelStates);
 					else
 						MrBayesPrint ("%s         # States  = %d\n", spacer, ns);
 					if (modelSettings[i].dataType == STANDARD)

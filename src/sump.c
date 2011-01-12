@@ -125,10 +125,10 @@ int DoSump (void)
 	MrBayesPrint ("%s   Writing summary statistics to file %s.pstat\n", spacer, sumpParams.sumpFileName);
 
     if (chainParams.relativeBurnin == YES)
-        MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of sampled trees\n",
+        MrBayesPrint ("%s   Using relative burnin ('relburnin=yes'), discarding the first %.0f %% of samples\n",
             spacer, chainParams.burninFraction*100.0, chainParams.burninFraction);
     else
-        MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d sampled trees\n",
+        MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d samples\n",
             spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
 
     /* Initialize to silence warning. */
@@ -267,7 +267,8 @@ int DoSump (void)
 			{
 			MrBayesPrint ("\n");
 			MrBayesPrint ("%s   Estimated marginal likelihoods for run sampled in file \"%s.p\":\n", spacer, sumpParams.sumpFileName);
-			MrBayesPrint ("%s      (Use the harmonic mean for Bayes factor comparisons of models)\n\n", spacer, sumpParams.sumpFileName);
+			MrBayesPrint ("%s      (Use the harmonic mean for Bayes factor comparisons of models)\n", spacer, sumpParams.sumpFileName);
+            MrBayesPrint ("%s      (Values are saved to the file %s.lstat)\n\n", spacer, sumpParams.sumpOutfile);
 			MrBayesPrint ("%s   Arithmetic mean   Harmonic mean\n", spacer);
 			MrBayesPrint ("%s   --------------------------------\n", spacer);
 			if (unreliable == NO)
@@ -294,6 +295,7 @@ int DoSump (void)
 				else /* if (sumpParams.numRuns == 2) */
 					MrBayesPrint ("%s      \"%s.run1.p\" and \"%s.run2.p\":\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
 			    MrBayesPrint ("%s      (Use the harmonic mean for Bayes factor comparisons of models)\n\n", spacer, sumpParams.sumpFileName);
+                MrBayesPrint ("%s      (Values are saved to the file %s.lstat)\n\n", spacer, sumpParams.sumpOutfile);
 				MrBayesPrint ("%s   Run   Arithmetic mean   Harmonic mean\n", spacer);
 				MrBayesPrint ("%s   --------------------------------------\n", spacer);
 				}
@@ -1149,7 +1151,6 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     /* nHeaders - is a convenient synonym for number of column headers */
 
-
     /* check if we have any model indicator variables and also check for longest header */
     k = 0;
     longestName = 0;
@@ -1176,11 +1177,13 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
         return NO_ERROR;
 
     /* open output file */
+	MrBayesPrint ("%s   Model probabilities saved to file \"%s.mstat\".\n", spacer, sumpParams.sumpOutfile);
     strncpy (temp,fileName,90);
     strcat (temp, ".mstat");
     fp = OpenNewMBPrintFile(temp);
     if (!fp)
         return ERROR;
+    MrBayesPrint ("\n");
 
     /* print unique identifier to the output file */
 	if (strlen(stamp) > 1)
@@ -1192,14 +1195,20 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
         {
         MrBayesPrint ("%s        %*c        Posterior\n", spacer, longestName-5, ' ');
         MrBayesPrint ("%s   Model%*c       Probability\n", spacer, longestName-5, ' ');
-        MrBayesPrint ("%s   -----%-*c------------------\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----", spacer);
+        for (i=0; i<longestName-5; i++)
+            MrBayesPrint ("-");
+        MrBayesPrint ("------------------\n");
         MrBayesPrintf (fp, "Model\tProbability\n");
         }
     else
         {
 		MrBayesPrint ("%s        %*c        Posterior      Standard         Min.           Max.   \n", spacer, longestName-5, ' ');
 		MrBayesPrint ("%s   Model%*c       Probability     Deviation     Probability    Probability\n", spacer, longestName-5, ' ');
-        MrBayesPrint ("%s   -----%-*c---------------------------------------------------------------\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----", spacer);
+        for (i=0; i<longestName-5; i++)
+            MrBayesPrint ("-");
+        MrBayesPrint ("---------------------------------------------------------------\n");
         MrBayesPrintf (fp, "Model\tProbability\tStd_dev\tMin_prob\tMax_prob\n");
         }
 
@@ -1297,11 +1306,17 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	/* print footer */
     if (nRuns == 1)
         {
-        MrBayesPrint ("%s   -----%-*c------------------\n\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----", spacer);
+        for (i=0; i<longestName-5; i++)
+            MrBayesPrint ("-");
+        MrBayesPrint ("------------------\n\n");
         }
     else
         {
-        MrBayesPrint ("%s   -----%-*c---------------------------------------------------------------\n\n", spacer, longestName-5, '-');
+        MrBayesPrint ("%s   -----", spacer);
+        for (i=0; i<longestName-5; i++)
+            MrBayesPrint ("-");
+        MrBayesPrint ("---------------------------------------------------------------\n\n");
         }
 
     /* close output file */
@@ -1560,6 +1575,8 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
+        if (modelIndicatorParams[j][0]!='\0')
+            continue;
 		if (IsSame (temp, "Gen") == SAME)
 			continue;
 		if (IsSame (temp, "lnL") == SAME)

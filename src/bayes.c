@@ -792,7 +792,7 @@ int InitializeMrBayes (void)
 
     /* Allocate and initialize model indicator parameter names */
     modelIndicatorParams = (char **) SafeCalloc (2, sizeof (char *));
-    modelIndicatorParams[0] = "Aamodel";
+    modelIndicatorParams[0] = "aamodel";
     modelIndicatorParams[1] = "";
 
     /* Aamodel */

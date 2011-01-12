@@ -1098,6 +1098,7 @@ int CheckSetConstraints (Tree *t)
         p = t->allDownPass[i];
         p->isLocked = NO;
         p->lockID = -1;
+        p->calibration = NULL;
         }
 
     /* allocate space */

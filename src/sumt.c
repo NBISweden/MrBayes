@@ -2370,13 +2370,17 @@ int DoSumt (void)
 			maxWidthID = 2;
         maxNumTaxa = SCREEN_WIDTH - 9;
 
-        /* print header to screen and to parts file simultaneously */
-		if (sumtParams.table == YES)
+        for (j=0; j<sumtParams.numTaxa; j+=maxNumTaxa)
             {
+            /* print header to screen and to parts file simultaneously */
+
             /* first print header to screen */
             MrBayesPrint ("%s   ", spacer);
-		    MrBayesPrint ("%*s -- Partition\n", maxWidthID, "ID");
-		    tableWidth = maxWidthID + 4 + sumtParams.numTaxa;
+		    if (j == 0)
+                MrBayesPrint ("%*s -- Partition\n", maxWidthID, "ID");
+		    else
+                MrBayesPrint ("%*s -- Partition (continued)\n", maxWidthID, "ID");
+            tableWidth = maxWidthID + 4 + sumtParams.numTaxa;
             if (tableWidth > SCREEN_WIDTH)
                 tableWidth = SCREEN_WIDTH;
 		    MrBayesPrint ("%s   ", spacer);
@@ -2386,62 +2390,56 @@ int DoSumt (void)
 
 		    /* now print header to file */
 		    MrBayesPrintf (fpParts, "ID\tPartition\n");
-            }
 
-        /* now, show partitions that were found on screen; print to .parts file simultaneously */
-		mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
-        for (i=0; i<sumtParams.numTaxa; i++)
-            SetBit (i, mask);
-        for (i=0; i<numTreePartsToPrint; i++)
-			{
-			x = treeParts[i];
-            if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
-                FlipBits(x->partition, sumtParams.SafeLongsNeeded, mask);
+            /* now, show partitions that were found on screen; print to .parts file simultaneously */
+		    mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
+            for (i=0; i<sumtParams.numTaxa; i++)
+                SetBit (i, mask);
+            for (i=0; i<numTreePartsToPrint; i++)
+			    {
+			    x = treeParts[i];
+                if (IsBitSet(localOutGroup, x->partition) == YES && sumtParams.isRooted == NO)
+                    FlipBits(x->partition, sumtParams.SafeLongsNeeded, mask);
 
-            if ((NumBits(x->partition, sumtParams.SafeLongsNeeded) == numLocalTaxa || NumBits(x->partition, sumtParams.SafeLongsNeeded) == 0) && sumtParams.isClock == NO)
-                continue;
+                if ((NumBits(x->partition, sumtParams.SafeLongsNeeded) == numLocalTaxa || NumBits(x->partition, sumtParams.SafeLongsNeeded) == 0) && sumtParams.isClock == NO)
+                    continue;
 
-            if (sumtParams.table == YES)
-                {
                 MrBayesPrint ("%s   %*d -- ", spacer, maxWidthID, i);
-			    if (sumtParams.numTaxa <= maxNumTaxa)
+		        if (sumtParams.numTaxa <= maxNumTaxa)
                     ShowParts (stdout, x->partition, sumtParams.numTaxa);
                 else
                     {
-                    for (j=0; j<sumtParams.numTaxa; j+=maxNumTaxa)
-                        {
-                        if (sumtParams.numTaxa - j > maxNumTaxa)
-                            ShowSomeParts (stdout, x->partition, j, maxNumTaxa);
-                        else
-                            ShowSomeParts (stdout, x->partition, j, sumtParams.numTaxa - j);
-                        }
+                    if (sumtParams.numTaxa - j > maxNumTaxa)
+                        ShowSomeParts (stdout, x->partition, j, maxNumTaxa);
+                    else
+                        ShowSomeParts (stdout, x->partition, j, sumtParams.numTaxa - j);
                     }
-			    fflush(stdout);
+		        fflush(stdout);
                 MrBayesPrint ("\n");
 
                 MrBayesPrintf (fpParts, "%d\t", i);
                 ShowParts (fpParts, x->partition, sumtParams.numTaxa);
                 MrBayesPrintf (fpParts, "\n");
-                }
-			}
-        free (mask);
+			    }
+            free (mask);
 
-        /* finish screen table */
-        if (sumtParams.table == YES)
-            {
-            MrBayesPrint ("%s   ", spacer);
-	        for (i=0; i<tableWidth; i++)
+            /* finish screen table */
+            if (sumtParams.table == YES)
                 {
-		        MrBayesPrint ("-");
-                }
-	        MrBayesPrint ("\n");
-	        if (oneUnreliable == YES)
-                {
-		        MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n\n", spacer);
-                }
-		    else
-                {
-			    MrBayesPrint ("\n");
+                MrBayesPrint ("%s   ", spacer);
+	            for (i=0; i<tableWidth; i++)
+                    {
+		            MrBayesPrint ("-");
+                    }
+	            MrBayesPrint ("\n");
+	            if (oneUnreliable == YES)
+                    {
+		            MrBayesPrint ("%s   * The partition was not found in all runs so the values are unreliable\n\n", spacer);
+                    }
+		        else
+                    {
+			        MrBayesPrint ("\n");
+                    }
                 }
             }
 
@@ -5310,7 +5308,7 @@ void ShowSomeParts (FILE *fp, SafeLong *p, int offset, int nTaxaToShow)
 	int         i;
 	SafeLong    x, y;
 	
-	for (i=offset; i<nTaxaToShow; i++)
+	for (i=offset; i<offset+nTaxaToShow; i++)
 		{
 		y = p[i / nBitsInALong];
 		x = 1 << (i % nBitsInALong);
