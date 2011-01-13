@@ -11061,7 +11061,7 @@ int InitChainCondLikes (void)
 #endif
             for (j=0; j<numLocalChains; j++)
                 m->condLikeIndex[j][i] = clIndex;
-            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of canditioonal likelihoods  for terminals for all chains.
+            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.
             }
 
         /* reserve private space for parsimony-based moves if parsimony model is used */

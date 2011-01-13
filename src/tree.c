@@ -1085,7 +1085,7 @@ int CheckSetConstraints (Tree *t)
 
 {
 
-	int				a, i, j, nLongsNeeded, foundIt;
+	int				a, i, j, k, nLongsNeeded, foundIt;
 	SafeLong		*constraintPartition, *mask;
 	TreeNode		*p;
 	   	
@@ -1139,6 +1139,10 @@ int CheckSetConstraints (Tree *t)
                 SetBit(j, constraintPartition);
             j++;
             }
+
+        k = NumBits(constraintPartition, nLongsNeeded);
+        if (k == 0 || k == 1)
+            continue;
 
 		/* make sure outgroup is outside constrained partition (marked 0) */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition) == YES)
