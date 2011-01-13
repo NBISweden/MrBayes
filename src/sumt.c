@@ -3553,22 +3553,16 @@ int DoSumtTree (void)
         /* get the tree we just read in */
         t = sumtParams.tree;
     	
+        /* move calculation root for nonrooted trees if necessary */
+        MovePolyCalculationRoot (t, localOutGroup);
+        
         /* check taxon set and outgroup */
         if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
             {
-            /* set basic parameters */
-            sumtParams.numTaxa = t->nNodes - t->nIntNodes;
-            numLocalTaxa = sumtParams.numTaxa;
-            sumtParams.SafeLongsNeeded = ((numLocalTaxa-1) / nBitsInALong) + 1;
-            if (t->isRooted == YES)
-                sumtParams.orderLen = numLocalTaxa - 2;
-            else
-                sumtParams.orderLen = numLocalTaxa - 3;
-
             if (isTranslateDef == YES && isTranslateDiff == YES)
                 {
                 /* we are using a translate block with different taxa set */
-                if (sumtParams.numTaxa != numTranslates)
+                if (t->nNodes - t->nIntNodes != numTranslates)
                     {
                     MrBayesPrint ("%s   ERROR: Expected %d taxa; found %d taxa\n", spacer, numTranslates, sumtParams.numTaxa);
                     return (ERROR);
@@ -3599,6 +3593,25 @@ int DoSumtTree (void)
                         }
                     }
                 }
+
+            /* now we can safely prune the tree based on taxaInfo[].isDeleted */
+            if (isTranslateDef == NO || isTranslateDiff == NO)
+                {
+                PrunePolyTree(t);
+
+                /* reset tip and int node indices in case some taxa deleted */
+                ResetTipIndices (t);
+                ResetIntNodeIndices(t);
+                }
+
+            /* set basic parameters */
+            sumtParams.numTaxa = t->nNodes - t->nIntNodes;
+            numLocalTaxa = sumtParams.numTaxa;
+            sumtParams.SafeLongsNeeded = ((numLocalTaxa-1) / nBitsInALong) + 1;
+            if (t->isRooted == YES)
+                sumtParams.orderLen = numLocalTaxa - 2;
+            else
+                sumtParams.orderLen = numLocalTaxa - 3;
             }
         else
             {
@@ -3613,41 +3626,31 @@ int DoSumtTree (void)
                         return (ERROR);
                         }
                     }
-                }
-            }
 
-        /* prune tree based on taxaInfo[].isDeleted */
-        if (isTranslateDef == NO || isTranslateDiff == NO)
-            {
-            PrunePolyTree (t);
+                /* now we can safely prune the tree based on taxaInfo[].isDeleted */
+                PrunePolyTree (t);
+
+                /* reset tip and int node indices in case some taxa deleted */
+                ResetTipIndices (t);
+                ResetIntNodeIndices(t);
+                PrintPolyNodes(t);
+                }
+
+            /* check that all taxa are included */
             if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
-                {
-			    MrBayesPrint ("%s   Expected %d nondeleted taxa in tree, only found %d taxa\n",
-                    spacer, numLocalTaxa, t->nNodes - t->nIntNodes);
-                return (ERROR);
-                }
-
-            /* reset tip and int node indices in case some taxa deleted */
-            ResetTipIndices (t);
-            ResetIntNodeIndices(t);
+	            {
+	            MrBayesPrint ("%s   Expecting %d taxa but tree '%s' in file '%s' has %d taxa\n",
+                    spacer, sumtParams.numTaxa, t->name, sumtParams.curFileName, t->nNodes-t->nIntNodes);
+	            return ERROR;
+	            }
             }
-
-        /* move calculation root for nonrooted trees if necessary */
-        MovePolyCalculationRoot (t, localOutGroup);
-        
-        /* check that all taxa are included */
-        if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)
-	        {
-	        MrBayesPrint ("%s   Expecting %d taxa but tree '%s' in file '%s' has %d taxa\n",
-                spacer, sumtParams.numTaxa, t->name, sumtParams.curFileName, t->nNodes-t->nIntNodes);
-	        return ERROR;
-	        }
 
         if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
             {
             /* harvest labels (can only be done safely after pruning) */
             for (i=0; i<sumtParams.numTaxa; i++)
                 {
+                PrintPolyNodes(t);
                 for (j=0; j<t->nNodes; j++)
                     {
                     p = t->allDownPass[j];
@@ -4091,14 +4094,29 @@ void FreeTreeCtr (TreeCtr *r)
 /* Label: Calculate length of label and fill in char *label if not NULL */
 int Label (PolyNode *p, int addIndex, char *label, int maxLength)
 {
-    int     i, j0, j1, k, n, length, nameLength;
+    int     i, j0, j1, k, n, length, nameLength, index;
 
     if (p == NULL)
         return 0;
 
     /* first calculate length */
+    if (inSumtCommand == YES && isTranslateDiff == NO)
+        {
+        for (index=i=0; index<numTaxa; index++)
+            {
+            if (sumtParams.absentTaxa[index] == YES || taxaInfo[index].isDeleted == YES)
+                continue;
+            if (p->index == i)
+                break;
+            else
+                i++;
+            }
+        }
+    else
+        index = p->index;
+
     if (addIndex != NO)
-        length = (int)(strlen(p->label)) + 4 + (int)(log10(p->index+1));
+        length = (int)(strlen(p->label)) + 4 + (int)(log10(index+1));
     else
         length = (int)(strlen(p->label));
     length = (length > maxLength ? maxLength : length);
@@ -4107,7 +4125,7 @@ int Label (PolyNode *p, int addIndex, char *label, int maxLength)
     if (label != NULL)
         {
         if (addIndex != NO)
-            nameLength = length - 4 - (int)(log10(p->index+1));
+            nameLength = length - 4 - (int)(log10(index+1));
         else
             nameLength = length;
 
@@ -4122,7 +4140,7 @@ int Label (PolyNode *p, int addIndex, char *label, int maxLength)
             {
             label[++i] = ' ';
             label[++i] = '(';
-            n = p->index + 1;
+            n = index + 1;
             k = (int)(log10(n)) + 1;
             while (n != 0)
                 {

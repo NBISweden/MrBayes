@@ -3764,7 +3764,7 @@ void PrintPolyNodes (PolyTree *pt)
 	PolyNode	*p;
 
 	printf ("Node\tleft\tsib\tanc\tlength\tlabel\n");
-	for (i=0; i<pt->nNodes; i++)
+	for (i=0; i<pt->memNodes; i++)
 		{
 		p = &pt->nodes[i];
 		MrBayesPrint ("%d\t%d\t%d\t%d\t%f\t%s\n",
@@ -3874,7 +3874,6 @@ int PrunePolyTree (PolyTree *pt)
 		if (taxaInfo[p->index].isDeleted == YES)
 			{
             numTermPruned++;
-			q = p->anc;
 			for (q=p->anc->left; q!=NULL; q=q->sib)
 				{
 				if (q->sib == p)
@@ -3887,7 +3886,7 @@ int PrunePolyTree (PolyTree *pt)
 				}
 			else
 				{
-				/* p is q->sib */
+				/* p is q->sib; this also works if p->sib is NULL */
 				q->sib = p->sib;
 				}
 			/* if only one child left, delete ancestral node */
@@ -3898,20 +3897,51 @@ int PrunePolyTree (PolyTree *pt)
 				{
 				/* p->anc->left is only child left; make p->anc be p->anc->left and accommodate its length */
 				numIntPruned++;
-				p->anc->index = p->anc->left->index;
-				p->anc->left = NULL;
-				p->anc->length += p->anc->left->length;
+                q = p->anc->left;
+				if (q->left == NULL)
+                    {
+                    q->anc->index = q->index;
+                    q->anc->length += q->length;
+                    strcpy(q->anc->label, q->label);
+                    q->anc->left = NULL;
+                    }
+                else
+                    {
+				    q->anc->index   = q->index;
+                    if (q->anc->anc != NULL)
+                        q->anc->length += q->length;
+                    q->anc->left    = q->left;
+                    q->left->anc    = q->anc;
+                    }
 				}
+            if (j == 2 && pt->isRooted == NO && p->anc->anc == NULL)
+                {
+                if (p->anc->left->left != NULL)
+                    {
+                    for (q=p->anc->left->left; q->sib!=NULL; q=q->sib)
+                        ;
+                    q->sib = p->anc->left->sib;
+                    p->anc->left->sib->anc = q->anc;
+                    p->anc->left->sib->length += q->anc->length;
+                    p->anc->left->sib = NULL;
+                    p->anc->left->anc = NULL;
+                    pt->root = q->anc;
+                    }
+                else
+                    {
+                    for (q=p->anc->left->sib->left; q->sib!=NULL; q=q->sib)
+                        ;
+                    q->sib = p->anc->left;
+                    p->anc->left->anc = q->anc;
+                    p->anc->left->length += q->anc->length;
+                    p->anc->left->sib = NULL;
+                    q->anc->anc = NULL;
+                    pt->root = q->anc;
+                    }
+                }
 			}
 		}
 
-    /* check if the remaining nodes include all the nondeleted taxa */
-	if (pt->nNodes - pt->nIntNodes - numTermPruned - numIntPruned != numLocalTaxa)
-		{
-		MrBayesPrint ("%s   User tree '%s' to does not include all taxa\n", spacer, pt->name);
-		return (ERROR);
-		}
-   
 	/* place unused space at end of pt->nodes array */
 	for (i=0; i<pt->nNodes; i++)
 		{
@@ -3946,7 +3976,7 @@ int PrunePolyTree (PolyTree *pt)
 		}
 
 	/* correct number of nodes */
-	pt->nNodes -= numTermPruned - numIntPruned;
+	pt->nNodes -= (numTermPruned + numIntPruned);
 	pt->nIntNodes -= numIntPruned;
 	
 	/* get downpass; note that the deletion procedure does not change the root */
@@ -4352,7 +4382,7 @@ void ResetTipIndices (PolyTree *pt)
 		{
 		for (k=0; k<pt->nNodes; k++)
 			{
-			p = &pt->nodes[k];
+			p = pt->allDownPass[k];
 			if (p->index == i)
 				break;
 			}
