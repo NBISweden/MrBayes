@@ -36489,7 +36489,7 @@ int ReassembleParamVals (int *curId)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
                     CheckSetConstraints(tree);
-                    SetDatedNodeDepths(modelSettings[tree->relParts[0]].brlen, j, i, state[i]);
+                    SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i, state[i]);
                     }
                 else if (proc_id == proc)
                     {
@@ -36798,13 +36798,11 @@ int RedistributeParamVals (void)
             ierror = MPI_Isend (x, paramValsRowSize*2*(upper-lower), MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, &request);
             if (ierror != MPI_SUCCESS)
                 {
-		printf ("error in MPI_Isend\n");
                 return (ERROR);
                 }
             ierror = MPI_Waitall (1, &request, &status);
             if (ierror != MPI_SUCCESS)
                 {
-		printf ("error in MPI_Waitall on proc 0\n");
                 return (ERROR);
                 }
             }
@@ -36814,13 +36812,11 @@ int RedistributeParamVals (void)
             ierror = MPI_Irecv (x, paramValsRowSize*2*(upper-lower), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &request);
             if (ierror != MPI_SUCCESS)
                 {
-		printf ("error in MPI_Irecv on proc %d\n", proc_id);
                 return (ERROR);
                 }
             ierror = MPI_Waitall (1, &request, &status);
             if (ierror != MPI_SUCCESS)
                 {
-		printf ("error in MPI_Waitall on proc %d\n", proc_id);
                 return (ERROR);
                 }
             }
@@ -36895,7 +36891,7 @@ int RedistributeParamVals (void)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
                     CheckSetConstraints(tree);
-                    SetDatedNodeDepths(modelSettings[tree->relParts[0]].brlen, j, i, state[i]);
+                    SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i-lower, 0);
                     }
                 }
             }
