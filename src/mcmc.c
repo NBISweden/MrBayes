@@ -6499,7 +6499,8 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
 			{
 			for (n=0; n<nStates; n++)
 				{
-				(*clP[k]++) = _mm_div_ps (*clP[k], m1);
+				*clP[k] = _mm_div_ps (*clP[k], m1);
+                clP[k]++;
 				}
 			}
 		}
@@ -6709,7 +6710,7 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 
 {
 	int				c, k;
-	CLFlt			scaler, *scP, *lnScaler;
+	CLFlt			*scP, *lnScaler;
     __m128          *clPtr, **clP, *scP_SSE, m1;
 	ModelInfo		*m;
 	
@@ -6735,7 +6736,6 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 	/* rescale */
     for (c=0; c<m->numSSEChars; c++)
 		{
-		scaler = 0.0;
         m1 = _mm_setzero_ps ();
         for (k=0; k<m->numGammaCats; k++)
 			{
@@ -6747,10 +6747,14 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 
 		for (k=0; k<m->numGammaCats; k++)
 			{
-			(*clP[k]++) = _mm_div_ps (*clP[k], m1);
-			(*clP[k]++) = _mm_div_ps (*clP[k], m1);
-			(*clP[k]++) = _mm_div_ps (*clP[k], m1);
-			(*clP[k]++) = _mm_div_ps (*clP[k], m1);
+			*clP[k] = _mm_div_ps (*clP[k], m1);
+            clP[k]++;
+			*clP[k] = _mm_div_ps (*clP[k], m1);
+            clP[k]++;
+			*clP[k] = _mm_div_ps (*clP[k], m1);
+            clP[k]++;
+			*clP[k] = _mm_div_ps (*clP[k], m1);
+            clP[k]++;
 			}
 
 		(*scP_SSE++) = m1;
@@ -7008,7 +7012,8 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
 			{
 			for (n=0; n<nStates; n++)
 				{
-				(*clP[k]++) = _mm_div_ps (*clP[k], m1);
+				*clP[k] = _mm_div_ps (*clP[k], m1);
+                clP[k]++;
 				}
 			}
 		}
@@ -11056,12 +11061,14 @@ int InitChainCondLikes (void)
         for (i=0; i<numLocalTaxa; i++)
             {
 #if !defined (DEBUG_NOSHORTCUTS)
-            //if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
-                //continue;
+            /* TODO: Untill CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncoment down the function */
+            /*if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
+                continue;
+            */
 #endif
             for (j=0; j<numLocalChains; j++)
                 m->condLikeIndex[j][i] = clIndex;
-            clIndex += 1; //indexStep; even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.
+            clIndex += 1; /* even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.*/
             }
 
         /* reserve private space for parsimony-based moves if parsimony model is used */
@@ -11084,8 +11091,6 @@ int InitChainCondLikes (void)
             return (ERROR);
         for (i=0; i<nNodes; i++)
             m->condLikeScratchIndex[i] = -1;
-		//for (i=0; i<numLocalTaxa; i++) //we do not need it becouse condLike space never gets fliped for taxa nodes
-			//m->condLikeScratchIndex[i] = m->condLikeIndex[0][i];
         for (i=0; i<nIntNodes; i++)
             {
             m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
@@ -11183,7 +11188,7 @@ int InitChainCondLikes (void)
         m->siteScalerScratchIndex = scalerIndex;
 
 #if defined (BEAGLE_ENABLED)
-        /* we use only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
+        /* used only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
         if ( m->useBeagle == YES )
 			{
 			m->succesCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
@@ -11202,7 +11207,7 @@ int InitChainCondLikes (void)
 			assert( NO == 0 ); /* SafeMalloc set the allocated memmory to 0 while we need to set it to NO */
 			for (i=0; i<numLocalChains; i++)
 			   {
-			   m->isScalerNode[i] = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa; //m->isScalerNodeScratch + i * nIntNodes;
+			   m->isScalerNode[i] = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa;
 			   }
 			}
 #endif
@@ -11298,8 +11303,10 @@ int InitChainCondLikes (void)
 			for (i=0; i<numLocalTaxa; i++)
 				{
 #if !defined (DEBUG_NOSHORTCUTS) && !defined (SSE_ENABLED)
-                //if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
-                    //continue;
+                /* TODO: Untill CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncomment up the function */
+                /*if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
+                    continue;
+                */
 #endif
 				cL = m->condLikes[clIndex++];
 #if defined (SSE_ENABLED)
@@ -12462,8 +12469,8 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
 
 
-
 #if defined (SSE_ENABLED)
+#if 0
 CLFlt DeleteME[1000];
 int PrintOld_SSE (TreeNode *p, int division, int chain){
 
@@ -12503,7 +12510,7 @@ int PrintOld_SSE (TreeNode *p, int division, int chain){
 
 	return 1;
 }
-
+#endif
 
 
 

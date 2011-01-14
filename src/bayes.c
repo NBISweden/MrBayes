@@ -841,7 +841,7 @@ unsigned FindMaxRevision ( unsigned amount, ...)
   for (i=0;i<amount;i++)
   {
     cur=va_arg(vl,const char*);
-    sscanf(svnRevisionBayesC,"%s %d",tmp,&val);
+    sscanf(cur,"%s %d",tmp,&val);
     max=(max>val)?max:val;
   }
   va_end(vl);

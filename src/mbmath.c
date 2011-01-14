@@ -5180,9 +5180,8 @@ MrBFlt QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta)
 MrBFlt RandomNumber (SafeLong *seed)
 
 {
-
 	SafeLong	lo, hi, test;
-	
+
 	hi = (*seed) / 127773;
 	lo = (*seed) % 127773;
 	test = 16807 * lo - 2836 * hi;
