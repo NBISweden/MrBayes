@@ -498,7 +498,7 @@ int InitializeMrBayes (void)
 {
 	/* this function initializes the program; only call it at the start of execution */
 	
-	int		i;
+	int		i, j, growthFxn[6];
 
     nBitsInALong         = sizeof(SafeLong) * 8;     /* global variable: number of bits in a SafeLong */
 	userLevel            = STANDARD_USER;            /* default user level                            */
@@ -589,7 +589,11 @@ int InitializeMrBayes (void)
 	for (i=0; i<MAX_NUM_USERTREES; i++)
 		userTree[i] = NULL;
 
-	/* Prior model settings */
+    /* parameter values */
+    paramValues = NULL;
+    intValues = NULL;
+    
+    /* Prior model settings */
 	defaultModel.dataType = DNA;		            /* datatype                                     */
 	strcpy(defaultModel.coding, "All");             /* ascertainment bias                           */
 	strcpy(defaultModel.nucModel, "4by4");          /* nucleotide model                             */
@@ -619,6 +623,7 @@ int InitializeMrBayes (void)
 		defaultModel.revMatFix[i] = 1.0;
 		defaultModel.revMatDir[i] = 1.0;
 		}
+    defaultModel.revRateExp = 1.0;                  /* default prior for GTR mixed model          */
 	strcpy (defaultModel.aaRevMatPr, "Dirichlet");  /* prior for GTR model (proteins)             */
 	for (i=0; i<190; i++)
 		{
@@ -791,12 +796,13 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.inferSiteRates, "No");		/* do not infer site rates					  */
 
     /* Allocate and initialize model indicator parameter names */
-    modelIndicatorParams = (char **) SafeCalloc (2, sizeof (char *));
+    modelIndicatorParams = (char **) SafeCalloc (3, sizeof (char *));
     modelIndicatorParams[0] = "aamodel";
-    modelIndicatorParams[1] = "";
+    modelIndicatorParams[1] = "gtrsubmodel";
+    modelIndicatorParams[2] = "";
 
     /* Aamodel */
-    modelElementNames = (char ***) SafeCalloc (2, sizeof (char **));
+    modelElementNames = (char ***) SafeCalloc (3, sizeof (char **));
     modelElementNames[0] = (char **) SafeCalloc (11, sizeof (char *));
     modelElementNames[0][0]  = "Poisson";
     modelElementNames[0][1]  = "Jones";
@@ -810,9 +816,20 @@ int InitializeMrBayes (void)
     modelElementNames[0][9]  = "Blosum";
     modelElementNames[0][10] = "";
 
+    /* Gtrsubmodel */
+    modelElementNames[1] = (char **) SafeCalloc (203, sizeof (char *));
+    for (i=0; i<203; i++)
+        {
+        modelElementNames[1][i]  = (char *) SafeCalloc (7, sizeof (char));
+        FromIndexToGrowthFxn(i, growthFxn);
+        for (j=0; j<6; j++)
+            modelElementNames[1][i][j] = '0' + growthFxn[j];
+        modelElementNames[1][i][j] = '\0';
+        }
+
     /* Termination */
-    modelElementNames[1]    = (char **) SafeCalloc (1, sizeof(char *));
-    modelElementNames[1][0] = "";
+    modelElementNames[2]    = (char **) SafeCalloc (1, sizeof(char *));
+    modelElementNames[2][0] = "";
 
     /* initialize user trees */
 	for (i=0; i<MAX_NUM_USERTREES; i++)

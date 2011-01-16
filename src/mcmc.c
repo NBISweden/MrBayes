@@ -7143,7 +7143,7 @@ void CopyParams (int chain)
 
 {
 
-	int			i, j, k, fromState, toState;
+	int			i, j, k, fromState, toState, *fromInt, *toInt;
 	MrBFlt		*from, *to;
 	ModelInfo	*m;
 	Param		*p;
@@ -7166,6 +7166,12 @@ void CopyParams (int chain)
 
 		for (j=0; j<p->nSubValues; j++)
 			to[j] = from[j];
+
+		fromInt = GetParamIntVals (p, chain, state[chain]);
+		toInt = GetParamIntVals (p, chain, (state[chain] ^ 1));
+
+		for (j=0; j<p->nIntValues; j++)
+			toInt[j] = fromInt[j];
 
 		if (p->nStdStateFreqs > 0)
 			{
@@ -29711,6 +29717,39 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 /*----------------------------------------------------------------
 |
+|	Move_Revmat_Mult: Multiply one rate (for REVMAT_MIX)
+----------------------------------------------------------------*/
+int Move_Revmat_Mult (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+	int			*newGrowthFunction, *oldGrowthFunction;
+	MrBFlt		*newRate, *oldRate;
+	ModelParams *mp;
+    ModelInfo   *m;
+
+	/* get model params and settings */
+	mp = &modelParams[param->relParts[0]];
+    m  = &modelSettings[param->relParts[0]];
+
+    /* get the values we need */
+	newRate = GetParamVals (param, chain, state[chain]);
+	oldRate = GetParamVals (param, chain, state[chain] ^ 1);
+    newGrowthFunction = GetParamIntVals (param, chain, state[chain]);
+    oldGrowthFunction = GetParamIntVals (param, chain, state[chain] ^ 1);
+
+    /* TODO: Code needed here */
+
+    return (NO_ERROR);
+
+}
+
+
+
+
+
+/*----------------------------------------------------------------
+|
 |	Move_Revmat_Slider: Change rate matrix using sliding window
 |       move. Choose a pair of rates (e.g. r(A<>C), and r(A<>G)) at
 |       random and denote them rA, and rB. Let oldProp = rA/(rA + rB)
@@ -29804,6 +29843,39 @@ int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 		modelSettings[param->relParts[i]].upDateCijk = YES;
 
 	return (NO_ERROR);
+
+}
+
+
+
+
+
+/*----------------------------------------------------------------
+|
+|	Move_Revmat_SplitMerge: Split or merge rates of rate matrix
+----------------------------------------------------------------*/
+int Move_Revmat_SplitMerge (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+	int			*newGrowthFunction, *oldGrowthFunction;
+	MrBFlt		*newRate, *oldRate;
+	ModelParams *mp;
+    ModelInfo   *m;
+
+	/* get model params and settings */
+	mp = &modelParams[param->relParts[0]];
+    m  = &modelSettings[param->relParts[0]];
+
+    /* get the values we need */
+	newRate = GetParamVals (param, chain, state[chain]);
+	oldRate = GetParamVals (param, chain, state[chain] ^ 1);
+    newGrowthFunction = GetParamIntVals (param, chain, state[chain]);
+    oldGrowthFunction = GetParamIntVals (param, chain, state[chain] ^ 1);
+
+    /* TODO: Code needed here */
+
+    return (NO_ERROR);
 
 }
 
@@ -34803,15 +34875,33 @@ int PrintStates (int curGen, int coldId)
 			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(1.0 / (1.0 + st[0])));
 			if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			}
-		else if (p->paramType == P_REVMAT && !strcmp(mp->revmatFormat,"Ratio"))
-			{
-			sum = st[p->nValues-1];
-			for (j=0; j<p->nValues; j++)
-				{
-				SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
-				if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-				}
-			}
+		else if (p->paramType == P_REVMAT)
+            {
+            if (!strcmp(mp->revmatFormat,"Ratio"))
+			    {
+			    sum = st[p->nValues-1];
+			    for (j=0; j<p->nValues; j++)
+				    {
+				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
+				    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+				    }
+			    }
+            else
+                {
+			    for (j=0; j<p->nValues; j++)
+				    {
+				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j]));
+				    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+				    }
+                }
+            if (p->paramId == REVMAT_MIX)
+                {
+			    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(FromGrowthFxnToIndex(GetParamIntVals(p, coldId, state[coldId]))));
+			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+			    SafeSprintf (&tempStr, &tempStrSize, "\t%d", GetKFromGrowthFxn(GetParamIntVals(p, coldId, state[coldId])));
+			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }
+            }
 		else if (p->paramType == P_RATEMULT)
 			{
 			if (!strcmp(mp->ratemultFormat,"Ratio"))
@@ -36316,6 +36406,7 @@ int ReassembleParamVals (int *curId)
 
     extern MrBFlt   *paramValues;
     extern int      paramValsRowSize;
+    extern int      intValsRowSize;
 
     for (i=0; i<numLocalChains; i++)
         curId[i] = chainId[i];
@@ -36784,6 +36875,7 @@ int RedistributeParamVals (void)
 
     extern MrBFlt   *paramValues;
     extern int      paramValsRowSize;
+    extern int      intValsRowSize;
 
     numChainsForProc = numGlobalChains / num_procs;
     if (numGlobalChains % num_procs > 0)
@@ -39890,7 +39982,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 			rateValues[0] = rateValues[2] = rateValues[3] = rateValues[5] =1.0; /* Setting transversions */
 			rateValues[1] = rateValues[4] = trans; /* Setting transitions */
 			}
-		#endif
+#endif
 		}
 
     else if (m->nst == 6 || m->nst == NST_MIXED)

@@ -162,8 +162,10 @@ char		colonPr[100], clockPr[30];
 
 /* other local variables (this file) */
 MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition      */
+int				intValsRowSize = 0;	         /* row size of intValues matrix				 */
+int			    *intValues = NULL;           /* stores int values of chain parameters        */
 Tree			**mcmcTree;                  /* pointers to trees for mcmc                   */
-int				paramValsRowSize;	         /* row size of paramValues matrix				 */
+int				paramValsRowSize = 0;	     /* row size of paramValues matrix				 */
 MrBFlt			*paramValues = NULL;         /* stores actual values of chain parameters     */
 int				*relevantParts = NULL;       /* partitions that are affected by this move    */
 Param			**subParamPtrs;		         /* pointer to subparams for topology params     */
@@ -615,32 +617,47 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
 int AllocateNormalParams (void)
 
 {
-	int			i, k, nOfParams;
+	int			i, k, nOfParams, nOfIntParams;
 	Param		*p;
 	
 	/* Count the number of param values and subvalues */
 	nOfParams = 0;
+    nOfIntParams = 0;
 	for (k=0; k<numParams; k++)
 		{
 		nOfParams += params[k].nValues;
 		nOfParams += params[k].nSubValues;
+        nOfIntParams += params[k].nIntValues;
 		}
 
 	/* Set row size and find total number of values */
 	paramValsRowSize = nOfParams;
 	nOfParams *= (2 * numGlobalChains);
+    nOfIntParams *= (2 * numGlobalChains);
 
 	if (memAllocs[ALLOC_PARAMVALUES] == YES)
 		{
 		paramValues = (MrBFlt *) realloc ((void *) paramValues, nOfParams * sizeof (MrBFlt));
 		for (i=0; i<nOfParams; i++)
 			paramValues[i] = 0.0;
+        if (nOfIntParams > 0)
+            intValues = (int *) realloc ((void *) intValues, nOfIntParams * sizeof(int));
 		}
 	else
+        {
 		paramValues = (MrBFlt *) calloc (nOfParams, sizeof(MrBFlt));
-	if (!paramValues)
+        if (nOfIntParams > 0)
+            intValues = (int *) calloc (nOfIntParams, sizeof(int));
+        else
+            intValues = NULL;
+        }
+	if (!paramValues || (nOfIntParams > 0 && !intValues))
 		{
 		MrBayesPrint ("%s   Problem allocating paramValues\n", spacer);
+        if (paramValues)
+            free (paramValues);
+        if (intValues)
+            free (intValues);
 		return ERROR;
 		}
 	else
@@ -649,13 +666,25 @@ int AllocateNormalParams (void)
 	/* set pointers to values for chain 1 state 0            */
 	/* this scheme keeps the chain and state values together */
 	nOfParams = 0;
+    nOfIntParams = 0;
 	for (k=0; k<numParams; k++)
 		{
 		p = &params[k];
-		p->values = paramValues + nOfParams;
+        if (p->nValues > 0)
+    		p->values = paramValues + nOfParams;
+        else
+            p->values = NULL;
 		nOfParams += p->nValues;
-		p->subValues = paramValues + nOfParams;
+        if (p->nSubValues > 0)
+    		p->subValues = paramValues + nOfParams;
+        else
+            p->subValues = NULL;
 		nOfParams += p->nSubValues;
+        if (p->nIntValues > 0)
+            p->intValues = intValues + nOfIntParams;
+        else
+            p->intValues = NULL;
+        nOfIntParams += p->nIntValues;
 		}
 	
 	/* allocate space for cpp events */
@@ -4624,6 +4653,55 @@ int DoPrsetParm (char *parmName, char *tkn)
 							}
 						}
 					}
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else
+				return (ERROR);
+			}
+		/* set Revratepr (revRatePr) ****************************************************/
+		else if (!strcmp(parmName, "Revratepr"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == ERROR)  /* we only allow exponential prior, so no need to store the value */
+					{
+					MrBayesPrint ("%s   Invalid Revratepr argument\n", spacer);
+					return (ERROR);
+					}
+				expecting  = Expecting(LEFTPAR);
+				for (i=0; i<numCurrentDivisions; i++)
+					numVars[i] = 0;
+				}
+			else if (expecting == Expecting(LEFTPAR))
+				{
+				expecting  = Expecting(NUMBER);
+				}
+			else if (expecting == Expecting(NUMBER))
+				{
+				nApplied = NumActiveParts ();
+				for (i=0; i<numCurrentDivisions; i++)
+					{
+					if (activeParts[i] == YES || nApplied == 0)
+						{
+						sscanf (tkn, "%lf", &tempD);
+						if (tempD <= 0.0)
+							{
+							MrBayesPrint ("%s   Exponential rate parameter must be positive\n", spacer);
+							return (ERROR);
+							}
+						modelParams[i].revRateExp = tempD;
+						if (nApplied == 0 && numCurrentDivisions == 1)
+							MrBayesPrint ("%s   Setting Revratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].revRateExp);
+						else
+							MrBayesPrint ("%s   Setting Revratepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].revRateExp, i+1);
+						expecting  = Expecting(RIGHTPAR);
+						}
+					}
+				}
+			else if (expecting == Expecting(RIGHTPAR))
+				{
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -9623,7 +9701,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 {
 
-	int			i, j, k, chn, tempInt;
+	int			i, j, k, chn, tempInt, *intValue;
 	MrBFlt		*bs, *value, *subValue, scaler;
     Tree        *tree;
 	Param		*p;
@@ -9644,6 +9722,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 			value = GetParamVals (p, chn, 0);
 			subValue = GetParamSubVals (p, chn, 0);
+            intValue = GetParamIntVals (p, chn, 0);
 
 			if (p->paramType == P_TRATIO)
 				{
@@ -9680,6 +9759,14 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 							value[j] /= scaler;
 						}
 					}
+				else if (p->paramId == REVMAT_MIX)
+                    {
+                    for (j=0; j<6; j++)
+                        {
+                        value[j] = 1.0;
+                        intValue[j] = 0;
+                        }
+                    }
 				}
 			else if (p->paramType == P_OMEGA)
 				{
@@ -10647,6 +10734,9 @@ int FreeModel (void)
 			}
 		free (paramValues);
 		paramValues = NULL;
+        free (intValues);
+        intValues = NULL;
+        paramValsRowSize = intValsRowSize = 0;
 		memAllocs[ALLOC_PARAMVALUES] = NO;
 		}
 	if (memAllocs[ALLOC_PARAMS] == YES)
@@ -10886,18 +10976,6 @@ int GetEmpiricalFreqs (int *relParts, int nRelParts)
 
 
 
-MrBFlt	*GetParamVals (Param *parm, int chain, int state)
-
-{
-	
-	return parm->values + (2 * chain + state) * paramValsRowSize;
-	
-}
-
-
-
-
-
 int GetNumDivisionChars (void)
 
 {
@@ -10935,6 +11013,18 @@ int GetNumDivisionChars (void)
 
 
 
+int	*GetParamIntVals (Param *parm, int chain, int state)
+
+{
+
+	return parm->intValues + (2 * chain + state) * intValsRowSize;
+	
+}
+
+
+
+
+
 MrBFlt	*GetParamStdStateFreqs (Param *parm, int chain, int state)
 
 {
@@ -10952,6 +11042,18 @@ MrBFlt	*GetParamSubVals (Param *parm, int chain, int state)
 {
 
 	return parm->subValues + (2 * chain + state) * paramValsRowSize;
+	
+}
+
+
+
+
+
+MrBFlt	*GetParamVals (Param *parm, int chain, int state)
+
+{
+	
+	return parm->values + (2 * chain + state) * paramValsRowSize;
 	
 }
 
@@ -11410,7 +11512,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (isSecondNucleotide == NO && isSecondProtein == NO)
 			*isApplic2 = NO; /* part2 is not nucleotide or protein data so GTR rates do not apply */
 
-		/* check that nst=6 for both partitions if nucleotide */
+		/* check that nst=6 or mixed for both partitions if nucleotide */
 		if (isFirstNucleotide == YES && strcmp(modelParams[part1].nst, "6") && strcmp(modelParams[part1].nst, "Mixed"))
 			*isApplic1 = NO; /* part1 does not have nst=6/Mixed and GTR rates do not apply */
 		if (isSecondNucleotide == YES && strcmp(modelParams[part2].nst, "6") && strcmp(modelParams[part2].nst, "Mixed"))
@@ -11431,7 +11533,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* GTR applies to both part1 and part2. We now need to check if the prior is the same for both. */
 		if (isFirstNucleotide == YES)
 			{
-			if (!strcmp(modelParams[part1].revMatPr,"Dirichlet") && !strcmp(modelParams[part2].revMatPr,"Dirichlet"))
+			if (strcmp(modelParams[part1].nst, modelParams[part2].nst) != 0)
+                isSame = NO;
+			if (!strcmp(modelParams[part1].nst,"Mixed"))
+				{
+				if (AreDoublesEqual (modelParams[part1].revRateExp, modelParams[part2].revRateExp, (MrBFlt) 0.00001) == NO)
+					isSame = NO;
+				}
+            else if (!strcmp(modelParams[part1].nst,"6") && !strcmp(modelParams[part1].revMatPr,"Dirichlet") && !strcmp(modelParams[part2].revMatPr,"Dirichlet"))
 				{
 				for (i=0; i<6; i++)
 					{
@@ -11439,7 +11548,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						isSame = NO;
 					}
 				}
-			else if (!strcmp(modelParams[part1].revMatPr,"Fixed") && !strcmp(modelParams[part2].revMatPr,"Fixed"))
+			else if (!strcmp(modelParams[part1].nst,"6") && !strcmp(modelParams[part1].revMatPr,"Fixed") && !strcmp(modelParams[part2].revMatPr,"Fixed"))
 				{
 				for (i=0; i<6; i++)
 					{
@@ -15873,8 +15982,12 @@ int SetModelParams (void)
         /* Parameter nValues and nSubValues, which are needed for memory allocation
 		   are calculated for each case in the code below. nSympi, however, is
 		   only used for one special type of parameter and it therefore makes
-		   sense to initialize it to 0 here. The same applies to hasBinaryStd. */
-		p->nSympi = 0;
+		   sense to initialize it to 0 here. The same applies to hasBinaryStd
+           and nIntValues. To be safe, we set all to 0 here. */
+        p->nValues = 0;
+        p->nSubValues = 0;
+        p->nIntValues = 0;
+        p->nSympi = 0;
         p->hasBinaryStd = NO;
 		
 		/* should this parameter be printed to a file? */
@@ -15969,8 +16082,12 @@ int SetModelParams (void)
 			else
 				p->nValues = 6;
 			p->nSubValues = 0;
+            if (p->paramId == REVMAT_MIX)
+                p->nIntValues = 6;
+            else
+                p->nIntValues = 0;
             p->min = 0.0;
-            p->max = 1.0;
+            p->max = 1.0;       /* adjust later for REVMAT_MIX, see a few lines below */
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].revMat = p;
@@ -15980,7 +16097,12 @@ int SetModelParams (void)
 			strcat (p->name, partString);			
 
 			/* find the parameter x prior type */
-			if (!strcmp(mp->revMatPr,"Dirichlet"))
+			if (!strcmp(mp->nst, "Mixed"))
+                {
+                p->paramId = REVMAT_MIX;
+                p->max = 1E6;   /* some large value */
+                }
+            else if (!strcmp(mp->revMatPr,"Dirichlet"))
 				p->paramId = REVMAT_DIR;
 			else
 				p->paramId = REVMAT_FIX;
@@ -16028,6 +16150,15 @@ int SetModelParams (void)
 							}
 						}
 					}
+                if (p->paramId == REVMAT_MIX)
+                    {
+                    sprintf (temp, "\tgtrsubmodel");
+					SafeStrcat (&p->paramHeader, temp);
+					SafeStrcat (&p->paramHeader, partString);
+                    sprintf (temp, "\tk_revmat");
+					SafeStrcat (&p->paramHeader, temp);
+					SafeStrcat (&p->paramHeader, partString);
+                    }
 				}
 			}
 		else if (j == P_OMEGA)
@@ -18982,6 +19113,26 @@ void SetUpMoveTypes (void)
 	mt->Autotune = &AutotuneDirichlet;
 	mt->targetRate = 0.25;
 
+	/* Move_Revmat_Multiplier */
+	mt = &moveTypes[i++];
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
+	mt->applicableTo[0] = REVMAT_MIX;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_Revmat_Mult;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
+
 	/* Move_Revmat_Slider */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -19000,6 +19151,18 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
+
+	/* Move_Revmat_SplitMerge */
+	mt = &moveTypes[i++];
+	mt->name = "Split-merge move";
+	mt->shortName = "Splitmerge";
+	mt->applicableTo[0] = REVMAT_MIX;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_Revmat_SplitMerge;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
 
 	/* Move_Speciation */
 	mt = &moveTypes[i++];
@@ -20449,9 +20612,14 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 		else if (j == P_REVMAT)
 			{
-			if (ms->numModelStates == 4)
+			if (ms->numModelStates != 20)
                 {
-    			if (!strcmp(mp->revMatPr,"Dirichlet"))
+                if (!strcmp(mp->nst,"Mixed"))
+                    {
+                    MrBayesPrint ("%s            Prior      = All GTR submodels have equal probability\n", spacer); 
+                    MrBayesPrint ("%s                         All revmat rates have an Exponential(%1.2lf) prior\n", spacer, mp->revRateExp);
+                    }
+    			else if (!strcmp(mp->revMatPr,"Dirichlet"))
                     {
                     MrBayesPrint ("%s            Prior      = Dirichlet(%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf)\n", spacer, 
 				    mp->revMatDir[0], mp->revMatDir[1], mp->revMatDir[2],

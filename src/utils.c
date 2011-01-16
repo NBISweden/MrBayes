@@ -306,6 +306,35 @@ void FlipOneBit (int n, SafeLong *p)
 
 
 
+/* Convert from 0-based growth function over six states to model index */
+int      FromGrowthFxnToIndex(int *growthFxn)
+{
+    /* TODO: Bret - silly return for now */
+    return 0;
+}
+
+
+
+
+
+/* Convert from model index to 0-based growth function over six states */
+void     FromIndexToGrowthFxn(int index, int *growthFxn)
+{
+
+    /* TODO: Bret - silly stuff for now */
+    growthFxn[0] = 0;
+    growthFxn[1] = 0;
+    growthFxn[2] = 0;
+    growthFxn[3] = 0;
+    growthFxn[4] = 0;
+    growthFxn[5] = 0;
+
+}
+
+
+
+
+
 /* GetIntSummary: Get summary statistics for a number of runs (int version) */
 void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HPD)
 
@@ -338,6 +367,22 @@ void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HP
         LowerUpperMedian (theValues, nVals, &(theStats->lower), &(theStats->upper), &(theStats->median));
 
     free (theValues);
+}
+
+
+
+
+
+/* Get k from 0-based growth function */
+int GetKFromGrowthFxn(int *growthFxn)
+{
+    int i, k=0;
+
+    for (i=0; i<6; i++)
+        if (growthFxn[i] > k)
+            k = growthFxn[i];
+    
+    return k+1;
 }
 
 

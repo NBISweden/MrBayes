@@ -554,8 +554,10 @@ typedef struct param
 	int				paramId;		    /* unique ID for parameter x prior combination	*/
 	MrBFlt			*values;		    /* main values of parameter						*/
 	MrBFlt			*subValues;		    /* subvalues of parameter						*/
+	int			    *intValues;		    /* integer values (model index/growth fxn)      */
 	int				nValues;		    /* number of values								*/
 	int				nSubValues;		    /* number of subvalues							*/
+	int				nIntValues;		    /* number of intvalues						    */
     MrBFlt          min;                /* minimum value of parameter                   */
     MrBFlt          max;                /* maximum value of parameter                   */
 	int				*relParts;		    /* pointer to relevant divisions				*/
@@ -736,6 +738,8 @@ typedef struct s_launch_struct
 #define CLOCKRATE_EXP                   137
 #define SPECIESTREE_UNIFORM             138
 #define GENETREERATEMULT_DIR            139
+#define REVMAT_MIX						140
+
 
 
 #if defined (BEAGLE_ENABLED)
@@ -873,6 +877,7 @@ typedef struct model
 	char		revMatPr[100];     /* prior for GTR model                          */
 	MrBFlt		revMatFix[6];
 	MrBFlt		revMatDir[6];
+	MrBFlt		revRateExp;        /* prior for mixed GTR subspace model           */
 	char		aaModelPr[100];    /* prior for amino acid model                   */
 	char		aaModel[100];
 	MrBFlt		aaModelPrProbs[10];

@@ -42,6 +42,7 @@ extern int				inValidCommand;                         /* a useful flag set whene
 extern int  			isInAmbig, isInPoly;                    /* flags whether we are within () or {}          */
 extern int  			isMixed;			                    /* flags whether dataset is mixed                */
 extern int				inMrbayesBlock;                         /* flag for whether we are in a mrbayes block    */
+extern int				*intValues;                             /* integer values of parameters                  */
 extern int				isTaxsetDef;							/* is a taxon set defined                        */
 extern int				isTranslateDef;							/* is a translation block defined                */
 extern int				isTranslateDiff;					    /* is translate different from current taxaset?  */
@@ -100,6 +101,7 @@ extern int              *numVars;                               /* number of var
 extern int				*origChar;			                    /* index from compressed char to original char   */
 extern int				outGroupNum;                            /* number of outgroup taxon                      */
 extern ParmInfo			paramTable[];						    /* information on parameters                     */
+extern MrBFlt			*paramValues;						    /* values of parameters                          */
 extern int              **partitionId;                          /* holds information about defined partitions    */
 extern char				**partitionNames;                       /* hold names of partitions (first is "default") */
 extern MrBFlt			*parameterValues;                       /* vector holding sump or plot parameters        */

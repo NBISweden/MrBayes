@@ -27,6 +27,7 @@ int		FillTreeParams (SafeLong *seed, int fromChain, int toChain);
 int		FreeModel (void);
 int		GetEmpiricalFreqs (int *relParts, int nRelParts);
 int		GetNumDivisionChars (void);
+int	    *GetParamIntVals (Param *parm, int chain, int state);
 MrBFlt	*GetParamStdStateFreqs (Param *parm, int chain, int state);
 MrBFlt	*GetParamSubVals (Param *parm, int chain, int state);
 MrBFlt	*GetParamVals (Param *parm, int chain, int state);

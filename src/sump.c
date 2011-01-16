@@ -1277,24 +1277,27 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
 		for (j1=0; j1<nElements; j1++)
 			{
-        	if (nRuns == 1)
-            	{
-            	sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
-				MrBayesPrint ("%s   %-*s          %1.3lf\n", spacer, longestName, temp, prob[j1]);
-            	MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[j1])); 
-            	}
-        	else /* if (nRuns > 1) */
-            	{
-            	sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
-				MrBayesPrint ("%s   %-*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
-                	spacer, longestName, temp, prob[j1], stddev[j1], min[j1], max[j1]);
-            	MrBayesPrintf (fp, "%s", temp);
-            	MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[j1]));
-            	MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[j1]));
-            	MrBayesPrintf (fp, "\t%s", MbPrintNum(min[j1]));
-            	MrBayesPrintf (fp, "\t%s", MbPrintNum(max[j1]));
-            	MrBayesPrintf (fp, "\n");
-            	}
+        	if (prob[j1] > 0.0)
+                {
+                if (nRuns == 1)
+            	    {
+            	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
+				    MrBayesPrint ("%s   %-*s          %1.3lf\n", spacer, longestName, temp, prob[j1]);
+            	    MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[j1])); 
+            	    }
+        	    else /* if (nRuns > 1) */
+            	    {
+            	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
+				    MrBayesPrint ("%s   %-*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
+                	    spacer, longestName, temp, prob[j1], stddev[j1], min[j1], max[j1]);
+            	    MrBayesPrintf (fp, "%s", temp);
+            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[j1]));
+            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[j1]));
+            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(min[j1]));
+            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(max[j1]));
+            	    MrBayesPrintf (fp, "\n");
+            	    }
+                }
 			}
 
         free(modelCounts);

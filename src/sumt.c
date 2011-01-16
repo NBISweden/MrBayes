@@ -3633,7 +3633,6 @@ int DoSumtTree (void)
                 /* reset tip and int node indices in case some taxa deleted */
                 ResetTipIndices (t);
                 ResetIntNodeIndices(t);
-                PrintPolyNodes(t);
                 }
 
             /* check that all taxa are included */
@@ -3650,7 +3649,6 @@ int DoSumtTree (void)
             /* harvest labels (can only be done safely after pruning) */
             for (i=0; i<sumtParams.numTaxa; i++)
                 {
-                PrintPolyNodes(t);
                 for (j=0; j<t->nNodes; j++)
                     {
                     p = t->allDownPass[j];
