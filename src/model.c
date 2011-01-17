@@ -19380,9 +19380,9 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_TreeStretch;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log(1.1); /* lambda */
+	mt->tuningParam[0] = 2.0 * log(1.01); /* lambda */
 	mt->minimum[0] = 0.00000001;
-	mt->maximum[0] = 2.0 * log(10.0);
+	mt->maximum[0] = 2.0 * log(2.0);
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19517,7 +19517,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_BmBranchRate;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;

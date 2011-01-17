@@ -31254,7 +31254,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     TouchAllTreeNodes(m, chain);
 
     /* check that all branch lengths are proper, which need not be the case */
-    for (i=0; i<t->nNodes-1; i++)
+    for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
         if (p->length < BRLENS_MIN)
