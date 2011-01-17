@@ -38746,7 +38746,13 @@ int RunChain (SafeLong *seed)
     		*/
 
             /* make move */
-            assert (IsTreeConsistent(theMove->parm, chn, state[chn]) == YES);
+#if ! defined (NDEBUG)
+            if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
+                {
+                printf ("IsTreeConsistent failed before move!\n");
+                exit(1);
+                }
+#endif
 			if ((theMove->moveFxn)(theMove->parm, chn, seed, &lnPriorRatio, &lnProposalRatio, theMove->tuningParam[chainId[chn]]) == ERROR)
 				{
 				MrBayesPrint ("%s   Error in move %s\n", spacer, theMove->name);
@@ -38761,7 +38767,13 @@ int RunChain (SafeLong *seed)
             if (abortMove == NO)
 				{
 				/* TouchAllTrees(chn); */ /* for debugging copying shortcuts [SLOW!!]*/
-                assert (IsTreeConsistent(theMove->parm, chn, state[chn]) == YES);
+#if ! defined (NDEBUG)
+                if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
+                    {
+                    printf ("IsTreeConsistent failed before move '%s'\n", theMove->name);
+                    exit(1);
+                    }
+#endif
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
