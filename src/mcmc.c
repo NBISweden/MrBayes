@@ -7296,7 +7296,7 @@ void CopyTrees (int chain)
 		from = GetTreeFromIndex (n, chain, state[chain]);		
 		to = GetTreeFromIndex (n, chain, (state[chain]^1));
 
-		/* copy nodes */
+        /* copy nodes */
 		for (j=0; j<from->nNodes; j++)
 			{
 			/* copy pointers */
@@ -16427,6 +16427,8 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     Model       *mp;
     ModelInfo   *m;
 
+    assert (IsTreeConsistent(modelSettings[param->relParts[0]].brlens, chain, state[chain]) == YES);
+
 	/* get old value of clock rate */
 	oldR = *GetParamVals(param, chain, state[chain]);
 
@@ -16459,6 +16461,8 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     
         if (stretchTime == NO)
             {
+            /* we stretch the branch length tree */
+
             /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
             for (j=0; j<t->nNodes-1; j++)
                 {
@@ -16535,9 +16539,9 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                 {
                 p = t->allDownPass[j];
                 if ((p->isDated == NO && p->left!= NULL && !(p->anc->anc == NULL && treeParam->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
-                    (p->isDated == YES && p->calibration->prior == offsetExponential && p->age*factor > p->calibration->offset) ||
+                    (p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor > p->calibration->offset) ||
                     (p->isDated == YES && p->calibration->prior == uniform &&
-                     p->age*factor > p->calibration->min && p->age*factor < p->calibration->max))
+                     p->age/factor > p->calibration->min && p->age/factor < p->calibration->max))
                     {
                     if (strcmp(mp->clockPr,"Fixed") != 0)
                         (*lnProposalRatio) -= log(factor);  // there is a prior on the time tree, so a Jacobian results
@@ -16602,7 +16606,9 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             /* no proposal and prior ratio adjustment for relaxed clock models, since branch lengths are the same */
             }
         }
-    
+ 
+    assert (IsTreeConsistent(modelSettings[param->relParts[0]].brlens, chain, state[chain]) == YES);
+
 	return (NO_ERROR);
 
 }
@@ -38824,25 +38830,12 @@ int RunChain (SafeLong *seed)
 
 			/* TouchAllPartitions(); */    /* for debugging copying shortcuts [SLOW!!]*/
 
-	        /* for debugging of relaxed clocks */
-            /*
-    		for (i=0; i<numPrintTreeParams; i++)
-                {
-                printf ("Eventtree before move:\n");
-                WriteEventTree(GetTree(printTreeParam[i],0,state[0])->root->left,0,printTreeParam[i]->subParams[0]);
-                printf ("\nEvoltree before move:\n");
-                WriteEvolTree(GetTree(printTreeParam[i],0,state[0])->root->left,0,printTreeParam[i]->subParams[0]);
-                printf("\n");
-                printf ("Making move '%s'\n", theMove->name);
-                }
-    		*/
-
             /* make move */
 #if ! defined (NDEBUG)
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
                 printf ("IsTreeConsistent failed before move!\n");
-                exit(1);
+                getchar();
                 }
 #endif
 			if ((theMove->moveFxn)(theMove->parm, chn, seed, &lnPriorRatio, &lnProposalRatio, theMove->tuningParam[chainId[chn]]) == ERROR)
@@ -38862,8 +38855,8 @@ int RunChain (SafeLong *seed)
 #if ! defined (NDEBUG)
                 if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                     {
-                    printf ("IsTreeConsistent failed before move '%s'\n", theMove->name);
-                    exit(1);
+                    printf ("IsTreeConsistent failed after move '%s'\n", theMove->name);
+                    getchar();
                     }
 #endif
                 lnLike = LogLike(chn);
@@ -38941,6 +38934,7 @@ int RunChain (SafeLong *seed)
 			if (curLnL[chn] > maxLnL0[chainId[chn]])
 				maxLnL0[chainId[chn]] = curLnL[chn];
             }
+
 
         /* attempt swap(s) */
 		if (chainParams.numChains > 1 && n % chainParams.swapFreq == 0)
@@ -39027,7 +39021,7 @@ int RunChain (SafeLong *seed)
 #			endif
 			}
 
-		/* print mcmc diagnostics */
+        /* print mcmc diagnostics */
 		if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == 1 || n == chainParams.numGen))
 			{
 			if (chainParams.numRuns > 1 && ((n > 1 && chainParams.relativeBurnin == YES)
@@ -39176,19 +39170,6 @@ int RunChain (SafeLong *seed)
 			  previousCPUTime = clock();
 			  /* timers should not be increased during the wait for a reply */
 			}
-
-#		if defined (DEBUG_RUNCHAIN)
-		/* debugging code */
-		if (n % chainParams.printFreq == 0)
-			{
-			for (chn=0; chn<numLocalChains; chn++)
-				{
-				m = &modelSettings[0];
-				printf ("%f  --   ", *GetParamVals(m->shape, chn, state[chn]));
-				}
-				printf("\n");
-			}
-#		endif
 
 		} /* end run chain */
 	endingT = time(0);

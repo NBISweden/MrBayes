@@ -3152,10 +3152,10 @@ int IsTreeConsistent (Param *param, int chain, int state)
                         p->index, p->age, p->calibration->age);
                     return NO;
                     }
-                else if (p->calibration->prior == offsetExponential && p->age < p->calibration->min)
+                else if (p->calibration->prior == offsetExponential && p->age < p->calibration->offset)
                     {
                     printf ("Node %d has age %f but should be minimally of age %f\n",
-                        p->index, p->age, p->calibration->min);
+                        p->index, p->age, p->calibration->offset);
                     return NO;
                     }
                 else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age > p->calibration->max))
