@@ -36586,6 +36586,8 @@ int ReassembleParamVals (int *curId)
                         if (localOutGroup!=0)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
+                    /* since we only transferred some info, there are additional things we need to
+                       consider, like constraints and calibrations; tree names are OK on proc 0 */
                     CheckSetConstraints(tree);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i, state[i]);
                     }
@@ -36989,8 +36991,13 @@ int RedistributeParamVals (void)
                         if (localOutGroup != 0)
                             MoveCalculationRoot(tree,localOutGroup);
                         }
+                    /* since we only transferred some info, there are additional things we need to
+                       consider, like names, constraints and calibrations */
                     CheckSetConstraints(tree);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i-lower, 0);
+                    strcpy(tree->name, GetTreeFromIndex(j, i, 0)->name);
+                    tree = GetTreeFromIndex(j,i-lower,1);
+                    strcpy(tree->name, GetTreeFromIndex(j, i, 0)->name);
                     }
                 }
             }

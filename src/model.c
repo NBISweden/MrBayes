@@ -2209,7 +2209,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 
 {
 
-	int     i, j, st, isCalibrated, isClock, nTaxa;
+	int     i, st, isCalibrated, isClock, nTaxa;
 	Tree	*tree, **treeHandle;
 	Model	*mp;
 	
@@ -2255,23 +2255,17 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 			}
 		}
 
-	/* initialize the trees; j is offset in mpi version */
-#if defined (MPI_ENABLED)
-	j = (numGlobalChains/num_procs) * proc_id;
-	j += (numGlobalChains%num_procs < proc_id ? numGlobalChains%num_procs : proc_id);
-#else
-	j = 0;
-#endif
+	/* initialize the trees */
 	for (i=from; i<to; i++)
 		{
 		for (st=0; st<2; st++)
 			{
 			tree = GetTree (p, i, st);
 			if (numTrees > 1)
-				sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+j+1);
+				sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+1);
 			else /* if (numTrees == 1) */
-				sprintf (tree->name, "mcmc.tree_%d", i+j+1);
-			tree->nRelParts = p->nRelParts;
+				sprintf (tree->name, "mcmc.tree_%d", i+1);
+            tree->nRelParts = p->nRelParts;
 			tree->relParts = p->relParts;
             tree->isRooted = isRooted;
 			tree->isClock = isClock;
