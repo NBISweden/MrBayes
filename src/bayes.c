@@ -962,7 +962,7 @@ int ReinitializeMrBayes (void)
 	chainParams.stopVal = 0.05;						 /* convergence diagnostic value to reach         */
 	chainParams.numRuns = 2;                         /* number of runs                                */
 	chainParams.numChains = 4;                       /* number of chains                              */
-	chainParams.chainTemp = 0.2;                     /* chain temperature                             */
+	chainParams.chainTemp = 0.1;                     /* chain temperature                             */
 	chainParams.redirect = NO;                       /* should printf be to stdout                    */
 	strcpy(chainParams.chainFileName, "temp.out");   /* chain file name for output                    */
 	chainParams.chainBurnIn = 0;                     /* chain burn in length                          */

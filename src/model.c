@@ -1092,7 +1092,7 @@ int AreDoublesEqual (MrBFlt x, MrBFlt y, MrBFlt tol)
 int ChangeNumChains (int from, int to)
 
 {
-	int			i, i1, j, k, nRuns, fromIndex, toIndex, run, chn, nCppEventParams, *toEvents, *fromEvents;
+	int			i, i1, j, k, nRuns, fromIndex, toIndex, run, chn, *tempIntVals, nCppEventParams, *toEvents, *fromEvents;
 	MCMCMove	**tempMoves, *fromMove, *toMove;
 	Tree		**tempTrees;
 	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition;
@@ -1108,6 +1108,8 @@ int ChangeNumChains (int from, int to)
 	/* first save old values */
 	tempVals = paramValues;
 	paramValues = NULL;
+    tempIntVals = intValues;
+    intValues = NULL;
 	memAllocs[ALLOC_PARAMS] = NO;
     /* .. and old cpp events parameters */
     nCppEventParams = 0;
@@ -1154,6 +1156,10 @@ int ChangeNumChains (int from, int to)
 				toIndex = (run*to + chn)*2*paramValsRowSize;
 				for (i=0; i<2*paramValsRowSize; i++)
 					paramValues[toIndex++] = tempVals[fromIndex++];
+				fromIndex = (run*from + chn)*2*intValsRowSize;
+				toIndex = (run*to + chn)*2*intValsRowSize;
+				for (i=0; i<2*intValsRowSize; i++)
+					intValues[toIndex++] = tempIntVals[fromIndex++];
                 for (i=i1=0; i<numParams; i++)
                     {
                     p = &params[i];
@@ -1187,6 +1193,8 @@ int ChangeNumChains (int from, int to)
 	
 	/* and free up space */
 	free (tempVals);
+    if (intValsRowSize > 0)
+        free (tempIntVals);
     for (i=0; i<nCppEventParams; i++)
         {
         FreeCppEvents(&cppEventParams[i]);
@@ -1230,11 +1238,9 @@ int ChangeNumChains (int from, int to)
     for (i=0; i<2*nRuns*from*numTrees; i++)
         if (tempTrees[i] != NULL)
 			FreeTree (tempTrees[i]);
-            //free (tempTrees[i]);
     free (tempTrees);
 
-
-		/* now fill in the tree parameters */
+	/* now fill in the tree parameters */
     for (i=0; i<numParams; i++)
 		{
 		p = &params[i];
@@ -8909,7 +8915,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	PolyTree			*thePolyTree;
 	static Param	    *param = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
-	static int			useSubvalues, useStdStateFreqs, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
+	static int			useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
 	static char			tempName[100];
 
 	if (defMatrix == NO)
@@ -8947,6 +8953,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			param = NULL;
 			runIndex = chainIndex = -1;
 			useSubvalues = NO;
+            useIntValues = NO;
             useStdStateFreqs = NO;
 			foundComma = foundEqual = foundName = foundDash = NO;
 			expecting = Expecting(LEFTCURL) | Expecting(LEFTPAR) | 	Expecting(EQUALSIGN);
@@ -9241,6 +9248,13 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 theValueMin = ETA;
                 theValueMax = 1.0;
                 }
+            if (param->nIntValues == YES && nValuesRead==numExpectedValues && useIntValues == NO)
+                {
+                /* continue with intValues */
+                nValuesRead = 0;
+                numExpectedValues = param->nIntValues;
+                useIntValues = YES;
+                }
             if (param->paramType==P_PI && modelSettings[param->relParts[0]].dataType == STANDARD && param->paramId != SYMPI_EQUAL
                 && nValuesRead==numExpectedValues && useStdStateFreqs == NO)
                 {
@@ -9258,14 +9272,22 @@ int DoStartvalsParm (char *parmName, char *tkn)
 				{
 				if (param->paramType == P_OMEGA)
                     MrBayesPrint ("%s   Only %d values were expected for parameter '%s'\n", spacer, param->nValues+param->nSubValues/2, param->name);
+                else if (param->nIntValues > 0)   
+                    MrBayesPrint ("%s   Only %d values were expected for parameter '%s'\n", spacer, param->nValues+param->nIntValues, param->name);
                 else
                     MrBayesPrint ("%s   Only %d values were expected for parameter '%s'\n", spacer, numExpectedValues, param->name);
 				return (ERROR);
 				}
-			sscanf (tkn, "%lf", &tempFloat);
+            if (useIntValues == YES)
+			    sscanf (tkn, "%d", &tempInt);
+			else
+                sscanf (tkn, "%lf", &tempFloat);
             if (foundDash == YES)
                 {
-                tempFloat = -tempFloat;
+                if (useIntValues == NO)
+                    tempFloat = -tempFloat;
+                else
+                    tempInt = -tempInt;
                 foundDash = NO;
                 }
 			if (tempFloat < theValueMin || tempFloat > theValueMax)
@@ -9281,19 +9303,26 @@ int DoStartvalsParm (char *parmName, char *tkn)
 					{
 					if (chainIndex != -1 && chainIndex != j)
 						continue;
-					if (useSubvalues == NO && useStdStateFreqs == NO)
-						theValue = GetParamVals (param, i*chainParams.numChains+j, 0);
-					else if (useSubvalues == YES)
-						theValue = GetParamSubVals (param, i*chainParams.numChains+j, 0);
-					else if (useStdStateFreqs == YES)
+					if (useIntValues == YES)
                         {
-                        theValue = GetParamStdStateFreqs (param, i*chainParams.numChains+j, 0);
-                        if (param->hasBinaryStd == YES)
-                            theValue += 2 * modelSettings[param->relParts[0]].numBetaCats;
+                        GetParamIntVals (param, i*chainParams.numChains+j, 0)[nValuesRead-1] = tempInt;
                         }
                     else
-                        return (ERROR);
-					theValue[nValuesRead-1] = tempFloat;
+                        {
+                        if (useSubvalues == NO && useStdStateFreqs == NO)
+						    theValue = GetParamVals (param, i*chainParams.numChains+j, 0);
+					    else if (useSubvalues == YES)
+						    theValue = GetParamSubVals (param, i*chainParams.numChains+j, 0);
+					    else if (useStdStateFreqs == YES)
+                            {
+                            theValue = GetParamStdStateFreqs (param, i*chainParams.numChains+j, 0);
+                            if (param->hasBinaryStd == YES)
+                                theValue += 2 * modelSettings[param->relParts[0]].numBetaCats;
+                            }
+                        else
+                            return (ERROR);
+					    theValue[nValuesRead-1] = tempFloat;
+                        }
 					}
 				}
 			expecting = Expecting (COMMA) | Expecting(RIGHTPAR);
@@ -9462,13 +9491,26 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			if ((param->paramType == P_PI && modelParams[param->relParts[0]].dataType != STANDARD))
 				{
 				useSubvalues = YES;
+                useIntValues = NO;
 				numExpectedValues = param->nSubValues;
 				}
-            else
+            else if (param->nValues == 0 && param->nIntValues > 0)
+                {
+                useSubvalues = NO;
+                useIntValues = YES;
+                numExpectedValues = param->nIntValues;
+                }
+            else if (param->nValues > 0)
 				{
 				useSubvalues = NO;
+                useIntValues = NO;
 				numExpectedValues = param->nValues;
 				}
+            else
+                {
+			    MrBayesPrint ("%s   Not expecting any values for parameter '%s'\n", spacer, param->name);
+			    return (ERROR);
+                }
 			nValuesRead = 0;
 			expecting = Expecting(LEFTPAR);
 			}

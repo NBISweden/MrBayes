@@ -16562,7 +16562,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             x = 0.0;
             if (!strcmp(mp->clockPr,"Uniform"))
                 {
-                (*lnPriorRatio) -= LnUniformPriorPr(t, oldR);
+                (*lnPriorRatio) -= LnUniformPriorPr(oldT, oldR);
                 (*lnPriorRatio) += LnUniformPriorPr(t, newR);
                 }
             else if (!strcmp(mp->clockPr,"Birthdeath"))
@@ -16571,7 +16571,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                 eR = *GetParamVals(m->extinctionRates, chain, state[chain]);
                 sF = mp->sampleProb;
                 x = 0.0;
-                LnBirthDeathPriorPr(t, oldR, &x, sR, eR, sF);
+                LnBirthDeathPriorPr(oldT, oldR, &x, sR, eR, sF);
                 (*lnPriorRatio) -= x;
                 x = 0.0;
                 LnBirthDeathPriorPr(t, newR, &x, sR, eR, sF);
@@ -16588,7 +16588,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                     theta = 2.0*N;
                 theta *= oldR;
                 x = 0.0;
-                LnCoalescencePriorPr(t, oldR, &x, theta, 0.0);
+                LnCoalescencePriorPr(oldT, oldR, &x, theta, 0.0);
                 (*lnPriorRatio) -= x;
                 x = 0.0;
                 theta *= factor;
@@ -33298,7 +33298,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 int PrintCheckPoint (int gen)
 
 {
-	int			i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE, hasEvents;
+	int			i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE, hasEvents, *intValue;
 	char		bkupFileName[100], oldBkupFileName[100], ckpFileName[100], *tempString=NULL;
 	MrBFlt		*value, clockRate;
 	Param		*p = NULL, *subParm = NULL;
@@ -33626,6 +33626,19 @@ int PrintCheckPoint (int gen)
 				if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
 					nErrors++;
 				}
+            /* print int values if present */
+            if (p->nIntValues > 0)
+				{
+				intValue = GetParamIntVals (p, j, state[j]);
+                nValues  = p->nIntValues;
+                for (k=0; k<nValues; k++)
+				    {
+    			    if (nErrors==0 && SafeSprintf (&tempString, &tempStrSize, ",%d", intValue[k]) == ERROR)
+	    		        nErrors++;
+		    		if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
+			    	    nErrors++;
+                    }
+                }
             /* print extra params for symdir multistate */
             if (p->nSympi > 0)
 				{
@@ -34886,8 +34899,23 @@ int PrintStates (int curGen, int coldId)
 				    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 				    }
 			    }
+            else if (p->paramId == REVMAT_MIX)
+   			    {
+                /* convert raw rates to rate proportions */
+                sum = 0.0;
+			    for (j=0; j<p->nValues; j++)
+                    {
+                    sum += st[j];
+                    }
+			    for (j=0; j<p->nValues; j++)
+				    {
+				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
+				    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+				    }
+			    }
             else
                 {
+                /* we already have rate proportions */
 			    for (j=0; j<p->nValues; j++)
 				    {
 				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j]));
@@ -34896,6 +34924,7 @@ int PrintStates (int curGen, int coldId)
                 }
             if (p->paramId == REVMAT_MIX)
                 {
+                /* add model index and k for nst=mixed */
 			    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(FromGrowthFxnToIndex(GetParamIntVals(p, coldId, state[coldId]))));
 			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			    SafeSprintf (&tempStr, &tempStrSize, "\t%d", GetKFromGrowthFxn(GetParamIntVals(p, coldId, state[coldId])));
@@ -36397,7 +36426,7 @@ int ReassembleMoveInfo (void)
 
 int ReassembleParamVals (int *curId)
 {
-    int             i, j, k, orderLen, nBrlens, lower, upper, numChainsForProc, proc, ierror, *order, *id, *nEvents;
+    int             i, j, k, orderLen, nBrlens, lower, upper, numChainsForProc, proc, ierror, *y, *order, *id, *nEvents;
     MrBFlt          *x, *brlens, **position, **rateMult;
     MPI_Status      status;
     MPI_Request     request;
@@ -36496,6 +36525,20 @@ int ReassembleParamVals (int *curId)
 				{
 				return (ERROR);
 				}
+            if (intValsRowSize > 0)
+                {
+                y = intValues + 2*intValsRowSize*lower;
+                ierror = MPI_Irecv (y, intValsRowSize*2*(upper-lower), MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
+                ierror = MPI_Waitall (1, &request, &status);
+                if (ierror != MPI_SUCCESS)
+				    {
+				    return (ERROR);
+				    }
+                }
             }
         else if (proc_id == proc)
             {
@@ -36510,6 +36553,20 @@ int ReassembleParamVals (int *curId)
 				{
 				return (ERROR);
 				}
+    		if (intValsRowSize > 0)
+                {
+                y = intValues;
+                ierror = MPI_Isend (y, intValsRowSize*2*(upper-lower), MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
+			    if (ierror != MPI_SUCCESS)
+				    {
+				    return (ERROR);
+				    }
+			    ierror = MPI_Waitall (1, &request, &status);
+			    if (ierror != MPI_SUCCESS)
+				    {
+				    return (ERROR);
+				    }
+                }
             }
 
         /* std state frequencies */
@@ -36868,7 +36925,7 @@ void RedistributeMoveInfo (void)
 
 int RedistributeParamVals (void)
 {
-    int             i, j, k, orderLen, nBrlens, lower, upper, numChainsForProc, proc, ierror, *order, *nEvents;
+    int             i, j, k, orderLen, nBrlens, lower, upper, numChainsForProc, proc, ierror, *y, *order, *nEvents;
     MrBFlt          *x, *brlens, **position, **rateMult;
     MPI_Status      status;
     MPI_Request     request;
@@ -36906,6 +36963,20 @@ int RedistributeParamVals (void)
                 {
                 return (ERROR);
                 }
+            if (intValsRowSize > 0)
+                {
+                y = intValues + 2*intValsRowSize*lower;
+                ierror = MPI_Isend (y, intValsRowSize*2*(upper-lower), MPI_INT, proc, 0, MPI_COMM_WORLD, &request);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
+                ierror = MPI_Waitall (1, &request, &status);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
+                }
             }
         else if (proc_id == proc)
             {
@@ -36919,6 +36990,20 @@ int RedistributeParamVals (void)
             if (ierror != MPI_SUCCESS)
                 {
                 return (ERROR);
+                }
+            if (intValsRowSize > 0)
+                {
+                y = intValues;
+                ierror = MPI_Irecv (y, intValsRowSize*2*(upper-lower), MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
+                ierror = MPI_Waitall (1, &request, &status);
+                if (ierror != MPI_SUCCESS)
+                    {
+                    return (ERROR);
+                    }
                 }
             }
         
