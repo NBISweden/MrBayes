@@ -817,15 +817,17 @@ int InitializeMrBayes (void)
     modelElementNames[0][10] = "";
 
     /* Gtrsubmodel */
-    modelElementNames[1] = (char **) SafeCalloc (203, sizeof (char *));
+    modelElementNames[1] = (char **) SafeCalloc (204, sizeof (char *));
     for (i=0; i<203; i++)
         {
         modelElementNames[1][i]  = (char *) SafeCalloc (7, sizeof (char));
         FromIndexToGrowthFxn(i, growthFxn);
         for (j=0; j<6; j++)
-            modelElementNames[1][i][j] = '0' + growthFxn[j];
+            modelElementNames[1][i][j] = '1' + growthFxn[j];
         modelElementNames[1][i][j] = '\0';
         }
+    modelElementNames[1][203]  = "";
+
 
     /* Termination */
     modelElementNames[2]    = (char **) SafeCalloc (1, sizeof(char *));
@@ -1071,9 +1073,10 @@ int DoQuit (void)
 		}
 
     /* free modelIndicatorParams and modelElementNames */
-	for (i=0; modelElementNames[i][0][0]!='\0'; i++)
+    for (i=0; i<203; i++)
+        free (modelElementNames[1][i]);
+	for (i=0; i<3; i++)
 		free (modelElementNames[i]);
-    free (modelElementNames[i]);
     free (modelElementNames);
     free (modelIndicatorParams);
 

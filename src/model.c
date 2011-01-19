@@ -632,6 +632,7 @@ int AllocateNormalParams (void)
 
 	/* Set row size and find total number of values */
 	paramValsRowSize = nOfParams;
+    intValsRowSize = nOfIntParams;
 	nOfParams *= (2 * numGlobalChains);
     nOfIntParams *= (2 * numGlobalChains);
 
@@ -16118,7 +16119,7 @@ int SetModelParams (void)
 			else
 				p->nValues = 6;
 			p->nSubValues = 0;
-            if (p->paramId == REVMAT_MIX)
+            if (!strcmp(mp->nst, "Mixed"))
                 p->nIntValues = 6;
             else
                 p->nIntValues = 0;

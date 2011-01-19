@@ -17158,7 +17158,11 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	brlenNode[3] = v;
 
 	/* change in root tree ? */
-	if (j == 2 || RandomNumber (seed) < 0.5)
+	if (j == 2)
+        moveInRoot = YES;
+    else if (i == 2)
+        moveInRoot = NO;
+    else if (RandomNumber (seed) < 0.5)
 		moveInRoot = YES;
 	else
 		moveInRoot = NO;
@@ -17599,7 +17603,9 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		}
 #endif
 
-	return (NO_ERROR);
+    assert (nCrownNodes > 0 || nRootNodes > 0);
+
+    return (NO_ERROR);
 	
 }
 
@@ -18990,7 +18996,11 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		} while (i == 2 && j == 2);
 
     /* determine whether to move first step unconditionally in root or in crown */
-    if (j == 2 || RandomNumber(seed) < 0.5)
+    if (j == 2)
+        alwaysMoveRoot = YES;
+    else if (i == 2)
+        alwaysMoveRoot = NO;
+    else if (RandomNumber(seed) < 0.5)
         alwaysMoveRoot = YES;
     else
         alwaysMoveRoot = NO;
@@ -19386,6 +19396,8 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		getchar();
 		}
 #endif
+
+    assert (nCrownNodes > 0 || nRootNodes > 0);
 
 	return (NO_ERROR);
 	
@@ -34931,7 +34943,7 @@ int PrintStates (int curGen, int coldId)
             if (p->paramId == REVMAT_MIX)
                 {
                 /* add model index and k for nst=mixed */
-			    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(FromGrowthFxnToIndex(GetParamIntVals(p, coldId, state[coldId]))));
+			    SafeSprintf (&tempStr, &tempStrSize, "\t%d", FromGrowthFxnToIndex(GetParamIntVals(p, coldId, state[coldId])));
 			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 			    SafeSprintf (&tempStr, &tempStrSize, "\t%d", GetKFromGrowthFxn(GetParamIntVals(p, coldId, state[coldId])));
 			    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
