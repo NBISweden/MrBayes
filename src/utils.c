@@ -309,8 +309,39 @@ void FlipOneBit (int n, SafeLong *p)
 /* Convert from 0-based growth function over six states to model index */
 int      FromGrowthFxnToIndex(int *growthFxn)
 {
-    /* TODO: Bret - silly return for now */
-    return 0;
+    int     i, fxn[6];
+
+    /* set local growth fxn to lexicographical max */
+    for (i=0; i<6; i++)
+        fxn[i] = i;
+
+    /* decrease until we reach growthFxn */
+    for (k=202; k>=0; k--)
+        {
+        for (i=0; i<6; i++)
+            {
+            if (fxn[i] != growthFxn[i])
+                break;
+            }
+        if (i == 6)
+            break;
+
+        /* get next growth fxn */
+        for (i=5; i>=0; i--)
+            {
+            fxn[i]--;
+            if (fxn[i] >= 0)
+                break;
+            }
+
+        if (i < 0)
+            return -1;  /* error */
+
+        for (i++; i<6; i++)
+            fxn[i] = fxn[i-1] + 1;
+        }
+
+    return k;
 }
 
 
@@ -318,17 +349,30 @@ int      FromGrowthFxnToIndex(int *growthFxn)
 
 
 /* Convert from model index to 0-based growth function over six states */
-void     FromIndexToGrowthFxn(int index, int *growthFxn)
+void FromIndexToGrowthFxn(int index, int *growthFxn)
 {
+    int     i, k;
 
-    /* TODO: Bret - silly stuff for now */
-    growthFxn[0] = 0;
-    growthFxn[1] = 0;
-    growthFxn[2] = 0;
-    growthFxn[3] = 0;
-    growthFxn[4] = 0;
-    growthFxn[5] = 0;
+    /* set growth fxn to lexicographical max */
+    for (i=0; i<6; i++)
+        growthFxn[i] = i;
 
+    /* decrease until we reach index */
+    for (k=202; k>index; k--)
+        {
+        for (i=5; i>=0; i--)
+            {
+            growthFxn[i]--;
+            if (growthFxn[i] >= 0)
+                break;
+            }
+
+        if (i < 0)
+            return; /* ERROR */
+
+        for (i++; i<6; i++)
+            growthFxn[i] = growthFxn[i-1] + 1;
+        }
 }
 
 
