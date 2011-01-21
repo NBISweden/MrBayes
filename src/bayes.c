@@ -540,7 +540,6 @@ int InitializeMrBayes (void)
     tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
-    beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;     /* default to single-precision                   */
     beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;           /* default to SSE code                           */
 	beagleResource = NULL;
 	beagleResourceCount = 0;						 /* default has no list */

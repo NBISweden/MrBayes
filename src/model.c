@@ -11415,6 +11415,12 @@ int InitializeTreeCalibrations (Tree *t)
 				p->age = p->calibration->offset;
 				}
 			}
+        else if (p->left == NULL && p->right == NULL)
+            {
+            p->isDated = NO;
+            p->calibration = NULL;
+            p->age = -1.0;
+            }            
 		}
 
     /* Initialize interior calibrations */

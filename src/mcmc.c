@@ -36686,6 +36686,7 @@ int ReassembleParamVals (int *curId)
                         }
                     /* since we only transferred some info, there are additional things we need to
                        consider, like constraints and calibrations; tree names are OK on proc 0 */
+                    InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i, state[i]);
                     }
@@ -37119,6 +37120,7 @@ int RedistributeParamVals (void)
                         }
                     /* since we only transferred some info, there are additional things we need to
                        consider, like names, constraints and calibrations */
+                    InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i-lower, 0);
                     strcpy(tree->name, GetTreeFromIndex(j, i, 0)->name);

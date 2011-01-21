@@ -1098,9 +1098,12 @@ int CheckSetConstraints (Tree *t)
         p = t->allDownPass[i];
         p->isLocked = NO;
         p->lockID = -1;
-        p->calibration = NULL;
-        p->isDated = NO;
-        p->age = -1.0;
+        if (p->left != NULL)
+            {
+            p->calibration = NULL;
+            p->isDated = NO;
+            p->age = -1.0;
+            }
         }
 
     /* allocate space */
