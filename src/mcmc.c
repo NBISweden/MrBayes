@@ -1319,7 +1319,7 @@ void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrB
         logTuning += delta;
 
     newTuning = exp(logTuning);
-    if (newTuning > minTuning && newTuning > maxTuning)
+    if (newTuning > minTuning && newTuning < maxTuning)
         *alphaPi = newTuning;
 }
 
@@ -1343,7 +1343,7 @@ void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, Mr
         logTuning -= delta;
 
     newTuning = exp(logTuning);
-    if (newTuning > minTuning && newTuning > maxTuning)
+    if (newTuning > minTuning && newTuning < maxTuning)
         *lambda = newTuning;
 }
 
@@ -1367,7 +1367,7 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
         logTuning -= delta;
 
     newTuning = exp(logTuning);
-    if (newTuning > minTuning && newTuning > maxTuning)
+    if (newTuning > minTuning && newTuning < maxTuning)
         *width = newTuning;
 }
 
@@ -6157,7 +6157,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 {
 
 	int				c, k, nGammaCats;
-	CLFlt			*clFA, *clFP, *clDP, *pA, *tiPA, likeUp[4], sum[4];
+	CLFlt			*clFA, *clFP, *clDP, *tiP, condLikeUp[4], sum[4];
 	ModelInfo		*m;
 	
 	/* find model settings for this division */
@@ -6178,10 +6178,10 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 		clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
         
 		/* final cond likes = downpass cond likes */
-		for (c=0; c<m->numChars; c++)
+		for (k=0; k<nGammaCats; k++)
 			{
 			/* copy cond likes */ 
-			for (k=0; k<nGammaCats; k++)
+			for (c=0; c<m->numChars; c++)
 				{
 				*(clFP++) = *(clDP++);
 				*(clFP++) = *(clDP++);
@@ -6199,35 +6199,34 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
         clDP = m->condLikes[m->condLikeIndex[chain][p->index     ]];
         
 		/* find transition probabilities */
-		pA = m->tiProbs[m->tiProbsIndex[chain][p->index]];
+		tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-		for (c=0; c<m->numChars; c++)
+		for (k=0; k<nGammaCats; k++)
 			{
-			tiPA = pA;
-			for (k=0; k<nGammaCats; k++)
+			for (c=0; c<m->numChars; c++)
 				{
-                likeUp[A] = likeUp[C] = likeUp[G] = likeUp[T] = 0.0;
+                condLikeUp[A] = condLikeUp[C] = condLikeUp[G] = condLikeUp[T] = 0.0;
 
-                sum[A] = (tiPA[AA]*clDP[A] + tiPA[AC]*clDP[C] + tiPA[AG]*clDP[G] + tiPA[AT]*clDP[T]);
-				sum[C] = (tiPA[CA]*clDP[A] + tiPA[CC]*clDP[C] + tiPA[CG]*clDP[G] + tiPA[CT]*clDP[T]);
-				sum[G] = (tiPA[GA]*clDP[A] + tiPA[GC]*clDP[C] + tiPA[GG]*clDP[G] + tiPA[GT]*clDP[T]);
-				sum[T] = (tiPA[TA]*clDP[A] + tiPA[TC]*clDP[C] + tiPA[TG]*clDP[G] + tiPA[TT]*clDP[T]);
+                sum[A] = (tiP[AA]*clDP[A] + tiP[AC]*clDP[C] + tiP[AG]*clDP[G] + tiP[AT]*clDP[T]);
+				sum[C] = (tiP[CA]*clDP[A] + tiP[CC]*clDP[C] + tiP[CG]*clDP[G] + tiP[CT]*clDP[T]);
+				sum[G] = (tiP[GA]*clDP[A] + tiP[GC]*clDP[C] + tiP[GG]*clDP[G] + tiP[GT]*clDP[T]);
+				sum[T] = (tiP[TA]*clDP[A] + tiP[TC]*clDP[C] + tiP[TG]*clDP[G] + tiP[TT]*clDP[T]);
 
-                if (sum[A] != 0.0) likeUp[A] = clFA[A] / sum[A];
-				if (sum[C] != 0.0) likeUp[C] = clFA[C] / sum[C];
-				if (sum[G] != 0.0) likeUp[G] = clFA[G] / sum[G];
-				if (sum[T] != 0.0) likeUp[T] = clFA[T] / sum[T];
+                if (sum[A] != 0.0) condLikeUp[A] = clFA[A] / sum[A];
+				if (sum[C] != 0.0) condLikeUp[C] = clFA[C] / sum[C];
+				if (sum[G] != 0.0) condLikeUp[G] = clFA[G] / sum[G];
+				if (sum[T] != 0.0) condLikeUp[T] = clFA[T] / sum[T];
 
-                clFP[A] = (likeUp[A]*tiPA[AA] + likeUp[C]*tiPA[CA] + likeUp[G]*tiPA[GA] + likeUp[T]*tiPA[TA])*clDP[A];
-				clFP[C] = (likeUp[A]*tiPA[AC] + likeUp[C]*tiPA[CC] + likeUp[G]*tiPA[GC] + likeUp[T]*tiPA[TC])*clDP[C];
-				clFP[G] = (likeUp[A]*tiPA[AG] + likeUp[C]*tiPA[CG] + likeUp[G]*tiPA[GG] + likeUp[T]*tiPA[TG])*clDP[G];
-				clFP[T] = (likeUp[A]*tiPA[AT] + likeUp[C]*tiPA[CT] + likeUp[G]*tiPA[GT] + likeUp[T]*tiPA[TT])*clDP[T];
+                clFP[A] = (condLikeUp[A]*tiP[AA] + condLikeUp[C]*tiP[CA] + condLikeUp[G]*tiP[GA] + condLikeUp[T]*tiP[TA])*clDP[A];
+				clFP[C] = (condLikeUp[A]*tiP[AC] + condLikeUp[C]*tiP[CC] + condLikeUp[G]*tiP[GC] + condLikeUp[T]*tiP[TC])*clDP[C];
+				clFP[G] = (condLikeUp[A]*tiP[AG] + condLikeUp[C]*tiP[CG] + condLikeUp[G]*tiP[GG] + condLikeUp[T]*tiP[TG])*clDP[G];
+				clFP[T] = (condLikeUp[A]*tiP[AT] + condLikeUp[C]*tiP[CT] + condLikeUp[G]*tiP[GT] + condLikeUp[T]*tiP[TT])*clDP[T];
 
 				clFA += 4;
 				clFP += 4;
 				clDP += 4;
-				tiPA += 16;
 				}
+            tiP += 16;
 			}
 		}	
 
@@ -7809,6 +7808,11 @@ int DoMcmcParm (char *parmName, char *tkn)
 		/* set Seed (globalSeed) ***************************************************************/
 		if (!strcmp(parmName, "Seed"))
 			{
+                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
+                free (tempStr);
+			    return (ERROR);
+            /*
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(NUMBER);
 			else if (expecting == Expecting(NUMBER))
@@ -7823,10 +7827,16 @@ int DoMcmcParm (char *parmName, char *tkn)
 				free (tempStr);
 				return (ERROR);
 				}
+                */
 			}
 		/* set Swapseed (global variable swapSeed) ***************************************************************/
 		else if (!strcmp(parmName, "Swapseed"))
 			{
+                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
+                free (tempStr);
+			    return (ERROR);
+                /*
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(NUMBER);
 			else if (expecting == Expecting(NUMBER))
@@ -7841,6 +7851,7 @@ int DoMcmcParm (char *parmName, char *tkn)
 				free (tempStr);
 				return (ERROR);
 				}
+                */
 			}
 		/* set run ID */
 		/* this setting is provided for GRID use only, so that identical runs can be generated */
@@ -33044,7 +33055,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 	int				c, i, k, *rateCat, hasPInvar, nGammaCats;
 	MrBFlt			*bsVals;
 	CLFlt			*cL, sum, pInvar=0.0, bs[4], freq, f;
-	const CLFlt		*clFP, *clInvar=NULL, *lnScaler;
+	const CLFlt		*clFP, *clInvar=NULL, *lnScaler,**clP;
 	char			*tempStr;
 	int             tempStrSize = TEMPSTRSIZE;
 	ModelInfo		*m;
@@ -33076,6 +33087,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 		pInvar = (CLFlt) *GetParamVals (m->pInvar, chain, state[chain]); 
 		}
 
+
 	/* find number of rate categories */
 	nGammaCats = m->numGammaCats;
 
@@ -33093,6 +33105,17 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
+
+    if (m->gibbsGamma == NO)
+        {
+        /* find conditional likelihood pointers */
+        clP = m->clP;
+        for (k=0; k<m->numGammaCats; k++)
+            {
+            clP[k] = clFP;
+            clFP += m->numChars * m->numModelStates;
+            }
+        }
     
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
@@ -33133,11 +33156,11 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 			cL[A] = cL[C] = cL[G] = cL[T] = 0.0;
 			for (k=0; k<nGammaCats; k++)
 				{
-				cL[A] += clFP[A];
-				cL[C] += clFP[C];
-				cL[G] += clFP[G];
-				cL[T] += clFP[T];
-				clFP += 4;
+				cL[A] += clP[k][A];
+				cL[C] += clP[k][C];
+				cL[G] += clP[k][G];
+				cL[T] += clP[k][T];
+				clP[k] += 4;
 				}
 			cL[A] *= bs[A];
 			cL[C] *= bs[C];
@@ -33179,8 +33202,8 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 	/* print the resulting conditional likelihoods cycling over uncompressed chars */
 	for (c=0; c<numChar; c++)
 		{
-		//if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
-			//continue;
+		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+			continue;
 		i = compCharPos[c] - m->compCharStart;
 		cL = m->ancStateCondLikes + (i*4);
 		SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[A]));
@@ -38288,6 +38311,7 @@ int RunChain (SafeLong *seed)
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
 
+
 #if defined (BEAGLE_ENABLED)
 	int			ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
 #ifndef NDEBUG
@@ -38318,7 +38342,6 @@ int RunChain (SafeLong *seed)
 
 	/* set nErrors to 0 */
 	nErrors = 0;
-	
 	if (numLocalTaxa < 4)
 		{
 		for (i=0; i<numTrees; i++)

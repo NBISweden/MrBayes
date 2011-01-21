@@ -10041,7 +10041,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 					if (GetEmpiricalFreqs (p->relParts, p->nRelParts) == ERROR)
 						return (ERROR);
 					for (i=0; i<mp->nStates; i++)
-						value[i] = empiricalFreqs[i];
+						subValue[i] = empiricalFreqs[i];
 					}
 
 				else if (p->paramId == PI_EQUAL)
@@ -10839,6 +10839,7 @@ void FreeMove (MCMCMove *mv)
 
 
 
+/* Compute empirical state freq are return it in global array empiricalFreqs[] */
 int GetEmpiricalFreqs (int *relParts, int nRelParts)
 
 {

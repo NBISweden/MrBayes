@@ -11171,19 +11171,6 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Options:                                                                      \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Seed         -- Sets the seed number for the random number generator. The     \n");
-		MrBayesPrint ("                   random number seed is initialized haphazardly at the beg-     \n");
-		MrBayesPrint ("                   inning of each MrBayes session. This option allows you to     \n");
-		MrBayesPrint ("                   set the seed to some specific value, thereby allowing you     \n");
-		MrBayesPrint ("                   to exactly repeat an analysis. If the analysis uses swapping  \n");
-		MrBayesPrint ("                   between cold and heated chains, you must also set the swap    \n");
-		MrBayesPrint ("                   seed (see below) to exactly repeat the analysis.              \n");
-		MrBayesPrint ("   Swapseed     -- Sets the seed used for generating the swapping sequence       \n");
-		MrBayesPrint ("                   when Metropolis-coupled heated chains are used. This seed     \n");
-		MrBayesPrint ("                   is initialized haphazardly at the beginning of each MrBayes   \n");
-		MrBayesPrint ("                   session. This option allows you to set the seed to some       \n");
-		MrBayesPrint ("                   specific value, thereby allowing you to exactly repeat a      \n");
-		MrBayesPrint ("                   swap sequence. See also the 'Seed' option.                    \n");
 		MrBayesPrint ("   Ngen         -- This option sets the number of cycles for the MCMC alg-       \n");
 		MrBayesPrint ("                   orithm. This should be a big number as you want the chain     \n");
 		MrBayesPrint ("                   to first reach stationarity, and then remain there for        \n");
@@ -11387,6 +11374,19 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Available options:                                                            \n");
 		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Seed         -- Sets the seed number for the random number generator. The     \n");
+		MrBayesPrint ("                   random number seed is initialized haphazardly at the beg-     \n");
+		MrBayesPrint ("                   inning of each MrBayes session. This option allows you to     \n");
+		MrBayesPrint ("                   set the seed to some specific value, thereby allowing you     \n");
+		MrBayesPrint ("                   to exactly repeat an analysis. If the analysis uses swapping  \n");
+		MrBayesPrint ("                   between cold and heated chains, you must also set the swap    \n");
+		MrBayesPrint ("                   seed (see below) to exactly repeat the analysis.              \n");
+		MrBayesPrint ("   Swapseed     -- Sets the seed used for generating the swapping sequence       \n");
+		MrBayesPrint ("                   when Metropolis-coupled heated chains are used. This seed     \n");
+		MrBayesPrint ("                   is initialized haphazardly at the beginning of each MrBayes   \n");
+		MrBayesPrint ("                   session. This option allows you to set the seed to some       \n");
+		MrBayesPrint ("                   specific value, thereby allowing you to exactly repeat a      \n");
+		MrBayesPrint ("                   swap sequence. See also the 'Seed' option.                    \n");
 		MrBayesPrint ("   Dir          -- The working directory. Specifies the absolute or relative path\n");
 		MrBayesPrint ("                   to the working directory. If left empty, the working directory\n");
 		MrBayesPrint ("                   is the current directory.                                     \n");
@@ -11449,13 +11449,15 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Parameter       Options                  Current Setting                      \n");
+		MrBayesPrint ("   Parameter          Options               Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Dir             <name>                   \"%s\"\n", workingDir);
+        MrBayesPrint ("   Seed               <number>              %ld                                     \n", globalSeed);
+		MrBayesPrint ("   Swapseed           <number>              %ld                                     \n", swapSeed);
+        MrBayesPrint ("   Dir                <name>                \"%s\"\n", workingDir);
         if (defMatrix == YES)
-            MrBayesPrint ("   Partition       <name>                   %s\n", partitionNames[partitionNum]);
+            MrBayesPrint ("   Partition          <name>                %s\n", partitionNames[partitionNum]);
         else
-            MrBayesPrint ("   Partition       <name>                   \"\"\n");
+            MrBayesPrint ("   Partition          <name>                \"\"\n");
         if (defTaxa == YES)
             MrBayesPrint ("   Speciespartition   <name>                %s\n", speciespartitionNames[speciespartitionNum]);
         else
@@ -13009,8 +13011,6 @@ void PrintSettings (char *command, ModelInfo *mp)
 		{
 		MrBayesPrint ("   Parameter       Options               Current Setting                         \n");
 		MrBayesPrint ("   -----------------------------------------------------                         \n");
-		MrBayesPrint ("   Seed            <number>              %ld                                     \n", globalSeed);
-		MrBayesPrint ("   Swapseed        <number>              %ld                                     \n", swapSeed);
 		MrBayesPrint ("   Ngen            <number>              %d                                      \n", chainParams.numGen);
 		MrBayesPrint ("   Nruns           <number>              %d                                      \n", chainParams.numRuns);
 		MrBayesPrint ("   Nchains         <number>              %d                                      \n", chainParams.numChains);
