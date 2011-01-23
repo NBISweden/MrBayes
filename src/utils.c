@@ -309,7 +309,7 @@ void FlipOneBit (int n, SafeLong *p)
 /* Convert from 0-based growth function over six states to model index */
 int      FromGrowthFxnToIndex(int *growthFxn)
 {
-    int     i, fxn[6];
+    int     i, k, fxn[6];
 
     /* set local growth fxn to lexicographical max */
     for (i=0; i<6; i++)
