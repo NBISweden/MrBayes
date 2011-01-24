@@ -5987,7 +5987,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 {
 
 	int				c, k;
-	CLFlt			*clFA, *clFP, *clDP, *pA, *tiPA, likeUp[2], sum[2];
+	CLFlt			*clFA, *clFP, *clDP, *tiP, condLikeUp[2], sum[2];
 	ModelInfo		*m;
 	
 	/* find model settings for this division */
@@ -6001,9 +6001,9 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 		clDP = m->condLikes[m->condLikeIndex[chain][p->index]];
         clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
 
-		for (c=0; c<m->numChars; c++)
+		for (k=0; k<m->numGammaCats; k++)
 			{
-			for (k=0; k<m->numGammaCats; k++)
+			for (c=0; c<m->numChars; c++)
 				{
 				*(clFP++) = *(clDP++);
 				*(clFP++) = *(clDP++);
@@ -6019,28 +6019,27 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 		clDP = m->condLikes[m->condLikeIndex[chain][p->index     ]];
         
 		/* find transition probabilities */
-		pA = m->tiProbs[m->tiProbsIndex[chain][p->index]];
+		tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-		for (c=0; c<m->numChars; c++)
+		for (k=0; k<m->numGammaCats; k++)
 			{
-			tiPA = pA;
-			for (k=0; k<m->numGammaCats; k++)
+			for (c=0; c<m->numChars; c++)
 				{
-                likeUp[0] = likeUp[1] = 0.0;
+                condLikeUp[0] = condLikeUp[1] = 0.0;
 
-                sum[0] = tiPA[0]*clDP[0] + tiPA[1]*clDP[1];
-                sum[1] = tiPA[2]*clDP[0] + tiPA[3]*clDP[2];
+                sum[0] = tiP[0]*clDP[0] + tiP[1]*clDP[1];
+                sum[1] = tiP[2]*clDP[0] + tiP[3]*clDP[2];
 
-                if (sum[0] != 0.0) likeUp[0] = clFA[0] / sum[0];
-				if (sum[1] != 0.0) likeUp[1] = clFA[1] / sum[1];
+                if (sum[0] != 0.0) condLikeUp[0] = clFA[0] / sum[0];
+				if (sum[1] != 0.0) condLikeUp[1] = clFA[1] / sum[1];
 				
-                *(clFP++) = (likeUp[0]*tiPA[0] + likeUp[1]*tiPA[2])*clDP[0];
-				*(clFP++) = (likeUp[0]*tiPA[1] + likeUp[1]*tiPA[3])*clDP[1];
+                *(clFP++) = (condLikeUp[0]*tiP[0] + condLikeUp[1]*tiP[2])*clDP[0];
+				*(clFP++) = (condLikeUp[0]*tiP[1] + condLikeUp[1]*tiP[3])*clDP[1];
 				
-                tiPA += 4;
 				clFA += 2;
 				clDP += 2;
 				}
+            tiP += 4;
 			}
 		}	
 
@@ -6062,7 +6061,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 {
 
 	int				a, c, i, j, k, nStates, nStatesSquared, nGammaCats;
-	CLFlt			*clFA, *clFP, *clDP, *pA, *tiPA, *likeUp, sum;
+	CLFlt			*clFA, *clFP, *clDP, *tiP, *condLikeUp, sum;
 	ModelInfo		*m;
 	
 	/* find model settings for this division */
@@ -6078,7 +6077,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 		nGammaCats = 1;
 
 	/* use preallocated scratch space */
-	likeUp = m->ancStateCondLikes;
+	condLikeUp = m->ancStateCondLikes;
 
 	/* calculate final states */
 	if (p->anc->anc == NULL)
@@ -6090,10 +6089,10 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 		clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
         
 		/* final cond likes = downpass cond likes */
-        for (c=0; c<m->numChars; c++)
+        for (k=0; k<nGammaCats; k++)
 			{
 			/* copy cond likes */ 
-			for (k=0; k<nGammaCats*nStates; k++)
+			for (c=0; c<m->numChars*nStates; c++)
 				*(clFP++) = *(clDP++);
 			}
 		}
@@ -6106,19 +6105,18 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
         clDP = m->condLikes[m->condLikeIndex[chain][p->index     ]];
         
 		/* find transition probabilities */
-		pA = m->tiProbs[m->tiProbsIndex[chain][p->index]];
+		tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-        for (c=0; c<m->numChars; c++)
+        for (k=0; k<nGammaCats; k++)
 			{
-			tiPA = pA;
-			for (k=0; k<nGammaCats; k++)
+			for (c=0; c<m->numChars; c++)
 				{
 				for (a=j=0; a<nStates; a++)
 					{
-					sum = likeUp[A] = 0.0;
+					sum = 0.0; // Also was here??? condLikeUp[A] = 0.0
 					for (i=0; i<nStates; i++)
-						sum += tiPA[j++]*clDP[i];
-                    if (sum != 0.0) likeUp[a] = clFA[a] / sum;
+						sum += tiP[j++]*clDP[i];
+                    if (sum != 0.0) condLikeUp[a] = clFA[a] / sum;
 					}
 					
 				for (a=0; a<nStates; a++)
@@ -6127,7 +6125,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 					j = a;
 					for (i=0; i<nStates; i++)
 						{
-						sum += likeUp[i] * tiPA[j];
+						sum += condLikeUp[i] * tiP[j];
 						j += nStates;
 						}
 					*(clFP++) = sum * clDP[a];
@@ -6135,8 +6133,8 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 
 				clFA += nStates;
 				clDP += nStates;
-				tiPA += nStatesSquared;
 				}
+            tiP += nStatesSquared;
 			}
 		}	
 
@@ -6246,8 +6244,8 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 {
 
-	int				a, c, i, j, k, nStates, nCats;
-	CLFlt			*clFA, *clFP, *clDP, *pA, *tiPA, likeUp[10], sum;
+	int				a, c, i, j, k, nStates, nCats, coppySize,tmp;
+	CLFlt			*clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[10], sum;
 	ModelInfo		*m;
 	
 	/* find model settings for this division */
@@ -6262,6 +6260,7 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 		clDP = m->condLikes[m->condLikeIndex[chain][p->index]];
         clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
         
+        coppySize=0;
 		/* final cond likes = downpass cond likes */
 		for (c=0; c<m->numChars; c++)
 			{
@@ -6275,13 +6274,15 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 			else
 				nCats = 1;
 
-			/* finally multiply with the gamma cats */
-			nCats *= m->numGammaCats;
+            coppySize+=nCats*nStates;
+            }
 
-			/* copy cond likes */ 
-			for (k=0; k<nCats*nStates; k++)
-				*(clFP++) = *(clDP++);
-			}
+		/* finally multiply with the gamma cats */
+		coppySize *= m->numGammaCats;
+
+		/* copy cond likes */ 
+		for (k=0; k<coppySize; k++)
+			*(clFP++) = *(clDP++);
 		}
 	else
 		{
@@ -6294,56 +6295,62 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 		/* find transition probabilities */
         pA = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-		for (c=0; c<m->numChars; c++)
-			{
-			/* find transition probs for this character */
-			tiPA = pA + m->tiIndex[c];
+        for (k=0; k<m->numGammaCats; k++)
+		    {
+		    for (c=0; c<m->numChars; c++)
+			    {
 
-			/* calculate nStates and nCats */
-			nStates = m->nStates[c];
-			
-			/* the following lines ensure that nCats is 1 unless */
-			/* the character is binary and beta categories are used  */
-			if (nStates == 2)
-				nCats = m->numBetaCats;
-			else
-				nCats = 1;
+			    /* calculate nStates and nCats */
+			    nStates = m->nStates[c];
+    			
+			    /* the following lines ensure that nCats is 1 unless */
+			    /* the character is binary and beta categories are used  */
+			    if (nStates == 2)
+				    nCats = m->numBetaCats;
+			    else
+				    nCats = 1;
 
-			/* finally multiply with the gamma cats */
-			nCats *= m->numGammaCats;
+			    tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
+			    tiP = pA + m->tiIndex[c] + tmp;
+			    tmp = (m->numGammaCats-1)*2*2; /* tmp contains size of block of tpi matrices across all gamma cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
+    			
 
-			/* now calculate the final cond likes */
-			for (k=0; k<nCats; k++)
-				{
-				for (a=j=0; a<nStates; a++)
-					{
-					sum = 0.0;
-					for (i=0; i<nStates; i++)
-						sum += tiPA[j++]*clDP[i];
-                    if (sum == 0.0)
-                        likeUp[a] = 0.0;    /* we lost the conditional likelihood in the downpass (can occur in gamma model) */
-                    else
-    					likeUp[a] = clFA[a] / sum;
-					}
-					
-				for (a=0; a<nStates; a++)
-					{
-					sum = 0.0;
-					j = a;
-					for (i=0; i<nStates; i++)
-						{
-						sum += likeUp[i] * tiPA[j];
-						j += nStates;
-						}
-					clFP[a] = sum * clDP[a];
-					}
+			    /* finally multiply with the gamma cats */
+			    //nCats *= m->numGammaCats;
 
-				clFP += nStates;
-				clFA += nStates;
-				clDP += nStates;
-				tiPA += nStates*nStates;
-				}
-			}
+			    /* now calculate the final cond likes */
+			    for (k=0; k<nCats; k++)
+				    {
+				    for (a=j=0; a<nStates; a++)
+					    {
+					    sum = 0.0;
+					    for (i=0; i<nStates; i++)
+						    sum += tiP[j++]*clDP[i];
+                        if (sum == 0.0)
+                            condLikeUp[a] = 0.0;    /* we lost the conditional likelihood in the downpass (can occur in gamma model) */
+                        else
+    					    condLikeUp[a] = clFA[a] / sum;
+					    }
+    					
+				    for (a=0; a<nStates; a++)
+					    {
+					    sum = 0.0;
+					    j = a;
+					    for (i=0; i<nStates; i++)
+						    {
+						    sum += condLikeUp[i] * tiP[j];
+						    j += nStates;
+						    }
+					    clFP[a] = sum * clDP[a];
+					    }
+
+				    clFP += nStates;
+				    clFA += nStates;
+				    clDP += nStates;
+				    tiP += tmp;
+				    }
+			    }
+            }
 		}
 
 	return NO_ERROR;
@@ -25904,13 +25911,16 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	/* then move down towards root */
 	if (u->isLocked == NO)
 		{
-		p = a;
-		do {
-			p->marked = YES;
-			q = p;
+		p = a->anc;
+        while( p->anc != NULL)
+            {
+            p->marked = YES;
+            if( p->isLocked == YES )
+                break;
 			p = p->anc;
-			} while (p->isLocked == NO && p->anc != NULL);
+			}
 		}
+
 	/* finally move up */
 	for (i=t->nNodes-2; i>=0; i--)
 		{
@@ -32808,7 +32818,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 
 	int				c, i, k;
 	MrBFlt			*bs, freq;
-	CLFlt			*clFP, *cL, sum;
+	CLFlt			*clFP, *cL, sum, **clP;
 	char			*tempStr;
 	int             tempStrSize = TEMPSTRSIZE;
 	ModelInfo		*m;
@@ -32832,17 +32842,25 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
 
+    clP = m->clP;
+    for (k=0; k<m->numGammaCats; k++)
+        {
+        clP[k] =  clFP;
+        clFP += m->numChars * m->numModelStates;
+        }
+
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
 	
 	/* cycle over the compressed characters */
-	for (c=i=0; c<m->numChars; c++)
+	for (c=0; c<m->numChars; c++)
 		{
 		cL[0] = cL[1] = 0.0;
 		for (k=0; k<m->numGammaCats; k++)
 			{
-			cL[0] += clFP[i++];
-			cL[1] += clFP[i++];
+			cL[0] += clP[k][0];
+			cL[1] += clP[k][1];
+            clP[k]+=2;
 			}
 		cL[0] *= (CLFlt) (bs[0] * freq);
 		cL[1] *= (CLFlt) (bs[1] * freq);
@@ -32887,7 +32905,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 	const int		*rateCat;
 	MrBFlt			*bsVals;
 	CLFlt			*cL, sum, pInvar=0.0, freq, f, bs[64];
-	const CLFlt		*clFP, *clInvar=NULL, *lnScaler;
+	const CLFlt		*clFP, *clInvar=NULL, *lnScaler, **clP;
 	char			*tempStr, *printedChar;
 	int             tempStrSize = TEMPSTRSIZE;
 	ModelInfo		*m;
@@ -32935,6 +32953,17 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
+
+    if (m->gibbsGamma == NO)
+        {
+        /* find conditional likelihood pointers */
+        clP = m->clP;
+        for (k=0; k<m->numGammaCats; k++)
+            {
+            clP[k] = clFP;
+            clFP += m->numChars * m->numModelStates;
+            }
+        }
     
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
@@ -32977,7 +33006,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 			for (k=0; k<nGammaCats; k++)
 				{
 				for (i=0; i<nStates; i++)
-					cL[i] += *(clFP++);
+					cL[i] += *(clP[k]++);
 				}
 			for (i=0; i<nStates; i++)
 				cL[i] *= bs[i];
@@ -38920,7 +38949,7 @@ int RunChain (SafeLong *seed)
 			i = chainId[chn];
             theMove->nTried[i]++;
             theMove->nTotTried[i]++;
-            if (abortMove == NO && RandomNumber(seed) < r)
+            if ( abortMove == NO && RandomNumber(seed) < r)
 				{
 				acceptMove = YES;
                 theMove->nAccepted[i]++;
