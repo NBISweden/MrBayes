@@ -877,7 +877,7 @@ typedef struct model
 	char		revMatPr[100];     /* prior for GTR model                          */
 	MrBFlt		revMatFix[6];
 	MrBFlt		revMatDir[6];
-	MrBFlt		revRateExp;        /* prior for mixed GTR subspace model           */
+	MrBFlt		revMatSymDir;      /* prior for mixed GTR subspace model           */
 	char		aaModelPr[100];    /* prior for amino acid model                   */
 	char		aaModel[100];
 	MrBFlt		aaModelPrProbs[10];

@@ -622,7 +622,7 @@ int InitializeMrBayes (void)
 		defaultModel.revMatFix[i] = 1.0;
 		defaultModel.revMatDir[i] = 1.0;
 		}
-    defaultModel.revRateExp = 1.0;                  /* default prior for GTR mixed model          */
+    defaultModel.revMatSymDir = 1.0;                /* default prior for GTR mixed model          */
 	strcpy (defaultModel.aaRevMatPr, "Dirichlet");  /* prior for GTR model (proteins)             */
 	for (i=0; i<190; i++)
 		{

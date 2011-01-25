@@ -10196,11 +10196,11 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    the GTR model subspace when 'nst' is set to 'mixed' (see the \n");
         MrBayesPrint ("                    'lset' command). The only option is                          \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset revratepr = exponential(<number>)                   \n");
+		MrBayesPrint ("                       prset revratepr = symdir(<number>)                        \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    which will associate each independent rate in the rate matrix\n");
-		MrBayesPrint ("                    with an exponential prior distribution with the specified    \n");
-		MrBayesPrint ("                    rate parameter.                                              \n");
+		MrBayesPrint ("                    with a symmetric Dirichlet prior with the specified alpha    \n");
+		MrBayesPrint ("                    parameter for each independent rate.                         \n");
 		MrBayesPrint ("   Aamodelpr     -- This parameter sets the rate matrix for amino acid data.     \n");
 		MrBayesPrint ("                    You can either fix the model by specifying aamodelpr=        \n");
 		MrBayesPrint ("                    fixed(<model name>), where <model name> is 'poisson' (a      \n");
@@ -13676,7 +13676,7 @@ void SetUpParms (void)
 	PARAM   (243, "Ibr",            DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
-    PARAM   (246, "Revratepr",      DoPrsetParm,       "Exponential|\0");
+    PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary) 

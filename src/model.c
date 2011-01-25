@@ -4659,14 +4659,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Revratepr (revRatePr) ****************************************************/
+		/* set Revratepr (revSymDirPr) ****************************************************/
 		else if (!strcmp(parmName, "Revratepr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
 			else if (expecting == Expecting(ALPHA))
 				{
-				if (IsArgValid(tkn, tempStr) == ERROR)  /* we only allow exponential prior, so no need to store the value */
+				if (IsArgValid(tkn, tempStr) == ERROR)  /* we only allow symmetric dirichlet prior, so no need to store the value */
 					{
 					MrBayesPrint ("%s   Invalid Revratepr argument\n", spacer);
 					return (ERROR);
@@ -4689,14 +4689,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 						sscanf (tkn, "%lf", &tempD);
 						if (tempD <= 0.0)
 							{
-							MrBayesPrint ("%s   Exponential rate parameter must be positive\n", spacer);
+							MrBayesPrint ("%s   Symmetric Dirichlet parameter must be positive\n", spacer);
 							return (ERROR);
 							}
-						modelParams[i].revRateExp = tempD;
+						modelParams[i].revMatSymDir = tempD;
 						if (nApplied == 0 && numCurrentDivisions == 1)
-							MrBayesPrint ("%s   Setting Revratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].revRateExp);
+                            MrBayesPrint ("%s   Setting Revratepr to Symmetric Dirichlet(%1.2lf)\n", spacer, modelParams[i].revMatSymDir);
 						else
-							MrBayesPrint ("%s   Setting Revratepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].revRateExp, i+1);
+                            MrBayesPrint ("%s   Setting Revratepr to Symmetric Dirichlet(%1.2lf) for partition %d\n", spacer, modelParams[i].revMatSymDir, i+1);
 						expecting  = Expecting(RIGHTPAR);
 						}
 					}
@@ -9800,8 +9800,8 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
                     {
                     for (j=0; j<6; j++)
                         {
-                        value[j] = 1.0;
-                        intValue[j] = 0;
+                        value[j] = 1.0 / 6.0;
+                        intValue[j] = j;
                         }
                     }
 				}
@@ -11581,7 +11581,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                 isSame = NO;
 			if (!strcmp(modelParams[part1].nst,"Mixed"))
 				{
-				if (AreDoublesEqual (modelParams[part1].revRateExp, modelParams[part2].revRateExp, (MrBFlt) 0.00001) == NO)
+				if (AreDoublesEqual (modelParams[part1].revMatSymDir, modelParams[part2].revMatSymDir, (MrBFlt) 0.00001) == NO)
 					isSame = NO;
 				}
             else if (!strcmp(modelParams[part1].nst,"6") && !strcmp(modelParams[part1].revMatPr,"Dirichlet") && !strcmp(modelParams[part2].revMatPr,"Dirichlet"))
@@ -19157,23 +19157,23 @@ void SetUpMoveTypes (void)
 	mt->Autotune = &AutotuneDirichlet;
 	mt->targetRate = 0.25;
 
-	/* Move_Revmat_Multiplier */
+	/* Move_Revmat_DirMix */
 	mt = &moveTypes[i++];
-	mt->name = "Multiplier";
-	mt->shortName = "Multiplier";
-	mt->tuningName[0] = "Multiplier tuning parameter";
-	mt->shortTuningName[0] = "lambda";
+	mt->name = "Dirichlet proposal";
+	mt->shortName = "Dirichlet";
+	mt->tuningName[0] = "Dirichlet parameter";
+	mt->shortTuningName[0] = "alpha";
 	mt->applicableTo[0] = REVMAT_MIX;
 	mt->nApplicable = 1;
-	mt->moveFxn = &Move_Revmat_Mult;
+	mt->moveFxn = &Move_Revmat_DirMix;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+	mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
+    mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
 
 
@@ -20661,7 +20661,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 if (!strcmp(mp->nst,"Mixed"))
                     {
                     MrBayesPrint ("%s            Prior      = All GTR submodels have equal probability\n", spacer); 
-                    MrBayesPrint ("%s                         All revmat rates have an Exponential(%1.2lf) prior\n", spacer, mp->revRateExp);
+                    MrBayesPrint ("%s                         All revmat rates have a Symmetric Dirichlet(%1.2lf) prior\n", spacer, mp->revMatSymDir);
                     }
     			else if (!strcmp(mp->revMatPr,"Dirichlet"))
                     {

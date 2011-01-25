@@ -148,6 +148,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_MOVE_TREEAGE
 #undef  DEBUG_LNLIKELIHOODRATIO
 #undef  DEBUG_NNIClock
+#undef  DEBUG_SPLITMERGE
 #undef  SHOW_MOVE
 
 
@@ -14663,7 +14664,7 @@ MrBFlt LogPrior (int chain)
 
 {
 
-	int				i, j, c, n, nStates, *nEvents, sumEvents;
+	int				i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
 	const int		*rateCat;
 	MrBFlt			*st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
 					sR, eR, sF, freq, pInvar, lambda, sigma, nu, ibrvar, **rateMultiplier;
@@ -14719,14 +14720,40 @@ MrBFlt LogPrior (int chain)
                     alphaDir = mp->revMatDir;
                 else /* if (p->nValues == 190) */
                     alphaDir = mp->aaRevMatDir;
-				sum = 0.0;
+                sum = 0.0;
+                for (i=0; i<p->nValues; i++)
+                    sum += alphaDir[i];
+                x = LnGamma(sum);
+                for (i=0; i<p->nValues; i++)
+                    x -= LnGamma(alphaDir[i]);
 				for (i=0; i<p->nValues; i++)
-					sum += st[i];
-				for (i=0; i<p->nValues; i++)
-					newProp[i] = st[i] / sum;
-				x = 0.0;
-				for (i=0; i<p->nValues; i++)
-					x += (alphaDir[i] - 1.0) * log(newProp[i]);
+					x += (alphaDir[i] - 1.0) * log(st[i]);
+				lnPrior += x;
+				}
+			else if (p->paramId == REVMAT_MIX)
+				{
+				assert (p->nValues == 6);
+                alphaDir = &mp->revMatSymDir;
+                ist      = GetParamIntVals(p, chain, state[chain]); /* the growth fxn */
+                nRates   = GetKFromGrowthFxn(ist);
+                /* get the actual rate proportions of the current groups */
+                for (i=0; i<nRates; i++)
+                    {
+					newProp[i] = 0.0;
+                    nParts[i] = 0;
+                    }
+				for (i=0; i<6; i++)
+                    {
+                    nParts[ist[i]]++;
+                    newProp[ist[i]] += st[i];
+                    }
+                /* now we calculate probability as usual, with alpha
+                   parameter multiplied by number of parts */
+                x = LnGamma(6.0 * alphaDir[0]);
+                for (i=0; i<nRates; i++)
+                    x -= LnGamma(nParts[i] * alphaDir[0]);
+				for (i=0; i<nRates; i++)
+					x += (nParts[i] * alphaDir[0] - 1.0) * log(newProp[i]);
 				lnPrior += x;
 				}
 			else
@@ -14742,7 +14769,12 @@ MrBFlt LogPrior (int chain)
 				alphaDir = mp->omegaDir;
 				newProp[0] = st[0] / (st[0] + 1.0);
 				newProp[1] = 1.0 - newProp[0];
-				x = 0.0;
+                sum = 0.0;
+                for (i=0; i<2; i++)
+                    sum += alphaDir[i];
+                x = LnGamma(sum);
+                for (i=0; i<2; i++)
+                    x -= LnGamma(alphaDir[i]);
 				for (i=0; i<2; i++)
 					x += (alphaDir[i]-1.0)*log(newProp[i]);
 				lnPrior += x;
@@ -29756,28 +29788,125 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 /*----------------------------------------------------------------
 |
-|	Move_Revmat_Mult: Multiply one rate (for REVMAT_MIX)
+|	Move_Revmat_DirMix: Dirichlet proposal for REVMAT_MIX. From
+|      Huelsenbeck et al. (2004), but note that the prior density
+|      is different in that paper because they set the rate sum
+|      to 6, not to 1.
+|
 ----------------------------------------------------------------*/
-int Move_Revmat_Mult (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
-	int			*newGrowthFunction, *oldGrowthFunction;
-	MrBFlt		*newRate, *oldRate;
+	int			i, j, k, *growthFxn, nRates, isValid, groupSize[6];
+	MrBFlt		*value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, x, y;
 	ModelParams *mp;
     ModelInfo   *m;
 
 	/* get model params and settings */
 	mp = &modelParams[param->relParts[0]];
-    m  = &modelSettings[param->relParts[0]];
+	m  = &modelSettings[param->relParts[0]];
 
-    /* get the values we need */
-	newRate = GetParamVals (param, chain, state[chain]);
-	oldRate = GetParamVals (param, chain, state[chain] ^ 1);
-    newGrowthFunction = GetParamIntVals (param, chain, state[chain]);
-    oldGrowthFunction = GetParamIntVals (param, chain, state[chain] ^ 1);
+	/* get growthFunction and nRates */
+    value     = GetParamVals (param, chain, state[chain]);
+	growthFxn = GetParamIntVals (param, chain, state[chain]);
+    nRates    = GetKFromGrowthFxn(growthFxn);
 
-    /* TODO: Code needed here */
+    /* we can't do anything if there is only one rate */
+    if (nRates == 1)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+
+    /* extract unique rates from value vector */
+    for (i=0; i<nRates; i++)
+        oldRate[i] = 0.0;
+    for (i=0; i<6; i++)
+        oldRate[growthFxn[i]] += value[i];
+
+	/* get so called alpha_pi parameter and adjust for number of components */
+	alphaPi = mvp[0] * nRates;
+
+    /* get symmetric dirichlet parameter */
+    symDir  = mp->revMatSymDir;
+
+	/* multiply old ratesum props with some large number to get new values close to the old ones */
+	for (i=0; i<nRates; i++)
+		dirParm[i] = oldRate[i] * alphaPi;
+	
+	/* get new values */
+	isValid = NO;
+    do {
+        DirichletRandomVariable (dirParm, newRate, nRates, seed);
+    	isValid = YES;
+        for (i=0; i<nRates; i++)
+            {
+            if (newRate[i] < RATE_MIN)
+                {
+                isValid = NO;
+                break;
+                }
+            }
+        } while (isValid == NO);
+
+	/* copy new unique rate ratio values back into the value array */
+	for (i=0; i<nRates; i++)
+        {
+        k = 0;
+        for (j=i; j<6; j++)
+            {
+            if (growthFxn[j] == i)
+                k++;
+            }
+        for (j=i; j<6; j++)
+            {
+            if (growthFxn[j] == i)
+                value[j] = newRate[i] / (MrBFlt) k;
+            }
+        }
+	
+	/* get proposal ratio */
+	sum = 0.0;
+	for (i=0; i<nRates; i++)
+		sum += newRate[i]*alphaPi;
+	x = LnGamma(sum);
+	for (i=0; i<nRates; i++)
+		x -= LnGamma(newRate[i]*alphaPi);
+	for (i=0; i<nRates; i++)
+		x += (newRate[i]*alphaPi-1.0)*log(oldRate[i]);
+	sum = 0.0;
+	for (i=0; i<nRates; i++)
+		sum += oldRate[i]*alphaPi;
+	y = LnGamma(sum);
+	for (i=0; i<nRates; i++)
+		y -= LnGamma(oldRate[i]*alphaPi);
+	for (i=0; i<nRates; i++)
+		y += (oldRate[i]*alphaPi-1.0)*log(newRate[i]);
+	(*lnProposalRatio) = x - y;
+
+    /* get group sizes, needed for prior ratio */
+    for (i=0; i<nRates; i++)
+        groupSize[i] = 0;
+    for (i=0; i<6; i++)
+        groupSize[growthFxn[i]]++;
+
+	/* get prior ratio */
+	x = y = 0.0;
+	for (i=0; i<nRates; i++)
+		x += (groupSize[i]*symDir-1.0)*log(newRate[i]);
+	for (i=0; i<nRates; i++)
+		y += (groupSize[i]*symDir-1.0)*log(oldRate[i]);
+	(*lnPriorRatio) = x - y;
+
+	/* Set update flags for all partitions that share this revmat. Note that the conditional
+	   likelihood update flags have been set before we even call this function. */
+	for (i=0; i<param->nRelParts; i++)
+		TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+		
+	/* Set update flags for cijks for all affected partitions */
+	for (i=0; i<param->nRelParts; i++)
+		modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
 
@@ -29891,14 +30020,21 @@ int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 
 /*----------------------------------------------------------------
 |
-|	Move_Revmat_SplitMerge: Split or merge rates of rate matrix
+|	Move_Revmat_SplitMerge: Split or merge rates of rate matrix.
+|      See Huelsenbeck et al. (2004). Note that the proposal ratio
+|      differs by a factor K-1 from the one given in their paper in
+|      the second equation.
+|
 ----------------------------------------------------------------*/
 int Move_Revmat_SplitMerge (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
-	int			*newGrowthFunction, *oldGrowthFunction;
-	MrBFlt		*newRate, *oldRate;
+	int			i, j, k, index_i, index_j, n_i, n_j, foundFirstI, foundFirstJ,
+                *newGrowthFxn, *oldGrowthFxn, nOldRates, nNewRates, merge,
+                groupSize[6], nCompositeRates;
+	MrBFlt		R, R_i, R_j, u, *newValue, *oldValue, newRate[6], oldRate[6], symDir,
+                prob_split, prob_merge;
 	ModelParams *mp;
     ModelInfo   *m;
 
@@ -29907,12 +30043,295 @@ int Move_Revmat_SplitMerge (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
     m  = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
-	newRate = GetParamVals (param, chain, state[chain]);
-	oldRate = GetParamVals (param, chain, state[chain] ^ 1);
-    newGrowthFunction = GetParamIntVals (param, chain, state[chain]);
-    oldGrowthFunction = GetParamIntVals (param, chain, state[chain] ^ 1);
+    oldValue     = GetParamVals(param, chain, state[chain] ^ 1);
+    newValue     = GetParamVals(param, chain, state[chain]);
+    oldGrowthFxn = GetParamIntVals(param, chain, state[chain] ^ 1);
+    newGrowthFxn = GetParamIntVals (param, chain, state[chain]);
+    nOldRates    = GetKFromGrowthFxn(oldGrowthFxn);
+    symDir       = mp->revMatSymDir;
 
-    /* TODO: Code needed here */
+    /* get the old rates */
+    for (i=0; i<nOldRates; i++)
+        oldRate[i] = 0.0;
+    for (i=0; i<6; i++)
+        oldRate[oldGrowthFxn[i]] += oldValue[i];
+
+    /* decide whether to split or merge */
+    if (nOldRates == 1)
+        merge = NO;
+    else if (nOldRates == 6)
+        merge = YES;
+    else if (RandomNumber(seed) < 0.5)
+        merge = YES;
+    else
+        merge = NO;
+
+    /* now split or merge */
+    R = R_i = R_j = 0.0;
+    u = -1.0;
+    if (merge == YES)
+        {
+        /* merge two rates */
+        nNewRates = nOldRates - 1;
+
+        /* determine split and merge probs */
+        if (nNewRates == 1)
+            prob_split = 1.0;
+        else
+            prob_split = 0.5;
+        if (nOldRates == 6)
+            prob_merge = 1.0;
+        else
+            prob_merge = 0.5;
+
+        /* select two rates randomly */
+        index_i = (int) (RandomNumber(seed) * nOldRates);
+        index_j = (int) (RandomNumber(seed) * (nOldRates - 1));
+        if (index_j == index_i)
+            index_j = nOldRates - 1;
+
+        /* make sure index_i is lower index */
+        if (index_i > index_j)
+            {
+            i = index_i;
+            index_i = index_j;
+            index_j = i;
+            }
+
+        /* find group sizes */
+        n_i = n_j = 0;
+        for (i=0; i<6; i++)
+            {
+            if (oldGrowthFxn[i] == index_i)
+                n_i++;
+            else if (oldGrowthFxn[i] == index_j)
+                n_j++;
+            }
+
+        /* adjust growth function */
+        for (i=0; i<6; i++)
+            {
+            if (oldGrowthFxn[i] == index_j)
+                newGrowthFxn[i] = index_i;
+            else if (oldGrowthFxn[i] > index_j)
+                newGrowthFxn[i] = oldGrowthFxn[i] - 1;
+            else
+                newGrowthFxn[i] = oldGrowthFxn[i];
+            }
+
+        /* find the new rates */
+        for (i=0; i<nNewRates; i++)
+            {
+            if (i == index_i)
+                newRate[i] = (oldRate[index_i] + oldRate[index_j]);
+            else if (i < index_j)
+                newRate[i] = oldRate[i];
+            else if (i >= index_j)
+                newRate[i] = oldRate[i+1];
+            }
+
+        /* copy new unique rate values back into the value array */
+	    for (i=0; i<nNewRates; i++)
+            {
+            k = 0;
+            for (j=i; j<6; j++)
+                {
+                if (newGrowthFxn[j] == i)
+                    k++;
+                }
+            for (j=i; j<6; j++)
+                {
+                if (newGrowthFxn[j] == i)
+                    newValue[j] = newRate[i] / (MrBFlt) k;
+                }
+            }
+
+        /* get the new and old rates (sum over parts) */
+        R_i = oldRate[index_i];
+        R_j = oldRate[index_j];
+        R   = R_i + R_j;
+
+        /* check group sizes after merge (before split in back move) */
+        for (i=0; i<nNewRates; i++)
+            groupSize[i] = 0;
+        for (i=0; i<6; i++)
+            groupSize[newGrowthFxn[i]]++;
+        nCompositeRates = 0;
+        for (i=0; i<nNewRates; i++)
+            {
+            if (groupSize[i] > 1)
+                nCompositeRates++;
+            }
+
+        /* calculate prior ratio (different in the paper) */
+        (*lnPriorRatio) = LnGamma(n_i * symDir) + LnGamma(n_j * symDir) - LnGamma ((n_i + n_j) * symDir);
+        (*lnPriorRatio) += ((n_i + n_j) * symDir - 1.0) * log(R) - (n_i * symDir - 1.0) * log(R_i) - (n_j * symDir - 1.0) * log(R_j);
+
+        /* calculate proposal ratio */
+        (*lnProposalRatio) = log ( (prob_split / prob_merge) * ((nOldRates * (nOldRates - 1)) / (2.0 * nCompositeRates)) * (1.0 / ((pow(2, n_i + n_j - 1) - 1) * R)) );
+
+        /* no Jacobian (different in the paper) */
+        }
+    else
+        {
+        /* split two rates */
+        nNewRates = nOldRates + 1;
+
+        /* determine split and merge probs */
+        if (nNewRates == 6)
+            prob_merge = 1.0;
+        else
+            prob_merge = 0.5;
+        if (nOldRates == 1)
+            prob_split = 1.0;
+        else
+            prob_split = 0.5;
+
+        /* check group sizes before split */
+        for (i=0; i<nOldRates; i++)
+            groupSize[i] = 0;
+        for (i=0; i<6; i++)
+            groupSize[oldGrowthFxn[i]]++;
+        nCompositeRates = 0;
+        for (i=0; i<nOldRates; i++)
+            {
+            if (groupSize[i] > 1)
+                nCompositeRates++;
+            }
+
+        /* randomly select a rate with two or more components to split */
+        k = (int) (RandomNumber(seed) * nCompositeRates);
+
+        for (i=j=0; i<nOldRates; i++)
+            {
+            if (groupSize[i] > 1)
+                {
+                if (k == j)
+                    break;
+                j++;
+                }
+            }
+        assert (i < nOldRates && groupSize[i] > 1);
+        index_i = i; 
+
+        /* adjust growth function */
+        do {
+            foundFirstI = foundFirstJ = NO;
+            k = 0;
+            index_j = -1;
+            for (i=0; i<6; i++)
+                {
+                if (oldGrowthFxn[i] == index_i)
+                    {
+                    if (foundFirstI == NO)
+                        {
+                        newGrowthFxn[i] = index_i;
+                        foundFirstI = YES;
+                        }
+                    else
+                        {
+                        if (RandomNumber(seed) < 0.5)
+                            {
+                            if (foundFirstJ == NO)
+                                {
+                                foundFirstJ = YES;
+                                index_j = k + 1;    /* one more than previous max */
+                                newGrowthFxn[i] = index_j;
+                                }
+                            else
+                                {
+                                newGrowthFxn[i] = index_j;
+                                }
+                            }
+                        else
+                            newGrowthFxn[i] = index_i;
+                        }
+                    }
+                else if (foundFirstJ == YES && oldGrowthFxn[i] >= index_j)
+                    newGrowthFxn[i] = oldGrowthFxn[i] + 1;
+                else
+                    newGrowthFxn[i] = oldGrowthFxn[i];
+                if (foundFirstJ == NO && oldGrowthFxn[i] > k)
+                    k = oldGrowthFxn[i];
+                }
+            } while (foundFirstJ == NO);
+
+        /* find group sizes */
+        n_i = n_j = 0;
+        for (i=0; i<6; i++)
+            {
+            if (newGrowthFxn[i] == index_i)
+                n_i++;
+            else if (newGrowthFxn[i] == index_j)
+                n_j++;
+            }
+
+        /* find old rate */
+        R = oldRate[index_i];
+
+        /* propose new rates */
+        u = RandomNumber(seed) * R;
+        R_i = u;
+        R_j = R - u;
+
+        /* set the new rates */
+        for (i=0; i<nNewRates; i++)
+            {
+            if (i == index_i)
+                newRate[i] = R_i;
+            else if (i == index_j)
+                newRate[i] = R_j;
+            else if (i > index_j)
+                newRate[i] = oldRate[i-1];
+            else
+                newRate[i] = oldRate[i];
+            }
+
+        /* copy new unique rate values back into the value array */
+	    for (i=0; i<nNewRates; i++)
+            {
+            k = 0;
+            for (j=i; j<6; j++)
+                {
+                if (newGrowthFxn[j] == i)
+                    k++;
+                }
+            for (j=i; j<6; j++)
+                {
+                if (newGrowthFxn[j] == i)
+                    newValue[j] = newRate[i] / (MrBFlt) k;
+                }
+            }
+
+        /* calculate prior ratio (different in the paper) */
+        (*lnPriorRatio) = LnGamma((n_i + n_j) * symDir) - LnGamma(n_i * symDir) - LnGamma(n_j * symDir);
+        (*lnPriorRatio) += (n_i * symDir - 1.0) * log(R_i) + (n_j * symDir - 1.0) * log(R_j) - ((n_i + n_j) * symDir - 1.0) * log(R);;
+
+        /* calculate proposal ratio */
+        (*lnProposalRatio) = log ( (prob_merge / prob_split) * ((2.0 * nCompositeRates) / (nNewRates * (nNewRates - 1))) * ((pow(2, n_i + n_j - 1) - 1) * R) );
+
+        /* no Jacobian (different in the paper) */
+        }
+
+#if defined (DEBUG_SPLITMERGE)
+    printf ("prob_merge=%f prob_split=%f nCompositeRates=%d nOldRates=%d nNewRates=%d\n", prob_merge, prob_split, nCompositeRates, nOldRates, nNewRates);
+    printf ("merge=%s n_i=%d n_j=%d, u=%f R=%f R_i=%f R_j=%f\n", merge == NO ? "NO" : "YES", n_i, n_j, u, R, R_i, R_j);
+    printf ("Old rates={%f,%f,%f,%f,%f,%f}\n", oldValue[0], oldValue[1], oldValue[2], oldValue[3], oldValue[4], oldValue[5]);
+    printf ("Old growth fxn={%d,%d,%d,%d,%d,%d}\n", oldGrowthFxn[0], oldGrowthFxn[1], oldGrowthFxn[2], oldGrowthFxn[3], oldGrowthFxn[4], oldGrowthFxn[5]);
+    printf ("New rates={%f,%f,%f,%f,%f,%f}\n", newValue[0], newValue[1], newValue[2], newValue[3], newValue[4], newValue[5]);
+    printf ("New growth fxn={%d,%d,%d,%d,%d,%d}\n", newGrowthFxn[0], newGrowthFxn[1], newGrowthFxn[2], newGrowthFxn[3], newGrowthFxn[4], newGrowthFxn[5]);
+    printf ("lnPriorRatio=%f  lnProposalRatio=%f\n", *lnPriorRatio, *lnProposalRatio);
+    getchar();
+#endif
+
+    /* Set update flags for all partitions that share this revmat. Note that the conditional
+	   likelihood update flags have been set before we even call this function. */
+	for (i=0; i<param->nRelParts; i++)
+		TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+		
+	/* Set update flags for cijks for all affected partitions */
+	for (i=0; i<param->nRelParts; i++)
+		modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
 
@@ -34963,20 +35382,6 @@ int PrintStates (int curGen, int coldId)
             if (!strcmp(mp->revmatFormat,"Ratio"))
 			    {
 			    sum = st[p->nValues-1];
-			    for (j=0; j<p->nValues; j++)
-				    {
-				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
-				    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-				    }
-			    }
-            else if (p->paramId == REVMAT_MIX)
-   			    {
-                /* convert raw rates to rate proportions */
-                sum = 0.0;
-			    for (j=0; j<p->nValues; j++)
-                    {
-                    sum += st[j];
-                    }
 			    for (j=0; j<p->nValues; j++)
 				    {
 				    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
