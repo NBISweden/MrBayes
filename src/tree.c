@@ -4490,10 +4490,13 @@ int ResetTopology (Tree *t, char *s)
 
     /* relabel interior nodes, find number of nodes and root */
     t->nNodes = j;
-    t->nIntNodes = t->nNodes - numLocalTaxa;
-	if (t->isRooted)
-        t->nIntNodes--;
-    j = numLocalTaxa;
+    t->nIntNodes = t->nNodes/2 - 1;
+
+    if (t->isRooted == NO)
+        j = t->nNodes - t->nIntNodes;
+    else
+        j = t->nNodes - t->nIntNodes - 1;
+
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = &t->nodes[i];

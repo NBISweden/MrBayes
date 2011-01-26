@@ -1822,7 +1822,7 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 	n = chainParams.numRuns;
 	min = (int) (chainParams.minPartFreq * stat->numSamples);
 
-    /*recursevly compute partition frequencies for all subpartitions*/
+    /* recursively compute partition frequencies for all subpartitions */
 	if (p->left != NULL) 
 		CalcPartFreqStats (p->left, stat);
 	if (p->right != NULL)
@@ -1923,7 +1923,7 @@ void CalculateTopConvDiagn (int numSamples)
 				for (j=0; j<chainParams.numRuns; j++)
 					stat->pair[i][j] = 0.0;
 			}
-		
+	
 		CalcPartFreqStats (partFreqTreeRoot[n], stat);
 		
         stat->avgStdDev = stat->sum / stat->numPartitions;
