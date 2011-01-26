@@ -1562,7 +1562,7 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
 
     /* order the tips randomly, use last as root */
     for (i=0; i<nTips-1; i++) {
-        j = (int) RandomNumber(seed)*(nTips-1-i);
+        j = (int) (RandomNumber(seed)*(nTips-1-i));
         j += i;
         p = t->allDownPass[i];
         t->allDownPass[i] = t->allDownPass[j];
@@ -1574,6 +1574,8 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
     q = t->allDownPass[0];
     r = t->allDownPass[1];
     p = t->intDownPass[j++];
+    q->anc   = p;
+    r->anc   = p;
     p->left  = q;
     p->right = r;
     q = t->allDownPass[nTips-1];
@@ -1587,8 +1589,8 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
     for (i=2; i<nTips-1; i++) {
         r = t->allDownPass[i];
         p = t->intDownPass[j++];
-        GetParsDP(t, t->root, chain);
-        GetParsFP(t, t->root, chain);
+        GetParsDP(t, t->root->left, chain);
+        GetParsFP(t, t->root->left, chain);
         q = FindBestNode(t, t->root->left, r, &length, chain);
         p->left = q;
         p->right = r;
@@ -1598,6 +1600,7 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
         else
             q->anc->right = p;
         q->anc = p;
+        r->anc = p;
     }
 
     /* take care of the root */
@@ -7667,6 +7670,7 @@ int DoMcmc (void)
         else if (!strcmp(chainParams.startTree,"Parsimony"))
             {
             MrBayesPrint ("%s   Rebuilding starting trees using random addition sequences and parsimony\n", spacer);
+            BuildParsTrees(&seed);
             }
 
         /* Perturb start trees if requested */
@@ -9304,7 +9308,7 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLengt
 		m = &modelSettings[division];
 
 		/* Find number of site patterns */
-		nSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
+		nSitesOfPat = numSitesOfPat + ((1 % chainParams.numChains) * numCompressedChars) + m->compCharStart;
 
 		/* Find final-pass parsimony sets for the node and its ancestor */
 		pP    = m->parsSets[p->index      ];
@@ -9814,7 +9818,7 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
     pD  = m->parsSets[destination];
 		
 	/* Find number of site patterns */
-	nSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
+	nSitesOfPat = numSitesOfPat + ((1 % chainParams.numChains) * numCompressedChars) + m->compCharStart;//chainId[chain]
 
     if (m->nParsIntsPerSite == 1)
         {
@@ -9831,6 +9835,7 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
         }
     else /* if (m->nParsIntsPerSite == 2) */
         {
+        assert(m->nParsIntsPerSite == 2);
         for (c=i=0; c<m->numChars; c++)
 		    {
             x[0] = pS1[i]   & pS2[i];
@@ -9922,11 +9927,11 @@ void GetParsFP (Tree *t, TreeNode *p, int chain)
 				    x[0] = pP[c] & pA[c];
 
 				    if (x[0] != pA[c])
-					    {
+					    {/*means that we allow change of state from p to a*/
 					    if ((pL[c] & pR[c]) != 0)
-						    x[0] = ((pL[c] | pR[c]) & pA[c]) | pP[c] ;
+						    x[0] = ((pL[c] | pR[c]) & pA[c]) | pP[c] ;/*we still allow only one change from both children of p through p to a. So state from a  that belong to one of the children of p can be added to pP[c], if p assume the state then the only change would be on the other child. */
 					    else
-						    x[0] = pP[c] | pA[c];
+						    x[0] = pP[c] | pA[c]; /*Here we allow two change from both children of p through p to a *//*adding pA[c] to pP[c] means that if p assume state exclusive in a theneven if both children will be in different state from p we still get optimal parsimony*/
 					    }
 				    pP[c] = x[0];
 				    }
@@ -36431,7 +36436,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 #	if defined (MPI_ENABLED)
 	int			numLocalColdChains, numFirstAndLastCold;
 	
-	if (curGen == 1)
+	if (curGen == 0)
 		{
         if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
             {
@@ -36510,7 +36515,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 	
 #	else
 
-	if (curGen == 1)
+	if (curGen == 0)
 		{
         if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
             {
@@ -39223,6 +39228,11 @@ int RunChain (SafeLong *seed)
 	CPUTime = 0.0;
 	previousCPUTime = clock();
 
+    if( numPreviousGen==0 ){
+        n=0;
+        goto printState;
+        }
+
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
 		{
 		currentCPUTime = clock();
@@ -39426,13 +39436,14 @@ int RunChain (SafeLong *seed)
 				}
 			}
 
+printState:
         /* print information to screen */
-		if (n == 1 || n % chainParams.printFreq == 0)
+		if ( n % chainParams.printFreq == 0)
 			PrintToScreen(n, numPreviousGen, time(0), startingT);
 
         /* print information to files */
 		/* this will also add tree samples to topological convergence diagnostic counters */
-		if (n == 1 || n == chainParams.numGen || n % chainParams.sampleFreq == 0)
+		if ( n == chainParams.numGen || n % chainParams.sampleFreq == 0)
 			{
 #			if defined (MPI_ENABLED)
 			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
