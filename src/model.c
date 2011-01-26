@@ -9249,7 +9249,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 theValueMin = ETA;
                 theValueMax = 1.0;
                 }
-            if (param->nIntValues == YES && nValuesRead==numExpectedValues && useIntValues == NO)
+            if (param->nIntValues > 0 && nValuesRead==numExpectedValues && useIntValues == NO)
                 {
                 /* continue with intValues */
                 nValuesRead = 0;
@@ -9291,7 +9291,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                     tempInt = -tempInt;
                 foundDash = NO;
                 }
-			if (tempFloat < theValueMin || tempFloat > theValueMax)
+			if (useIntValues == NO && (tempFloat < theValueMin || tempFloat > theValueMax))
 				{
 				MrBayesPrint ("%s   The value is out of range (min = %lf; max = %lf)\n", spacer, theValueMin, theValueMax);
 				return (ERROR);
@@ -9801,7 +9801,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
                     for (j=0; j<6; j++)
                         {
                         value[j] = 1.0 / 6.0;
-                        intValue[j] = j;
+                        intValue[j] = 0;
                         }
                     }
 				}

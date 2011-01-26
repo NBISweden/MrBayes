@@ -14759,6 +14759,8 @@ MrBFlt LogPrior (int chain)
                     x -= LnGamma(nParts[i] * alphaDir[0]);
 				for (i=0; i<nRates; i++)
 					x += (nParts[i] * alphaDir[0] - 1.0) * log(newProp[i]);
+                /* finally take model probability into account */
+                x += log (1.0 / 203);
 				lnPrior += x;
 				}
 			else
