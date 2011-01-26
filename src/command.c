@@ -61,7 +61,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    58  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						246
+#define	NUMPARAMS						247
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -13679,8 +13679,7 @@ void SetUpParms (void)
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 250) in paramTable[] (global.h: may not be necessary) 
-	         and at the top of this file. */
+	         change the number of elements (now 247) in paramTable[] at the top of this file. */
 
 }
 

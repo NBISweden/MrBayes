@@ -33377,17 +33377,6 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
-
-    if (m->gibbsGamma == NO)
-        {
-        /* find conditional likelihood pointers */
-        clP = m->clP;
-        for (k=0; k<m->numGammaCats; k++)
-            {
-            clP[k] = clFP;
-            clFP += m->numChars * m->numModelStates;
-            }
-        }
     
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
@@ -33423,6 +33412,13 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 		}
 	else
 		{
+        /* find conditional likelihood pointers */
+        clP = (const CLFlt**)m->clP;
+        for (k=0; k<m->numGammaCats; k++)
+            {
+            clP[k] = clFP;
+            clFP += m->numChars * m->numModelStates;
+            }
 		for (c=0; c<m->numChars; c++)
 			{
 			for (i=0; i<nStates; i++)
@@ -33558,17 +33554,6 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
-
-    if (m->gibbsGamma == NO)
-        {
-        /* find conditional likelihood pointers */
-        clP = m->clP;
-        for (k=0; k<m->numGammaCats; k++)
-            {
-            clP[k] = clFP;
-            clFP += m->numChars * m->numModelStates;
-            }
-        }
     
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
@@ -33604,6 +33589,14 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 		}
 	else
 		{
+        /* find conditional likelihood pointers */
+        clP = (const CLFlt**)m->clP;
+        for (k=0; k<m->numGammaCats; k++)
+            {
+            clP[k] = clFP;
+            clFP += m->numChars * m->numModelStates;
+            }
+
 		for (c=0; c<m->numChars; c++)
 			{
 			cL[A] = cL[C] = cL[G] = cL[T] = 0.0;
@@ -33686,9 +33679,9 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
 {
 
-	int				c, i, j, k, s, nStates;
+	int				c, i, j, k, s, nStates, numReps;
 	MrBFlt			*bsBase, *bs, freq;
-	CLFlt			*clFP, *cL, sum;
+	CLFlt			*clFP, *cL, sum,** clP;
 	char			*tempStr;
 	int			    tempStrSize = TEMPSTRSIZE;
 	ModelInfo		*m;
@@ -33708,6 +33701,23 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 	
 	/* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
+
+    numReps=0;
+	for (c=0; c<m->numChars; c++)
+		{
+		if ( m->nStates[c] == 2 )
+				numReps += m->numBetaCats * 2;
+			else
+				numReps += m->nStates[c];
+		}
+
+    /* find conditional likelihood pointers */
+    clP = m->clP;
+    for (k=0; k<m->numGammaCats; k++)
+        {
+        clP[k] = clFP;
+        clFP += numReps;
+        }
 
 	/* find the preallocated working space */
 	cL = m->ancStateCondLikes;
@@ -33729,8 +33739,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
                 for (k=0; k<m->numGammaCats; k++)
 			        {
 		            for (s=0; s<nStates; s++)
-			            cL[s] += clFP[s] * (CLFlt)(bs[s] * freq);
-    		        clFP += nStates;
+			            cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
+    		        clP[k] += nStates;
                     }
                 bs += nStates;
 		        }
@@ -33741,8 +33751,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
             for (k=0; k<m->numGammaCats; k++)
 		        {
 	            for (s=0; s<nStates; s++)
-		            cL[s] += clFP[s] * (CLFlt)(bs[s] * freq);
-		        clFP += nStates;
+		            cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
+		        clP[k] += nStates;
                 }
 	        }
 
