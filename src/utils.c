@@ -1198,13 +1198,13 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 \param vals[0..nRuns][count[]]   All records for all runs 
 \param nRuns                     Number of runs
 \param count[0..nRuns]           Number of records in each run
-\param returnESS[0..nRuns]       Is an arry in which the routine retrurns ESS values for each run.
+\param returnESS[0..nRuns]       Is an arry in which the routine returns ESS values for each run.
 */
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
 
 	int		    i, j, lag, maxLag, samples;
-    MrBFlt      *values, mean, del1, del2,varStat;
+    MrBFlt      *values, mean, del1, del2, varStat=0.0;
     MrBFlt      gammaStat[2000];
         
     for( i=0; i<nRuns; i++)

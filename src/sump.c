@@ -1623,9 +1623,9 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	MrBayesPrint ("\n");
 	if (nRuns > 1)
 		{
-		MrBayesPrint ("%s   * Convergence diagnostic (ESS = Esimateed Sample Size ) min and max values\n", spacer);
+		MrBayesPrint ("%s   * Convergence diagnostic (ESS = Estimated Sample Size); min and max values\n", spacer);
         MrBayesPrint ("%s     correspond to minimal and maximal ESS among runs. \n", spacer); 
-        MrBayesPrint ("%s     ESS value below 100 may indicate that the paramiter is undersampled. \n", spacer);
+        MrBayesPrint ("%s     ESS value below 100 may indicate that the parameter is undersampled. \n", spacer);
         MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
 		MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge.\n", spacer);
 		}
