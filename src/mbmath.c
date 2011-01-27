@@ -1933,7 +1933,6 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, SafeLong *seed)
 		}
 	for(i=0; i<n; i++)
 		z[i] /= sum;
-	
 }
 
 

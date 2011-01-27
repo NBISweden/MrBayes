@@ -71,5 +71,6 @@ void     SortMrBFlt (MrBFlt *item, int left, int right);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
 FILE    *TestOpenTextFileR (char *name);
+void     UpdateGrowthFxn(int *growthFxn);
 int      UpperTriangIndex(int i, int j, int size);
 int      WantTo (const char *msg);

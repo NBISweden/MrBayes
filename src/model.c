@@ -19196,17 +19196,43 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-	/* Move_Revmat_SplitMerge */
+	/* Move_Revmat_SplitMerge1 */
 	mt = &moveTypes[i++];
-	mt->name = "Split-merge move";
-	mt->shortName = "Splitmerge";
+	mt->name = "Split-merge move 1";
+	mt->shortName = "Splitmerge1";
+	mt->tuningName[0] = "Dirichlet parameter";
+	mt->shortTuningName[0] = "alpha";
 	mt->applicableTo[0] = REVMAT_MIX;
 	mt->nApplicable = 1;
-	mt->moveFxn = &Move_Revmat_SplitMerge;
+	mt->moveFxn = &Move_Revmat_SplitMerge1;
 	mt->relProposalProb = 1.0;
-	mt->numTuningParams = 0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 10.0;  /* alphaPi per rate */
+	mt->minimum[0] = 0.5;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+	mt->Autotune = &AutotuneDirichlet;
+	mt->targetRate = 0.25;
+
+	/* Move_Revmat_SplitMerge2 */
+	mt = &moveTypes[i++];
+	mt->name = "Split-merge move 2";
+	mt->shortName = "Splitmerge2";
+	mt->tuningName[0] = "Dirichlet parameter";
+	mt->shortTuningName[0] = "alpha";
+	mt->applicableTo[0] = REVMAT_MIX;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_Revmat_SplitMerge2;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 10.0;  /* alphaPi per rate */
+	mt->minimum[0] = 0.5;
+	mt->maximum[0] = 100.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+	mt->Autotune = &AutotuneDirichlet;
+	mt->targetRate = 0.25;
 
 	/* Move_Speciation */
 	mt = &moveTypes[i++];

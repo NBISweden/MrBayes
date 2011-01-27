@@ -1578,6 +1578,41 @@ FILE *TestOpenTextFileR (char *name)
 
 
 
+/*---------
+|
+|   UpdateGrowthFxn: We expect a set of unique indexes from 0 to 5
+|      indicating a partition of 6 rates into sets. We make sure
+|      the indices correspond to a restricted growth function here.
+|
+-----------------------*/
+void UpdateGrowthFxn(int *growthFxn)
+{
+    int     i, j, max, fxn[6];
+
+    for (i=0; i<6; i++)
+        fxn[i] = -1;
+
+    max = 0;
+    for (i=0; i<6; i++)
+        {
+        if (fxn[i] != -1)
+            continue;
+        for (j=i; j<6; j++)
+            {
+            if (growthFxn[j] == growthFxn[i])
+                fxn[j] = max;
+            }
+        max++;
+        }
+
+    for (i=0; i<6; i++)
+        growthFxn[i] = fxn[i];   
+}
+
+
+
+
+
 int UpperTriangIndex(int i, int j, int size)
 {
     if (i < j)

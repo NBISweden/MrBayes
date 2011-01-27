@@ -10229,8 +10229,13 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset revratepr = symdir(<number>)                        \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    which will associate each independent rate in the rate matrix\n");
-		MrBayesPrint ("                    with a symmetric Dirichlet prior with the specified alpha    \n");
-		MrBayesPrint ("                    parameter for each independent rate.                         \n");
+		MrBayesPrint ("                    with a modified symmetric Dirichlet prior, where a singleton \n");
+		MrBayesPrint ("                    rate has the specified alpha parameter, while a rate that    \n");
+		MrBayesPrint ("                    applies to n pairwise substitution types has an alpha that is\n");
+		MrBayesPrint ("                    n times the specified number. The higher the specified num-  \n");
+		MrBayesPrint ("                    ber, the more focused the prior will be on equal rates. The  \n");
+		MrBayesPrint ("                    default value is 1, which gives an effect similar to a flat  \n");
+		MrBayesPrint ("                    Dirichlet.                                                   \n");
 		MrBayesPrint ("   Aamodelpr     -- This parameter sets the rate matrix for amino acid data.     \n");
 		MrBayesPrint ("                    You can either fix the model by specifying aamodelpr=        \n");
 		MrBayesPrint ("                    fixed(<model name>), where <model name> is 'poisson' (a      \n");
