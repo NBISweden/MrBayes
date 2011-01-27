@@ -55,7 +55,7 @@ const char* const svnRevisionPlotC="$Rev$";   /* Revision keyword which is expen
 
 /* local (to this file) */
 int		foundCurly;
-char	*plotTokenP, plotToken[CMD_STRING_LENGTH];
+char	*plotTokenP;/* plotToken[CMD_STRING_LENGTH];*/
 
 
 

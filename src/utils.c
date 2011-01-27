@@ -457,13 +457,13 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
 {
 
     int     i, nVals;
-    MrBFlt  *theValues, *p;
+    MrBFlt  *theValues, *p, *ESS;
 
     nVals = 0;
     for (i=0; i<nRows; i++)
         nVals += rowCount[i];
 
-    theValues = (MrBFlt *) calloc (nVals, sizeof(MrBFlt));
+    theValues = (MrBFlt *) SafeMalloc ( (size_t) nVals* sizeof(MrBFlt));
 
     /* extract values */
     p = theValues;
@@ -482,6 +482,23 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     if (nRows > 1)
         theStats->PSRF = PotentialScaleReduction (vals, nRows, rowCount);
 
+    ESS =   (MrBFlt *) SafeMalloc ((size_t) nRows * sizeof(MrBFlt));
+
+    EstimatedSampleSize (vals, nRows, rowCount, ESS);
+    theStats->maxESS = theStats->minESS = ESS[0];
+    for(i=1; i<nRows; i++)
+        {
+        if(theStats->minESS > ESS[i] )
+            {
+            theStats->minESS = ESS[i];
+            }
+        if(theStats->maxESS < ESS[i] )
+            {
+            theStats->maxESS = ESS[i];
+            }
+        }
+
+    free (ESS);
     free (theValues);
 }
 
@@ -1122,6 +1139,12 @@ FILE *OpenTextFileW (char *name)
 
 
 
+/*!
+\param vals[0..nRuns][count[]]   All records for all runs 
+\param nRuns                     Number of runs
+\param count[0..nRuns]           Number of records in each run
+\return PSRF
+*/
 MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 
 {
@@ -1165,6 +1188,67 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 		}
 	else
 		return -1.0;
+}
+
+
+
+
+
+/*!
+\param vals[0..nRuns][count[]]   All records for all runs 
+\param nRuns                     Number of runs
+\param count[0..nRuns]           Number of records in each run
+\param returnESS[0..nRuns]       Is an arry in which the routine retrurns ESS values for each run.
+*/
+void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
+{
+
+	int		    i, j, lag, maxLag, samples;
+    MrBFlt      *values, mean, del1, del2,varStat;
+    MrBFlt      gammaStat[2000];
+        
+    for( i=0; i<nRuns; i++)
+        {
+        samples=count[i];
+        values=vals[i];
+        mean=0.0;
+        for(j=0; j<samples; j++ )
+            {
+            mean+=values[j];
+            }
+        mean /=samples;
+
+        maxLag = ((samples - 1) > 2000)?2000:(samples - 1);
+
+        for (lag = 0; lag < maxLag; lag++)
+            {
+            gammaStat[lag]=0;
+            for (j = 0; j < samples - lag; j++) 
+                {
+                del1 = values[j] - mean;
+                del2 = values[j + lag] - mean;
+                gammaStat[lag] += (del1 * del2);
+                }
+
+            gammaStat[lag] /= ((MrBFlt) (samples - lag));
+
+            if (lag == 0) 
+                {
+                varStat = gammaStat[0];
+                } 
+            else if (lag % 2 == 0) 
+                {
+                if (gammaStat[lag - 1] + gammaStat[lag] > 0) 
+                    {
+                    varStat += 2.0 * (gammaStat[lag - 1] + gammaStat[lag]);
+                    }
+                else
+                    maxLag = lag;
+                }
+            }
+        returnESS[i] = (gammaStat[0] * samples) / varStat;
+        }
+
 }
 
 

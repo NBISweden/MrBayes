@@ -6037,8 +6037,8 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
                 if (sum[0] != 0.0) condLikeUp[0] = clFA[0] / sum[0];
 				if (sum[1] != 0.0) condLikeUp[1] = clFA[1] / sum[1];
 				
-                *(clFP++) = (condLikeUp[0]*tiP[0] + condLikeUp[1]*tiP[2])*clDP[0];
-				*(clFP++) = (condLikeUp[0]*tiP[1] + condLikeUp[1]*tiP[3])*clDP[1];
+                *(clFP++) = (condLikeUp[0]*tiP[0] + condLikeUp[1]*tiP[1])*clDP[0];
+				*(clFP++) = (condLikeUp[0]*tiP[2] + condLikeUp[1]*tiP[3])*clDP[1];
 				
 				clFA += 2;
 				clDP += 2;
@@ -6123,14 +6123,12 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
                     if (sum != 0.0) condLikeUp[a] = clFA[a] / sum;
 					}
 					
-				for (a=0; a<nStates; a++)
+				for (a=j=0; a<nStates; a++)
 					{
 					sum = 0.0;
-					j = a;
 					for (i=0; i<nStates; i++)
 						{
-						sum += condLikeUp[i] * tiP[j];
-						j += nStates;
+						sum += condLikeUp[i] * tiP[j++];
 						}
 					*(clFP++) = sum * clDP[a];
 					}
@@ -6219,10 +6217,17 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 				if (sum[G] != 0.0) condLikeUp[G] = clFA[G] / sum[G];
 				if (sum[T] != 0.0) condLikeUp[T] = clFA[T] / sum[T];
 
+/*
                 clFP[A] = (condLikeUp[A]*tiP[AA] + condLikeUp[C]*tiP[CA] + condLikeUp[G]*tiP[GA] + condLikeUp[T]*tiP[TA])*clDP[A];
 				clFP[C] = (condLikeUp[A]*tiP[AC] + condLikeUp[C]*tiP[CC] + condLikeUp[G]*tiP[GC] + condLikeUp[T]*tiP[TC])*clDP[C];
 				clFP[G] = (condLikeUp[A]*tiP[AG] + condLikeUp[C]*tiP[CG] + condLikeUp[G]*tiP[GG] + condLikeUp[T]*tiP[TG])*clDP[G];
 				clFP[T] = (condLikeUp[A]*tiP[AT] + condLikeUp[C]*tiP[CT] + condLikeUp[G]*tiP[GT] + condLikeUp[T]*tiP[TT])*clDP[T];
+*/
+
+                clFP[A] = (condLikeUp[A]*tiP[AA] + condLikeUp[C]*tiP[AC] + condLikeUp[G]*tiP[AG] + condLikeUp[T]*tiP[AT])*clDP[A];
+				clFP[C] = (condLikeUp[A]*tiP[CA] + condLikeUp[C]*tiP[CC] + condLikeUp[G]*tiP[CG] + condLikeUp[T]*tiP[CT])*clDP[C];
+				clFP[G] = (condLikeUp[A]*tiP[GA] + condLikeUp[C]*tiP[GC] + condLikeUp[G]*tiP[GG] + condLikeUp[T]*tiP[GT])*clDP[G];
+				clFP[T] = (condLikeUp[A]*tiP[TA] + condLikeUp[C]*tiP[TC] + condLikeUp[G]*tiP[TG] + condLikeUp[T]*tiP[TT])*clDP[T];
 
 				clFA += 4;
 				clFP += 4;
@@ -6336,14 +6341,12 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
     					    condLikeUp[a] = clFA[a] / sum;
 					    }
     					
-				    for (a=0; a<nStates; a++)
+				    for (a=j=0; a<nStates; a++)
 					    {
 					    sum = 0.0;
-					    j = a;
 					    for (i=0; i<nStates; i++)
 						    {
-						    sum += condLikeUp[i] * tiP[j];
-						    j += nStates;
+						    sum += condLikeUp[i] * tiP[j++];
 						    }
 					    clFP[a] = sum * clDP[a];
 					    }
@@ -34273,8 +34276,8 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 	MCMCMove	*theMove;
     char        *diagnstat;
 
-    /* Simply print header if curGen == 1 */
-    if (curGen == 1)
+    /* Simply print header if curGen == 0 */
+    if (curGen == 0)
 		{
 		MrBayesPrintf (fpMcmc, "[LEGEND:\n");
 		MrBayesPrintf (fpMcmc, "   Gen                --  Generation\n");
@@ -35018,7 +35021,7 @@ int PrintStates (int curGen, int coldId)
 		}
 
 	/* Set up the header to the file. */
-	if (curGen == 1)
+	if (curGen == 0)
 		{
 		SafeSprintf (&tempStr, &tempStrSize, "[ID: %s]\n", stamp);
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -36008,7 +36011,7 @@ int PrintStatesToFiles (int curGen)
                     char *s = NULL;
 					StripComments (printString);
 					/* if it is the first tree, we strip out the translate block first (twice)*/
-					if (curGen==1) {
+					if (curGen==0) {
 					  if (strtok (printString, ";")==NULL) /* get translate lock */
                                               return (ERROR);
 					  if (strtok (NULL, ";")==NULL) 
@@ -36512,7 +36515,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 	else
 		MrBayesPrint ("[...%d remote chains...] ", (chainParams.numChains*chainParams.numRuns) - numLocalChains);
 
-	if (curGen > 1)
+	if (curGen > 0)
 		{
 		timePerGen = (MrBFlt) ((MrBFlt)(endingT-startingT)/(MrBFlt)curGen);
 		nSecs = (int)((chainParams.numGen - curGen) * timePerGen);
@@ -36579,7 +36582,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 			}
 		}
 		
-	if (curGen > 1)
+	if (curGen > 0)
 		{
 		timePerGen = (MrBFlt) ((MrBFlt)(endingT-startingT)/(MrBFlt)(curGen-startGen));
 		nSecs = (int)((chainParams.numGen - curGen) * timePerGen);
@@ -36662,7 +36665,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
 		}
 	
 	/* print the translate block information and the top of the file */
-	if (curGen == 1)
+	if (curGen == 0)
 		{
 		/* print #NEXUS and translation block information */
 		SafeSprintf (&tempStr, &tempStrSize, "#NEXUS\n");

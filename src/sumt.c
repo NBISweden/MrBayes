@@ -93,8 +93,8 @@ typedef struct
     }
     SumtFileInfo;
 
-#define	MAX_PARTITIONS		    10000
-#define	MAX_TREES				1000
+/*#define	MAX_PARTITIONS		    10000
+#define	MAX_TREES				1000 */
 #define ALLOC_LEN               100     /* number of values to allocate each time in partition counter nodes */
 
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
@@ -3837,7 +3837,8 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
 		sumtTokenP = &s[0];
 		do
 			{
-			GetToken (sumtToken, &tokenType, &sumtTokenP);
+			if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+                goto errorExit;
 			if (IsSame("[", sumtToken) == SAME)
 				inSumtComment = YES;
 			if (IsSame("]", sumtToken) == SAME)
@@ -3848,14 +3849,18 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
 				if (IsSame ("Param", sumtToken) == SAME)
 					{
 					/* extract the tree name */
-					GetToken (sumtToken, &tokenType, &sumtTokenP);	/* get the colon */
-					GetToken (sumtToken, &tokenType, &sumtTokenP);	/* get the tree name */
+					if(GetToken (sumtToken, &tokenType, &sumtTokenP))	/* get the colon */
+                        goto errorExit;
+					if(GetToken (sumtToken, &tokenType, &sumtTokenP))	/* get the tree name */
+                        goto errorExit;
 					strcpy (treeName, sumtToken);
-					GetToken (sumtToken, &tokenType, &sumtTokenP);
+					if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+                        goto errorExit;
 					while (IsSame("]", sumtToken) != SAME)
 						{
 						strcat (treeName, sumtToken);
-						GetToken (sumtToken, &tokenType, &sumtTokenP);
+						if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+                            goto errorExit;
 						}
 					inSumtComment = NO;
 					}

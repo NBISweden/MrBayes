@@ -727,8 +727,8 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		lastTokenWasDash = NO;
 		nNumbersOnThisLine = 0;
 		do {
-			GetToken (sumpToken, &tokenType, &sumpTokenP);
-
+			if(GetToken (sumpToken, &tokenType, &sumpTokenP))
+                goto errorExit;
             /*printf ("%s (%d)\n", sumpToken, tokenType);*/
 			if (IsSame("[", sumpToken) == SAME)
 				inSumpComment = YES;
@@ -821,7 +821,8 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		lastTokenWasDash = NO;
 		nNumbersOnThisLine = 0;
 		do {
-			GetToken (sumpToken, &tokenType, &sumpTokenP);
+			if(GetToken (sumpToken, &tokenType, &sumpTokenP))
+                goto errorExit;
 			if (IsSame("[", sumpToken) == SAME)
 				inSumpComment = YES;
 			if (IsSame("]", sumpToken) == SAME)
@@ -1553,22 +1554,22 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         MrBayesPrint ("%s   %*c                            95%% Cred. Interval\n", spacer, longestHeader, ' ');
 	MrBayesPrint ("%s   %*c                           --------------------\n", spacer, longestHeader, ' ');
 
-	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median", spacer, longestHeader-9, ' ');
+	MrBayesPrint ("%s   Parameter%*c     Mean      Variance     Lower       Upper       Median    min ESS*  max ESS", spacer, longestHeader-9, ' ');
 	if (nRuns > 1)
-		MrBayesPrint ("     PSRF+ ");
+		MrBayesPrint ("    PSRF+ ");
 	MrBayesPrint ("\n");
 
 	MrBayesPrint ("%s   ", spacer);
 	for (j=0; j<longestHeader+1; j++)
 		MrBayesPrint ("-");
-	MrBayesPrint ("----------------------------------------------------------");
+	MrBayesPrint ("-------------------------------------------------------------------------------");
 	if (nRuns > 1)
-		MrBayesPrint ("----------");
+		MrBayesPrint ("---------");
 	MrBayesPrint ("\n");
     if (nRuns > 1)
-        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\tPSRF\n");
+        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\tminESS\tmaxESS\tPSRF\n");
     else
-        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\n");
+        MrBayesPrintf (fp, "Parameter\tMean\tVariance\tLower\tUpper\tMedian\tminESS\tmaxESS\n");
 
 	/* print table values */
 	for (i=0; i<nHeaders; i++)
@@ -1588,13 +1589,15 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
 		
 		MrBayesPrint ("%s   %-*s ", spacer, longestHeader, temp);
-		MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+		MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf  %8.2lf  %8.2lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median,theStats.minESS, theStats.maxESS);
 		MrBayesPrintf (fp, "%s", temp);
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.mean));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.var));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.lower));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
+        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.minESS));
+        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.maxESS));
 		if (nRuns > 1)
 			{
 			if (theStats.PSRF < 0.0)
@@ -1614,13 +1617,16 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	MrBayesPrint ("%s   ", spacer);
 	for (j=0; j<longestHeader+1; j++)
 		MrBayesPrint ("-");
-	MrBayesPrint ("----------------------------------------------------------");
+	MrBayesPrint ("-------------------------------------------------------------------------------");
 	if (nRuns > 1)
-		MrBayesPrint ("----------");
+		MrBayesPrint ("---------");
 	MrBayesPrint ("\n");
 	if (nRuns > 1)
 		{
-		MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
+		MrBayesPrint ("%s   * Convergence diagnostic (ESS = Esimateed Sample Size ) min and max values\n", spacer);
+        MrBayesPrint ("%s     correspond to minimal and maximal ESS among runs. \n", spacer); 
+        MrBayesPrint ("%s     ESS value below 100 may indicate that the paramiter is undersampled. \n", spacer);
+        MrBayesPrint ("%s   + Convergence diagnostic (PSRF = Potential Scale Reduction Factor; Gelman\n", spacer);
 		MrBayesPrint ("%s     and Rubin, 1992) should approach 1.0 as runs converge.\n", spacer);
 		}
 	MrBayesPrint ("\n\n");
@@ -1814,7 +1820,8 @@ int ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *p
         column = 0;
         p = s;
 		do {
-			GetToken (sumpToken, &tokenType, &p);
+			if(GetToken (sumpToken, &tokenType, &p))
+                goto errorExit;
             if (IsSame("[", sumpToken) == SAME)
 				inSumpComment = YES;
 			if (IsSame("]", sumpToken) == SAME)

@@ -11,6 +11,8 @@ typedef struct
     MrBFlt          upper;
     MrBFlt          var;
     MrBFlt          PSRF;
+    MrBFlt          maxESS;
+    MrBFlt          minESS;
 	}
 	Stat;
 
@@ -55,6 +57,7 @@ FILE 	*OpenTextFileA (char *name);
 FILE    *OpenTextFileR (char *name);
 FILE 	*OpenTextFileW (char *name);
 MrBFlt   PotentialScaleReduction (MrBFlt **vals, int nRows, int *count);
+void     EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS);
 void    *SafeCalloc(size_t n, size_t s);
 int      SafeFclose(FILE **fp);
 void     SafeFree(void **ptr);

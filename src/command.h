@@ -4,7 +4,7 @@ int         CheckString (char **list, int len, char *token, int *matchIndex);
 int         CheckStringValidity (char *s);
 int         DoExecute (void);
 int         FreeMatrix (void);
-void     	GetToken (char *token, int *tokenType, char **sourceH);
+int     	GetToken (char *token, int *tokenType, char **sourceH);
 int      	FindValidCommand (char *tk, int *numMatches);
 int         IsArgValid (char *s, char *validArg);
 int         IsIn (char ch, char *s);

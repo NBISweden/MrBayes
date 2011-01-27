@@ -3308,11 +3308,11 @@ int DoExecute (void)
 	/* check that longest line is not longer than CMD_STRING_LENGTH */
 	if (longestLineLength >= CMD_STRING_LENGTH - 100)
 		{
-		MrBayesPrint ("%s   A maximum of %d characters is allowed on a single line\n", spacer, CMD_STRING_LENGTH - 100);
-		MrBayesPrint ("%s   in a file. The longest line of the file %s\n", spacer, inputFileName);
+		/*MrBayesPrint ("%s   A maximum of %d characters is allowed on a single line\n", spacer, CMD_STRING_LENGTH - 100);*/
+		MrBayesPrint ("%s   The longest line of the file %s\n", spacer, inputFileName);
 		MrBayesPrint ("%s   contains at least one line with %d characters.\n", spacer, longestLineLength);
-		nErrors++;
 		}
+    /*
 #	if defined (MPI_ENABLED)
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	if (sumErrors > 0)
@@ -3324,7 +3324,8 @@ int DoExecute (void)
 	if (nErrors > 0)
 		goto errorExit;
 #	endif
-	
+	*/
+
 	/* allocate a string long enough to hold a line */
 	s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
 	if (!s)
@@ -9077,15 +9078,17 @@ int GetNumPartDivisions (int n)
 
 
 
-void GetToken (char *token, int *tokenType, char **sourceH)
+int GetToken (char *token, int *tokenType, char **sourceH)
 
 {
 		
 	int				allNumbers, foundExp, foundExpSign;
 	register char	*temp;
+    char            *tempMax;
 	
 	(*tokenType) = 0;
 	temp = token;
+    tempMax = temp + CMD_STRING_LENGTH - 10;
 	
 	while (IsWhite(**sourceH) == 1 || IsWhite(**sourceH) == 2)
 		{
@@ -9108,12 +9111,22 @@ void GetToken (char *token, int *tokenType, char **sourceH)
         else
             {
             while (isgraph(**sourceH) && **sourceH!=';')
+                {
+                if( temp > tempMax )
+                    {
+                    *tokenType = NOTHING;
+                    token[20]='\0';
+                    MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
+                    MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                    return (ERROR);
+                    }
 			    *temp++ = *(*sourceH)++;
+                }
     		*tokenType = ALPHA;
             }
 		*temp = '\0';
 		readWord = NO;
-		return;
+		return (NO_ERROR);;
 		}
 
     *tokenType = UNKNOWN_TOKEN_TYPE;
@@ -9192,6 +9205,14 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 		(*sourceH)++;
 		while(**sourceH != '"' && **sourceH != '\0')
 			{
+            if( temp > tempMax )
+                {
+                *tokenType = NOTHING;
+                token[20]='\0';
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
+                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                return (ERROR);
+                }
 			*temp++ = *((*sourceH)++);
 			}
         *temp='\0';
@@ -9209,6 +9230,14 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 		*temp++ = *(*sourceH)++;
 		while(IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
 			{
+            if( temp > tempMax )
+                {
+                *tokenType = NOTHING;
+                token[20]='\0';
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
+                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                return (ERROR);
+                }
 			if(allNumbers == TRUE && !IsIn((*sourceH)[-1],"Ee") && **sourceH=='-')
                 break;
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
@@ -9266,6 +9295,7 @@ void GetToken (char *token, int *tokenType, char **sourceH)
 		}
 
 	*temp = '\0';
+    return (NO_ERROR);
 	
 }
 
@@ -10913,7 +10943,6 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
-			MrBayesPrint ("                    Normal/Fixed                   ");
 			if (!strcmp(mp->popSizePr, "Uniform"))
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeUni[0], mp->popSizeUni[1]);
 			else if (!strcmp(mp->popSizePr, "Lognormal"))
@@ -10924,8 +10953,9 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeGamma[0], mp->popSizeGamma[1]);
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->popSizeFix);
+            MrBayesPrint ("                    Normal/Fixed                   \n");
 
-			MrBayesPrint ("   Popvarpr          Equal/Variable              %s\n", mp->popVarPr);
+			MrBayesPrint ("   Popvarpr         Equal/Variable               %s\n", mp->popVarPr);
 
             /*
 			MrBayesPrint ("   Growthpr         Uniform/Exponential/         \n");
@@ -12797,7 +12827,11 @@ int ParseCommand (char *s)
 	do
 		{
 		/* Get the next token. A token is a valid word in a line. Token type is defined in "globals.h". */
-		GetToken (token, &tokenType, &tokenP);
+		if( GetToken (token, &tokenType, &tokenP))
+            {
+            inError = YES; 
+            break;
+            }
 		if (strlen(token) > 0 || tokenType == ALPHA)
 			{
 #			if defined (SHOW_TOKENS)
