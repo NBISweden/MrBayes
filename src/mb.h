@@ -582,6 +582,7 @@ typedef struct param
 	int				nStdStateFreqs;     /* number of std state frequencies				*/
 	MrBFlt			*stdStateFreqs;     /* pointer to std state frequencies				*/
 	int				**nEvents;		    /* number of branch events for Cpp model        */
+                                        /* nEvents[0..2*numCains][0..numNodes=2*numTaxa]*/
 	MrBFlt			***position;	    /* event positions for Cpp relaxed clock model  */
 	MrBFlt			***rateMult;	    /* rate multipliers for Cpp relaxed clock model */
     int             affectsLikelihood;  /* does parameter directly influence likelihood? */

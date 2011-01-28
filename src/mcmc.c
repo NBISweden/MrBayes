@@ -1816,11 +1816,13 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 /* CalcPartFreqStats: Calculate standard deviation of partition frequencies */
 void CalcPartFreqStats (PFNODE *p, STATS *stat)
 {
-	int 	i, j, n;
-	MrBFlt 	f, sum, sumsq, stdev, min;
+	int 	i, j, n, min;
+	MrBFlt 	f, sum, sumsq, stdev;
 
 	n = chainParams.numRuns;
-	min = (chainParams.minPartFreq * stat->numSamples);
+	min = (int)(chainParams.minPartFreq * stat->numSamples);
+    if( ((MrBFlt)min) != chainParams.minPartFreq * stat->numSamples )
+        min++;
 
     /* recursively compute partition frequencies for all subpartitions */
 	if (p->left != NULL) 

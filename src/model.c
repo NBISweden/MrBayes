@@ -161,15 +161,15 @@ MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char		colonPr[100], clockPr[30];
 
 /* other local variables (this file) */
-MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition      */
-int				intValsRowSize = 0;	         /* row size of intValues matrix				 */
-int			    *intValues = NULL;           /* stores int values of chain parameters        */
-Tree			**mcmcTree;                  /* pointers to trees for mcmc                   */
-int				paramValsRowSize = 0;	     /* row size of paramValues matrix				 */
-MrBFlt			*paramValues = NULL;         /* stores actual values of chain parameters     */
-int				*relevantParts = NULL;       /* partitions that are affected by this move    */
-Param			**subParamPtrs;		         /* pointer to subparams for topology params     */
-int				*stateSize;			         /* # states for each compressed char			 */
+MrBFlt			empiricalFreqs[200];         /* emprical base frequencies for partition                 */
+int				intValsRowSize = 0;	         /* row size of intValues matrix				            */
+int			    *intValues = NULL;           /* stores int values of chain parameters                   */
+Tree			**mcmcTree;                  /* pointers to trees for mcmc                              */
+int				paramValsRowSize = 0;	     /* row size of paramValues matrix				            */
+MrBFlt			*paramValues = NULL;         /* stores actual values and subvalues of chain parameters  */
+int				*relevantParts = NULL;       /* partitions that are affected by this move               */
+Param			**subParamPtrs;		         /* pointer to subparams for topology params                */
+int				*stateSize;			         /* # states for each compressed char			            */
 
 
 
@@ -1105,6 +1105,9 @@ int ChangeNumChains (int from, int to)
 	nRuns = chainParams.numRuns;
 	numGlobalChains = chainParams.numRuns * chainParams.numChains;
 
+
+    /*TODO: It seems that standard chars need to be processed as in changeNumRun. Check it!*/
+
 	/* Do the normal parameters */	
 	/* first save old values */
 	tempVals = paramValues;
@@ -1188,6 +1191,7 @@ int ChangeNumChains (int from, int to)
                         i1++;
                         }
                     }
+                assert( nCppEventParams==i1++ );
 				}
 			}
 		}
@@ -1222,7 +1226,7 @@ int ChangeNumChains (int from, int to)
             {
             if (chn >= to)
                 continue;
-
+            /*Here we move only one tree per chain/state?! Should not we move numTrees??*/
             fromIndex = (2*(run*from + chn) + 0) * numTrees;
             toIndex   = (2*(run*to   + chn) + 0) * numTrees;
             mcmcTree[toIndex]    = tempTrees[fromIndex];
@@ -1251,6 +1255,7 @@ int ChangeNumChains (int from, int to)
 			for (j=0; j<p->nSubParams; j++)
 				{
 				q = p->subParams[j];
+                assert( q->paramType != P_CPPEVENTS && q->paramType != BMBRANCHRATES);
 				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
 				if (to > from)
 					for (run=0; run<nRuns; run++)
@@ -1261,6 +1266,8 @@ int ChangeNumChains (int from, int to)
 			}
         else if (p->paramType == P_CPPEVENTS || p->paramType == BMBRANCHRATES)
             p->tree += (mcmcTree - oldMcmcTree);
+        else
+            assert( p->paramType==P_BRLENS || p->tree==NULL );
 		}
 
     
@@ -1276,7 +1283,7 @@ int ChangeNumChains (int from, int to)
                 }
             }
         }
-		
+
 	/* Do the moves */
 	/* first allocate space and set up default moves */
 	tempMoves = moves;
@@ -1328,6 +1335,7 @@ int ChangeNumRuns (int from, int to)
 	Tree		**oldMcmcTree;
 	MrBFlt		*oldParamValues;
 	MrBFlt		*stdStateFreqsOld;
+    int         *oldintValues;
 
 #if 0
     for (i=0; i<numParams; i++)
@@ -1446,6 +1454,8 @@ int ChangeNumRuns (int from, int to)
 	/* and finally the normal parameters */
 	oldParamValues = paramValues;
 	paramValues = (MrBFlt *) realloc ((void *) paramValues, paramValsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
+    oldintValues = intValues;
+    intValues = (int *) realloc ((void *) intValues, intValsRowSize * 2 * numGlobalChains * sizeof (int));
 	if (paramValues == NULL)
 		{
 		memAllocs[ALLOC_PARAMVALUES] = NO;
@@ -1456,6 +1466,7 @@ int ChangeNumRuns (int from, int to)
 		{
 		params[i].values += (paramValues - oldParamValues);
 		params[i].subValues += (paramValues - oldParamValues);
+        params[i].intValues += (intValues - oldintValues);
 		}
 
     /* fill new chains paramiters with appropriate values */
@@ -9761,6 +9772,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 	Param		*p;
 	ModelInfo	*m;
 	ModelParams	*mp;
+
 	
 
 	/* fill in values for nontree params for state 0 of chains */
@@ -9771,7 +9783,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 			p  = &params[k];
 			mp = &modelParams[p->relParts[0]];
 			m  = &modelSettings[p->relParts[0]];
-			
+
 			/* find model settings and nStates, pInvar, invar cond likes */
 
 			value = GetParamVals (p, chn, 0);
