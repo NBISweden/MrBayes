@@ -1933,11 +1933,11 @@ int DoSumt (void)
 
 {
 
-    int		        i, j=0, k, n, len, min, longestName, treeNo, numTreePartsToPrint,
+    int		        i, j=0, k, n, len, longestName, treeNo, numTreePartsToPrint,
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
 			        longestHeader;
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
-                    maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0;
+                    maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
 	PartCtr 	    *x;
 	char		    *s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], divString[100];
 	FILE		    *fp=NULL;
@@ -2237,7 +2237,7 @@ int DoSumt (void)
         i = 0;
         PartCtrUppass(partCtrRoot, treeParts, &i);
 
-        min = (int) (sumtParams.minPartFreq * (sumtParams.numTreesSampled/sumtParams.numRuns));
+        min = (sumtParams.minPartFreq * (sumtParams.numTreesSampled/sumtParams.numRuns));
         numTreePartsToPrint=numUniqueSplitsFound;
 		for (i=0; i<numTreePartsToPrint;)
 			{
@@ -2843,7 +2843,7 @@ int DoSumt (void)
 
             if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
                 {
-                MrBayesPrint ("%s   Summary statistics for partitions with frequency > %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
+                MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
                 MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
                 MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
                 }
