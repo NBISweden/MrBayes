@@ -1322,11 +1322,12 @@ int ChangeNumChains (int from, int to)
 int ChangeNumRuns (int from, int to)
 
 {
-	int			i, i1, j, k, nChains;
+	int			i, i1, j, k, n, nChains;
 	Param		*p, *q;
 	MoveType	*mvt;
 	Tree		**oldMcmcTree;
 	MrBFlt		*oldParamValues;
+	MrBFlt		*stdStateFreqsOld;
 
 #if 0
     for (i=0; i<numParams; i++)
@@ -1482,14 +1483,30 @@ int ChangeNumRuns (int from, int to)
 	FillTreeParams (&globalSeed, from*nChains, to*nChains);
 
 
-	/* Process standard characters (calculates bsIndex, tiIndex, and more). We need it here to setup stdStateFreqs STANDARD devisions */
-	if (ProcessStdChars(&globalSeed) == ERROR)
-		return (ERROR);
+	/* fix stationary frequencies for standard data */
+	if(   stdStateFreqsRowSize > 0 )
+		{
+		assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
+		stdStateFreqsOld=stdStateFreqs;
+		stdStateFreqs = (MrBFlt *) realloc ((void *) stdStateFreqs, stdStateFreqsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
+		if (!stdStateFreqs)
+			{
+			MrBayesPrint ("%s   Problem reallocating stdStateFreqs\n", spacer);
+			return (ERROR);
+			}
+		
+		/* set pointers */
+		for (k=n=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+				continue;
+			p->stdStateFreqs += stdStateFreqs-stdStateFreqsOld;
+			}
+		
+		FillStdStateFreqs( from*nChains, to*nChains, &globalSeed);
+	}
 
-
-	/* Set the applicable moves that could be used by the chain. */
-	//if (SetMoves () == ERROR)
-	//	return (ERROR);
 
 	/* do the moves */
 	for (i=0; i<numApplicableMoves; i++)
@@ -13462,16 +13479,14 @@ int PrintMatrix (void)
 /*--------------------------------------------------------------
 |
 |	ProcessStdChars: process standard characters
-|   Needs to be executeed if number of chains increases to reallocate stdStateFreqs, etc
 |
 ---------------------------------------------------------------*/
 int ProcessStdChars (SafeLong *seed)
 
 {
 
-	int				b, c, d, i, j, k, n, chn, ts, index, numStandardChars, origCharPos, *bsIndex;
+	int				c, d, i, j, k, n, ts, index, numStandardChars, origCharPos, *bsIndex;
     char            piHeader[30];
-	MrBFlt			*subValue, sum, symDir[10];
 	ModelInfo		*m;
 	ModelParams		*mp=NULL;
 	Param			*p;
@@ -13852,8 +13867,29 @@ int ProcessStdChars (SafeLong *seed)
 		n += p->nStdStateFreqs;
 		}
 	
-	/* fill */
-	for (chn=0; chn<numGlobalChains; chn++)
+	FillStdStateFreqs( 0 , numGlobalChains, seed);
+
+	return (NO_ERROR);
+	
+}
+
+
+
+
+
+/*--------------------------------------------------------------
+|
+|  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains  in range [chfrom, chto)
+|
+---------------------------------------------------------------*/
+void FillStdStateFreqs(int chfrom, int chto, SafeLong *seed)
+{
+
+	int		chn, n, i, j, k, b, c, nb, index;
+	MrBFlt	*subValue, sum, symDir[10];
+	Param	*p;
+
+	for (chn=chfrom; chn<chto; chn++)
 		{
 		for (k=0; k<numParams; k++)
 			{
@@ -13899,8 +13935,9 @@ int ProcessStdChars (SafeLong *seed)
 				{
 				if (p->hasBinaryStd == YES)
 					{
-					BetaBreaks (p->values[0], p->values[0], subValue, mp->numBetaCats);
-					b = 2*mp->numBetaCats;
+					nb=modelParams[p->relParts[0]].numBetaCats;
+					BetaBreaks (p->values[0], p->values[0], subValue, nb);
+					b = 2*nb;
 					for (i=b-2; i>0; i-=2)
 						{
 						subValue[i] = subValue[i/2];
@@ -13909,7 +13946,7 @@ int ProcessStdChars (SafeLong *seed)
 						{
 						subValue[i] =  (1.0 - subValue[i-1]);
 						}
-					subValue += (2 * mp->numBetaCats);
+					subValue += (2 * nb);
 					}
 				
 				/* Then fill in state frequencies for multistate chars, one set for each */
@@ -13927,110 +13964,14 @@ int ProcessStdChars (SafeLong *seed)
 							subValue[i] =  0.0001;
 						sum += subValue[i];
 						}
-					for (i=0; i<mp->nStates; i++)
+					for (i=0; i<modelParams[p->relParts[0]].nStates; i++)
 						subValue[i] /= sum;
 					subValue += p->sympinStates[c];
 					}
 				}		
 			}	/* next parameter */
 		}	/* next chain */
-
-	return (NO_ERROR);
-	
 }
-
-
-
-
-
-//void fillStdStateFreqs()
-//{
-//
-//	int		chn, n, i, j, index;
-//	MrBFlt	*subValue;
-//
-//	for (chn=0; chn<numGlobalChains; chn++)
-//		{
-//		for (k=0; k<numParams; k++)
-//			{
-//			p = &params[k];
-//			if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
-//				continue;
-//			subValue = GetParamStdStateFreqs (p, chn, 0);
-//			if (p->paramId == SYMPI_EQUAL)
-//				{
-//				for (n=index=0; n<9; n++)
-//					{
-//					for (i=0; i<p->nRelParts; i++)
-//						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
-//							break;
-//					if (i < p->nRelParts)
-//						{
-//						for (j=0; j<(n+2); j++)
-//							{
-//							subValue[index++] =  (1.0 / (n + 2));
-//							}
-//						}
-//					}
-//				for (n=9; n<13; n++)
-//					{
-//					for (i=0; i<p->nRelParts; i++)
-//						if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
-//							break;
-//					if (i < p->nRelParts)
-//						{
-//						for (j=0; j<(n-6); j++)
-//							{
-//							subValue[index++] =  (1.0 / (n - 6));
-//							}
-//						}
-//					}
-//				}
-//
-//			/* Deal with transition asymmetry for standard characters */
-//			/* First, fill in stationary frequencies for beta categories if needed; */
-//			/* discard category frequencies (assume equal) */
-//			if (p->paramId == SYMPI_FIX || p->paramId == SYMPI_UNI || p->paramId == SYMPI_EXP
-//				|| p->paramId == SYMPI_FIX_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_EXP_MS)
-//				{
-//				if (p->hasBinaryStd == YES)
-//					{
-//					BetaBreaks (p->values[0], p->values[0], subValue, mp->numBetaCats);
-//					b = 2*mp->numBetaCats;
-//					for (i=b-2; i>0; i-=2)
-//						{
-//						subValue[i] = subValue[i/2];
-//						}
-//					for (i=1; i<b; i+=2)
-//						{
-//						subValue[i] =  (1.0 - subValue[i-1]);
-//						}
-//					subValue += (2 * mp->numBetaCats);
-//					}
-//				
-//				/* Then fill in state frequencies for multistate chars, one set for each */
-//				for (i=0; i<10; i++)
-//					symDir[i] = p->values[0];
-//			
-//				for (c=0; c<p->nSympi; c++)
-//					{
-//					/* now fill in subvalues */
-//					DirichletRandomVariable (symDir, subValue, p->sympinStates[c], seed);
-//					sum = 0.0;
-//					for (i=0; i<p->sympinStates[c]; i++)
-//						{
-//						if (subValue[i] < 0.0001)
-//							subValue[i] =  0.0001;
-//						sum += subValue[i];
-//						}
-//					for (i=0; i<mp->nStates; i++)
-//						subValue[i] /= sum;
-//					subValue += p->sympinStates[c];
-//					}
-//				}		
-//			}	/* next parameter */
-//		}	/* next chain */
-//}
 
 
 

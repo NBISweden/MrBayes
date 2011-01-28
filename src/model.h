@@ -22,6 +22,7 @@ int		DoStartvalsParm (char *parmName, char *tkn);
 int		DoUnlink (void);
 int		FillNormalParams (SafeLong *seed, int fromChain, int toChain);
 int		FillRelPartsString (Param *p, char relPartString[100]);
+void	FillStdStateFreqs(int chfrom, int chto, SafeLong *seed);
 int     FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed);
 int		FillTreeParams (SafeLong *seed, int fromChain, int toChain);
 int		FreeModel (void);

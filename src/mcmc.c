@@ -9660,59 +9660,59 @@ void FreeChainMemory (void)
 #endif
         }
 
-    if (memAllocs[ALLOC_CURLNL] == YES)
+    if (memAllocs[ALLOC_CURLNL] == YES) /*alloc in RunChain()*/
 		{
 		free (maxLnL0); 
 		free (curLnL);  
 		memAllocs[ALLOC_CURLNL] = NO;
 		}
-	if (memAllocs[ALLOC_CURLNPR] == YES)
+	if (memAllocs[ALLOC_CURLNPR] == YES) /*alloc in RunChain()*/
 		{
 		free (curLnPr); 
 		memAllocs[ALLOC_CURLNPR] = NO;
 		}
-	if (memAllocs[ALLOC_CHAINID] == YES)
+	if (memAllocs[ALLOC_CHAINID] == YES) /*alloc in RunChain()*/
 		{
 		free (chainId); 
 		memAllocs[ALLOC_CHAINID] = NO;
 		}
-	if (memAllocs[ALLOC_USEDMOVES] == YES)
+	if (memAllocs[ALLOC_USEDMOVES] == YES) /*alloc in setUsedMoves()*/
 		{
 		free (usedMoves);
 		memAllocs[ALLOC_USEDMOVES] = NO;
 		}
-    if (memAllocs[ALLOC_TERMSTATE] == YES)
+    if (memAllocs[ALLOC_TERMSTATE] == YES) /*alloc in SetUpTermState()*/
 		{
 		free (termState);
         termState = NULL;  
 		memAllocs[ALLOC_TERMSTATE] = NO;
 		}
-    if (memAllocs[ALLOC_ISPARTAMBIG] == YES)
+    if (memAllocs[ALLOC_ISPARTAMBIG] == YES) /*alloc in SetUpTermState()*/
 		{
 		free (isPartAmbig);
         isPartAmbig = NULL;
 		memAllocs[ALLOC_ISPARTAMBIG] = NO;
 		}
-    if (memAllocs[ALLOC_PRELIKES] == YES)
+    if (memAllocs[ALLOC_PRELIKES] == YES) /*alloc in InitCondLike()*/
 		{
 		free (preLikeL);
         preLikeL = NULL;
 		memAllocs[ALLOC_PRELIKES] = NO;
 		}
-	if (memAllocs[ALLOC_RATEPROBS] == YES)
+	if (memAllocs[ALLOC_RATEPROBS] == YES) /*alloc in InitAdGamma() not used */
 		{
 		free (rateProbSpace);
 		free (rateProbs);
         rateProbs = NULL;
 		memAllocs[ALLOC_RATEPROBS] = NO;
 		}
-	if (memAllocs[ALLOC_SITEJUMP] == YES)
+	if (memAllocs[ALLOC_SITEJUMP] == YES) /*alloc in InitAdGamma() not used */
 		{
 		free (siteJump);
         siteJump = NULL;
 		memAllocs[ALLOC_SITEJUMP] = NO;
 		}
-	if (memAllocs[ALLOC_MARKOVTIS] == YES)
+	if (memAllocs[ALLOC_MARKOVTIS] == YES)  /*alloc in InitAdGamma() not used */
 		{
 		for (i=0; i<MAX_SMALL_JUMP; i++)
 			if (markovTi[i] != NULL)
@@ -9720,19 +9720,19 @@ void FreeChainMemory (void)
 		FreeSquareDoubleMatrix(markovTiN);
 		memAllocs[ALLOC_MARKOVTIS] = NO;
 		}
-	if (memAllocs[ALLOC_SWAPINFO] == YES)
+	if (memAllocs[ALLOC_SWAPINFO] == YES) /*alloc in RunChain()*/
 		{
 		for (i=0; i<chainParams.numRuns; i++)
 			FreeSquareIntegerMatrix(swapInfo[i]);
 		free (swapInfo);
 		memAllocs[ALLOC_SWAPINFO] = NO;
 		}
-	if (memAllocs[ALLOC_POSSELPROBS] == YES)
+	if (memAllocs[ALLOC_POSSELPROBS] == YES) /*alloc in PrintStates() <- RunChain()*/
 		{
 		free (posSelProbs);
 		memAllocs[ALLOC_POSSELPROBS] = NO;
 		}
-	if (memAllocs[ALLOC_PFCOUNTERS] == YES)
+	if (memAllocs[ALLOC_PFCOUNTERS] == YES) /*alloc in SetUpParitionCounters() <- RunChain()*/
 		{
 		free (partition[0]);
 		free (partition);
@@ -9741,7 +9741,7 @@ void FreeChainMemory (void)
 		free (partFreqTreeRoot);
 		memAllocs[ALLOC_PFCOUNTERS] = NO;
 		}
-	if (memAllocs[ALLOC_FILEPOINTERS] == YES)
+	if (memAllocs[ALLOC_FILEPOINTERS] == YES) /* alloc in ( PreparePrintFiles(), ReusePreviousResults() ) <- RunChain() */
 		{
 		CloseMBPrintFiles ();
 		if (fpTree != NULL)
@@ -9756,7 +9756,7 @@ void FreeChainMemory (void)
 		fpMcmc = NULL;
 		memAllocs[ALLOC_FILEPOINTERS] = NO;
 		}
-	if (memAllocs[ALLOC_STATS] == YES)
+	if (memAllocs[ALLOC_STATS] == YES) /* alloc in RunChain() */
 		{
 		if (chainParams.allComps == YES)
 			{
