@@ -1019,6 +1019,7 @@ int ReinitializeMrBayes (void)
 	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
 	sumpParams.HPD = YES;                            /* use Highest Posterior Density?                */
+	sumpParams.minProb = 0.05;                       /* min. prob. of models to include in summary    */
 
 	/* comparetree parameters */
 	strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */

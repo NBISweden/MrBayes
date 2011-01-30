@@ -6440,6 +6440,16 @@ int DoSetParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(ALPHA))
 				{
 				strcpy (workingDir, tkn);
+#if defined (WIN_VERSION)
+                /* Reformat to Windows with trailing '\' */
+                for (index=0; index<(int)strlen(workingDir); index++)
+                    {
+                    if (workingDir[index] == ':' || workingDir[index] == '/')
+                        workingDir[index] = '\\';
+                    }
+                if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '\\')
+                    strcat(workingDir,"\\");
+#else
                 /* Reformat to Unix with trailing '/' */
                 for (index=0; index<(int)strlen(workingDir); index++)
                     {
@@ -6448,7 +6458,8 @@ int DoSetParm (char *parmName, char *tkn)
                     }
                 if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '/')
                     strcat(workingDir,"/");
-				MrBayesPrint ("%s   Setting working directory to \"%s\"\n", spacer, workingDir);
+#endif
+                MrBayesPrint ("%s   Setting working directory to \"%s\"\n", spacer, workingDir);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -12000,6 +12011,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Hpd          -- Determines whether credibility intervals will be given as the \n");
 		MrBayesPrint ("                   region of Highest Posterior Density ('Yes') or as the interval\n");
 		MrBayesPrint ("                   containing the median 95 %% of sampled values ('No').         \n");
+		MrBayesPrint ("   Minprob      -- Determines the minimum probability of submodels to be included\n");
+		MrBayesPrint ("                   in summary statistics. Only applicable to models that explore \n");
+		MrBayesPrint ("                   submodel spaces, like 'nst=mixed' and 'aamodelpr=mixed'.      \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -12015,6 +12029,7 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Filename        <name>                   %s<.run<i>.p>\n", sumpParams.sumpFileName);
 		MrBayesPrint ("   Outputname      <name>                   %s<.pstat etc>\n", sumpParams.sumpOutfile);
         MrBayesPrint ("   Hpd             <number>                 %d                                   \n", sumpParams.HPD == YES ? "Yes" : "No");
+        MrBayesPrint ("   Minprob         <number>                 %1.3lf                               \n", sumpParams.minProb);
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -13608,7 +13623,7 @@ void SetUpParms (void)
 	PARAM   (136, "Possel",         DoReportParm,      "Yes|No|\0");
 	PARAM   (137, "Plot",           DoSumpParm,        "Yes|No|\0");
 	PARAM   (138, "Table",          DoSumpParm,        "Yes|No|\0");
-	PARAM   (139, "Marglike",       DoSumpParm,        "Yes|No|\0");
+	PARAM   (139, "Minprob",        DoSumpParm,        "\0");
 	PARAM   (140, "Printtofile",    DoSumpParm,        "Yes|No|\0");
 	PARAM   (141, "Outputname",     DoSumpParm,        "\0");
 	PARAM   (142, "Redirect",       DoMcmcParm,        "Yes|No|\0");

@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <direct.h>
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
@@ -34583,29 +34584,28 @@ int PrintMCMCDiagnosticsToFile (int curGen)
     /* Simply print header if curGen == 0 */
     if (curGen == 0)
 		{
-		MrBayesPrintf (fpMcmc, "[LEGEND:\n");
-		MrBayesPrintf (fpMcmc, "   Gen                --  Generation\n");
+		MrBayesPrintf (fpMcmc, "[LEGEND:]\n");
+		MrBayesPrintf (fpMcmc, "[   Gen                --  Generation]\n");
 		if (chainParams.allChains == YES)
-			MrBayesPrintf (fpMcmc, "   <name>(1).acc(2,3) --  Acceptance rate of move <name> changing parameter 1 in run 2, chain 3\n");
+			MrBayesPrintf (fpMcmc, "[   <name1>(<name2>)$acc_run2_chn3 --  Acceptance rate of move <name1> changing parameter <name2> in run 2, chain 3]\n");
 		else /* if (chainParams.allChains == NO) */
-			MrBayesPrintf (fpMcmc, "   <name>(1).acc(2)   --  Acceptance rate of move <name> changing parameter 1 in run 2\n");
+			MrBayesPrintf (fpMcmc, "[   <name1>(<name2>)$acc_run2      --  Acceptance rate of move <name1> changing parameter 1 in run 2]\n");
 		if (chainParams.numChains > 1 && chainParams.numRuns > 1)
-			MrBayesPrintf (fpMcmc, "   Swap(1-2).acc(3)   --  Acceptance rate of swaps between chains 1 and 2 in run 3\n");
+			MrBayesPrintf (fpMcmc, "[   Swap(1<>2)$acc_run3            --  Acceptance rate of swaps between chains 1 and 2 in run 3]\n");
 		else if (chainParams.numChains > 1 && chainParams.numRuns == 1)
-			MrBayesPrintf (fpMcmc, "   Swap(1-2).acc      --  Acceptance rate of swaps between chains 1 and 2\n");
+			MrBayesPrintf (fpMcmc, "[   Swap(1<>2)$acc                 --  Acceptance rate of swaps between chains 1 and 2]\n");
 		if (chainParams.diagnStat == AVGSTDDEV)
             diagnstat = "Average";
         else
             diagnstat = "Maximum";
         if (chainParams.numRuns > 1 && numTopologies == 1 && chainParams.allComps == NO)
-			MrBayesPrintf (fpMcmc, "   StdDev(s)          --  %s standard deviation of split frequencies\n", diagnstat);
+			MrBayesPrintf (fpMcmc, "[   StdDev(s)                      --  %s standard deviation of split frequencies]\n", diagnstat);
 		else if (chainParams.numRuns > 1 && numTopologies == 1 && chainParams.allComps == YES)
-			MrBayesPrintf (fpMcmc, "   StdDev(s)(1-2)     --  %s standard deviation of split frequencies between runs 1 and 2\n", diagnstat);
+			MrBayesPrintf (fpMcmc, "[   StdDev(s)(run1-run2)           --  %s standard deviation of split frequencies between runs 1 and 2]\n", diagnstat);
 		else if (chainParams.numRuns > 1 && numTopologies > 1 && chainParams.allComps == NO)
-			MrBayesPrintf (fpMcmc, "   StdDev(s_1)        --  %s standard deviation of split frequencies for topology 1\n", diagnstat);
+			MrBayesPrintf (fpMcmc, "[   StdDev(s.tree1)                --  %s standard deviation of split frequencies for topology 1]\n", diagnstat);
 		else if (chainParams.numRuns > 1 && numTopologies > 1 && chainParams.allComps == YES)
-			MrBayesPrintf (fpMcmc, "   StdDev(s_1)(1-2)   --  %s standard deviation of split frequencies between runs 1 and 2 for topology 1\n", diagnstat);
-		MrBayesPrintf (fpMcmc, "]\n\n");
+			MrBayesPrintf (fpMcmc, "[   StdDev(s.tree1)(run1-run2)     --  %s standard deviation of split frequencies between runs 1 and 2 for topology 1]\n", diagnstat);
 
 		MrBayesPrintf (fpMcmc, "Gen");
 		for (n=0; n<chainParams.numRuns; n++)
@@ -34617,9 +34617,11 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 					for (j=0; j<numUsedMoves; j++)
 						{
 						theMove = usedMoves[j];
-						MrBayesPrintf (fpMcmc, "\t%s.%s.acc_run%d_chn%d", theMove->moveType->shortName, theMove->parm->name, n+1, i+1);
+						MrBayesPrintf (fpMcmc, "\t%s(%s)$acc_run%d_chn%d", theMove->moveType->shortName,
+                                theMove->parm->name, n+1, i+1);
                         if (theMove->moveType->Autotune != NULL && chainParams.autotune == YES)
-						    MrBayesPrintf (fpMcmc, "\t%s.%s.%s_run%d_chn%d", theMove->moveType->shortName, theMove->moveType->shortTuningName[0], n+1, i+1);
+						    MrBayesPrintf (fpMcmc, "\t%s(%s)$%s_run%d_chn%d", theMove->moveType->shortName,
+                                theMove->parm->name, theMove->moveType->shortTuningName[0], n+1, i+1);
 						}
 					}
 				}
@@ -34630,15 +34632,15 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 					theMove = usedMoves[i];
 					if (chainParams.numRuns == 1)
                         {
-						MrBayesPrintf (fpMcmc, "\t%s.%s.acc", theMove->moveType->shortName, theMove->parm->name);
+						MrBayesPrintf (fpMcmc, "\t%s(%s)$acc", theMove->moveType->shortName, theMove->parm->name);
                         if (theMove->moveType->Autotune != NULL && chainParams.autotune == YES)
-						    MrBayesPrintf (fpMcmc, "\t%s.%s.%s", theMove->moveType->shortName, theMove->parm->name, theMove->moveType->shortTuningName[0]);
+						    MrBayesPrintf (fpMcmc, "\t%s(%s)$%s", theMove->moveType->shortName, theMove->parm->name, theMove->moveType->shortTuningName[0]);
                         }
 					else
                         {
-						MrBayesPrintf (fpMcmc, "\t%s.%s.acc_run%d", theMove->moveType->shortName, theMove->parm->name, n+1);
+						MrBayesPrintf (fpMcmc, "\t%s(%s)$acc_run%d", theMove->moveType->shortName, theMove->parm->name, n+1);
                         if (theMove->moveType->Autotune != NULL && chainParams.autotune == YES)
-						    MrBayesPrintf (fpMcmc, "\t%s.%s.%s_run%d", theMove->moveType->shortName, theMove->parm->name, theMove->moveType->shortTuningName[0], n+1);
+						    MrBayesPrintf (fpMcmc, "\t%s(%s)$%s_run%d", theMove->moveType->shortName, theMove->parm->name, theMove->moveType->shortTuningName[0], n+1);
                         }
 					}
 				}
@@ -34649,9 +34651,9 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 					for (j=i+1; j<chainParams.numChains; j++)
 						{
 						if (chainParams.numRuns == 1)
-							MrBayesPrintf (fpMcmc, "\tSwap(%d-%d).acc", i+1, j+1);
+							MrBayesPrintf (fpMcmc, "\tSwap(%d<>%d)$acc", i+1, j+1);
 						else
-							MrBayesPrintf (fpMcmc, "\tSwap(%d-%d).acc(%d)", i+1, j+1, n+1);
+							MrBayesPrintf (fpMcmc, "\tSwap(%d<>%d)$acc(%d)", i+1, j+1, n+1);
 						}
 					}
 				}
@@ -34671,9 +34673,9 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 				else
                     {
                     if (chainParams.diagnStat == AVGSTDDEV)
-					    MrBayesPrintf (fpMcmc, "\tAvgStdDev(s_%d)", n+1);
+					    MrBayesPrintf (fpMcmc, "\tAvgStdDev(s.tree%d)", n+1);
                     else
-					    MrBayesPrintf (fpMcmc, "\tMaxStdDev(s_%d)", n+1);
+					    MrBayesPrintf (fpMcmc, "\tMaxStdDev(s.tree%d)", n+1);
                     }
 
 				if (chainParams.allComps == YES)
@@ -34685,16 +34687,16 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 				            if (numTopologies == 1)
                                 {
                                 if (chainParams.diagnStat == AVGSTDDEV)
-					                MrBayesPrintf (fpMcmc, "\tAvgStdDev(s)(%d_%d)", i+1,j+1);
+					                MrBayesPrintf (fpMcmc, "\tAvgStdDev(s)(run%d_run%d)", i+1,j+1);
                                 else
-					                MrBayesPrintf (fpMcmc, "\tMaxStdDev(s)(%d_%d)", i+1, j+1);
+					                MrBayesPrintf (fpMcmc, "\tMaxStdDev(s)(run%d_run%d)", i+1, j+1);
                                 }
 				            else
                                 {
                                 if (chainParams.diagnStat == AVGSTDDEV)
-					                MrBayesPrintf (fpMcmc, "\tAvgStdDev(s_%d)(%d-%d)", n+1, i+1, j+1);
+					                MrBayesPrintf (fpMcmc, "\tAvgStdDev(s.tree%d)(run%d_run%d)", n+1, i+1, j+1);
                                 else
-					                MrBayesPrintf (fpMcmc, "\tMaxStdDev(s_%d)(%d_%d)", n+1, i+1, j+1);
+					                MrBayesPrintf (fpMcmc, "\tMaxStdDev(s.tree%d)(run%d_run%d)", n+1, i+1, j+1);
                                 }
 							}
 						}
@@ -38991,7 +38993,7 @@ int ReusePreviousResults (int *numSamples)
 		{
 		k = n;
 
-		if (chainParams.numRuns == 1)
+        if (chainParams.numRuns == 1)
 			sprintf (fileName, "%s%s.p", workingDir, localFileName);
 		else
 			sprintf (fileName, "%s%s.run%d.p", workingDir, localFileName, n+1);
@@ -39547,9 +39549,46 @@ int RunChain (SafeLong *seed)
 	CPUTime = 0.0;
 	previousCPUTime = clock();
 
-    if( numPreviousGen==0 ){
-        n=0;
-        goto printState;
+    /* print headers and starting states */
+    if( numPreviousGen==0 )
+        {
+        /* make sure we print headers */
+		PrintToScreen(0, 0, time(0), startingT);
+		if (PrintStatesToFiles (0) == ERROR)
+			{
+            MrBayesPrint("%s   Error in printing headers to files\n");
+# if defined (MPI_ENABLED)
+			nErrors++;
+# else
+			return ERROR;
+# endif
+			}
+# if defined (MPI_ENABLED)
+		MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		if (sumErrors > 0)
+            {
+			MrBayesPrint ("%s   Aborting run.\n");
+            return ERROR;
+            }
+# endif
+
+        if (PrintMCMCDiagnosticsToFile (0) == ERROR)
+            {
+			MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
+# if defined (MPI_ENABLED)
+			nErrors++;
+# else
+            return (ERROR);
+# endif
+            }
+# if defined (MPI_ENABLED)
+        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		if (sumErrors > 0)
+			{
+            MrBayesPrint ("%s   Aborting run.\n");
+			return ERROR;
+			}
+# endif
         }
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
@@ -39755,7 +39794,6 @@ int RunChain (SafeLong *seed)
 				}
 			}
 
-printState:
         /* print information to screen */
 		if ( n % chainParams.printFreq == 0)
 			PrintToScreen(n, numPreviousGen, time(0), startingT);

@@ -54,6 +54,7 @@
 const char* const svnRevisionSumpC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 /* local prototypes */
+int      CompareModelProbs (const void *x, const void *y);
 int		 PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples);
 int		 PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRows, int nSamples);
 int		 PrintParamStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples);
@@ -89,6 +90,21 @@ int AllocateParameterSamples (ParameterSample **parameterSamples, int numRuns, i
         }
 
     return NO_ERROR;
+}
+
+
+
+
+
+/** Compare function (ModelProb) for qsort. Note reverse sort order (from larger to smaller probs) */
+int CompareModelProbs (const void *x, const void *y) {
+
+    if ((*((ModelProb *)(x))).prob > (*((ModelProb *)(y))).prob)
+        return -1;
+    else if ((*((ModelProb *)(x))).prob < (*((ModelProb *)(y))).prob)
+        return 1;
+    else
+        return 0;
 }
 
 
@@ -566,6 +582,28 @@ int DoSumpParm (char *parmName, char *tkn)
 				return (ERROR);
 				}
 			}
+		/* set Minprob (sumpParams.minProb) ************************************************************/
+		else if (!strcmp(parmName, "Minprob"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%lf", &tempD);
+				if (tempD > 0.50)
+					{
+					MrBayesPrint ("%s   Minprob too high (it should be smaller than 0.50)\n", spacer);
+					return (ERROR);
+					}
+                sumpParams.minProb = tempD;
+				MrBayesPrint ("%s   Setting minprob to %1.3f\n", spacer, sumpParams.minProb);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				return (ERROR);
+				}
+			}
 		/* set Nruns (sumpParams.numRuns) *******************************************************/
 		else if (!strcmp(parmName, "Nruns"))
 			{
@@ -667,7 +705,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             lastTokenWasDash, nNumbersOnThisLine, tokenType, burnin, nLines, firstNumCols,
             numRows, numColumns;
     MrBFlt  tempD;
-    FILE    *fp;
+    FILE    *fp = NULL;
 
 
 	/* open binary file */
@@ -915,11 +953,13 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
         }
 
     free (s);
+    fclose(fp);
     return (NO_ERROR);
 
 errorExit:
 
     free(s);
+    fclose(fp);
     return (ERROR);
 }
 
@@ -1145,10 +1185,11 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
 /* PrintModelStats: Print model stats to screen and to .mstat file */
 int PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
-	int		i, j, j1, j2, k, longestName, nElements, *modelCounts=NULL;
-	MrBFlt	f, *prob=NULL, *sum=NULL, *ssq=NULL, *min=NULL, *max=NULL, *stddev=NULL;
-	char	temp[100];
-    FILE    *fp;
+	int         i, j, j1, j2, k, longestName, nElements, *modelCounts=NULL;
+	MrBFlt	    f, *prob=NULL, *sum=NULL, *ssq=NULL, *min=NULL, *max=NULL, *stddev=NULL;
+	char	    temp[100];
+    FILE        *fp;
+    ModelProb   *elem = NULL;
 
     /* nHeaders - is a convenient synonym for number of column headers */
 
@@ -1178,7 +1219,8 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
         return NO_ERROR;
 
     /* open output file */
-	MrBayesPrint ("%s   Model probabilities saved to file \"%s.mstat\".\n", spacer, sumpParams.sumpOutfile);
+	MrBayesPrint ("%s   Model probabilities above %1.3lf\n", spacer, sumpParams.minProb);
+    MrBayesPrint ("%s   Estimates saved to file \"%s.mstat\".\n", spacer, sumpParams.sumpOutfile);
     strncpy (temp,fileName,90);
     strcat (temp, ".mstat");
     fp = OpenNewMBPrintFile(temp);
@@ -1276,31 +1318,42 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 				stddev[j1] = sqrt (f);
 			}
 
-		for (j1=0; j1<nElements; j1++)
-			{
-        	if (prob[j1] > 0.0)
-                {
-                if (nRuns == 1)
-            	    {
-            	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
-				    MrBayesPrint ("%s   %-*s          %1.3lf\n", spacer, longestName, temp, prob[j1]);
-            	    MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[j1])); 
-            	    }
-        	    else /* if (nRuns > 1) */
-            	    {
-            	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][j1]);
-				    MrBayesPrint ("%s   %-*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
-                	    spacer, longestName, temp, prob[j1], stddev[j1], min[j1], max[j1]);
-            	    MrBayesPrintf (fp, "%s", temp);
-            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[j1]));
-            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[j1]));
-            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(min[j1]));
-            	    MrBayesPrintf (fp, "\t%s", MbPrintNum(max[j1]));
-            	    MrBayesPrintf (fp, "\n");
-            	    }
-                }
-			}
+        elem = (ModelProb *) calloc (nElements, sizeof(ModelProb));
+        for (j1=0; j1<nElements; j1++)
+            {
+            elem[j1].index = j1;
+            elem[j1].prob = prob[j1];
+            }
 
+        /* sort in terms of decreasing probabilities */
+        qsort((void *) elem, (size_t) nElements, (size_t) sizeof(ModelProb), CompareModelProbs);
+
+        for (j1=0; j1<nElements; j1++)
+			{
+        	if (elem[j1].prob <= sumpParams.minProb)
+                break;
+
+            if (nRuns == 1)
+        	    {
+        	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][elem[j1].index]);
+			    MrBayesPrint ("%s   %-*s          %1.3lf\n", spacer, longestName, temp, prob[elem[j1].index]);
+        	    MrBayesPrintf (fp, "%s\t%s\n", temp, MbPrintNum(prob[elem[j1].index])); 
+        	    }
+    	    else /* if (nRuns > 1) */
+        	    {
+        	    sprintf (temp, "%s[%s]", headerNames[i], modelElementNames[j][elem[j1].index]);
+			    MrBayesPrint ("%s   %-*s          %1.3lf          %1.3lf          %1.3lf          %1.3lf\n", 
+            	    spacer, longestName, temp, prob[elem[j1].index], stddev[elem[j1].index], min[elem[j1].index], max[elem[j1].index]);
+        	    MrBayesPrintf (fp, "%s", temp);
+        	    MrBayesPrintf (fp, "\t%s", MbPrintNum(prob[elem[j1].index]));
+        	    MrBayesPrintf (fp, "\t%s", MbPrintNum(stddev[elem[j1].index]));
+        	    MrBayesPrintf (fp, "\t%s", MbPrintNum(min[elem[j1].index]));
+        	    MrBayesPrintf (fp, "\t%s", MbPrintNum(max[elem[j1].index]));
+        	    MrBayesPrintf (fp, "\n");
+        	    }
+			}
+        free(elem);
+        elem = NULL;
         free(modelCounts);
         modelCounts = NULL;
         free (prob);

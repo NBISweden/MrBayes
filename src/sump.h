@@ -10,6 +10,13 @@ typedef struct
     int     numColumns;
 } SumpFileInfo;
 
+/* struct to hold info about a model probability */
+typedef struct
+    {
+    int     index;
+    double  prob;
+    }   ModelProb;
+
 /* struct to hold a parameter sample, possibly from multiple files */
 typedef struct {
     MrBFlt **values;

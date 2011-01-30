@@ -1307,8 +1307,8 @@ typedef struct sump
 	int			margLike;              /* output marginal likelihood (y/n)?             */
 	int			numRuns;			   /* number of independent analyses to summarize   */
 	int			allRuns;			   /* should data for all runs be printed (yes/no)? */
-	int			overlayPlot;		   /* should plots from several runs be overlaid?   */
     int         HPD;                   /* use highest posterior density?                */
+    MrBFlt      minProb;               /* cut-off for model probabilities to show       */
 	} Sump;
 
 typedef struct plot
