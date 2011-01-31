@@ -6407,6 +6407,11 @@ int DoSetParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
+                if( tempI == 0 || tempI == 2147483647 )
+                    {
+                    MrBayesPrint ("%s   Error: Seed can be any natural number except 0 and 2147483647\n", spacer);
+                    return (ERROR);
+                    }
 				globalSeed = tempI;
 				MrBayesPrint ("%s   Setting seed to %ld\n", spacer, globalSeed);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -6422,7 +6427,12 @@ int DoSetParm (char *parmName, char *tkn)
  			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-				swapSeed = tempI;
+                if( tempI == 0 || tempI == 2147483647 )
+                    {
+                    MrBayesPrint ("%s   Error: Swapseed can be any natural number except 0 and 2147483647\n", spacer);
+                    return (ERROR);
+                    }
+                swapSeed = tempI;
 				MrBayesPrint ("%s   Setting swapseed to %ld\n", spacer, swapSeed);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}

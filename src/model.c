@@ -1096,17 +1096,17 @@ int ChangeNumChains (int from, int to)
 	int			i, i1, j, k, nRuns, fromIndex, toIndex, run, chn, *tempIntVals, nCppEventParams, *toEvents, *fromEvents;
 	MCMCMove	**tempMoves, *fromMove, *toMove;
 	Tree		**tempTrees;
-	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition;
+	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition, *stdStateFreqsOld;
     Param       *p, *q, *cppEventParams = NULL;
 	Tree		**oldMcmcTree;
+
+    if(from == to)
+        return (NO_ERROR);
 
 	/* set new number of chains */
 	chainParams.numChains = to;
 	nRuns = chainParams.numRuns;
 	numGlobalChains = chainParams.numRuns * chainParams.numChains;
-
-
-    /*TODO: It seems that standard chars need to be processed as in changeNumRun. Check it!*/
 
 	/* Do the normal parameters */	
 	/* first save old values */
@@ -1191,7 +1191,7 @@ int ChangeNumChains (int from, int to)
                         i1++;
                         }
                     }
-                assert( nCppEventParams==i1++ );
+                assert( nCppEventParams==i1 );
 				}
 			}
 		}
@@ -1202,7 +1202,9 @@ int ChangeNumChains (int from, int to)
         free (tempIntVals);
     for (i=0; i<nCppEventParams; i++)
         {
+        numGlobalChains = chainParams.numRuns * from; /* Revert to the old value to clean old Cpp events in FreeCppEvents() */
         FreeCppEvents(&cppEventParams[i]);
+        numGlobalChains = chainParams.numRuns * chainParams.numChains; /*Set to proper value again*/
         }
     if (nCppEventParams > 0)
         free (cppEventParams);
@@ -1227,15 +1229,13 @@ int ChangeNumChains (int from, int to)
             if (chn >= to)
                 continue;
             /*Here we move only one tree per chain/state?! Should not we move numTrees??*/
-            fromIndex = (2*(run*from + chn) + 0) * numTrees;
-            toIndex   = (2*(run*to   + chn) + 0) * numTrees;
-            mcmcTree[toIndex]    = tempTrees[fromIndex];
-            tempTrees[fromIndex] = NULL;
-
-            fromIndex = (2*(run*from + chn) + 1) * numTrees;
-            toIndex   = (2*(run*to   + chn) + 1) * numTrees;
-            mcmcTree[toIndex]    = tempTrees[fromIndex];
-            tempTrees[fromIndex] = NULL;
+            fromIndex = 2*(run*from + chn)  * numTrees;
+            toIndex   = 2*(run*to   + chn)  * numTrees;
+            for(k=0;k<2*numTrees;k++)
+                {
+                mcmcTree[toIndex+k]    = tempTrees[fromIndex+k];
+                tempTrees[fromIndex+k] = NULL;
+                }
             }
         }
 
@@ -1283,6 +1283,50 @@ int ChangeNumChains (int from, int to)
                 }
             }
         }
+
+
+    	/* fix stationary frequencies for standard data */
+	if(   stdStateFreqsRowSize > 0 )
+		{
+		assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
+		stdStateFreqsOld=stdStateFreqs;
+		stdStateFreqs = (MrBFlt *) malloc ((size_t)stdStateFreqsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
+		if (!stdStateFreqs)
+			{
+			MrBayesPrint ("%s   Problem reallocating stdStateFreqs\n", spacer);
+			return (ERROR);
+			}
+
+        /* set pointers */
+		for (k=0; k<numParams; k++)
+			{
+			p = &params[k];
+			if (p->paramType != P_PI || modelParams[p->relParts[0]].dataType != STANDARD)
+				continue;
+			p->stdStateFreqs += stdStateFreqs-stdStateFreqsOld;
+			}
+        
+        for (run=0; run<nRuns; run++)
+            {
+            /* copy old chains values*/
+            for (chn=0; chn<from; chn++)
+                {
+                if (chn >= to)
+                    break;
+
+                fromIndex = 2*(run*from + chn)*stdStateFreqsRowSize;
+                toIndex = 2*(run*to + chn)*stdStateFreqsRowSize;
+                for(k=0;k<2*stdStateFreqsRowSize;k++)
+                    {
+                    stdStateFreqs[toIndex+k]=stdStateFreqsOld[fromIndex+k];
+                    }
+                }
+            /* set new chains */
+		    FillStdStateFreqs( run*to+from, run*to+to, &globalSeed);
+            }
+        free(stdStateFreqsOld);
+	}
+    
 
 	/* Do the moves */
 	/* first allocate space and set up default moves */
@@ -1336,6 +1380,9 @@ int ChangeNumRuns (int from, int to)
 	MrBFlt		*oldParamValues;
 	MrBFlt		*stdStateFreqsOld;
     int         *oldintValues;
+
+    if(from == to)
+        return (NO_ERROR);
 
 #if 0
     for (i=0; i<numParams; i++)
