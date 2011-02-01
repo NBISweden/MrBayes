@@ -24380,7 +24380,9 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
     /* check whether or not we can change root */
-    if (!strcmp(mp->clockPr, "Uniform") && !strcmp(mp->treeAgePr, "Fixed"))
+    if (!strcmp(mp->clockPr, "Uniform") &&
+        ((!strcmp(mp->treeAgePr, "Fixed") && t->root->left->isDated == NO) ||
+         (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed)))
         i = t->nNodes - 2;
     else
         i = t->nNodes - 1;
