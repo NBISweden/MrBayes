@@ -44,7 +44,6 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <direct.h>
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
@@ -16602,7 +16601,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                 {
                 p = t->allDownPass[j];
                 if ((p->isDated == NO && p->left!= NULL && !(p->anc->anc == NULL && treeParam->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
-                    p->isDated == YES && p->calibration->prior != fixed)
+                    (p->isDated == YES && p->calibration->prior != fixed))
                     {
                     if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor < p->calibration->offset) ||
                         (p->isDated == YES && p->calibration->prior == uniform && (p->age/factor < p->calibration->min || p->age/factor > p->calibration->max)))
