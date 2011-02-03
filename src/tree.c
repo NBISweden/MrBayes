@@ -3176,6 +3176,12 @@ int IsTreeConsistent (Param *param, int chain, int state)
         {
         if (param->subParams[i]->paramId == BMBRANCHRATES)
             {
+            rAnc = GetParamVals(param->subParams[i], chain, state)[tree->root->left->index];
+            if (fabs(rAnc - 1.0) > 1E-6)
+                {
+                MrBayesPrint("%s   Bm relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
+                return NO;
+                }
             for (j=0; j<tree->nNodes-2; j++)
                 {
                 p = tree->allDownPass[j];

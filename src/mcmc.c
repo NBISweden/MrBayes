@@ -15641,7 +15641,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 
         /* Get the dated node depths and sort them. The call to GetDatedNodeDepths also
            returns the root node depth into nodeDepths, which is convenient. For now, this
-           only works for dated tips, not for constrained but undated tips. */
+           only works for dated tips, not for constrained but undated interior nodes. */
         GetDatedNodeDepths (root, nodeDepths);
         SortMrBFlt (nodeDepths, 0, nDatedTips);   /* use index of left and right in call */
 
@@ -16595,17 +16595,21 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             }
         else /* if (stretchTime == YES) */
             {
-            /* proposal ratio effect and prior ratio effect on clock model since the time tree remains the same */
+            /* proposal ratio effect and prior ratio effect on clock model since the time tree is changed */
             mp = &modelParams[t->relParts[0]];
             m  = &modelSettings[t->relParts[0]];
             for (j=0; j<t->nNodes-1; j++)
                 {
                 p = t->allDownPass[j];
                 if ((p->isDated == NO && p->left!= NULL && !(p->anc->anc == NULL && treeParam->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
-                    (p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor > p->calibration->offset) ||
-                    (p->isDated == YES && p->calibration->prior == uniform &&
-                     p->age/factor > p->calibration->min && p->age/factor < p->calibration->max))
+                    p->isDated == YES && p->calibration->prior != fixed)
                     {
+                    if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor < p->calibration->offset) ||
+                        (p->isDated == YES && p->calibration->prior == uniform && (p->age/factor < p->calibration->min || p->age/factor > p->calibration->max)))
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
                     if (strcmp(mp->clockPr,"Fixed") != 0)
                         (*lnProposalRatio) -= log(factor);  // there is a prior on the time tree, so a Jacobian results
                     if (p->isDated == YES)
@@ -31975,7 +31979,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
 {
 	int			i, j, *nEvents;
-	MrBFlt	    tuning, factor, oldHeight, newHeight, lambda=0.0, nu=0.0, ibrvar=0.0,
+	MrBFlt	    tuning, factor, lambda=0.0, nu=0.0, ibrvar=0.0,
                 *brlens=NULL, *bmRate=NULL, *ibrRate=NULL, numChangedNodes;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
@@ -31995,27 +31999,26 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     /* determine multiplication factor */
     factor = exp(tuning * (RandomNumber(seed) - 0.5));
 
-    /* record old and new tree heights */
-    oldHeight = t->root->left->nodeDepth;
-    newHeight = oldHeight * factor;
-
     /* multiply all branch lengths and node depths by this factor  */
     numChangedNodes = 0;
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
         if ((p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && param->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
-            (p->isDated == YES && p->calibration->prior == offsetExponential && p->age*factor > p->calibration->offset) ||
-            (p->isDated == YES && p->calibration->prior == uniform &&
-             p->age*factor > p->calibration->min && p->age*factor < p->calibration->max))
+            (p->isDated == YES && p->calibration->prior != fixed))
             {
+            if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age*factor < p->calibration->offset) ||
+                (p->isDated == YES && p->calibration->prior == uniform &&
+                (p->age*factor < p->calibration->min || p->age*factor > p->calibration->max)))
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
             numChangedNodes++;
-            assert(p->nodeDepth >= 0.0 && p->nodeDepth < POS_INFINITY);
             p->nodeDepth *= factor;
             if (p->isDated == YES)
                 p->age *= factor;
-            assert(p->nodeDepth >= 0.0);
-            assert(p->nodeDepth < POS_INFINITY);
+            assert(p->nodeDepth >= 0.0 && p->nodeDepth < POS_INFINITY);
             if (p->left != NULL)
                 {
                 p->left ->length = p->nodeDepth - p->left ->nodeDepth;
@@ -32026,7 +32029,6 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 p->length = p->anc->nodeDepth - p->nodeDepth;
             }
         }
-    TouchAllTreeNodes(m, chain);
 
     /* check that all branch lengths are proper, which need not be the case */
     for (i=0; i<t->nNodes-2; i++)
@@ -32106,10 +32108,15 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             }
 		}
 
+    TouchAllTreeNodes(m, chain);
+
+    if (numChangedNodes == 0)
+        getchar();
+
 #if defined (DEBUG_TREESTRETCH)
 	printf ("After treestretch:\n");
 	printf ("Old tree height: %f -- New tree height: %f -- lnPriorRatio = %f -- lnProposalRatio = %f\n",
-		oldHeight, newHeight, (*lnPriorRatio), (*lnProposalRatio));
+		oldT->root->left->nodeDepth, t->root->left->nodeDepth, (*lnPriorRatio), (*lnProposalRatio));
 #endif
 
     return (NO_ERROR);

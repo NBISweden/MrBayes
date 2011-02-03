@@ -1788,7 +1788,11 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 		MrBayesPrint (" ");
 	MrBayesPrint ("^\n");
 	MrBayesPrint ("   %1.0lf", minX);
-	for (i=0; i<screenWidth-(int)(log10(minX)); i++)
+    if (minX == 0)
+        j = 1;
+    else
+        j = (int)(log10(minX)) + 1;
+	for (i=0; i<screenWidth-j; i++)
 		MrBayesPrint (" ");
 	MrBayesPrint ("%1.0lf\n\n", maxX);
 

@@ -7781,6 +7781,8 @@ int DoTranslate (void)
                 isTranslateDiff = YES;
                 }
             }
+        if (numTranslates != numTaxa)
+            isTranslateDiff = YES;
         }
 
 	return (NO_ERROR);

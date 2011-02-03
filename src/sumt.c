@@ -2663,29 +2663,26 @@ int DoSumt (void)
                 }
             MrBayesPrint ("\n");
 
-            /* print lengths (do not print for root) */
-            if (sumtParams.isClock == NO)
-                {
-                strcpy (divString, treeName+4);
-                for (i=1; i<numTreePartsToPrint; i++)
-		            {
-                    x = treeParts[i];
+            /* print lengths */
+            strcpy (divString, treeName+4);
+            for (i=1; i<numTreePartsToPrint; i++)
+	            {
+                x = treeParts[i];
 
-		            sprintf (tempStr, "length%s[%d]", divString, i);
-                    len = (int) strlen(tempStr);
+	            sprintf (tempStr, "length%s[%d]", divString, i);
+                len = (int) strlen(tempStr);
 
-                    GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
+                GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
-                    MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
-                    MrBayesPrintf (fpVstat, "%s", tempStr);
+                MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
+                MrBayesPrintf (fpVstat, "%s", tempStr);
 
-					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
+				PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
 
-		            }
-                }
+	            }
 
-            /* or print heights */
-            else /* if (sumtParams.isClock == YES) */
+            /* print heights */
+           if (sumtParams.isClock == YES)
                 {
                 strcpy (divString, treeName+4);
                 for (i=0; i<numTreePartsToPrint; i++)
@@ -2760,7 +2757,7 @@ int DoSumt (void)
                     }
                 for (i=0; i<sumtParams.nESets; i++)
                     {
-                    for (j=0; j<numTreePartsToPrint; j++)
+                    for (j=1; j<numTreePartsToPrint; j++)
 		                {
                         x = treeParts[j];
 
