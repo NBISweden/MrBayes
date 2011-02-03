@@ -148,7 +148,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_MOVE_TREEAGE
 #undef  DEBUG_LNLIKELIHOODRATIO
 #undef  DEBUG_NNIClock
-#define  DEBUG_SPLITMERGE
+#undef  DEBUG_SPLITMERGE
 #undef  SHOW_MOVE
 
 
@@ -16619,15 +16619,6 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                             (*lnPriorRatio) += p->calibration->lambda * (p->age * factor - p->age);
                         }
                     }
-                else
-                    {
-                    /* abort if a dated or interior node is impossible to move */
-                    if (p->isDated == YES || p->left != NULL)
-                        {
-                        abortMove = YES;
-                        return (NO_ERROR);
-                        }
-                    }
                 }
             x = 0.0;
             if (!strcmp(mp->clockPr,"Uniform"))
@@ -22027,7 +22018,7 @@ int Move_Growth (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 
-int Move_IbrBranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_IbrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -22056,7 +22047,7 @@ int Move_IbrBranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	t = GetTree (param, chain, state[chain]);
 
 	/* get minimum and maximum branch length */
-	minB = 0.0;
+	minB = BRLENS_MIN;
 	maxB = BRLENS_MAX;
 	
 	/* randomly pick a rate */
@@ -31977,9 +31968,9 @@ int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
-	int			i, j, *nEvents;
+	int			i, j, *nEvents, numChangedNodes;
 	MrBFlt	    tuning, factor, lambda=0.0, nu=0.0, ibrvar=0.0,
-                *brlens=NULL, *bmRate=NULL, *ibrRate=NULL, numChangedNodes;
+                *brlens=NULL, *bmRate=NULL, *ibrRate=NULL;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
 	ModelInfo	*m;
@@ -32071,6 +32062,33 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
 			}
+#if 0
+			nEvents = subParm->nEvents[2*chain+state[chain]];
+			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+			/* proposal ratio */
+			if (p->left != NULL)
+                {
+                (*lnProposalRatio) += nEvents[p->left->index ] * log (p->left->length  / oldLeftLength);
+			    (*lnProposalRatio) += nEvents[p->right->index] * log (p->right->length / oldRightLength);
+                }
+			if (p->anc->anc != NULL)
+                (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
+
+            /* prior ratio */
+			if (p->anc->anc == NULL) // two branches changed in same direction
+                (*lnPriorRatio) += lambda * (2.0 * (oldDepth - newDepth));
+            else if (p->left != NULL) // two branches changed in one direction, one branch in the other direction
+                (*lnPriorRatio) += lambda * (oldDepth - newDepth);
+            else /* if (p->left == NULL) */ // one branch changed
+                (*lnPriorRatio) += lambda * (newDepth - oldDepth);
+
+            /* update effective evolutionary lengths */
+			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+#endif
         else if (subParm->paramType == P_BMBRANCHRATES)
 			{
 			nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
@@ -32095,13 +32113,15 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			ibrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			
-			/* prior ratio and update of ibr rates */
+			/* prior ratio and update of ibr branch lengths and rates (stretched using same factor as tree) */
             for (j=0; j<t->nNodes-2; j++)
                 {
                 p = t->allDownPass[j];
                 q = oldT->allDownPass[j];
-                (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[q->index]);
-    			(*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
+    			(*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index] * factor);
+                brlens[p->index] *= factor;
+                (*lnProposalRatio) += log(factor);
                 ibrRate[p->index] = brlens[p->index] / p->length;
                 }
             }

@@ -2793,26 +2793,6 @@ int DoSumt (void)
 				    }
                 }
 
-            /* print ages */
-            if (sumtParams.isCalibrated == YES)
-                {
-                strcpy (divString, treeName+4);
-                for (i=0; i<numTreePartsToPrint; i++)
-		            {
-                    x = treeParts[i];
-
-		            sprintf (tempStr, "age%s[%d]", divString, i);
-                    len = (int) strlen(tempStr);
-
-                    GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
-
-					MrBayesPrint ("%s   %-*s  ", spacer, longestHeader, tempStr);
-                    MrBayesPrintf (fpVstat, "%s", tempStr);
-
-					PrintSumtTableLine(sumtParams.numRuns, x->count, &theStats, &numPSRFSamples, &maxPSRF, &sumPSRF);
-					}
-                }
-
             /* finish table */
             MrBayesPrint ("%s   ", spacer);
             for (j=0; j<tableWidth; j++)

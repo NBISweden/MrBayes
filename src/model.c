@@ -19615,7 +19615,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-	/* Move_IbrBranchRate */
+	/* Move_IbrBranchLen */
 	mt = &moveTypes[i++];
 	mt->name = "Multiplier";
 	mt->shortName = "Multiplier";
@@ -19623,12 +19623,12 @@ void SetUpMoveTypes (void)
 	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = IBRBRANCHLENS;
 	mt->nApplicable = 1;
-	mt->moveFxn = &Move_IbrBranchRate;
+	mt->moveFxn = &Move_IbrBranchLen;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.001;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
