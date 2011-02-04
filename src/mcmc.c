@@ -16511,161 +16511,82 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
         t = GetTreeFromIndex(i, chain, state[chain]);
         if (t->isClock == NO)
             continue;
+        if (!strcmp(modelParams[t->relParts[0]].clockPr, "Fixed"))
+            continue;
 
         oldT      = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
 
-        /* decide whether we want to stretch the time tree or the branchlength tree */
-        if (!strcmp(modelParams[i].clockPr,"Fixed") || RandomNumber(seed) < 0.5)
-            stretchTime = YES;
-        else
-            stretchTime = NO;
-    
-        if (stretchTime == NO)
+        /* we always stretch branchlength tree, because it may not be possible to stretch the time tree */
+
+        /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
+        for (j=0; j<t->nNodes-1; j++)
             {
-            /* we stretch the branch length tree */
-
-            /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
-            for (j=0; j<t->nNodes-1; j++)
-                {
-                p = t->allDownPass[j];
-                p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
-                p->length *= factor;    /* no harm done if length==0.0 (root)*/
-                }
-            /* adjust proposal and prior ratio for relaxed clock models */
-	        for (j=0; j<treeParam->nSubParams; j++)
-    		    {
-                subParm = treeParam->subParams[j];
-		        if (subParm->paramType == P_CPPEVENTS)
-			        {
-			        nEvents = subParm->nEvents[2*chain+state[chain]];
-			        lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-			        /* proposal ratio */
-			        for (k=0; k<t->nNodes-2; k++)
-                        {
-                        p = t->allDownPass[k];
-                        q = oldT->allDownPass[k];
-                        (*lnProposalRatio) += nEvents[p->index ] * log (p->length  / q->length);
-                        }
-			        /* prior ratio */
-                    (*lnPriorRatio) += lambda * (TreeLen(oldT) - TreeLen(t));
-			        /* update effective evolutionary lengths */
-			        if (UpdateCppEvolLengths (subParm, t->root->left, chain) == ERROR)
-                        {
-                        abortMove = YES;
-                        return (NO_ERROR);
-                        }
-			        }
-                else if (subParm->paramType == P_BMBRANCHRATES)
-	    		    {
-		    	    nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
-			        bmRate = GetParamVals (subParm, chain, state[chain]);
-			        brlens = GetParamSubVals (subParm, chain, state[chain]);
-
-                    /* no proposal ratio effect */
-
-                    /* prior ratio and update of brlens */
-    			    for (j=0; j<t->nNodes-2; j++)
-                        {
-                        p = t->allDownPass[j];
-                        q = oldT->allDownPass[j];
-                        (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[q->anc->index], nu*q->length, bmRate[q->index]);
-    			        (*lnPriorRatio) += LnProbBmLogNormal (bmRate[p->anc->index], nu*p->length, bmRate[p->index]);
-                        brlens[p->index] = p->length * (bmRate[p->anc->index]+bmRate[p->index])/2.0;
-                        }
-			        }
-    		    else if (subParm->paramType == P_IBRBRANCHLENS)
-	    		    {
-		    	    ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
-			        ibrRate = GetParamVals (subParm, chain, state[chain]);
-			        brlens = GetParamSubVals (subParm, chain, state[chain]);
-    			
-			        /* prior ratio and update of ibr rates */
-                    for (j=0; j<t->nNodes-2; j++)
-                        {
-                        p = t->allDownPass[j];
-                        q = oldT->allDownPass[j];
-                        (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[q->index]);
-    			        (*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
-                        ibrRate[p->index] = brlens[p->index] / p->length;
-                        }
-                    }
-                }
+            p = t->allDownPass[j];
+            p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
+            p->length *= factor;    /* no harm done if length==0.0 (root)*/
             }
-        else /* if (stretchTime == YES) */
-            {
-            /* proposal ratio effect and prior ratio effect on clock model since the time tree is changed */
-            mp = &modelParams[t->relParts[0]];
-            m  = &modelSettings[t->relParts[0]];
-            for (j=0; j<t->nNodes-1; j++)
-                {
-                p = t->allDownPass[j];
-                if ((p->isDated == NO && p->left!= NULL && !(p->anc->anc == NULL && treeParam->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
-                    (p->isDated == YES && p->calibration->prior != fixed))
+        /* adjust proposal and prior ratio for relaxed clock models */
+        for (j=0; j<treeParam->nSubParams; j++)
+		    {
+            subParm = treeParam->subParams[j];
+	        if (subParm->paramType == P_CPPEVENTS)
+		        {
+		        nEvents = subParm->nEvents[2*chain+state[chain]];
+		        lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+		        /* proposal ratio */
+		        for (k=0; k<t->nNodes-2; k++)
                     {
-                    if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor < p->calibration->offset) ||
-                        (p->isDated == YES && p->calibration->prior == uniform && (p->age/factor < p->calibration->min || p->age/factor > p->calibration->max)))
-                        {
-                        abortMove = YES;
-                        return (NO_ERROR);
-                        }
-                    if (strcmp(mp->clockPr,"Fixed") != 0)
-                        (*lnProposalRatio) -= log(factor);  // there is a prior on the time tree, so a Jacobian results
-                    if (p->isDated == YES)
-                        {
-                        p->age /= factor;
-                        assert(p->age >= 0.0 && p->age < POS_INFINITY);
-                        if (p->calibration->prior == offsetExponential)
-                            (*lnPriorRatio) += p->calibration->lambda * (p->age * factor - p->age);
-                        }
+                    p = t->allDownPass[k];
+                    q = oldT->allDownPass[k];
+                    (*lnProposalRatio) += nEvents[p->index ] * log (p->length  / q->length);
+                    }
+		        /* prior ratio */
+                (*lnPriorRatio) += lambda * (TreeLen(oldT) - TreeLen(t));
+		        /* update effective evolutionary lengths */
+		        if (UpdateCppEvolLengths (subParm, t->root->left, chain) == ERROR)
+                    {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                    }
+		        }
+            else if (subParm->paramType == P_BMBRANCHRATES)
+    		    {
+	    	    nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
+		        bmRate = GetParamVals (subParm, chain, state[chain]);
+		        brlens = GetParamSubVals (subParm, chain, state[chain]);
+
+                /* no proposal ratio effect */
+
+                /* prior ratio and update of brlens */
+			    for (j=0; j<t->nNodes-2; j++)
+                    {
+                    p = t->allDownPass[j];
+                    q = oldT->allDownPass[j];
+                    (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[q->anc->index], nu*q->length, bmRate[q->index]);
+			        (*lnPriorRatio) += LnProbBmLogNormal (bmRate[p->anc->index], nu*p->length, bmRate[p->index]);
+                    brlens[p->index] = p->length * (bmRate[p->anc->index]+bmRate[p->index])/2.0;
+                    }
+		        }
+		    else if (subParm->paramType == P_IBRBRANCHLENS)
+    		    {
+	    	    ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
+		        ibrRate = GetParamVals (subParm, chain, state[chain]);
+		        brlens = GetParamSubVals (subParm, chain, state[chain]);
+			
+		        /* prior ratio and update of ibr rates */
+                for (j=0; j<t->nNodes-2; j++)
+                    {
+                    p = t->allDownPass[j];
+                    q = oldT->allDownPass[j];
+                    (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[q->index]);
+			        (*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
+                    ibrRate[p->index] = brlens[p->index] / p->length;
                     }
                 }
-            x = 0.0;
-            if (!strcmp(mp->clockPr,"Uniform"))
-                {
-                (*lnPriorRatio) -= LnUniformPriorPr(oldT, oldR);
-                (*lnPriorRatio) += LnUniformPriorPr(t, newR);
-                }
-            else if (!strcmp(mp->clockPr,"Birthdeath"))
-                {
-                sR = *GetParamVals(m->speciationRates, chain, state[chain]);
-                eR = *GetParamVals(m->extinctionRates, chain, state[chain]);
-                sF = mp->sampleProb;
-                x = 0.0;
-                LnBirthDeathPriorPr(oldT, oldR, &x, sR, eR, sF);
-                (*lnPriorRatio) -= x;
-                x = 0.0;
-                LnBirthDeathPriorPr(t, newR, &x, sR, eR, sF);
-                (*lnPriorRatio) += x;
-                }
-            else if (!strcmp(mp->clockPr,"Coalescence"))
-                {
-                N = *GetParamVals(m->popSize, chain, state[chain]);
-                if (!strcmp(mp->ploidy,"Diploid"))
-                    theta = 4.0*N;
-                else if (!strcmp(mp->ploidy,"Haploid"))
-                    theta = 3.0*N;
-                else
-                    theta = 2.0*N;
-                theta *= oldR;
-                x = 0.0;
-                LnCoalescencePriorPr(oldT, oldR, &x, theta, 0.0);
-                (*lnPriorRatio) -= x;
-                x = 0.0;
-                theta *= factor;
-                LnCoalescencePriorPr(t, newR, &x, theta, 0.0);
-                (*lnPriorRatio) += x;
-                }
-            else /* if (!strcmp(mp->clockPr,"Fixed")) */
-                {
-                /* No prior ratio effect */
-                }
-            /* no proposal and prior ratio adjustment for relaxed clock models, since branch lengths are the same */
             }
         }
  
-    assert (IsTreeConsistent(modelSettings[param->relParts[0]].brlens, chain, state[chain]) == YES);
-
 	return (NO_ERROR);
 
 }
@@ -34762,7 +34683,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 					else
 						MrBayesPrintf (fpMcmc, "\t%.6f", theMove->lastAcceptanceRate[j]);
                     if (theMove->moveType->Autotune != NULL)
-                        MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[0]);
+                        MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[j][0]);
 					}
 				}
 			}
@@ -34777,7 +34698,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 				else
 					MrBayesPrintf (fpMcmc, "\t%.6f", theMove->lastAcceptanceRate[j]);
                 if (theMove->moveType->Autotune != NULL)
-                    MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[0]);
+                    MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[j][0]);
 				}
 			}
 		if (chainParams.numChains > 1)
