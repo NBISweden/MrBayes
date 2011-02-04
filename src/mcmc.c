@@ -16480,14 +16480,11 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 	/* change clock rate using multiplier */
 	
-	int			i, j, k, *nEvents, stretchTime;
-	MrBFlt		oldR, newR, factor, lambda, x, nu, ibrvar, *brlens, *ibrRate, *bmRate,
-                sR, eR, sF, theta, N;
+	int			i, j, k, *nEvents;
+	MrBFlt		oldR, newR, factor, lambda, nu, ibrvar, *brlens, *ibrRate, *bmRate;
 	Tree		*t, *oldT;
     TreeNode    *p, *q;
     Param       *treeParam, *subParm;
-    Model       *mp;
-    ModelInfo   *m;
 
     assert (IsTreeConsistent(modelSettings[param->relParts[0]].brlens, chain, state[chain]) == YES);
 
