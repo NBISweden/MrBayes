@@ -4387,6 +4387,7 @@ void ResetTipIndices (PolyTree *pt)
     int         i, j, k;
     PolyNode    *p;
 
+
     for (i=j=0; i<numTaxa; i++)
 		{
 		for (k=0; k<pt->nNodes; k++)

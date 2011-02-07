@@ -11,7 +11,7 @@ typedef struct
     MrBFlt          upper;
     MrBFlt          var;
     MrBFlt          PSRF;
-    MrBFlt          maxESS;
+    MrBFlt          avrESS;
     MrBFlt          minESS;
 	}
 	Stat;

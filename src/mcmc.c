@@ -31927,7 +31927,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             if (p->isDated == YES)
                 p->age *= factor;
             assert(p->nodeDepth >= 0.0 && p->nodeDepth < POS_INFINITY);
-            if (p->left != NULL)
+            if (p->left != NULL) 
                 {
                 p->left ->length = p->nodeDepth - p->left ->nodeDepth;
                 p->right->length = p->nodeDepth - p->right->nodeDepth;

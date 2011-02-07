@@ -7815,9 +7815,14 @@ int DoTranslateParm (char *parmName, char *tkn)
 	if (expecting == Expecting(ALPHA) ||
         expecting == Expecting(NUMBER))
 		{
+        if( numTaxa == 0 )
+            {
+			MrBayesPrint ("%s   Data matrix should be defined before translation table could be set.\n", spacer);
+			return (ERROR);
+            }
 		if (numTranslates == numTaxa)
 			{
-			MrBayesPrint ("%s   Too many entries in translation table\n", spacer);
+			MrBayesPrint ("%s   Too many entries in translation table. Maximum number of taxon names to translate is %d\n", spacer,numTaxa);
 			return (ERROR);
 			}
 		if (whichTranslate == 0)
@@ -7922,7 +7927,7 @@ int DoTreeParm (char *parmName, char *tkn)
 
     if (isTaxsetDef == NO)
 		{
-		MrBayesPrint ("%s   Taxon labels must be specified before a tree can be read in\n", spacer);
+		MrBayesPrint ("%s   Taxon labels must be specified before a tree could be red in\n", spacer);
 		return (ERROR);
 		}
 	if (inTreesBlock == NO)
@@ -10917,12 +10922,10 @@ int GetUserHelp (char *helpTkn)
 					{
 					if (mp->activeConstraints[j] == YES)
 						{
-						if (j+1 == mp->numActiveConstraints)
-							MrBayesPrint ("%d)\n", j+1);
-						else
-							MrBayesPrint ("%d,", j+1);
+						MrBayesPrint ("%d,", j+1);
 						}
 					}
+                MrBayesPrint (")\n");
 				}
 			else if (!strcmp(mp->topologyPr, "Fixed"))
 				MrBayesPrint("(%s)\n", userTree[mp->topologyFix]->name);
