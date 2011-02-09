@@ -10659,7 +10659,7 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
                     constraintTree = AllocatePolyTree (numTaxa);
 					CopyToPolyTreeFromPolyTree (constraintTree, userTree[modelParams[p->relParts[0]].topologyFix]);
 					PrunePolyTree (constraintTree);
-                    ResetTipIndices(constraintTree);
+                    ResetTipIndicesLabel(constraintTree);
                     ResetIntNodeIndices(constraintTree);
                     if (tree->nIntNodes != constraintTree->nIntNodes)
 						{

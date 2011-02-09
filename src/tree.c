@@ -4410,6 +4410,39 @@ void ResetTipIndices (PolyTree *pt)
 
 /*----------------------------------------------
 |
+|   ResetTipIndicesLabel: reset tip indices to be from 
+|      0 to number of included taxa, in same order
+|      as in the original taxon set.
+|
+-----------------------------------------------*/
+void ResetTipIndicesLabel (PolyTree *pt)
+{
+    int         i, j, k;
+    PolyNode    *p;
+
+
+    for (i=j=0; i<numTaxa; i++)
+		{
+		for (k=0; k<pt->nNodes; k++)
+			{
+			p = pt->allDownPass[k];
+			if (StrCmpCaseInsensitive(p->label,taxaNames[i]) == 0)
+				break;
+			}
+        if (k < pt->nNodes)
+            {
+            assert (p->left == NULL);
+		    p->index = j++;
+            }
+		}
+}
+
+
+
+
+
+/*----------------------------------------------
+|
 |   ResetTopology: rebuild the tree t to fit the 
 |      Newick string s. Everyting except topology
 |      is left in the same state in t.
