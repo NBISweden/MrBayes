@@ -3839,20 +3839,22 @@ void PrintPolyNodes (PolyTree *pt)
 |      of the included taxa. NB! All tree nodes cannot be accessed by cycling over the
 |      pt->nodes array after the deletion, because some spaces will be occupied by deleted
 |      nodes and pt->nNodes is no longer the length of this array.
+|      Note: the function relies on tip node indeces be set according to original matrices.
 |
 ---------------------------------------------------------------------------------------------*/
 int PrunePolyTree (PolyTree *pt)
 
 {
 
-	int 			i, j, k, numDeleted, numTermPruned, numIntPruned;
+	int 			i, j, k, numDeleted, numTermPruned, numIntPruned, index;
 	PolyNode		*p = NULL, *q=NULL, *r=NULL;
 
 	numDeleted = 0;
 	for (i=0; i<pt->nNodes; i++)
 		{
 		p = pt->allDownPass[i];
-        if (p->left == NULL && taxaInfo[p->index].isDeleted == YES)
+        CheckString (taxaNames, numTaxa, p->label, &index);
+        if (p->left == NULL && taxaInfo[index].isDeleted == YES)
 			numDeleted++;
 		}
 		
@@ -3880,7 +3882,8 @@ int PrunePolyTree (PolyTree *pt)
 		p = pt->allDownPass[i];
 		if (p->left != NULL)
 			continue;
-		if (taxaInfo[p->index].isDeleted == YES)
+        CheckString (taxaNames, numTaxa, p->label, &index);
+		if (taxaInfo[index].isDeleted == YES)
 			{
             numTermPruned++;
 			for (q=p->anc->left; q!=NULL; q=q->sib)
@@ -4375,6 +4378,7 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 
 
 
+
 /*----------------------------------------------
 |
 |   ResetTipIndices: reset tip indices to be from 
@@ -4382,40 +4386,7 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 |      as in the original taxon set.
 |
 -----------------------------------------------*/
-void ResetTipIndices (PolyTree *pt)
-{
-    int         i, j, k;
-    PolyNode    *p;
-
-
-    for (i=j=0; i<numTaxa; i++)
-		{
-		for (k=0; k<pt->nNodes; k++)
-			{
-			p = pt->allDownPass[k];
-			if (p->index == i)
-				break;
-			}
-        if (k < pt->nNodes)
-            {
-            assert (p->left == NULL);
-		    p->index = j++;
-            }
-		}
-}
-
-
-
-
-
-/*----------------------------------------------
-|
-|   ResetTipIndicesLabel: reset tip indices to be from 
-|      0 to number of included taxa, in same order
-|      as in the original taxon set.
-|
------------------------------------------------*/
-void ResetTipIndicesLabel (PolyTree *pt)
+void ResetTipIndices(PolyTree *pt)
 {
     int         i, j, k;
     PolyNode    *p;

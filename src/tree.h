@@ -69,7 +69,6 @@ void      ResetPolyTreePartitions (PolyTree *pt);
 void      ResetPolyTreeRelClockParams (PolyTree *pt);
 int       ResetRootHeight (Tree *t, MrBFlt rootHeight);
 void      ResetTipIndices (PolyTree *pt);
-void      ResetTipIndicesLabel (PolyTree *pt);
 int       ResetTopology (Tree *t, char *s);
 int       ResetTopologyFromTree (Tree *tree, Tree *top);
 int       ResetTopologyFromPolyTree (Tree *tree, PolyTree *top);

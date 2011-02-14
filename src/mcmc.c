@@ -1611,8 +1611,9 @@ int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
         q->anc = q->right = NULL;
         q->left = p;
         p->anc = q;
-        p->right = r;
         p->left = r->left;
+        p->right = r;
+        p->left->anc = p;
         r->left = r->right = NULL;
         r->anc = p;
         t->root = q;
@@ -39006,6 +39007,7 @@ int ReusePreviousResults (int *numSamples)
 
 
 
+
 int RunChain (SafeLong *seed)
 
 {
@@ -39027,7 +39029,7 @@ int RunChain (SafeLong *seed)
 #endif
 	ModelInfo	*m;
 	ResetScalersNeeded = NO;
-
+    
 	for (i=0; i<numCurrentDivisions; i++)
 		{
 		m = &modelSettings[i];

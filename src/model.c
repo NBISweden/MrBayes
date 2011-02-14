@@ -10659,8 +10659,9 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
                     constraintTree = AllocatePolyTree (numTaxa);
 					CopyToPolyTreeFromPolyTree (constraintTree, userTree[modelParams[p->relParts[0]].topologyFix]);
 					PrunePolyTree (constraintTree);
-                    ResetTipIndicesLabel(constraintTree);
+                    ResetTipIndices(constraintTree);
                     ResetIntNodeIndices(constraintTree);
+                    RandResolve (constraintTree, seed, constraintTree->isRooted);
                     if (tree->nIntNodes != constraintTree->nIntNodes)
 						{
 						MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved or differs in rootedness\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
