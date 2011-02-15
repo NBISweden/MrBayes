@@ -5299,6 +5299,7 @@ int DoMatrixParm (char *parmName, char *tkn)
 	return (NO_ERROR);
 	MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
 	errorExit:
+        numTaxa=taxonCount;
 		FreeMatrix();
 		return (ERROR);
 
@@ -8215,11 +8216,19 @@ int DoTreeParm (char *parmName, char *tkn)
             {
             if (pp->anc == NULL)
 			    {
-			    MrBayesPrint ("%s   Incorrect tree format: cannot go down\n", spacer, tkn);
+			    MrBayesPrint ("%s   Incorrect tree format: cannot go down\n", spacer);//, tkn
 			    if (inSumtCommand == NO && inComparetreeCommand == NO)
                     FreePolyTree (userTree[treeIndex]);
 			    return (ERROR);
 			    }
+            if( pp->anc->left == pp )
+                {
+                MrBayesPrint ("%s   Incorrect tree format: all nodes except tips should have more then one child. Either a single\n", spacer);
+                MrBayesPrint ("%s   taxon is surrounded with brackets or there is a clade surrounded by double brackets.\n", spacer);
+			    if (inSumtCommand == NO && inComparetreeCommand == NO)
+                    FreePolyTree (userTree[treeIndex]);
+			    return (ERROR);
+                }
 		    pp = pp->anc;
 		    if (pp->anc == NULL)
 			    {

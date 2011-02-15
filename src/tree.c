@@ -50,6 +50,7 @@
 #include "globals.h"
 #include "tree.h"
 #include "utils.h"
+#include "command.h"
 
 const char* const svnRevisionTreeC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
