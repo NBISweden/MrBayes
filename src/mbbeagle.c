@@ -1203,6 +1203,15 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
                 }
             else
                 length = p->length;
+
+            /* numerical errors might ensue if we allow very large or very small branch lengths, which might
+               occur in relaxed clock models; an elegant solution would be to substitute the stationary
+               probs and initial probs but for now we truncate lengths at small or large values */
+            if (length > BRLENS_MAX)
+                length = BRLENS_MAX;
+            else if (length < BRLENS_MIN)
+                length = BRLENS_MIN;
+
             m->branchLengths[count] = length;
             
             /* find index */

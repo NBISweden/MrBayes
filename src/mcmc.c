@@ -42542,11 +42542,13 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -42654,11 +42656,13 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -42759,11 +42763,13 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->nCijkParts; k++)
@@ -42874,11 +42880,13 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -42961,11 +42969,13 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -43044,11 +43054,13 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -43126,11 +43138,13 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
-    /* numerical errors will ensue if we allow very large branch lengths, which might occur
-       in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs but for now we truncate lengths at a large value */
+    /* numerical errors will ensue if we allow very large or very small branch lengths, which might
+       occur in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs and initial probs but for now we truncate lengths at small or large values */
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
+    else if (length < BRLENS_MIN)
+        length = BRLENS_MIN;
 
 	/* fill in values; this has to be done differently if state freqs are not equal */
 	if (m->stateFreq->paramId == SYMPI_EQUAL)
