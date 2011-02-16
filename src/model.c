@@ -21720,9 +21720,9 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 	if (p != NULL)
 		{
 #if 0
-        if (baseRate < NEG_INFINITY)
+        if (baseRate < POS_MIN > baseRate > POS_INFINITY)
             {
-            printf("Too small baseRate (%.15e for node %d\n", baseRate, p->index);
+            printf("baseRate out of bound (%.15e for node %d\n", baseRate, p->index);
             return (ERROR);
             }
 #endif
@@ -21756,14 +21756,14 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 			endRate *= rateMult[p->index][i];
 
 #if 0
-        if (endRate < NEG_INFINITY)
+        if (endRate < POS_MIN || endRate > POS_INFINITY)
             {
-			printf ("Too low endrate (%.15e for node %d)\n", endRate, p->index);
+			printf ("endRate out of bound (%.15e for node %d)\n", endRate, p->index);
             return (ERROR);
             }
-		if (evolLength[p->index] < NEG_INFINITY && p->anc != NULL && p->anc->anc != NULL)
+		if (p->anc != NULL && p->anc->anc != NULL && (evolLength[p->index] < POS_MIN || evolLength[p->index] > POS_INFINITY))
             {
-			printf ("Effective branch length too small (%.15e for node %d)\n", evolLength[p->index], p->index);
+			printf ("Effective branch length out of bound (%.15e for node %d)\n", evolLength[p->index], p->index);
             return (ERROR);
             }
 #endif

@@ -16642,6 +16642,11 @@ int Move_CPPEventPosition (Param *param, int chain, SafeLong *seed, MrBFlt *lnPr
 
 	/* find new position */
 	pos = RandomNumber (seed);
+    if (pos < POS_MIN || 1.0 - pos < POS_MIN)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
 	position[p->index][k] = pos;
 
 	/* sort events; bubble sort for now */
@@ -16793,8 +16798,8 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, SafeLong *seed, MrBFlt 
 	rateMultiplier = param->rateMult[2*chain+state[chain]];
 
 	/* get minimum and maximum of CPP rate multiplier */
-	minM = CPPLAMBDA_MIN;
-	maxM = CPPLAMBDA_MAX;
+	minM = param->min;
+	maxM = param->max;
 	
 	/* pick a branch and a rateMultiplier */
 	for (i=j=0; i<t->nNodes - 2; i++)
@@ -16921,7 +16926,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, SafeLong *seed, MrBFlt *
 	/* set new value */
 	do {
 		newRateMultiplier = LogNormalRandomVariable (0.0, sigma, seed);
-		} while (newRateMultiplier < CPPRATEMULTIPLIER_MIN || newRateMultiplier > CPPRATEMULTIPLIER_MAX);
+		} while (newRateMultiplier < param->min || newRateMultiplier > param->max);
 	rateMultiplier[p->index][k] = newRateMultiplier;
 
 	/* calculate prior ratio */
@@ -24332,7 +24337,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
     else
         {
 		minDepth = p->left->nodeDepth + BRLENS_MIN;
-		if (p->right->nodeDepth + POS_MIN > minDepth)
+		if (p->right->nodeDepth + BRLENS_MIN > minDepth)
 			minDepth = p->right->nodeDepth + BRLENS_MIN;
         }
 	if (p->anc->anc == NULL)
@@ -24506,7 +24511,9 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 {
                 brlens[p->left->index ] = ibrRate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = ibrRate[p->right->index] * p->right->length;
-                if (brlens[p->left->index] <= 0.0 || brlens[p->right->index] <= 0.0)
+                // ibrRate[p->left-> index] = brlens[p->left-> index] / p->left->length;
+                // ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
+                if (brlens[p->left->index] < BRLENS_MIN || brlens[p->right->index] < BRLENS_MIN)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
@@ -24517,7 +24524,8 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
             if (p->anc->anc != NULL)
                 {
                 brlens[p->index] = ibrRate[p->index] * p->length;
-                if (brlens[p->index] <= 0.0)
+                // ibrRate[p->index] = brlens[p->index] / p->length;
+                if (brlens[p->index] < BRLENS_MIN)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
@@ -42534,6 +42542,12 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
+
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
@@ -42640,6 +42654,12 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
+
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
@@ -42738,6 +42758,12 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 		}
 	else
 		length = p->length;
+
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
 
 	/* fill in values */
 	for (k=index=0; k<m->nCijkParts; k++)
@@ -42848,6 +42874,12 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
+
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
@@ -42929,6 +42961,12 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
+
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
@@ -43006,6 +43044,12 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 	else
 		length = p->length;
 
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
+
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
@@ -43081,6 +43125,12 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 		}
 	else
 		length = p->length;
+
+    /* numerical errors will ensue if we allow very large branch lengths, which might occur
+       in relaxed clock models; an elegant solution would be to substitute the stationary
+       probs but for now we truncate lengths at a large value */
+    if (length > BRLENS_MAX)
+        length = BRLENS_MAX;
 
 	/* fill in values; this has to be done differently if state freqs are not equal */
 	if (m->stateFreq->paramId == SYMPI_EQUAL)
