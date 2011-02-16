@@ -8249,7 +8249,14 @@ int DoTreeParm (char *parmName, char *tkn)
                     (t->isRooted == NO  && t->nNodes-t->nIntNodes != t->nIntNodes + 2))
                     {
                     /* we are protected from adding too many taxa by taxon-matching code above */
-			        MrBayesPrint ("%s   Taxa missing in tree\n", spacer);
+                    if (t->isRooted == YES && t->nNodes-t->nIntNodes == t->nIntNodes + 2)
+                        {
+                        MrBayesPrint ("%s   The tree is declared as rooted (by comment [&R]) but\n", spacer);
+                        MrBayesPrint ("%s   the given tree has unrooted structure.\n", spacer);
+                        }
+                    else
+			            MrBayesPrint ("%s   Taxa missing in tree\n", spacer);
+
                     return (ERROR);
                     }
 

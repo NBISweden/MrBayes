@@ -24354,8 +24354,9 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 			if (p->calibration->min * clockRate > minDepth)
 				minDepth = p->calibration->min * clockRate;
 			}
-		else /* if (p->calibration->prior == Offsetexponential) */
+		else 
 			{
+            assert(p->calibration->prior == offsetExponential);
 			if (p->calibration->offset * clockRate > minDepth)
 				minDepth = p->calibration->offset * clockRate;
 			}
@@ -24392,12 +24393,18 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 	if (p->left != NULL)
 		{
 		p->left->length = p->nodeDepth - p->left->nodeDepth;
+        assert(p->left->length > 0.0);
+        /*
         if (p->left->length < 0.0)
             p->left->length = 0.0;
+        */
 		p->left->upDateTi = YES;
 		p->right->length = p->nodeDepth - p->right->nodeDepth;
+        /*
         if (p->right->length < 0.0)
             p->right->length = 0.0;
+        */
+        assert(p->right->length > 0.0);
 		p->right->upDateTi = YES;
 		}
 	if (p->anc->anc != NULL)

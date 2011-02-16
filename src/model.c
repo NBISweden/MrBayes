@@ -6408,19 +6408,23 @@ int DoPrsetParm (char *parmName, char *tkn)
 					    MrBayesPrint ("%s   Constraint number is too large\n", spacer);
 					    return (ERROR);
 					    }
-				    if (fromI == -1)
+                    if (fromI == -1)
+                        {
 					    fromI = tempInt;
+                        tempActiveConstraints[fromI-1] = YES;
+                        }
 				    else if (fromI != -1 && toJ == -1 && foundDash == YES && foundComma == NO)
 					    {
 					    toJ = tempInt;
-					    for (i=fromI-1; i<toJ; i++)
+					    //for (i=fromI-1; i<toJ; i++)
+                        for (i=fromI; i<toJ; i++)
 						    tempActiveConstraints[i] = YES;
 					    fromI = toJ = -1;
 					    foundDash = NO;
 					    }
 				    else if (fromI != -1 && toJ == -1 && foundDash == NO && foundComma == YES)
 					    {
-					    tempActiveConstraints[fromI-1] = YES;
+					    //tempActiveConstraints[fromI-1] = YES;
 					    fromI = tempInt;
 					    foundComma = NO;
 					    }
@@ -6462,10 +6466,6 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(RIGHTPAR))
 				{
-				/* close expression for constraints */
-                if (fromI != -1)
-					tempActiveConstraints[fromI-1] = YES;
-
                 /* find out whether we need a tree number or constraint number(s) */
 				nApplied = NumActiveParts ();
 				for (i=0; i<numCurrentDivisions; i++)
