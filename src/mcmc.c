@@ -24380,13 +24380,14 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 	newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
     
     /* reflect the new node depth */
-	while (newDepth < minDepth || newDepth > maxDepth)
+    while (newDepth < minDepth || newDepth > maxDepth)
 		{
 		if (newDepth < minDepth)
 			newDepth = 2.0 * minDepth - newDepth;
 		if (newDepth > maxDepth)
 			newDepth = 2.0 * maxDepth - newDepth;
 		}
+
 	p->nodeDepth = newDepth;
 
 	/* determine new branch lengths around p and set update of transition probabilities */
@@ -24518,8 +24519,6 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 {
                 brlens[p->left->index ] = ibrRate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = ibrRate[p->right->index] * p->right->length;
-                // ibrRate[p->left-> index] = brlens[p->left-> index] / p->left->length;
-                // ibrRate[p->right->index] = brlens[p->right->index] / p->right->length;
                 if (brlens[p->left->index] < BRLENS_MIN || brlens[p->right->index] < BRLENS_MIN)
                     {
                     abortMove = YES;
@@ -24531,7 +24530,6 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
             if (p->anc->anc != NULL)
                 {
                 brlens[p->index] = ibrRate[p->index] * p->length;
-                // ibrRate[p->index] = brlens[p->index] / p->length;
                 if (brlens[p->index] < BRLENS_MIN)
                     {
                     abortMove = YES;
