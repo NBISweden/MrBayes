@@ -16515,7 +16515,19 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
         oldT      = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
 
-        /* we always stretch branchlength tree, because it may not be possible to stretch the time tree */
+        /* decide whether we want to stretch the time tree or the branchlength tree */
+        if (!strcmp(modelParams[i].clockPr,"Fixed"))
+            stretchTime = NO;
+        else if (RandomNumber(seed) < 0.5)
+            stretchTime = YES;
+        else
+            stretchTime = NO;
+    
+        stretchTime = YES;
+
+        if (stretchTime == NO)
+            {
+            /* we stretch the branch length tree */
 
         /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
         for (j=0; j<t->nNodes-1; j++)
@@ -16575,11 +16587,20 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		        /* prior ratio and update of ibr rates */
                 for (j=0; j<t->nNodes-2; j++)
                     {
-                    p = t->allDownPass[j];
-                    q = oldT->allDownPass[j];
-                    (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[q->index]);
-			        (*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
-                    ibrRate[p->index] = brlens[p->index] / p->length;
+                    if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor < p->calibration->offset) ||
+                        (p->isDated == YES && p->calibration->prior == uniform && (p->age/factor < p->calibration->min || p->age/factor > p->calibration->max)))
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    (*lnProposalRatio) -= log(factor);  // there is a prior on the time tree, so a Jacobian results
+                    if (p->isDated == YES)
+                        {
+                        p->age /= factor;
+                        assert(p->age >= 0.0 && p->age < POS_INFINITY);
+                        if (p->calibration->prior == offsetExponential)
+                            (*lnPriorRatio) += p->calibration->lambda * (p->age * factor - p->age);
+                        }
                     }
                 }
             }
@@ -24354,7 +24375,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 			if (p->calibration->min * clockRate > minDepth)
 				minDepth = p->calibration->min * clockRate;
 			}
-		else 
+		else /* if (p->calibration->prior == offsetExponential) */
 			{
             assert(p->calibration->prior == offsetExponential);
 			if (p->calibration->offset * clockRate > minDepth)
@@ -24372,7 +24393,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
     /* save some reflection time */
     if( maxDepth-minDepth < window )
 		{
-		window = maxDepth-minDepth;
+		window = 0.05; // maxDepth-minDepth;
 		}
 
 	/* pick the new node depth */
@@ -24394,16 +24415,11 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 	if (p->left != NULL)
 		{
 		p->left->length = p->nodeDepth - p->left->nodeDepth;
-        assert(p->left->length > 0.0);
-        /*
-        if (p->left->length < 0.0)
-            p->left->length = 0.0;
+        assert (p->left->length >= BRLENS_MIN);
         */
 		p->left->upDateTi = YES;
 		p->right->length = p->nodeDepth - p->right->nodeDepth;
-        /*
-        if (p->right->length < 0.0)
-            p->right->length = 0.0;
+        assert (p->right->length >= BRLENS_MIN);
         */
         assert(p->right->length > 0.0);
 		p->right->upDateTi = YES;
@@ -24411,8 +24427,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 	if (p->anc->anc != NULL)
         {
         p->length = p->anc->nodeDepth - p->nodeDepth;
-        if (p->length < 0.0)
-            p->length = 0.0;
+        assert (p->length >= BRLENS_MIN);
 	    p->upDateTi = YES;
         }
 
