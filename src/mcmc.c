@@ -16515,27 +16515,16 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
         oldT      = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
 
-        /* decide whether we want to stretch the time tree or the branchlength tree */
-        if (!strcmp(modelParams[i].clockPr,"Fixed"))
-            stretchTime = NO;
-        else if (RandomNumber(seed) < 0.5)
-            stretchTime = YES;
-        else
-            stretchTime = NO;
-    
-        stretchTime = YES;
-
-        if (stretchTime == NO)
-            {
-            /* we stretch the branch length tree */
-
         /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
+        
+        /* adjust the node depths and lengths */
         for (j=0; j<t->nNodes-1; j++)
             {
             p = t->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root)*/
             }
+        
         /* adjust proposal and prior ratio for relaxed clock models */
         for (j=0; j<treeParam->nSubParams; j++)
 		    {
@@ -16580,27 +16569,18 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		        }
 		    else if (subParm->paramType == P_IBRBRANCHLENS)
     		    {
-	    	    ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
-		        ibrRate = GetParamVals (subParm, chain, state[chain]);
-		        brlens = GetParamSubVals (subParm, chain, state[chain]);
-			
-		        /* prior ratio and update of ibr rates */
+                ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
+                ibrRate = GetParamVals (subParm, chain, state[chain]);
+                brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+                /* prior ratio and update of ibr rates */
                 for (j=0; j<t->nNodes-2; j++)
                     {
-                    if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age/factor < p->calibration->offset) ||
-                        (p->isDated == YES && p->calibration->prior == uniform && (p->age/factor < p->calibration->min || p->age/factor > p->calibration->max)))
-                        {
-                        abortMove = YES;
-                        return (NO_ERROR);
-                        }
-                    (*lnProposalRatio) -= log(factor);  // there is a prior on the time tree, so a Jacobian results
-                    if (p->isDated == YES)
-                        {
-                        p->age /= factor;
-                        assert(p->age >= 0.0 && p->age < POS_INFINITY);
-                        if (p->calibration->prior == offsetExponential)
-                            (*lnPriorRatio) += p->calibration->lambda * (p->age * factor - p->age);
-                        }
+                    p = t->allDownPass[j];
+                    q = oldT->allDownPass[j];
+                    (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[q->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
+                    ibrRate[p->index] = brlens[p->index] / p->length;
                     }
                 }
             }
@@ -24416,12 +24396,9 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 		{
 		p->left->length = p->nodeDepth - p->left->nodeDepth;
         assert (p->left->length >= BRLENS_MIN);
-        */
 		p->left->upDateTi = YES;
 		p->right->length = p->nodeDepth - p->right->nodeDepth;
         assert (p->right->length >= BRLENS_MIN);
-        */
-        assert(p->right->length > 0.0);
 		p->right->upDateTi = YES;
 		}
 	if (p->anc->anc != NULL)
@@ -32009,33 +31986,6 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
 			}
-#if 0
-			nEvents = subParm->nEvents[2*chain+state[chain]];
-			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-			/* proposal ratio */
-			if (p->left != NULL)
-                {
-                (*lnProposalRatio) += nEvents[p->left->index ] * log (p->left->length  / oldLeftLength);
-			    (*lnProposalRatio) += nEvents[p->right->index] * log (p->right->length / oldRightLength);
-                }
-			if (p->anc->anc != NULL)
-                (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
-
-            /* prior ratio */
-			if (p->anc->anc == NULL) // two branches changed in same direction
-                (*lnPriorRatio) += lambda * (2.0 * (oldDepth - newDepth));
-            else if (p->left != NULL) // two branches changed in one direction, one branch in the other direction
-                (*lnPriorRatio) += lambda * (oldDepth - newDepth);
-            else /* if (p->left == NULL) */ // one branch changed
-                (*lnPriorRatio) += lambda * (newDepth - oldDepth);
-
-            /* update effective evolutionary lengths */
-			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
-#endif
         else if (subParm->paramType == P_BMBRANCHRATES)
 			{
 			nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
@@ -32066,8 +32016,8 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 p = t->allDownPass[j];
                 q = oldT->allDownPass[j];
                 (*lnPriorRatio) -= LnProbGamma (q->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
-    			(*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index] * factor);
                 brlens[p->index] *= factor;
+    			(*lnPriorRatio) += LnProbGamma (p->length/ibrvar, 1.0/ibrvar, brlens[p->index]);
                 (*lnProposalRatio) += log(factor);
                 ibrRate[p->index] = brlens[p->index] / p->length;
                 }
