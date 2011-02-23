@@ -17752,6 +17752,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) -= LnProbTruncGamma(u->length/ibrvar, 1.0/ibrvar, brlens[u->index], minB, maxB);
 
             /* adjust effective branch lengths and rates */
+            /* we just move brlens[u->index] to new location; Hastings ratio of the alternative not worked out yet */
             // brlens[a->index] += brlens[u->index];
             ibrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
@@ -17981,11 +17982,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) -= LnProbTruncGamma ((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index], minB, maxB);
 
             /* adjust effective branch lengths and rates; use random number from above to subdivide  */
-            if (brlens[a->index] - 2.0*minB <= 0.0 || brlens[oldA->index] - 2.0*minB <= 0.0)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
+            /* we just rearrange brlens values; Hastings ratio not worked out yet for alternative */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
             // brlens [u->index] = (brlens[a->index] - 2.0*minB) * y + minB;   /* y is random number from above */
@@ -18005,6 +18002,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			(*lnPriorRatio) += LnProbTruncGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index], minB, maxB);
 
             /* adjust proposal ratio (prop. to ratio between new and old brlen that is being split) */
+            /* when we rearrange effective brlens, the proposal ratio is 1; the ratio below is NOT the correct Hastings ratio for the alternative update */
             // (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index] - 2.0*minB) / (brlens[oldA->index] - 2.0*minB));
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
@@ -26362,6 +26360,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			(*lnPriorRatio) -= LnProbTruncGamma(u->length/ibrvar, 1.0/ibrvar, brlens[u->index], minB, maxB);
 
             /* adjust effective branch lengths and rates */
+            /* we move brens[u->index] to new location; Hastings ratio of alternative not worked out yet */
             // brlens[a->index] += brlens[u->index];
             ibrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
@@ -26674,6 +26673,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			(*lnPriorRatio) -= LnProbTruncGamma ((c->length+u->length)/ibrvar, 1.0/ibrvar, brlens[c->index], minB, maxB);
 
             /* adjust effective branch lengths and rates */
+            /* we use the old values, just rearrange them; Hastings ratio of alternative not worked out yet */
 			brlens [v->index] = brlens[v->index];   /* keep this branch length the same */
             ibrRate[v->index] = brlens[v->index] / v->length;
             // brlens [u->index] = brlens[c->index] * newProp;
@@ -26694,6 +26694,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			(*lnPriorRatio) += LnProbTruncGamma (u->length/ibrvar, 1.0/ibrvar, brlens[u->index], minB, maxB);
 
             /* adjust proposal ratio */
+            /* when we just rearrange old values, the proposal ratio is 1; the ratio below is NOT the correct one for the alternative update */
             // (*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
             }   /* end ibr branch rate parameter */
 		}	/* next subparameter */
