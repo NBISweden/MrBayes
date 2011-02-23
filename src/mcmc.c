@@ -14543,9 +14543,7 @@ MrBFlt LogLike (int chain)
 {
 
 	int				i, d;
-	//TreeNode		*p;
 	ModelInfo		*m;
-	//Tree			*tree;
 	MrBFlt			chainLnLike, lnL;
 						
 	/* initialize chain cond like */
@@ -14553,7 +14551,6 @@ MrBFlt LogLike (int chain)
 	
 	if (chainParams.runWithData == NO)
 		return (chainLnLike);
-
 
 #	if defined (DEBUG_RUN_WITHOUT_DATA)
 	return (chainLnLike);
@@ -21974,7 +21971,7 @@ int Move_IbrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 {
 
-	/* move one IBR relaxed clock branch rate using multiplier */
+	/* move one IBR relaxed clock branch length using multiplier */
 
 	int			i;
 	MrBFlt		newBrlen, oldBrlen, tuning, minB, maxB, ibrvar, *ibrRate, *brlens;
@@ -22002,7 +21999,7 @@ int Move_IbrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	minB = RELBRLENS_MIN;
 	maxB = RELBRLENS_MAX;
 	
-	/* randomly pick a rate */
+	/* randomly pick a length */
 	i = (int) (RandomNumber(seed) * (t->nNodes - 2));
 	p = t->allDownPass[i];
 
