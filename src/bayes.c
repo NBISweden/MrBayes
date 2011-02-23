@@ -768,17 +768,17 @@ int InitializeMrBayes (void)
 	defaultModel.cppRateExp = 0.1;
 	defaultModel.cppRateFix = 1.0;
 	strcpy(defaultModel.cppMultDevPr, "Fixed") ;	/* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
-	defaultModel.cppMultDevFix = 1.0;
-	strcpy(defaultModel.bmvarPr, "Fixed") ;	/* prior on nu parameter for BM rel clock */
-	defaultModel.bmvarExp = 1.0;
-	defaultModel.bmvarFix = 1.0;
-	defaultModel.bmvarUni[0] = BMVAR_MIN;
-	defaultModel.bmvarUni[1] = BMVAR_MAX;
-	strcpy(defaultModel.ibrvarPr, "Fixed") ;	/* prior on shape parameter for IBR rel clock */
-	defaultModel.ibrvarExp = 1.0;
-	defaultModel.ibrvarFix = 1.0;
-	defaultModel.ibrvarUni[0] = ALPHA_MIN;
-	defaultModel.ibrvarUni[1] = ALPHA_MAX;
+	defaultModel.cppMultDevFix = 0.4;
+	strcpy(defaultModel.bmvarPr, "Exponential") ;	/* prior on nu parameter for BM rel clock */
+	defaultModel.bmvarExp = 10.0;
+	defaultModel.bmvarFix = 0.1;
+	defaultModel.bmvarUni[0] = 0.0;
+	defaultModel.bmvarUni[1] = 0.5;
+	strcpy(defaultModel.ibrvarPr, "Exponential") ;	/* prior on variance increase parameter for IBR rel clock */
+	defaultModel.ibrvarExp = 10.0;
+	defaultModel.ibrvarFix = 0.1;
+	defaultModel.ibrvarUni[0] = 0.0;
+	defaultModel.ibrvarUni[1] = 0.5;
 	strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition                */
 	defaultModel.ratePrDir = 1.0;
 
