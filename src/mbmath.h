@@ -38,6 +38,7 @@ MrBFlt  LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt  LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt  LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt  LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
+MrBFlt  LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max);
 MrBFlt  LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x);
 MrBFlt  LnProbBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt x);
 MrBFlt  LnProbScaledGamma (MrBFlt alpha, MrBFlt x);

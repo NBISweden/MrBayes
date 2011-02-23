@@ -4431,6 +4431,23 @@ MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
 
 
 
+/* Log probability for a value drawn from a truncated gamma distribution */
+MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max)
+
+{
+    MrBFlt lnProb;
+
+    lnProb = (alpha-1.0)*log(x) + alpha*log(beta) - x*beta - LnGamma(alpha);
+
+    lnProb -= log (IncompleteGamma (max*beta, alpha, LnGamma(alpha)) - IncompleteGamma (min*beta, alpha, LnGamma(alpha)));
+
+    return lnProb;
+}
+
+
+
+
+
 /* Log ratio for two values drawn from a lognormal distribution */
 MrBFlt LnRatioBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
 
