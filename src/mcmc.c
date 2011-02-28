@@ -29550,9 +29550,6 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     oldRate = dirParm + numCurrentDivisions;
     newRate = dirParm + 2*numCurrentDivisions;
 
-    /* get so called alphaPi parameter */
-	alphaPi = mvp[0];
-
 	/* get number of rates */
 	nRates = param->nValues;
 
@@ -29570,7 +29567,10 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	for (i=0; i<nRates; i++)
 		oldRate[i] = value[i] * subValue[i] / numSites;
 	
-	/* multiply old ratesum proportions with some large number to get new values close to the old ones */
+    /* get alphaPi tuning parameter */
+    alphaPi = mvp[0] * numSites;
+
+    /* multiply old ratesum proportions with some large number to get new values close to the old ones */
 	for (i=0; i<nRates; i++)
 		dirParm[i] = oldRate[i] * alphaPi;
 	
@@ -29630,6 +29630,93 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			modelSettings[param->relParts[i]].upDateCijk = YES;
 
     free (dirParm);
+
+    return (NO_ERROR);
+
+}
+
+
+
+
+
+/*----------------------------------------------------------------
+|
+|	Move_RateMult_Slider: Change rate multiplier using slider
+|      proposal.
+|
+----------------------------------------------------------------*/
+int Move_RateMult_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+	int			i, indexI, indexJ, nRates;
+	MrBFlt		delta, *value, *subValue, sum, *alphaDir, x, numSites,
+				oldRateProps[2], newRateProps[2], min, max;
+
+	/* get number of rates */
+	nRates = param->nValues;
+
+	/* get pointer to rates and number of uncompressed chars */
+	value = GetParamVals(param, chain, state[chain]);
+	subValue = GetParamSubVals(param, chain, state[chain]);
+
+	/* get Dirichlet prior parameters */
+	alphaDir = subValue + nRates;
+
+    /* randomly select two rates */
+    indexI = (int) (RandomNumber(seed) * nRates);
+    indexJ = (int) (RandomNumber(seed) * (nRates - 1));
+    if (indexJ == indexI)
+        indexJ = nRates - 1;
+
+    /* get number of sites */
+    numSites = 0;
+    for (i=0; i<nRates; i++)
+        numSites += subValue[i];
+
+	/* calculate old ratesum proportions */
+    sum = value[indexI] * subValue[indexI] + value[indexJ] * subValue[indexJ];
+	oldRateProps[0] = value[indexI] * subValue[indexI] / sum;
+	oldRateProps[1] = value[indexJ] * subValue[indexJ] / sum;
+	
+    /* get delta tuning parameter */
+    delta = mvp[0];
+
+    /* reflect */
+    min = DIR_MIN / sum;
+    max = 1.0 - min;
+
+    x = oldRateProps[0] + delta * (RandomNumber(seed) - 0.5);
+	while (x < min || x > max)
+        {
+        if (x < min)
+			x = 2.0 * min - x;
+		if (x > max)
+            x = 2.0 * max - x;
+		}
+    
+	/* set the new values */
+    newRateProps[0] = x;
+    newRateProps[1] = 1.0 - x;
+    value[indexI] = newRateProps[0] * sum / subValue[indexI];
+    value[indexJ] = newRateProps[1] * sum / subValue[indexJ];
+
+	/* get proposal ratio */
+	(*lnProposalRatio) = 0.0;
+
+	/* get prior ratio */
+	(*lnPriorRatio)  = (alphaDir[indexI]-1.0)*(log(newRateProps[0] * sum / numSites) - log(oldRateProps[0] * sum / numSites));
+	(*lnPriorRatio) += (alphaDir[indexJ]-1.0)*(log(newRateProps[1] * sum / numSites) - log(oldRateProps[1] * sum / numSites));
+
+	/* Set update flags for all partitions that share the rate multiplier. Note that the conditional
+	   likelihood update flags have been set before we even call this function. */
+	for (i=0; i<param->nRelParts; i++)
+		TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+		
+	/* may need to hit update flag for cijks when you have a covarion model */
+	for (i=0; i<param->nRelParts; i++)
+		if (modelSettings[param->relParts[i]].nCijkParts > 1)
+			modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
 
@@ -29927,7 +30014,7 @@ int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
     /* reflect */
     isValid = NO;
     min = RATE_MIN / sum;
-    max = 1.0 - RATE_MIN;
+    max = 1.0 - min;
 
 	x   = oldRate[i] / sum;
 	if( delta > max-min ) /* we do it to avoid following long while loop in case if delta is high */
