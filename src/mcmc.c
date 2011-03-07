@@ -1095,6 +1095,9 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				        usedMoves[i]->nTried[tempIdA]             = 0;
 				        usedMoves[i]->nBatches[tempIdA]           = 0;
 				        usedMoves[i]->lastAcceptanceRate[tempIdA] = 0.0;
+					if (usedMoves[i]->moveType->numTuningParams > 0)
+                                                usedMoves[i]->tuningParam[tempIdA][0]     = 0.0;
+				
 			            }
 		            }
 		        }
@@ -37231,7 +37234,7 @@ int Move_RealSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 int ReassembleMoveInfo (void)
 {
 	int             i, n, ierror;
-    MrBFlt          x[6], sum[6];
+    double          x[7], sum[7];
 	MCMCMove        *mv;
 
 	for (n=0; n<numGlobalChains; n++)
@@ -37247,8 +37250,11 @@ int ReassembleMoveInfo (void)
             x[3] = mv->nTotAccepted[n];
             x[4] = mv->nTotTried[n];
             x[5] = mv->lastAcceptanceRate[n];
+            if (mv->moveType->Autotune != NULL)
+                x[6]=mv->tuningParam[n][0];
+	    	
 
-            ierror = MPI_Allreduce (&x, &sum, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            ierror = MPI_Allreduce (&x, &sum, 7, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	        if (ierror != MPI_SUCCESS)
 		        return (ERROR);
 
@@ -37259,7 +37265,9 @@ int ReassembleMoveInfo (void)
                 mv->nBatches[n]           = (int)sum[2];
                 mv->nTotAccepted[n]       = (int)sum[3];
                 mv->nTotTried[n]          = (int)sum[4];
-                mv->lastAcceptanceRate[n] = sum[5];
+                mv->lastAcceptanceRate[n] = (MrBFlt)sum[5];
+                if (mv->moveType->Autotune != NULL)
+                    mv->tuningParam[n][0]=(MrBFlt)sum[6];
                 }
             }
         }
@@ -37761,7 +37769,9 @@ void RedistributeMoveInfo (void)
                 mv->nBatches[i] = 0;
                 mv->nTotAccepted[i] = 0;
                 mv->nTotTried[i] = 0;
-                mv->lastAcceptanceRate[i] = 0;            
+                mv->lastAcceptanceRate[i] = 0;
+		if (mv->moveType->Autotune != NULL)
+                    mv->tuningParam[i][0]=0.0;            
                 }
             }
         }
@@ -38089,6 +38099,18 @@ int RedistributeTuningParams (void)
     if (numGlobalChains % num_procs != 0)
         lower++;
 
+    if(proc_id != 0 )
+        {
+        for (i=0; i<numGlobalChains; i++)
+            {
+            for (k=0; k<numUsedMoves; k++)
+                                {
+                                if (usedMoves[k]->moveType->numTuningParams > 0)
+                        usedMoves[k]->tuningParam[i][0] = 0.0;
+                                }
+	    }
+        }
+
     for (i=lower; i<numGlobalChains; i++)
         {
 		for (j=0; j<numLocalChains; j++)
@@ -38100,7 +38122,10 @@ int RedistributeTuningParams (void)
         for (k=0; k<numUsedMoves; k++)
             {
 			if (proc_id == 0 && usedMoves[k]->moveType->numTuningParams > 0) /* we have the tuning parameter of interest */
+		{
                 x[k] = usedMoves[k]->tuningParam[i][0];
+		usedMoves[k]->tuningParam[i][0]=0.0;
+		}
             else
                 x[k] = 0.0;
 	    }
