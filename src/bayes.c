@@ -744,6 +744,7 @@ int InitializeMrBayes (void)
 	defaultModel.extinctionFix = 1.0;
 	defaultModel.extinctionBeta[0] = 1;
 	defaultModel.extinctionBeta[1] = 1;
+	strcpy(defaultModel.sampleStrat, "Random");     /* taxon sampling strategy                        */
 	defaultModel.sampleProb = 1.0;                  /* taxon sampling fraction                      */
 	strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
 	defaultModel.popSizeFix = 10.0;

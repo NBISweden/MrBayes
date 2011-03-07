@@ -7030,6 +7030,30 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+		/* set SampleStrat (sampleStrat) *****************************************************/
+		else if (!strcmp(parmName, "SampleStrat"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					nApplied = NumActiveParts ();
+					for (i=0; i<numCurrentDivisions; i++)
+						if (activeParts[i] == YES || nApplied == 0)
+							strcpy(modelParams[i].sampleStrat, tempStr);
+					}
+				else
+					{
+					MrBayesPrint ("%s   Invalid SampleStrat argument\n", spacer);
+					return (ERROR);
+					}
+				}
+			else
+				return (ERROR);
+			}
 		/* set Sampleprob (sampleProb) *****************************************************/
 		else if (!strcmp(parmName, "Sampleprob"))
 			{
@@ -12447,6 +12471,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 
 						if (AreDoublesEqual (modelParams[part1].sampleProb, modelParams[part2].sampleProb, 0.00001) == NO)
                             isSame = NO;
+						if (!strcmp(modelParams[part1].sampleStrat,modelParams[part2].sampleStrat))
+                            isSame = NO;
+							
                         }
 					else if (!strcmp(modelParams[part1].clockPr, "Coalescence") || !strcmp(modelParams[part1].clockPr, "Speciestreecoalescence"))
 						{

@@ -858,9 +858,11 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
     if (strcmp(mp->speciesTreeBrlensPr, "Birthdeath") == 0) {
         sR = *GetParamVals(m->speciationRates, chain, state[chain]);
         eR = *GetParamVals(m->extinctionRates, chain, state[chain]);
+//        sS = mp->sampleStrat;
         sF = mp->sampleProb;
         lnPrior = 0.0;
-        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, sF);
+//        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, sS, sF);
+        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, mp->sampleStrat, sF);
     }
     else
         lnPrior = 0.0;

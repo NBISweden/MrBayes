@@ -967,6 +967,7 @@ typedef struct model
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
 	MrBFlt		extinctionExp;
+	char		sampleStrat[30];      /* taxon sampling strategy (for b-d process)    */
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
 	char		treeAgePr[100];       /* prior on tree age for uniform clock prior */
 	MrBFlt		treeAgeGamma[2];

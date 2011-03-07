@@ -61,7 +61,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    58  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						247
+#define	NUMPARAMS						248
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -10550,6 +10550,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
+		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
+		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
+		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
 		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of species that are         \n");
 		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-        \n");
 		MrBayesPrint ("                    death prior on trees (see Yang and Rannala, 1997).           \n");
@@ -10987,6 +10990,7 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->extinctionBeta[0], mp->extinctionBeta[1]);
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
+			MrBayesPrint ("   SampleStrat      Random/Biologist/Cluster     %s\n", mp->sampleStrat);
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
@@ -13762,9 +13766,10 @@ void SetUpParms (void)
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
+	PARAM   (247, "SampleStrat",     DoPrsetParm,       "Random|Biologist|Cluster|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 247) in paramTable[] at the top of this file. */
+	         change the number of elements (now 248) in paramTable[] at the top of this file. */
 
 }
 
