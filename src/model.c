@@ -12471,7 +12471,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 
 						if (AreDoublesEqual (modelParams[part1].sampleProb, modelParams[part2].sampleProb, 0.00001) == NO)
                             isSame = NO;
-						if (!strcmp(modelParams[part1].sampleStrat,modelParams[part2].sampleStrat))
+						if (strcmp(modelParams[part1].sampleStrat,modelParams[part2].sampleStrat))
                             isSame = NO;
 							
                         }
