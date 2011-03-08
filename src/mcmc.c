@@ -15364,7 +15364,7 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
 {
 
 	int				i, nTaxa;
-	MrBFlt			*nt, et_1, p0t_1, lambda, mu, rho;
+	MrBFlt			*nt, lambda, mu, rho;
 	TreeNode		*p;
 
 	/* allocate space for the speciation times */
@@ -22121,8 +22121,8 @@ int Move_IbrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		for (j=0; j<t->nNodes-2; j++)
 			{
 			p = t->allDownPass[j];
-			(*lnPriorRatio) -= LnProbGamma (p->length/oldIbrvar, 1.0/oldIbrvar, brlens[p->index]);
-			(*lnPriorRatio) += LnProbGamma (p->length/newIbrvar, 1.0/newIbrvar, brlens[p->index]);
+			(*lnPriorRatio) -= LnProbTruncGamma  (p->length/oldIbrvar, 1.0/oldIbrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+			(*lnPriorRatio) += LnProbTruncGamma (p->length/newIbrvar, 1.0/newIbrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 			}
 		}
 
