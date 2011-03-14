@@ -3572,7 +3572,10 @@ int DoSumtTree (void)
                 }
 
             /* now we can safely prune the tree based on taxaInfo[].isDeleted */
-            if (isTranslateDef == NO || isTranslateDiff == NO)
+            /* the following block was conditioned with if(isTranslateDef == NO || isTranslateDiff == NO) 
+            The reason was not clearly stated  but it prevents exclusion of taxa to work in case when the condition does not hold.
+            My guess is that before PrunePolyTree() relied on indeses of tips be set as in original matrix.
+            Now it is not needed after PrunePolyTree and ResetTipIndices ware modified to use labels istead of indexes to recognize tips.*/
                 {
                 PrunePolyTree(t);
 
@@ -3592,7 +3595,10 @@ int DoSumtTree (void)
             }
         else
             {
-            if (isTranslateDef == NO || isTranslateDiff == NO)
+            /* the following block was conditioned with if(isTranslateDef == NO || isTranslateDiff == NO) 
+            The reason was not clearly stated  but it prevents exclusion of taxa to work in case when the condition does not hold.
+            My guess is that before PrunePolyTree() relied on indeses of tips be set as in original matrix.
+            Now it is not needed after PrunePolyTree and ResetTipIndices ware modified to use labels istead of indexes to recognize tips.*/
                 {
                 for (i=0; i<t->nNodes; i++)
                     {

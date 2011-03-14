@@ -3836,11 +3836,10 @@ void PrintPolyNodes (PolyTree *pt)
 /*-------------------------------------------------------------------------------------------
 |
 |   PrunePolyTree: This routine will prune a polytomous tree according to the currently
-|      included taxa. In the the process, tip indices will be updated to reflect the indices
-|      of the included taxa. NB! All tree nodes cannot be accessed by cycling over the
+|      included taxa.  NB! All tree nodes cannot be accessed by cycling over the
 |      pt->nodes array after the deletion, because some spaces will be occupied by deleted
-|      nodes and pt->nNodes is no longer the length of this array.
-|      Note: the function relies on tip node indeces be set according to original matrices.
+|      nodes and pt->nNodes is no longer the length of this array
+|      (if proper re-arangment of pt->nodes needed then remove "#if 0" and make changes to p->x, see below).
 |
 ---------------------------------------------------------------------------------------------*/
 int PrunePolyTree (PolyTree *pt)
@@ -3848,7 +3847,7 @@ int PrunePolyTree (PolyTree *pt)
 {
 
 	int 			i, j, k, numDeleted, numTermPruned, numIntPruned, index;
-	PolyNode		*p = NULL, *q=NULL, *r=NULL;
+	PolyNode		*p = NULL, *q=NULL, *r=NULL, *qa;
 
 	numDeleted = 0;
 	for (i=0; i<pt->nNodes; i++)
@@ -3910,44 +3909,49 @@ int PrunePolyTree (PolyTree *pt)
 				{
 				/* p->anc->left is only child left; make p->anc be p->anc->left and accommodate its length */
 				numIntPruned++;
-                q = p->anc->left;
+                qa= p->anc;
+                q = qa->left;
 				if (q->left == NULL)
                     {
-                    q->anc->index = q->index;
-                    q->anc->length += q->length;
-                    strcpy(q->anc->label, q->label);
-                    q->anc->left = NULL;
+                    qa->index = q->index;
+                    qa->length += q->length;
+                    strcpy(qa->label, q->label);
+                    qa->left = NULL;
+                    q->left = (struct pNode*)1;
                     }
                 else
                     {
-				    q->anc->index   = q->index;
-                    if (q->anc->anc != NULL)
-                        q->anc->length += q->length;
-                    q->anc->left    = q->left;
-                    q->left->anc    = q->anc;
+				    qa->index   = q->index;
+                    if (qa->anc != NULL)
+                        qa->length += q->length;
+                    qa->left = q->left;
+                    for(r=q->left; r!= NULL; r=r->sib)
+                        r->anc = qa;
                     }
 				}
+            /*if unrooted, then root node has to have more then 2 children, thus the following check */
             if (j == 2 && pt->isRooted == NO && p->anc->anc == NULL)
                 {
-                if (p->anc->left->left != NULL)
-                    {
-                    for (q=p->anc->left->left; q->sib!=NULL; q=q->sib)
+                r=p->anc; /*r is the root with only 2 children*/
+                if (r->left->left != NULL)
+                    {/* Make r->left new root by attaching "right" child of r to children of r->left*/
+                    for (q=r->left->left; q->sib!=NULL; q=q->sib)
                         ;
-                    q->sib = p->anc->left->sib;
-                    p->anc->left->sib->anc = q->anc;
-                    p->anc->left->sib->length += q->anc->length;
-                    p->anc->left->sib = NULL;
-                    p->anc->left->anc = NULL;
-                    pt->root = q->anc;
+                    q->sib = r->left->sib;
+                    r->left->sib->anc = q->anc;
+                    r->left->sib->length += q->anc->length;
+                    r->left->sib = NULL;
+                    r->left->anc = NULL;
+                    pt->root = r->left;
                     }
                 else
-                    {
-                    for (q=p->anc->left->sib->left; q->sib!=NULL; q=q->sib)
+                    {/* Make "right" child of r (r->left->sib) the new root by attaching r->left to children of r->"right" */
+                    for (q=r->left->sib->left; q->sib!=NULL; q=q->sib)
                         ;
-                    q->sib = p->anc->left;
-                    p->anc->left->anc = q->anc;
-                    p->anc->left->length += q->anc->length;
-                    p->anc->left->sib = NULL;
+                    q->sib = r->left;
+                    r->left->anc = q->anc;
+                    r->left->length += q->anc->length;
+                    r->left->sib = NULL;
                     q->anc->anc = NULL;
                     pt->root = q->anc;
                     }
@@ -3955,7 +3959,8 @@ int PrunePolyTree (PolyTree *pt)
 			}
 		}
 
-	/* place unused space at end of pt->nodes array */
+#if 0 
+	/* place unused space at the end of pt->nodes array. If activated this code p->x has to be set to non 0 value for all p that are deleted. */
 	for (i=0; i<pt->nNodes; i++)
 		{
 		p = &pt->nodes[i];
@@ -3987,13 +3992,17 @@ int PrunePolyTree (PolyTree *pt)
 				}
 			}
 		}
+#endif
 
 	/* correct number of nodes */
 	pt->nNodes -= (numTermPruned + numIntPruned);
 	pt->nIntNodes -= numIntPruned;
 	
-	/* get downpass; note that the deletion procedure does not change the root */
-	GetPolyDownPass (pt);
+	/* get downpass; note that the deletion procedure does not change the root in rooted case*/
+    i=j=0;
+    GetPolyNodeDownPass (pt, pt->root, &i, &j);
+    assert(i==pt->nNodes);
+    assert(j==pt->nIntNodes);
 
 	return (NO_ERROR);
 	
