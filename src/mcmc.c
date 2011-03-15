@@ -7300,7 +7300,7 @@ void CopySiteScalers (ModelInfo *m, int chain)
 /*-----------------------------------------------------------------
 |
 |	CopyTrees: copies touched trees for chain
-|		resets node update flags in the process
+|		resets division and node update flags in the process
 |
 -----------------------------------------------------------------*/
 void CopyTrees (int chain)
@@ -7311,7 +7311,11 @@ void CopyTrees (int chain)
 	TreeNode	*p, *q;
 	Tree		*from, *to;
 
-	for (n=0; n<numTrees; n++)
+    /* reset division update flags */
+    for (i=0; i<numCurrentDivisions; i++)
+        modelSettings[i].upDateCl = NO;
+
+    for (n=0; n<numTrees; n++)
 		{
 		from = GetTreeFromIndex (n, chain, state[chain]);		
 		to = GetTreeFromIndex (n, chain, (state[chain]^1));
@@ -16383,9 +16387,18 @@ int Move_BmBranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
         brlens[p->right->index] = p->right->length * (bmRate[p->right->index] + newRate) / 2.0;
         }
 
-	/* set update of cond likes down to root */
+	/* set update of ti probs */
+    p->upDateTi = YES;
+    if (p->left != NULL)
+        {
+        p->left ->upDateTi = YES;
+        p->right->upDateTi = YES;
+        }
+    
+    /* set update of cond likes down to root */
 	/* update of crowntree set in UpdateCppEvolLengths */
-	q = p->anc;
+    p->upDateCl = YES;
+    q = p->anc;
 	while (q->anc != NULL)
 		{
 		q->upDateCl = YES;
@@ -22126,7 +22139,7 @@ int Move_IbrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 			}
 		}
 
-	/* take prior on Ibrsvar into account */
+	/* take prior on Ibrvar into account */
 	if (!strcmp(mp->ibrvarPr,"Exponential"))
 		(*lnPriorRatio) += mp->ibrvarExp * (oldIbrvar - newIbrvar);
 	
@@ -38846,8 +38859,7 @@ void ResetFlips (int chain)
                 }
             }
         
-        /* reset division flag; tree node flags are reset when trees are copied */
-        m->upDateCl = NO;
+        /* division flag and tree node flags are reset when trees are copied */
     }
 }
 
@@ -39781,19 +39793,35 @@ int RunChain (SafeLong *seed)
             /* calculate likelihood ratio */
             if (abortMove == NO)
 				{
-				/* TouchAllTrees(chn); */ /* for debugging copying shortcuts [SLOW!!]*/
-#if ! defined (NDEBUG)
-                if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
-                    {
-                    printf ("IsTreeConsistent failed after move '%s'\n", theMove->name);
-                    getchar();
-                    }
-#endif
                 lnLike = LogLike(chn);
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
-                assert( lnPriorRatio==lnPriorRatio);
-                assert (fabs((lnPrior-LogPrior(chn))/lnPrior) < 0.0001);
+
+#if ! defined (NDEBUG)
+                /* We check various aspects of calculations in debug version of code */
+                if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
+                    {
+                    printf ("DEBUG ERROR: IsTreeConsistent failed after move '%s'\n", theMove->name);
+                    return ERROR;
+                    }
+                if (lnPriorRatio != lnPriorRatio)
+                    {
+                    printf ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
+                    return ERROR;
+                    }
+                if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
+                    {
+                    printf ("DEBUG ERROR: Log prior incorrect after move '%s'\n", theMove->name);
+                    return ERROR;
+                    }
+                ResetFlips(chn);
+                TouchAllTrees(chn);
+                if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
+                    {
+                    printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
+                    return ERROR;
+                    }
+#endif
 
                 /* heat */
                 lnLikelihoodRatio *= Temperature (chainId[chn]);
@@ -39851,12 +39879,14 @@ int RunChain (SafeLong *seed)
                 theMove->nAccepted[i] = 0;
                 theMove->nBatches[i]++;
                 if (chainParams.autotune == YES && theMove->moveType->Autotune != NULL)
+                    {
                     theMove->moveType->Autotune(theMove->lastAcceptanceRate[i],
                                                 theMove->targetRate[i],
                                                 theMove->nBatches[i],
                                                 &theMove->tuningParam[i][0],
                                                 theMove->moveType->minimum[0],
                                                 theMove->moveType->maximum[0]);
+                    }
                 }
 
             /*ShowValuesForChain (chn); */

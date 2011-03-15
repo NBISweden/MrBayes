@@ -1264,7 +1264,7 @@ int ChangeNumChains (int from, int to)
 						}
 				}
 			}
-        else if (p->paramType == P_CPPEVENTS || p->paramType == BMBRANCHRATES)
+        else if (p->paramType == P_CPPEVENTS || p->paramType == P_BMBRANCHRATES || p->paramType == P_IBRBRANCHLENS)
             p->tree += (mcmcTree - oldMcmcTree);
         else
             assert( p->paramType==P_BRLENS || p->tree==NULL );
@@ -17351,13 +17351,13 @@ int SetModelParams (void)
 			p->paramType = P_BMBRANCHRATES;
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = 0.0;
-            p->max = POS_INFINITY;
+            p->min = RATE_MIN;
+            p->max = RATE_MAX;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].bmBranchRates = p;
 			
-			p->paramTypeName = "Branch rates of relaxed clock";
+			p->paramTypeName = "Branch rates of bm relaxed clock";
 			strcpy (p->name, "Bm");
 			strcat (p->name, partString);
 			
@@ -19634,9 +19634,9 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_BmBranchRate;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->minimum[0] = 0.001;
+	mt->maximum[0] = 10.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19673,7 +19673,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_IbrBranchLen;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
+	mt->tuningParam[0] = 2.0 * log (1.2);  /* lambda */
 	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;

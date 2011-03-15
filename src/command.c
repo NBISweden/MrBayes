@@ -7904,6 +7904,7 @@ int DoTreeParm (char *parmName, char *tkn)
 	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
+    static SafeLong     lastExpecting; /* keep track of what we expected before a comment, in case we want to skip a comment */
 	static char 		tempNameString[150]; /* Contains multiple tokens which form name string of param set*/
 	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundN, foundFirst,
                         foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
@@ -7983,6 +7984,7 @@ int DoTreeParm (char *parmName, char *tkn)
         t->popSizeSet = NO;     
 		readComment = YES;
 		expecting = Expecting(EQUALSIGN) | Expecting(LEFTCOMMENT);
+        lastExpecting = expecting;
 		}
 	else if (expecting == Expecting(EQUALSIGN))
 		{
@@ -7993,7 +7995,8 @@ int DoTreeParm (char *parmName, char *tkn)
 		    for (i=0; i<numTaxa; i++)
 			    tempSet[i] = NO;
             foundEqual = YES;
-		    expecting  = Expecting(LEFTPAR) | Expecting(LEFTCOMMENT);
+		    expecting = Expecting(LEFTPAR) | Expecting(LEFTCOMMENT);
+            lastExpecting = expecting;
             }
 		}
 	else if (expecting == Expecting(LEFTPAR))
@@ -8019,6 +8022,8 @@ int DoTreeParm (char *parmName, char *tkn)
 		    expecting = Expecting(LEFTPAR);
 		    expecting |= Expecting(ALPHA);
 		    expecting |= Expecting(NUMBER);
+            expecting |= Expecting(LEFTCOMMENT);
+            lastExpecting = expecting;
             }
 		}
 	else if (expecting == Expecting(ALPHA))
@@ -8061,12 +8066,7 @@ int DoTreeParm (char *parmName, char *tkn)
 				{
 				inComment = YES;
 				numComments++;
-				if (foundEqual == NO)
-					expecting = Expecting(LEFTCOMMENT) | Expecting(EQUALSIGN);
-				else if (pp->anc->left == pp)
-					expecting = Expecting(LEFTCOMMENT) | Expecting(COMMA);
-				else
-					expecting = Expecting(LEFTCOMMENT) | Expecting(RIGHTPAR);
+				expecting = lastExpecting;
 				}
 			foundAmpersand = NO;
 			}
@@ -8288,6 +8288,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     {
                     readComment = YES;
                     expecting = Expecting(LEFTCOMMENT);
+                    lastExpecting = expecting;
                     }
                 }
     		else
@@ -8305,6 +8306,8 @@ int DoTreeParm (char *parmName, char *tkn)
             expecting = Expecting(LEFTPAR);
         else
             expecting  = Expecting(NUMBER);
+        expecting |= Expecting(LEFTCOMMENT);
+        lastExpecting = expecting;
 		}
 	else if (expecting == Expecting(COMMA))
 		{
@@ -8333,6 +8336,8 @@ int DoTreeParm (char *parmName, char *tkn)
 			expecting = Expecting(LEFTPAR);
 			expecting |= Expecting(ALPHA);
 			expecting |= Expecting(NUMBER);
+            expecting |= Expecting(LEFTCOMMENT);
+            lastExpecting = expecting;
 			}
 		}
 	else if (expecting == Expecting(NUMBER))
@@ -8470,6 +8475,7 @@ int DoTreeParm (char *parmName, char *tkn)
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(RIGHTPAR);
 			expecting |= Expecting(LEFTCOMMENT);
+            lastExpecting = expecting;
 			}
 		else	/* taxon identifier */
 			{
@@ -8551,6 +8557,8 @@ int DoTreeParm (char *parmName, char *tkn)
 			expecting  = Expecting(COMMA);
 			expecting |= Expecting(COLON);
 			expecting |= Expecting(RIGHTPAR);
+            expecting |= Expecting(LEFTCOMMENT);
+            lastExpecting = expecting;
 			}
 		}
 	else if (expecting == Expecting(LEFTCOMMENT))
