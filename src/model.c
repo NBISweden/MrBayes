@@ -10156,12 +10156,12 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 				/* first get hyperprior */
 				if (p->paramId == SHAPE_UNI)
 					{
-					value[0] = 0.5;
+					value[0] = 100.0;
 					if (value[0] < mp->shapeUni[0] || value[0] > mp->shapeUni[1])
 						value[0] = mp->shapeUni[0] + (mp->shapeUni[1] - mp->shapeUni[0]) *  0.5;
 					}
 				else if (p->paramId == SHAPE_EXP)
-					value[0] = 0.5;
+					value[0] = 100.0;
 				else if (p->paramId == SHAPE_FIX)
 					value[0] = mp->shapeFix;
 				/* now fill in rates */
@@ -18694,8 +18694,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.05; /* window size */
-	mt->minimum[0] = 0.00000001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.000001;
+	mt->maximum[0] = 1.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
