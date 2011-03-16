@@ -319,8 +319,12 @@ MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
 int     LnBirthDeathPriorPrRandom(Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
-MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt r);
+int     LnBirthDeathPriorPrDiversity(Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
+int     LnBirthDeathPriorPrCluster(Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
+MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m);
+MrBFlt  LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
+MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
+MrBFlt  LnP1Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 void    MarkClsBelow (TreeNode *p);
 MrBFlt  MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt  MinimumValue (MrBFlt x, MrBFlt y);
@@ -15272,6 +15276,14 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 		{
 			return LnBirthDeathPriorPrRandom (t, clockRate, prob, sR, eR, sF);
 		}
+	else if (!strcmp(sS, "Diversity")) 
+    {
+        return LnBirthDeathPriorPrDiversity (t, clockRate, prob, sR, eR, sF);
+    }
+	else if (!strcmp(sS, "Cluster")) 
+    {
+        return LnBirthDeathPriorPrCluster (t, clockRate, prob, sR, eR, sF);
+    }
 	else 
 		{
 		printf ("\n   ERROR: Sampling strategy for birth-death process not implemented.\n");
@@ -15399,7 +15411,7 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         (*prob) = log(nTaxa) + log(lambda - mu) - (lambda - mu) * nt[t->nIntNodes-1];
         (*prob) -= log(rho*lambda + (lambda*(1.0 - rho) - mu)*exp((mu - lambda)*nt[t->nIntNodes-1]));
 		for (i=0; i<t->nIntNodes; i++)
-			(*prob) += log(rho*lambda) + LnP1(nt[i], lambda, mu, rho);
+			(*prob) += log(rho*lambda) + LnP1Subsample(nt[i], lambda, mu, rho);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
 	else
@@ -15411,6 +15423,201 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
 		}
 
+	/* free memory */
+	free (nt);
+	
+	return (NO_ERROR);
+}
+
+/*---------------------------------------------------------------------------------
+ |
+ |   LnBirthDeathPriorPrRandom
+ |
+ |   We assume a rooted tree that satisfies the molecular clock constraint. The
+ |   tree is labelled as follows:
+ |
+ |                                      t_4 (age of tips)
+ |     \         \         \        /            
+ |      \         \         \      /              
+ |       \         \         \    /         
+ |        \         \         \  /          
+ |         \         \         \/       t_3 
+ |          \         \        /            
+ |           \         \      /             
+ |            \         \    /              
+ |             \         \  /               
+ |              \         \/            t_2  
+ |               \        /                 
+ |                \      /                  
+ |                 \    /                        
+ |                  \  /                         
+ |                   \/                 t_1 (age of most recent common ancestor)
+ |    
+ |
+ |   This function calculates the probability of such a tree under the neutral
+ |   birth death prior with constant birth and death rates, conditioned on
+ |   a particular time of the first split, t_1, and a particular number of
+ |   species, n. We assume diversity-sampling, that is, a constant sampling frac-
+ |   tion rho, which is known, across tips of the tree. Variables:
+ |
+ |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
+ |        speciation times from a point process
+ |   tau: the labeled unoriented tree
+ |   b:   birth (speciation) rate
+ |   d:   death (extintion) rate
+ |   f:   sampling fraction
+ |   n:   number of species in the sampled tree
+ |
+ |
+ ---------------------------------------------------------------------------------*/
+
+int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
+{
+    
+	int				i, nTaxa, n, m;
+	MrBFlt			*nt, lambda, mu, rho;
+	TreeNode		*p;
+    
+	/* allocate space for the speciation times */
+	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+	if (!nt)
+    {
+		printf ("\n   ERROR: Problem allocating nt\n");
+		return (ERROR);
+    }
+    
+    /* transform to standard variables */
+    rho    = sF;
+    lambda = sR / (1.0 - eR);
+    mu     = eR * lambda;
+    
+    n      = t->nIntNodes+1;
+    m      = round(n/sF);
+    
+    /* get the node times and put them into a vector */
+	for (i=0; i<t->nIntNodes; i++)
+    {
+		p = t->intDownPass[i];
+		nt[i] = p->nodeDepth / clockRate;
+    }
+    nTaxa = t->nIntNodes + 1;
+    
+	/* calculate probability of tree using standard variables */
+	if (AreDoublesEqual(lambda,mu,ETA)==NO)
+    {
+		// birth rate != death rate
+        MrBFlt *p0_t1;
+        (*p0_t1) = LnP0(nt[t->nIntNodes-1], lambda, mu);
+        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
+        (*prob) += (m-n) * (LnP0(nt[0], lambda, mu) - (*p0_t1));
+		for (i=0; i<t->nIntNodes-1; i++)
+			(*prob) += (LnP1(nt[i], lambda, mu) - (*p0_t1));
+        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
+    }
+	else
+    {
+		printf ("\n   ERROR: Critical branchin process for diversity sampling not implemented\n");
+		return (ERROR);
+    }
+    
+	/* free memory */
+	free (nt);
+	
+	return (NO_ERROR);
+}
+
+
+/*---------------------------------------------------------------------------------
+ |
+ |   LnBirthDeathPriorPrRandom
+ |
+ |   We assume a rooted tree that satisfies the molecular clock constraint. The
+ |   tree is labelled as follows:
+ |
+ |                                      t_4 (age of tips)
+ |     \         \         \        /            
+ |      \         \         \      /              
+ |       \         \         \    /         
+ |        \         \         \  /          
+ |         \         \         \/       t_3 
+ |          \         \        /            
+ |           \         \      /             
+ |            \         \    /              
+ |             \         \  /               
+ |              \         \/            t_2  
+ |               \        /                 
+ |                \      /                  
+ |                 \    /                        
+ |                  \  /                         
+ |                   \/                 t_1 (age of most recent common ancestor)
+ |    
+ |
+ |   This function calculates the probability of such a tree under the neutral
+ |   birth death prior with constant birth and death rates, conditioned on
+ |   a particular time of the first split, t_1, and a particular number of
+ |   species, n. We assume cluster-sampling, that is, a constant sampling frac-
+ |   tion rho, which is known, across tips of the tree. Variables:
+ |
+ |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
+ |        speciation times from a point process
+ |   tau: the labeled unoriented tree
+ |   b:   birth (speciation) rate
+ |   d:   death (extintion) rate
+ |   f:   sampling fraction
+ |   n:   number of species in the sampled tree
+ |
+ |
+ ---------------------------------------------------------------------------------*/
+
+int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
+{
+    
+	int				i, nTaxa, n, m;
+	MrBFlt			*nt, lambda, mu, rho;
+	TreeNode		*p;
+    
+	/* allocate space for the speciation times */
+	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+	if (!nt)
+    {
+		printf ("\n   ERROR: Problem allocating nt\n");
+		return (ERROR);
+    }
+    
+    /* transform to standard variables */
+    rho    = sF;
+    lambda = sR / (1.0 - eR);
+    mu     = eR * lambda;
+    
+    n      = t->nIntNodes+1;
+    m      = round(n/sF);
+    
+    /* get the node times and put them into a vector */
+	for (i=0; i<t->nIntNodes; i++)
+    {
+		p = t->intDownPass[i];
+		nt[i] = p->nodeDepth / clockRate;
+    }
+    nTaxa = t->nIntNodes + 1;
+    
+	/* calculate probability of tree using standard variables */
+	if (AreDoublesEqual(lambda,mu,ETA)==NO)
+    {
+		// birth rate != death rate
+        MrBFlt *p0_t1;
+        (*p0_t1) = LnP0(nt[t->nIntNodes-1], lambda, mu);
+        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
+        (*prob) += (m-n) * (LnP0(nt[t->nIntNodes-2], lambda, mu) - (*p0_t1));
+		for (i=0; i<t->nIntNodes-1; i++)
+			(*prob) += (LnP1(nt[i], lambda, mu) - (*p0_t1));
+        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
+    }
+	else
+    {
+		printf ("\n   ERROR: Critical branchin process for cluster sampling not implemented\n");
+		return (ERROR);
+    }
+    
 	/* free memory */
 	free (nt);
 	
@@ -15731,7 +15938,28 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 }
 
 
+/*
+ |
+ | The probability of having zero lineages remaining after time t in the
+ | birth-death process.
+ |
+ | param: t - speciation time
+ | param: b - birth rate
+ | param: d - death rate
+ | return: log probability of zero remaining lineages
+ |
+ */
+MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d)
 
+{
+    
+	MrBFlt		p0t;
+	
+	p0t = d*(1.0-exp((d-b)*t)) / (b -d*exp((d-b)*t));
+	
+	return (log(p0t));
+    
+}
 
 
 /*
@@ -15746,7 +15974,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 | return: log probability of zero remaining lineages
 |
 */
-MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 
 {
 
@@ -15759,7 +15987,30 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 }
 
 
+/*
+ |
+ | The probability of having one lineage remaining after time t
+ | in the birth-death process.
+ |
+ | param: t - speciation time
+ | param: b - birth rate
+ | param: d - death rate
+ | return: log probability of one remaining lineage
+ |
+ */
+MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
 
+{
+    
+	MrBFlt		p0t;
+    
+    p0t = 2.0 * log(b-d) - (b-d)*t;
+	
+	p0t -= 2.0 * log(b - d*exp((d-b)*t));
+	
+	return p0t;
+    
+}
 
 
 /*
@@ -15774,7 +16025,7 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 | return: log probability of one remaining lineage
 |
 */
-MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
+MrBFlt LnP1Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 
 {
 

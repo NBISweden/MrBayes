@@ -4173,7 +4173,7 @@ int DoPrset (void)
 int DoPrsetParm (char *parmName, char *tkn)
 
 {
-
+    
     int			i, j, k, tempInt, nApplied, index, ns, flag=0;
 	MrBFlt		tempD, sum;
 	char		tempStr[100];
@@ -7032,14 +7032,16 @@ int DoPrsetParm (char *parmName, char *tkn)
 			}
 		/* set SampleStrat (sampleStrat) *****************************************************/
 		else if (!strcmp(parmName, "SampleStrat"))
-			{
+        {
 			if (expecting == Expecting(EQUALSIGN))
+            {
 				expecting = Expecting(ALPHA);
+            }
 			else if (expecting == Expecting(ALPHA))
-				{
+            {
 				
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
-					{
+                {
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
 						if (activeParts[i] == YES || nApplied == 0)
@@ -7050,10 +7052,14 @@ int DoPrsetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Invalid SampleStrat argument\n", spacer);
 					return (ERROR);
 					}
-				}
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
 			else
+            {
+                MrBayesPrint ("%s   Invalid SampleStrat argument\n", spacer);
 				return (ERROR);
-			}
+            }
+        }
 		/* set Sampleprob (sampleProb) *****************************************************/
 		else if (!strcmp(parmName, "Sampleprob"))
 			{
