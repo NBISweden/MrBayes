@@ -1222,18 +1222,20 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
 
     /* TODO: only need to update branches that have changed */
     /* calculate transition probabilities */
-    for (i=0; i<m->nCijkParts; i++)
-        {
-        beagleUpdateTransitionMatrices(m->beagleInstance,
-                                       m->cijkIndex[chain] + i,
-                                       m->tiProbIndices,
-                                       NULL,
-                                       NULL,
-                                       m->branchLengths,
-                                       count);
-        for (j=0; j<count; j++)
-            m->tiProbIndices[j]++;
-        }
+    if (count > 0) {
+        for (i=0; i<m->nCijkParts; i++)
+            {
+            beagleUpdateTransitionMatrices(m->beagleInstance,
+                                           m->cijkIndex[chain] + i,
+                                           m->tiProbIndices,
+                                           NULL,
+                                           NULL,
+                                           m->branchLengths,
+                                           count);
+            for (j=0; j<count; j++)
+                m->tiProbIndices[j]++;
+            }
+    }
 
     /* return success */
 	return NO_ERROR;
