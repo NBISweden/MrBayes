@@ -15492,7 +15492,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     mu     = eR * lambda;
     
     n      = t->nIntNodes+1;
-    m      = round(n/sF);
+    m      = (int)floor(n/sF+0.5);/*equal to round(n/sF) plus it is compartable with MS Visula Studio*/
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
@@ -15506,12 +15506,12 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 	if (AreDoublesEqual(lambda,mu,ETA)==NO)
     {
 		// birth rate != death rate
-        MrBFlt *p0_t1;
-        (*p0_t1) = LnP0(nt[t->nIntNodes-1], lambda, mu);
+        MrBFlt p0_t1;
+        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
         (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt[0], lambda, mu) - (*p0_t1));
+        (*prob) += (m-n) * (LnP0(nt[0], lambda, mu) - p0_t1);
 		for (i=0; i<t->nIntNodes-1; i++)
-			(*prob) += (LnP1(nt[i], lambda, mu) - (*p0_t1));
+			(*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
     }
 	else
@@ -15590,7 +15590,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     mu     = eR * lambda;
     
     n      = t->nIntNodes+1;
-    m      = round(n/sF);
+    m      = (int)floor(n/sF+0.5);/*equal to round(n/sF) plus it is compartable with MS Visula Studio*/
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
@@ -15604,12 +15604,12 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 	if (AreDoublesEqual(lambda,mu,ETA)==NO)
     {
 		// birth rate != death rate
-        MrBFlt *p0_t1;
-        (*p0_t1) = LnP0(nt[t->nIntNodes-1], lambda, mu);
+        MrBFlt p0_t1;
+        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
         (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt[t->nIntNodes-2], lambda, mu) - (*p0_t1));
+        (*prob) += (m-n) * (LnP0(nt[t->nIntNodes-2], lambda, mu) - p0_t1);
 		for (i=0; i<t->nIntNodes-1; i++)
-			(*prob) += (LnP1(nt[i], lambda, mu) - (*p0_t1));
+			(*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
     }
 	else

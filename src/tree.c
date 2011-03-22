@@ -3833,6 +3833,92 @@ void PrintPolyNodes (PolyTree *pt)
 
 
 
+/**
+Update relaxed clock paramiter of the branch of a node with index "b" after node with index "a" is removed. 
+i.e. make branch of node with index "b" be a concatenation of its original branch and the branch of node with index "a"
+Relaxed clock paramiter of node with index "a" become invalid in the process.
+Note: For Non-clock models the routine has no effect. 
+
+|       |
+|       |
+a       |
+|   ->  |
+|       |
+|       b
+b
+
+*/
+void AppendRelaxedBranch (int a,int b,PolyTree *t){
+
+    int i,len;
+
+    for (i=0; i<t->nBSets; i++)
+        {
+        t->effectiveBrLen[i][b] += t->effectiveBrLen[i][a];
+        }
+
+    for (i=0; i<t->nESets; i++)
+        {
+        len=t->nEvents[i][a]+t->nEvents[i][b];
+        t->position[i][a] = (MrBFlt *) SafeRealloc ((void *)t->position[i][a], len*sizeof(MrBFlt));
+	    t->rateMult[i][a] = (MrBFlt *) SafeRealloc ((void *)t->rateMult[i][a], len*sizeof(MrBFlt));
+        memcpy( t->position[i][a]+t->nEvents[i][a], t->position[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
+        memcpy( t->rateMult[i][a]+t->nEvents[i][a], t->rateMult[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
+        free(t->position[i][b]);
+        free(t->rateMult[i][b]);
+        t->position[i][b] = t->position[i][a];
+        t->rateMult[i][b] = t->rateMult[i][a];
+        t->position[i][a] = NULL;
+        t->rateMult[i][a] = NULL;
+        t->nEvents[i][a] = 0;
+        t->nEvents[i][b] = len;
+        }
+
+}
+
+
+
+
+
+/**
+Swap relaxed clock paramiters of the branch of nodes with index "a" and "b".
+*/
+void SwapRelaxedBranchInfo (int a,int b,PolyTree *t){
+
+    int i,j;
+    MrBFlt tmp, *tmpp;
+
+    for (i=0; i<t->nBSets; i++)
+        {
+        tmp = t->effectiveBrLen[i][a];
+        t->effectiveBrLen[i][a] = t->effectiveBrLen[i][b];
+        t->effectiveBrLen[i][b] = tmp;
+        }
+    if (t->popSizeSet == YES)
+        {
+        tmp = t->popSize[a];
+        t->popSize[a]=t->popSize[b];
+        t->popSize[b] = tmp;
+        }
+
+    for (i=0; i<t->nESets; i++)
+        {
+        tmpp = t->position[i][a];
+        t->position[i][a] = t->position[i][b];
+        t->position[i][b] = tmpp;
+        tmpp = t->rateMult[i][a];
+	    t->rateMult[i][a] = t->rateMult[i][b];
+        t->rateMult[i][b] = tmpp;
+        j = t->nEvents[i][a];
+        t->nEvents[i][a] = t->nEvents[i][b];
+        t->nEvents[i][b] = j;
+        }
+}
+
+
+
+
+
 /*-------------------------------------------------------------------------------------------
 |
 |   PrunePolyTree: This routine will prune a polytomous tree according to the currently
@@ -3846,7 +3932,7 @@ int PrunePolyTree (PolyTree *pt)
 
 {
 
-	int 			i, j, k, numDeleted, numTermPruned, numIntPruned, index;
+	int 			i, j, numDeleted, numTermPruned, numIntPruned, index;
 	PolyNode		*p = NULL, *q=NULL, *r=NULL, *qa;
 
 	numDeleted = 0;
@@ -3913,28 +3999,33 @@ int PrunePolyTree (PolyTree *pt)
                 q = qa->left;
 				if (q->left == NULL)
                     {
+                    AppendRelaxedBranch ( qa->index, q->index, pt );
                     qa->index = q->index;
                     qa->length += q->length;
                     strcpy(qa->label, q->label);
                     qa->left = NULL;
-                    q->left = (struct pNode*)1;
+                    /* To make sure that q is not treated as the representer of the tip it represented before. i.e. make  condition if (p->left != NULL) true */
+                    q->left = (struct pNode*)1; 
                     }
                 else
                     {
-				    qa->index   = q->index;
                     if (qa->anc != NULL)
+                        {
+                        AppendRelaxedBranch ( qa->index, q->index, pt );
                         qa->length += q->length;
+                        }
+                    qa->index   = q->index;
                     qa->left = q->left;
                     for(r=q->left; r!= NULL; r=r->sib)
                         r->anc = qa;
                     }
 				}
-            /*if unrooted, then root node has to have more then 2 children, thus the following check */
+            /* if unrooted, then root node has to have more then 2 children, thus the following check */
             if (j == 2 && pt->isRooted == NO && p->anc->anc == NULL)
                 {
                 r=p->anc; /*r is the root with only 2 children*/
-                if (r->left->left != NULL)
-                    {/* Make r->left new root by attaching "right" child of r to children of r->left*/
+                if ( r->left->left != NULL )
+                    {/* Make r->left new root by attaching "right" child of r to children of r->left */
                     for (q=r->left->left; q->sib!=NULL; q=q->sib)
                         ;
                     q->sib = r->left->sib;
@@ -3946,7 +4037,7 @@ int PrunePolyTree (PolyTree *pt)
                     }
                 else
                     {/* Make "right" child of r (r->left->sib) the new root by attaching r->left to children of r->"right" */
-                    for (q=r->left->sib->left; q->sib!=NULL; q=q->sib)
+                    for ( q=r->left->sib->left; q->sib!=NULL; q=q->sib )
                         ;
                     q->sib = r->left;
                     r->left->anc = q->anc;
@@ -3998,9 +4089,9 @@ int PrunePolyTree (PolyTree *pt)
 	pt->nNodes -= (numTermPruned + numIntPruned);
 	pt->nIntNodes -= numIntPruned;
 	
-	/* get downpass; note that the deletion procedure does not change the root in rooted case*/
+	/* get downpass; note that the deletion procedure does not change the root in rooted case */
     i=j=0;
-    GetPolyNodeDownPass (pt, pt->root, &i, &j);
+    GetPolyNodeDownPass ( pt, pt->root, &i, &j );
     assert(i==pt->nNodes);
     assert(j==pt->nIntNodes);
 
@@ -4398,7 +4489,7 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 -----------------------------------------------*/
 void ResetTipIndices(PolyTree *pt)
 {
-    int         i, j, k;
+    int         i, j, k, m;
     PolyNode    *p;
 
 
@@ -4413,7 +4504,19 @@ void ResetTipIndices(PolyTree *pt)
         if (k < pt->nNodes)
             {
             assert (p->left == NULL);
-		    p->index = j++;
+            if(p->index!=j){
+                SwapRelaxedBranchInfo( p->index, j, pt);
+                for(m=0; m<pt->nNodes; m++)
+                    {
+                    if(pt->allDownPass[m]->index==j)
+                        {
+                        pt->allDownPass[m]->index=p->index;
+                        break;
+                        }
+                    }
+		        p->index = j;
+                }
+            j++;
             }
 		}
 }
@@ -4619,12 +4722,27 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
 /* ResetIntNodeIndices: Set int node indices in downpass order from numTaxa to 2*numTaxa-2 */
 void ResetIntNodeIndices (PolyTree *t)
 {
-    int i, index;
+    int i, m, index;
 
     index = t->nNodes - t->nIntNodes;
 
     for (i=0; i<t->nIntNodes; i++)
-        t->intDownPass[i]->index = index++;
+        {
+        if(t->intDownPass[i]->index != index)
+            {
+            SwapRelaxedBranchInfo( t->intDownPass[i]->index, index, t);
+            for(m=0; m<t->nIntNodes; m++)
+                {
+                if(t->intDownPass[m]->index==index)
+                    {
+                    t->intDownPass[m]->index=t->intDownPass[i]->index;
+                    break;
+                    }
+                }
+	        t->intDownPass[i]->index = index;
+            }
+        index++;
+        }
 }
 
 

@@ -1255,7 +1255,8 @@ int ChangeNumChains (int from, int to)
 			for (j=0; j<p->nSubParams; j++)
 				{
 				q = p->subParams[j];
-                assert( q->paramType != P_CPPEVENTS && q->paramType != BMBRANCHRATES);
+                assert( q->paramType==P_BRLENS );
+                //assert( q->paramType != P_CPPEVENTS && q->paramType != BMBRANCHRATES);
 				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
 				if (to > from)
 					for (run=0; run<nRuns; run++)
@@ -1530,11 +1531,12 @@ int ChangeNumRuns (int from, int to)
 			for (j=0; j<p->nSubParams; j++)
 				{
 				q = p->subParams[j];
+                assert( q->paramType==P_BRLENS );
 				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
 				InitializeChainTrees (q, from*nChains, to*nChains, GetTree (q, 0, 0)->isRooted);
 				}
 			}
-        else if (p->paramType == P_CPPEVENTS || p->paramType == BMBRANCHRATES)
+        else if (p->paramType == P_CPPEVENTS || p->paramType == P_BMBRANCHRATES || p->paramType == P_IBRBRANCHLENS)
             p->tree += (mcmcTree - oldMcmcTree);
 		}
 
