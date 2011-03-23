@@ -2133,6 +2133,7 @@ int CheckExpandedModels (void)
 							nuc1 = matrix[pos(t,c+0,numChar)];
 							nuc2 = matrix[pos(t,c+1,numChar)];
 							nuc3 = matrix[pos(t,c+2,numChar)];
+                            /*nucX is in range 0-15 to represent any possible set of states that nucleatide could be in*/
 							GetPossibleNucs (nuc1, posNucs1);
 							GetPossibleNucs (nuc2, posNucs2);
 							GetPossibleNucs (nuc3, posNucs3);
@@ -15898,6 +15899,8 @@ int SetModelInfo (void)
 				m->printAncStates = YES;
 			if (m->printAncStates == YES)
 				inferAncStates = YES;
+            else
+                MrBayesPrint ("%s   Print out of ancestral states is not applicable for devision %d.\n",spacer,i);
 			}
 
 		/* check if we should calculate site rates */

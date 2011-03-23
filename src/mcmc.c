@@ -33977,12 +33977,22 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 	ModelInfo		*m;
 	
 	tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
-    printedChar = (char *) calloc (numChar, sizeof(char));
-	if (!tempStr || !printedChar)
+    if (!tempStr )
 		{
-		MrBayesPrint ("%s   Problem allocating tempString (%d) or printedChar\n", spacer, tempStrSize * sizeof(char));
+		MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
 		return (ERROR);
 		}
+
+    if (!strcmp(modelParams[division].nucModel,"Codon") || !strcmp(modelParams[division].nucModel,"Protein") || !strcmp(modelParams[division].nucModel,"Doublet"))
+        {
+        assert(modelParams[division].dataType == DNA || modelParams[division].dataType == RNA);/*Note that we can have matrix with Protein datatype which is not and should not be covered here */
+        printedChar = (char *) SafeMalloc (numChar*sizeof(char));
+        }
+    else
+        {
+        printedChar = NULL;
+        }
+
         
 	/* find model settings for this division */
 	m = &modelSettings[division];
@@ -34105,19 +34115,25 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 			}
 		}
 
+
 	/* print the resulting conditional likelihoods cycling over uncompressed chars */
-    for (c=0; c<numChar; c++)
-        printedChar[c] = NO;
+    if( printedChar )
+        for (c=0; c<numChar; c++)
+            printedChar[c] = NO;
+
     for (c=0; c<numChar; c++)
 		{
-		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1 ||
-            printedChar[c] == YES)
+		if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1 || (printedChar &&
+            printedChar[c] == YES))
 			continue;
 		i = compCharPos[c] - m->compCharStart;
 		cL = m->ancStateCondLikes + (i*nStates);
-        for (i=c+1; i<numChar; i++)
-            if (charInfo[c].charId == charInfo[i].charId)
-                printedChar[i] = YES;
+        if( printedChar )
+            {
+            for (i=c+1; i<numChar; i++)
+                if (charInfo[c].charId == charInfo[i].charId)
+                    printedChar[i] = YES;
+            }
 		for (i=0; i<nStates; i++)
 			{
 			SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(cL[i]));
@@ -35923,6 +35939,29 @@ int PrintStates (int curGen, int coldId)
 								if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 								}
                             }
+                        else if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp(mp->nucModel,"Protein"))
+                            {
+					        origAlignmentChars[0] = j+1;
+                            k1 = 1;
+                            for (k=j+1; k<numChar; k++)
+						        {
+						        if (charInfo[k].charId == charInfo[j].charId)
+							        {
+							        origAlignmentChars[k1++] = k+1;
+							        printedChar[k] = YES;
+							        }
+						        }
+							for (k=0; k<m->numStates; k++)
+								{
+								SafeSprintf (&tempStr, &tempStrSize, "\tp(%c){%d,%d,%d@%s}",
+                                    m->StateCode(k),
+                                    origAlignmentChars[0],
+                                    origAlignmentChars[1],
+                                    origAlignmentChars[2],
+                                    constraintNames[i]);
+								if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+								}
+							}
                         else
 							{
 							for (k=0; k<m->numStates; k++)
