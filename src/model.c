@@ -6413,7 +6413,12 @@ int DoPrsetParm (char *parmName, char *tkn)
 					    }
                     if (fromI == -1)
                         {
-					    fromI = tempInt;
+				        if ( foundDash == YES )
+					        {
+					        MrBayesPrint ("%s   Unexpected dash\n", spacer);
+					        return (ERROR);
+					        }
+                        fromI = tempInt;
                         tempActiveConstraints[fromI-1] = YES;
                         }
 				    else if (fromI != -1 && toJ == -1 && foundDash == YES && foundComma == NO)
@@ -6427,8 +6432,8 @@ int DoPrsetParm (char *parmName, char *tkn)
 					    }
 				    else if (fromI != -1 && toJ == -1 && foundDash == NO && foundComma == YES)
 					    {
-					    //tempActiveConstraints[fromI-1] = YES;
 					    fromI = tempInt;
+                        tempActiveConstraints[fromI-1] = YES;
 					    foundComma = NO;
 					    }
 				    expecting  = Expecting(COMMA);
@@ -10644,6 +10649,140 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 
 
+int PruneConstraintPartitions()
+{
+
+    int				i, j, constraintId, nLongsNeeded;
+	
+
+    nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
+
+    for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
+		{
+	    definedConstraintPruned[constraintId] = (SafeLong *) realloc ((void *)definedConstraintPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+	    if (!definedConstraintPruned[constraintId])
+		    {
+		    MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
+		    return (ERROR);
+		    }
+
+        /* initialize bits in partition to add; get rid of deleted taxa in the process */
+        ClearBits(definedConstraintPruned[constraintId], nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+            {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            if (IsBitSet(i, definedConstraint[constraintId]) == YES)
+                SetBit(j, definedConstraintPruned[constraintId]);
+            j++;
+            }
+        assert (j == numLocalTaxa);
+
+
+        if (definedConstraintsType[constraintId] == PARTIAL )
+            {
+        	definedConstraintTwoPruned[constraintId] = (SafeLong *) realloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+	        if (!definedConstraintTwoPruned[constraintId])
+		        {
+		        MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
+		        return (ERROR);
+		        }
+
+            /* initialize bits in partition to add; get rid of deleted taxa in the process */
+            ClearBits(definedConstraintTwoPruned[constraintId], nLongsNeeded);
+            for (i=j=0; i<numTaxa; i++)
+                {
+                if (taxaInfo[i].isDeleted == YES)
+                    continue;
+                if (IsBitSet(i, definedConstraintTwo[constraintId]) == YES)
+                    SetBit(j, definedConstraintTwoPruned[constraintId]);
+                j++;
+                }
+            assert (j == numLocalTaxa);
+            }
+    }
+    return NO_ERROR;
+
+}
+
+
+int DoesTreeSatisfyConstraints(Tree *t){
+
+    int         i, k, numTaxa, nLongsNeeded;
+    TreeNode    *p;
+
+    /* get some handy numbers */
+    numTaxa = t->nNodes - t->nIntNodes - (t->isRooted == YES ? 1 : 0);
+    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
+
+    if ( t->bitsets == NULL)
+        {
+        AllocateTreePartitions(t);
+        }
+    else
+        {
+        ResetTreePartitions(t);  /*inefficiant function, rewrite faster version*/ 
+        }
+
+    for (k=0; k<numDefinedConstraints; k++)
+        {
+        if( t->constraints[k] == NO || definedConstraintsType[k] == HARD )
+            continue;
+
+        if( definedConstraintsType[k] == PARTIAL )
+            {
+            /* alternative way
+            if (t->isRooted == NO && !IsBitSet(localOutGroup, definedConstraintPruned[k]))
+                {
+		        m = FirstTaxonInPartition (constraintPartition, nLongsNeeded);
+		        for (i=0; t->nodes[i].index != m; i++)
+			        ;
+		        p = &t->nodes[i];
+
+                p=p->anc;
+                while( !IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                    p=p->anc;
+
+                if( IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                    continue;
+                }
+            */
+            for (i=0; i<t->nIntNodes; i++)
+	            {
+                p = t->intDownPass[i];
+                if (p->anc != NULL)
+		            {
+                    if( IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                        break;
+                    if( IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                        break;
+		            }
+	            }
+            if( i==t->nIntNodes )
+                return NO;
+            }
+        else
+            {
+            assert(definedConstraintsType[k] == NEGATIVE);
+            for (i=0; i<t->nIntNodes; i++)
+	            {
+                p = t->intDownPass[i];
+                if (p->anc != NULL)
+		            {
+                    if( !IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                        break;
+		            }
+	            }
+            if( i==t->nIntNodes )
+                return NO;
+            }
+        }
+    return YES;
+
+}
+
+
+
 
 /*------------------------------------------------------------------
 |
@@ -10657,10 +10796,14 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
 
-	int			k, chn, nTaxa;
+	int			i, k, chn, nTaxa;
 	Param		*p, *q;
 	Tree		*tree;
 	PolyTree	*constraintTree;
+    PolyTree	*constraintTreeRef;
+
+    if( PruneConstraintPartitions() == ERROR )
+        return ERROR;
 
 	/* Build starting trees for state 0 */
 	for (chn=fromChain; chn<toChain; chn++)
@@ -10712,20 +10855,31 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
                 /* constrained topology */
                 else if (tree->nConstraints > 0)
 					{
-					constraintTree = AllocatePolyTree (nTaxa);
+					constraintTreeRef = AllocatePolyTree (nTaxa);
+					if (!constraintTreeRef)
+						return (ERROR);
+					if (BuildConstraintTree (tree, constraintTreeRef, localTaxonNames) == ERROR)
+						{
+						FreePolyTree (constraintTreeRef);
+						return (ERROR);
+						}
+
+                    constraintTree = AllocatePolyTree (nTaxa);
 					if (!constraintTree)
 						return (ERROR);
-					if (BuildConstraintTree (tree, constraintTree, localTaxonNames) == ERROR)
-						{
-						FreePolyTree (constraintTree);
-						return (ERROR);
-						}
-					if (RandResolve (constraintTree, &globalSeed, tree->isRooted) == ERROR)
-						{
-						FreePolyTree (constraintTree);
-						return (ERROR);
-						}
-					CopyToTreeFromPolyTree(tree, constraintTree);
+
+                    for(i=0;i<100000;i++)
+                        {
+                        CopyToPolyTreeFromPolyTree(constraintTree,constraintTreeRef);
+					    if (RandResolve (constraintTree, &globalSeed, tree->isRooted) == ERROR)
+						    {
+						    FreePolyTree (constraintTree);
+						    return (ERROR);
+						    }
+					    CopyToTreeFromPolyTree(tree, constraintTree);
+                        if( DoesTreeSatisfyConstraints(tree) )
+                            break;
+                        }
 #if defined (DEBUG_CONSTRAINTS)
 					if (theTree->checkConstraints == YES && CheckConstraints (tree) == ERROR)
 						{
@@ -10734,6 +10888,12 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 						}
 #endif
 					FreePolyTree (constraintTree);
+                    FreePolyTree (constraintTreeRef);
+                    if(i==100000)
+                        {
+                        MrBayesPrint ("%s   Could not build a starting tree satisfying all constraints\n", spacer); 					
+                        return (ERROR);
+                        }
 					}
 				/* random topology */
                 else

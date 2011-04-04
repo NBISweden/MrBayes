@@ -15,6 +15,9 @@ extern int				compMatrixRowSize;	                    /* row size of compressed m
 extern Comptree			comptreeParams;                         /* holds parameters for comparetree command      */
 extern char				**constraintNames;					    /* holds names of constraints                    */
 extern SafeLong         **definedConstraint;                    /* holds information about defined constraints   */
+extern SafeLong        **definedConstraintTwo;                  /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)                                  */
+extern SafeLong        **definedConstraintPruned;               /* bitfields representing taxa sets of defined constraints after delited taxa are removed                                         */
+extern SafeLong        **definedConstraintTwoPruned;            /* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
 extern int				dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */
@@ -78,6 +81,7 @@ extern int				numComments;                            /* number of nested commen
 extern int				numCompressedChars;                     /* number of compressed characters				 */
 extern int				numCurrentDivisions;                    /* number of partitions of data                  */
 extern int				numDefinedConstraints;                  /* number of constraints defined                 */
+extern enum ConstraintType  *definedConstraintsType;            /* Store type of constraint                      */
 extern int				numDefinedPartitions;                   /* number of partitions defined                  */
 extern int				numDefinedSpeciespartitions;            /* number of species partitions defined          */
 extern int				numGlobalChains;						/* number of global chains						 */

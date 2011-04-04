@@ -702,7 +702,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 	nextNode = numLocalTaxa + 1;
 	for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
 		{
-		if (t->constraints[constraintId] == NO)
+		if (t->constraints[constraintId] == NO || definedConstraintsType[constraintId] != HARD )
 			continue;
 
         /* initialize bits in partition to add; get rid of deleted taxa in the process */
@@ -1020,7 +1020,7 @@ int CheckConstraints (Tree *t)
 
 	for (a=0; a<numDefinedConstraints; a++)
 		{
-        if (t->constraints[a] == NO)
+        if (t->constraints[a] == NO  || definedConstraintsType[i] != HARD)
             continue;
 
 		/* set bits in partition to check */
@@ -1130,7 +1130,7 @@ int CheckSetConstraints (Tree *t)
 	
 	for (a=0; a<numDefinedConstraints; a++)
 		{
-		if (modelParams[t->relParts[0]].activeConstraints[a] == NO)
+		if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[i] != HARD )
 			continue;
 
 		/* set bits in partition to add */
@@ -1784,7 +1784,7 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q)
 	p->isLocked				  = q->isLocked;
 	p->lockID				  = q->lockID;
 	p->d					  = q->d;
-	p->partition			  = q->partition;
+	//p->partition			  = q->partition;//the content should be copied not the pointers. Otherwise we are risking to have segmentation faults
     p->label                  = q->label;
 }
 

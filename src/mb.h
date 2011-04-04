@@ -407,6 +407,13 @@ enum CALPRIOR
 	uniform
 	};
 
+enum ConstraintType
+    {
+    PARTIAL,
+    NEGATIVE,
+    HARD
+    };
+
 /* typedef for calibration */
 typedef struct calibration
 	{

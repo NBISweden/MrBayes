@@ -6264,7 +6264,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 {
 
-	int				a, c, i, j, k, nStates, nCats, coppySize,tmp;
+	int				a, c, i, j, k, t, nStates, nCats, coppySize,tmp;
 	CLFlt			*clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[10], sum;
 	ModelInfo		*m;
 	
@@ -6339,7 +6339,7 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 			    //nCats *= m->numGammaCats;
 
 			    /* now calculate the final cond likes */
-			    for (k=0; k<nCats; k++)
+			    for (t=0; t<nCats; t++)
 				    {
 				    for (a=j=0; a<nStates; a++)
 					    {
@@ -16871,6 +16871,12 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
                     ibrRate[p->index] = brlens[p->index] / p->length;
                     }
                 }
+                /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+                if (*lnPriorRatio != *lnPriorRatio)
+                    {
+                    abortMove=YES;
+                    return (NO_ERROR);
+                    }
             }
         }
  
@@ -18037,6 +18043,13 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     
             /* adjust prior ratio for new branch lengths */
 			(*lnPriorRatio) += LnProbTruncGamma((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index], minB, maxB);
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }
 		}	/* next subparameter */
 
@@ -18283,6 +18296,13 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             /* adjust proposal ratio (prop. to ratio between new and old brlen that is being split) */
             /* when we rearrange effective brlens, the proposal ratio is 1; the ratio below is NOT the correct Hastings ratio for the alternative update */
             // (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index] - 2.0*minB) / (brlens[oldA->index] - 2.0*minB));
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }   /* end ibr branch rate parameter */
         }	/* next subparameter */
 
@@ -19192,6 +19212,12 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             /* adjust for prior (part 2) */
             (*lnPriorRatio) += LnProbTruncGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index], minB, maxB);
             (*lnPriorRatio) += LnProbTruncGamma (c->length/ibrvar, 1.0/ibrvar, brlens[c->index], minB, maxB);
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }
 		}
 	
@@ -22307,6 +22333,13 @@ int Move_IbrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     (*lnPriorRatio) -= LnProbTruncGamma (p->length/ibrvar, 1.0/ibrvar, oldBrlen, minB, maxB);
     (*lnPriorRatio) += LnProbTruncGamma (p->length/ibrvar, 1.0/ibrvar, newBrlen, minB, maxB);
 
+    /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+    if (*lnPriorRatio != *lnPriorRatio)
+        {
+        abortMove=YES;
+        return (NO_ERROR);
+        }
+
 	/* calculate proposal ratio */
 	(*lnProposalRatio) = log (newBrlen / oldBrlen);
 
@@ -24348,6 +24381,12 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
             /* adjust for prior (part 2) */
             (*lnPriorRatio) += LnProbTruncGamma (a->length/ibrvar, 1.0/ibrvar, brlens[a->index], minB, maxB);
             (*lnPriorRatio) += LnProbTruncGamma (c->length/ibrvar, 1.0/ibrvar, brlens[c->index], minB, maxB);
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }
 		}
 	
@@ -24837,7 +24876,14 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 }
             if (p->anc->anc != NULL)
     			(*lnPriorRatio) += LnProbTruncGamma (p->length /ibrvar, 1.0/ibrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            }
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
+            }          
 		}
 
 #if defined (DEBUG_CSLIDER)
@@ -26645,6 +26691,13 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     
             /* adjust prior ratio for new branch lengths */
 			(*lnPriorRatio) += LnProbTruncGamma((a->length+u->length)/ibrvar, 1.0/ibrvar, brlens[a->index], minB, maxB);
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }
 		}	/* next subparameter */
 
@@ -26975,6 +27028,13 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
             /* adjust proposal ratio */
             /* when we just rearrange old values, the proposal ratio is 1; the ratio below is NOT the correct one for the alternative update */
             // (*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }   /* end ibr branch rate parameter */
 		}	/* next subparameter */
 
@@ -32431,6 +32491,13 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 (*lnProposalRatio) += log(p->length / q->length);
                 ibrRate[p->index] = brlens[p->index] / p->length;
                 }
+
+            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove=YES;
+                return (NO_ERROR);
+                }
             }
 		}
 
@@ -35872,7 +35939,7 @@ int PrintStates (int curGen, int coldId)
                 {
 				m = &modelSettings[d];
 				mp = &modelParams[d];
-                if (m->printAncStates != YES)
+                if ( m->printAncStates != YES )
                     continue;
     			for (j=0; j<numChar; j++)
     				{ 
@@ -35881,7 +35948,7 @@ int PrintStates (int curGen, int coldId)
     					continue;
 					for (i=0; i<numDefinedConstraints; i++)
 						{
-                        if (mp->activeConstraints[i] == NO)
+                        if (mp->activeConstraints[i] == NO || definedConstraintsType[i] != HARD )
                             continue;
 						if (mp->dataType == STANDARD)
 							{
@@ -35930,12 +35997,11 @@ int PrintStates (int curGen, int coldId)
 							for (k=0; k<m->numStates; k++)
 								{
                                 State_DOUBLET(stateString, k);
-								if (mp->numActiveConstraints > 1)
-									SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d@%s}",
-                                        stateString,
-                                        origAlignmentChars[0],
-                                        origAlignmentChars[1],
-                                        constraintNames[i]);
+								SafeSprintf (&tempStr, &tempStrSize, "\tp(%s){%d,%d@%s}",
+                                    stateString,
+                                    origAlignmentChars[0],
+                                    origAlignmentChars[1],
+                                    constraintNames[i]);
 								if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 								}
                             }
@@ -36302,8 +36368,10 @@ int PrintStates (int curGen, int coldId)
 					node = tree->intDownPass[i];
 					m->CondLikeUp (node, d, coldId);
 					}
-				for (k=0; k<mp->numActiveConstraints; k++)
+                for (k=0; k<numDefinedConstraints; k++)
 					{
+                    if (mp->activeConstraints[k] == NO || definedConstraintsType[k] != HARD )
+                        continue;
                     for (i=tree->nIntNodes-1; i>=0; i--)
 						{
 						node = tree->intDownPass[i];
@@ -40079,6 +40147,11 @@ int RunChain (SafeLong *seed)
 				return ERROR;
 #				endif
 				}
+
+            if (theMove->parm->paramType == P_TOPOLOGY && !DoesTreeSatisfyConstraints(GetTree (theMove->parm->subParams[0], chn, 0)))
+                {
+                abortMove= YES;
+                }
 
             /* calculate likelihood ratio */
             if (abortMove == NO)

@@ -177,16 +177,19 @@ char     WhichStand (int x);
 
 /* globals */
 int				autoClose;             /* autoclose                                     */
-int 			autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes */
+int 			autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes   */
 Calibration		*calibrationPtr;       /* ptr to calibration being set                  */
 CharInformation *charInfo;             /* holds critical information about characters   */
 SafeLong        **charSet;             /* holds information about defined charsets      */
 char			**charSetNames;        /* holds names of character sets                 */
 Comptree		comptreeParams;        /* holds parameters for comparetree command      */
-char			**constraintNames;     /* holds names of constraints                    */
+char			**constraintNames;     /* holds names of constraints               */
 int				dataType;              /* type of data                                  */
 Calibration     defaultCalibration;    /* default calibration                           */
-SafeLong        **definedConstraint;   /* holds information about defined constraints   */
+SafeLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints             */
+SafeLong        **definedConstraintTwo;/* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)             */
+SafeLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed            */
+SafeLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
 int				echoMB;				   /* flag used by Manual to prevent echoing        */
 SafeLong        expecting;             /* variable denoting expected token type         */
 int				foundNewLine;          /* whether a new line has been found             */
@@ -217,7 +220,7 @@ int				noWarn;                /* no warnings on overwriting files              *
 int				numChar;               /* number of characters in character matrix      */
 int				numCharSets;           /* number of character sets                      */
 int				numComments;		   /* counts how deeply nested a comment is         */
-int				numDefinedConstraints; /* number of constraints defined                 */
+int				numDefinedConstraints; /* number of constraints defined           */
 int				numDefinedPartitions;  /* number of partitions defined                  */
 int				numDefinedSpeciespartitions;  /* number of speciespartitions defined    */
 int				numNamedTaxa;          /* number of named taxa during parsing of cmd    */
@@ -237,7 +240,7 @@ int				quitOnError;		   /* quit on error?					            */
 int				replaceLogFile;        /* should logfile be replace/appended to         */
 int 			scientific;            /* use scientific format for samples ?           */
 char			spacer[10];            /* holds blanks for printing indentations        */
-NameSet		    *speciesNameSets;      /* hold species name sets, one for each speciespartition */
+NameSet		    *speciesNameSets;      /* hold species name sets, one for each speciespartition     */
 int             **speciespartitionId;  /* holds info about defined speciespartitions    */
 char            **speciespartitionNames;    /* hold names of speciespartitions (first is "default") */
 int				speciespartitionNum;   /* index of current speciespartition             */
@@ -248,7 +251,9 @@ char			**taxaNames;           /* holds name of taxa                            *
 SafeLong        **taxaSet;             /* holds information about defined taxasets      */
 char			**taxaSetNames;        /* holds names of taxa sets                      */
 int             *tempActiveConstraints;/* temporarily holds active constraints in prset */
+enum ConstraintType  *definedConstraintsType;/* Store type of constraint                     */
 int				*tempSet;              /* temporarily holds defined set                 */
+int				*tempSetNeg;           /* holds bitset of negative set of taxa for partial constraint*/
 int  			theAmbigChar;          /* int containing ambiguous character            */
 Calibration     *tipCalibration;       /* holds information about node calibrations     */
 char			**transFrom;           /* translation block information                 */
@@ -374,10 +379,11 @@ CmdType 			*commandPtr; /*Points to the commands array entery which corresponds 
 ParmInfoPtr			paramPtr;	 /*Points to paramTable table array entery which corresponds to currently processed parameter of current command*/
 TreeNode			*pPtr, *qPtr;
 
+enum ConstraintType     consrtainType; /* Used only in processing of constraine command to indicate what is the type of constrain */
 
 
 
-int AddToSet (int i, int j, int k, int id)
+int AddToGivenSet (int i, int j, int k, int id, int *Set)
 
 {
 
@@ -399,12 +405,12 @@ int AddToSet (int i, int j, int k, int id)
 			return (ERROR);
 		else
 			{
-			if (tempSet[i] != 0)
+			if (Set[i] != 0)
 				{
 				MrBayesPrint ("%s   Character %d defined more than once\n", spacer, i+1);
 				return (ERROR);
 				}
-			tempSet[i] = id;
+			Set[i] = id;
 			}
 		}
 	else if (i >= 0 && j >= 0)
@@ -413,12 +419,12 @@ int AddToSet (int i, int j, int k, int id)
 			{
 			for (m=i; m<=j; m++)
 				{
-				if (tempSet[m] != 0)
+				if (Set[m] != 0)
 					{
 					MrBayesPrint ("%s   Character %d defined more than once\n", spacer, m+1);
 					return (ERROR);
 					}
-				tempSet[m] = id;
+				Set[m] = id;
 				}
 			}
 		else
@@ -428,12 +434,12 @@ int AddToSet (int i, int j, int k, int id)
 				{
 				if (n % k == 0)
 					{
-					if (tempSet[m] != 0)
+					if (Set[m] != 0)
 						{
 						MrBayesPrint ("%s   Character %d defined more than once\n", spacer, m+1);
 						return (ERROR);
 						}
-					tempSet[m] = id;
+					Set[m] = id;
 					}
 				n++;
 				}
@@ -445,6 +451,14 @@ int AddToSet (int i, int j, int k, int id)
 	
 }
 
+
+
+
+
+int AddToSet (int i, int j, int k, int id)
+{
+    return AddToGivenSet (i, j, k,id, tempSet);
+}
 
 
 
@@ -572,7 +586,8 @@ int AllocCharacters (void)
 	else
 		tempSetSize = numTaxa;
 	tempSet = (int *)SafeRealloc((void *)tempSet, (size_t) (tempSetSize * sizeof(int)));
-	if (!tempSet)
+    tempSetNeg = (int *)SafeRealloc((void *)tempSetNeg, (size_t) (tempSetSize * sizeof(int)));
+	if (!tempSet || !tempSetNeg)
 		{
 		MrBayesPrint ("%s   Problem reallocating tempSet (%d)\n", spacer, tempSetSize * sizeof(int));
 		goto errorExit;
@@ -670,7 +685,11 @@ int AllocTaxa (void)
     if (memAllocs[ALLOC_CONSTRAINTS] == YES)
         goto errorExit;
     constraintNames = NULL;
+    definedConstraintsType = NULL; 
     definedConstraint = NULL;
+    definedConstraintTwo = NULL;
+    definedConstraintPruned = NULL;
+    definedConstraintTwoPruned = NULL;   
     numDefinedConstraints = 0;
     tempActiveConstraints = NULL;
 	memAllocs[ALLOC_CONSTRAINTS] = YES;     /* safe to free */
@@ -684,7 +703,8 @@ int AllocTaxa (void)
     if (memAllocs[ALLOC_TMPSET] == YES)
         goto errorExit;
     tempSet = (int *) SafeMalloc ((size_t)(numTaxa*sizeof(int)));
-    if (!tempSet)
+    tempSetNeg = (int *) SafeMalloc ((size_t)(numTaxa*sizeof(int)));
+    if (!tempSet || !tempSetNeg)
         goto errorExit;
     memAllocs[ALLOC_TMPSET] = YES;
 
@@ -1239,7 +1259,11 @@ int DoCalibrate (void)
 		MrBayesPrint ("%4d  --  %s\n", i+1, tipCalibration[i].name);
 	MrBayesPrint ("Constraint ages\n");
 	for (i=0; i<numDefinedConstraints; i++)
+        {
+        if( definedConstraintsType[i] != HARD )
+            continue;
 		MrBayesPrint ("%4d  --  %s\n", i+1, nodeCalibration[i].name);
+        }
 #endif
 
     /* Update model if calibrations enforced */
@@ -1289,7 +1313,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		howMany = 0;
 
 		/* first look in constraint names */
-		if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) != ERROR)
+		if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) != ERROR && definedConstraintsType[index] == HARD )
 			{
 			calibrationPtr = &nodeCalibration[index];
 			howMany++;
@@ -1309,7 +1333,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		/* return error if not found or ambiguous */
 		if (howMany == 0)
 			{
-			MrBayesPrint ("%s   No taxon or constraint named ""%s"" found\n", spacer, tkn);
+			MrBayesPrint ("%s   No taxon or hard constraint named ""%s"" found. Note that only hard constraint can be calibrated.\n", spacer, tkn);
 			return (ERROR);
 			}
 		else if (howMany > 1)
@@ -2177,21 +2201,27 @@ int DoConstraint (void)
 {
 
 	int			i, howMany;
+    int		    *tset;
+
+    if( consrtainType == PARTIAL )
+        tset=tempSetNeg;
+    else
+        tset=tempSet;
 
 	/* add set to tempSet */
 	if (fromI >= 0 && toJ < 0)
 		{
-		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+		if (AddToGivenSet (fromI, toJ, everyK, 1, tset) == ERROR)
 			return (ERROR);
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 		{
-		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+		if (AddToGivenSet (fromI, toJ, everyK, 1, tset) == ERROR)
 			return (ERROR);
 		}
 	else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 		{
-		if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+		if (AddToGivenSet (fromI, toJ, everyK, 1, tset) == ERROR)
 			return (ERROR);
 		}
 			
@@ -2200,25 +2230,71 @@ int DoConstraint (void)
 	for (i=0; i<numTaxa; i++)
 		if (tempSet[i] != 0)
 			howMany++;
-	if (howMany == numTaxa)
-		{
-        /* We allow this so we can report states from and calibrate root */
-		}
-    if (howMany == 0)
-		{
-		MrBayesPrint ("%s   This constraint does not include any taxa and will not be defined\n", spacer);
-		return (ERROR);
-		}
-		
-	/* add name to constraintNames */
-	if (AddString (&constraintNames, numDefinedConstraints, tempSetName) == ERROR)
-		{
-		MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
-		return (ERROR);
-		}
 
-	/* store tempSet */
-	AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
+    if (howMany == 0)
+	    {
+	    MrBayesPrint ("%s   This constraint does not include any taxa and will not be defined\n", spacer);
+	    return (ERROR);
+	    }
+
+    if( consrtainType == HARD )
+        {
+	    if (howMany == numTaxa)
+		    {
+            /* We allow this so we can report states from and calibrate root */
+		    }
+		
+        } /*end consrtainType == HARD */
+    else if( consrtainType == PARTIAL )
+        {
+        howMany = 0;
+	    for (i=0; i<numTaxa; i++)
+            {
+		    if (tempSetNeg[i] != 0)
+                {
+			    howMany++;
+                if (tempSetNeg[i] == tempSet[i])
+                    {
+	                MrBayesPrint ("%s   Two sets of taxa in partial constraint are not allowed to intersect. Constraint will not be defined\n", spacer);
+	                return (ERROR);
+                    }
+                }
+            }
+        if (howMany == 0)
+	        {
+	        MrBayesPrint ("%s   This partial constraint does not include any taxa in the second set and will not be defined\n", spacer);
+	        return (ERROR);
+	        }
+        }
+    else if( consrtainType == NEGATIVE)
+        {
+        if (howMany == 1)
+	        {
+	        MrBayesPrint ("%s   Negative constraint should include more than one taxa. Constraint will not be defined\n", spacer);
+	        return (ERROR);
+	        }
+        }
+
+   /* add name to constraintNames */
+    if (AddString (&constraintNames, numDefinedConstraints, tempSetName) == ERROR)
+        {
+        MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
+        return (ERROR);
+        }
+
+    /* store tempSet */
+    AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
+    if( consrtainType == PARTIAL)
+        {
+        AddBitfield (&definedConstraintTwo, numDefinedConstraints, tempSetNeg, numTaxa);
+        }
+    else
+        {
+        definedConstraintTwo = (SafeLong **) SafeRealloc ((void *)(definedConstraintTwo), (size_t)((numDefinedConstraints+1)*sizeof(SafeLong *)));
+        if ( definedConstraintTwo==NULL )
+            return ERROR;
+        definedConstraintTwo[numDefinedConstraints]=NULL;
+        }
 	
     /* add a default node calibration */
     nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
@@ -2231,7 +2307,7 @@ int DoConstraint (void)
     strcpy(nodeCalibration[numDefinedConstraints].name, defaultCalibration.name);
 
     /* increment number of defined constraints */
-	numDefinedConstraints++;
+    numDefinedConstraints++;
 
     /* reallocate and initialize space for activeConstraints */
     for (i=0; i<numCurrentDivisions; i++)
@@ -2244,10 +2320,28 @@ int DoConstraint (void)
     tempActiveConstraints = (int *) realloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
     tempActiveConstraints[numDefinedConstraints-1] = NO;
 
+    definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)(numDefinedConstraints*sizeof(enum ConstraintType)));
+    if ( definedConstraintsType==NULL )
+        return ERROR;
+    definedConstraintsType[numDefinedConstraints-1] = consrtainType;
+
+    definedConstraintPruned = (SafeLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)((numDefinedConstraints)*sizeof(SafeLong *)));
+    if ( definedConstraintPruned==NULL )
+        return ERROR;
+    definedConstraintPruned[numDefinedConstraints-1]=NULL;
+
+
+    definedConstraintTwoPruned = (SafeLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(SafeLong *)));
+    if ( definedConstraintTwoPruned==NULL )
+        return ERROR;
+    definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
+
+
+
     /* show taxset (for debugging) */
 #	if 0 
-	for (i=0; i<numTaxa; i++)
-		MrBayesPrint ("%4d  %4d\n", i+1, taxaInfo[i].constraints[numDefinedConstraints-1]);
+    for (i=0; i<numTaxa; i++)
+        MrBayesPrint ("%4d  %4d\n", i+1, taxaInfo[i].constraints[numDefinedConstraints-1]);
 #	endif
 
 	return (NO_ERROR);
@@ -2297,13 +2391,14 @@ int DoConstraintParm (char *parmName, char *tkn)
 					}
 				}
 				
-			/* add the name to the temporary constraint names string */
+			/* copy the name to the temporary constraint names string */
 			strcpy (tempSetName, tkn);
 			
 			/* clear tempSet */
 			for (i=0; i<numTaxa; i++)
 				tempSet[i] = 0;
-			
+
+            consrtainType=HARD; /*set default constrain type*/
 			fromI = toJ = everyK = -1;
 			foundDash = foundSlash = NO;
 			MrBayesPrint ("%s   Defining constraint called '%s'\n", spacer, tkn);
@@ -2351,18 +2446,39 @@ int DoConstraintParm (char *parmName, char *tkn)
 		if (foundFirst == YES && foundEqual == NO)
 			{
 			/* We are filling in the probability for the constraint. Specifically, we expect exp(number). */
-			if (IsSame ("Exp", tkn) == SAME || IsSame ("Exp", tkn) == CONSISTENT_WITH)
+            if(IsSame ("Partial", tkn) == SAME)
+                {
+			    for (i=0; i<numTaxa; i++)
+				    tempSetNeg[i] = 0;
+
+                consrtainType=PARTIAL;
+                expecting = Expecting(EQUALSIGN);
+                expecting |= Expecting(ALPHA);
+                }
+            else if(IsSame ("Hard", tkn) == SAME)
+                {
+                consrtainType=HARD;
+                expecting = Expecting(EQUALSIGN);
+                expecting |= Expecting(ALPHA);
+                }
+            else if(IsSame ("Negative", tkn) == SAME)
+                {
+                consrtainType=NEGATIVE;
+                expecting = Expecting(EQUALSIGN);
+                expecting |= Expecting(ALPHA);
+                }
+            else if (IsSame ("Exp", tkn) == SAME || IsSame ("Exp", tkn) == CONSISTENT_WITH)
 				{
 				foundExp = YES;
 				foundDash = NO;
 				isNegative = NO;
+                expecting  = Expecting(LEFTPAR);
 				}
 			else
 				{
 				MrBayesPrint ("%s   Do not understand %s\n", spacer, tkn);
 				return (ERROR);
 				}
-			expecting  = Expecting(LEFTPAR);
 			}
 		else
 			{
@@ -2384,19 +2500,30 @@ int DoConstraintParm (char *parmName, char *tkn)
 				/* add taxa from taxset tkn to new tempSet */
 				for (i=0; i<numTaxa; i++)
 					{
-					if (IsBitSet(i, taxaSet[index]) == YES)
-						tempSet[i] = 1;
+                    if (IsBitSet(i, taxaSet[index]) == YES)
+                        {
+                        if( foundColon == NO )
+						    tempSet[i] = 1;
+                        else
+                            tempSetNeg[i] = 1;
+                        }
 					}
 				}
 			else
 				{
-				tempSet[index] = 1;
+                if( foundColon == NO )
+				    tempSet[index] = 1;
+                else
+                    tempSetNeg[index] = 1;
 				}
 			fromI = toJ = everyK = -1;
 
 			expecting  = Expecting(ALPHA);
 			expecting |= Expecting(NUMBER);
-			expecting |= Expecting(SEMICOLON);
+            if( consrtainType != PARTIAL || foundColon == YES )
+                expecting |= Expecting(SEMICOLON);
+            else
+                expecting |= Expecting(COLON);
 			}
 		}
 	else if (expecting == Expecting(NUMBER))
@@ -2504,9 +2631,12 @@ int DoConstraintParm (char *parmName, char *tkn)
 
 			expecting  = Expecting(ALPHA);
 			expecting |= Expecting(NUMBER);
-			expecting |= Expecting(SEMICOLON);
 			expecting |= Expecting(DASH);
 			expecting |= Expecting(BACKSLASH);
+            if( consrtainType != PARTIAL || foundColon == YES )
+                expecting |= Expecting(SEMICOLON);
+            else
+                expecting |= Expecting(COLON);
 			}
 		}
 	else if (expecting == Expecting(BACKSLASH))
@@ -2514,6 +2644,37 @@ int DoConstraintParm (char *parmName, char *tkn)
 		foundSlash = YES;
 		expecting = Expecting(NUMBER);
 		}
+    else if (expecting == Expecting(COLON))
+        {
+        if( foundColon == YES )
+            {
+            MrBayesPrint ("%s   Improperly formatted constraint: two colon charactors in constraint command.\n", spacer);
+			return (ERROR);
+            }
+
+        	/* add set to tempSet */
+	    if (fromI >= 0 && toJ < 0)
+		    {
+		    if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+			    return (ERROR);
+		    }
+	    else if (fromI >= 0 && toJ >= 0 && everyK < 0)
+		    {
+		    if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+			    return (ERROR);
+		    }
+	    else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
+		    {
+		    if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+			    return (ERROR);
+		    }
+        fromI = toJ = everyK = -1;
+		foundDash = foundSlash = NO;
+
+        foundColon = YES;
+        expecting  = Expecting(ALPHA);
+	    expecting |= Expecting(NUMBER);
+        }
 	else
 		return (ERROR);
 
@@ -8903,6 +9064,7 @@ int FreeCharacters (void)
         {
         if (numChar > numTaxa)
             tempSet = (int *) SafeRealloc ((void *) tempSet, (size_t)(numTaxa*sizeof(int)));
+            tempSetNeg = (int *) SafeRealloc ((void *) tempSetNeg, (size_t)(numTaxa*sizeof(int)));
         }
     if (memAllocs[ALLOC_MATRIX] == YES)
 		{
@@ -9020,6 +9182,8 @@ int FreeTaxa (void)
 		{
 		free (tempSet);
         tempSet = NULL;
+        free (tempSetNeg);
+        tempSetNeg = NULL;
 		memAllocs[ALLOC_TMPSET] = NO;
 		memoryLetFree = YES;
 		}
@@ -9057,11 +9221,18 @@ int FreeTaxa (void)
         for (i=0; i<numDefinedConstraints; i++)
             {
             free(definedConstraint[i]);
+            free(definedConstraintTwo[i]);
+            free(definedConstraintPruned[i]);
+            free(definedConstraintTwoPruned[i]);
             free (constraintNames[i]);
             }
         free (definedConstraint);
         definedConstraint = NULL;
-		free (constraintNames);
+        free (definedConstraintTwo);
+        definedConstraintTwo = NULL;
+		free (definedConstraintsType);
+        definedConstraintsType = NULL;
+        free (constraintNames);
         constraintNames = NULL;
         free (nodeCalibration);
         nodeCalibration = NULL;
@@ -9842,18 +10013,33 @@ int GetUserHelp (char *helpTkn)
             {
             MrBayesPrint ("   Currently defined constraints:                                                \n");
 	        MrBayesPrint ("                                                                                 \n");
-            MrBayesPrint ("   Constraint name                Number of included taxa                        \n");
-		    MrBayesPrint ("   ------------------------------------------------------------------            \n");		
+            MrBayesPrint ("   Constraint name              type     Number of included taxa                        \n");
+		    MrBayesPrint ("   --------------------------------------------------------------------------            \n");		
             }
         for (i=0; i<numDefinedConstraints; i++)
 			{
 			strncpy (tempString, constraintNames[i], 22);
 			MrBayesPrint ("   %-22.22s   ", tempString);
+            if( definedConstraintsType[i] == HARD )
+                MrBayesPrint ("    hard     ");
+            else if( definedConstraintsType[i] == PARTIAL )
+                MrBayesPrint (" partial     ");
+            else
+                {
+                assert(definedConstraintsType[i] == NEGATIVE );
+                MrBayesPrint ("negative     ");
+                }
             k = NumBits (definedConstraint[i], numTaxa/nBitsInALong + 1);
-			MrBayesPrint ("%d\n", k);
+			MrBayesPrint ("%d", k);
+            if( definedConstraintsType[i] == PARTIAL )
+                {
+                k = NumBits (definedConstraintTwo[i], numTaxa/nBitsInALong + 1);
+                MrBayesPrint (":%d", k);
+                }
+        MrBayesPrint ("\n");
 			}
-	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+	    MrBayesPrint ("                                                                                   \n");
+		MrBayesPrint ("   --------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Calibrate"))
 		{
@@ -13398,7 +13584,12 @@ void ResetTaxaFlags (void)
     defTaxa                 = NO;                        /* flag for whether number of taxa is known      */
     isTaxsetDef             = NO;                        /* is a taxlabels set defined                    */
 	numDefinedConstraints   = 0;          			     /* holds number of defined constraints           */
-	free (tempActiveConstraints);                        /* holds temp info on active constraints         */
+    definedConstraint       = NULL;
+    definedConstraintTwo    = NULL;
+    definedConstraintPruned       = NULL;
+    definedConstraintTwoPruned    = NULL;
+    constraintNames         = NULL;
+    nodeCalibration         = NULL;
 	tempActiveConstraints   = NULL;          			 /* holds temp info on active constraints        */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
