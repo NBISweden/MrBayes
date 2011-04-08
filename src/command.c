@@ -186,10 +186,11 @@ Comptree		comptreeParams;        /* holds parameters for comparetree command    
 char			**constraintNames;     /* holds names of constraints               */
 int				dataType;              /* type of data                                  */
 Calibration     defaultCalibration;    /* default calibration                           */
-SafeLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints             */
+SafeLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints                                                   */
 SafeLong        **definedConstraintTwo;/* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)             */
-SafeLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed            */
-SafeLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
+SafeLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
+SafeLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
+                                             /* taxa are removed and for NEGATIVE constraint it contains complements of definedConstraintPruned     */
 int				echoMB;				   /* flag used by Manual to prevent echoing        */
 SafeLong        expecting;             /* variable denoting expected token type         */
 int				foundNewLine;          /* whether a new line has been found             */
@@ -250,7 +251,7 @@ TaxaInformation *taxaInfo;             /* holds critical information about taxa 
 char			**taxaNames;           /* holds name of taxa                            */
 SafeLong        **taxaSet;             /* holds information about defined taxasets      */
 char			**taxaSetNames;        /* holds names of taxa sets                      */
-int             *tempActiveConstraints;/* temporarily holds active constraints in prset */
+int             *tempActiveConstraints;/* temporarily holds active constraints size allcated          */
 enum ConstraintType  *definedConstraintsType;/* Store type of constraint                     */
 int				*tempSet;              /* temporarily holds defined set                 */
 int				*tempSetNeg;           /* holds bitset of negative set of taxa for partial constraint*/
@@ -2358,6 +2359,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 
 	int		i, index, tempInt;
 	MrBFlt	tempD;
+    static int		*tempSetCurrent;
 	
 	if (defMatrix == NO)
 		{
@@ -2399,6 +2401,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 				tempSet[i] = 0;
 
             consrtainType=HARD; /*set default constrain type*/
+            tempSetCurrent=tempSet;
 			fromI = toJ = everyK = -1;
 			foundDash = foundSlash = NO;
 			MrBayesPrint ("%s   Defining constraint called '%s'\n", spacer, tkn);
@@ -2406,6 +2409,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 			foundFirst = YES;
             foundEqual = NO;
 			isNegative = NO;
+            foundColon = NO;
 			expecting = Expecting(ALPHA);
 			expecting |= Expecting(NUMBER);
 			expecting |= Expecting(DASH);
@@ -2502,19 +2506,13 @@ int DoConstraintParm (char *parmName, char *tkn)
 					{
                     if (IsBitSet(i, taxaSet[index]) == YES)
                         {
-                        if( foundColon == NO )
-						    tempSet[i] = 1;
-                        else
-                            tempSetNeg[i] = 1;
+                        tempSetCurrent[i] = 1;
                         }
 					}
 				}
 			else
 				{
-                if( foundColon == NO )
-				    tempSet[index] = 1;
-                else
-                    tempSetNeg[index] = 1;
+                tempSetCurrent[index] = 1;
 				}
 			fromI = toJ = everyK = -1;
 
@@ -2598,7 +2596,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 				{
 				if (fromI >= 0 && toJ < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+					if (AddToGivenSet (fromI, toJ, everyK, 1, tempSetCurrent) == ERROR)
 						return (ERROR);
 					fromI = tempInt;
 					}
@@ -2608,14 +2606,14 @@ int DoConstraintParm (char *parmName, char *tkn)
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK < 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+					if (AddToGivenSet (fromI, toJ, everyK, 1, tempSetCurrent) == ERROR)
 						return (ERROR);
 					fromI = tempInt;
 					toJ = everyK = -1;
 					}
 				else if (fromI >= 0 && toJ >= 0 && everyK >= 0)
 					{
-					if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
+					if (AddToGivenSet (fromI, toJ, everyK, 1, tempSetCurrent) == ERROR)
 						return (ERROR);
 					fromI = tempInt;
 					toJ = everyK = -1;
@@ -2672,6 +2670,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 		foundDash = foundSlash = NO;
 
         foundColon = YES;
+        tempSetCurrent = tempSetNeg;
         expecting  = Expecting(ALPHA);
 	    expecting |= Expecting(NUMBER);
         }
@@ -7848,7 +7847,12 @@ int DoTaxaStat (void)
 			strcpy (tempName, constraintNames[j]);
 
             /* for now, ignore the probability */
-			MrBayesPrint ("%s     %2d -- Trees with constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
+            if( definedConstraintsType[j] == HARD )
+			    MrBayesPrint ("%s     %2d -- Trees with 'hard' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
+            else if( definedConstraintsType[j] == PARTIAL )
+                MrBayesPrint ("%s     %2d -- Trees with 'partial' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
+            else
+                MrBayesPrint ("%s     %2d -- Trees with 'negative' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
 			MrBayesPrint ("%s           more probable than those without \n", spacer);
 
 			}
@@ -7899,16 +7903,40 @@ int DoTaxaStat (void)
 			
 		for (j=0; j<numDefinedConstraints; j++)
 			{
-			if (IsBitSet(i, definedConstraint[j]) == NO)
-				MrBayesPrint ("  .");
-			else
-				MrBayesPrint ("  *");
+            if( definedConstraintsType[j] == HARD )
+                {
+			    if (IsBitSet(i, definedConstraint[j]) == NO)
+				    MrBayesPrint ("  .");
+			    else
+				    MrBayesPrint ("  *");
+                }
+            else if( definedConstraintsType[j] == PARTIAL )
+                {
+                if (IsBitSet(i, definedConstraint[j]) == YES)
+				    MrBayesPrint ("  +");
+			    else if(IsBitSet(i, definedConstraintTwo[j]) == YES)
+                    MrBayesPrint ("  -");
+                else
+				    MrBayesPrint ("  .");
+                }
+            else if( definedConstraintsType[j] == NEGATIVE )
+                {
+			    if (IsBitSet(i, definedConstraint[j]) == NO)
+				    MrBayesPrint ("  .");
+			    else
+                    MrBayesPrint ("  #");
+                }
 			}
 		MrBayesPrint ("\n");
 		}
 		
 	MrBayesPrint ("\n");
-	MrBayesPrint ("%s   Arrow indicates current outgroup\n", spacer);
+    MrBayesPrint ("%s   '.' indicate that the taxon is not present in the constraint. \n", spacer);
+    MrBayesPrint ("%s   '*' indicate that the taxon is present in the 'hard' constraint. \n", spacer);
+    MrBayesPrint ("%s   '+' indicate that the taxon is present in the first groupe of 'partial' constraint. \n", spacer);
+    MrBayesPrint ("%s   '-' indicate that the taxon is present in the second groupe of 'partial' constraint. \n", spacer);
+    MrBayesPrint ("%s   '#' indicate that the taxon is present in the 'negative' constraint. \n", spacer);
+	MrBayesPrint ("%s   Arrow indicates current outgroup. \n", spacer);
 
 	return (NO_ERROR);
 
@@ -9990,44 +10018,67 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   This command defines a tree constraint. The format for the constraint         \n");
 	    MrBayesPrint ("   command is                                                                    \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      constraint <constraint name> = <list of taxa>                              \n");
+	    MrBayesPrint ("    constraint <name> [hard|negative|partial] = <list of taxa> [:<list of taxa>] \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   There sre three type of constraints implemented in MrBayes.                   \n");
+        MrBayesPrint ("   Type of a constraint is assigned by spesifying one of the three keywords:     \n");
+        MrBayesPrint ("   'partial|negative|hard' right after the name of the constraint.               \n");
+        MrBayesPrint ("   If no type is specified then 'hard' constraint is assumed by default.         \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   'hard' constraint forces a tree to have all listed taxa in a single subtree   \n");
+        MrBayesPrint ("   that contains no other taxa outside of the list. By subtree we mean a portion \n");
+        MrBayesPrint ("   of an unrooted tree that is connected by a single branch to the rest of the   \n");
+        MrBayesPrint ("   tree and we mean clade for a rooted tree.                                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   'negative' constraint bans all the tree that have listed taxa in a single     \n");
+        MrBayesPrint ("   subtree, i.e. it is an opposite to a hard constraint.                         \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   'partial' constraint deal with two groupe of taxa which should be specified   \n");
+        MrBayesPrint ("   in definition of the constraint as two list of taxa separated by a colon      \n");
+        MrBayesPrint ("   charactor. Partial constraint impose a requirement to a tree that there should\n");
+        MrBayesPrint ("   be a subtree which includes all taxa of the first groupe and it may contain   \n");
+        MrBayesPrint ("   any other taxa except those of the second groupe of taxa. Note: For unrooted  \n");
+        MrBayesPrint ("   tree two taxa groups could be switched with each other with no effect. For a  \n");
+        MrBayesPrint ("   rooted tree first group has to be in a clade sharing common ancestor which is \n");
+        MrBayesPrint ("   not shared with any taxa from the second group.                               \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   A list of taxa can be specified using a taxset, taxon names, or taxon         \n");
-	    MrBayesPrint ("   numbers. The constraint is treated as an absolute requirement of trees.       \n");
-	    MrBayesPrint ("   That is, trees that are not compatible with the constraint have zero prior    \n");
-	    MrBayesPrint ("   (and hence zero posterior) probability.                                       \n");
+	    MrBayesPrint ("   numbers. Or any combination of above sepatated by a space. The constraint is  \n");
+        MrBayesPrint ("   treated as an absolute requirement of trees. That is, trees that are not      \n");
+	    MrBayesPrint ("   compatible with the constraint have zero prior (and hence zero posterior)     \n");
+	    MrBayesPrint ("   probability.                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   If you are interested in inferring ancestral states for a particular node,    \n");
-	    MrBayesPrint ("   you need to constrain that node first using the 'constraint' command. The     \n");
-	    MrBayesPrint ("   same applies if you wish to calibrate an interior node in a dated analysis.   \n");
-	    MrBayesPrint ("   For more information on how to infer ancestral states, see the help for the   \n");
-	    MrBayesPrint ("   'report' command. For more on dating, see the 'calibrate' command.            \n");
+	    MrBayesPrint ("   you need to 'hard' constrain that node first using the 'constraint' command.  \n");
+	    MrBayesPrint ("   The same applies if you wish to calibrate an interior node in a dated         \n");
+	    MrBayesPrint ("   analysis. For more information on how to infer ancestral states, see the help \n");
+	    MrBayesPrint ("   for the 'report' command. For more on dating, see the 'calibrate' command.    \n");
 		MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   It is important to note that simply defining a constraint using this          \n");
 	    MrBayesPrint ("   command is not sufficient for the program to actually implement the           \n");
 	    MrBayesPrint ("   constraint in an analysis. You must also specify the constraints using        \n");
-	    MrBayesPrint ("   'prset topologypr = constraints (<name of constraint>)'. For more infor-      \n");
+	    MrBayesPrint ("   'prset topologypr = constraints (<list of constraints>)'. For more infor-     \n");
 	    MrBayesPrint ("   mation on this, see the help on the 'prset' command.                          \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    if (numDefinedConstraints > 0)
             {
             MrBayesPrint ("   Currently defined constraints:                                                \n");
 	        MrBayesPrint ("                                                                                 \n");
-            MrBayesPrint ("   Constraint name              type     Number of included taxa                        \n");
-		    MrBayesPrint ("   --------------------------------------------------------------------------            \n");		
+            MrBayesPrint ("   Number  Constraint name          type      Number of taxa in[:out]            \n");
+		    MrBayesPrint ("   --------------------------------------------------------------------------    \n");		
             }
         for (i=0; i<numDefinedConstraints; i++)
 			{
 			strncpy (tempString, constraintNames[i], 22);
-			MrBayesPrint ("   %-22.22s   ", tempString);
+			MrBayesPrint ("   %4d    %-22.22s   ",i+1, tempString);
             if( definedConstraintsType[i] == HARD )
-                MrBayesPrint ("    hard     ");
+                MrBayesPrint ("hard      ");
             else if( definedConstraintsType[i] == PARTIAL )
-                MrBayesPrint (" partial     ");
+                MrBayesPrint ("partial   ");
             else
                 {
                 assert(definedConstraintsType[i] == NEGATIVE );
-                MrBayesPrint ("negative     ");
+                MrBayesPrint ("negative  ");
                 }
             k = NumBits (definedConstraint[i], numTaxa/nBitsInALong + 1);
 			MrBayesPrint ("%d", k);
@@ -10038,7 +10089,7 @@ int GetUserHelp (char *helpTkn)
                 }
         MrBayesPrint ("\n");
 			}
-	    MrBayesPrint ("                                                                                   \n");
+	    MrBayesPrint ("                                                                                \n");
 		MrBayesPrint ("   --------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Calibrate"))
@@ -11132,11 +11183,19 @@ int GetUserHelp (char *helpTkn)
 			if (!strcmp(mp->topologyPr, "Constraints"))
 				{
 				MrBayesPrint ("(");
-				for (j=0; j<mp->numActiveConstraints; j++)
+				for (j=0; j<numDefinedConstraints; j++)
 					{
 					if (mp->activeConstraints[j] == YES)
 						{
-						MrBayesPrint ("%d,", j+1);
+						MrBayesPrint ("%d", j+1);
+                        break;
+						}
+					}
+               for (j++; j<numDefinedConstraints; j++)
+					{
+					if (mp->activeConstraints[j] == YES)
+						{
+						MrBayesPrint (",%d", j+1);
 						}
 					}
                 MrBayesPrint (")\n");

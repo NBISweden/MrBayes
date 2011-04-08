@@ -9136,7 +9136,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             PrunePolyTree (thePolyTree);
                             ResetTipIndices(thePolyTree);
                             }
-					    RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
+					    RandResolve (NULL, thePolyTree, &globalSeed, theTree->isRooted);
                         if (param->paramType == P_SPECIESTREE)
                             CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
 					    else
@@ -9152,7 +9152,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         thePolyTree = AllocatePolyTree(numSpecies);
 					    CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
                         ResetIntNodeIndices(thePolyTree);
-					    RandResolve (thePolyTree, &globalSeed, theTree->isRooted);
+					    RandResolve (NULL, thePolyTree, &globalSeed, theTree->isRooted);
                         CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
 					    FreePolyTree (thePolyTree);
                         }
@@ -10649,6 +10649,8 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 
 
+
+/*Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions may theoreticly have different clock models, whil constraints apply to all partitions/trees */
 int PruneConstraintPartitions()
 {
 
@@ -10700,16 +10702,43 @@ int PruneConstraintPartitions()
                 }
             assert (j == numLocalTaxa);
             }
+        else if (definedConstraintsType[constraintId] == NEGATIVE )
+            {
+            /* Here we create definedConstraintTwoPruned[constraintId] which is complemente of definedConstraintPruned[constraintId] */
+            definedConstraintTwoPruned[constraintId] = (SafeLong *) realloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+	        if (!definedConstraintTwoPruned[constraintId])
+		        {
+		        MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
+		        return (ERROR);
+		        }
+
+            /* initialize bits in partition to add; get rid of deleted taxa in the process */
+            ClearBits(definedConstraintTwoPruned[constraintId], nLongsNeeded);
+            for (i=j=0; i<numTaxa; i++)
+                {
+                if (taxaInfo[i].isDeleted == YES)
+                    continue;
+                if (IsBitSet(i, definedConstraint[constraintId]) == NO)
+                    SetBit(j, definedConstraintTwoPruned[constraintId]);
+                j++;
+                }
+            assert (j == numLocalTaxa);         
+            }
     }
     return NO_ERROR;
 
 }
 
 
+
+
+
 int DoesTreeSatisfyConstraints(Tree *t){
 
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
+    int         CheckFirst, CheckSecond; /*Flag indicating wheather coresonding set(first/second) of partial constraint has to be checked*/
+
 
     /* get some handy numbers */
     numTaxa = t->nNodes - t->nIntNodes - (t->isRooted == YES ? 1 : 0);
@@ -10747,14 +10776,26 @@ int DoesTreeSatisfyConstraints(Tree *t){
                     continue;
                 }
             */
+            if( t->isRooted == YES )
+                {
+                CheckFirst = YES;
+                CheckSecond = NO; /*In rooted case even if we have a node with partition fully containing second set and not containing the first set it would not sutisfy the constraint*/
+                }
+            else
+                {
+                /*one or two of the next two statments will be YES*/
+                CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
+                CheckSecond = IsBitSet(localOutGroup, definedConstraintTwoPruned[k])==YES ? NO : YES;
+                assert( (CheckFirst|CheckSecond)==1 );
+                }
             for (i=0; i<t->nIntNodes; i++)
 	            {
                 p = t->intDownPass[i];
                 if (p->anc != NULL)
-		            {
-                    if( IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+		            { 
+                    if( CheckFirst==YES && IsPartNested( definedConstraintPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
                         break;
-                    if( IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                    if( CheckSecond==YES && IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
                         break;
 		            }
 	            }
@@ -10764,14 +10805,29 @@ int DoesTreeSatisfyConstraints(Tree *t){
         else
             {
             assert(definedConstraintsType[k] == NEGATIVE);
+            if( t->isRooted == YES )
+                {
+                CheckFirst = YES;
+                CheckSecond = NO; 
+                }
+            else
+                {
+                /*exactly one of next two will be YES*/
+                CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
+                CheckSecond = IsBitSet(localOutGroup, definedConstraintTwoPruned[k])==YES ? NO : YES;
+                assert( (CheckFirst^CheckSecond)==1 );
+                }
+
             for (i=0; i<t->nIntNodes; i++)
 	            {
                 p = t->intDownPass[i];
                 if (p->anc != NULL)
 		            {
-                    if( !IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                    if(CheckFirst==YES &&  !IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
                         break;
-		            }
+                    if(CheckSecond==YES &&  !IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                        break;
+                    }
 	            }
             if( i==t->nIntNodes )
                 return NO;
@@ -10796,7 +10852,7 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 
 {
 
-	int			i, k, chn, nTaxa;
+	int			i, k, chn, nTaxa, tmp;
 	Param		*p, *q;
 	Tree		*tree;
 	PolyTree	*constraintTree;
@@ -10837,7 +10893,7 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 					PrunePolyTree (constraintTree);
                     ResetTipIndices(constraintTree);
                     ResetIntNodeIndices(constraintTree);
-                    RandResolve (constraintTree, seed, constraintTree->isRooted);
+                    RandResolve (NULL, constraintTree, seed, constraintTree->isRooted);
                     if (tree->nIntNodes != constraintTree->nIntNodes)
 						{
 						MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved or differs in rootedness\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
@@ -10863,21 +10919,35 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 						FreePolyTree (constraintTreeRef);
 						return (ERROR);
 						}
+                    if ( AllocatePolyTreePartitions (constraintTreeRef) == ERROR )
+                        return (ERROR);
 
                     constraintTree = AllocatePolyTree (nTaxa);
 					if (!constraintTree)
 						return (ERROR);
+                    if ( AllocatePolyTreePartitions (constraintTree) == ERROR )
+                        return (ERROR);
 
-                    for(i=0;i<100000;i++)
+                    for(i=0;i<100;i++)
                         {
                         CopyToPolyTreeFromPolyTree(constraintTree,constraintTreeRef);
-					    if (RandResolve (constraintTree, &globalSeed, tree->isRooted) == ERROR)
-						    {
-						    FreePolyTree (constraintTree);
-						    return (ERROR);
-						    }
+                        tmp = RandResolve (tree, constraintTree, &globalSeed, tree->isRooted);
+                        if ( tmp != NO_ERROR )
+                            {
+					        if (tmp  == ERROR)
+						        {
+						        FreePolyTree (constraintTree);
+						        return (ERROR);
+						        }
+                            else
+                                {   
+                                assert (tmp  == ABORT);
+                                continue;
+                                }
+                            }
+                   
 					    CopyToTreeFromPolyTree(tree, constraintTree);
-                        if( DoesTreeSatisfyConstraints(tree) )
+                        if( DoesTreeSatisfyConstraints(tree)==YES )
                             break;
                         }
 #if defined (DEBUG_CONSTRAINTS)
@@ -10889,7 +10959,7 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
 #endif
 					FreePolyTree (constraintTree);
                     FreePolyTree (constraintTreeRef);
-                    if(i==100000)
+                    if(i==100)
                         {
                         MrBayesPrint ("%s   Could not build a starting tree satisfying all constraints\n", spacer); 					
                         return (ERROR);

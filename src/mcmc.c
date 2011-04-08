@@ -7305,6 +7305,8 @@ void CopySiteScalers (ModelInfo *m, int chain)
 |
 |	CopyTrees: copies touched trees for chain
 |		resets division and node update flags in the process
+|       Note: partition information of nodes are not copied if
+|       either sorce or destination tree does not have bitsets allocated
 |
 -----------------------------------------------------------------*/
 void CopyTrees (int chain)
@@ -7314,6 +7316,12 @@ void CopyTrees (int chain)
 	int			i, j, n;
 	TreeNode	*p, *q;
 	Tree		*from, *to;
+    int         numTaxa, nLongsNeeded, nLongsNeededTmp;
+
+    /* get some handy numbers */
+    from = GetTreeFromIndex (0, chain, state[chain]);
+    numTaxa = from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0);
+    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
     /* reset division update flags */
     for (i=0; i<numCurrentDivisions; i++)
@@ -7323,6 +7331,11 @@ void CopyTrees (int chain)
 		{
 		from = GetTreeFromIndex (n, chain, state[chain]);		
 		to = GetTreeFromIndex (n, chain, (state[chain]^1));
+        assert( from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0) == numTaxa );/*so that nLongsNeeded is correct*/
+        if( from->bitsets!=NULL && to->bitsets!=NULL )
+            nLongsNeededTmp=nLongsNeeded;
+        else
+            nLongsNeededTmp=0;
 
         /* copy nodes */
 		for (j=0; j<from->nNodes; j++)
@@ -7346,7 +7359,7 @@ void CopyTrees (int chain)
 			else
 				q->right = NULL;
 
-			CopyTreeNodes (q, p);
+			CopyTreeNodes (q, p, nLongsNeededTmp);
             q->upDateCl = q->upDateTi = NO;     /* reset update flags */
 			}
 		

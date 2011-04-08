@@ -41,6 +41,7 @@ int      IsConsistentWith (const char *token, const char *expected);
 int      IsPartNested (SafeLong *smaller, SafeLong *larger, int length);
 int      IsPartCompatible (SafeLong *smaller, SafeLong *larger, int length);
 int      IsSectionEmpty (SafeLong *bitField1, SafeLong *bitField2, int length);
+int      IsUnionEqThird (SafeLong *bitField1, SafeLong *bitField2, SafeLong *bitField3, int length);
 SafeLong LastBlock (FILE *fp, char *lineBuf, int longestLine);
 int		 LineTermType (FILE *fp);
 int      LongestLine (FILE *fp);

@@ -688,6 +688,22 @@ int IsSectionEmpty (SafeLong *bitField1, SafeLong *bitField2, int length)
 
 
 
+/* IsSectionEmpty: Test whether union of bitField1 and bitField2 equal to bitField3*/
+int IsUnionEqThird (SafeLong *bitField1, SafeLong *bitField2, SafeLong *bitField3, int length)
+{
+	int i;
+
+	for (i=0; i<length; i++)
+		if ((bitField1[i] | bitField2[i]) != bitField3[i] )
+			return NO;
+		
+	return YES;
+}
+
+
+
+
+
 /* LastBlock: Return file position of last block in file */
 SafeLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
 {

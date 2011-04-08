@@ -1221,7 +1221,7 @@ void ColorClusters (TreeNode *p, int *index)
 
 
 /* CopyPolyNodes: Copies everything except pointers and memoryIndex */
-void CopyPolyNodes (PolyNode *p, PolyNode *q)
+void CopyPolyNodes (PolyNode *p, PolyNode *q, int nLongsNeeded)
 {
 	p->index                  = q->index; 
 	p->mark                   = q->mark;
@@ -1234,7 +1234,12 @@ void CopyPolyNodes (PolyNode *p, PolyNode *q)
 	p->isLocked				  = q->isLocked;
 	p->lockID				  = q->lockID;
 	strcpy (p->label, q->label);
-	p->partition			  = q->partition;
+    if( nLongsNeeded!=0 )
+        {
+        assert(p->partition);
+        assert(q->partition);
+        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(SafeLong));
+        }
 	p->support                = q->support;
 	p->f                      = q->f;
 }
@@ -1327,11 +1332,21 @@ void CopySubtreeToTree (Tree *subtree, Tree *t)
 -----------------------------------------------------------------*/
 int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 {
-	int			i, j, k;
+	int			i, j, k, nLongsNeeded;
 	PolyNode	*p, *q;
 
     /* check we have enough memory */
     assert (to->memNodes >= from->nNodes);
+    if( from->bitsets==NULL || to->bitsets==NULL )
+        {
+        nLongsNeeded=0;
+        }
+    else
+        {
+        assert (to->memNodes >= from->memNodes);/*Otherwise partition length woould not be long enough for nodes in "to" */
+        nLongsNeeded = (from->memNodes/2 - 1) / nBitsInALong + 1;
+        }
+
 
 	/* copy nodes */
 	for (i=0; i<from->nNodes; i++)
@@ -1359,12 +1374,10 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 			q->sib = NULL;
 
 		/* Copy everything else except memoryIndex */
-        CopyPolyNodes (q, p);
+        CopyPolyNodes (q, p, nLongsNeeded);
 		}
 
-	/* fill node arrays */
-    GetPolyDownPass (to);
-
+    /* fill node arrays */
 	/* copy tree properties */
     to->nNodes = from->nNodes;
 	to->nIntNodes = from->nIntNodes;
@@ -1373,6 +1386,8 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
     to->isRelaxed = from->isRelaxed;
     to->clockRate = from->clockRate;
 	strcpy (to->name, from->name);
+  
+    GetPolyDownPass (to);
 
 	/* copy partitions */
     if (from->bitsets)
@@ -1691,14 +1706,21 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 |
 |	CopyToTreeFromTree: copies second tree to first tree
 |		(used to initialize brlen sets for same topology)
+|       Note: partition information of nodes are not copied if
+|       either "from" or "to" tree does not have bitsets allocated
 |
 -----------------------------------------------------------------*/
 int CopyToTreeFromTree (Tree *to, Tree *from)
 
 {
 
-	int			i;
+	int			i, numTaxa, nLongsNeeded;
 	TreeNode	*p, *q;
+
+    numTaxa = from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0);
+    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
+    if( from->bitsets==NULL || to->bitsets==NULL )
+        nLongsNeeded=0;
 
 	/* check that there is enough memory */
     assert (to->memNodes >= from->nNodes);
@@ -1728,7 +1750,7 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 		else
 			q->right = NULL;
 
-		CopyTreeNodes (q, p);
+		CopyTreeNodes (q, p, nLongsNeeded);
 		}
 
 	/* create new node arrays */
@@ -1765,7 +1787,8 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 
 
 
-void CopyTreeNodes (TreeNode *p, TreeNode *q)
+/* Copeing node q to node p. nLongsNeeded is the length of partition that the node represents. */
+void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 {
 
     /* copies everything except pointers and memoryIndex */
@@ -1785,6 +1808,12 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q)
 	p->lockID				  = q->lockID;
 	p->d					  = q->d;
 	//p->partition			  = q->partition;//the content should be copied not the pointers. Otherwise we are risking to have segmentation faults
+    if( nLongsNeeded!=0 )
+        {
+        assert(p->partition);
+        assert(q->partition);
+        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(SafeLong));
+        }
     p->label                  = q->label;
 }
 
@@ -2266,6 +2295,7 @@ void GetPolyDownPass (PolyTree *t)
 
 	i = j = 0;
 	GetPolyNodeDownPass (t, t->root, &i, &j);
+    assert( t->nIntNodes==j );
 		
 }
 
@@ -4066,7 +4096,7 @@ int PrunePolyTree (PolyTree *pt)
 			if (j != pt->nNodes)
 				{
 				/* swap nodes; quite difficult! */
-				CopyPolyNodes (p, q);
+				CopyPolyNodes (p, q, nLongsNeeded);
 				p->left = q->left;
 				p->sib = q->sib;
 				p->anc = q->anc;
@@ -4182,23 +4212,253 @@ int RandPerturb (Tree *t, int nPert, SafeLong *seed)
 
 
 
+/*
+|       Reorder array of nodes "nodeArray" such that first nodes in it could be paired with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint.  
+|       
+| @param w                      Reference node as described 
+| @param nodeArray              A set of node to order as described
+| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
+| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition.
+| @param isRooted               Do constraints apply to rootet tree YES or NO
+|
+| @return                       Number of nodes in "nodeArray" that could be paired  with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint
+*/
+int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+{
+
+    int             i, j,  k, FirstEmpty;
+    SafeLong        **constraintPartition;
+    PolyNode        *tmp;
+
+    for (j=0; j<activeConstraintsSize; j++)
+        {
+        k=activeConstraints[j];
+
+        if( definedConstraintsType[k] == PARTIAL )
+            {
+            if( ( IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES ) ||
+                ( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES )
+              )
+                continue;/* all nodes are compartable because condition of the constraint has to be sutsfied in the subtree rooted at w*/
+
+            FirstEmpty = IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded);
+            if( FirstEmpty == YES &&  IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES )
+                continue; /* all nodes are compartable becouse w does not contain any constraint taxa*/
+
+            assert(FirstEmpty^IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded));
+
+            if( FirstEmpty == YES )
+                {/*w->partition has intersection with definedConstraintTwoPruned[k], thus remove all nodes from nodeArray that intersect with definedConstraintPruned[k]*/
+                constraintPartition=definedConstraintPruned;
+                }
+            else
+                {/*w->partition has intersection with definedConstraintPruned[k], thus remove all nodes from nodeArray that intersect with definedConstraintTwoPruned[k]*/
+                constraintPartition=definedConstraintTwoPruned;
+                }
+
+            for(i=0;i<nodeArraySize;i++)
+                {
+                if( IsSectionEmpty(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO &&
+                    ( ( FirstEmpty == NO && isRooted== YES ) ||  IsPartNested(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO  )
+                  )
+                  /*second part of if statment is to bail out "nodeArray[i]" when "w" contains nodes for example from definedConstraintPruned and "nodeArray[i]" have definedConstraintTwoPruned fully nested in it
+                  This bail out not applicable if t->isRooted== YES Since we should create a rooting node for the first set of taxa in the constraint.
+                  Note that such case possible because we may have hard constraint node that fully nest definedConstraintTwoPruned but also having taxa from definedConstraintPruned keeping constraint active.*/
+                    {
+                    tmp = nodeArray[i];
+                    nodeArray[i]=nodeArray[--nodeArraySize];
+                    nodeArray[nodeArraySize]=tmp;
+                    i--;
+                    }
+                }
+            }/*end if PARTIAL*/
+        else 
+            {
+            assert( definedConstraintsType[k] == NEGATIVE );
+            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+                constraintPartition=definedConstraintPruned;
+            else
+                constraintPartition=definedConstraintTwoPruned;
+            
+            if( IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==YES )
+                continue;
+
+            for(i=0;i<nodeArraySize;i++)
+                {
+                if( IsUnionEqThird (w->partition, nodeArray[i]->partition, constraintPartition[k], nLongsNeeded) == YES )
+                    {
+                    tmp = nodeArray[i];
+                    nodeArray[i]=nodeArray[--nodeArraySize];
+                    nodeArray[nodeArraySize]=tmp;
+                    i--;
+                    }
+                }
+
+            }/*end if NEGATIVE*/
+        }
+
+   return nodeArraySize;
+}
+
+
+
+
+/*
+|               Check if "partition" violate any constraint.  
+|       
+| @param partiton               Partition to check 
+| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints  
+| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition
+| @param isRooted               Do constraints apply to rootet tree YES or NO
+|
+| @return                       Index of first violated constraint in activeConstraints array, -1 if no constraint is violated.
+*/
+int ViolatedConstraint(SafeLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+{
+
+    int             j, k;
+    SafeLong        **constraintPartition;
+
+
+    for (j=0; j<activeConstraintsSize; j++)
+        {
+        k=activeConstraints[j];
+
+        if( definedConstraintsType[k] == PARTIAL )
+            {
+            if( ( IsSectionEmpty(definedConstraintPruned[k], partition, nLongsNeeded) == NO ) &&
+                ( IsSectionEmpty(definedConstraintTwoPruned[k], partition, nLongsNeeded) == NO ) &&
+                ( IsPartNested(definedConstraintPruned[k], partition, nLongsNeeded) == NO) &&
+                !( isRooted=NO && IsPartNested(definedConstraintTwoPruned[k], partition, nLongsNeeded) == YES)
+              )
+                return j;
+
+            }/*end if PARTIAL*/
+        else 
+            {
+            assert( definedConstraintsType[k] == NEGATIVE );
+            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+                constraintPartition=definedConstraintPruned;
+            else
+                constraintPartition=definedConstraintTwoPruned;
+
+            if( IsUnionEqThird (partition, partition, constraintPartition[k], nLongsNeeded) == YES )
+                return j;
+
+            }/*end if NEGATIVE*/
+        }
+
+   return -1;
+}
+
+
+
+
+
+
+/*
+|         Remove from activeConstraints references to constraints that become satisfied if PolyNode "w" exist, i.e. they do not need to be checked furter thus become not active  
+|
+| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
+| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition.
+| @param isRooted               Do constraints apply to rootet tree YES or NO
+|
+| @return                       Size of pruned "activeConstraints" array
+*/
+int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+{
+
+    int             j,  k;
+    SafeLong        **constraintPartition;
+    //PolyNode        *tmp;
+
+    for (j=0; j<activeConstraintsSize; j++)
+        {
+        k=activeConstraints[j];
+
+        if( definedConstraintsType[k] == PARTIAL )
+            {
+            if( (IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded)) ||
+                ( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded))
+              )
+                {
+                //tmp = activeConstraints[j];
+                activeConstraints[j]=activeConstraints[--activeConstraintsSize];
+                //activeConstraints[activeConstraintsSize]=tmp;
+                j--;
+                }
+            }/*end if PARTIAL*/
+        else 
+            {
+            assert( definedConstraintsType[k] == NEGATIVE );
+            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+                constraintPartition=definedConstraintPruned;
+            else
+                constraintPartition=definedConstraintTwoPruned;
+            
+            if( IsPartNested(constraintPartition[k], w->partition, nLongsNeeded)==NO && IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==NO )
+                {
+                //tmp = activeConstraints[j];
+                activeConstraints[j]=activeConstraints[--activeConstraintsSize];
+                //activeConstraints[activeConstraintsSize]=tmp;
+                j--;
+                }
+            }/*end if NEGATIVE*/
+        }
+
+   return activeConstraintsSize;
+}
+
+
+
+
+
 /*--------------------------------------------------------------------
 |
-|		RandResolve: Randomly resolve a polytomous tree
+|		    RandResolve: Randomly resolve a polytomous tree
 |
+| @param    tt is a tree which contains information about applicable constraints. If it is set to NULL then no constraints will be used.
+| @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
-int RandResolve (PolyTree *t, SafeLong *seed, int destinationIsRooted)
+int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
 
 {
 
-	int			i, j, nextNode, stopNode, rand1, rand2;
-	PolyNode	*p=NULL, *q, *r, *s, *u;
+	int			i, j, k, nextNode, stopNode, rand1, rand2, nLongsNeeded, tmp;
+	PolyNode	*p=NULL, *q, *r, *u, *w1, *w2;
+    int         nodeArrayAllowedSize, nodeArraySize, activeConstraintsSize;
+    PolyNode	**nodeArray;
+    int         *activeConstraints;
+
+    assert( numLocalTaxa == t->memNodes/2);
+    nLongsNeeded = (t->memNodes/2 - 1) / nBitsInALong + 1;
+
+    nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
+    activeConstraints = tempActiveConstraints;
+    activeConstraintsSize = 0;
+    /* collect constraints to consider if applicable*/
+    if( tt!=NULL && tt->constraints!=NULL )
+        {
+        for (k=0; k<numDefinedConstraints; k++)
+            {
+            if( tt->constraints[k] == YES && definedConstraintsType[k] != HARD )
+                activeConstraints[activeConstraintsSize++]=k;
+            }
+        }
 
 	/* count immediate descendants */
 	GetPolyDownPass(t);
 	for (i=0; i<t->nIntNodes; i++)
 		{
 		p = t->intDownPass[i];
+        tmp=ViolatedConstraint(p->partition, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
+        if ( tmp != -1)
+            {
+            assert( p->isLocked == YES );
+            MrBayesPrint ("%s   Could not build a constraint tree since hard constraint \"%s\" and constraint \"%s\" are incompatible\n", spacer, constraintNames[p->lockID], constraintNames[activeConstraints[tmp]]);
+            return (ERROR);
+            }
+        activeConstraintsSize = PruneActiveConstraints (p, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
 		j = 0;
 		for (q=p->left; q!=NULL; q=q->sib)
 			j++;
@@ -4224,52 +4484,72 @@ int RandResolve (PolyTree *t, SafeLong *seed, int destinationIsRooted)
 
 		/* if we can't find one, there's an error */
 		if (i == t->nIntNodes)
+            {
 			return  ERROR;
+            }
 
-		/* identify two descendants randomly */
+        nodeArraySize=0;
+        /*Collect initial list of condidate nodes to join*/
+        for (q = p->left; q!= NULL; q = q->sib)
+            {
+            nodeArray[nodeArraySize++]=q;
+            }
+        assert(nodeArraySize==p->x);
+
+        /* identify two descendants randomly */
 		/* make sure we do not select outgroup if it is an unrooted tree */
 		if (p->anc == NULL && destinationIsRooted == NO)
-			j = p->x - 1;
-		else
-			j = p->x;
-		rand1 = (int) (RandomNumber(seed) * j);
-		rand2 = (int) (RandomNumber(seed) *(j-1));
-		if (rand2 == rand1)
-			rand2 = j-1;
+			nodeArraySize--;
+
+        do
+            {
+            /*Pick first node*/
+            rand1 = (int) (RandomNumber(seed) * nodeArraySize);
+            w1 = nodeArray[rand1];
+            nodeArray[rand1] = nodeArray[--nodeArraySize];
+
+            if( nodeArraySize==0 )
+                return ABORT; /*Potentaily here we could instead revert by removing last added node and try again. */
+
+            /*Move all nodes in nodeArray which can be paired with w to the begining of array*/
+            nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+            /*TODO optimization for Maxim(if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
+            }while( nodeArrayAllowedSize==0 );
+
+		rand2 = (int) (RandomNumber(seed) *nodeArrayAllowedSize);
+        w2 = nodeArray[rand2];
+
 
 		/* create a new node */
 		u = &t->nodes[nextNode];
 		u->anc = p;
 		u->x = 2;
-		p->x --;
+		p->x--;
+        for (j=0; j<nLongsNeeded; j++)
+			u->partition[j] = w1->partition[j] | w2->partition[j] ;
+
+        activeConstraintsSize = PruneActiveConstraints (u, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+        u->left = w1;
 		t->nNodes++;
 		t->nIntNodes++;
 		
+
 		/* connect tree together */
-		r = s = NULL;
-		for (q = p->left, j=0; q!= NULL; q = q->sib, j++)
+        r = u;
+        for (q = p->left; q!= NULL; q = q->sib)
 			{
-			if (rand1 == j || rand2 == j)
+			if ( q != w1 && q!=w2)
 				{
-				q->anc = u;
-				if (s == NULL)
-					u->left = q;
-				else
-					s->sib = q;
-				s = q;
-				}
-			else
-				{
-				if (r == NULL)
-					u->sib = q;
-				else
-					r->sib = q;
-				r = q;
+                r->sib=q;
+                r = q;
 				}
 			}
 		r->sib = NULL;
-		s->sib = NULL;
-		p->left = u;
+        w1->sib = w2;
+        w2->sib = NULL;
+        w1->anc = u;
+        w2->anc = u;
+        p->left = u;
 
 		/* update tree */
 		GetPolyDownPass (t);
