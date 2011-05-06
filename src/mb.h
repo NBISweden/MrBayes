@@ -1030,6 +1030,10 @@ typedef struct chain
 	int			swapFreq;              /* frequency to attempt swap of states           */
 	int			numRuns;               /* number of runs                                */
 	int			numChains;             /* number of chains                              */
+    int         isSS;                  /* do we do Steppingstone Sampling               */
+    int         numStepsSS;            /* Number of steps in SS                         */
+    int         burninSS;              /* Fixed burnin for SS                           */
+    MrBFlt      alphaSS;               /* Betta values are destributed according to quantiles of BETA(alphaSS,1.0) distribution */
 	MrBFlt		chainTemp;             /* chain temperature                             */
 	int			userDefinedTemps;      /* should we use the users temperatures?         */
 	MrBFlt		userTemps[MAX_CHAINS]; /* user-defined chain temperatures               */

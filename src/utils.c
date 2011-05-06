@@ -508,63 +508,73 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
 int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *harm_mean)
 {
 	int				i, reliable;
-	MrBFlt			a, aOld, x, y, scaler, n;
+	MrBFlt			a, x, y, scaler, n;
 
 	reliable = YES;
 	
 	scaler = vals[nVals-1];
-	a = aOld = n = 0.0;
+	a  = n = 0.0;
 	for (i=0; i<nVals; i++)
 		{
 		y = vals[i];
 		y -= scaler;
-		if (y < -100.0 || y > 100.0)
+		if (y > 400.0)
 			{
-			reliable = NO;
-			continue;
+            if (y > 5000.0)
+                {
+			    reliable = NO;
+			    continue;
+                }
+            a /= exp( y - 100.0 ); 
+            scaler += y - 100.0;
+            y = 100.0;
 			}
-		else
-			x = (MrBFlt) exp(y);
+		
+	    x = (MrBFlt) exp(y);
 			
 		if (n < 0.5)
 			a = x;
 		else
 			{
-			aOld = a;
-			a = aOld + (x - aOld) / (n+(MrBFlt)1.0);
+            a += x;
 			}
 		n += 1.0;
 		}
 
 	/* arithmetic mean */
-	(*mean) = (MrBFlt) log(a) + scaler;
+	(*mean) = (MrBFlt) log(a/n) + scaler;
 	
 	scaler = (MrBFlt) (0.0 - vals[nVals-1]);
-	a = aOld = n = 0.0;
+	a  = n = 0.0;
 	for (i=0; i<nVals; i++)
 		{
 		y = (MrBFlt) (0.0 - vals[i]);
 		y -= scaler;
-		if (y < -100.0 || y > 100.0)
+		if (y > 400.0)
 			{
-			reliable = NO;
-			continue;
+            if (y > 5000.0)
+                {
+			    reliable = NO;
+			    continue;
+                }
+            a /= exp( y - 100.0 ); 
+            scaler += y - 100.0;
+            y = 100.0;
 			}
-		else
-			x = (MrBFlt) exp(y);
+		
+	    x = (MrBFlt) exp(y);
 			
 		if (n < 0.5)
 			a = x;
 		else
 			{
-			aOld = a;
-			a = aOld + (x - aOld) / (n+(MrBFlt)1.0);
+            a += x;
 			}
 		n += (MrBFlt) 1.0;
 		}
 
 	/* harmonic mean */
-	(*harm_mean) = - (MrBFlt) log(a) - scaler;
+	(*harm_mean) = - (MrBFlt) log(a/n) - scaler;
 
 	if (reliable == YES)
 		return (NO_ERROR);
@@ -907,6 +917,72 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 		(*var) = 0.0;
 	else
 		(*var) = s / (nVals - 1);
+			
+}
+
+
+
+
+
+/*  Compute mean and variance of log scaled values.
+
+@param vals    pointer to values in log scale
+@param nVals   number of "vals", minimum 1
+@param mean    adress of variable where computed mean is returned by the function
+@param var     adress of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
+@param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
+               Could be set to NULL if this value need not to be returened.
+
+Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences.
+    */
+void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst )
+
+{
+
+	int				i;
+	MrBFlt			a, aOld, s, x, y, scaler;
+
+	a = s = 0.0;
+    scaler = vals[nVals-1];
+	for (i=0; i<nVals; i++)
+		{
+		y = vals[i];
+		y -= scaler;
+		if (y > 200.0)
+			{
+            a /= exp( y - 100.0 );
+            s /= exp( 2*(y - 100));
+            scaler += y - 100.0;
+            y = 100.0;
+			}
+
+        x=(MrBFlt)exp(y);
+
+		aOld = a;
+		a += (x - a) / (MrBFlt) (i + 1);
+		s += (x - a) * (x - aOld);
+		}
+
+	/* mean */
+	(*mean) = log(a) + scaler;
+	
+	/* variance */
+    if( var!=NULL )
+        {
+	    if (nVals <= 1)
+		    (*var) = 0.0;
+	    else
+		    (*var) = log( s / (nVals)) + 2*scaler;
+        }
+
+	/* variance */
+    if( varEst!=NULL )
+        {
+	    if (nVals <= 1)
+		    (*varEst) = 0.0;
+	    else
+		    (*varEst) = log( s / (nVals+1)) + 2*scaler;
+        }
 			
 }
 

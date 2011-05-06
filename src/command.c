@@ -59,9 +59,9 @@
 
 const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
-#define	NUMCOMMANDS					    58  /* Note: NUMCOMMANDS gives the total number  */
+#define	NUMCOMMANDS					    59  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						248
+#define	NUMPARAMS						251
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -357,17 +357,19 @@ CmdType			commands[] =
             { 44,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
             { 45,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
             { 46,"Speciespartition",  NO,DoSpeciespartition,  1,                                                                                            {244},        4,                   "Defines a partition of tips into species",  IN_CMD, SHOW },
-            { 47,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-            { 48,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 49,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
-            { 50,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
-            { 51,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
-            { 52,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
-            { 53,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
-            { 54,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-            { 55,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
-            { 56,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
-            { 57,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
+            { 47,              "Ss",  NO,              DoSs, 49,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
+            														     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250},       36, "Sets the parameters of a chain and start Steppingstone sampling",  IN_CMD, SHOW },
+            { 48,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
+            { 49,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+            { 50,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+            { 51,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
+            { 52,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
+            { 53,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
+            { 54,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
+            { 55,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
+            { 56,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+            { 57,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
+            { 58,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
 		    { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
 		};
@@ -14025,10 +14027,13 @@ void SetUpParms (void)
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-	PARAM   (247, "SampleStrat",     DoPrsetParm,       "Random|Diversity|Cluster|\0");
+	PARAM   (247, "SampleStrat",    DoPrsetParm,       "Random|Diversity|Cluster|\0");
+    PARAM   (248, "BurninSS",       DoSsParm,           "\0");
+    PARAM   (249, "NstepsSS",       DoSsParm,           "\0");
+    PARAM   (250, "AlphaSS",       DoSsParm,            "\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 248) in paramTable[] at the top of this file. */
+	         change the number of elements (now 251) in paramTable[] at the top of this file. */
 
 }
 

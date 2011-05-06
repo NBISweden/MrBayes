@@ -1580,8 +1580,10 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
     /* refuse to arbitrarily root an input tree */
     assert (!(from->isRooted == NO && to->isRooted == YES));
     if ( (from->isRooted == NO) && (to->isRooted == YES) )
+        {
+        MrBayesPrint ("%s   Fail to copy trees due to difference in rootedness of source and destination. \n", spacer);
         return (ERROR);
-
+        }
     /* calculate space needed */
     if (from->isRooted == YES && to->isRooted == YES)
 		nNodesNeeded    = from->nNodes + 1;
@@ -4010,6 +4012,7 @@ int PrunePolyTree (PolyTree *pt)
 			if (q == NULL)
 				{
 				/* p is the left of its ancestor */
+                assert( p->anc->left == p);
 				p->anc->left = p->sib;
 				}
 			else
@@ -4053,6 +4056,7 @@ int PrunePolyTree (PolyTree *pt)
             /* if unrooted, then root node has to have more then 2 children, thus the following check */
             if (j == 2 && pt->isRooted == NO && p->anc->anc == NULL)
                 {
+                numIntPruned++;
                 r=p->anc; /*r is the root with only 2 children*/
                 if ( r->left->left != NULL )
                     {/* Make r->left new root by attaching "right" child of r to children of r->left */
@@ -4417,7 +4421,8 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 |
 |		    RandResolve: Randomly resolve a polytomous tree
 |
-| @param    tt is a tree which contains information about applicable constraints. If it is set to NULL then no constraints will be used.
+| @param    tt is a tree which contains information about applicable constraints. If it is set to NULL then no constraints will be used. 
+            If t!=NULL then partitions of nodes of polytree should be allocated for example by AllocatePolyTreePartitions (t);
 | @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
 int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
@@ -4431,11 +4436,13 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
     int         *activeConstraints;
 
     assert( numLocalTaxa == t->memNodes/2);
+    assert(tt==NULL || t->bitsets!=NULL);
     nLongsNeeded = (t->memNodes/2 - 1) / nBitsInALong + 1;
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
     activeConstraintsSize = 0;
+
     /* collect constraints to consider if applicable*/
     if( tt!=NULL && tt->constraints!=NULL )
         {
@@ -4525,10 +4532,13 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
 		u->anc = p;
 		u->x = 2;
 		p->x--;
-        for (j=0; j<nLongsNeeded; j++)
-			u->partition[j] = w1->partition[j] | w2->partition[j] ;
 
-        activeConstraintsSize = PruneActiveConstraints (u, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+        if( tt!=NULL ){
+            for (j=0; j<nLongsNeeded; j++)
+			    u->partition[j] = w1->partition[j] | w2->partition[j] ;
+            activeConstraintsSize = PruneActiveConstraints (u, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+        }
+
         u->left = w1;
 		t->nNodes++;
 		t->nIntNodes++;
@@ -5681,7 +5691,7 @@ void SetNodeDepths (Tree *t)
 			{
 			d1 = p->left->nodeDepth  + p->left->length;
 			d2 = p->right->nodeDepth + p->right->length;
-            assert (!(t->isCalibrated == NO && AreDoublesEqual(d1,d2,0.00001)==NO));
+            //assert (!(t->isCalibrated == NO && AreDoublesEqual(d1,d2,0.00001)==NO)); // may not work if we set startval topology of strict clock tree by non clock tree. 
 			if (d1 > d2)
 				p->nodeDepth = d1;
 			else

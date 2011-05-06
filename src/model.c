@@ -9022,7 +9022,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 
 {
 
-	int                 i, j, k, nMatches, tempInt, treeIndex, chainId;
+	int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
 	char		        temp[100];
 	MrBFlt				tempFloat, *value, *subValue;
 	Tree				*theTree, *usrTree;
@@ -9138,10 +9138,12 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             }
 					    RandResolve (NULL, thePolyTree, &globalSeed, theTree->isRooted);
                         if (param->paramType == P_SPECIESTREE)
-                            CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
+                            ret=CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
 					    else
-                            CopyToTreeFromPolyTree (usrTree, thePolyTree);
+                            ret=CopyToTreeFromPolyTree (usrTree, thePolyTree);
 					    FreePolyTree (thePolyTree);
+                        if(ret==ERROR)
+                            return ERROR;
                         }
                     else
                         {

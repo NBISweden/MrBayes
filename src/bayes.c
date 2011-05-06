@@ -954,6 +954,10 @@ int ReinitializeMrBayes (void)
 	chainParams.printFreq = 500;                     /* frequency to print chain                      */
 	chainParams.swapFreq = 1;                        /* frequency of attempting swap of states        */
 	chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
+    chainParams.isSS = NO;
+    chainParams.numStepsSS = 50;
+    chainParams.burninSS = 1000;
+    chainParams.alphaSS = 0.4;
 	chainParams.mcmcDiagn = YES;                     /* write MCMC diagnostics to file ?              */
 	chainParams.diagnFreq = 5000;                    /* diagnostics frequency                         */
 	chainParams.minPartFreq = 0.10;                  /* min partition frequency for diagnostics       */

@@ -13,6 +13,7 @@ MrBFlt  **AllocateSquareDoubleMatrix (int dim);
 int     **AllocateSquareIntegerMatrix (int dim);
 int     AutodGamma (MrBFlt *M, MrBFlt rho, int K);
 void    BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K);
+MrBFlt  BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 void    CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v);
 void    CopyComplexMatrices (int dim, complex **from, complex **to);
 void    CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to);

@@ -446,10 +446,13 @@ int				numLocalChains;              /* number of Markov chains                  
 int				*chainId = NULL;             /* information on the id (0 ...) of the chain   */
 MrBFlt			*curLnL = NULL;              /* stores log likelihood                        */
 MrBFlt			*curLnPr = NULL;             /* stores log prior probability                 */
+MrBFlt			*marginalLnLSS = NULL;       /* marginal liklihood obtained using stepppingstone sampling */
+MrBFlt			*stepAcumulatorSS = NULL;    /* accumulates liklihoods for current step in SS*/
+MrBFlt			*stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale      */
 int				*sympiIndex;                 /* sympi state freq index for multistate chars  */
 int				stdStateFreqsRowSize;		 /* row size for std state frequencies			 */
 int				*weight;			         /* weight of each compressed char				 */
-int				*chainTempId;                /* info on temp, change to float holding temp?  */
+int				*chainTempId;                /* info ton temp, change to float holding temp?  */
 int				state[MAX_CHAINS];           /* state of chain								 */
 int				augmentData;		         /* are data being augmented for any division?	 */
 int				*nAccepted;			         /* counter of accepted moves					 */
@@ -7819,6 +7822,86 @@ int DoMcmcp (void)
 
 
 
+int DoSsParm (char *parmName, char *tkn)
+
+{
+
+	int			tempI;
+	MrBFlt		tempD;
+	
+
+	if (defMatrix == NO)
+		{
+		MrBayesPrint ("%s   A character matrix must be defined first\n", spacer);
+		return (ERROR);
+		}
+
+	if (expecting == Expecting(PARAMETER))
+		{
+		expecting = Expecting(EQUALSIGN);
+		}
+	else
+		{
+		if (!strcmp(parmName, "BurninSS"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%d", &tempI);
+			    chainParams.burninSS = tempI;
+				MrBayesPrint ("%s   Setting burnin for Steppingstone sampling to %ld\n", spacer, chainParams.burninSS);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				return (ERROR);
+				}         
+			}
+        else if (!strcmp(parmName, "NstepsSS"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%d", &tempI);
+			    chainParams.numStepsSS = tempI;
+				MrBayesPrint ("%s   Setting number of steps in Steppingstone sampling to %ld\n", spacer, chainParams.numStepsSS);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				return (ERROR);
+				}                
+			}
+        else if (!strcmp(parmName, "AlphaSS"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(NUMBER);
+			else if (expecting == Expecting(NUMBER))
+				{
+				sscanf (tkn, "%lf", &tempD);
+			    chainParams.alphaSS = tempD;
+				MrBayesPrint ("%s   Setting alpha in Steppingstone sampling to %lf\n", spacer, chainParams.alphaSS);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				return (ERROR);
+				}                
+			}
+        else
+			{
+            return (ERROR);
+			}
+		}
+	return (NO_ERROR);
+}
+
+
+
+
+
 int DoMcmcParm (char *parmName, char *tkn)
 
 {
@@ -9058,6 +9141,21 @@ int DoMcmcParm (char *parmName, char *tkn)
 
 
 
+int DoSs (void)
+{
+    int ret;
+
+    chainParams.isSS = YES;
+    ret=DoMcmc();
+    chainParams.isSS = NO;
+
+    return ret;
+}
+
+
+
+
+
 int ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo)
 
 {
@@ -9691,7 +9789,10 @@ void FreeChainMemory (void)
     if (memAllocs[ALLOC_CURLNL] == YES) /*alloc in RunChain()*/
 		{
 		free (maxLnL0); 
-		free (curLnL);  
+		free (curLnL);
+        free (marginalLnLSS);
+        free (stepScalerSS);
+        free (stepAcumulatorSS);
 		memAllocs[ALLOC_CURLNL] = NO;
 		}
 	if (memAllocs[ALLOC_CURLNPR] == YES) /*alloc in RunChain()*/
@@ -39546,6 +39647,9 @@ int RunChain (SafeLong *seed)
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
+    /* Steppingstone sampling variables */
+    int run, samplesCountSS, stepIndexSS,numGenInStepSS;
+    MrBFlt powerSS, stepLengthSS,meanSS,varSS;
 
 
 #if defined (BEAGLE_ENABLED)
@@ -39620,6 +39724,30 @@ int RunChain (SafeLong *seed)
 	else if ((maxLnL0 = (MrBFlt *) calloc (chainParams.numRuns * chainParams.numChains, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating maxLnL0\n", spacer, numLocalChains * sizeof(MrBFlt));
+		free (curLnL);
+		nErrors++;
+		}
+    else if ((marginalLnLSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		{
+		MrBayesPrint ("%s   Problem allocating marginalLnLSS\n", spacer);
+        free (maxLnL0);
+		free (curLnL);
+		nErrors++;
+		}
+    else if ((stepScalerSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		{
+		MrBayesPrint ("%s   Problem allocating stepScalerSS\n", spacer);
+        free (marginalLnLSS);
+        free (maxLnL0);
+		free (curLnL);
+		nErrors++;
+		}
+    else if ((stepAcumulatorSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		{
+		MrBayesPrint ("%s   Problem allocating stepAcumulatorSS\n", spacer);
+        free (stepScalerSS);
+        free (marginalLnLSS);
+        free (maxLnL0);
 		free (curLnL);
 		nErrors++;
 		}
@@ -40065,6 +40193,36 @@ int RunChain (SafeLong *seed)
 # endif
         }
 
+    if ( chainParams.isSS == YES )
+        {
+        numGenInStepSS = ( chainParams.numGen - chainParams.burninSS )/ chainParams.numStepsSS;
+        MrBayesPrint ("\n");
+        MrBayesPrint ("%s   Starting Steppingstone sampling in order to estimate Marginal Liklihood.  \n", spacer);
+        MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
+        MrBayesPrint ("%s   Total of %d generations will be processed while first %d generations will be used as burnin.        \n\n", spacer,chainParams.numGen,chainParams.burninSS );
+        if( numGenInStepSS/chainParams.sampleFreq < 1  )
+            {
+            MrBayesPrint ("%s   There is less then one samples in each step of Steppingstone sampling.  \n", spacer);
+            MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
+            MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
+			return ERROR;
+            }
+        stepIndexSS = chainParams.numStepsSS-1;
+        powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+        stepLengthSS = 1.0-powerSS;
+        for (chn=0; chn<chainParams.numChains; chn++)
+            {
+            if (chainId[chn] % chainParams.numChains == 0)
+                {
+                run = chainId[chn] / chainParams.numChains;
+                marginalLnLSS[run] = 0.0;
+                stepScalerSS[run] = curLnL[chn]*stepLengthSS;
+                stepAcumulatorSS[run]=0.0;
+                }
+            }
+        samplesCountSS=0;
+        }
+
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
 		{
 		currentCPUTime = clock();
@@ -40147,7 +40305,7 @@ int RunChain (SafeLong *seed)
 #if ! defined (NDEBUG)
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
-                printf ("IsTreeConsistent failed before move!\n");
+                printf ("IsTreeConsistent failed before move! Press enter to continue.\n");
                 getchar();
                 }
 #endif
@@ -40202,6 +40360,9 @@ int RunChain (SafeLong *seed)
                 /* heat */
                 lnLikelihoodRatio *= Temperature (chainId[chn]);
 				lnPriorRatio      *= Temperature (chainId[chn]);
+
+                if( chainParams.isSS == YES )
+                    lnLikelihoodRatio *= powerSS;
 
                 /* calculate the acceptance probability */
 				if (lnLikelihoodRatio + lnPriorRatio + lnProposalRatio < -100.0)
@@ -40269,6 +40430,7 @@ int RunChain (SafeLong *seed)
 
 			if (curLnL[chn] > maxLnL0[chainId[chn]])
 				maxLnL0[chainId[chn]] = curLnL[chn];
+
             }
 
 
@@ -40294,6 +40456,9 @@ int RunChain (SafeLong *seed)
         /* print information to screen */
 		if ( n % chainParams.printFreq == 0)
 			PrintToScreen(n, numPreviousGen, time(0), startingT);
+
+       if( chainParams.isSS == YES )
+           lnLikelihoodRatio *= powerSS;
 
         /* print information to files */
 		/* this will also add tree samples to topological convergence diagnostic counters */
@@ -40358,7 +40523,7 @@ int RunChain (SafeLong *seed)
 			}
 
         /* print mcmc diagnostics */
-		if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen))
+		if ( chainParams.isSS == NO && ( chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen) ))
 			{
 			if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES)
 				|| (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
@@ -40487,14 +40652,14 @@ int RunChain (SafeLong *seed)
 			}
 
         /* check if time to break because stopVal reached */
-		if (chainParams.stopRule == YES && stopChain == YES)
+		if ( chainParams.isSS == NO && (chainParams.stopRule == YES && stopChain == YES ) )
 			{
 			MrBayesPrint ("\n%s   Analysis stopped because convergence diagnostic hit stop value.\n", spacer);
 			break;
 			}
 			
 		/* user may want to extend chain */
-		if (n == chainParams.numGen && autoClose == NO)
+		if (chainParams.isSS == NO && ( n == chainParams.numGen && autoClose == NO ))
 			{
 			  stoppingT1 = time(0); 
 			  currentCPUTime = clock();
@@ -40506,6 +40671,49 @@ int RunChain (SafeLong *seed)
 			  previousCPUTime = clock();
 			  /* timers should not be increased during the wait for a reply */
 			}
+
+        /* Do stepping sampling staf if needed */
+        if ( chainParams.isSS == YES && n > chainParams.burninSS )
+            {
+            if( ( n-chainParams.burninSS ) % chainParams.sampleFreq == 0 )
+                { /* do sampling*/
+                for (chn=0; chn<numLocalChains; chn++)
+		            {
+                    if (chainId[chn] % chainParams.numChains == 0)
+                        {
+                        run = chainId[chn] / chainParams.numChains;
+                        if( curLnL[chn]*stepLengthSS > stepScalerSS[run] + 200.0 )
+                            {
+                            // adjust scaler;
+                            stepAcumulatorSS[run] /= exp( curLnL[chn]*stepLengthSS - 100.0 - stepScalerSS[run] ); 
+                            stepScalerSS[run]= curLnL[chn]*stepLengthSS - 100.0;
+                            }
+                        stepAcumulatorSS[run] += exp( curLnL[chn]*stepLengthSS - stepScalerSS[run] );
+                        }
+                    }
+                samplesCountSS++;
+                }
+
+            if( ( n-chainParams.burninSS ) % numGenInStepSS == 0 )
+                { /* prepare sample of next step */
+                stepIndexSS--;
+                stepLengthSS = powerSS; 
+                powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+                stepLengthSS -= powerSS;
+                for (chn=0; chn<numLocalChains; chn++)
+		            {
+                    if (chainId[chn] % chainParams.numChains == 0)
+                        {
+                        run = chainId[chn] / chainParams.numChains;
+                        marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
+                        stepScalerSS[run] = curLnL[chn]*stepLengthSS;
+                        stepAcumulatorSS[run]=0.0;
+                        }
+                    }
+                samplesCountSS=0;
+                }
+                
+            }
 
 		} /* end run chain */
 	endingT = time(0);
@@ -40631,6 +40839,26 @@ int RunChain (SafeLong *seed)
 			}
 		}
 
+    if ( chainParams.isSS == YES )
+        {
+        MrBayesPrint ("\n");
+        MrBayesPrint ("%s   Marginal LogLiklihood estimated using Steppingstone sampling based on\n", spacer );
+        MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
+        MrBayesPrint ("%s       Run   Marginal LogLiklihood\n",spacer);
+        MrBayesPrint ("%s       ------------------------\n",spacer);
+        for(j=0; j<chainParams.numRuns; j++)
+            {
+            MrBayesPrint ("%s       %3d    %9.2lf   \n", spacer, j+1, marginalLnLSS[j] );
+            }
+        MrBayesPrint ("%s       ------------------------\n",spacer);
+        if(chainParams.numRuns>1)
+            {
+            MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
+            MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal LogLiklihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
+            MrBayesPrint ("%s       Note: Scaled variance is given in log units and calculated as \"variance/mean^2\"\n",spacer);     
+            }
+        }
+
 #	if defined (MPI_ENABLED)
 	/* we need to collect the information on the number of accepted moves if
 	   this is a parallel version */
@@ -40716,7 +40944,7 @@ int RunChain (SafeLong *seed)
 		return (NO_ERROR);
 #	endif
 
-	if (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES)
+	if ( chainParams.isSS == NO && (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES) )
 		{
 		f = 0.0;
 		for (i=0; i<numTrees; i++)
