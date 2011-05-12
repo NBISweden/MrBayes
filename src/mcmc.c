@@ -39648,8 +39648,8 @@ int RunChain (SafeLong *seed)
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
     /* Steppingstone sampling variables */
-    int run, samplesCountSS, stepIndexSS,numGenInStepSS;
-    MrBFlt powerSS, stepLengthSS,meanSS,varSS;
+    int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0;
+    MrBFlt powerSS=0, stepLengthSS,meanSS,varSS;
 
 
 #if defined (BEAGLE_ENABLED)

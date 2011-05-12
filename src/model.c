@@ -10742,6 +10742,8 @@ int DoesTreeSatisfyConstraints(Tree *t){
     int         CheckFirst, CheckSecond; /*Flag indicating wheather coresonding set(first/second) of partial constraint has to be checked*/
 
 
+    if( t->checkConstraints == NO)
+        return YES;
     /* get some handy numbers */
     numTaxa = t->nNodes - t->nIntNodes - (t->isRooted == YES ? 1 : 0);
     nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;

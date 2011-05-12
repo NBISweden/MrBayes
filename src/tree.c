@@ -4435,9 +4435,9 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
     PolyNode	**nodeArray;
     int         *activeConstraints;
 
-    assert( numLocalTaxa == t->memNodes/2);
-    assert(tt==NULL || t->bitsets!=NULL);
-    nLongsNeeded = (t->memNodes/2 - 1) / nBitsInALong + 1;
+    assert(tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
+    assert( numLocalTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
+    nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first numLocalTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
