@@ -757,9 +757,9 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 	ModelInfo		*m;
 	Tree			*tree;
 #					if defined (MPI_ENABLED)
-	int				numChainsForProc, tempIdA=0, tempIdB=0, proc, procIdForA=0, procIdForB=0, 
+	int				numChainsForProc, tempIdA=0, tempIdB=0, proc, procIdForA=0, procIdForB=0, tempIdMy, procIdPartner,
 					whichElementA=0, whichElementB=0, lower, upper, areWeA, doISwap, ierror,
-					myId, partnerId, i;
+					myId, partnerId, i, run;
 	MrBFlt			swapRan;
 	MPI_Status 		status[2];
 	MPI_Request		request[2];
@@ -969,6 +969,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 						}
 					}
 				}
+
+
 			if (areWeA == YES)
 				{
 				/*curLnPr[whichElementA] = LogPrior(whichElementA);*/
@@ -1034,6 +1036,10 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				if (swapRan < r)
 					{
 					/* swap chain id's (heats) */
+					isSwapSuccessful = YES;
+					tempIdMy = chainId[whichElementA];
+					procIdPartner = procIdForB;
+
 					if (reweightingChars == YES)
 						chainId[whichElementA] = tempIdB;
 					else
@@ -1042,7 +1048,6 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 						{
 						curLnL[whichElementA] = lnLikeStateAonDataB;
 						}
-					isSwapSuccessful = YES;
 					}
 					
 				/* only processor A keeps track of the swap success/failure */
@@ -1170,8 +1175,13 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 					r = exp(lnR);
 
 				/* we use process A's random number to make the swap decision */
+				isSwapSuccessful = NO;
 				if (partnerStateInfo[3] < r)
 					{
+					isSwapSuccessful = YES;
+					tempIdMy = chainId[whichElementB];
+					procIdPartner = procIdForA;
+
 					if (reweightingChars == YES)
 						chainId[whichElementB] = tempIdA;
 					else
@@ -1230,6 +1240,55 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
                         }
                     }
                 }
+
+			/*We exchange only if swap successful and (my id is cold or patner id is cold)*/
+			if ( chainParams.isSS == YES && isSwapSuccessful == YES && (tempIdMy % chainParams.numChains == 0 || (areWeA == YES && chainId[whichElementA] % chainParams.numChains == 0) || (areWeA == NO && chainId[whichElementB] % chainParams.numChains == 0)  ))
+				{
+					run = tempIdMy/chainParams.numChains;
+
+					myStateInfo[0] = tempIdMy;
+				    myStateInfo[1] = marginalLnLSS	 [ run ];
+        			myStateInfo[2] = stepAcumulatorSS[ run ];
+		       		myStateInfo[3] = stepScalerSS	 [ run ];
+
+                    ierror = MPI_Isend (&myStateInfo, 4, MPI_DOUBLE, procIdPartner, 0, MPI_COMM_WORLD, &request[0]);
+			        if (ierror != MPI_SUCCESS)
+				        {
+					    return (ERROR);
+				        }
+
+			        ierror = MPI_Irecv (&partnerStateInfo, 4, MPI_DOUBLE, procIdPartner, 0, MPI_COMM_WORLD, &request[1]);
+				    if (ierror != MPI_SUCCESS)
+					    {
+					    return (ERROR);
+					    }
+				    ierror = MPI_Waitall (2, request, status);
+				    if (ierror != MPI_SUCCESS)
+					    {
+					    return (ERROR);
+					    }
+
+				    /*we swap chains from the same run*/
+				    assert(run == (int)partnerStateInfo[0]/chainParams.numChains );
+
+					/*If my chain is the cold chain then send current SS values of corresponding run*/
+					if( tempIdMy % chainParams.numChains == 0)
+						{
+						assert( (int)partnerStateInfo[0] % chainParams.numChains != 0 );
+						assert(partnerStateInfo[1] == 0.0);
+						marginalLnLSS	[ run ] = (MrBFlt) 0.0;
+						stepAcumulatorSS[ run ] = (MrBFlt) 0.0;
+						stepScalerSS	[ run ] = (MrBFlt) 0.0;
+						}
+					else if( (int)partnerStateInfo[0] % chainParams.numChains == 0 )
+						{
+						marginalLnLSS	[ run ] = (MrBFlt) partnerStateInfo[1];
+						stepAcumulatorSS[ run ] = (MrBFlt) partnerStateInfo[2];
+						stepScalerSS	[ run ] = (MrBFlt) partnerStateInfo[3];
+						}
+				}
+
+
 			}
 		}
 #	else
@@ -40210,18 +40269,25 @@ int RunChain (SafeLong *seed)
         stepIndexSS = chainParams.numStepsSS-1;
         powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
         stepLengthSS = 1.0-powerSS;
-        for (chn=0; chn<chainParams.numChains; chn++)
+        for (run=0; run<chainParams.numRuns; run++)
+            {
+        	marginalLnLSS[run] = 0.0;
+        	stepScalerSS[run] = 0.0;
+        	stepAcumulatorSS[run]=0.0;
+            }
+        for (chn=0; chn<numLocalChains; chn++)
             {
             if (chainId[chn] % chainParams.numChains == 0)
                 {
                 run = chainId[chn] / chainParams.numChains;
-                marginalLnLSS[run] = 0.0;
                 stepScalerSS[run] = curLnL[chn]*stepLengthSS;
-                stepAcumulatorSS[run]=0.0;
                 }
             }
         samplesCountSS=0;
         }
+
+
+
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
 		{
@@ -40704,6 +40770,7 @@ int RunChain (SafeLong *seed)
 		            {
                     if (chainId[chn] % chainParams.numChains == 0)
                         {
+                    	//printf("pr_id=%d ch_id=%d\n", proc_id, chainId[chn] );
                         run = chainId[chn] / chainParams.numChains;
                         marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
                         stepScalerSS[run] = curLnL[chn]*stepLengthSS;
@@ -40816,6 +40883,24 @@ int RunChain (SafeLong *seed)
 			}
 		maxLnL0[j] = best;
 		}
+
+	/* Collecting  Marginal LogLiklihoods if SS is used */
+    if ( chainParams.isSS == YES )
+        {
+    	for (j=0; j<chainParams.numRuns ; j++)
+			{
+			ierror = MPI_Reduce (&marginalLnLSS[j],&r, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			if (ierror != MPI_SUCCESS)
+				{
+				MrBayesPrint ("%s   Problem with MPI_Send\n", spacer);
+				return ERROR;
+				}
+	    	if(proc_id == 0 )
+	    		{
+	    		marginalLnLSS[j]=r;
+	    		}
+			}
+        }
 #	endif
 
 	if (chainParams.numRuns == 1)
@@ -40838,6 +40923,7 @@ int RunChain (SafeLong *seed)
 				}
 			}
 		}
+
 
     if ( chainParams.isSS == YES )
         {
