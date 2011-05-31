@@ -37371,7 +37371,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 	
 	if (curGen == 0)
 		{
-        if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
+        if (chainParams.isSS == NO && chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
             {
             MrBayesPrint ("\n");
             if (chainParams.relativeBurnin == YES)
@@ -37450,7 +37450,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 
 	if (curGen == 0)
 		{
-        if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
+        if (chainParams.isSS == NO && chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
             {
             MrBayesPrint ("\n");
             if (chainParams.relativeBurnin == YES)
@@ -39708,7 +39708,7 @@ int RunChain (SafeLong *seed)
 	clock_t		previousCPUTime, currentCPUTime;
     /* Steppingstone sampling variables */
     int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0;
-    MrBFlt powerSS=0, stepLengthSS,meanSS,varSS;
+    MrBFlt powerSS=0, stepLengthSS=0,meanSS,varSS;
 
 
 #if defined (BEAGLE_ENABLED)
@@ -40119,7 +40119,7 @@ int RunChain (SafeLong *seed)
             }
         if (nErrors == 0)
             {
-            if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
+            if (chainParams.isSS == NO && chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
                 {
                 MrBayesPrint ("\n");
                 if (chainParams.relativeBurnin == YES)
@@ -40210,55 +40210,14 @@ int RunChain (SafeLong *seed)
 	CPUTime = 0.0;
 	previousCPUTime = clock();
 
-    /* print headers and starting states */
-    if( numPreviousGen==0 )
-        {
-        /* make sure we print headers */
-		PrintToScreen(0, 0, time(0), startingT);
-		if (PrintStatesToFiles (0) == ERROR)
-			{
-            MrBayesPrint("%s   Error in printing headers to files\n");
-# if defined (MPI_ENABLED)
-			nErrors++;
-# else
-			return ERROR;
-# endif
-			}
-# if defined (MPI_ENABLED)
-		MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		if (sumErrors > 0)
-            {
-			MrBayesPrint ("%s   Aborting run.\n");
-            return ERROR;
-            }
-# endif
-
-        if (PrintMCMCDiagnosticsToFile (0) == ERROR)
-            {
-			MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
-# if defined (MPI_ENABLED)
-			nErrors++;
-# else
-            return (ERROR);
-# endif
-            }
-# if defined (MPI_ENABLED)
-        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		if (sumErrors > 0)
-			{
-            MrBayesPrint ("%s   Aborting run.\n");
-			return ERROR;
-			}
-# endif
-        }
-
     if ( chainParams.isSS == YES )
         {
         numGenInStepSS = ( chainParams.numGen - chainParams.burninSS )/ chainParams.numStepsSS;
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Starting Steppingstone sampling in order to estimate Marginal Liklihood.  \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s   Total of %d generations will be processed while first %d generations will be used as burnin.        \n\n", spacer,chainParams.numGen,chainParams.burninSS );
+        MrBayesPrint ("%s   Total of %d generations will be processed while first %d generations      \n", spacer,chainParams.numGen,chainParams.burninSS );
+        MrBayesPrint ("%s   will be used as burnin.                                                 \n\n", spacer);     
         if( numGenInStepSS/chainParams.sampleFreq < 1  )
             {
             MrBayesPrint ("%s   There is less then one samples in each step of Steppingstone sampling.  \n", spacer);
@@ -40288,6 +40247,48 @@ int RunChain (SafeLong *seed)
 
 
 
+
+    /* print headers and starting states */
+    if( numPreviousGen==0 )
+        {
+        /* make sure we print headers */
+		PrintToScreen(0, 0, time(0), startingT);
+		if (PrintStatesToFiles (0) == ERROR)
+			{
+            MrBayesPrint("%s   Error in printing headers to files\n");
+# if defined (MPI_ENABLED)
+			nErrors++;
+# else
+			return ERROR;
+# endif
+			}
+# if defined (MPI_ENABLED)
+		MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		if (sumErrors > 0)
+            {
+			MrBayesPrint ("%s   Aborting run.\n");
+            return ERROR;
+            }
+# endif
+
+        if (chainParams.isSS == NO &&  PrintMCMCDiagnosticsToFile (0) == ERROR)
+            {
+			MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
+# if defined (MPI_ENABLED)
+			nErrors++;
+# else
+            return (ERROR);
+# endif
+            }
+# if defined (MPI_ENABLED)
+        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		if (sumErrors > 0)
+			{
+            MrBayesPrint ("%s   Aborting run.\n");
+			return ERROR;
+			}
+# endif
+        }
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
 		{

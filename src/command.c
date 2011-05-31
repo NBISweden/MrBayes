@@ -11699,7 +11699,76 @@ int GetUserHelp (char *helpTkn)
 		PrintSettings ("Mcmc", NULL);
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
-	else if (!strcmp(helpTkn, "Set"))
+	else if (!strcmp(helpTkn, "Ss"))
+		{
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		MrBayesPrint ("   SS                                                                            \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   This command is used to start Steppingstone Sampling.                         \n");
+	    MrBayesPrint ("   The objective of steppingstone sampling is to estimate marginal likelihood of \n");
+	    MrBayesPrint ("   of currently specified model.  Steppingstone sampling uses importance sampling\n");
+		MrBayesPrint ("   to estimate each ratio in a series bridging posterior and prior distributions.\n");
+		MrBayesPrint ("   Underling importance distributions called power posterior distributions       \n");
+        MrBayesPrint ("   defined as Prior*(Lilklihood^Beta) are sampled using mcmc. First 'BurninSS'   \n");
+		MrBayesPrint ("   number of generations are taken from posterior distribution as burnin         \n");
+		MrBayesPrint ("   followed by a given number of sampling steps 'NStepsSS'. At each step likeli- \n");
+		MrBayesPrint ("   hood is sampled from a power posterior distribution with distinct Beta value. \n");
+		MrBayesPrint ("   Beta values are taken according to evenly spaces 'NStepsSS'-quantiles of      \n");
+        MrBayesPrint ("   BETA ('AlphaSS',1.0) distribution. For the first sampling step Beta value is  \n");
+        MrBayesPrint ("   equal to the last quantile, i.e. close to 1.0.  For each successive step      \n");
+        MrBayesPrint ("   Beta value is gradually reduced assuming value of previous quintiles of       \n");
+        MrBayesPrint ("   BETA distribution.                                                            \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   SS and mcmc share majority of the parameters.                                 \n");
+        MrBayesPrint ("   All parameters of mcmc, except 'mcmcDiagn' and burnin related  parameters,    \n");
+        MrBayesPrint ("   have the same meaning and usage during ss run as they have in ordinary mcmc   \n");
+        MrBayesPrint ("   run.  Regardless of the value of 'mcmcDiagn' parameter no mcmc diagnostic is  \n");
+        MrBayesPrint ("   performed. Effectivly assuming value 'NO' for 'mcmcDiagn' paramiter during    \n");
+        MrBayesPrint ("   the run. Ss has its own burin parameter 'BurninSS' while mcmc burnin          \n");
+        MrBayesPrint ("   parameters are ignored.                                                       \n");
+        MrBayesPrint ("   Note that 'Ngen' parameter of mcmc is used to set overall number of           \n");
+        MrBayesPrint ("   generations processed including 'BurninSS' and all 'NstepsSS'. At each step   \n");
+        MrBayesPrint ("   ('Ngen'-'BurninSS')/'NstepsSS' generations are processed taking samples       \n");
+        MrBayesPrint ("   every 'Samplefreq' generation. More information on mcmc paramiters you can get\n");
+        MrBayesPrint ("   by typing 'help mcmc' command.                                                \n");
+        MrBayesPrint ("   Beside mcmc parameters ss run is affected by its exclusive parameters listed  \n");
+        MrBayesPrint ("   below. The exclusive ss parameters could be set up only in ss command.        \n");
+        MrBayesPrint ("   The parameters shared with mcmc could be set both in mcmcp and in ss command. \n");
+        MrBayesPrint ("   The correct usage is                                                          \n");
+        MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("      ss <parameter>=<value> ... <parameter>=<value>                             \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Note that a command:                                                          \n");
+        MrBayesPrint ("     ss <setting shared with mcmc paramiters> <setting ss exclusive paramiters>; \n");
+        MrBayesPrint ("   Would be equivalent to executing two commands:                                \n");
+        MrBayesPrint ("     mcmcp <setting shared with mcmc paramiters>;                                \n");
+        MrBayesPrint ("     ss <setting ss exclusive paramiters>;                                       \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Available ss exlusive paremeters:                                             \n");
+		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   AlphaSS      -- Betta values are destributed according to quantiles of        \n");
+		MrBayesPrint ("                   BETA('AlphaSS',1.0) distribution. Effectively the parameter   \n");
+		MrBayesPrint ("                   determen the level of skewenes of betta values. If AlphaSS=1.0\n");
+		MrBayesPrint ("                   then betta values spaced uniformaly on interval from 0.0 to   \n");
+		MrBayesPrint ("                   1.0. It was empirically observed that value for AlphaSS in    \n");
+		MrBayesPrint ("                   the range between 0.3 and 0.5 typicaly produce the most       \n");
+		MrBayesPrint ("                   accurate result.                                              \n");
+        MrBayesPrint ("   BurninSS     -- fixed number of generations (not samples) burned before       \n");
+		MrBayesPrint ("                   sampling of the first step starts.                            \n");
+		MrBayesPrint ("   NstepsSS     -- number of steps in steppingstone sampling analyzes. Typically \n");
+		MrBayesPrint ("                   number above 30 is  sufficient to achieve accurate result.    \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Current settings:                                                             \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Parameter          Options               Current Setting                      \n");
+		MrBayesPrint ("   --------------------------------------------------------                      \n");
+        MrBayesPrint ("   AlphaSS            <number>              %1.2lf                               \n", chainParams.alphaSS );
+		MrBayesPrint ("   BurninSS           <number>              %ld                                  \n", chainParams.burninSS);
+        MrBayesPrint ("   NstepsSS           <number>              %ld                                  \n", chainParams.numStepsSS);
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		}
+else if (!strcmp(helpTkn, "Set"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		MrBayesPrint ("   Set                                                                           \n");

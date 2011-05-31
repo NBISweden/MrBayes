@@ -10704,7 +10704,7 @@ int PruneConstraintPartitions()
                 }
             assert (j == numLocalTaxa);
             }
-        else if (definedConstraintsType[constraintId] == NEGATIVE )
+        else if (definedConstraintsType[constraintId] == NEGATIVE || (definedConstraintsType[constraintId] == HARD) )
             {
             /* Here we create definedConstraintTwoPruned[constraintId] which is complemente of definedConstraintPruned[constraintId] */
             definedConstraintTwoPruned[constraintId] = (SafeLong *) realloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
@@ -10759,6 +10759,41 @@ int DoesTreeSatisfyConstraints(Tree *t){
 
     for (k=0; k<numDefinedConstraints; k++)
         {
+#if ! defined (NDEBUG)
+        if( t->constraints[k] == YES && definedConstraintsType[k] == HARD )
+            {
+            if( t->isRooted == YES )
+                {
+                CheckFirst = YES;
+                CheckSecond = NO; 
+                }
+            else
+                {
+                /*exactly one of next two will be YES*/
+                CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
+                CheckSecond = IsBitSet(localOutGroup, definedConstraintTwoPruned[k])==YES ? NO : YES;
+                assert( (CheckFirst^CheckSecond)==1 );
+                }
+
+            for (i=0; i<t->nIntNodes; i++)
+	            {
+                p = t->intDownPass[i];
+                if (p->anc != NULL)
+		            {
+                    if(CheckFirst==YES &&  IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsPartNested(p->partition,definedConstraintPruned[k], nLongsNeeded) )
+                        break;
+                    if(CheckSecond==YES &&  IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsPartNested(p->partition, definedConstraintTwoPruned[k], nLongsNeeded) )
+                        break;
+                    }
+	            }
+            if( i==t->nIntNodes )
+                {
+                printf ("DEBUG ERROR: Hard constraint is not satisfied. \n");
+                //assert(0);
+                }
+            }
+#endif
+
         if( t->constraints[k] == NO || definedConstraintsType[k] == HARD )
             continue;
 
