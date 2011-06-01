@@ -40375,6 +40375,11 @@ int RunChain (SafeLong *seed)
                 printf ("IsTreeConsistent failed before move! Press enter to continue.\n");
                 getchar();
                 }
+            if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
+                {
+                printf ("DEBUG ERROR: DoesTreeSatisfyConstraints failed before a move\n");
+                return ERROR;
+                }
 #endif
 			if ((theMove->moveFxn)(theMove->parm, chn, seed, &lnPriorRatio, &lnProposalRatio, theMove->tuningParam[chainId[chn]]) == ERROR)
 				{
@@ -40386,8 +40391,14 @@ int RunChain (SafeLong *seed)
 #				endif
 				}
 
-            if (theMove->parm->paramType == P_TOPOLOGY && !DoesTreeSatisfyConstraints(GetTree (theMove->parm->subParams[0], chn, 0)))
+            if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
                 {
+#if ! defined (NDEBUG)
+            	if(DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))==ABORT)
+            		{
+            		printf ("DEBUG ERROR: After move '%s'\n", theMove->name);
+            		}
+#endif
                 abortMove= YES;
                 }
 

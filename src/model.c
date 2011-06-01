@@ -10740,7 +10740,9 @@ int DoesTreeSatisfyConstraints(Tree *t){
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather coresonding set(first/second) of partial constraint has to be checked*/
-
+#if ! defined (NDEBUG)
+    int 	locs_count=0;
+#endif
 
     if( t->checkConstraints == NO)
         return YES;
@@ -10754,7 +10756,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
         }
     else
         {
-        ResetTreePartitions(t);  /*inefficiant function, rewrite faster version*/ 
+        ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
 
     for (k=0; k<numDefinedConstraints; k++)
@@ -10778,6 +10780,16 @@ int DoesTreeSatisfyConstraints(Tree *t){
             for (i=0; i<t->nIntNodes; i++)
 	            {
                 p = t->intDownPass[i];
+                if(p->isLocked == YES)
+                	if ( IsUnionEqThird (definedConstraintPruned[p->lockID], definedConstraintPruned[p->lockID], p->partition, nLongsNeeded) == NO)
+                		{
+                		printf ("DEBUG ERROR: Locked node does not represent right partition. \n");
+                		return ABORT;
+                		}
+                	else
+                		{
+                		locs_count++;
+                		}
                 if (p->anc != NULL)
 		            {
                     if(CheckFirst==YES &&  IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsPartNested(p->partition,definedConstraintPruned[k], nLongsNeeded) )
@@ -10786,9 +10798,16 @@ int DoesTreeSatisfyConstraints(Tree *t){
                         break;
                     }
 	            }
+            if(locs_count != t->nLocks)
+            	{
+            	printf("DEBUG ERROR: lock_count:%d shouldbe lock_count:%d\n",proc_id, locs_count, t->nLocks);
+            	return ABORT;
+            	}
+
             if( i==t->nIntNodes )
                 {
                 printf ("DEBUG ERROR: Hard constraint is not satisfied. \n");
+                return ABORT;
                 //assert(0);
                 }
             }

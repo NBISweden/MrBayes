@@ -1094,6 +1094,7 @@ int CheckSetConstraints (Tree *t)
 	    return (NO_ERROR);
 
     /* reset all existing locks, if any */
+    t->nLocks=0;
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
@@ -1130,7 +1131,7 @@ int CheckSetConstraints (Tree *t)
 	
 	for (a=0; a<numDefinedConstraints; a++)
 		{
-		if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[i] != HARD )
+		if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[a] != HARD )
 			continue;
 
 		/* set bits in partition to add */
