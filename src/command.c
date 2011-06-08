@@ -358,7 +358,7 @@ CmdType			commands[] =
             { 45,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
             { 46,"Speciespartition",  NO,DoSpeciespartition,  1,                                                                                            {244},        4,                   "Defines a partition of tips into species",  IN_CMD, SHOW },
             { 47,              "Ss",  NO,              DoSs, 49,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            														     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250},       36, "Sets the parameters of a chain and start Steppingstone sampling",  IN_CMD, SHOW },
+            														     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250},       36,                              "Starts Steppingstone sampling",  IN_CMD, SHOW },
             { 48,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
             { 49,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 50,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
@@ -10402,7 +10402,7 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Parameter    Options                               Current Setting            \n");
 			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
 			MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Protein            %s                         \n", mp->nucModel);
-			MrBayesPrint ("   Nst          1/2/6                                 %s                         \n", mp->nst);
+			MrBayesPrint ("   Nst          1/2/6/Mixed                           %s                         \n", mp->nst);
 			MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
 			MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
 			MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked               %s                         \n", mp->ploidy);
@@ -11706,7 +11706,7 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   This command is used to start Steppingstone Sampling.                         \n");
 	    MrBayesPrint ("   The objective of steppingstone sampling is to estimate marginal likelihood of \n");
-	    MrBayesPrint ("   of currently specified model.  Steppingstone sampling uses importance sampling\n");
+	    MrBayesPrint ("   currently specified model.  Steppingstone sampling uses importance sampling   \n");
 		MrBayesPrint ("   to estimate each ratio in a series bridging posterior and prior distributions.\n");
 		MrBayesPrint ("   Underling importance distributions called power posterior distributions       \n");
         MrBayesPrint ("   defined as Prior*(Lilklihood^Beta) are sampled using mcmc. First 'BurninSS'   \n");
@@ -11717,7 +11717,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   BETA ('AlphaSS',1.0) distribution. For the first sampling step Beta value is  \n");
         MrBayesPrint ("   equal to the last quantile, i.e. close to 1.0.  For each successive step      \n");
         MrBayesPrint ("   Beta value is gradually reduced assuming value of previous quintiles of       \n");
-        MrBayesPrint ("   BETA distribution.                                                            \n");
+        MrBayesPrint ("   the BETA distribution.                                                        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   SS and mcmc share majority of the parameters.                                 \n");
         MrBayesPrint ("   All parameters of mcmc, except 'mcmcDiagn' and burnin related  parameters,    \n");

@@ -10759,6 +10759,29 @@ int DoesTreeSatisfyConstraints(Tree *t){
         ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
 
+     for (i=0; i<t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        if(p->isLocked == YES)
+        	{
+        	if ( IsUnionEqThird (definedConstraintPruned[p->lockID], definedConstraintPruned[p->lockID], p->partition, nLongsNeeded) == NO && IsUnionEqThird (definedConstraintTwoPruned[p->lockID], definedConstraintTwoPruned[p->lockID], p->partition, nLongsNeeded) == NO)
+        		{
+        		printf ("DEBUG ERROR: Locked node does not represent right partition. \n");
+        		return ABORT;
+        		}
+        	else
+        		{
+        		locs_count++;
+        		}
+        	}
+        }
+
+    if(locs_count != t->nLocks)
+    	{
+    	printf("DEBUG ERROR: lock_count:%d shouldbe lock_count:%d\n", locs_count, t->nLocks);
+    	return ABORT;
+    	}
+
     for (k=0; k<numDefinedConstraints; k++)
         {
 #if ! defined (NDEBUG)
@@ -10780,18 +10803,6 @@ int DoesTreeSatisfyConstraints(Tree *t){
             for (i=0; i<t->nIntNodes; i++)
 	            {
                 p = t->intDownPass[i];
-                if(p->isLocked == YES)
-                	{
-                	if ( IsUnionEqThird (definedConstraintPruned[p->lockID], definedConstraintPruned[p->lockID], p->partition, nLongsNeeded) == NO)
-                		{
-                		printf ("DEBUG ERROR: Locked node does not represent right partition. \n");
-                		return ABORT;
-                		}
-                	else
-                		{
-                		locs_count++;
-                		}
-                	}
                 if (p->anc != NULL)
 		            {
                     if(CheckFirst==YES &&  IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsPartNested(p->partition,definedConstraintPruned[k], nLongsNeeded) )
@@ -10800,11 +10811,6 @@ int DoesTreeSatisfyConstraints(Tree *t){
                         break;
                     }
 	            }
-            if(locs_count != t->nLocks)
-            	{
-            	printf("DEBUG ERROR: lock_count:%d shouldbe lock_count:%d\n", locs_count, t->nLocks);
-            	return ABORT;
-            	}
 
             if( i==t->nIntNodes )
                 {

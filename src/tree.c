@@ -1020,7 +1020,7 @@ int CheckConstraints (Tree *t)
 
 	for (a=0; a<numDefinedConstraints; a++)
 		{
-        if (t->constraints[a] == NO  || definedConstraintsType[i] != HARD)
+        if (t->constraints[a] == NO  || definedConstraintsType[a] != HARD)
             continue;
 
 		/* set bits in partition to check */

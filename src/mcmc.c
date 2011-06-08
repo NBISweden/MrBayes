@@ -40214,10 +40214,10 @@ int RunChain (SafeLong *seed)
         {
         numGenInStepSS = ( chainParams.numGen - chainParams.burninSS )/ chainParams.numStepsSS;
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Starting Steppingstone sampling in order to estimate Marginal Liklihood.  \n", spacer);
+        MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
         MrBayesPrint ("%s   Total of %d generations will be processed while first %d generations      \n", spacer,chainParams.numGen,chainParams.burninSS );
-        MrBayesPrint ("%s   will be used as burnin.                                                 \n\n", spacer);     
+        MrBayesPrint ("%s   will be used as burnin.                                                   \n\n", spacer);     
         if( numGenInStepSS/chainParams.sampleFreq < 1  )
             {
             MrBayesPrint ("%s   There is less then one samples in each step of Steppingstone sampling.  \n", spacer);

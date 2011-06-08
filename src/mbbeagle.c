@@ -129,6 +129,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
     
     if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
         requiredFlags |= BEAGLE_FLAG_SCALERS_LOG; //BEAGLE_FLAG_SCALERS_RAW; 
+ 
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
     /* create beagle instance */
@@ -192,6 +193,8 @@ int InitBeagleInstance (ModelInfo *m, int division)
                     }
                 if (j == m->numModelStates)
                     inStates[c] = j;
+                else
+                    assert(j==1);
                 charBits += m->nParsIntsPerSite;
                 }
             beagleSetTipStates(m->beagleInstance, i, inStates);
@@ -1059,7 +1062,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     {
 #if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
 		countBeagleDynamicFail++;
-		printf("#####DEBUG INFO############## countBeagleDynamicFail:%d countALL:%d\n",countBeagleDynamicFail,countALL);
+		printf("#####DEBUG INFO (it is not an error)############## countBeagleDynamicFail:%d countALL:%d\n",countBeagleDynamicFail,countALL);
 #endif
         return beagleReturn;
     }
