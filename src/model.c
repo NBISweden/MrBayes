@@ -10758,7 +10758,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
         {
         ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
-
+#if ! defined (NDEBUG)
      for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
@@ -10781,6 +10781,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
     	printf("DEBUG ERROR: lock_count:%d shouldbe lock_count:%d\n", locs_count, t->nLocks);
     	return ABORT;
     	}
+#endif
 
     for (k=0; k<numDefinedConstraints; k++)
         {

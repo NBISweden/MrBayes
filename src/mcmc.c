@@ -40423,7 +40423,7 @@ int RunChain (SafeLong *seed)
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
-                    printf ("DEBUG ERROR: Log prior incorrect after move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: Log prior incorrect after move '%s'\n", theMove->name,lnPrior-LogPrior(chn));
                     return ERROR;
                     }
                 ResetFlips(chn);
