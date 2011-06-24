@@ -2294,7 +2294,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 
 {
 
-	int     i, st, isCalibrated, isClock, nTaxa;
+	int     i, st, isCalibrated, isClock, nTaxa, numActiveHardConstraints=0;
 	Tree	*tree, **treeHandle;
 	Model	*mp;
 	
@@ -2317,6 +2317,16 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 		isCalibrated = YES;
 	else
 		isCalibrated = NO;
+
+    if (p->checkConstraints == YES)
+		{
+
+        for (i=0; i<numDefinedConstraints; i++)
+		    {
+		    if (mp->activeConstraints[i] == YES && definedConstraintsType[i] == HARD )
+			    numActiveHardConstraints++;
+            }
+		}
 
 	/* allocate space for and construct the trees */
     /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
@@ -2374,7 +2384,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 				{
 				tree->checkConstraints = YES;
 				tree->nConstraints = mp->numActiveConstraints;
-				tree->nLocks = mp->numActiveConstraints;
+				tree->nLocks = numActiveHardConstraints;
 				tree->constraints = mp->activeConstraints;
 				}
 			else
@@ -10778,7 +10788,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
 
     if(locs_count != t->nLocks)
     	{
-    	printf("DEBUG ERROR: lock_count:%d shouldbe lock_count:%d\n", locs_count, t->nLocks);
+    	printf("DEBUG ERROR: lock_count:%d should be lock_count:%d\n", locs_count, t->nLocks);
     	return ABORT;
     	}
 #endif
@@ -10850,6 +10860,8 @@ int DoesTreeSatisfyConstraints(Tree *t){
                 }
             else
                 {
+                if ( NumBits(definedConstraintTwoPruned[k], nLongsNeeded) == 1)
+                    continue;
                 /*one or two of the next two statments will be YES*/
                 CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
                 CheckSecond = IsBitSet(localOutGroup, definedConstraintTwoPruned[k])==YES ? NO : YES;

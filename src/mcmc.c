@@ -2115,7 +2115,7 @@ PFNODE *CompactTree (PFNODE *p)
 
 
 
-#if !defined (SSE_ENABLED)
+#if !defined (SSE_ENABLED)|| 1
 /*----------------------------------------------------------------
 |
 |	CondLikeDown_Bin: binary model with or without rate
@@ -3365,7 +3365,7 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)
+#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |	CondLikeDown_NY98: codon model with omega variation
@@ -3801,7 +3801,7 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)
+#if !defined (SSE_ENABLED)|| 1
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_Bin: binary model with or without rate
@@ -5472,7 +5472,7 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)
+#if !defined (SSE_ENABLED)|| 1
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_NY98: codon model with omega variation
@@ -6953,7 +6953,7 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)
+#if !defined (SSE_ENABLED)|| 1
 /*----------------------------------------------------------------
 |
 |	CondLikeScaler_NY98: codon model with omega variation
@@ -11008,12 +11008,16 @@ int InitChainCondLikes (void)
 				m->condLikeLength = m->numChars * m->numGammaCats * m->numOmegaCats * m->numModelStates;
 #if defined (BEAGLE_ENABLED)
             /* tentatively decide on whether to use Beagle */
-            if (inferPosSel == YES)
-                m->useBeagle = NO;
-            else if (m->gibbsGamma == NO)
-                m->useBeagle = tryToUseBEAGLE;
-            else
-                m->useBeagle = NO;
+            if( tryToUseBEAGLE == YES )
+                {
+                if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+		            {
+		            MrBayesPrint ("%s   Non-beagle version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, d+1);
+                    MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+		            }                
+                else if (m->gibbsGamma == NO)
+                    m->useBeagle = YES;
+                }
 #endif
 			}
         
@@ -40423,7 +40427,7 @@ int RunChain (SafeLong *seed)
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
-                        printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%f :%f\n", theMove->name,lnPrior,LogPrior(chn));
+                        printf ("DEBUGl ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
                     return ERROR;
                     }
                 ResetFlips(chn);
@@ -41282,13 +41286,23 @@ int SetLikeFunctions (void)
 					else
 						{
 #if defined (SSE_ENABLED)
+					if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+						{
+						MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request \n", spacer);
+                        MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+						}
+
+                        m->CondLikeUp = &CondLikeUp_NUC4;
+						m->PrintAncStates = &PrintAncStates_NUC4;
+						m->PrintSiteRates = &PrintSiteRates_Gen;
+
 						if (m->gibbsGamma == YES)
 							{
 							m->CondLikeDown = &CondLikeDown_NUC4_GibbsGamma;
 							m->CondLikeRoot = &CondLikeRoot_NUC4_GibbsGamma;
 							m->CondLikeScaler = &CondLikeScaler_NUC4_GibbsGamma;
 							}
-						else if (m->correlation != NULL)
+						else if (m->correlation != NULL || m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES)
 							{
 							m->CondLikeDown = &CondLikeDown_NUC4;
 							m->CondLikeRoot = &CondLikeRoot_NUC4;
@@ -41299,13 +41313,20 @@ int SetLikeFunctions (void)
 						    m->CondLikeDown = &CondLikeDown_NUC4_SSE;
 						    m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
 						    m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
+                            /* Should be sse versions if we want to handel m->printAncStates == YES || inferSiteRates == YES.
+                            For now just set to NULL for early error detection if functions anyway got called */
+                            m->CondLikeUp = NULL;
+	    					m->PrintAncStates = NULL;
+		    				m->PrintSiteRates = NULL;
                             }
 
                         if (m->correlation != NULL)
 							m->Likelihood = &Likelihood_Adgamma;
 						else if (m->gibbsGamma == YES)
 							m->Likelihood = &Likelihood_NUC4_GibbsGamma;
-						else
+						else if (m->printAncStates == YES || inferSiteRates == YES)
+                            m->Likelihood = &Likelihood_NUC4;
+                        else
 							m->Likelihood = &Likelihood_NUC4_SSE;
 #else
 						if (m->gibbsGamma == YES)
@@ -41327,6 +41348,10 @@ int SetLikeFunctions (void)
 							m->Likelihood = &Likelihood_NUC4_GibbsGamma;
 						else
 							m->Likelihood = &Likelihood_NUC4;
+
+                        m->CondLikeUp = &CondLikeUp_NUC4;
+						m->PrintAncStates = &PrintAncStates_NUC4;
+						m->PrintSiteRates = &PrintSiteRates_Gen;
 #endif
 
                         if (m->nst == 1)
@@ -41335,10 +41360,8 @@ int SetLikeFunctions (void)
 							m->TiProbs = &TiProbs_Hky;
 						else
 							m->TiProbs = &TiProbs_Gen;
-						m->CondLikeUp = &CondLikeUp_NUC4;
 						m->StateCode = &StateCode_NUC4;
-						m->PrintAncStates = &PrintAncStates_NUC4;
-						m->PrintSiteRates = &PrintSiteRates_Gen;
+
 						}
 					}
 				else if (m->nucModelId == NUCMODEL_DOUBLET)
@@ -41381,35 +41404,49 @@ int SetLikeFunctions (void)
 							}
 						else
 							{
+                            m->CondLikeDown = &CondLikeDown_Gen;
+					        m->CondLikeRoot = &CondLikeRoot_Gen;
+					        m->CondLikeScaler = &CondLikeScaler_Gen;
+						    m->Likelihood = &Likelihood_Gen;
 #if defined (SSE_ENABLED)
-							m->CondLikeDown = &CondLikeDown_Gen_SSE;
-							m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
-							m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
-							m->Likelihood = &Likelihood_Gen_SSE;
-
-#else
-							m->CondLikeDown = &CondLikeDown_Gen;
-							m->CondLikeRoot = &CondLikeRoot_Gen;
-							m->CondLikeScaler = &CondLikeScaler_Gen;
-							m->Likelihood = &Likelihood_Gen;
+                            
+					        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+						        {
+						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+                                MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+						        }
+                            else
+                                {
+							    m->CondLikeDown = &CondLikeDown_Gen_SSE;
+							    m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
+							    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
+							    m->Likelihood = &Likelihood_Gen_SSE;
+                                }
 #endif
 							}
 						}
 					else
 						{
-#if defined (SSE_ENABLED)
-						m->CondLikeDown   = &CondLikeDown_NY98_SSE;
-						m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
-						m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
-						m->Likelihood     = &Likelihood_NY98_SSE;
-
-#else
-						m->CondLikeDown   = &CondLikeDown_NY98;
+                        m->CondLikeDown   = &CondLikeDown_NY98;
 						m->CondLikeRoot   = &CondLikeRoot_NY98;
 						m->CondLikeScaler = &CondLikeScaler_NY98;
 						m->Likelihood     = &Likelihood_NY98;
-#endif
+#if defined (SSE_ENABLED)
 
+                         if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+						        {
+						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+                                MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+						        }
+                            else
+                                {
+						        m->CondLikeDown   = &CondLikeDown_NY98_SSE;
+						        m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
+						        m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
+						        m->Likelihood     = &Likelihood_NY98_SSE;
+                                }
+
+#endif
 						}
 					m->TiProbs        = &TiProbs_Gen;
 					if (m->nCijkParts > 1)
@@ -41497,16 +41534,24 @@ int SetLikeFunctions (void)
 				}
 			else
 				{
-#if defined (SSE_ENABLED)
-				m->CondLikeDown   = &CondLikeDown_Bin_SSE;
-				m->CondLikeRoot   = &CondLikeRoot_Bin_SSE;
-				m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
-				m->Likelihood     = &Likelihood_Res_SSE;
-#else
-				m->CondLikeDown   = &CondLikeDown_Bin;
+                m->CondLikeDown   = &CondLikeDown_Bin;
 				m->CondLikeRoot   = &CondLikeRoot_Bin;
 				m->CondLikeScaler = &CondLikeScaler_Gen;
 				m->Likelihood     = &Likelihood_Res;
+
+#if defined (SSE_ENABLED)
+                if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+			        {
+			        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+                    MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+			        }
+                else
+                    {
+	                m->CondLikeDown   = &CondLikeDown_Bin_SSE;
+	                m->CondLikeRoot   = &CondLikeRoot_Bin_SSE;
+	                m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
+	                m->Likelihood     = &Likelihood_Res_SSE;
+                    }
 #endif
 				m->TiProbs        = &TiProbs_Res;
 				m->CondLikeUp = &CondLikeUp_Bin;

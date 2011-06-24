@@ -880,7 +880,11 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		printf ("\n\n");
 #		endif
+#ifdef RELEASE
+		printf ("                            MrBayes v%s\n\n", VERSION_NUMBER);
+#else
 		printf ("                            MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
+#endif
 		printf ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		printf ("                             (Parallel version)\n");
@@ -912,7 +916,11 @@ void PrintHeader (void)
 #		if !defined (MPI_ENABLED)
 		MrBayesPrint ("\n\n");
 #		endif
+#ifdef RELEASE
+        MrBayesPrint ("                           MrBayes v%s\n\n", VERSION_NUMBER);
+#else
         MrBayesPrint ("                           MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
+#endif
 		MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
 		MrBayesPrint ("                             (Parallel version)\n");

@@ -2250,6 +2250,12 @@ int DoConstraint (void)
         } /*end consrtainType == HARD */
     else if( consrtainType == PARTIAL )
         {
+        if (howMany == 1)
+	        {
+	        MrBayesPrint ("%s   This partial constraint include only one taxa. It is alwayes satisfied and will not be defined.\n", spacer);
+	        return (ERROR);
+	        }
+
         howMany = 0;
 	    for (i=0; i<numTaxa; i++)
             {
