@@ -154,6 +154,23 @@ typedef void (*sighandler_t)(int);
 
 #define TNODE TreeNode
 
+#if defined (MPI_ENABLED)
+#define FAIL_EXIT(failString) \
+	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);\
+	if (sumErrors > 0)\
+		{\
+        MrBayesPrint ("%s   "failString"\n", spacer);\
+		return ERROR;\
+		}
+#	else
+#define FAIL_EXIT(failString) \
+	if (nErrors > 1)\
+		{\
+        MrBayesPrint ("%s   "failString"\n", spacer);\
+		return ERROR;\
+		}
+#	endif
+
 /* local (to this file) data types */
 typedef struct pfnode
     {
@@ -9210,11 +9227,7 @@ int DoSs (void)
     chainParams.relativeBurnin = YES;
 
     if( chainParams.burninSS < 0 )
-        chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS+1)*chainParams.sampleFreq);
-    /*else
-        chainParams.chainBurnIn = chainParams.burninSS;
-    chainParams.chainBurnIn=-1;
-    */
+        chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS-chainParams.burninSS)*chainParams.sampleFreq);
     chainParams.isSS = YES;
 
     ret=DoMcmc();
@@ -39731,7 +39744,7 @@ int RunChain (SafeLong *seed)
 	clock_t		previousCPUTime, currentCPUTime;
     /* Steppingstone sampling variables */
     int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS;
-    MrBFlt powerSS=0, stepLengthSS=0,meanSS,varSS;
+    MrBFlt powerSS=0, stepLengthSS=0,meanSS,varSS, *tempX;
 
 
 #if defined (BEAGLE_ENABLED)
@@ -39833,7 +39846,7 @@ int RunChain (SafeLong *seed)
 		free (curLnL);
 		nErrors++;
 		}
-	else if ((splitfreqSS = (MrBFlt *) calloc (chainParams.numStepsSS, sizeof(MrBFlt))) == NULL)
+	else if ((splitfreqSS = (MrBFlt *) calloc (chainParams.numStepsSS*numTopologies, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating splitfreqSS\n", spacer);
         free (stepScalerSS);
@@ -40245,10 +40258,6 @@ int RunChain (SafeLong *seed)
 
     if ( chainParams.isSS == YES )
         {
-        for(i=0;i<chainParams.numStepsSS;i++){
-            splitfreqSS[i]=i+1;
-        }
-        //PrintPlot (splitfreqSS, splitfreqSS, chainParams.numStepsSS);
         numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
         numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq);
         numGenOld = chainParams.numGen;
@@ -40724,6 +40733,7 @@ int RunChain (SafeLong *seed)
 				/* output statistics */
 				if (numTopologies == 1)
 					{
+                    f=-1.0;
                     if (chainParams.stat[0].numPartitions == 0)
                         {
     					MrBayesPrint ("%s   Average standard deviation of split frequencies: NA (no splits above min. frequency)\n", spacer);
@@ -40738,6 +40748,7 @@ int RunChain (SafeLong *seed)
 						f = chainParams.stat[0].max;
     					MrBayesPrint ("%s   Max standard deviation of split frequencies: %.6f\n", spacer, f);
                         }
+                    splitfreqSS[chainParams.numStepsSS-stepIndexSS-1] = f;
 					if (chainParams.stat[0].numPartitions > 0 && f <= chainParams.stopVal)
 						stopChain = YES;
 					if (n < chainParams.numGen - chainParams.printFreq && (chainParams.stopRule == NO || stopChain == NO))
@@ -40748,6 +40759,7 @@ int RunChain (SafeLong *seed)
 					stopChain = YES;
 					for (i=0; i<numTopologies; i++)
 						{
+                        f=-1.0;
                         if (chainParams.stat[i].numPartitions == 0)
                             {
     					    MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: NA (no splits above min. frequency)\n", spacer, i+1);
@@ -40762,6 +40774,7 @@ int RunChain (SafeLong *seed)
 							f = chainParams.stat[i].max;
     						MrBayesPrint ("%s   Max standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
                             }
+                        splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1] = f;
                         if (chainParams.stat[i].numPartitions == 0 && f > chainParams.stopVal)
 							stopChain = NO;
 						}
@@ -41060,6 +41073,51 @@ int RunChain (SafeLong *seed)
             MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
             MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal LogLiklihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
             MrBayesPrint ("%s       Note: Scaled variance is given in log units and calculated as \"variance/mean^2\"\n",spacer);     
+            }
+
+        if ( chainParams.mcmcDiagn == YES )
+            {
+            if ((tempX = (MrBFlt *) calloc (chainParams.numStepsSS, sizeof(MrBFlt))) == NULL)
+                {
+                nErrors++;
+                }
+            FAIL_EXIT("Problem allocating memory");
+
+            for(i=0; i<chainParams.numStepsSS; i++)
+                {
+                tempX[i]=i+1;
+                }
+            MrBayesPrint ("\n");
+
+            if( numTopologies > 1 )
+                {
+                if (chainParams.diagnStat == AVGSTDDEV)
+                    MrBayesPrint ("   Plots of average standard deviation of split frequencies across steps for different topology.");
+                else
+                    MrBayesPrint ("   Plots of max standard deviation of split frequencies across steps for different topology.");
+                }
+            else
+                {
+                if (chainParams.diagnStat == AVGSTDDEV)
+                    MrBayesPrint ("   Plot of average standard deviation of split frequencies across steps.");
+                else
+                    MrBayesPrint ("   Plot of max standard deviation of split frequencies across steps.");
+                }
+
+            MrBayesPrint ("\n   Points at -1.0 (y-axis) indicates that there were no splits\n");
+            MrBayesPrint ("\n   above minimum frequency for corresponding step.");
+            if (numTopologies>1)
+                {
+                for(i=0; i<numTopologies; i++)
+                    {
+                    MrBayesPrint ("%s   Topology %d.\n", spacer, i+1);
+                    PrintPlot (tempX, splitfreqSS+i*chainParams.numStepsSS, chainParams.numStepsSS);
+                    }
+                }
+            else
+                PrintPlot (tempX, splitfreqSS, chainParams.numStepsSS);
+
+            free(tempX);
             }
         }
 
