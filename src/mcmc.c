@@ -448,7 +448,8 @@ MrBFlt			*curLnL = NULL;              /* stores log likelihood                  
 MrBFlt			*curLnPr = NULL;             /* stores log prior probability                 */
 MrBFlt			*marginalLnLSS = NULL;       /* marginal liklihood obtained using stepppingstone sampling */
 MrBFlt			*stepAcumulatorSS = NULL;    /* accumulates liklihoods for current step in SS*/
-MrBFlt			*stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale      */
+MrBFlt			*stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale in SS*/
+MrBFlt			*splitfreqSS = NULL;         /* array holding split frequencis for each step in SS        */
 int				*sympiIndex;                 /* sympi state freq index for multistate chars  */
 int				stdStateFreqsRowSize;		 /* row size for std state frequencies			 */
 int				*weight;			         /* weight of each compressed char				 */
@@ -9202,11 +9203,25 @@ int DoMcmcParm (char *parmName, char *tkn)
 
 int DoSs (void)
 {
-    int ret;
+    int ret, oldBurnin, oldRelativeBurnin;
 
+    oldBurnin = chainParams.chainBurnIn;
+    oldRelativeBurnin = chainParams.burninSS;
+    chainParams.relativeBurnin = YES;
+
+    if( chainParams.burninSS < 0 )
+        chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS+1)*chainParams.sampleFreq);
+    /*else
+        chainParams.chainBurnIn = chainParams.burninSS;
+    chainParams.chainBurnIn=-1;
+    */
     chainParams.isSS = YES;
+
     ret=DoMcmc();
+
     chainParams.isSS = NO;
+    chainParams.burninSS = oldBurnin;
+    chainParams.relativeBurnin = oldRelativeBurnin;
 
     return ret;
 }
@@ -9852,6 +9867,7 @@ void FreeChainMemory (void)
         free (marginalLnLSS);
         free (stepScalerSS);
         free (stepAcumulatorSS);
+        free (splitfreqSS);
 		memAllocs[ALLOC_CURLNL] = NO;
 		}
 	if (memAllocs[ALLOC_CURLNPR] == YES) /*alloc in RunChain()*/
@@ -11112,15 +11128,18 @@ int InitChainCondLikes (void)
                 m->useBeagle = NO;
             }
 #endif
-        m->useSSE = NO;
+        //m->useSSE = NO;
 #if defined (SSE_ENABLED)
-        if (useBeagle == NO && m->dataType != STANDARD)
-            m->useSSE = YES;
+        /*if (useBeagle == NO && m->dataType != STANDARD)
+            m->useSSE = YES;*/
+        if (useBeagle == YES)
+            m->useSSE = NO;
+
 #endif
         if (useBeagle == NO && m->useSSE == NO)
             MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
         else if (useBeagle == NO && m->useSSE == YES)
-            MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d\n", spacer, d+1);
+            MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d (single-precision)\n", spacer, d+1);
 
 
         if (useBeagle == NO)
@@ -39711,7 +39730,7 @@ int RunChain (SafeLong *seed)
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
     /* Steppingstone sampling variables */
-    int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0;
+    int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS;
     MrBFlt powerSS=0, stepLengthSS=0,meanSS,varSS;
 
 
@@ -39814,7 +39833,17 @@ int RunChain (SafeLong *seed)
 		free (curLnL);
 		nErrors++;
 		}
-	else
+	else if ((splitfreqSS = (MrBFlt *) calloc (chainParams.numStepsSS, sizeof(MrBFlt))) == NULL)
+		{
+		MrBayesPrint ("%s   Problem allocating splitfreqSS\n", spacer);
+        free (stepScalerSS);
+        free (marginalLnLSS);
+        free (maxLnL0);
+		free (curLnL);
+        free (stepAcumulatorSS);
+		nErrors++;
+		}
+    else
 		memAllocs[ALLOC_CURLNL] = YES;
 #	if defined (MPI_ENABLED)
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -40216,12 +40245,27 @@ int RunChain (SafeLong *seed)
 
     if ( chainParams.isSS == YES )
         {
-        numGenInStepSS = ( chainParams.numGen - chainParams.burninSS )/ chainParams.numStepsSS;
+        for(i=0;i<chainParams.numStepsSS;i++){
+            splitfreqSS[i]=i+1;
+        }
+        //PrintPlot (splitfreqSS, splitfreqSS, chainParams.numStepsSS);
+        numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
+        numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq);
+        numGenOld = chainParams.numGen;
+        lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
+        chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s   Total of %d generations will be processed while first %d generations      \n", spacer,chainParams.numGen,chainParams.burninSS );
-        MrBayesPrint ("%s   will be used as burnin.                                                   \n\n", spacer);     
+        MrBayesPrint ("%s   Total of %d generations (%d samples) will be taken while first            \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
+        MrBayesPrint ("%s   %d generations (%d samples) will be discurded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
+        if( numGenOld != chainParams.numGen)
+            {
+            MrBayesPrint ("%s   NOTE: In total it will be taken %d generations instead of requested %d.   \n", spacer, chainParams.numGen, numGenOld ); 
+            MrBayesPrint ("%s   The reduiction occurs due to reducing number of generation of each     \n", spacer);
+            MrBayesPrint ("%s   step in order to make it multiple of sampling frequency.                  \n", spacer);
+            }
+        MrBayesPrint ("\n");
         if( numGenInStepSS/chainParams.sampleFreq < 1  )
             {
             MrBayesPrint ("%s   There is less then one samples in each step of Steppingstone sampling.  \n", spacer);
@@ -40275,7 +40319,7 @@ int RunChain (SafeLong *seed)
             }
 # endif
 
-        if (chainParams.isSS == NO &&  PrintMCMCDiagnosticsToFile (0) == ERROR)
+        if (PrintMCMCDiagnosticsToFile (0) == ERROR)
             {
 			MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
 # if defined (MPI_ENABLED)
@@ -40292,7 +40336,30 @@ int RunChain (SafeLong *seed)
 			return ERROR;
 			}
 # endif
-        }
+         if( chainParams.isSS == YES && chainParams.burninSS == 0 )
+            { 
+            /* Remove all previouse samples from diagnostics */
+            removeTo=1;
+            if ( RemoveTreeSamples ( 1,1 ) == ERROR)
+					{
+             	  	 MrBayesPrint("%s   Problem removing tree samples\n");
+#				      		  if defined (MPI_ENABLED)
+		     		   nErrors++;
+#	        	      		  else
+		      		  return ERROR;
+#                     		  endif
+                	}
+#               if defined (MPI_ENABLED)
+            MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+            if (sumErrors > 0)
+                {
+	            MrBayesPrint ("%s   Aborting run.\n");
+                return ERROR;
+                }
+#			    endif
+            MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
+            }
+    }
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
 		{
@@ -40427,7 +40494,7 @@ int RunChain (SafeLong *seed)
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
-                        printf ("DEBUGl ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
+                        printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
                     return ERROR;
                     }
                 ResetFlips(chn);
@@ -40605,16 +40672,17 @@ int RunChain (SafeLong *seed)
 			}
 
         /* print mcmc diagnostics */
-		if ( chainParams.isSS == NO && ( chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen) ))
+		if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
+                                             || ( chainParams.isSS == YES && ( n-lastStepEndSS ) % numGenInStepSS == 0 ) ) )
 			{
-			if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES)
-				|| (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
+			if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || n > chainParams.burninSS * chainParams.sampleFreq ))
+				                            || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
 				{
 				/* we need some space for coming output */
 				MrBayesPrint ("\n");
 				/* remove tree samples if using burninpercentage */
 				/* the following function returns immediately in MPI if proc_id != 0 */
-				if (chainParams.relativeBurnin == YES)
+				if (chainParams.relativeBurnin == YES && chainParams.isSS == NO )
 					{
 					removeFrom = removeTo;
 					removeTo = (int)(chainParams.burninFraction * (n/chainParams.sampleFreq+1)); /* (n/chainParams.sampleFreq+1) is the current number of samples */
@@ -40641,7 +40709,7 @@ int RunChain (SafeLong *seed)
 					}
 
 				lastDiagnostics = (n/chainParams.sampleFreq)+1; /* +1 because we always have start tree sampled*/
-				if (chainParams.relativeBurnin == YES)
+				if ( chainParams.relativeBurnin == YES )
 					{
 					i = lastDiagnostics - removeTo;
 					}
@@ -40755,9 +40823,9 @@ int RunChain (SafeLong *seed)
 			}
 
         /* Do stepping sampling staf if needed */
-        if ( chainParams.isSS == YES && n > chainParams.burninSS )
+        if ( chainParams.isSS == YES && n >= chainParams.burninSS*chainParams.sampleFreq )
             {
-            if( ( n-chainParams.burninSS ) % chainParams.sampleFreq == 0 )
+            if( ( n-lastStepEndSS ) % chainParams.sampleFreq == 0 && n > chainParams.burninSS*chainParams.sampleFreq )
                 { /* do sampling*/
                 for (chn=0; chn<numLocalChains; chn++)
 		            {
@@ -40776,26 +40844,60 @@ int RunChain (SafeLong *seed)
                 samplesCountSS++;
                 }
 
-            if( ( n-chainParams.burninSS ) % numGenInStepSS == 0 )
-                { /* prepare sample of next step */
-                stepIndexSS--;
-                stepLengthSS = powerSS; 
-                powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-                stepLengthSS -= powerSS;
-                for (chn=0; chn<numLocalChains; chn++)
-		            {
-                    if (chainId[chn] % chainParams.numChains == 0)
-                        {
-                    	//printf("pr_id=%d ch_id=%d\n", proc_id, chainId[chn] );
-                        run = chainId[chn] / chainParams.numChains;
-                        marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
-                        stepScalerSS[run] = curLnL[chn]*stepLengthSS;
-                        stepAcumulatorSS[run]=0.0;
-                        }
+            if( ( n-lastStepEndSS ) % numGenInStepSS == 0 )      /* prepare sample of next step */
+                { 
+                /* Remove all previouse samples from diagnostics */
+				removeFrom = removeTo;
+				removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples */
+                lastStepEndSS = removeTo*chainParams.sampleFreq;
+                removeTo++;
+				if( removeFrom < removeTo )
+					{
+					if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
+						{
+                 	  	 MrBayesPrint("%s   Problem removing tree samples\n");
+#				      		  if defined (MPI_ENABLED)
+			     		   nErrors++;
+#	        	      		  else
+			      		  return ERROR;
+#                     		  endif
+                    	}
+					}
+#                   if defined (MPI_ENABLED)
+		        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		        if (sumErrors > 0)
+                    {
+			        MrBayesPrint ("%s   Aborting run.\n");
+                    return ERROR;
                     }
-                samplesCountSS=0;
-                }
-                
+#			        endif
+                if( n > chainParams.burninSS*chainParams.sampleFreq )
+                    {
+                    stepIndexSS--;
+                    stepLengthSS = powerSS; 
+                    powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+                    stepLengthSS -= powerSS;
+                    if ( n != chainParams.numGen )
+                        MrBayesPrint("%s   Start sampling step %d out of %d steps...\n\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
+                    else
+                        MrBayesPrint("%s   Stepping stone sampling is complete successfuly!!!\n\n",spacer );
+                    for (chn=0; chn<numLocalChains; chn++)
+		                {
+                        if (chainId[chn] % chainParams.numChains == 0)
+                            {
+                            run = chainId[chn] / chainParams.numChains;
+                            marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
+                            stepScalerSS[run] = curLnL[chn]*stepLengthSS;
+                            stepAcumulatorSS[run]=0.0;
+                            }
+                        }
+                    samplesCountSS=0;
+                    }
+                else
+                    {
+                    MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
+                    }
+                }             
             }
 
 		} /* end run chain */
@@ -41242,6 +41344,7 @@ int SetLikeFunctions (void)
 	for (i=0; i<numCurrentDivisions; i++)
 		{
 		m = &modelSettings[i];
+        m->useSSE= NO;
 		
 		if (m->dataType == DNA || m->dataType == RNA)
 			{
@@ -41286,11 +41389,11 @@ int SetLikeFunctions (void)
 					else
 						{
 #if defined (SSE_ENABLED)
-					if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
-						{
-						MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request \n", spacer);
-                        MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
-						}
+					    if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+						    {
+                            MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
+                            MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+						    }
 
                         m->CondLikeUp = &CondLikeUp_NUC4;
 						m->PrintAncStates = &PrintAncStates_NUC4;
@@ -41310,6 +41413,7 @@ int SetLikeFunctions (void)
 							}
                         else
                             {
+                            m->useSSE= YES;
 						    m->CondLikeDown = &CondLikeDown_NUC4_SSE;
 						    m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
 						    m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
@@ -41412,11 +41516,12 @@ int SetLikeFunctions (void)
                             
 					        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 						        {
-						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+                                MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
                                 MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 						        }
                             else
                                 {
+                                m->useSSE= YES;
 							    m->CondLikeDown = &CondLikeDown_Gen_SSE;
 							    m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
 							    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
@@ -41435,11 +41540,12 @@ int SetLikeFunctions (void)
 
                          if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 						        {
-						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
                                 MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 						        }
                             else
                                 {
+                                m->useSSE= YES;
 						        m->CondLikeDown   = &CondLikeDown_NY98_SSE;
 						        m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
 						        m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
@@ -41542,11 +41648,12 @@ int SetLikeFunctions (void)
 #if defined (SSE_ENABLED)
                 if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 			        {
-			        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used due to request\n", spacer);
+			        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
                     MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 			        }
                 else
                     {
+                    m->useSSE= YES;
 	                m->CondLikeDown   = &CondLikeDown_Bin_SSE;
 	                m->CondLikeRoot   = &CondLikeRoot_Bin_SSE;
 	                m->CondLikeScaler = &CondLikeScaler_Gen_SSE;

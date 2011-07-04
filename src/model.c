@@ -2945,17 +2945,17 @@ int DoLinkParm (char *parmName, char *tkn)
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_BMVAR][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Bm_rates"))
+		else if (!strcmp(parmName, "Bmbranchrates"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_BMBRANCHRATES][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Ibr_var"))
+		else if (!strcmp(parmName, "Ibrvar"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_IBRVAR][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Ibr_lens"))
+		else if (!strcmp(parmName, "Ibrbranchlens"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_IBRBRANCHLENS][i] = tempLinkUnlinkVec[i];
@@ -17678,7 +17678,7 @@ int SetModelParams (void)
 					modelSettings[i].bmBranchRates = p;
 			
 			p->paramTypeName = "Branch rates of bm relaxed clock";
-			strcpy (p->name, "Bm");
+			strcpy (p->name, "Bmbranchrates");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
@@ -17703,7 +17703,7 @@ int SetModelParams (void)
 					modelSettings[i].ibrvar = p;
 
             p->paramTypeName = "Variance increase of ibr model branch lenths";
-			strcpy (p->name, "Ibr_var");
+			strcpy (p->name, "Ibrvar");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */
@@ -17716,7 +17716,7 @@ int SetModelParams (void)
 			
 			if (p->paramId != IBRVAR_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "ibr_var");
+			SafeStrcat (&p->paramHeader, "ibrvar");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_IBRBRANCHLENS)
@@ -17732,7 +17732,7 @@ int SetModelParams (void)
 					modelSettings[i].ibrBranchRates = p;
 			
 			p->paramTypeName = "Branch lengths of relaxed clock";
-			strcpy (p->name, "Ibr");
+			strcpy (p->name, "Ibrbranchlens");
 			strcat (p->name, partString);
 			
 			/* find the parameter x prior type */

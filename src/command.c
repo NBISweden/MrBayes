@@ -11760,7 +11760,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                   the range between 0.3 and 0.5 typicaly produce the most       \n");
 		MrBayesPrint ("                   accurate result.                                              \n");
         MrBayesPrint ("   BurninSS     -- fixed number of generations (not samples) burned before       \n");
-		MrBayesPrint ("                   sampling of the first step starts.                            \n");
+		MrBayesPrint ("                   sampling of the first step starts. Negative value implies that\n");
+        MrBayesPrint ("                   the burnin equal to the number of generations in one step.    \n");
 		MrBayesPrint ("   NstepsSS     -- number of steps in steppingstone sampling analyzes. Typically \n");
 		MrBayesPrint ("                   number above 30 is  sufficient to achieve accurate result.    \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -14052,7 +14053,7 @@ void SetUpParms (void)
 	PARAM   (194, "Cppmultdev",     DoLinkParm,        "\0");
 	PARAM   (195, "Cppevents",      DoLinkParm,        "\0");
 	PARAM   (196, "Bmvar",          DoLinkParm,        "\0");
-	PARAM   (197, "Bm",             DoLinkParm,        "\0");
+	PARAM   (197, "Bmbranchrates",  DoLinkParm,        "\0");
 	PARAM   (198, "Savetrees",      DoMcmcParm,        "Yes|No|\0");
 	PARAM   (199, "Diagnstat",      DoMcmcParm,        "Avgstddev|Maxstddev|\0");
 	PARAM   (200, "Startparams",    DoMcmcParm,        "Reset|Current|\0");
@@ -14098,7 +14099,7 @@ void SetUpParms (void)
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
 	PARAM   (242, "Ibrvar",         DoLinkParm,        "\0");
-	PARAM   (243, "Ibr",            DoLinkParm,        "\0");
+	PARAM   (243, "Ibrbranchlens",  DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");

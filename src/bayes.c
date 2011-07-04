@@ -964,7 +964,7 @@ int ReinitializeMrBayes (void)
 	chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
     chainParams.isSS = NO;
     chainParams.numStepsSS = 50;
-    chainParams.burninSS = 1000;
+    chainParams.burninSS = -1;
     chainParams.alphaSS = 0.4;
 	chainParams.mcmcDiagn = YES;                     /* write MCMC diagnostics to file ?              */
 	chainParams.diagnFreq = 5000;                    /* diagnostics frequency                         */
