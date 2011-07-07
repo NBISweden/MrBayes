@@ -11759,12 +11759,12 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                   the range between 0.3 and 0.5 typicaly produce the most       \n");
 		MrBayesPrint ("                   accurate result.                                              \n");
         MrBayesPrint ("   BurninSS     -- fixed number of samples burned before sampling of the first   \n");
-		MrBayesPrint ("                   step starts. The given numer could be either positive or      \n");
-        MrBayesPrint ("                   negative. Positive number expresses burnin in terms of         \n");
-        MrBayesPrint ("                   samples. Absolute value of negative number expresses burnin   \n");
-        MrBayesPrint ("                   in terms of steps.                                            \n");
+		MrBayesPrint ("                   step starts. 'BurninSS' could be either positive or negative  \n");
+        MrBayesPrint ("                   number. Positive number defines burnin in terms of samples.   \n");
+        MrBayesPrint ("                   Absolute value of negative number expresses burnin in terms   \n");
+        MrBayesPrint ("                   of steps.                                                     \n");
 		MrBayesPrint ("   NstepsSS     -- number of steps in steppingstone sampling analyzes. Typically \n");
-		MrBayesPrint ("                   number above 30 is  sufficient to achieve accurate result.    \n");
+		MrBayesPrint ("                   number above 30 is sufficient to achieve accurate result.     \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");

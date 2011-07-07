@@ -39743,7 +39743,7 @@ int RunChain (SafeLong *seed)
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
     /* Steppingstone sampling variables */
-    int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS;
+    int run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0;
     MrBFlt powerSS=0, stepLengthSS=0,meanSS,varSS, *tempX;
 
 
@@ -40267,7 +40267,7 @@ int RunChain (SafeLong *seed)
         MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
         MrBayesPrint ("%s   Total of %d generations (%d samples) will be taken while first            \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
-        MrBayesPrint ("%s   %d generations (%d samples) will be discurded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
+        MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
         if( numGenOld != chainParams.numGen)
             {
             MrBayesPrint ("%s   NOTE: In total it will be taken %d generations instead of requested %d.   \n", spacer, chainParams.numGen, numGenOld ); 
@@ -41103,9 +41103,9 @@ int RunChain (SafeLong *seed)
                 else
                     MrBayesPrint ("   Plot of max standard deviation of split frequencies across steps.");
                 }
-
-            MrBayesPrint ("\n   Points at -1.0 (y-axis) indicates that there were no splits\n");
-            MrBayesPrint ("\n   above minimum frequency for corresponding step.");
+            MrBayesPrint ("\n");
+            MrBayesPrint ("   Points at -1.0 (y-axis) indicates that there were no splits\n");
+            MrBayesPrint ("   above minimum frequency for corresponding step.");
             if (numTopologies>1)
                 {
                 for(i=0; i<numTopologies; i++)
