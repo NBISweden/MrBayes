@@ -104,7 +104,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 /*#define RELEASE*/
 #ifdef RELEASE
-#define	VERSION_NUMBER			"3.2"
+#define	VERSION_NUMBER			"3.2.0"
 #else
 #define VERSION_NUMBER          "3.2-svn"
 #endif

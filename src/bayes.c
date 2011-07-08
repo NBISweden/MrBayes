@@ -537,7 +537,7 @@ int InitializeMrBayes (void)
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
 	strcpy(workingDir,"");				             /* working directory		                      */
 #if defined (BEAGLE_ENABLED)
-    tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library                 */
+    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     // SSE instructions do not work in Windows environment
