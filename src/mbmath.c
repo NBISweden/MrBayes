@@ -4365,7 +4365,7 @@ MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
 /* Log probability for a value drawn from a lognormal distribution; parameters are
    mean and variance of value (not of log value) */
-MrBFlt LnProbBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
+MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
 
 {
 	MrBFlt		z, lnProb, mu, sigma;
@@ -4449,7 +4449,7 @@ MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt
 
 
 /* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioBmLogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
 
 {
     MrBFlt  newZ, oldZ, mu, sigma;

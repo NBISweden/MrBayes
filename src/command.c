@@ -61,7 +61,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    59  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						251
+#define	NUMPARAMS						257
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -329,7 +329,7 @@ CmdType			commands[] =
             { 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                      "Defines character format in data block", IN_FILE, SHOW },
             { 20,            "Help", YES,            DoHelp,  1,                                                                                             {50},    16416,                  "Provides detailed description of commands",  IN_CMD, SHOW },
             { 21,         "Include", YES,         DoInclude,  1,                                                                                             {46},    49152,                                             "Includes sites",  IN_CMD, SHOW },
-            { 22,            "Link",  NO,            DoLink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
+            { 22,            "Link",  NO,            DoLink, 27,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
             { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,	       "Manual",  NO,          DoManual,  1,								    														{126},       36,				  "Prints a command reference to a text file",  IN_CMD, SHOW },
@@ -342,8 +342,8 @@ CmdType			commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 39,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
-                                                                                                                     168,172,173,174,183,184,185,218,241,246,247},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
+            { 33,           "Prset",  NO,           DoPrset, 41,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+                                                                                                             168,172,173,174,183,184,185,218,241,246,247,251,254},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
@@ -1894,7 +1894,7 @@ int DoCitations (void)
 	MrBayesPrint ("   Citations                                                                     \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("   If you publish results obtained using MrBayes you may want to cite the        \n");
-    MrBayesPrint ("   program. The appropriate citation is:                                         \n");
+    MrBayesPrint ("   program using one of these papers:                                            \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Huelsenbeck, J. P. and F. Ronquist. 2001. MRBAYES: Bayesian                \n");
     MrBayesPrint ("         inference of phylogeny. Bioinformatics 17:754-755.                      \n");
@@ -2181,6 +2181,16 @@ int DoCitations (void)
 	MrBayesPrint ("         Ecology and Evolution 19: 475-481.                                      \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   MrBayes allows you to analyze gene tree - species tree problems using the     \n");
+    MrBayesPrint ("   multi-species coalescent originally presented by Edwards et al. (2007).     \n");
+    MrBayesPrint ("   so-called parsimony method of phylogenetic inference. The appropriate         \n");
+    MrBayesPrint ("   citation is:                                                                  \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
+    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   The program implements an incredibly parameter rich model, first described    \n");
     MrBayesPrint ("   by Tuffley and Steel (1997), that orders trees in the same way as the         \n");
     MrBayesPrint ("   so-called parsimony method of phylogenetic inference. The appropriate         \n");
@@ -2189,6 +2199,64 @@ int DoCitations (void)
     MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
     MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The program implements three relaxed clock models: the CPP, TK02 and IGR      \n");
+    MrBayesPrint ("   The Compound Poisson Process (CPP) model was first described by Huelsenbeck   \n");
+    MrBayesPrint ("   et al. (2000). It is an autocorrelated discrete model of rate variation over  \n");
+    MrBayesPrint ("   time. Instead of the modified gamma distribution originally proposed for the  \n");
+    MrBayesPrint ("   rate multipliers, MrBayes uses a lognormal distribution. The extensions       \n");
+    MrBayesPrint ("   necessary to sample over tree space under this model are original to MrBayes. \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The Thorne-Kishino 2002 (TK02) model was first described by Thorne and Kishino\n");
+    MrBayesPrint ("   (2002), and is a slight variant of a model presented by them earlier (Thorne  \n");
+    MrBayesPrint ("   et al., 1998). It as an autocorrelated continuous model, in which rates vary  \n");
+    MrBayesPrint ("   according to a lognormal distribution.                                        \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The final relaxed clock model is the Independent Gamma Rates (IGR) model, in  \n");
+    MrBayesPrint ("   which branch rates are drawn independently from a scaled gamma distribution.  \n");
+    MrBayesPrint ("   The model was originally described in the literature as the 'White Noise'     \n");
+    MrBayesPrint ("   model by Lepage et al. (2007), but the original MrBayes implementation pre-   \n");
+    MrBayesPrint ("   dates that paper. The model is closely related to uncorrelated models presen- \n");
+    MrBayesPrint ("   ted originally by Drummonds et al. (2006), but is more elegant in that it is  \n");
+    MrBayesPrint ("   truly uncorrelated over time in the mathematical sense. See Lepage et al.     \n");
+    MrBayesPrint ("   (2007) for details.                                                           \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
+    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The tree proposals used by MrBayes are described by Lakner et al. (2008). The \n");
+    MrBayesPrint ("   parsimony-biased moves are still undescribed in the literature, although a    \n");
+    MrBayesPrint ("   rough outline of the idea is presented in the above-mentioned paper.          \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
+    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The topology convergence diagnostic used by MrBayes, the average standard     \n");
+    MrBayesPrint ("   deviation of split frequencies, is described by Lakner et al. (2008). The     \n");
+    MrBayesPrint ("   potential scale reduction factor, the diagnostic used by MrBayes for contin-  \n");
+    MrBayesPrint ("   uous parameters, was first proposed by Gelman and Rubin ( 1992). The auto-    \n");
+    MrBayesPrint ("   tuning mechanism is based on a paper by Roberts and Rosenthal (2006?).        \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
+    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The harmonic mean estimator of marginal likelihoods, used for Bayes factor    \n");
+    MrBayesPrint ("   testing, was discussed by Newton and Raftery (1996). The more accurate step-  \n");
+    MrBayesPrint ("   ping-stone algorithm was first proposed by Xie et al. (2011). Raftery         \n");
+    MrBayesPrint ("   provide some guide to the interpretation of Bayes factors.                    \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
+    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+	MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
 	return (NO_ERROR);
@@ -8118,7 +8186,7 @@ int DoTreeParm (char *parmName, char *tkn)
           tree <name> = [&R] <newick-description>;
           tree <name> = [&U] <newick-description>;
           tree <name> [&E CppEvents{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents{1,2,5} 2:(0.10 1.11,0.83 3.17)],2:0.021):0.038,3:0.059);
-          tree <name> [&B BmBranchRates{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&B BmBranchRates{1,2,5} 1.12],2:0.021[&B BmBranchRates{1,2,5}...
+          tree <name> [&B TK02BranchRates{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&B TK02BranchRates{1,2,5} 1.12],2:0.021[&B TK02BranchRates{1,2,5}...
        
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
@@ -10026,35 +10094,39 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   This command defines a tree constraint. The format for the constraint         \n");
 	    MrBayesPrint ("   command is                                                                    \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("    constraint <name> [hard|negative|partial] = <list of taxa> [:<list of taxa>] \n");
+	    MrBayesPrint ("      constraint <name> [hard|negative|partial] = <taxon list> [:<taxon list>]   \n");
 	    MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   There sre three type of constraints implemented in MrBayes.                   \n");
-        MrBayesPrint ("   Type of a constraint is assigned by spesifying one of the three keywords:     \n");
-        MrBayesPrint ("   'partial|negative|hard' right after the name of the constraint.               \n");
-        MrBayesPrint ("   If no type is specified then 'hard' constraint is assumed by default.         \n");
+        MrBayesPrint ("   There are three types of constraint implemented in MrBayes. The type of the   \n");
+        MrBayesPrint ("   constraint is specified by using one of the three keywords 'hard', 'negative',\n");
+        MrBayesPrint ("   or 'partial' right after the name of the constraint. If no type is specified, \n");
+        MrBayesPrint ("   then the constraint is assumed to be 'hard'.                                  \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   'hard' constraint forces a tree to have all listed taxa in a single subtree   \n");
-        MrBayesPrint ("   that contains no other taxa outside of the list. By subtree we mean a portion \n");
-        MrBayesPrint ("   of an unrooted tree that is connected by a single branch to the rest of the   \n");
-        MrBayesPrint ("   tree and we mean clade for a rooted tree.                                     \n");
+        MrBayesPrint ("   In a rooted tree, a 'hard' constraint forces the taxa in the list to form a   \n");
+        MrBayesPrint ("   monophyletic group. In an unrooted tree, the taxon split that separates the   \n");
+        MrBayesPrint ("   taxa in the list from other taxa is forced to be present. The interpretation  \n");
+        MrBayesPrint ("   of this depends on whether the tree is rooted on a taxon outside the list or  \n");
+        MrBayesPrint ("   a taxon in the list. If the outgroup is excluded , the taxa in the list are   \n");
+        MrBayesPrint ("   assumed to form a monophyletic group, but if the outgroup is included, it is  \n");
+        MrBayesPrint ("   the taxa that are not in the list that are forced together.                   \n");
 	    MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   'negative' constraint bans all the tree that have listed taxa in a single     \n");
-        MrBayesPrint ("   subtree, i.e. it is an opposite to a hard constraint.                         \n");
+        MrBayesPrint ("   A 'negative' constraint bans all the trees that have the listed taxa in the   \n");
+        MrBayesPrint ("   same subtree. In other words, it is the opposite of a hard constraint.        \n");
 	    MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   'partial' constraint deal with two groupe of taxa which should be specified   \n");
-        MrBayesPrint ("   in definition of the constraint as two list of taxa separated by a colon      \n");
-        MrBayesPrint ("   charactor. Partial constraint impose a requirement to a tree that there should\n");
-        MrBayesPrint ("   be a subtree which includes all taxa of the first groupe and it may contain   \n");
-        MrBayesPrint ("   any other taxa except those of the second groupe of taxa. Note: For unrooted  \n");
-        MrBayesPrint ("   tree two taxa groups could be switched with each other with no effect. For a  \n");
-        MrBayesPrint ("   rooted tree first group has to be in a clade sharing common ancestor which is \n");
-        MrBayesPrint ("   not shared with any taxa from the second group.                               \n");
+        MrBayesPrint ("   A 'partial' or backbone constraint is defined in terms of two sets of taxa    \n");
+        MrBayesPrint ("   separated by a colon character. The constraint forces all taxa in the first   \n");
+        MrBayesPrint ("   list to form a monophyletic group that does not include any taxon in the      \n");
+        MrBayesPrint ("   second list. Taxa that are not included in either list can be placed in any   \n");
+        MrBayesPrint ("   position on the tree, either inside or outside the constrained group. In an   \n");
+        MrBayesPrint ("   unrooted tree, the two taxon lists can be switched with each other with no    \n");
+        MrBayesPrint ("   effect. For a rooted tree, it is the taxa in the first list that have to be   \n");
+        MrBayesPrint ("   monophyletic, that is, these taxa must share a common ancestor not shared with\n");
+        MrBayesPrint ("   any taxon in the second list. The taxa in the second list may or may not fall \n");
+        MrBayesPrint ("   in a monophyletic group depending on the rooting of the tree.                 \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   A list of taxa can be specified using a taxset, taxon names, or taxon         \n");
-	    MrBayesPrint ("   numbers. Or any combination of above sepatated by a space. The constraint is  \n");
-        MrBayesPrint ("   treated as an absolute requirement of trees. That is, trees that are not      \n");
-	    MrBayesPrint ("   compatible with the constraint have zero prior (and hence zero posterior)     \n");
-	    MrBayesPrint ("   probability.                                                                  \n");
+	    MrBayesPrint ("   A list of taxa can be specified using a taxset, taxon names, taxon numbers, or\n");
+	    MrBayesPrint ("   any combination of the above, sepatated by spaces. The constraint is treated  \n");
+        MrBayesPrint ("   as an absolute requirement of trees, that is, trees that are not compatible   \n");
+	    MrBayesPrint ("   with the constraint have zero prior (and hence zero posterior) probabilty.    \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   If you are interested in inferring ancestral states for a particular node,    \n");
 	    MrBayesPrint ("   you need to 'hard' constrain that node first using the 'constraint' command.  \n");
@@ -10064,9 +10136,31 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   It is important to note that simply defining a constraint using this          \n");
 	    MrBayesPrint ("   command is not sufficient for the program to actually implement the           \n");
-	    MrBayesPrint ("   constraint in an analysis. You must also specify the constraints using        \n");
+	    MrBayesPrint ("   constraint in an analysis. You must also enforce the constraints using        \n");
 	    MrBayesPrint ("   'prset topologypr = constraints (<list of constraints>)'. For more infor-     \n");
 	    MrBayesPrint ("   mation on this, see the help on the 'prset' command.                          \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Examples:                                                                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("      constraint myclade = Homo Pan Gorilla                                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   Defines a hard constraint forcing Homo, Pan, and Gorilla to form a mono-      \n");
+	    MrBayesPrint ("   phyletic group or a split that does not include any other taxa.               \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("      constraint forbiddenclade negative = Homo Pan Gorilla                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   Defines a negative constraint that associates all trees where Homon, Pan, and \n");
+	    MrBayesPrint ("   Gorilla form a monophyletic group with zero posterior probability. In other   \n");
+	    MrBayesPrint ("   words, such trees will not be sampled during MCMC.                            \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("      constraint backbone partial = Homo Gorilla : Mus                           \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   Defines a partial constraint that keeps Mus outside of the clade defined by   \n");
+	    MrBayesPrint ("   the most recent common ancestor of Homo and Gorilla. Other taxa are allowed to\n");
+	    MrBayesPrint ("   sit anywhere in the tree.                                                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   To define a more complex constraint tree, simply combine constraints into a   \n");
+	    MrBayesPrint ("   list when issuing the 'prset topologypr' command.                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    if (numDefinedConstraints > 0)
             {
@@ -10317,6 +10411,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
 		MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
 		MrBayesPrint ("                approximating the continuous gamma.                              \n");
+#if 0
+        /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
 		MrBayesPrint ("   Usegibbs  -- Specifies whether site probabilities under the discrete gamma    \n");
 		MrBayesPrint ("                model of rate variation across sites will be summed across rate  \n");
 		MrBayesPrint ("                categories ('Usegibbs=No') or sampled using a Gibbs sampler      \n");
@@ -10346,7 +10442,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                summing across the n rate categories in every generation, which  \n");
 		MrBayesPrint ("                requires time proportional to n*k. In practice, however, the     \n");
 		MrBayesPrint ("                speed difference is not quite as large as this.                  \n");
-		MrBayesPrint ("   Nbetacat  -- Sets the number of rate categories for the beta distribution.    \n");
+#endif
+        MrBayesPrint ("   Nbetacat  -- Sets the number of rate categories for the beta distribution.    \n");
 		MrBayesPrint ("                A symmetric beta distribution is used to model the station-      \n");
 		MrBayesPrint ("                ary frequencies when morphological data are used. This option    \n");
 		MrBayesPrint ("                specifies how well the beta distribution will be approx-         \n");
@@ -10414,9 +10511,12 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked               %s                         \n", mp->ploidy);
 			MrBayesPrint ("   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  %s                         \n", mp->ratesModel);
 			MrBayesPrint ("   Ngammacat    <number>                              %d                         \n", mp->numGammaCats);
-			MrBayesPrint ("   Usegibbs     Yes/No                                %s                         \n", mp->useGibbs);
-			MrBayesPrint ("   Gibbsfreq    <number>                              %d                         \n", mp->gibbsFreq);
-			MrBayesPrint ("   Nbetacat     <number>                              %d                         \n", mp->numBetaCats);
+#if 0
+            /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
+            MrBayesPrint ("   Usegibbs     Yes/No                                %s                         \n", mp->useGibbs);
+            MrBayesPrint ("   Gibbsfreq    <number>                              %d                         \n", mp->gibbsFreq);
+#endif
+            MrBayesPrint ("   Nbetacat     <number>                              %d                         \n", mp->numBetaCats);
 			MrBayesPrint ("   Omegavar     Equal/Ny98/M3                         %s                         \n", mp->omegaVar);
 			MrBayesPrint ("   Covarion     No/Yes                                %s                         \n", mp->covarionModel);
 			MrBayesPrint ("   Coding       All/Variable/Noabsencesites/                                     \n");
@@ -10896,17 +10996,20 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    constant throughout the tree. You can also use 'cpp', which  \n");
 		MrBayesPrint ("                    invokes a relaxed clock model where the rate evolves         \n");
 		MrBayesPrint ("                    according to a Compound Poisson Process (CPP) model (see     \n");
-		MrBayesPrint ("                    Huelsenbeck et al., 2000) or 'bm', which invokes the         \n");
-		MrBayesPrint ("                    Brownian Motion (BM) model described by Kishino et al.       \n");
+		MrBayesPrint ("                    Huelsenbeck et al., 2000) or 'tk02', which invokes the       \n");
+		MrBayesPrint ("                    Brownian Motion (TK02) model described by Thorne and Kishino \n");
 		MrBayesPrint ("                    (2002). Finally, you can use a model where each branch has an\n");
         MrBayesPrint ("                    independent rate drawn from a scaled gamma distribution, such\n");
         MrBayesPrint ("                    that there is a specified variance in the effective height of\n");
-        MrBayesPrint ("                    the tree in the prior, the Independent Branch Rate (IBR)     \n");
+        MrBayesPrint ("                    the tree in the prior, the Independent Gamma Rate (IGR)      \n");
         MrBayesPrint ("                    model (LePage et al., 2007). Each of the relaxed clock models\n");
 		MrBayesPrint ("                    has additional parameters with priors. For the CPP model, it \n");
-		MrBayesPrint ("                    is 'cppratepr' and 'cppmultdevpr'; for the BM model, it is   \n");
-        MrBayesPrint ("                    'bmvarpr'; for the IBR  model, it is 'ibrvarpr'. The         \n");
+		MrBayesPrint ("                    is 'cppratepr' and 'cppmultdevpr'; for the TK02 model, it is \n");
+        MrBayesPrint ("                    'tk02varpr'; for the IGR  model, it is 'igrvarpr'. The       \n");
 		MrBayesPrint ("                    'clockvarpr' parameter is only relevant for clock trees.     \n");
+		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    For backward compatibility, 'bm' is allowed as a synonym of  \n");
+        MrBayesPrint ("                    'tk02', and 'ibr' as a synonym of 'igr'.                     \n");
 		MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
 		MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
 		MrBayesPrint ("                    changes in the evolutionary rate in the CPP relaxed clock    \n");
@@ -10936,14 +11039,14 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset cppmultdevpr = fixed(<number>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    where <number> is the standard deviation on the log scale.   \n");
-		MrBayesPrint ("   Bmvarpr       -- This parameter allows you to specify the prior probability   \n");
+		MrBayesPrint ("   TK02varpr     -- This parameter allows you to specify the prior probability   \n");
 		MrBayesPrint ("                    distribution for the variance of the rate multiplier in the  \n");
         MrBayesPrint ("                    Thorne-Kishino ('Brownian motion') relaxed clock model.      \n");
 		MrBayesPrint ("                    Specifically, the parameter specifies the rate at which the  \n");
         MrBayesPrint ("                    variance increases with respect to the base rate of the      \n");
 		MrBayesPrint ("                    clock. If you have a branch of a length corresponding to 0.4 \n");
 		MrBayesPrint ("                    expected changes per site according to the base rate of the  \n");
-		MrBayesPrint ("                    clock, and the bmvar parameter has a value of 2.0, then the  \n");
+		MrBayesPrint ("                    clock, and the tk02var parameter has a value of 2.0, then the\n");
 		MrBayesPrint ("                    rate multiplier at the end of the branch will be drawn from a\n");
 		MrBayesPrint ("                    lognormal distribution with a variance of 0.4*2.0 (on the    \n");
 		MrBayesPrint ("                    linear, not the logarithm scale). The mean is the same as the\n");
@@ -10953,28 +11056,32 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset bmvarpr = fixed(<number>)                           \n");
-		MrBayesPrint ("                       prset bmvarpr = exponential(<number>)                     \n");
-		MrBayesPrint ("                       prset bmvarpr = uniform(<number>,<number>)                \n");
+		MrBayesPrint ("                       prset tk02varpr = fixed(<number>)                         \n");
+		MrBayesPrint ("                       prset tk02varpr = exponential(<number>)                   \n");
+		MrBayesPrint ("                       prset tk02varpr = uniform(<number>,<number>)              \n");
 		MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   Ibrvarpr      -- This parameter allows you to specify a prior on the variance \n");
+        MrBayesPrint ("                    For backward compatibility, 'bmvarpr' is allowed as a synonym\n");
+        MrBayesPrint ("                    of 'tko2varpr'.                                              \n");
+        MrBayesPrint ("   Igrvarpr      -- This parameter allows you to specify a prior on the variance \n");
         MrBayesPrint ("                    of the gamma distribution from which the branch lengths are  \n");
-		MrBayesPrint ("                    drawn in the independent branch rate (IBR) relaxed clock     \n");
+		MrBayesPrint ("                    drawn in the independent branch rate (IGR) relaxed clock     \n");
 		MrBayesPrint ("                    model. Specifically, the parameter specifies the rate at     \n");
         MrBayesPrint ("                    which the variance increases with respect to the base rate of\n");
 		MrBayesPrint ("                    the clock. If you have a branch of a length corresponding to \n");
 		MrBayesPrint ("                    0.4 expected changes per site according to the base rate of  \n");
-		MrBayesPrint ("                    the clock, and the ibrvar parameter has a value of 2.0, then \n");
+		MrBayesPrint ("                    the clock, and the igrvar parameter has a value of 2.0, then \n");
 		MrBayesPrint ("                    the effective branch length will be drawn from a distribution\n");
 		MrBayesPrint ("                    with a variance of 0.4*2.0.                                  \n");
 		MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset ibrvarpr = fixed(<number>)                          \n");
-		MrBayesPrint ("                       prset ibrvarpr = exponential(<number>)                    \n");
-		MrBayesPrint ("                       prset ibrvarpr = uniform(<number>,<number>)               \n");
+		MrBayesPrint ("                       prset igrvarpr = fixed(<number>)                          \n");
+		MrBayesPrint ("                       prset igrvarpr = exponential(<number>)                    \n");
+		MrBayesPrint ("                       prset igrvarpr = uniform(<number>,<number>)               \n");
 		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    For backward compatibility, 'ibrvarpr' is allowed as a syn-  \n");
+        MrBayesPrint ("                    onym of 'igrvarpr'.                                          \n");
 		MrBayesPrint ("   Ratepr        -- This parameter allows you to specify the site specific rates \n");
 		MrBayesPrint ("                    model or any other model that allows different partitions to \n");
 		MrBayesPrint ("                    evolve at different rates. First, you must have defined a    \n");
@@ -11287,7 +11394,7 @@ int GetUserHelp (char *helpTkn)
 
 			MrBayesPrint ("   Clockratepr      Fixed/Normal/Lognormal/\n%s", spacer);
 			MrBayesPrint ("                    Exponential/Gamma            %s\n", mp->clockRatePr);
-			MrBayesPrint ("   Clockvarpr       Strict/Cpp/Bm/Ibr            %s\n", mp->clockVarPr);
+			MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr          %s\n", mp->clockVarPr);
 
 			MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
 			if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -11298,13 +11405,13 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Cppmultdevpr     Fixed                        %s", mp->cppMultDevPr);
 			MrBayesPrint ("(%1.2lf)\n", mp->cppMultDevFix);
 
-			MrBayesPrint ("   Bmvarpr          Fixed/Exponential/Uniform    %s", mp->bmvarPr);
-			if (!strcmp(mp->bmvarPr, "Fixed"))
-				MrBayesPrint ("(%1.2lf)\n", mp->bmvarFix);
-			else if (!strcmp(mp->bmvarPr,"Exponential"))
-				MrBayesPrint ("(%1.2lf)\n", mp->bmvarExp);
-			else /*if (!strcmp(mp->bmvarPr,"Uniform")) */
-				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->bmvarUni[0], mp->bmvarUni[1]);
+			MrBayesPrint ("   TK02varpr        Fixed/Exponential/Uniform    %s", mp->tk02varPr);
+			if (!strcmp(mp->tk02varPr, "Fixed"))
+				MrBayesPrint ("(%1.2lf)\n", mp->tk02varFix);
+			else if (!strcmp(mp->tk02varPr,"Exponential"))
+				MrBayesPrint ("(%1.2lf)\n", mp->tk02varExp);
+			else /*if (!strcmp(mp->tk02varPr,"Uniform")) */
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->tk02varUni[0], mp->tk02varUni[1]);
 
 			MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
 			if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -11708,71 +11815,104 @@ int GetUserHelp (char *helpTkn)
 	else if (!strcmp(helpTkn, "Ss"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
-		MrBayesPrint ("   SS                                                                            \n");
+		MrBayesPrint ("   Ss                                                                            \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   This command is used to start Steppingstone Sampling.                         \n");
-	    MrBayesPrint ("   The objective of steppingstone sampling is to estimate marginal likelihood of \n");
-	    MrBayesPrint ("   currently specified model.  Steppingstone sampling uses importance sampling   \n");
-		MrBayesPrint ("   to estimate each ratio in a series bridging posterior and prior distributions.\n");
-		MrBayesPrint ("   Underling importance distributions called power posterior distributions       \n");
-        MrBayesPrint ("   defined as Prior*(Lilklihood^Beta) are sampled using mcmc. First 'BurninSS'   \n");
-		MrBayesPrint ("   number of generations are taken from posterior distribution as burnin         \n");
-		MrBayesPrint ("   followed by a given number of sampling steps 'NStepsSS'. At each step likeli- \n");
-		MrBayesPrint ("   hood is sampled from a power posterior distribution with distinct Beta value. \n");
-		MrBayesPrint ("   Beta values are taken according to evenly spaces 'NStepsSS'-quantiles of      \n");
-        MrBayesPrint ("   BETA ('AlphaSS',1.0) distribution. For the first sampling step Beta value is  \n");
-        MrBayesPrint ("   equal to the last quantile, i.e. close to 1.0.  For each successive step      \n");
-        MrBayesPrint ("   Beta value is gradually reduced assuming value of previous quintiles of       \n");
-        MrBayesPrint ("   the BETA distribution.                                                        \n");
+	    MrBayesPrint ("   This command is used to start steppingstone sampling, which is an efficient   \n");
+	    MrBayesPrint ("   and accurate method for estimating the marginal likelihood of the currently   \n");
+	    MrBayesPrint ("   specified model. It is considerably more accurate than the harmonic mean of   \n");
+        MrBayesPrint ("   the likelihoods from a standard MCMC run on the model (calculated by the      \n");
+        MrBayesPrint ("   'Sumt' command) but it requires a separate MCMC-like run. To be more specific,\n");
+        MrBayesPrint ("   steppingstone sampling uses importance sampling to estimate each ratio in a   \n");
+		MrBayesPrint ("   series of discrete steps bridging the posterior and prior distributions.      \n");
+		MrBayesPrint ("   The importance distributions that are used are called power posterior distri- \n");
+        MrBayesPrint ("   butions, and are defined as prior*(likelihood^beta). By varying beta from 1 to\n");
+        MrBayesPrint ("   0, we get a series of distributions that connect the posterior (beta = 1) to  \n");
+        MrBayesPrint ("   the prior (beta = 0).                                                         \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   The power posterior distributions are sampled using MCMC. First, we start a   \n");
+        MrBayesPrint ("   standard MCMC chain on the posterior distribution, and let it run until we    \n");
+        MrBayesPrint ("   have reached the criterion specified by the 'Burninss' option. After this, we \n");
+		MrBayesPrint ("   step through the power posterior distributions until we reach the prior dis-  \n");
+		MrBayesPrint ("   tribution. In each of the 'Nsteps' steps, we sample from a new power poster-  \n");
+		MrBayesPrint ("   ior distribution with a distinct beta value. The beta values correspond to    \n");
+		MrBayesPrint ("   'Nsteps' evenly spaced quantiles in a Beta distribution with the parameters   \n");
+		MrBayesPrint ("   'Alpha' and 1.0. For the first sampling step, the beta value is equal to the \n");
+        MrBayesPrint ("   last quantile, i.e., it is close to 1.0. For each successive step, the beta   \n");
+        MrBayesPrint ("   value takes on the value of the next quantile, in decreasing order, until it  \n");
+        MrBayesPrint ("   reaches the value of 0.0.                                                     \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   SS and mcmc share majority of the parameters.                                 \n");
-        MrBayesPrint ("   All parameters of mcmc, except burnin related  parameters, have the same      \n");
-        MrBayesPrint ("   meaning and usage during ss run as they have in ordinary mcmc run. Ss has its \n");
-        MrBayesPrint ("   own burin parameter 'BurninSS' while mcmc burnin parameters are ignored.      \n");
-        MrBayesPrint ("   Note that 'Ngen' parameter of mcmc is used to set maximum number of           \n");
-        MrBayesPrint ("   generations processed including 'BurninSS' and all 'NstepsSS'. At each step   \n");
-        MrBayesPrint ("   up to ('Ngen'-'BurninSS')/'NstepsSS' generations are processed taking samples \n");
-        MrBayesPrint ("   every 'Samplefreq' generation. If ('Ngen'-'BurninSS')/'NstepsSS' is not       \n");
-        MrBayesPrint ("   multiple of 'Samplefreq' then numer of generaqtions taken at each step is     \n");
-        MrBayesPrint ("   reduced to the closest multiple of 'Samplefreq’.                              \n");
-        MrBayesPrint ("   More information on mcmc paramiters you can get by typing 'help mcmc' command.\n");
-        MrBayesPrint ("   Beside mcmc parameters ss run is affected by its exclusive parameters listed  \n");
-        MrBayesPrint ("   below. The exclusive ss parameters could be set up only in ss command.        \n");
-        MrBayesPrint ("   The parameters shared with mcmc could be set both in mcmcp and in ss command. \n");
+        MrBayesPrint ("   The 'Ss' procedure uses the same machinery as the standard 'Mcmc' algorithm,  \n");
+        MrBayesPrint ("   and shares most of its parameters with the 'Mcmc' and 'Mcmcp' commands. All   \n");
+        MrBayesPrint ("   'Mcmc' parameters, except those related to burnin, have the same meaning and  \n");
+        MrBayesPrint ("   usage in the 'Ss' command as they have in the 'Mcmc' command. However, the    \n");
+        MrBayesPrint ("   'Mcmc' burnin parameters are ignored. Instead, the 'Ss' command uses its own  \n");
+        MrBayesPrint ("   burnin parameter, 'Burninss' (see below for details). The 'Ss' command also has\n");
+        MrBayesPrint ("   its own parameters for specifying the number of steps and the shape of the    \n");
+        MrBayesPrint ("   Beta distribution from which the beta values are computed (see below).        \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Note that the 'Ngen' parameter of 'Mcmc' is used to set the maximum number of \n");
+        MrBayesPrint ("   generations processed, including both the burnin and the following steps in   \n");
+        MrBayesPrint ("   the steppingstone sampling phase. For instance, assume that 'Burninss' is set \n");
+        MrBayesPrint ("   to '-1', 'Nsteps' to '49', 'Ngen' to '1000000' and 'Samplefreq' to '1000'.    \n");
+        MrBayesPrint ("   We will then get 1,000 samples in total (1,000,000 / 1,000). These will fall  \n");
+        MrBayesPrint ("   into 50 bins, one of which represents the burnin and is discarded. Each step  \n");
+        MrBayesPrint ("   in the algorithm will thus be represented by 20 samples.                      \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   More information on 'Mcmc' parameters is available in the help for the 'Mcmc' \n");
+        MrBayesPrint ("   and 'Mcmcp' commands. Only the exclusive 'Ss' parameters are listed below.    \n");
+        MrBayesPrint ("   These can only be set up using the 'Ss' command, while the parameters shared  \n");
+        MrBayesPrint ("   with 'Mcmc' and 'Mcmcp' can also be set up using those commands.              \n");
+        MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The correct usage is                                                          \n");
         MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      ss <parameter>=<value> ... <parameter>=<value>                             \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Note that a command:                                                          \n");
-        MrBayesPrint ("     ss <setting shared with mcmc paramiters> <setting ss exclusive paramiters>; \n");
-        MrBayesPrint ("   Would be equivalent to executing two commands:                                \n");
-        MrBayesPrint ("     mcmcp <setting shared with mcmc paramiters>;                                \n");
-        MrBayesPrint ("     ss <setting ss exclusive paramiters>;                                       \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("      ss <setting parameters shared with mcmc> <setting exclusive ss parameters> \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   would be equivalent to executing two commands:                                \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("     mcmcp <setting parameters shared with mcmc>;                                \n");
+        MrBayesPrint ("     ss <setting exclusive ss parameters>;                                       \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Available ss exlusive paremeters:                                             \n");
+        MrBayesPrint ("   For more information on the steppingstone algorithm, see:                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Xie, W., P. O. Lewis, Y. Fan, L. Kuo, and M.-H. Chen. 2011. Improving marginal\n");
+        MrBayesPrint ("      likelihood estimation for Bayesian phylogenetic model selection. Systematic\n");
+        MrBayesPrint ("      Biology 60:150-160.                                                        \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Available paremeters:                                                         \n");
+        MrBayesPrint ("   (NB: Only exclusive ss parameters listed here. For additional parameters, see \n");
+        MrBayesPrint ("        help on 'mcmc' or 'mcmcp'.                                               \n");
 		MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   AlphaSS      -- Betta values are destributed according to quantiles of        \n");
-		MrBayesPrint ("                   BETA('AlphaSS',1.0) distribution. Effectively the parameter   \n");
-		MrBayesPrint ("                   determen the level of skewenes of betta values. If AlphaSS=1.0\n");
-		MrBayesPrint ("                   then betta values spaced uniformaly on interval from 0.0 to   \n");
-		MrBayesPrint ("                   1.0. It was empirically observed that value for AlphaSS in    \n");
-		MrBayesPrint ("                   the range between 0.3 and 0.5 typicaly produce the most       \n");
-		MrBayesPrint ("                   accurate result.                                              \n");
-        MrBayesPrint ("   BurninSS     -- fixed number of samples burned before sampling of the first   \n");
-		MrBayesPrint ("                   step starts. 'BurninSS' could be either positive or negative  \n");
-        MrBayesPrint ("                   number. Positive number defines burnin in terms of samples.   \n");
-        MrBayesPrint ("                   Absolute value of negative number expresses burnin in terms   \n");
-        MrBayesPrint ("                   of steps.                                                     \n");
-		MrBayesPrint ("   NstepsSS     -- number of steps in steppingstone sampling analyzes. Typically \n");
-		MrBayesPrint ("                   number above 30 is sufficient to achieve accurate result.     \n");
+        MrBayesPrint ("   Alpha        -- The beta values used in the steppingstone sampling procedure  \n");
+		MrBayesPrint ("                   correspond to evenly spaced quantiles from a Beta('Alpha',1.0)\n");
+		MrBayesPrint ("                   distribution. The parameter 'Alpha' determines the skewness of\n");
+		MrBayesPrint ("                   the beta values. If 'Alpha' is set to '1.0', the beta values  \n");
+		MrBayesPrint ("                   would be spaced uniformly on the interval (0.0,1.0). However, \n");
+		MrBayesPrint ("                   better results are obtained if the beta values are skewed.    \n");
+		MrBayesPrint ("                   Empirically, it was observed that 'Alpha' values in the range \n");
+		MrBayesPrint ("                   of 0.3 to 0.5 produce the most accurate results.              \n");
+        MrBayesPrint ("   Burninss     -- Fixed number of samples discarded before sampling of the first\n");
+		MrBayesPrint ("                   step starts. 'Burninss' can be specified using either a pos-  \n");
+        MrBayesPrint ("                   itive or a negative number. If the number is positive, it is  \n");
+        MrBayesPrint ("                   interpreted as the number of samples to discard as burnin. If \n");
+        MrBayesPrint ("                   the number is negative, its absolute value is interpreted as  \n");
+        MrBayesPrint ("                   the length of the burnin in terms of the length of each of the\n");
+        MrBayesPrint ("                   following steps in the steppingstone algorithm. For instance, \n");
+        MrBayesPrint ("                   a value of '-1' means that the length of the burnin is the    \n");
+        MrBayesPrint ("                   same as the length of each of the subsequent steps.           \n");
+		MrBayesPrint ("   Nsteps       -- Number of steps in the steppingstone algorithm. Typically, a  \n");
+		MrBayesPrint ("                   number above 30 is sufficient for accurate results.           \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter          Options               Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   AlphaSS            <number>              %1.2lf                               \n", chainParams.alphaSS );
-		MrBayesPrint ("   BurninSS           <number>              %ld                                  \n", chainParams.burninSS);
-        MrBayesPrint ("   NstepsSS           <number>              %ld                                  \n", chainParams.numStepsSS);
+        MrBayesPrint ("   Alpha              <number>              %1.2lf\n", chainParams.alphaSS);
+		MrBayesPrint ("   BurninSS           <number>              %d\n", chainParams.burninSS);
+        MrBayesPrint ("   Nsteps             <number>              %d\n", chainParams.numStepsSS);
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -12231,10 +12371,10 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
 		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
-		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
-		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
-		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
-		MrBayesPrint ("      Ibrbranchlens   -- Branch lengths of IBR relaxed clock model               \n"); 
+		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
+		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
+		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
+		MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -12275,10 +12415,10 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
 		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
-		MrBayesPrint ("      Bmvar           -- Variance increase in BM relaxed clock model             \n"); 
-		MrBayesPrint ("      Bmbranchrates   -- Branch rates of BM relaxed clock model                  \n"); 
-		MrBayesPrint ("      Ibrvar          -- Variance increase in IBR relaxed clock model            \n"); 
-		MrBayesPrint ("      Ibrbrlens       -- Branch lengths of IBR relaxed clock model               \n"); 
+		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
+		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
+		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
+		MrBayesPrint ("      Igrbrlens       -- Branch lengths of IGR relaxed clock model               \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -14031,7 +14171,7 @@ void SetUpParms (void)
 	PARAM   (171, "Npthreads",      DoSetParm,         "\0");
 	PARAM   (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
 	PARAM   (173, "Cppmultdevpr",   DoPrsetParm,       "Fixed|\0");
-	PARAM   (174, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (174, "TK02varpr",      DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (175, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (176, "Pfile",			DoSumtParm,        "\0");
 	PARAM   (177, "Autocomplete",   DoSumtParm,        "Yes|No|\0");
@@ -14042,7 +14182,7 @@ void SetUpParms (void)
 	PARAM   (182, "Swapseed",		DoSetParm,         "\0");
     PARAM   (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
 	PARAM   (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-	PARAM   (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|Bm|Ibr|\0");
+	PARAM   (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Ibr|\0");
 	PARAM   (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
 	PARAM   (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
 	PARAM	(188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -14053,8 +14193,8 @@ void SetUpParms (void)
 	PARAM   (193, "Cpprate",        DoLinkParm,        "\0");
 	PARAM   (194, "Cppmultdev",     DoLinkParm,        "\0");
 	PARAM   (195, "Cppevents",      DoLinkParm,        "\0");
-	PARAM   (196, "Bmvar",          DoLinkParm,        "\0");
-	PARAM   (197, "Bmbranchrates",  DoLinkParm,        "\0");
+	PARAM   (196, "TK02var",        DoLinkParm,        "\0");
+	PARAM   (197, "TK02branchrates",DoLinkParm,        "\0");
 	PARAM   (198, "Savetrees",      DoMcmcParm,        "Yes|No|\0");
 	PARAM   (199, "Diagnstat",      DoMcmcParm,        "Avgstddev|Maxstddev|\0");
 	PARAM   (200, "Startparams",    DoMcmcParm,        "Reset|Current|\0");
@@ -14075,7 +14215,7 @@ void SetUpParms (void)
 	PARAM   (215, "Tunefreq",	    DoMcmcParm,        "\0");
 	PARAM   (216, "Scientific",	    DoSetParm,         "Yes|No|\0");
 	PARAM   (217, "Siteomega",      DoReportParm,      "Yes|No|\0");
-	PARAM   (218, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (218, "Igrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (219, "Symbols",        DoFormatParm,      "\0");
 	PARAM   (220, "Equate",         DoFormatParm,      "\0");
 	PARAM   (221, "Relburnin",	    DoCompareTreeParm, "Yes|No|\0");
@@ -14099,18 +14239,24 @@ void SetUpParms (void)
 	PARAM   (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
-	PARAM   (242, "Ibrvar",         DoLinkParm,        "\0");
-	PARAM   (243, "Ibrbranchlens",  DoLinkParm,        "\0");
+	PARAM   (242, "Igrvar",         DoLinkParm,        "\0");
+	PARAM   (243, "Igrbranchlens",  DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-	PARAM   (247, "SampleStrat",    DoPrsetParm,       "Random|Diversity|Cluster|\0");
-    PARAM   (248, "BurninSS",       DoSsParm,           "\0");
-    PARAM   (249, "NstepsSS",       DoSsParm,           "\0");
-    PARAM   (250, "AlphaSS",       DoSsParm,            "\0");
+	PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|\0");
+    PARAM   (248, "Burninss",       DoSsParm,          "\0");
+    PARAM   (249, "Nsteps",         DoSsParm,          "\0");
+    PARAM   (250, "Alpha",          DoSsParm,          "\0");
+	PARAM   (251, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (252, "Bmvar",          DoLinkParm,        "\0");
+	PARAM   (253, "Bmbranchrates",  DoLinkParm,        "\0");
+	PARAM   (254, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (255, "Ibrvar",         DoLinkParm,        "\0");
+	PARAM   (256, "Ibrbranchlens",  DoLinkParm,        "\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 251) in paramTable[] at the top of this file. */
+	         change the number of elements (now 257) in paramTable[] at the top of this file. */
 
 }
 

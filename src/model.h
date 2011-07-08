@@ -46,7 +46,7 @@ int		SetUpAnalysis (SafeLong *seed);
 void	SetUpMoveTypes (void);
 int		ShowModel (void);
 int		Unlink (void);
-int	    UpdateBmEvolLengths (Param *param, Tree *t, int chain);
+int	    UpdateTK02EvolLengths (Param *param, Tree *t, int chain);
 int 	UpdateCppEvolLengths (Param *param, TreeNode *p, int chain);
-int	    UpdateIbrBranchRates (Param *param, Tree *t, int chain);
+int	    UpdateIgrBranchRates (Param *param, Tree *t, int chain);
 

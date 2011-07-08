@@ -3208,12 +3208,12 @@ int IsTreeConsistent (Param *param, int chain, int state)
 
     for (i=0; i<param->nSubParams; i++)
         {
-        if (param->subParams[i]->paramId == BMBRANCHRATES)
+        if (param->subParams[i]->paramId == TK02BRANCHRATES)
             {
             rAnc = GetParamVals(param->subParams[i], chain, state)[tree->root->left->index];
             if (fabs(rAnc - 1.0) > 1E-6)
                 {
-                MrBayesPrint("%s   Bm relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
+                MrBayesPrint("%s   TK02 relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
                 return NO;
                 }
             for (j=0; j<tree->nNodes-2; j++)
@@ -3224,12 +3224,12 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 rAnc = GetParamVals(param->subParams[i], chain, state)[p->anc->index];
                 if (fabs(p->length * (r + rAnc) / 2.0 - b) > 0.000001)
                     {
-                    MrBayesPrint("%s   Bm relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    MrBayesPrint("%s   TK02 relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }
             }
-        else if (param->subParams[i]->paramId == IBRBRANCHLENS)
+        else if (param->subParams[i]->paramId == IGRBRANCHLENS)
             {
             for (j=0; j<tree->nNodes-2; j++)
                 {
@@ -3238,7 +3238,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 r = GetParamVals(param->subParams[i], chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
-                    MrBayesPrint("%s   Ibr relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    MrBayesPrint("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }

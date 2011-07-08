@@ -266,10 +266,10 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define TREEAGE_MAX             1000000.0f
 #define CPPLAMBDA_MIN           0.00001f
 #define CPPLAMBDA_MAX           100.0f
-#define BMVAR_MIN	          	0.00001f
-#define BMVAR_MAX               100000.0f
-#define IBRVAR_MIN	         	0.00001f
-#define IBRVAR_MAX              100000.0f
+#define TK02VAR_MIN	          	0.00001f
+#define TK02VAR_MAX             100000.0f
+#define IGRVAR_MIN	         	0.00001f
+#define IGRVAR_MAX              100000.0f
 #define OMEGA_MAX               1000000.0f
 
 #define POS_MIN                 1E-25f
@@ -367,11 +367,11 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_GROWTH				17
 #define P_CPPMULTDEV            18
 #define P_CPPRATE               19
-#define P_BMVAR                 20
+#define P_TK02VAR               20
 #define P_CPPEVENTS				21
-#define P_BMBRANCHRATES			22
-#define P_IBRVAR                23
-#define P_IBRBRANCHLENS         24
+#define P_TK02BRANCHRATES	    22
+#define P_IGRVAR                23
+#define P_IGRBRANCHLENS         24
 #define P_CLOCKRATE             25
 #define P_SPECIESTREE           26
 #define P_GENETREERATE          27
@@ -725,9 +725,9 @@ typedef struct s_launch_struct
 #define CPPRATE_FIX						111
 #define CPPRATE_EXP						112
 #define CPPMULTDEV_FIX				    113
-#define BMVAR_FIX				        114
-#define BMVAR_EXP				        115
-#define BMVAR_UNI				        116
+#define TK02VAR_FIX				        114
+#define TK02VAR_EXP				        115
+#define TK02VAR_UNI				        116
 #define TOPOLOGY_RCL_UNIFORM		    117
 #define TOPOLOGY_RCL_CONSTRAINED		118
 #define TOPOLOGY_RCL_FIXED          	119
@@ -736,12 +736,12 @@ typedef struct s_launch_struct
 #define TOPOLOGY_RCCL_FIXED             123
 #define TOPOLOGY_SPECIESTREE            124
 #define CPPEVENTS						125
-#define BMBRANCHRATES					126
+#define TK02BRANCHRATES					126
 #define TOPOLOGY_FIXED                  127
-#define IBRVAR_FIX                      129
-#define IBRVAR_EXP                      130
-#define IBRVAR_UNI                      131
-#define IBRBRANCHLENS					132
+#define IGRVAR_FIX                      129
+#define IGRVAR_EXP                      130
+#define IGRVAR_UNI                      131
+#define IGRBRANCHLENS					132
 #define CLOCKRATE_FIX                   133
 #define CLOCKRATE_NORMAL                134
 #define CLOCKRATE_LOGNORMAL             135
@@ -1003,14 +1003,14 @@ typedef struct model
 	MrBFlt		cppRateExp;
 	char		cppMultDevPr[100];  /* prior on CPP rate multiplier Lognormal variance */
 	MrBFlt		cppMultDevFix;
-	char		bmvarPr[100];		/* prior on BM lognormal rate variance             */
-	MrBFlt		bmvarFix;
-	MrBFlt		bmvarUni[2];
-	MrBFlt		bmvarExp;
-	char		ibrvarPr[100];      /* prior on IBR gamma distribution variance        */
-	MrBFlt		ibrvarFix;
-	MrBFlt		ibrvarUni[2];
-	MrBFlt		ibrvarExp;
+	char		tk02varPr[100];		/* prior on TK02 lognormal rate variance           */
+	MrBFlt		tk02varFix;
+	MrBFlt		tk02varUni[2];
+	MrBFlt		tk02varExp;
+	char		igrvarPr[100];      /* prior on IGR gamma distribution variance        */
+	MrBFlt		igrvarFix;
+	MrBFlt		igrvarUni[2];
+	MrBFlt		igrvarExp;
 
 	char		tratioFormat[30];      /* format used to report tratio				   */
 	char		revmatFormat[30];      /* format used to report revmat				   */
@@ -1033,7 +1033,7 @@ typedef struct chain
     int         isSS;                  /* do we do Steppingstone Sampling               */
     int         numStepsSS;            /* Number of steps in SS                         */
     int         burninSS;              /* Fixed burnin for SS                           */
-    MrBFlt      alphaSS;               /* Betta values are destributed according to quantiles of BETA(alphaSS,1.0) distribution */
+    MrBFlt      alphaSS;               /* Beta values are distributed according to quantiles of Beta(alphaSS,1.0) distribution */
 	MrBFlt		chainTemp;             /* chain temperature                             */
 	int			userDefinedTemps;      /* should we use the users temperatures?         */
 	MrBFlt		userTemps[MAX_CHAINS]; /* user-defined chain temperatures               */
@@ -1118,10 +1118,10 @@ typedef struct modelinfo
 	Param		*cppMultDev;                /* ptr to cpp ratemult lognormal variance   */
 	Param		*cppRate;				    /* ptr to CPP rate used in model            */
 	Param		*cppEvents;					/* ptr to CPP events                        */
-	Param		*bmvar;						/* ptr to variance for BM relaxed clock     */
-	Param		*bmBranchRates;				/* ptr to branch rates for BM relaxed clock */
-	Param		*ibrvar;				    /* ptr to gamma var for IBR relaxed clock   */
-	Param		*ibrBranchRates;			/* ptr to branch rates for IBR relaxed clock*/
+	Param		*tk02var;	         		/* ptr to variance for TK02 relaxed clock   */
+	Param		*tk02BranchRates;           /* ptr to branch rates for TK02 relaxed clock */
+	Param		*igrvar;				    /* ptr to gamma var for IGR relaxed clock   */
+	Param		*igrBranchRates;			/* ptr to branch rates for IGR relaxed clock*/
     Param       *clockRate;                 /* ptr to clock rate parameter              */
 
     /* Information about characters and transformations */

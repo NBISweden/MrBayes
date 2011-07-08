@@ -1196,13 +1196,13 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
                 {
                 length = GetParamSubVals (m->cppEvents, chain, state[chain])[p->index];
                 }
-            else if (m->bmBranchRates != NULL)
+            else if (m->tk02BranchRates != NULL)
                 {
-                length = GetParamSubVals (m->bmBranchRates, chain, state[chain])[p->index];
+                length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
                 }
-            else if (m->ibrBranchRates != NULL)
+            else if (m->igrBranchRates != NULL)
                 {
-                length = GetParamSubVals (m->ibrBranchRates, chain, state[chain])[p->index];
+                length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
                 }
             else
                 length = p->length;

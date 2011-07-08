@@ -1500,8 +1500,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 	int			i, *nEvents;
 	MrBFlt	    window, minDepth, maxDepth, oldDepth, newDepth,
 				oldLeftLength=0.0, oldRightLength=0.0, clockRate,
-				oldPLength=0.0, lambda=0.0, nu=0.0, ibrvar=0.0,
-                *brlens=NULL, *bmRate=NULL, *ibrRate=NULL, *popSizePtr;
+				oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
+                *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL, *popSizePtr;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
 	ModelInfo	*m;
@@ -1663,10 +1663,10 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
 			}
-		else if (subParm->paramType == P_BMBRANCHRATES)
+		else if (subParm->paramType == P_TK02BRANCHRATES)
 			{
-			nu = *GetParamVals (modelSettings[subParm->relParts[0]].bmvar, chain, state[chain]);
-			bmRate = GetParamVals (subParm, chain, state[chain]);
+			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* no proposal ratio effect */
@@ -1674,44 +1674,44 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             /* prior ratio */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[p->index], nu*oldLeftLength, bmRate[p->left->index]);
-			    (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[p->index], nu*oldRightLength, bmRate[p->right->index]);
-    			(*lnPriorRatio) += LnProbBmLogNormal (bmRate[p->index], nu*p->left->length, bmRate[p->left->index]);
-    			(*lnPriorRatio) += LnProbBmLogNormal (bmRate[p->index], nu*p->right->length, bmRate[p->right->index]);
+                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
+			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
+    			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
+    			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
                 }
 			if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbBmLogNormal (bmRate[p->anc->index], nu*oldPLength, bmRate[p->index]);
-			    (*lnPriorRatio) += LnProbBmLogNormal (bmRate[p->anc->index], nu*p->length, bmRate[p->index]);
+                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
+			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
                 }
 
             /* update effective evolutionary lengths */
 			if (p->left != NULL)
                 {
-                brlens[p->left->index] = p->left->length * (bmRate[p->left->index]+bmRate[p->index])/2.0;
-			    brlens[p->right->index] = p->right->length * (bmRate[p->right->index]+bmRate[p->index])/2.0;
+                brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
+			    brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
                 }
             if (p->anc->anc != NULL)
-                brlens[p->index] = p->length * (bmRate[p->index]+bmRate[p->anc->index])/2.0;
+                brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[p->anc->index])/2.0;
 			}
-		else if (subParm->paramType == P_IBRBRANCHLENS)
+		else if (subParm->paramType == P_IGRBRANCHLENS)
 			{
-			ibrvar = *GetParamVals (modelSettings[subParm->relParts[0]].ibrvar, chain, state[chain]);
-			ibrRate = GetParamVals (subParm, chain, state[chain]);
+			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+			igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /ibrvar, 1.0/ibrvar, brlens[p->left->index ]);
-			    (*lnPriorRatio) -= LnProbGamma (oldRightLength  /ibrvar, 1.0/ibrvar, brlens[p->right->index]);
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+			    (*lnPriorRatio) -= LnProbGamma (oldRightLength  /igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
 			if (p->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbGamma (oldPLength/ibrvar, 1.0/ibrvar, brlens[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
 
             if (p->left != NULL)
                 {
-                brlens[p->left->index ] = ibrRate[p->left->index ] * p->left->length;
-                brlens[p->right->index] = ibrRate[p->right->index] * p->right->length;
+                brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
                 if (brlens[p->left->index] <= 0.0 || brlens[p->right->index] <= 0.0)
                     {
                     abortMove = YES;
@@ -1722,7 +1722,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
                 }
             if (p->anc->anc != NULL)
                 {
-                brlens[p->index] = ibrRate[p->index] * p->length;
+                brlens[p->index] = igrRate[p->index] * p->length;
                 if (brlens[p->index] <= 0.0)
                     {
                     abortMove = YES;
@@ -1733,11 +1733,11 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) += LnProbGamma (p->left->length /ibrvar, 1.0/ibrvar, brlens[p->left->index ]);
-			    (*lnPriorRatio) += LnProbGamma (p->right->length/ibrvar, 1.0/ibrvar, brlens[p->right->index]);
+                (*lnPriorRatio) += LnProbGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+			    (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
 			if (p->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbGamma (p->length /ibrvar, 1.0/ibrvar, brlens[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index]);
             }
 		}
 
