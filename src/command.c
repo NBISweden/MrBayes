@@ -42,6 +42,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "mb.h"
+#include "mbbeagle.h"
 #include "globals.h"
 #include "command.h"
 #include "bayes.h"
@@ -52,7 +53,7 @@
 #include "sumt.h"
 #include "tree.h"
 #include "utils.h"
-#include "mbbeagle.h"
+#include "libhmsbeagle/beagle.h"
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
@@ -2159,12 +2160,11 @@ int DoCitations (void)
     MrBayesPrint ("         DNA sequences. Genetics 139:993-1005.                                   \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   Ancestral state reconstruction. These two papers show how ancestral           \n");
-    MrBayesPrint ("   states on a tree can be reconstructed. The Yang et al. paper                  \n");
-    MrBayesPrint ("   implements an empirical Bayes approach. The Huelsenbeck and Bollback          \n");
-    MrBayesPrint ("   paper implements a hierarchical Bayes approach. The method implemented        \n");
-    MrBayesPrint ("   in MrBayes is hierarchical Bayes as it integrates over uncertainty in         \n");
-    MrBayesPrint ("   model parameters. --                                                          \n");
+    MrBayesPrint ("   The following two papers show how ancestral states on a tree can be recon-    \n");
+    MrBayesPrint ("   structed. The Yang et al. paper implements an empirical Bayes approach while  \n");
+    MrBayesPrint ("   Huelsenbeck and Bollback use a pure, hierarchical Bayes approach. The method  \n");
+    MrBayesPrint ("   used in MrBayes is the latter, since it integrates over uncertainty in model  \n");
+    MrBayesPrint ("   parameters.                                                                   \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Yang, Z., S. Kumar, and M. Nei. 1995. A new method of inference of         \n");
     MrBayesPrint ("         ancestral nucleotide and amino acid sequences. Genetics 141:1641        \n");
@@ -2182,13 +2182,10 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   MrBayes allows you to analyze gene tree - species tree problems using the     \n");
-    MrBayesPrint ("   multi-species coalescent originally presented by Edwards et al. (2007).     \n");
-    MrBayesPrint ("   so-called parsimony method of phylogenetic inference. The appropriate         \n");
-    MrBayesPrint ("   citation is:                                                                  \n");
+    MrBayesPrint ("   multi-species coalescent approach originally proposed by Edwards et al:       \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
-    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
-    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("      Edwards, S., L. Liu, and D. Pearl. 2007. High-resolution species trees     \n");
+    MrBayesPrint ("         without concatenation. Proc. Natl. Acad. Sci. USA 104: 5936-5941.       \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   The program implements an incredibly parameter rich model, first described    \n");
@@ -2201,60 +2198,96 @@ int DoCitations (void)
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The program implements three relaxed clock models: the CPP, TK02 and IGR      \n");
-    MrBayesPrint ("   The Compound Poisson Process (CPP) model was first described by Huelsenbeck   \n");
-    MrBayesPrint ("   et al. (2000). It is an autocorrelated discrete model of rate variation over  \n");
-    MrBayesPrint ("   time. Instead of the modified gamma distribution originally proposed for the  \n");
-    MrBayesPrint ("   rate multipliers, MrBayes uses a lognormal distribution. The extensions       \n");
-    MrBayesPrint ("   necessary to sample over tree space under this model are original to MrBayes. \n");
+    MrBayesPrint ("   MrBayes implements three relaxed clock models: the Compound Poisson Process   \n");
+    MrBayesPrint ("   (CPP), the Thorne-Kishino 2002 (TK02), and the Independent Gamma Rates (IGR)  \n");
+    MrBayesPrint ("   models. The CPP model was first described by Huelsenbeck et al. (2000). It    \n");
+    MrBayesPrint ("   is an autocorrelated discrete model of rate variation over time. Instead of   \n");
+    MrBayesPrint ("   the modified gamma distribution originally proposed for the rate multipliers, \n");
+    MrBayesPrint ("   MrBayes uses a lognormal distribution. The extensions necessary to sample over\n");
+    MrBayesPrint ("   tree space under this model are original to MrBayes; the original paper only  \n");
+    MrBayesPrint ("   considered fixed trees.                                                       \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The Thorne-Kishino 2002 (TK02) model was first described by Thorne and Kishino\n");
-    MrBayesPrint ("   (2002), and is a slight variant of a model presented by them earlier (Thorne  \n");
-    MrBayesPrint ("   et al., 1998). It as an autocorrelated continuous model, in which rates vary  \n");
-    MrBayesPrint ("   according to a lognormal distribution.                                        \n");
+    MrBayesPrint ("   The TK02 model was first described by Thorne and Kishino (2002), and is a     \n");
+    MrBayesPrint ("   variant of a model presented by them earlier (Thorne et al., 1998). It is an  \n");
+    MrBayesPrint ("   autocorrelated continuous model, in which rates vary according to a lognormal \n");
+    MrBayesPrint ("   distribution. Specifically, the rate of a descendant node is assumed to be    \n");
+    MrBayesPrint ("   drawn from a lognormal distribution with the mean being the rate of the an-   \n");
+    MrBayesPrint ("   cestral node, and the variance being proportional to the length of the branch \n");
+    MrBayesPrint ("   separating the nodes (measured in terms of expected substitutions per site at \n");
+    MrBayesPrint ("   the base rate of the clock).                                                  \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The final relaxed clock model is the Independent Gamma Rates (IGR) model, in  \n");
-    MrBayesPrint ("   which branch rates are drawn independently from a scaled gamma distribution.  \n");
-    MrBayesPrint ("   The model was originally described in the literature as the 'White Noise'     \n");
-    MrBayesPrint ("   model by Lepage et al. (2007), but the original MrBayes implementation pre-   \n");
-    MrBayesPrint ("   dates that paper. The model is closely related to uncorrelated models presen- \n");
-    MrBayesPrint ("   ted originally by Drummonds et al. (2006), but is more elegant in that it is  \n");
-    MrBayesPrint ("   truly uncorrelated over time in the mathematical sense. See Lepage et al.     \n");
-    MrBayesPrint ("   (2007) for details.                                                           \n");
+    MrBayesPrint ("   The final relaxed clock model is the IGR model, in which branch rates are     \n");
+    MrBayesPrint ("   modeled as being drawn independently from a scaled gamma distribution. The    \n");
+    MrBayesPrint ("   model was originally described in the literature as the 'White Noise' model   \n");
+    MrBayesPrint ("   by Lepage et al. (2007), but the original MrBayes implementation predates that\n");
+    MrBayesPrint ("   paper. The IGR model is closely related to the uncorrelated gamma model pre-  \n");
+    MrBayesPrint ("   sented originally by Drummond et al. (2006), but it is more elegant in that   \n");
+    MrBayesPrint ("   it truly lacks time structure. See Lepage et al. (2007) for details.          \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
-    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
-    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("      Huelsenbeck, J. P., B. Larget, and D. Swofford. 2000. A compound Poisson   \n");
+    MrBayesPrint ("         process for relaxing the molecular clock. Genetics 154: 1879-1892.      \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Thorne, J. L., H. Kishino, and I. S. Painter. 1998. Estimating the rate    \n");
+    MrBayesPrint ("         of evolution of the rate of molecular evolution. Mol. Biol. Evol.       \n");
+    MrBayesPrint ("         15: 1647-1657.                                                          \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Thorne, J. L., and H. Kishino. 2002. Divergence time and evolutionary      \n");
+    MrBayesPrint ("         rate estimation with multilocus data. Syst. Biol. 51: 689-702.          \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Drummond, A. J., S. Y. W. Ho, M. J. Phillips, and A. Rambaut. 2006.        \n");
+    MrBayesPrint ("         Relaxed phylogenetics and dating with confidence. PLoS Biology          \n");
+    MrBayesPrint ("         4: 699-710.                                                             \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Lepage, T., D. Bryant, H. Philippe, and N. Lartillot. 2007. A general      \n");
+    MrBayesPrint ("         comparison of relaxed molecular clock models. Mol. Biol. Evol.          \n");
+    MrBayesPrint ("         24: 2669-2680.                                                          \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The tree proposals used by MrBayes are described by Lakner et al. (2008). The \n");
-    MrBayesPrint ("   parsimony-biased moves are still undescribed in the literature, although a    \n");
-    MrBayesPrint ("   rough outline of the idea is presented in the above-mentioned paper.          \n");
+    MrBayesPrint ("   The standard tree proposals used by MrBayes are described by Lakner et al.    \n");
+    MrBayesPrint ("   (2008). The parsimony-biased tree proposals are still undescribed, although   \n");
+    MrBayesPrint ("   a rough outline of the idea is presented in the same paper.                   \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
-    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
-    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("      Lakner, C., P. van der Mark, J. P. Huelsenbeck, B. Larget, and F. Ronquist.\n");
+    MrBayesPrint ("         2008. Efficiency of Markov chain Monte Carlo tree proposals in Bayesian \n");
+    MrBayesPrint ("         phylogenetics. Syst. Biol. 57: 86-103.                                  \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   The topology convergence diagnostic used by MrBayes, the average standard     \n");
     MrBayesPrint ("   deviation of split frequencies, is described by Lakner et al. (2008). The     \n");
     MrBayesPrint ("   potential scale reduction factor, the diagnostic used by MrBayes for contin-  \n");
-    MrBayesPrint ("   uous parameters, was first proposed by Gelman and Rubin ( 1992). The auto-    \n");
-    MrBayesPrint ("   tuning mechanism is based on a paper by Roberts and Rosenthal (2006?).        \n");
+    MrBayesPrint ("   uous parameters, was first proposed by Gelman and Rubin (1992). The auto-     \n");
+    MrBayesPrint ("   tuning mechanism used in MrBayes is based on a paper by Roberts and Rosenthal \n");
+    MrBayesPrint ("   (2009).                                                                       \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
-    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
+    MrBayesPrint ("      Gelman, A., and D. B. Rubin. 1992. Inference from iterative simulation     \n");
+    MrBayesPrint ("         using multiple sequences. Statistical Science 7: 457-472.               \n");
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Lakner, C., P. van der Mark, J. P. Huelsenbeck, B. Larget, and F. Ronquist.\n");
+    MrBayesPrint ("         2008. Efficiency of Markov chain Monte Carlo tree proposals in Bayesian \n");
+    MrBayesPrint ("         phylogenetics. Syst. Biol. 57: 86-103.                                  \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Roberts, G. O., and J. S. Rosenthal. 2009. Examples of adaptive MCMC. Jour-\n");
+    MrBayesPrint ("         nal of Compuational and Graphical Statistics 18: 349-367.               \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The harmonic mean estimator of marginal likelihoods, used for Bayes factor    \n");
-    MrBayesPrint ("   testing, was discussed by Newton and Raftery (1996). The more accurate step-  \n");
-    MrBayesPrint ("   ping-stone algorithm was first proposed by Xie et al. (2011). Raftery         \n");
-    MrBayesPrint ("   provide some guide to the interpretation of Bayes factors.                    \n");
+    MrBayesPrint ("   The harmonic mean estimator of model likelihoods, used for Bayes factor tes-  \n");
+    MrBayesPrint ("   ting, was discussed by Newton and Raftery (1996). The more accurate stepping- \n");
+    MrBayesPrint ("   stone algorithm was first proposed by Xie et al. (2011). The paper by         \n");
+    MrBayesPrint ("   Lartillot and Philippe (2006) presents an interesting discussion of the       \n");
+    MrBayesPrint ("   shortcomings of the harmonic mean estimator and describes thermodynamic       \n");
+    MrBayesPrint ("   integration, a technique that is similar to the stepping-stone algorithm.     \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tuffley, C., and M. Steel. 1997. Links between maximum likelihood          \n");
-    MrBayesPrint ("         and maximum parsimony under a simple model of site substitution.        \n");
-    MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
+    MrBayesPrint ("      Newton, M. A., and A. E. Raftery. 1994. Approcimate Bayesian inference     \n");
+    MrBayesPrint ("         with the weighted likelihood bootstrap. J. R. Stat. Soc. B. 56. 3-48.   \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Lartillot, N., and H. Philippe. 2006. Computing Bayes factors using        \n");
+    MrBayesPrint ("         thermodynamic integration. Syst. Biol. 55: 195-207.                     \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Xie, W., P. O. Lewis, Y. Fan, L. Kuo, and M.-H. Chen. 2011. Improving      \n");
+    MrBayesPrint ("         marginal likelihood estimation for Bayesian phylogenetic model          \n");
+    MrBayesPrint ("         selection. Syst. Biol. 60: 150-160.                                     \n");
+    MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -9038,7 +9071,7 @@ char *command_generator(const char *text, int state) {
 	if(state==0) 
 		{
 		list_index=0;
-		len=strlen(text);
+		len= (int) strlen(text);
 		}
 	while ((command=commands[list_index].string)!=NULL) 
 		{

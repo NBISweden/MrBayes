@@ -48,6 +48,7 @@
 #include "globals.h"
 #include "bayes.h"
 #include "best.h"
+#include "mbbeagle.h"
 #include "mcmc.h"
 #include "model.h"
 #include "command.h"
@@ -61,7 +62,7 @@
 char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update*/
 
 #if defined(BEAGLE_ENABLED)
-#include "mbbeagle.h"
+#include "libhmsbeagle/beagle.h"
 #endif
 
 #if defined(WIN_VERSION) && !defined(__GNUC__)

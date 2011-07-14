@@ -1690,7 +1690,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 	for (i=0; i<m->nRows; i++)
 		{
 		/* retrieve character */
-		x = m->origin[m->column + i*m->rowSize];
+		x = (int) m->origin[m->column + i*m->rowSize];
 
 		/* add it to counters if not all ambiguous */
 		if (NBits(x) < ci->nStates)
@@ -1785,7 +1785,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 	   making the character informative */
 	for (i=0; i<m->nRows; i++)
 		{
-		x = m->origin[m->column + i*m->rowSize];
+		x = (int) m->origin[m->column + i*m->rowSize];
 		/* if partambig */ 
 		if (NBits(x) > 1 && NBits(x) < ci->nStates)
 			{
@@ -13732,7 +13732,7 @@ int PrintCompMatrix (void)
 					if (mp->dataType == CONTINUOUS)
 						MrBayesPrint ("%3d ", compMatrix[pos(i,j,compMatrixRowSize)]);
 					else
-						MrBayesPrint ("%c", whichChar(compMatrix[pos(i,j,compMatrixRowSize)]));
+						MrBayesPrint ("%c", whichChar((int)compMatrix[pos(i,j,compMatrixRowSize)]));
 					}
 				MrBayesPrint("\n");
 				}

@@ -241,7 +241,7 @@ SafeLong FirstTree (FILE *fp, char *lineBuf, int longestLine)
 	char		*word;
 	
 	do {
-		firstTree = ftell(fp);
+		firstTree = (int) ftell(fp);
 		if ((fgets (lineBuf, longestLine, fp)) == NULL)
 			return 0;
 		word = strtok (lineBuf, " ");
@@ -727,7 +727,7 @@ SafeLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
 		{
 		word = strtok (lineBuf, " ");
 		if (strcmp (word, "begin") == 0)
-			lastBlock = ftell (fp);
+			lastBlock = (int) ftell (fp);
 		}
 
 	return lastBlock;

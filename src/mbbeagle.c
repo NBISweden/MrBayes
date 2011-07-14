@@ -37,8 +37,8 @@
 #include <ctype.h>
 #include <assert.h>
 #include "mb.h"
-#include "globals.h"
 #include "mbbeagle.h"
+#include "globals.h"
 #include "utils.h"
 #include "mcmc.h"
 #include "model.h"

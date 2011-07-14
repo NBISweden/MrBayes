@@ -69,16 +69,6 @@ extern const char* const svnRevisionUtilsC;
 static char **readline_completion(const char *, int, int);
 #endif
 
-#if defined (__MWERKS__)
-#	if defined (MAC_VERSION)
-#		include "SIOUX.h"
-/* My codewarior version doesn't has this file, but compiles fine without Paul #		include "fonts.h" */
-#	elif defined (WIN_VERSION)
-#		include <windows.h>
-#		include <wincon.h>
-#		include <crtdbg.h>
-#	endif
-#endif
 #if defined (WIN_VERSION)
 #	undef NO_ERROR
 #	undef ERROR
@@ -537,7 +527,11 @@ int InitializeMrBayes (void)
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
 	strcpy(workingDir,"");				             /* working directory		                      */
 #if defined (BEAGLE_ENABLED)
+#if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
+#else
+    tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library if not Windows */
+#endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     // SSE instructions do not work in Windows environment
@@ -873,7 +867,9 @@ unsigned FindMaxRevision ( unsigned amount, ...)
 void PrintHeader (void)
 
 {
+#ifndef RELEASE
     unsigned rev=FindMaxRevision ( 13, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionPlotC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC); 
+#endif
 
 #	if defined (MAC_VERSION)
 
@@ -881,7 +877,7 @@ void PrintHeader (void)
 		printf ("\n\n");
 #		endif
 #ifdef RELEASE
-		printf ("                            MrBayes v%s\n\n", VERSION_NUMBER);
+		printf ("                               MrBayes v%s\n\n", VERSION_NUMBER);
 #else
 		printf ("                            MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
 #endif
