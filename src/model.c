@@ -6586,15 +6586,15 @@ int DoPrsetParm (char *parmName, char *tkn)
 				{
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
 					{
+                    if (strcmp(tempStr, "Bm") == 0)
+                        strcpy(tempStr, "TK02");
+                    else if (strcmp(tempStr, "Ibr") == 0)
+                        strcpy(tempStr, "Igr");
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
 						{
 						if (activeParts[i] == YES || nApplied == 0)
 							{
-							if (strcmp(tempStr, "Bm") == 0)
-                                strcpy(tempStr, "TK02");
-                            else if (strcmp(tempStr, "Ibr") == 0)
-                                strcpy(tempStr, "Igr");
                             strcpy(modelParams[i].clockVarPr, tempStr);
 							if (nApplied == 0 && numCurrentDivisions == 1)
 								MrBayesPrint ("%s   Setting Clockvarpr to %s\n", spacer, modelParams[i].clockVarPr);

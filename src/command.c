@@ -53,7 +53,9 @@
 #include "sumt.h"
 #include "tree.h"
 #include "utils.h"
+#if defined (BEAGLE_ENABLED)
 #include "libhmsbeagle/beagle.h"
+#endif
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
@@ -10829,7 +10831,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    fix the switching rates, in which case you must specify      \n");
 		MrBayesPrint ("                    both rates. (The first number is off->on and the second      \n");
 		MrBayesPrint ("                    is on->off).                                                 \n");
-		MrBayesPrint ("   Symdirihyperpr - This option sets the prior for the stationary frequencies   \n");
+		MrBayesPrint ("   Symdirihyperpr - This option sets the prior for the stationary frequencies    \n");
 		MrBayesPrint ("                    of the states for morphological (standard) data. There can   \n");
 		MrBayesPrint ("                    be as many as 10 states for standard data. However, the      \n");
 		MrBayesPrint ("                    labelling of the states is somewhat arbitrary. For example,  \n");
