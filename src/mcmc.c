@@ -1127,6 +1127,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				        usedMoves[i]->nTried[tempIdA]             = 0;
 				        usedMoves[i]->nBatches[tempIdA]           = 0;
 				        usedMoves[i]->lastAcceptanceRate[tempIdA] = 0.0;
+                        usedMoves[i]->nTotAccepted[tempIdA]       = 0;
+                        usedMoves[i]->nTotTried[tempIdA]          = 0;
 					if (usedMoves[i]->moveType->numTuningParams > 0)
                                                 usedMoves[i]->tuningParam[tempIdA][0]     = 0.0;
 				
@@ -17024,18 +17026,18 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
             }
         
         /* adjust proposal and prior ratio for relaxed clock models */
-        for (j=0; j<treeParam->nSubParams; j++)
+        for (k=0; k<treeParam->nSubParams; k++)
 		    {
-            subParm = treeParam->subParams[j];
+            subParm = treeParam->subParams[k];
 	        if (subParm->paramType == P_CPPEVENTS)
 		        {
 		        nEvents = subParm->nEvents[2*chain+state[chain]];
 		        lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
 		        /* proposal ratio */
-		        for (k=0; k<t->nNodes-2; k++)
+		        for (j=0; j<t->nNodes-2; j++)
                     {
-                    p = t->allDownPass[k];
-                    q = oldT->allDownPass[k];
+                    p = t->allDownPass[j];
+                    q = oldT->allDownPass[j];
                     (*lnProposalRatio) += nEvents[p->index ] * log (p->length  / q->length);
                     }
 		        /* prior ratio */
