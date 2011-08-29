@@ -44,6 +44,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <omp.h>
 #include "mb.h"
 #include "globals.h"
 #include "bayes.h"
@@ -776,7 +777,7 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 	ModelInfo		*m;
 	Tree			*tree;
 #					if defined (MPI_ENABLED)
-	int				numChainsForProc, tempIdA=0, tempIdB=0, proc, procIdForA=0, procIdForB=0, tempIdMy, procIdPartner,
+	int				numChainsForProc, tempIdA=0, tempIdB=0, proc, procIdForA=0, procIdForB=0, tempIdMy=0, procIdPartner=0,
 					whichElementA=0, whichElementB=0, lower, upper, areWeA, doISwap, ierror,
 					myId, partnerId, i, run;
 	MrBFlt			swapRan;
@@ -1129,8 +1130,8 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				        usedMoves[i]->lastAcceptanceRate[tempIdA] = 0.0;
                         usedMoves[i]->nTotAccepted[tempIdA]       = 0;
                         usedMoves[i]->nTotTried[tempIdA]          = 0;
-					if (usedMoves[i]->moveType->numTuningParams > 0)
-                                                usedMoves[i]->tuningParam[tempIdA][0]     = 0.0;
+					    if (usedMoves[i]->moveType->numTuningParams > 0)
+                            usedMoves[i]->tuningParam[tempIdA][0]     = 0.0;
 				
 			            }
 		            }
@@ -9224,6 +9225,12 @@ int DoMcmcParm (char *parmName, char *tkn)
 int DoSs (void)
 {
     int ret, oldBurnin, oldRelativeBurnin;
+
+    if( chainParams.append = YES)
+        {
+        MrBayesPrint ("%s   Error: Appending is not suported yet for Stepping Stone sampling.\n", spacer);
+        return (ERROR);
+        }
 
     oldBurnin = chainParams.chainBurnIn;
     oldRelativeBurnin = chainParams.burninSS;

@@ -4328,13 +4328,14 @@ int ViolatedConstraint(SafeLong *partition, int *activeConstraints, int activeCo
     for (j=0; j<activeConstraintsSize; j++)
         {
         k=activeConstraints[j];
+        assert(definedConstraintsType[k] != HARD);
 
         if( definedConstraintsType[k] == PARTIAL )
             {
             if( ( IsSectionEmpty(definedConstraintPruned[k], partition, nLongsNeeded) == NO ) &&
                 ( IsSectionEmpty(definedConstraintTwoPruned[k], partition, nLongsNeeded) == NO ) &&
                 ( IsPartNested(definedConstraintPruned[k], partition, nLongsNeeded) == NO) &&
-                !( isRooted=NO && IsPartNested(definedConstraintTwoPruned[k], partition, nLongsNeeded) == YES)
+                !( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], partition, nLongsNeeded) == YES)
               )
                 return j;
 
