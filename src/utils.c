@@ -876,7 +876,7 @@ void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper,
 
 
 
-/*NOTE!!!! The result of this function should be used before consequtive call to it again. It means NVER use it like this:  printf( "%s %s", MbPrintNum (a),MbPrintNum (b) ) */
+/*NOTE!!!! The result of this function should be used before consequtive call to it again. It means NEVER use it like this:  printf( "%s %s", MbPrintNum (a),MbPrintNum (b) ) */
 char *MbPrintNum (MrBFlt num)
 {
     static char s[40];

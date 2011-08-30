@@ -6125,9 +6125,9 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 			for (c=0; c<m->numChars; c++)
 				{
                 condLikeUp[0] = condLikeUp[1] = 0.0;
-
+                
                 sum[0] = tiP[0]*clDP[0] + tiP[1]*clDP[1];
-                sum[1] = tiP[2]*clDP[0] + tiP[3]*clDP[2];
+                sum[1] = tiP[2]*clDP[0] + tiP[3]*clDP[1];
 
                 if (sum[0] != 0.0) condLikeUp[0] = clFA[0] / sum[0];
 				if (sum[1] != 0.0) condLikeUp[1] = clFA[1] / sum[1];
@@ -34217,8 +34217,13 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 		cL[0] *= (CLFlt) (bs[0] * freq);
 		cL[1] *= (CLFlt) (bs[1] * freq);
 		sum = cL[0] + cL[1];
+        assert(cL[0]==cL[0]);
+        assert(cL[1]==cL[1]);
+        assert(sum<9999999999999999999999999999999.0);
 		cL[0] /= sum;
 		cL[1] /= sum;
+        assert(cL[0]==cL[0]);
+        assert(cL[1]==cL[1]);
 		cL += 2;
 		}
 

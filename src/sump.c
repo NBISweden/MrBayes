@@ -816,7 +816,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		}
 	if (numParamLines <= 0)
 		{
-		MrBayesPrint ("%s   No parameters were found in file \"%s\"\n", spacer, fileName);
+		MrBayesPrint ("%s   No parameters were found in file or there characters not representing a number in last string of the file.\"%s\"\n", spacer, fileName);
 			goto errorExit;
 		}
 
@@ -934,20 +934,28 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
         for (i=0, t=strtok(headerLine,"\t\n\r"); t!=NULL; t=strtok(NULL,"\t\n\r"), i++)
             {
             if (i == *nHeaders)
-                break;
+                {
+                MrBayesPrint ("%s   Expected %d headers but found more headers.\n",
+                spacer, fileInfo->numColumns);
+                goto errorExit;
+                }             
             if (strcmp(t,(*headerNames)[i])!=0)
-                break;
+                {
+                MrBayesPrint ("%s   Expected header '%s' for column %d but the header for this column was '%s' in file '%s'\n", spacer, (*headerNames)[i], i+1, t, fileName);
+                MrBayesPrint ("%s   It could be that some paramiter values are not numbers and the whole string containing \n",spacer); 
+                MrBayesPrint ("%s   this wrongly formated paramiter is treated as a header.\n",spacer);
+                goto errorExit;
+                }
             }
         if (t != NULL)
             {
-            MrBayesPrint ("%s   Expected %d headers but found more headers\n",
-                spacer, fileInfo->numColumns);
+            MrBayesPrint ("%s   Expected %d headers but found more headers.\n",spacer, fileInfo->numColumns);
             goto errorExit;
             }
         if (i < *nHeaders)
             {
             MrBayesPrint ("%s   Expected header '%s' for column %d but the header for this column was '%s' in file '%s'\n",
-                spacer, headerNames[i], i+1, t, fileName);
+                spacer, (*headerNames)[i], i+1, t, fileName);
             goto errorExit;
             }
         }
