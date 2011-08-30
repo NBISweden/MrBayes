@@ -130,7 +130,7 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
 
     longestLine = LongestLine(fromFile)+10;
     SafeFclose(&fromFile);
-    strBuf = (char *) calloc (2*(longestLine+2),sizeof(char));
+    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
@@ -169,7 +169,7 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
 
     longestLine = LongestLine(fromFile)+10;
     SafeFclose(&fromFile);
-    strBuf = (char *) calloc (2*(longestLine+2),sizeof(char));
+    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
@@ -409,7 +409,7 @@ void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HP
     for (i=0; i<nRows; i++)
         nVals += rowCount[i];
 
-    theValues = (MrBFlt *) calloc (nVals, sizeof(MrBFlt));
+    theValues = (MrBFlt *) SafeCalloc (nVals, sizeof(MrBFlt));
 
     /* extract values */
     p = theValues;
@@ -1352,7 +1352,11 @@ void *SafeCalloc(size_t n, size_t s) {
 
     if(ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
+        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
 
@@ -1400,7 +1404,11 @@ void *SafeMalloc(size_t s) {
 
     if(ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
+        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
 
@@ -1424,7 +1432,11 @@ void *SafeRealloc(void *ptr, size_t s) {
 
     if(ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
+        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
 
@@ -1439,9 +1451,9 @@ void *SafeRealloc(void *ptr, size_t s) {
 char *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) calloc (strlen(source)+1, sizeof(char));
+        *target = (char *) SafeCalloc (strlen(source)+1, sizeof(char));
     else
-        *target = (char *) realloc ((void *)*target, (size_t)(strlen(source)+strlen(*target)+1)*sizeof(char));
+        *target = (char *) SafeRealloc ((void *)*target, (size_t)(strlen(source)+strlen(*target)+1)*sizeof(char));
 
     if (*target)
         strcat(*target,source);

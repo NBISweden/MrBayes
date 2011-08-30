@@ -74,11 +74,11 @@ int AddToTreeList (TreeList *treeList, Tree *tree)
 
 {
 
-	TreeListElement		*listElement = (TreeListElement *) calloc (1, sizeof(TreeListElement));
+	TreeListElement		*listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
 	if (!listElement)
 		return (ERROR);
 
-	listElement->order = (int *) calloc (tree->nIntNodes-1, sizeof(int));
+	listElement->order = (int *) SafeCalloc (tree->nIntNodes-1, sizeof(int));
 	if (!listElement->order)
 		return (ERROR);
 	listElement->next = NULL;
@@ -109,13 +109,13 @@ PolyTree *AllocatePolyTree (int numTaxa)
 	int			i;
 	PolyTree	*pt;
 
-	pt = (PolyTree *) calloc (1, sizeof (PolyTree));
+	pt = (PolyTree *) SafeCalloc (1, sizeof (PolyTree));
 	if (!pt)
 		return (NULL);
 
 	pt->memNodes = 2*numTaxa;  
-	pt->nodes = (PolyNode *) calloc (2*numTaxa, sizeof(PolyNode));
-	pt->allDownPass = (PolyNode **) calloc (3*numTaxa, sizeof (PolyNode *));
+	pt->nodes = (PolyNode *) SafeCalloc (2*numTaxa, sizeof(PolyNode));
+	pt->allDownPass = (PolyNode **) SafeCalloc (3*numTaxa, sizeof (PolyNode *));
 	pt->intDownPass = pt->allDownPass + 2*numTaxa;
 	if (pt->nodes == NULL || pt->allDownPass == NULL)
 		{
@@ -187,24 +187,24 @@ int AllocatePolyTreeRelClockParams (PolyTree *pt, int nBSets, int nESets)
     /* take care of branch params */
     if (pt->nBSets > 0)
 		{
-		pt->bSetName = (char **) calloc (pt->nBSets, sizeof (char *));
-        pt->effectiveBrLen = (MrBFlt **) calloc (pt->nBSets, sizeof (MrBFlt *));
+		pt->bSetName = (char **) SafeCalloc (pt->nBSets, sizeof (char *));
+        pt->effectiveBrLen = (MrBFlt **) SafeCalloc (pt->nBSets, sizeof (MrBFlt *));
 		for (i=0; i<pt->nBSets; i++)
-            pt->effectiveBrLen[i] = (MrBFlt *) calloc (pt->memNodes, sizeof(MrBFlt));
+            pt->effectiveBrLen[i] = (MrBFlt *) SafeCalloc (pt->memNodes, sizeof(MrBFlt));
 		}
 	
     /* take care of breakpoint params */
     if (pt->nESets > 0)
 		{
-		pt->eSetName = (char **) calloc (pt->nESets, sizeof(char *));
-		pt->nEvents = (int **) calloc (pt->nESets, sizeof(int *));
-        pt->position = (MrBFlt ***) calloc (pt->nESets, sizeof(MrBFlt **));
-        pt->rateMult = (MrBFlt ***) calloc (pt->nESets, sizeof(MrBFlt **));
+		pt->eSetName = (char **) SafeCalloc (pt->nESets, sizeof(char *));
+		pt->nEvents = (int **) SafeCalloc (pt->nESets, sizeof(int *));
+        pt->position = (MrBFlt ***) SafeCalloc (pt->nESets, sizeof(MrBFlt **));
+        pt->rateMult = (MrBFlt ***) SafeCalloc (pt->nESets, sizeof(MrBFlt **));
 		for (i=0; i<pt->nESets; i++)
 			{
-    		pt->nEvents[i] = (int *) calloc (pt->memNodes, sizeof(int));
-            pt->position[i] = (MrBFlt **) calloc (pt->memNodes, sizeof(MrBFlt *));
-            pt->rateMult[i] = (MrBFlt **) calloc (pt->memNodes, sizeof(MrBFlt *));
+    		pt->nEvents[i] = (int *) SafeCalloc (pt->memNodes, sizeof(int));
+            pt->position[i] = (MrBFlt **) SafeCalloc (pt->memNodes, sizeof(MrBFlt *));
+            pt->rateMult[i] = (MrBFlt **) SafeCalloc (pt->memNodes, sizeof(MrBFlt *));
 		    }
         }
 
@@ -225,7 +225,7 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 	nLongsNeeded = (numTaxa -1) / nBitsInALong + 1;
 
     /* allocate space */
-    pt->bitsets = (SafeLong *) realloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(SafeLong));
+    pt->bitsets = (SafeLong *) SafeRealloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(SafeLong));
 	if (pt->bitsets == NULL)
 		return (ERROR);
     for (i=0; i<pt->memNodes*nLongsNeeded; i++)
@@ -251,7 +251,7 @@ Tree *AllocateTree (int numTaxa)
 	int		i;
 	Tree	*t;
 	
-	t = (Tree *) calloc (1, sizeof (Tree));
+	t = (Tree *) SafeCalloc (1, sizeof (Tree));
 	if (t == NULL)
 		return NULL;
 
@@ -278,12 +278,12 @@ Tree *AllocateTree (int numTaxa)
     /* allocate and initialize nodes and node arrays (enough for both rooted and unrooted trees) */
     t->nNodes = 0;
     t->nIntNodes = 0;
-    if ((t->nodes = (TreeNode *) calloc (2*numTaxa, sizeof (TreeNode))) == NULL)
+    if ((t->nodes = (TreeNode *) SafeCalloc (2*numTaxa, sizeof (TreeNode))) == NULL)
 		{
 		free (t);
 		return NULL;
 		}
-	if ((t->allDownPass = (TreeNode **) calloc (3*numTaxa, sizeof (TreeNode *))) == NULL)
+	if ((t->allDownPass = (TreeNode **) SafeCalloc (3*numTaxa, sizeof (TreeNode *))) == NULL)
 		{
 		free (t->nodes);
 		free (t);
@@ -312,7 +312,7 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
 	int		i;
 	Tree	*t;
 	
-	t = (Tree *) calloc (1, sizeof (Tree));
+	t = (Tree *) SafeCalloc (1, sizeof (Tree));
 	if (t == NULL)
 		return NULL;
 
@@ -350,12 +350,12 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
         t->nNodes = 2*numTaxa - 2;
         t->nIntNodes = numTaxa - 2;
         }
-    if ((t->nodes = (TreeNode *) calloc (t->nNodes, sizeof (TreeNode))) == NULL)
+    if ((t->nodes = (TreeNode *) SafeCalloc (t->nNodes, sizeof (TreeNode))) == NULL)
 		{
 		free (t);
 		return NULL;
 		}
-	if ((t->allDownPass = (TreeNode **) calloc (t->nNodes + t->nIntNodes, sizeof (TreeNode *))) == NULL)
+	if ((t->allDownPass = (TreeNode **) SafeCalloc (t->nNodes + t->nIntNodes, sizeof (TreeNode *))) == NULL)
 		{
 		free (t->nodes);
 		free (t);
@@ -392,7 +392,7 @@ int AllocateTreePartitions (Tree *t)
 	nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
 	/* reallocate space */
-    t->bitsets = (SafeLong *) realloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(SafeLong)));
+    t->bitsets = (SafeLong *) SafeRealloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(SafeLong)));
     if (!t->bitsets)
 		return (ERROR);
 	
@@ -441,7 +441,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 	
     /* allocate space */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
+    bitsets = (SafeLong *) SafeCalloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
     /* set mask */
@@ -538,7 +538,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	
 	/* allocate space */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    bitsets = (SafeLong *) calloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
+    bitsets = (SafeLong *) SafeCalloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
     mask = bitsets + 4*nLongsNeeded*nTaxa;
 	
     /* set mask */
@@ -633,7 +633,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 	pt->isRooted = t->isRooted;
 
     nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
-	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in BuildConstraintTree", spacer);
@@ -1000,7 +1000,7 @@ int CheckConstraints (Tree *t)
 
 	/* allocate space */
 	nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
-	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in CheckConstraints", spacer);
@@ -1116,7 +1116,7 @@ int CheckSetConstraints (Tree *t)
 		}
 
 	nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
-	constraintPartition = (SafeLong *) calloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition", spacer);
@@ -1407,7 +1407,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 
 	for (i=0; i<to->nBSets; i++)
 		{
-		to->bSetName[i] = (char *) calloc (strlen(from->bSetName[i])+2, sizeof(char));
+		to->bSetName[i] = (char *) SafeCalloc (strlen(from->bSetName[i])+2, sizeof(char));
 		strcpy (to->bSetName[i], from->bSetName[i]);
         for (j=0; j<from->nNodes; j++)
             to->effectiveBrLen[i][j] = from->effectiveBrLen[i][j];
@@ -1415,15 +1415,15 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 	
 	for (i=0; i<to->nESets; i++)
 		{
-		to->eSetName[i] = (char *) calloc (strlen(from->eSetName[i])+2, sizeof(char));
+		to->eSetName[i] = (char *) SafeCalloc (strlen(from->eSetName[i])+2, sizeof(char));
 		strcpy (to->eSetName[i], from->eSetName[i]);
         for (j=0; j<from->nNodes; j++)
             {
             to->nEvents[i][j] = from->nEvents[i][j];
             if (to->nEvents[i][j] > 0)
                 {
-                to->position[i][j] = (MrBFlt *) calloc (to->nEvents[i][j], sizeof (MrBFlt));
-                to->rateMult[i][j] = (MrBFlt *) calloc (to->nEvents[i][j], sizeof (MrBFlt));
+                to->position[i][j] = (MrBFlt *) SafeCalloc (to->nEvents[i][j], sizeof (MrBFlt));
+                to->rateMult[i][j] = (MrBFlt *) SafeCalloc (to->nEvents[i][j], sizeof (MrBFlt));
                 for (k=0; k<to->nEvents[i][j]; k++)
                     {
                     to->position[i][j][k] = from->position[i][j][k];
@@ -1438,10 +1438,10 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
     to->popSizeSet = from->popSizeSet;
     if (to->popSizeSet == YES)
         {
-        to->popSize = (MrBFlt *) calloc (to->nNodes-1, sizeof(MrBFlt));
+        to->popSize = (MrBFlt *) SafeCalloc (to->nNodes-1, sizeof(MrBFlt));
         for (i=0; i<to->nNodes-1; i++)
             to->popSize[i] = from->popSize[i];
-        to->popSizeSetName = (char *) calloc (strlen(from->popSizeSetName) + 1, sizeof(char));
+        to->popSizeSetName = (char *) SafeCalloc (strlen(from->popSizeSetName) + 1, sizeof(char));
         strcpy (to->popSizeSetName, from->popSizeSetName);
         }
 
@@ -2722,7 +2722,7 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmb
 		}
 	
 	/* Allocate memory */
-	nSubTrees = (int *) calloc (nTerminals * t->nNodes, sizeof(int));
+	nSubTrees = (int *) SafeCalloc (nTerminals * t->nNodes, sizeof(int));
 	if (!nSubTrees)
 		return (ERROR);
 	leaf = (TreeNode **) SafeMalloc (nLeaves * sizeof (TreeNode *));
@@ -2836,7 +2836,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 	if (t->isRooted == NO)
 		return (NO);
 		
-	x = (MrBFlt *) calloc (2*t->nNodes, sizeof (MrBFlt));
+	x = (MrBFlt *) SafeCalloc (2*t->nNodes, sizeof (MrBFlt));
 	if (x == NULL)
 		{
 		MrBayesPrint ("%s   Out of memory in IsCalibratedClockSatisfied\n", spacer);

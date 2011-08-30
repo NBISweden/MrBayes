@@ -92,16 +92,16 @@ int InitBeagleInstance (ModelInfo *m, int division)
         m->nCijkParts = 1;
 
     /* allocate memory used by beagle */
-    m->logLikelihoods          = (MrBFlt *) calloc ((numLocalChains)*m->numChars, sizeof(MrBFlt));
-    m->inRates                 = (MrBFlt *) calloc (m->numGammaCats, sizeof(MrBFlt));
-    m->branchLengths           = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
-    m->tiProbIndices           = (int *) calloc (2*numLocalTaxa, sizeof(int));
-    m->inWeights               = (MrBFlt *) calloc (m->numGammaCats*m->nCijkParts, sizeof(MrBFlt));
-    m->bufferIndices           = (int *) calloc (m->nCijkParts, sizeof(int));
-    m->eigenIndices            = (int *) calloc (m->nCijkParts, sizeof(int));
-    m->childBufferIndices      = (int *) calloc (m->nCijkParts, sizeof(int));
-    m->childTiProbIndices      = (int *) calloc (m->nCijkParts, sizeof(int));
-    m->cumulativeScaleIndices  = (int *) calloc (m->nCijkParts, sizeof(int));
+    m->logLikelihoods          = (MrBFlt *) SafeCalloc ((numLocalChains)*m->numChars, sizeof(MrBFlt));
+    m->inRates                 = (MrBFlt *) SafeCalloc (m->numGammaCats, sizeof(MrBFlt));
+    m->branchLengths           = (MrBFlt *) SafeCalloc (2*numLocalTaxa, sizeof(MrBFlt));
+    m->tiProbIndices           = (int *) SafeCalloc (2*numLocalTaxa, sizeof(int));
+    m->inWeights               = (MrBFlt *) SafeCalloc (m->numGammaCats*m->nCijkParts, sizeof(MrBFlt));
+    m->bufferIndices           = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
+    m->eigenIndices            = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
+    m->childBufferIndices      = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
+    m->childTiProbIndices      = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
+    m->cumulativeScaleIndices  = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
 
     numPartAmbigTips = 0;
     if (m->numStates != m->numModelStates)
@@ -399,7 +399,7 @@ void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) 
 	
 	beagleResources = beagleGetResourceList();
 	if (*newResourceList == NULL) {
-		*newResourceList = (int*) calloc(sizeof(int), beagleResources->length);
+		*newResourceList = (int*) SafeCalloc(sizeof(int), beagleResources->length);
 	}
 	gpuCount = 0;
 	for (i = 0; i < beagleResources->length; i++) {
@@ -565,9 +565,9 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {
 	chainLnLike = 0.0;
 
 	/* TODO Initialize only once */
-	threads = (pthread_t*) malloc(sizeof(pthread_t) * numCurrentDivisions);
-	launchValues = (LaunchStruct*) malloc(sizeof(LaunchStruct) * numCurrentDivisions);
-	wait = (int*) malloc(sizeof(int) * numCurrentDivisions);
+	threads = (pthread_t*) SafeMalloc(sizeof(pthread_t) * numCurrentDivisions);
+	launchValues = (LaunchStruct*) SafeMalloc(sizeof(LaunchStruct) * numCurrentDivisions);
+	wait = (int*) SafeMalloc(sizeof(int) * numCurrentDivisions);
 	
 	/* Cycle through divisions and recalculate tis and cond likes as necessary. */
 	/* Code below does not try to avoid recalculating ti probs for divisions    */

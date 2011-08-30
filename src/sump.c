@@ -1318,7 +1318,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 				stddev[j1] = sqrt (f);
 			}
 
-        elem = (ModelProb *) calloc (nElements, sizeof(ModelProb));
+        elem = (ModelProb *) SafeCalloc (nElements, sizeof(ModelProb));
         for (j1=0; j1<nElements; j1++)
             {
             elem[j1].index = j1;
@@ -1867,7 +1867,7 @@ int ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *p
         return ERROR;
 
     /* allocate space for reading lines */
-    s = (char *) calloc (fileInfo->longestLineLength + 10, sizeof(char));
+    s = (char *) SafeCalloc (fileInfo->longestLineLength + 10, sizeof(char));
 
 	/* fast forward to beginning of last unburned parameter line. */
 	for (lineNum=0; lineNum<fileInfo->firstParamLine; lineNum++)

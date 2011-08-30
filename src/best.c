@@ -63,8 +63,8 @@ void AllocateBestChainVariables (void)
     // Allocate space for upper triangular pair sets
     numUpperTriang     = (numSpecies * (numSpecies-1)) / 2;
     nLongsNeeded       = ((numSpecies - 1) / nBitsInALong) + 1;
-    speciesPairSets    = (SafeLong **) calloc (numUpperTriang, sizeof(SafeLong *));
-    speciesPairSets[0] = (SafeLong *)  calloc (numUpperTriang*nLongsNeeded, sizeof(SafeLong));
+    speciesPairSets    = (SafeLong **) SafeCalloc (numUpperTriang, sizeof(SafeLong *));
+    speciesPairSets[0] = (SafeLong *)  SafeCalloc (numUpperTriang*nLongsNeeded, sizeof(SafeLong));
     for (i=1; i<numUpperTriang; i++)
         speciesPairSets[i] = speciesPairSets[0] + i*nLongsNeeded;
 
@@ -176,7 +176,7 @@ int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
     // mitochondrion different substitution models, or if we assign different rates
     // to the codon site positions in a sequence
     numGeneTrees = numTopologies - 1;
-    geneTrees   = (Tree **) calloc (numGeneTrees, sizeof(Tree*));
+    geneTrees   = (Tree **) SafeCalloc (numGeneTrees, sizeof(Tree*));
 
     // Build species trees for state 0
 	for (chn=fromChain; chn<toChain; chn++)
@@ -416,8 +416,8 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
     // Allocate space for species partitions
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
-    speciesSets    = (SafeLong **) calloc (2*numLocalTaxa-1, sizeof(SafeLong *));
-    speciesSets[0] = (SafeLong *)  calloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
+    speciesSets    = (SafeLong **) SafeCalloc (2*numLocalTaxa-1, sizeof(SafeLong *));
+    speciesSets[0] = (SafeLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
     for (i=1; i<2*numLocalTaxa-1; i++)
         speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
 
@@ -520,7 +520,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 
     nLongsNeeded    = ((numSpecies - 1) / nBitsInALong) + 1;
     numUpperTriang  = numSpecies*(numSpecies - 1) / 2;
-    minDepth        = (Depth *) calloc (numUpperTriang, sizeof(Depth));
+    minDepth        = (Depth *) SafeCalloc (numUpperTriang, sizeof(Depth));
 
 	// Convert depthMatrix to an array of Depth structs
     index = 0;
@@ -694,12 +694,12 @@ int IsSpeciesTreeConsistent (Tree *speciesTree, int chain)
         }
 
     numGeneTrees = numTrees - 1;
-    geneTrees = (Tree **) calloc (numGeneTrees, sizeof(Tree *));
+    geneTrees = (Tree **) SafeCalloc (numGeneTrees, sizeof(Tree *));
     for (i=0; i<numTrees-1; i++)
         geneTrees[i] = GetTreeFromIndex(i, chain, state[chain]);
 
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
-    speciesTreeDepthMatrix = (double *) calloc (numUpperTriang, sizeof(double));
+    speciesTreeDepthMatrix = (double *) SafeCalloc (numUpperTriang, sizeof(double));
 
     GetMinDepthMatrix(geneTrees, numGeneTrees, depthMatrix);
     GetDepthMatrix(speciesTree, speciesTreeDepthMatrix);
@@ -798,7 +798,7 @@ double LnSpeciesTreeProb(int chain)
     speciesTree = GetTree(m->speciesTree, chain, state[chain]);
 
     numGeneTrees = m->speciesTree->nSubParams;
-    geneTrees = (Tree **) calloc (numGeneTrees, sizeof(Tree *));
+    geneTrees = (Tree **) SafeCalloc (numGeneTrees, sizeof(Tree *));
 
     for (i=0; i<m->speciesTree->nSubParams; i++)
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
@@ -1207,14 +1207,14 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
     oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
     // Get gene trees
-    geneTrees = (Tree **) calloc (2*numGeneTrees, sizeof(Tree *));
+    geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
     }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
-    oldMinDepths   = (double *) calloc (2*numUpperTriang, sizeof(double));
+    oldMinDepths   = (double *) SafeCalloc (2*numUpperTriang, sizeof(double));
     modMinDepths   = oldMinDepths + numUpperTriang;
 
     // Get min depth matrix for old gene trees
@@ -1312,14 +1312,14 @@ int Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
     oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
     // Get gene trees
-    geneTrees = (Tree **) calloc (2*numGeneTrees, sizeof(Tree *));
+    geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
     }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
-    oldMinDepths   = (double *) calloc (2*numUpperTriang, sizeof(double));
+    oldMinDepths   = (double *) SafeCalloc (2*numUpperTriang, sizeof(double));
     modMinDepths   = oldMinDepths + numUpperTriang;
 
     // Get min depth matrix for old gene trees
@@ -1417,14 +1417,14 @@ int Move_GeneTree3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
     oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
     // Get gene trees
-    geneTrees = (Tree **) calloc (2*numGeneTrees, sizeof(Tree *));
+    geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
     }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
-    oldMinDepths   = (double *) calloc (2*numUpperTriang, sizeof(double));
+    oldMinDepths   = (double *) SafeCalloc (2*numUpperTriang, sizeof(double));
     modMinDepths   = oldMinDepths + numUpperTriang;
 
     // Get min depth matrix for old gene trees
@@ -1788,7 +1788,7 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     oldSpeciesTree = GetTree (m->speciesTree, chain, state[chain] ^ 1);
 
     /* get gene trees */
-    geneTrees = (Tree **) calloc (numGeneTrees, sizeof(Tree*));
+    geneTrees = (Tree **) SafeCalloc (numGeneTrees, sizeof(Tree*));
     for (i=0; i<param->nSubParams; i++)
         geneTrees[i] = GetTree(param->subParams[i], chain, state[chain]);
 
@@ -1801,7 +1801,7 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
     /* make a copy for modification */
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
-    modMinDepths = (double *) calloc (numUpperTriang, sizeof(double));
+    modMinDepths = (double *) SafeCalloc (numUpperTriang, sizeof(double));
     for (i=0; i<numUpperTriang; i++)
         modMinDepths[i] = depthMatrix[i];
 

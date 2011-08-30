@@ -2424,12 +2424,12 @@ int DoConstraint (void)
     /* reallocate and initialize space for activeConstraints */
     for (i=0; i<numCurrentDivisions; i++)
         {
-        modelParams[i].activeConstraints = (int *) realloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+        modelParams[i].activeConstraints = (int *) SafeRealloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
         modelParams[i].activeConstraints[numDefinedConstraints-1] = NO;
         }
 
     /* reallocate and initialize space for tempActiveConstraints */
-    tempActiveConstraints = (int *) realloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+    tempActiveConstraints = (int *) SafeRealloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
     tempActiveConstraints[numDefinedConstraints-1] = NO;
 
     definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)(numDefinedConstraints*sizeof(enum ConstraintType)));
@@ -8390,13 +8390,13 @@ int DoTreeParm (char *parmName, char *tkn)
 				{
 				t->nESets++;
                 t->isRelaxed = YES;
-				t->nEvents  = (int **) realloc ((void *)t->nEvents, t->nESets*sizeof(int *));
-				t->position = (MrBFlt ***) realloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
-				t->rateMult = (MrBFlt ***) realloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
-                t->nEvents[t->nESets-1]  = (int *) calloc ((size_t)(2*numTaxa), sizeof(int));
-                t->position[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
-                t->rateMult[t->nESets-1] = (MrBFlt **) calloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
-                t->eSetName = (char **) realloc ((void *)t->eSetName, t->nESets*sizeof(char **));
+				t->nEvents  = (int **) SafeRealloc ((void *)t->nEvents, t->nESets*sizeof(int *));
+				t->position = (MrBFlt ***) SafeRealloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
+				t->rateMult = (MrBFlt ***) SafeRealloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
+                t->nEvents[t->nESets-1]  = (int *) SafeCalloc ((size_t)(2*numTaxa), sizeof(int));
+                t->position[t->nESets-1] = (MrBFlt **) SafeCalloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->rateMult[t->nESets-1] = (MrBFlt **) SafeCalloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->eSetName = (char **) SafeRealloc ((void *)t->eSetName, t->nESets*sizeof(char **));
                 }
 			strcpy (tempNameString,tkn);
 			foundName = YES;
@@ -8412,12 +8412,12 @@ int DoTreeParm (char *parmName, char *tkn)
 				{
 				t->nBSets++;
                 t->isRelaxed = YES;
-                t->effectiveBrLen = (MrBFlt **) realloc ((void *)t->effectiveBrLen, (size_t)(t->nBSets*sizeof(MrBFlt *)));
-                t->effectiveBrLen[t->nBSets-1] = (MrBFlt *) calloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
+                t->effectiveBrLen = (MrBFlt **) SafeRealloc ((void *)t->effectiveBrLen, (size_t)(t->nBSets*sizeof(MrBFlt *)));
+                t->effectiveBrLen[t->nBSets-1] = (MrBFlt *) SafeCalloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
                 for (i=0; i<2*numTaxa; i++)
                     t->effectiveBrLen[t->nBSets-1][i] = 1.0;
-                t->bSetName = (char **) realloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
-				t->bSetName[t->nBSets-1] = (char *) calloc (strlen(tkn)+1,sizeof(char));
+                t->bSetName = (char **) SafeRealloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
+				t->bSetName[t->nBSets-1] = (char *) SafeCalloc (strlen(tkn)+1,sizeof(char));
                 }
 			strcpy (tempNameString,tkn);
 			foundName = YES;
@@ -8440,9 +8440,9 @@ int DoTreeParm (char *parmName, char *tkn)
                     }
                 t->popSizeSet = YES;
                 if (isTranslateDef == YES && isTranslateDiff == YES)
-                    t->popSize = (MrBFlt *) calloc (2*numTranslates-1, sizeof(MrBFlt));
+                    t->popSize = (MrBFlt *) SafeCalloc (2*numTranslates-1, sizeof(MrBFlt));
                 else
-                    t->popSize = (MrBFlt *) calloc (2*numLocalTaxa-1, sizeof(MrBFlt));
+                    t->popSize = (MrBFlt *) SafeCalloc (2*numLocalTaxa-1, sizeof(MrBFlt));
 				}
 			strcpy (tempNameString,tkn);
 			foundName = YES;
@@ -8728,8 +8728,8 @@ int DoTreeParm (char *parmName, char *tkn)
 				t->nEvents[eSetIndex][pp->index]  = tempInt;
                 if (tempInt > 0)
                     {
-				    t->position[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
-				    t->rateMult[eSetIndex][pp->index] = (MrBFlt *) calloc (tempInt, sizeof(MrBFlt));
+				    t->position[eSetIndex][pp->index] = (MrBFlt *) SafeCalloc (tempInt, sizeof(MrBFlt));
+				    t->rateMult[eSetIndex][pp->index] = (MrBFlt *) SafeCalloc (tempInt, sizeof(MrBFlt));
                     expecting = Expecting (COLON);
                     if (inSumtCommand == YES || inComparetreeCommand == YES)
                         expecting |= Expecting (RIGHTCOMMENT);  /* we allow empty event specifications in sumt and comparetree */
@@ -8876,17 +8876,17 @@ int DoTreeParm (char *parmName, char *tkn)
 			    {
                 if (foundE == YES)
                     {
-				    t->eSetName[t->nESets-1] = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+				    t->eSetName[t->nESets-1] = (char *) SafeCalloc (strlen(tempNameString)+1,sizeof(char));
 				    strcat(t->eSetName[t->nESets-1],tempNameString);
     				}
                 else if (foundB == YES)
                     {
-				    t->bSetName[t->nBSets-1] = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+				    t->bSetName[t->nBSets-1] = (char *) SafeCalloc (strlen(tempNameString)+1,sizeof(char));
 				    strcat(t->bSetName[t->nBSets-1],tempNameString);
                     }
                 else if (foundN == YES)
                     {
-    				t->popSizeSetName = (char *) calloc (strlen(tempNameString)+1,sizeof(char));
+    				t->popSizeSetName = (char *) SafeCalloc (strlen(tempNameString)+1,sizeof(char));
     				strcpy(t->popSizeSetName,tempNameString);
                     }
                 foundName = NO;
@@ -9418,7 +9418,7 @@ int GetNumPartDivisions (int n)
         if (partitionId[i][n] > maxDiv)
             maxDiv = partitionId[i][n];
 
-    divFound = (int *) calloc (maxDiv, sizeof(int));
+    divFound = (int *) SafeCalloc (maxDiv, sizeof(int));
     
     for (i=0; i<maxDiv; i++)
 		divFound[i] = NO;
@@ -13943,8 +13943,8 @@ int SetPartition (int part)
 		}
 
     /* Allocate space for partition models */
-    modelParams = (Model *) calloc (numCurrentDivisions, sizeof (Model));
-	modelSettings = (ModelInfo *) calloc (numCurrentDivisions, sizeof (ModelInfo));
+    modelParams = (Model *) SafeCalloc (numCurrentDivisions, sizeof (Model));
+	modelSettings = (ModelInfo *) SafeCalloc (numCurrentDivisions, sizeof (ModelInfo));
 	if (!modelParams || !modelSettings)
 		{
 		MrBayesPrint ("%s   Could not allocate modelParams or modelSettings\n", spacer);

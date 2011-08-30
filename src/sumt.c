@@ -217,26 +217,26 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                 {
                 /* allocate more space */
                 if (sumtParams.brlensDef == YES)
-                    r->length[runId] = (MrBFlt *) realloc ((void *)r->length[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->length[runId] = (MrBFlt *) SafeRealloc ((void *)r->length[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
                 if (sumtParams.isClock == YES)
-                    r->height[runId] = (MrBFlt *) realloc ((void *)r->height[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->height[runId] = (MrBFlt *) SafeRealloc ((void *)r->height[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
                 if (sumtParams.isCalibrated == YES)
-                    r->age[runId] = (MrBFlt *) realloc ((void *)r->age[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->age[runId] = (MrBFlt *) SafeRealloc ((void *)r->age[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
                 if (sumtParams.nESets > 0)
                     {
                     for (i=0; i<sumtParams.nESets; i++)
-                        r->nEvents[i][runId] = (int *) realloc ((void *)r->nEvents[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(int));
+                        r->nEvents[i][runId] = (int *) SafeRealloc ((void *)r->nEvents[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(int));
                     }
                 if (sumtParams.nBSets > 0)
                     {
                     for (i=0; i<sumtParams.nBSets; i++)
                         {
-                        r->bRate[i][runId]   = (MrBFlt *) realloc ((void *)r->bRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
-                        r->bLen [i][runId]   = (MrBFlt *) realloc ((void *)r->bLen [i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
+                        r->bRate[i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
+                        r->bLen [i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bLen [i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
                         }
                     }
                 if (sumtParams.popSizeSet == YES)
-                    r->popSize[runId] = (MrBFlt *) realloc ((void *)r->popSize[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->popSize[runId] = (MrBFlt *) SafeRealloc ((void *)r->popSize[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
                 }
             /* record values */
             r->count[runId]++;
@@ -356,55 +356,55 @@ PartCtr *AllocPartCtr ()
 	PartCtr         *r;
 	
     /* allocate basic stuff */
-    r = (PartCtr *) calloc ((size_t) 1, sizeof(PartCtr));
+    r = (PartCtr *) SafeCalloc ((size_t) 1, sizeof(PartCtr));
     r->left = r->right = NULL;
-    r->partition = (SafeLong *) calloc ((size_t) sumtParams.SafeLongsNeeded, sizeof(SafeLong));
-    r->count = (int *) calloc ((size_t) sumtParams.numRuns, sizeof (int));
+    r->partition = (SafeLong *) SafeCalloc ((size_t) sumtParams.SafeLongsNeeded, sizeof(SafeLong));
+    r->count = (int *) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (int));
     if (sumtParams.brlensDef)
         {
-        r->length = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->length = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->length[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->length[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
         }
     if (sumtParams.isClock)
         {
-        r->height = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->height = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->height[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
-        r->age = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+            r->height[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
+        r->age = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->age[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->age[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
         }
 
     /* allocate relaxed clock parameters: eRate, nEvents, bRate */
     if (sumtParams.nESets > 0)
-        r->nEvents = (int    ***) calloc ((size_t) sumtParams.nESets, sizeof(int **));
+        r->nEvents = (int    ***) SafeCalloc ((size_t) sumtParams.nESets, sizeof(int **));
     for (i=0; i<sumtParams.nESets; i++)
         {
-        r->nEvents[i] = (int    **) calloc ((size_t) sumtParams.numRuns, sizeof(int *));
+        r->nEvents[i] = (int    **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(int *));
         for (j=0; j<sumtParams.numRuns; j++)
-            r->nEvents[i][j] = (int    *) calloc ((size_t) ALLOC_LEN, sizeof(int));
+            r->nEvents[i][j] = (int    *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(int));
 		}
 	if (sumtParams.nBSets > 0)
         {
-        r->bLen  = (MrBFlt ***) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
-        r->bRate = (MrBFlt ***) calloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
+        r->bLen  = (MrBFlt ***) SafeCalloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
+        r->bRate = (MrBFlt ***) SafeCalloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
         }
 	for (i=0; i<sumtParams.nBSets; i++)
         {
-        r->bLen[i]    = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
-        r->bRate[i]   = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
+        r->bLen[i]    = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
+        r->bRate[i]   = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
         for (j=0; j<sumtParams.numRuns; j++)
             {
-        	r->bLen[i][j]    = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
-        	r->bRate[i][j]   = (MrBFlt *) calloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+        	r->bLen[i][j]    = (MrBFlt *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+        	r->bRate[i][j]   = (MrBFlt *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
             }
         }
     if (sumtParams.popSizeSet == YES)
         {
-        r->popSize = (MrBFlt **) calloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->popSize = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->popSize[i] = (MrBFlt *) calloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->popSize[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
         }
 
     return r;
@@ -420,11 +420,11 @@ TreeCtr *AllocTreeCtr ()
 {
 	TreeCtr     *r;
 
-    r = (TreeCtr *) calloc ((size_t) 1, sizeof(TreeCtr));
+    r = (TreeCtr *) SafeCalloc ((size_t) 1, sizeof(TreeCtr));
     
     r->left = r->right = NULL;
     
-    r->order = (int *) calloc ((size_t) sumtParams.orderLen, sizeof(int));
+    r->order = (int *) SafeCalloc ((size_t) sumtParams.orderLen, sizeof(int));
 
     return r;
 }
@@ -1047,7 +1047,7 @@ int DoCompareTree (void)
 		MrBayesPrint ("%s   packedTreeList is already allocated\n", spacer);
 		goto errorExit;
 		}
-	packedTreeList[0] = (PackedTree *) calloc(numPackedTrees[0]+numPackedTrees[1], sizeof(PackedTree));
+	packedTreeList[0] = (PackedTree *) SafeCalloc(numPackedTrees[0]+numPackedTrees[1], sizeof(PackedTree));
 	packedTreeList[1] = packedTreeList[0] + numPackedTrees[0];
 	if (!packedTreeList[0])
 		{
@@ -1103,7 +1103,7 @@ int DoCompareTree (void)
     sumtParams.tree = AllocatePolyTree (numTaxa);
     AllocatePolyTreePartitions (sumtParams.tree);
     sumtParams.numTreesEncountered = sumtParams.numTreesSampled = 0;
-    sumtParams.numFileTrees = (int *) calloc (2*2+2*numTaxa, sizeof(int));
+    sumtParams.numFileTrees = (int *) SafeCalloc (2*2+2*numTaxa, sizeof(int));
     sumtParams.numFileTreesSampled = sumtParams.numFileTrees + sumtParams.numRuns;
     sumtParams.order = sumtParams.numFileTrees + 2*sumtParams.numRuns;
     sumtParams.absentTaxa = sumtParams.numFileTrees + 2*sumtParams.numRuns + numTaxa;
@@ -1211,7 +1211,7 @@ int DoCompareTree (void)
         sumtParams.numFileTreesSampled[1]);
 	
 	/* Extract partition counter pointers */
-    treeParts = (PartCtr **) calloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
+    treeParts = (PartCtr **) SafeCalloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
     i = 0;
     PartCtrUppass(partCtrRoot, treeParts, &i);
 
@@ -1263,7 +1263,7 @@ int DoCompareTree (void)
     MrBayesPrint ("%s     ID -- Partition%*c  No1%*c  No2%*c  Freq1   Freq2\n",
         spacer, j, ' ', i, ' ', i, ' ');
 
-    mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
+    mask = SafeCalloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
     for (i=0; i<sumtParams.numTaxa; i++)
         SetBit (i, mask);
     for (i=0; i<numUniqueSplitsFound; i++)
@@ -1979,7 +1979,7 @@ int DoSumt (void)
     sumtParams.popSizeSet = NO;
     sumtParams.popSizeSetName = NULL;
     AllocatePolyTreePartitions (sumtParams.tree);
-    sumtParams.numFileTrees = (int *) calloc (2*sumtParams.numRuns+2*numTaxa, sizeof(int));
+    sumtParams.numFileTrees = (int *) SafeCalloc (2*sumtParams.numRuns+2*numTaxa, sizeof(int));
     sumtParams.numFileTreesSampled = sumtParams.numFileTrees + sumtParams.numRuns;
     sumtParams.order = sumtParams.numFileTrees + 2*sumtParams.numRuns;
     sumtParams.absentTaxa = sumtParams.numFileTrees + 2*sumtParams.numRuns + numTaxa;
@@ -2233,7 +2233,7 @@ int DoSumt (void)
 			}	/* next run for this tree */
 				
 		/* Extract partition counter pointers */
-        treeParts = (PartCtr **) calloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
+        treeParts = (PartCtr **) SafeCalloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
         i = 0;
         PartCtrUppass(partCtrRoot, treeParts, &i);
 
@@ -2392,7 +2392,7 @@ int DoSumt (void)
 		    MrBayesPrintf (fpParts, "ID\tPartition\n");
 
             /* now, show partitions that were found on screen; print to .parts file simultaneously */
-		    mask = calloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
+		    mask = SafeCalloc (sumtParams.SafeLongsNeeded, sizeof(SafeLong));
             for (i=0; i<sumtParams.numTaxa; i++)
                 SetBit (i, mask);
             for (i=0; i<numTreePartsToPrint; i++)
@@ -3658,7 +3658,7 @@ int DoSumtTree (void)
             if (t->popSizeSet == YES)
                 {
                 sumtParams.popSizeSet = YES;
-                sumtParams.popSizeSetName = (char *) calloc (strlen(t->popSizeSetName)+1, sizeof(char));
+                sumtParams.popSizeSetName = (char *) SafeCalloc (strlen(t->popSizeSetName)+1, sizeof(char));
                 strcpy(sumtParams.popSizeSetName, t->popSizeSetName);
                 }
             else
@@ -4530,7 +4530,7 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
     MrBFlt  *support, mean, var, min, max;
     Stat    theStats;
 
-    support = calloc (sumtParams.numRuns, sizeof(MrBFlt));
+    support = SafeCalloc (sumtParams.numRuns, sizeof(MrBFlt));
     for (i=0; i<sumtParams.numRuns; i++)
         {
         support[i] = (MrBFlt) x->count[i] / (MrBFlt) sumtParams.numFileTreesSampled[i];
@@ -4800,8 +4800,8 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
     maxLabelLength = 20;
 
 	/* allocate space for label, printLine and markLine */
-	printLine = (char *) calloc ((2*screenWidth+2),sizeof(char)); 
-    label = (char *) calloc (maxLabelLength+1, sizeof(char));
+	printLine = (char *) SafeCalloc ((2*screenWidth+2),sizeof(char)); 
+    label = (char *) SafeCalloc (maxLabelLength+1, sizeof(char));
 	if (!printLine || !label)
 		return ERROR;
 	markLine = printLine + screenWidth + 1;
@@ -5040,7 +5040,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 	isTreeDivided = NO;
 	
 	/* allocate space for printLine, markLine and label */
-	printLine = (char *) calloc (maxLength+1+(2*screenWidth+2),sizeof(char));
+	printLine = (char *) SafeCalloc (maxLength+1+(2*screenWidth+2),sizeof(char));
 	if (!printLine)
 		return ERROR;
 	markLine = printLine + screenWidth + 1;
@@ -5459,8 +5459,8 @@ int StoreSumtTree (PackedTree *treeList, int index, PolyTree *t)
     orderLen = t->nIntNodes - 1;
 
     /* allocate space */
-    treeList[index].brlens = (MrBFlt *) calloc (numBrlens, sizeof(MrBFlt));
-    treeList[index].order  = (int *) calloc (orderLen, sizeof(MrBFlt));
+    treeList[index].brlens = (MrBFlt *) SafeCalloc (numBrlens, sizeof(MrBFlt));
+    treeList[index].order  = (int *) SafeCalloc (orderLen, sizeof(MrBFlt));
     if (!treeList[index].order || !treeList[index].brlens)
         {
         MrBayesPrint ("%s   Could not store packed representation of tree '%s'\n", spacer, t->name);
@@ -5513,7 +5513,7 @@ int TreeProb (void)
 	MrBayesPrint ("%s   Calculating tree probabilities...\n\n", spacer);
 
     /* allocate space for tree counters and trees */
-	trees = (TreeCtr **) calloc ((size_t)numUniqueTreesFound, sizeof(TreeCtr *));
+	trees = (TreeCtr **) SafeCalloc ((size_t)numUniqueTreesFound, sizeof(TreeCtr *));
     theTree = AllocateTree (sumtParams.numTaxa);
     if (!trees || !theTree)
 		{

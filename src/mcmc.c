@@ -599,7 +599,7 @@ int AddToPrintString (char *tempStr)
 	if (len1 + len2 + 5 > printStringSize)
 		{
 		printStringSize += len1 + len2 - printStringSize + 200;
-		printString = (char*)realloc((void*)printString, printStringSize * sizeof(char));
+		printString = (char*)SafeRealloc((void*)printString, printStringSize * sizeof(char));
 		if (!printString)
 			{
 			MrBayesPrint ("%s   Problem reallocating printString (%d)\n", spacer, printStringSize * sizeof(char));
@@ -670,7 +670,7 @@ int AddTreeSamples (int from, int to, int saveToList)
 				return (ERROR);
 			    }
 
-			lineBuf = (char *) calloc (longestLine + 10, sizeof (char));
+			lineBuf = (char *) SafeCalloc (longestLine + 10, sizeof (char));
 			if (!lineBuf)
 				{
 				SafeFclose (&fp);
@@ -1770,7 +1770,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	rP = rateProbs[chain] + state[chain] * rateProbRowSize;
 	
 	/* set bit vector indicating divisions in this HMM */
-	inHMM = (SafeLong *) calloc (((param->nRelParts/nBitsInALong) + 1), sizeof(SafeLong));
+	inHMM = (SafeLong *) SafeCalloc (((param->nRelParts/nBitsInALong) + 1), sizeof(SafeLong));
 	for (i=0; i<param->nRelParts; i++)
 		{
 		if (modelSettings[param->relParts[i]].shape ==
@@ -7306,13 +7306,13 @@ void CopyParams (int chain)
 						}
 					else if (p->nEvents[toState][j] == 0)
 						{
-						p->position[toState][j] = (MrBFlt *) calloc (p->nEvents[fromState][j], sizeof (MrBFlt));
-						p->rateMult[toState][j] = (MrBFlt *) calloc (p->nEvents[fromState][j], sizeof (MrBFlt));
+						p->position[toState][j] = (MrBFlt *) SafeCalloc (p->nEvents[fromState][j], sizeof (MrBFlt));
+						p->rateMult[toState][j] = (MrBFlt *) SafeCalloc (p->nEvents[fromState][j], sizeof (MrBFlt));
 						}
 					else
 						{
-						p->position[toState][j] = (MrBFlt *) realloc ((void *)p->position[toState][j], p->nEvents[fromState][j] * sizeof (MrBFlt));
-						p->rateMult[toState][j] = (MrBFlt *) realloc ((void *)p->rateMult[toState][j], p->nEvents[fromState][j] * sizeof (MrBFlt));
+						p->position[toState][j] = (MrBFlt *) SafeRealloc ((void *)p->position[toState][j], p->nEvents[fromState][j] * sizeof (MrBFlt));
+						p->rateMult[toState][j] = (MrBFlt *) SafeRealloc ((void *)p->rateMult[toState][j], p->nEvents[fromState][j] * sizeof (MrBFlt));
 						}
 					p->nEvents[toState][j] = p->nEvents[fromState][j];
 					}
@@ -9373,7 +9373,7 @@ int FillNumSitesOfPat (void)
 		goto errorExit;
 		}
 	memAllocs[ALLOC_NUMSITESOFPAT] = NO;
-	numSitesOfPat = (CLFlt *) realloc((void *) numSitesOfPat, numCompressedChars * chainParams.numChains * sizeof(MrBFlt));
+	numSitesOfPat = (CLFlt *) SafeRealloc((void *) numSitesOfPat, numCompressedChars * chainParams.numChains * sizeof(MrBFlt));
 	if (!numSitesOfPat)
 		{
 		MrBayesPrint ("%s   Problem reallocating numSitesOfPat (%d)\n", spacer, numCompressedChars * chainParams.numChains * sizeof(MrBFlt));
@@ -10734,7 +10734,7 @@ int InitAdGamma (void)
         free (corrModel);
         return ERROR;
         }
-    siteJump = (int *) calloc (numChar, sizeof(int));
+    siteJump = (int *) SafeCalloc (numChar, sizeof(int));
     if (siteJump)
         memAllocs[ALLOC_SITEJUMP] = YES;
     else
@@ -10960,18 +10960,18 @@ int InitAugmentedModels (void)
 			nRateCats = m->numGammaCats + 1;
 		for (i=0; i<numLocalChains; i++)
 			{
-			m->catLike[i] = (CLFlt **) calloc (nRateCats, sizeof (CLFlt *));
+			m->catLike[i] = (CLFlt **) SafeCalloc (nRateCats, sizeof (CLFlt *));
             if (!m->catLike[i])
                 return ERROR;
-			m->catLnScaler[i] = (CLFlt **) calloc (nRateCats, sizeof (CLFlt *));
+			m->catLnScaler[i] = (CLFlt **) SafeCalloc (nRateCats, sizeof (CLFlt *));
             if (!m->catLnScaler[i])
                 return ERROR;
 			for (j=0; j<nRateCats; j++)
 				{
-				m->catLike[i][j] = (CLFlt *) calloc (m->numChars, sizeof (CLFlt));
+				m->catLike[i][j] = (CLFlt *) SafeCalloc (m->numChars, sizeof (CLFlt));
                 if (!m->catLike[i][j])
                     return ERROR;
-				m->catLnScaler[i][j] = (CLFlt *) calloc (m->numChars, sizeof (CLFlt));
+				m->catLnScaler[i][j] = (CLFlt *) SafeCalloc (m->numChars, sizeof (CLFlt));
                 if (!m->catLnScaler[i][j])
                     return ERROR;
 				}
@@ -12086,19 +12086,19 @@ int InitParsSets (void)
 		m = &modelSettings[d];
 		mp = &modelParams[d];
 
-        m->parsSets = (SafeLong **) calloc (m->numParsSets, sizeof(SafeLong*));
+        m->parsSets = (SafeLong **) SafeCalloc (m->numParsSets, sizeof(SafeLong*));
         if (!m->parsSets)
             return (ERROR);
         for (i=0; i<m->numParsSets; i++)
             {
-            m->parsSets[i] = (SafeLong *) calloc (m->numChars*m->nParsIntsPerSite, sizeof(SafeLong));
+            m->parsSets[i] = (SafeLong *) SafeCalloc (m->numChars*m->nParsIntsPerSite, sizeof(SafeLong));
             if (!m->parsSets[i])
                 return (ERROR);
             }
 
         if (m->numParsNodeLens > 0)
             {
-            m->parsNodeLens = (CLFlt *) calloc (m->numParsNodeLens, sizeof(CLFlt));
+            m->parsNodeLens = (CLFlt *) SafeCalloc (m->numParsNodeLens, sizeof(CLFlt));
             if (!m->parsNodeLens)
                 return (ERROR);
             }
@@ -12315,8 +12315,8 @@ int InitPrintParams (void)
 		}
 
 	/* allocate space */
-	printParam = (Param **) calloc (numPrintParams + numPrintTreeParams + numTopologies, sizeof(Param *));
-	topologyPrintIndex = (int *) calloc (numTopologies + numPrintTreeParams, sizeof(int)); 
+	printParam = (Param **) SafeCalloc (numPrintParams + numPrintTreeParams + numTopologies, sizeof(Param *));
+	topologyPrintIndex = (int *) SafeCalloc (numTopologies + numPrintTreeParams, sizeof(int)); 
 	if (!printParam || !topologyPrintIndex)
 		{
 		free (printParam);
@@ -14474,7 +14474,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 	t = GetTree(m->brlens,chain,state[chain]);
 	
 	/* Allocate space for parsimony tree length */
-	treeLength = (CLFlt *) calloc (m->numChars, sizeof (CLFlt));
+	treeLength = (CLFlt *) SafeCalloc (m->numChars, sizeof (CLFlt));
 	
 	/* Get number of states */
 	nStates = m->nStates;
@@ -16080,7 +16080,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 
         /* Allocate space for node depths */
         nDatedTips = NumDatedTips (root);
-        nodeDepths = (MrBFlt *) realloc ((void *)nodeDepths, (nDatedTips+1)*sizeof(MrBFlt));
+        nodeDepths = (MrBFlt *) SafeRealloc ((void *)nodeDepths, (nDatedTips+1)*sizeof(MrBFlt));
 
         /* Get the dated node depths and sort them. The call to GetDatedNodeDepths also
            returns the root node depth into nodeDepths, which is convenient. For now, this
@@ -16096,7 +16096,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
         /* Get probability due to sorting of interior node depths */
         
         /* First get the potential number of lineages leaving each interval j at time nodeDepths[j+1] */
-        nLineages = (int *) realloc ((void *)nLineages, nDatedTips*sizeof(int));
+        nLineages = (int *) SafeRealloc ((void *)nLineages, nDatedTips*sizeof(int));
         for (j=0; j<nDatedTips; j++)
             nLineages[j] = j+1;
         
@@ -16500,8 +16500,8 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 			}
 		if (numEvents-1 > 0)
 			{
-			position[p->index] = (MrBFlt *) realloc ((void *) position[p->index], (numEvents-1)*sizeof(MrBFlt));
-			rateMultiplier[p->index] = (MrBFlt *) realloc ((void *) rateMultiplier[p->index], (numEvents-1)*sizeof(MrBFlt));
+			position[p->index] = (MrBFlt *) SafeRealloc ((void *) position[p->index], (numEvents-1)*sizeof(MrBFlt));
+			rateMultiplier[p->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[p->index], (numEvents-1)*sizeof(MrBFlt));
 			assert (position[p->index] != NULL && rateMultiplier[p->index] != NULL);
             }
 		else
@@ -16531,8 +16531,8 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 			}
 
 		/* rearrange and insert */
-		position[p->index] = (MrBFlt *) realloc ((void *)position[p->index], (numEvents+1)*sizeof(MrBFlt));
-		rateMultiplier[p->index] = (MrBFlt *) realloc ((void *)rateMultiplier[p->index], (numEvents+1)*sizeof(MrBFlt));
+		position[p->index] = (MrBFlt *) SafeRealloc ((void *)position[p->index], (numEvents+1)*sizeof(MrBFlt));
+		rateMultiplier[p->index] = (MrBFlt *) SafeRealloc ((void *)rateMultiplier[p->index], (numEvents+1)*sizeof(MrBFlt));
 		assert (position[p->index] != NULL && rateMultiplier[p->index] != NULL);
         for (i=numEvents; i>k; i--)
 			{
@@ -18209,8 +18209,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			n3 = nEvents[v->index];
 			if (n2 > 0)
 				{
-				position[a->index] = (MrBFlt *) realloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
-				rateMultiplier[a->index] = (MrBFlt *) realloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
+				position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
+				rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
 				}
 			for (j=0; j<n1; j++)
 				position[a->index][j] *= v1 / (v1+v2);
@@ -18415,8 +18415,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 			nEvents[u->index] = n5;
 			if (n5 > 0)
 				{
-				position[u->index] = (MrBFlt *) realloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
-				rateMultiplier[u->index] = (MrBFlt *) realloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));			
+				position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
+				rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));			
 				for (j=n4; j<nEvents[a->index]; j++)
 					{
 					position[u->index][j-n4] = (position[a->index][j] * (v4+v5) - v4) / v5;
@@ -18424,8 +18424,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 					}
 				if (n4 > 0)
 					{
-					position[a->index] = (MrBFlt *) realloc ((void *) position[a->index], n4 * sizeof (MrBFlt));
-					rateMultiplier[a->index] = (MrBFlt *) realloc ((void *) rateMultiplier[a->index], n4 * sizeof (MrBFlt));
+					position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], n4 * sizeof (MrBFlt));
+					rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], n4 * sizeof (MrBFlt));
 					for (j=0; j<n4; j++)
 						position[a->index][j] *= ((v4+v5) / v4);
 					}
@@ -22199,7 +22199,7 @@ int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 				*dirParm, *oldRate, *newRate;
 
     /* allocate memory */
-    dirParm = (MrBFlt *) calloc (3*(numTopologies-1), sizeof(MrBFlt));
+    dirParm = (MrBFlt *) SafeCalloc (3*(numTopologies-1), sizeof(MrBFlt));
     oldRate = dirParm + numCurrentDivisions;
     newRate = dirParm + 2*numCurrentDivisions;
 
@@ -23639,8 +23639,8 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 		}
 	
 	/* allocate space for temporary cond likes and condlike pointers */
-	tempCondLikes = (CLFlt *) calloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
-	tempCondLikePtr = (CLFlt **) calloc (nNodes, sizeof (CLFlt *)));
+	tempCondLikes = (CLFlt *) SafeCalloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
+	tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *)));
 	if (!tempCondLikes || !tempCondLikePtr)
 		{
 		free (tempCondLikes);
@@ -23689,7 +23689,7 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 
 	/* find number of site patterns and modify randomly */
 	globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-	nSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
+	nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
 	if (!nSitesOfPat)
 		{
 		MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_MLSPR\n", spacer);
@@ -24045,8 +24045,8 @@ int Move_MLSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		}
 	
 	/* allocate space for temporary cond likes and condlike pointers */
-	tempCondLikes = (CLFlt *) calloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
-	tempCondLikePtr = (CLFlt **) calloc (nNodes, sizeof (CLFlt *)));
+	tempCondLikes = (CLFlt *) SafeCalloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
+	tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *)));
 	if (!tempCondLikes || !tempCondLikePtr)
 		{
 		free (tempCondLikes);
@@ -26132,9 +26132,9 @@ int Move_ParsEraser1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	subtree = &memTree[0];
 	subtree->nNodes = 2 * nSubTerminals - 2;
 	subtree->nIntNodes = nSubTerminals - 2;
-	subtree->nodes = (TreeNode *) calloc (subtree->nNodes, sizeof (TreeNode));
-	subtree->allDownPass = (TreeNode **) calloc (subtree->nNodes, sizeof (TreeNode *));
-	subtree->intDownPass = (TreeNode **) calloc (subtree->nIntNodes, sizeof (TreeNode *));
+	subtree->nodes = (TreeNode *) SafeCalloc (subtree->nNodes, sizeof (TreeNode));
+	subtree->allDownPass = (TreeNode **) SafeCalloc (subtree->nNodes, sizeof (TreeNode *));
+	subtree->intDownPass = (TreeNode **) SafeCalloc (subtree->nIntNodes, sizeof (TreeNode *));
 	if (!subtree->nodes || !subtree->intDownPass || !subtree->allDownPass)
 		{
 		MrBayesPrint ("%s   ERROR: Could not allocate subtree\n", spacer);
@@ -26144,16 +26144,16 @@ int Move_ParsEraser1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	subtree1 = &memTree[1];
 	subtree1->nNodes = 2 * nSubTerminals - 2;
 	subtree1->nIntNodes = nSubTerminals - 2;
-	subtree1->nodes = (TreeNode *) calloc (subtree1->nNodes, sizeof (TreeNode));
-	subtree1->allDownPass = (TreeNode **) calloc (subtree1->nNodes, sizeof (TreeNode *));
-	subtree1->intDownPass = (TreeNode **) calloc (subtree1->nIntNodes, sizeof (TreeNode *));
+	subtree1->nodes = (TreeNode *) SafeCalloc (subtree1->nNodes, sizeof (TreeNode));
+	subtree1->allDownPass = (TreeNode **) SafeCalloc (subtree1->nNodes, sizeof (TreeNode *));
+	subtree1->intDownPass = (TreeNode **) SafeCalloc (subtree1->nIntNodes, sizeof (TreeNode *));
 	if (!subtree1->nodes || !subtree1->intDownPass || !subtree1->allDownPass)
 		{
 		MrBayesPrint ("%s   ERROR: Could not allocate subtree1\n", spacer);
 		goto errorExit;
 		}
 
-	tInfo.leaf = (TreeNode **) calloc (t->nNodes, sizeof(TreeNode *));
+	tInfo.leaf = (TreeNode **) SafeCalloc (t->nNodes, sizeof(TreeNode *));
 	if (!tInfo.leaf)
 		{
 		MrBayesPrint ("%s   ERROR: Could not allocate tInfo.leaf\n", spacer);
@@ -26461,7 +26461,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 	/* find number of site patterns and modify randomly */
 	globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-	nSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
+	nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
 	if (!nSitesOfPat)
 		{
 		MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPR\n", spacer);
@@ -26857,8 +26857,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			n3 = nEvents[v->index];
 			if (n2 > 0)
 				{
-				position[a->index] = (MrBFlt *) realloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
-				rateMultiplier[a->index] = (MrBFlt *) realloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
+				position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
+				rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
 				}
 			for (j=0; j<n1; j++)
 				position[a->index][j] *= v1 / (v1+v2);
@@ -26973,7 +26973,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     
 	/* find number of site patterns and modify randomly */
 	globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-	nSitesOfPat = (CLFlt *) calloc (numCompressedChars, sizeof(CLFlt));
+	nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
 	if (!nSitesOfPat)
 		{
 		MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPRClock\n", spacer);
@@ -27147,8 +27147,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			nEvents[u->index] = n5;
 			if (n5 > 0)
 				{
-				position[u->index] = (MrBFlt *) realloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
-				rateMultiplier[u->index] = (MrBFlt *) realloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));			
+				position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
+				rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));			
 				for (j=n4; j<nEvents[c->index]; j++)
 					{
 					position[u->index][j-n4] = (position[c->index][j] * (v4+v5) - v4) / v5;
@@ -27156,8 +27156,8 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 					}
 				if (n4 > 0)
 					{
-					position[c->index] = (MrBFlt *) realloc ((void *) position[c->index], n4 * sizeof (MrBFlt));
-					rateMultiplier[c->index] = (MrBFlt *) realloc ((void *) rateMultiplier[c->index], n4 * sizeof (MrBFlt));
+					position[c->index] = (MrBFlt *) SafeRealloc ((void *) position[c->index], n4 * sizeof (MrBFlt));
+					rateMultiplier[c->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[c->index], n4 * sizeof (MrBFlt));
 					for (j=0; j<n4; j++)
 						position[c->index][j] *= ((v4+v5) / v4);
 					}
@@ -30107,7 +30107,7 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 				*dirParm, *oldRate, *newRate;
 
     /* allocate memory */
-    dirParm = (MrBFlt *) calloc (3*numCurrentDivisions, sizeof(MrBFlt));
+    dirParm = (MrBFlt *) SafeCalloc (3*numCurrentDivisions, sizeof(MrBFlt));
     oldRate = dirParm + numCurrentDivisions;
     newRate = dirParm + 2*numCurrentDivisions;
 
@@ -33419,7 +33419,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
             FlipTiProbsSpace(m, chain, p->index);
 
 			/* allocate space for first and second derivatives */
-            tiP1 = (CLFlt *) calloc (2*m->tiProbLength, sizeof (CLFlt));
+            tiP1 = (CLFlt *) SafeCalloc (2*m->tiProbLength, sizeof (CLFlt));
 			if (!tiP1)
 				return (ERROR);
 			tiP2 = tiP1 + m->tiProbLength;
@@ -34007,20 +34007,20 @@ int PreparePrintFiles (void)
 	fpMcmc = NULL;
 	fpParm = NULL;
 	fpTree = NULL;	
-	fpParm = (FILE **) calloc (n, sizeof (FILE *));	
+	fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *));	
 	if (fpParm == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpParm in PreparePrintFiles\n", spacer);
 		return ERROR;
 		}
 	memAllocs[ALLOC_FILEPOINTERS] = YES;
-	fpTree = (FILE ***) calloc (n, sizeof (FILE **));	
+	fpTree = (FILE ***) SafeCalloc (n, sizeof (FILE **));	
 	if (fpTree == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpTree in PreparePrintFiles\n", spacer);
 		return ERROR;
 		}
-	fpTree[0] = (FILE **) calloc (numTrees*n, sizeof (FILE *));
+	fpTree[0] = (FILE **) SafeCalloc (numTrees*n, sizeof (FILE *));
 	if (fpTree[0] == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpTree[0] in PreparePrintFiles\n", spacer);
@@ -34760,7 +34760,7 @@ int PrintCheckPoint (int gen)
 #endif
 
 	/* allocate tempString */
-	if ((tempString = (char *) calloc (tempStrSize, sizeof(char))) == NULL)
+	if ((tempString = (char *) SafeCalloc (tempStrSize, sizeof(char))) == NULL)
 		nErrors++;
 
 #if defined (MPI_ENABLED)
@@ -34814,7 +34814,7 @@ int PrintCheckPoint (int gen)
 
 	/* allocate space for print string */
 	printStringSize = tempStrSize;
-	printString = (char *) calloc ((size_t)printStringSize, sizeof(char));
+	printString = (char *) SafeCalloc ((size_t)printStringSize, sizeof(char));
 	if (!printString)
 		nErrors++;
 	else
@@ -35460,7 +35460,7 @@ int PrintMPISlaves (FILE *fp)
 	nErrors = sumErrors = tag = 0;
     if (proc_id==0)
         {
-        s = (char *) calloc (100, sizeof(char));
+        s = (char *) SafeCalloc (100, sizeof(char));
         if (s!=NULL)
             lenS = 100;
         else
@@ -35494,7 +35494,7 @@ int PrintMPISlaves (FILE *fp)
 		/* reallocate string s on processor 0 if necessary */
 		if (nErrors == 0 && proc_id == 0 && len+5 > strlen(s))
 			{
-			if ((s = (char *) realloc ((void *)s, (size_t)((len+5)*sizeof(char)))) == NULL)
+			if ((s = (char *) SafeRealloc ((void *)s, (size_t)((len+5)*sizeof(char)))) == NULL)
 				{
 				MrBayesPrint ("%s   Problem reallocating %d chars to string 's' on proc 0 in PrintMPISlaves()\n", spacer, len+5);
 				nErrors++;
@@ -38067,8 +38067,8 @@ int ReassembleParamVals (int *curId)
             }
         
         /* mcmc trees */
-        brlens = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
-        order  = (int *)    calloc (2*numLocalTaxa,   sizeof(int));
+        brlens = (MrBFlt *) SafeCalloc (2*numLocalTaxa, sizeof(MrBFlt));
+        order  = (int *)    SafeCalloc (2*numLocalTaxa,   sizeof(int));
         for (i=lower; i<upper; i++)
             {
             for (j=0; j<numTrees; j++)
@@ -38228,8 +38228,8 @@ int ReassembleParamVals (int *curId)
                             {
                             if (nEvents[k] > 0)
                                 {
-                                position[k] = (MrBFlt *) calloc (nEvents[k], sizeof(MrBFlt));
-                                rateMult[k] = (MrBFlt *) calloc (nEvents[k], sizeof(MrBFlt));
+                                position[k] = (MrBFlt *) SafeCalloc (nEvents[k], sizeof(MrBFlt));
+                                rateMult[k] = (MrBFlt *) SafeCalloc (nEvents[k], sizeof(MrBFlt));
 
                                 ierror = MPI_Irecv (position[k], nEvents[k], MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, &request);
                                 if (ierror != MPI_SUCCESS)
@@ -38299,7 +38299,7 @@ int ReassembleTuningParams (void)
     int        i, j, k, lower, ierror;
     MrBFlt     *x, *sum;
     
-    x = (MrBFlt *) calloc (2*numUsedMoves, sizeof(MrBFlt));
+    x = (MrBFlt *) SafeCalloc (2*numUsedMoves, sizeof(MrBFlt));
     sum = x + numUsedMoves;
 
     lower = numGlobalChains / num_procs;
@@ -38475,8 +38475,8 @@ int RedistributeParamVals (void)
             }
         
         /* mcmc trees */
-        brlens = (MrBFlt *) calloc (2*numLocalTaxa, sizeof(MrBFlt));
-        order  = (int *)    calloc (2*numLocalTaxa,   sizeof(int));
+        brlens = (MrBFlt *) SafeCalloc (2*numLocalTaxa, sizeof(MrBFlt));
+        order  = (int *)    SafeCalloc (2*numLocalTaxa,   sizeof(int));
         for (i=lower; i<upper; i++)
             {
             for (j=0; j<numTrees; j++)
@@ -38638,8 +38638,8 @@ int RedistributeParamVals (void)
                             {
                             if (nEvents[k] > 0)
                                 {
-                                position[k] = (MrBFlt *) calloc (nEvents[k], sizeof(MrBFlt));
-                                rateMult[k] = (MrBFlt *) calloc (nEvents[k], sizeof(MrBFlt));
+                                position[k] = (MrBFlt *) SafeCalloc (nEvents[k], sizeof(MrBFlt));
+                                rateMult[k] = (MrBFlt *) SafeCalloc (nEvents[k], sizeof(MrBFlt));
 
                                 ierror = MPI_Irecv (position[k], nEvents[k], MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &request);
                                 if (ierror != MPI_SUCCESS)
@@ -38701,7 +38701,7 @@ int RedistributeTuningParams (void)
     int	    i, j, k, lower, ierror;
     MrBFlt  *x, *sum;
     
-    x = (MrBFlt *) calloc (2*numUsedMoves, sizeof(MrBFlt));
+    x = (MrBFlt *) SafeCalloc (2*numUsedMoves, sizeof(MrBFlt));
     sum = x + numUsedMoves;
 
     lower = numGlobalChains / num_procs;
@@ -39003,7 +39003,7 @@ int RemoveTreeSamples (int from, int to)
 				if (from == 1)
 					{
 					longestLine = LongestLine(fp);
-					lineBuf = (char *) calloc (longestLine+2,sizeof(char));
+					lineBuf = (char *) SafeCalloc (longestLine+2,sizeof(char));
 					fseek (fp, LastBlock(fp, lineBuf, longestLine), SEEK_SET);
 					fseek (fp, FirstTree(fp, lineBuf, longestLine), SEEK_SET);
 					fgetpos (fp, &chainParams.tFilePos[j*numTopologies+i]);
@@ -39027,7 +39027,7 @@ int RemoveTreeSamples (int from, int to)
 						;
 					}
 
-				lineBuf = (char *) calloc (longestLine + 10, sizeof (char));
+				lineBuf = (char *) SafeCalloc (longestLine + 10, sizeof (char));
 				if (!lineBuf)
 					{
 					SafeFclose (&fp);
@@ -39203,7 +39203,7 @@ void ResetChainIds (void)
 		    **swapPosition, **fromRateMult, **toRateMult, **swapRateMult;
 	Tree	*toTree, *fromTree, *swapTree;
 
-    curId = (int *) calloc (numGlobalChains, sizeof(int));
+    curId = (int *) SafeCalloc (numGlobalChains, sizeof(int));
 
 #if defined (MPI_ENABLED)
     ReassembleParamVals(curId);
@@ -39312,8 +39312,8 @@ void ResetChainIds (void)
 					{
 				    if (from[k] > 0)
                         {
-                        toPosition[k] = (MrBFlt *) realloc ((void *)toPosition[k], from[k]*sizeof (MrBFlt));
-						toRateMult[k] = (MrBFlt *) realloc ((void *)toRateMult[k], from[k]*sizeof (MrBFlt));
+                        toPosition[k] = (MrBFlt *) SafeRealloc ((void *)toPosition[k], from[k]*sizeof (MrBFlt));
+						toRateMult[k] = (MrBFlt *) SafeRealloc ((void *)toRateMult[k], from[k]*sizeof (MrBFlt));
 						for (k1=0; k1<from[k]; k1++)
 							{
 							toPosition[k][k1] = fromPosition[k][k1];
@@ -39330,8 +39330,8 @@ void ResetChainIds (void)
                     to[k] = from[k];
                     if (swap[k] > 0)
                         {
-                        fromPosition[k] = (MrBFlt *) realloc ((void *)fromPosition[k], swap[k]*sizeof (MrBFlt));
-						fromRateMult[k] = (MrBFlt *) realloc ((void *)fromRateMult[k], swap[k]*sizeof (MrBFlt));
+                        fromPosition[k] = (MrBFlt *) SafeRealloc ((void *)fromPosition[k], swap[k]*sizeof (MrBFlt));
+						fromRateMult[k] = (MrBFlt *) SafeRealloc ((void *)fromRateMult[k], swap[k]*sizeof (MrBFlt));
 						for (k1=0; k1<swap[k]; k1++)
 							{
 							fromPosition[k][k1] = swapPosition[k][k1];
@@ -39642,20 +39642,20 @@ int ReusePreviousResults (int *numSamples)
 	fpMcmc = NULL;
 	fpParm = NULL;
 	fpTree = NULL;	
-	fpParm = (FILE **) calloc (n, sizeof (FILE *));	
+	fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *));	
 	if (fpParm == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpParm in ReusePreviousResults\n", spacer);
 		return ERROR;
 		}
 	memAllocs[ALLOC_FILEPOINTERS] = YES;
-	fpTree = (FILE ***) calloc (n, sizeof (FILE **));	
+	fpTree = (FILE ***) SafeCalloc (n, sizeof (FILE **));	
 	if (fpTree == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpTree in ReusePreviousResults\n", spacer);
 		return ERROR;
 		}
-	fpTree[0] = (FILE **) calloc (numTrees*n, sizeof (FILE *));
+	fpTree[0] = (FILE **) SafeCalloc (numTrees*n, sizeof (FILE *));
 	if (fpTree[0] == NULL)
 		{
 		MrBayesPrint ("%s   Could not allocate fpTree[0] in ReusePreviousResults\n", spacer);
@@ -39826,20 +39826,20 @@ int RunChain (SafeLong *seed)
 		MrBayesPrint ("%s   Problem allocating curLnL (%d)\n", spacer, numLocalChains * sizeof(MrBFlt));
 		nErrors++;
 		}
-	else if ((maxLnL0 = (MrBFlt *) calloc (chainParams.numRuns * chainParams.numChains, sizeof(MrBFlt))) == NULL)
+	else if ((maxLnL0 = (MrBFlt *) SafeCalloc (chainParams.numRuns * chainParams.numChains, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating maxLnL0\n", spacer, numLocalChains * sizeof(MrBFlt));
 		free (curLnL);
 		nErrors++;
 		}
-    else if ((marginalLnLSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+    else if ((marginalLnLSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating marginalLnLSS\n", spacer);
         free (maxLnL0);
 		free (curLnL);
 		nErrors++;
 		}
-    else if ((stepScalerSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+    else if ((stepScalerSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating stepScalerSS\n", spacer);
         free (marginalLnLSS);
@@ -39847,7 +39847,7 @@ int RunChain (SafeLong *seed)
 		free (curLnL);
 		nErrors++;
 		}
-    else if ((stepAcumulatorSS = (MrBFlt *) calloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+    else if ((stepAcumulatorSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating stepAcumulatorSS\n", spacer);
         free (stepScalerSS);
@@ -39856,7 +39856,7 @@ int RunChain (SafeLong *seed)
 		free (curLnL);
 		nErrors++;
 		}
-	else if ((splitfreqSS = (MrBFlt *) calloc (chainParams.numStepsSS*numTopologies, sizeof(MrBFlt))) == NULL)
+	else if ((splitfreqSS = (MrBFlt *) SafeCalloc (chainParams.numStepsSS*numTopologies, sizeof(MrBFlt))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating splitfreqSS\n", spacer);
         free (stepScalerSS);
@@ -39933,7 +39933,7 @@ int RunChain (SafeLong *seed)
 		MrBayesPrint ("%s   swapInfo is already allocated\n", spacer);
 		nErrors++;
 		}
-	else if ((swapInfo = (int ***) calloc (chainParams.numRuns, sizeof (int **))) == NULL)
+	else if ((swapInfo = (int ***) SafeCalloc (chainParams.numRuns, sizeof (int **))) == NULL)
 		{
 		MrBayesPrint ("%s   Problem allocating swapInfo\n", spacer);
 		nErrors++;
@@ -39991,7 +39991,7 @@ int RunChain (SafeLong *seed)
 					nErrors++;
 				else 
 					{
-					chainParams.treeList = (TreeList *) calloc (chainParams.numRuns*numTopologies, sizeof (TreeList));
+					chainParams.treeList = (TreeList *) SafeCalloc (chainParams.numRuns*numTopologies, sizeof (TreeList));
 					if (!chainParams.treeList)
 						nErrors++;
 					}
@@ -40004,7 +40004,7 @@ int RunChain (SafeLong *seed)
 				}
 			else /* if (chainParams.saveTrees == NO) */
 				{
-				chainParams.tFilePos = (fpos_t*) realloc ((void *)chainParams.tFilePos, chainParams.numRuns*numTopologies*sizeof (fpos_t));
+				chainParams.tFilePos = (fpos_t*) SafeRealloc ((void *)chainParams.tFilePos, chainParams.numRuns*numTopologies*sizeof (fpos_t));
 				if (!chainParams.tFilePos)
 					nErrors++;
 				else
@@ -40017,7 +40017,7 @@ int RunChain (SafeLong *seed)
 #		if defined (MPI_ENABLED)
 		if (proc_id == 0)
 			{
-			if ((chainParams.stat = (STATS *) calloc (numTopologies, sizeof (STATS))) == NULL)
+			if ((chainParams.stat = (STATS *) SafeCalloc (numTopologies, sizeof (STATS))) == NULL)
 				nErrors++;
 			else
 				{
@@ -40052,7 +40052,7 @@ int RunChain (SafeLong *seed)
 			return ERROR;
 			}
 #		else
-		if ((chainParams.stat = (STATS *) calloc (numTopologies, sizeof (STATS))) == NULL)
+		if ((chainParams.stat = (STATS *) SafeCalloc (numTopologies, sizeof (STATS))) == NULL)
 			return ERROR;
 		else
 			{
@@ -41087,7 +41087,7 @@ int RunChain (SafeLong *seed)
 
         if ( chainParams.mcmcDiagn == YES )
             {
-            if ((tempX = (MrBFlt *) calloc (chainParams.numStepsSS, sizeof(MrBFlt))) == NULL)
+            if ((tempX = (MrBFlt *) SafeCalloc (chainParams.numStepsSS, sizeof(MrBFlt))) == NULL)
                 {
                 nErrors++;
                 }
@@ -41279,7 +41279,7 @@ int SafeSprintf(char **target, int *targetLen, char *fmt, ...) {
             *targetLen += TARGETLENDELTA;
 
 	/* reallocate target */
-	*target = realloc ((void *)*target, *targetLen);
+	*target = SafeRealloc ((void *)*target, *targetLen);
         if (*target == NULL)
             return ERROR;
         }
@@ -41945,7 +41945,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 		trans = rateValues[0];
 		if ( m->numModelStates == 4 )   /* code to satisfy Beagle */
 			{
-			rateValues = (MrBFlt *) calloc (6, sizeof(MrBFlt));
+			rateValues = (MrBFlt *) SafeCalloc (6, sizeof(MrBFlt));
 			rateValues[0] = rateValues[2] = rateValues[3] = rateValues[5] =1.0; /* Setting transversions */
 			rateValues[1] = rateValues[4] = trans; /* Setting transitions */
 			}
@@ -41957,7 +41957,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 #if defined (BEAGLE_ENABLED)
     else if (m->nst == 1 && m->numModelStates == 4)   /* code to satisfy Beagle */
         {
-        rateValues = (MrBFlt *) calloc (6, sizeof(MrBFlt));
+        rateValues = (MrBFlt *) SafeCalloc (6, sizeof(MrBFlt));
         for (i=0; i<6; i++)
             rateValues[i] = 1.0;
         }
@@ -43045,20 +43045,20 @@ int SetUpPartitionCounters (void)
 		MrBayesPrint ("%s   ERROR: pfcounters not free in SetUpPartitionCounters\n", spacer);
 		return ERROR;
 		}
-	partition = (SafeLong **) calloc (2*numLocalTaxa, sizeof (SafeLong *));
+	partition = (SafeLong **) SafeCalloc (2*numLocalTaxa, sizeof (SafeLong *));
 	if (partition == NULL)
 		{
 		MrBayesPrint ("%s   Failed to allocate partition in SetUpPartitionCounters\n", spacer);
 		return ERROR;
 		}
-	partition[0] = (SafeLong *) calloc (2*numLocalTaxa * nLongsNeeded, sizeof(SafeLong));
+	partition[0] = (SafeLong *) SafeCalloc (2*numLocalTaxa * nLongsNeeded, sizeof(SafeLong));
 	if (partition[0] == NULL)
 		{
 		free (partition);
 		MrBayesPrint ("%s   Failed to allocate partition[0] in SetUpPartitionCounters\n", spacer);
 		return ERROR;
 		}
-	partFreqTreeRoot = (PFNODE **) calloc (numTopologies, sizeof (PFNODE *));
+	partFreqTreeRoot = (PFNODE **) SafeCalloc (numTopologies, sizeof (PFNODE *));
 	if (partFreqTreeRoot == NULL)
 		{
 		free (partition);
@@ -43123,7 +43123,7 @@ int SetUpTermState (void)
 	numComprChars = numCompressedChars;
 #endif
 
-	termState = (int *) calloc (numLocalTaxa * numComprChars, sizeof(int));
+	termState = (int *) SafeCalloc (numLocalTaxa * numComprChars, sizeof(int));
 	if (termState)
 		memAllocs[ALLOC_TERMSTATE] = YES;
 	else
@@ -43131,7 +43131,7 @@ int SetUpTermState (void)
 		MrBayesPrint ("%s   Problem allocating termState\n", spacer);
 		return (ERROR);
 		}
-	isPartAmbig = (int *) calloc (numLocalTaxa*numCurrentDivisions, sizeof(int));
+	isPartAmbig = (int *) SafeCalloc (numLocalTaxa*numCurrentDivisions, sizeof(int));
 	if (isPartAmbig)
 		memAllocs[ALLOC_ISPARTAMBIG] = YES;
 	else
@@ -43158,7 +43158,7 @@ int SetUpTermState (void)
 		if (m->numModelStates > m->numStates)
 			nReps = m->numModelStates / mp->nStates;
 
-        m->termState   = (int **) calloc (numLocalTaxa, sizeof(int *));
+        m->termState   = (int **) SafeCalloc (numLocalTaxa, sizeof(int *));
         if (!m->termState)
             {
             MrBayesPrint("%s   Problems allocating termState pointers for division %d\n", spacer, d+1);
@@ -43511,14 +43511,14 @@ PFNODE *Talloc (void)
 	if (temp == NULL)
 		return NULL;
 
-	temp->partition = (SafeLong *) calloc (nLongsNeeded, sizeof (SafeLong));
+	temp->partition = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof (SafeLong));
 	if (temp->partition == NULL)
 		{
 		free (temp);
 		return NULL;
 		}
 
-	temp->count = (int *) calloc (chainParams.numRuns, sizeof (int));
+	temp->count = (int *) SafeCalloc (chainParams.numRuns, sizeof (int));
 	if (temp->count == NULL)
 		{
 		free (temp->partition);
@@ -44887,7 +44887,7 @@ int UpDateCijk (int whichPart, int whichChain)
                 if (m->useBeagle == YES)
                     {
                     /* TODO: only allocate this space once at initialization */
-                    beagleEigvecs = (double*) calloc (2*n*n, sizeof(double));
+                    beagleEigvecs = (double*) SafeCalloc (2*n*n, sizeof(double));
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     for (i=k=0; i<n; i++)
                         {
@@ -44969,7 +44969,7 @@ int UpDateCijk (int whichPart, int whichChain)
                 if (m->useBeagle == YES)
                     {
                     /* TODO: only allocate this space once at initialization */
-                    beagleEigvecs = (double*) calloc (2*n*n, sizeof(double));
+                    beagleEigvecs = (double*) SafeCalloc (2*n*n, sizeof(double));
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     }
 #endif
