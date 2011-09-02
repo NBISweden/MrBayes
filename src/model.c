@@ -20996,7 +20996,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 		else if (j == P_IGRBRANCHLENS)
 			{
-			MrBayesPrint ("%s      Igr            ", spacer);
+			MrBayesPrint ("%s      Igrbranchlens  ", spacer);
 			}
 		else if (j == P_CLOCKRATE)
 			{

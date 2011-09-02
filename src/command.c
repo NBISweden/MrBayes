@@ -10992,7 +10992,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    If you do not have any age calibrations in the tree, you can \n");
 		MrBayesPrint ("                    still calibrate the tree using 'Clockratepr'. For instance,  \n");
-		MrBayesPrint ("                    if you know that your sequence data evolve at a rat of 0.20  \n");
+		MrBayesPrint ("                    if you know that your sequence data evolve at a rate of 0.20 \n");
 		MrBayesPrint ("                    substitutions per million years, you might calibrate the tree\n");
 		MrBayesPrint ("                    by fixing the substitution rate to 0.20 using                \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -12399,6 +12399,7 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
 	    MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
 	    MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
+        MrBayesPrint ("      Ratemultiplier  -- Rate multiplier for partitions                          \n");
 	    MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
 	    MrBayesPrint ("      Theta           -- Parameter for coalescence process                       \n");
 		MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n"); 

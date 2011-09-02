@@ -9224,20 +9224,23 @@ int DoMcmcParm (char *parmName, char *tkn)
 
 int DoSs (void)
 {
-    int ret, oldBurnin, oldRelativeBurnin;
-
-    if( chainParams.append = YES)
-        {
-        MrBayesPrint ("%s   Error: Appending is not suported yet for Stepping Stone sampling.\n", spacer);
-        return (ERROR);
-        }
+    int ret, oldBurnin, oldRelativeBurnin, oldAppend;
 
     oldBurnin = chainParams.chainBurnIn;
     oldRelativeBurnin = chainParams.burninSS;
+    oldAppend = chainParams.append;
+
+
     chainParams.relativeBurnin = YES;
+    if( chainParams.append == YES)
+        {
+        MrBayesPrint ("%s   Warning: Appending is not suported yet for Stepping Stone sampling. \"append=no\" is assumed for the run.\n", spacer);
+        chainParams.append = NO;
+        }
 
     if( chainParams.burninSS < 0 )
         chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS-chainParams.burninSS)*chainParams.sampleFreq);
+
     chainParams.isSS = YES;
 
     ret=DoMcmc();
@@ -9245,6 +9248,7 @@ int DoSs (void)
     chainParams.isSS = NO;
     chainParams.burninSS = oldBurnin;
     chainParams.relativeBurnin = oldRelativeBurnin;
+    chainParams.append=oldAppend;
 
     return ret;
 }

@@ -164,6 +164,7 @@ int main (int argc, char *argv[])
 		printf(poltmp);
 		}
 #	endif
+
 	/*mtrace();*/
 	/* calculate the size of a long - used by bit manipulation functions */
 	nBitsInALong = sizeof(SafeLong) * 8;
