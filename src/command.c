@@ -11852,12 +11852,12 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		MrBayesPrint ("   Ss                                                                            \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   This command is used to start steppingstone sampling, which is an efficient   \n");
+	    MrBayesPrint ("   This command is used to start stepping-stone sampling, which is an efficient  \n");
 	    MrBayesPrint ("   and accurate method for estimating the marginal likelihood of the currently   \n");
 	    MrBayesPrint ("   specified model. It is considerably more accurate than the harmonic mean of   \n");
         MrBayesPrint ("   the likelihoods from a standard MCMC run on the model (calculated by the      \n");
         MrBayesPrint ("   'Sumt' command) but it requires a separate MCMC-like run. To be more specific,\n");
-        MrBayesPrint ("   steppingstone sampling uses importance sampling to estimate each ratio in a   \n");
+        MrBayesPrint ("   stepping-stone sampling uses importance sampling to estimate each ratio in a  \n");
 		MrBayesPrint ("   series of discrete steps bridging the posterior and prior distributions.      \n");
 		MrBayesPrint ("   The importance distributions that are used are called power posterior distri- \n");
         MrBayesPrint ("   butions, and are defined as prior*(likelihood^beta). By varying beta from 1 to\n");
@@ -11887,7 +11887,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Note that the 'Ngen' parameter of 'Mcmc' is used to set the maximum number of \n");
         MrBayesPrint ("   generations processed, including both the burnin and the following steps in   \n");
-        MrBayesPrint ("   the steppingstone sampling phase. For instance, assume that 'Burninss' is set \n");
+        MrBayesPrint ("   the stepping-stone sampling phase. For instance, assume that 'Burninss' is set\n");
         MrBayesPrint ("   to '-1', 'Nsteps' to '49', 'Ngen' to '1000000' and 'Samplefreq' to '1000'.    \n");
         MrBayesPrint ("   We will then get 1,000 samples in total (1,000,000 / 1,000). These will fall  \n");
         MrBayesPrint ("   into 50 bins, one of which represents the burnin and is discarded. Each step  \n");
@@ -11911,7 +11911,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("     mcmcp <setting parameters shared with mcmc>;                                \n");
         MrBayesPrint ("     ss <setting exclusive ss parameters>;                                       \n");
 	    MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   For more information on the steppingstone algorithm, see:                     \n");
+        MrBayesPrint ("   For more information on the stepping-stone algorithm, see:                    \n");
 	    MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Xie, W., P. O. Lewis, Y. Fan, L. Kuo, and M.-H. Chen. 2011. Improving marginal\n");
         MrBayesPrint ("      likelihood estimation for Bayesian phylogenetic model selection. Systematic\n");
@@ -11921,7 +11921,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   (NB: Only exclusive ss parameters listed here. For additional parameters, see \n");
         MrBayesPrint ("        help on 'mcmc' or 'mcmcp'.                                               \n");
 		MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   Alpha        -- The beta values used in the steppingstone sampling procedure  \n");
+        MrBayesPrint ("   Alpha        -- The beta values used in the stepping-stone sampling procedure \n");
 		MrBayesPrint ("                   correspond to evenly spaced quantiles from a Beta('Alpha',1.0)\n");
 		MrBayesPrint ("                   distribution. The parameter 'Alpha' determines the skewness of\n");
 		MrBayesPrint ("                   the beta values. If 'Alpha' is set to '1.0', the beta values  \n");
@@ -11935,10 +11935,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   interpreted as the number of samples to discard as burnin. If \n");
         MrBayesPrint ("                   the number is negative, its absolute value is interpreted as  \n");
         MrBayesPrint ("                   the length of the burnin in terms of the length of each of the\n");
-        MrBayesPrint ("                   following steps in the steppingstone algorithm. For instance, \n");
+        MrBayesPrint ("                   following steps in the stepping-stone algorithm. For instance,\n");
         MrBayesPrint ("                   a value of '-1' means that the length of the burnin is the    \n");
         MrBayesPrint ("                   same as the length of each of the subsequent steps.           \n");
-		MrBayesPrint ("   Nsteps       -- Number of steps in the steppingstone algorithm. Typically, a  \n");
+		MrBayesPrint ("   Nsteps       -- Number of steps in the stepping-stone algorithm. Typically, a \n");
 		MrBayesPrint ("                   number above 30 is sufficient for accurate results.           \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
