@@ -40289,14 +40289,14 @@ int RunChain (SafeLong *seed)
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
         if( numGenOld != chainParams.numGen)
             {
-            MrBayesPrint ("%s   NOTE: In total it will be taken %d generations instead of requested %d.   \n", spacer, chainParams.numGen, numGenOld ); 
-            MrBayesPrint ("%s   The reduiction occurs due to reducing number of generation of each     \n", spacer);
-            MrBayesPrint ("%s   step in order to make it multiple of sampling frequency.                  \n", spacer);
+            MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
+            MrBayesPrint ("%s   of sampling frequency. That is why, in total it will be taken %d gene-    \n", spacer, chainParams.numGen ); 
+            MrBayesPrint ("%s   rations instead of requested %d.                                          \n", spacer, numGenOld ); 
             }
         MrBayesPrint ("\n");
         if( numGenInStepSS/chainParams.sampleFreq < 1  )
             {
-            MrBayesPrint ("%s   There is less then one samples in each step of Steppingstone sampling.  \n", spacer);
+            MrBayesPrint ("%s   There is less then one sample in each step of Steppingstone sampling.   \n", spacer);
             MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
             MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
 			return ERROR;
@@ -40912,7 +40912,7 @@ int RunChain (SafeLong *seed)
                     if ( n != chainParams.numGen )
                         MrBayesPrint("%s   Start sampling step %d out of %d steps...\n\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
                     else
-                        MrBayesPrint("%s   Stepping stone sampling is complete successfuly!!!\n\n",spacer );
+                        MrBayesPrint("%s   Stepping stone sampling is completed successfuly!!!\n\n",spacer );
                     for (chn=0; chn<numLocalChains; chn++)
 		                {
                         if (chainId[chn] % chainParams.numChains == 0)
@@ -41123,7 +41123,7 @@ int RunChain (SafeLong *seed)
                     MrBayesPrint ("   Plot of max standard deviation of split frequencies across steps.");
                 }
             MrBayesPrint ("\n");
-            MrBayesPrint ("   Points at -1.0 (y-axis) indicates that there were no splits\n");
+            MrBayesPrint ("   Points at -1.0 (y-axis) indicate that there were no splits\n");
             MrBayesPrint ("   above minimum frequency for corresponding step.");
             if (numTopologies>1)
                 {

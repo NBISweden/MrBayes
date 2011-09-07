@@ -1754,6 +1754,8 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 	minY = maxY = meanY[0] / numY[0];
 	for (i=0; i<screenWidth; i++)
 		{
+        if( meanY[i] == 0) /* with some compilers if( NaN < 1 ) is equal true !!! so we realy need this check*/
+            continue;
 		meanY[i] /= numY[i];
 		if (meanY[i] < minY)
 			minY = meanY[i];
@@ -1768,7 +1770,7 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 	MrBayesPrint ("\n   +");
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint ("-");
-	MrBayesPrint ("+ %1.2lf\n", maxY);
+	MrBayesPrint ("+ %1.3lf\n", maxY);
 	for (j=screenHeight-1; j>=0; j--)
 		{
 		MrBayesPrint ("   |");
@@ -1797,7 +1799,7 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 		else
 			MrBayesPrint ("-");
 		}
-	MrBayesPrint ("+ %1.2lf\n", minY);
+	MrBayesPrint ("+ %1.3lf\n", minY);
 	MrBayesPrint ("   ^");
 	for (i=0; i<screenWidth; i++)
 		MrBayesPrint (" ");

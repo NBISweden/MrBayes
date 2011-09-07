@@ -11124,7 +11124,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    partition that divides the characters by codon position, if  \n");
 		MrBayesPrint ("                    you have DNA data. You can also divide your data using a     \n");
 		MrBayesPrint ("                    partition that separates different genes from each other.    \n");
-		MrBayesPrint ("	                   The next step is to make the desired partition the active one\n");
+		MrBayesPrint ("                    The next step is to make the desired partition the active one\n");
 		MrBayesPrint ("                    using the set command. For example, if your partition is     \n");
 		MrBayesPrint ("                    called \"by_codon\", then you make that the active partition \n");
 		MrBayesPrint ("                    using \"set partition=by_codon\". Now that you have defined  \n");
