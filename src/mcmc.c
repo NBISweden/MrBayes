@@ -39779,7 +39779,7 @@ int RunChain (SafeLong *seed)
 	int			lastDiagnostics;    // the sample no. when last diagnostic was performed
 	int         removeFrom, removeTo=0;
 	int 		stopChain, nErrors;
-	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f=0.0, CPUTime;
+	MrBFlt		r=0.0, sum=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f=0.0, CPUTime;
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
