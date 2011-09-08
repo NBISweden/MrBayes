@@ -516,6 +516,7 @@ MrBFlt          *maxLnL0 = NULL;             /* maximum likelihood              
 FILE			*fpMcmc = NULL;              /* pointer to .mcmc file                        */
 FILE			**fpParm = NULL;             /* pointer to .p file(s)                        */
 FILE			***fpTree = NULL;            /* pointer to .t file(s)                        */
+FILE			*fpSS = NULL;                /* pointer to .ss file                          */
 static int		requestAbortRun;             /* flag for aborting mcmc analysis              */
 int				*topologyPrintIndex;	     /* print file index of each topology            */
 int				*printTreeTopologyIndex;	 /* topology index of each tree print file       */
@@ -2085,6 +2086,9 @@ void CloseMBPrintFiles (void)
 
 	if (chainParams.mcmcDiagn == YES)
 		SafeFclose (&fpMcmc);
+
+    if ( chainParams.isSS == YES )
+		SafeFclose (&fpSS);
 		
 }
 
@@ -9985,6 +9989,7 @@ void FreeChainMemory (void)
 		fpParm = NULL;
 		fpTree = NULL;
 		fpMcmc = NULL;
+        fpSS = NULL;
 		memAllocs[ALLOC_FILEPOINTERS] = NO;
 		}
 	if (memAllocs[ALLOC_STATS] == YES) /* alloc in RunChain() */
@@ -34009,6 +34014,7 @@ int PreparePrintFiles (void)
 		return ERROR;
 		}
 	fpMcmc = NULL;
+    fpSS = NULL;
 	fpParm = NULL;
 	fpTree = NULL;	
 	fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *));	
@@ -34147,6 +34153,20 @@ int PreparePrintFiles (void)
 			return (ERROR);
             }
 		}
+
+    /* Prepare the .ss file */
+	if ( chainParams.isSS == YES )
+		{
+		sprintf (fileName, "%s.ss", chainParams.chainFileName);
+		if ((fpSS = OpenNewMBPrintFile (fileName)) == NULL)
+            {
+            noWarn = oldNoWarn;
+            autoOverwrite = oldAutoOverwrite;
+			return (ERROR);
+            }
+		}
+
+
 
     /* Remove previous chekpoint file if present */
     sprintf (fileName, "%s.ckp", chainParams.chainFileName);
@@ -35228,6 +35248,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
     if (curGen == 0)
 		{
 		MrBayesPrintf (fpMcmc, "[LEGEND:]\n");
+        MrBayesPrintf (fpMcmc, "[ID: %s]\n", stamp);
 		MrBayesPrintf (fpMcmc, "[   Gen                --  Generation]\n");
 		if (chainParams.allChains == YES)
 			MrBayesPrintf (fpMcmc, "[   <name1>(<name2>)$acc_run2_chn3 --  Acceptance rate of move <name1> changing parameter <name2> in run 2, chain 3]\n");
@@ -39649,6 +39670,7 @@ int ReusePreviousResults (int *numSamples)
 		return ERROR;
 		}
 	fpMcmc = NULL;
+    fpSS = NULL;
 	fpParm = NULL;
 	fpTree = NULL;	
 	fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *));	
@@ -40611,7 +40633,7 @@ int RunChain (SafeLong *seed)
             }
 
 
-        /* attempt swap(s) */
+        /* attempt swap(s) Non-blocking for MPI if no swap with external process. */
 		if (chainParams.numChains > 1 && n % chainParams.swapFreq == 0)
 			{
 			for (i = 0; i<chainParams.numRuns; i++)
@@ -40630,12 +40652,9 @@ int RunChain (SafeLong *seed)
 				}
 			}
 
-        /* print information to screen */
+        /* print information to screen . Non-blocking for MPI*/
 		if ( n % chainParams.printFreq == 0)
 			PrintToScreen(n, numPreviousGen, time(0), startingT);
-
-       if( chainParams.isSS == YES )
-           lnLikelihoodRatio *= powerSS;
 
         /* print information to files */
 		/* this will also add tree samples to topological convergence diagnostic counters */
@@ -40668,7 +40687,7 @@ int RunChain (SafeLong *seed)
 #			endif
 			}
 
-        /* print check-point file */
+        /* print check-point file. Blocking for MPI*/
 		if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
 			{
 #			if defined (MPI_ENABLED)
@@ -40699,7 +40718,7 @@ int RunChain (SafeLong *seed)
 #			endif
 			}
 
-        /* print mcmc diagnostics */
+        /* print mcmc diagnostics. Blocking for MPI*/
 		if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
                                              || ( chainParams.isSS == YES && ( n-lastStepEndSS ) % numGenInStepSS == 0 ) ) )
 			{
@@ -40813,7 +40832,7 @@ int RunChain (SafeLong *seed)
 #				endif
 				}
 
-            /* part of the following function needs to be performed by all MPI processors */
+            /* part of the following function needs to be performed by all MPI processors. Blocking for MPI. */
 			if (PrintMCMCDiagnosticsToFile (n) == ERROR)
                 {
 				MrBayesPrint ("%s   Problem printing mcmc diagnostics to file\n", spacer);
@@ -40888,11 +40907,11 @@ int RunChain (SafeLong *seed)
 					if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
 						{
                  	  	 MrBayesPrint("%s   Problem removing tree samples\n");
-#				      		  if defined (MPI_ENABLED)
+#				         if defined (MPI_ENABLED)
 			     		   nErrors++;
-#	        	      		  else
+#	        	         else
 			      		  return ERROR;
-#                     		  endif
+#                        endif
                     	}
 					}
 #                   if defined (MPI_ENABLED)
@@ -40905,6 +40924,32 @@ int RunChain (SafeLong *seed)
 #			        endif
                 if( n > chainParams.burninSS*chainParams.sampleFreq )
                     {
+                    /* dump to file current step contribution */
+                    MrBayesPrintf (fpSS, "%3d\t%.4f", chainParams.numStepsSS-stepIndexSS, powerSS);
+#                   if defined (MPI_ENABLED)
+    	            for (j=0; j<chainParams.numRuns ; j++)
+			            {
+                        r = log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j];
+			            ierror = MPI_Reduce (&r,&sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			            if (ierror != MPI_SUCCESS)
+				            {
+				            MrBayesPrint ("%s   Problem with MPI_Reduce\n", spacer);
+				            return ERROR;
+				            }
+	    	            if(proc_id == 0 )
+	    		            {
+	    		            MrBayesPrintf (fpSS, "\t%.6f", sum);
+	    		            }
+			            }
+#			        else
+                    for (j=0; j<chainParams.numRuns ; j++)
+			            {
+                        MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j]);
+                        }
+#                   endif
+                    MrBayesPrintf (fpSS, "\n");
+                    fflush (fpSS);
+
                     stepIndexSS--;
                     stepLengthSS = powerSS; 
                     powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
@@ -40927,6 +40972,15 @@ int RunChain (SafeLong *seed)
                     }
                 else
                     {
+                    MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
+                    MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
+		            MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
+                    MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
+			        MrBayesPrintf (fpSS, "[   runX                --  Contribution to the Marginal LogLikelihood of run X, i.e. Marginal LogLikelihood for run X is the sum across all steps in column runX.   ]\n");
+                    MrBayesPrintf (fpSS, "Step\tPower");
+                    for (j=0; j<chainParams.numRuns ; j++)
+                        MrBayesPrintf (fpSS, "\trun%d", j);
+                    MrBayesPrintf (fpSS, "\n");
                     MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
                     }
                 }             
@@ -41084,15 +41138,17 @@ int RunChain (SafeLong *seed)
         MrBayesPrint ("%s       ------------------------\n",spacer);
         for(j=0; j<chainParams.numRuns; j++)
             {
-            MrBayesPrint ("%s       %3d    %9.2lf   \n", spacer, j+1, marginalLnLSS[j] );
+            MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, j+1, marginalLnLSS[j] );
             }
         MrBayesPrint ("%s       ------------------------\n",spacer);
         if(chainParams.numRuns>1)
             {
             MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
-            MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal LogLiklihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
-            MrBayesPrint ("%s       Note: Scaled variance is given in log units and calculated as \"variance/mean^2\"\n",spacer);     
+            MrBayesPrint ("%s       Mean:  %9.2f\n\n",spacer,meanSS);
+            //MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal LogLiklihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
+            //MrBayesPrint ("%s       Note: Scaled variance is given in log units and calculated as \"variance/mean^2\"\n",spacer);     
             }
+        MrBayesPrint ("%s   More statistics on Steppingstone sampling is dumped to %s.ss file.\n", spacer, chainParams.chainFileName);
 
         if ( chainParams.mcmcDiagn == YES )
             {
