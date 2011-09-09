@@ -39776,7 +39776,7 @@ int RunChain (SafeLong *seed)
 	
 	int			i, j, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
 	int			lastDiagnostics;    // the sample no. when last diagnostic was performed
-	int         removeFrom, remake moveTo=0;
+	int         removeFrom, removeTo=0;
 	int 		stopChain, nErrors;
 	MrBFlt		r=0.0, lnLikelihoodRatio, lnPriorRatio, lnProposalRatio, lnLike=0.0, lnPrior=0.0, f=0.0, CPUTime;
 	MCMCMove	*theMove, *mv;
