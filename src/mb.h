@@ -47,6 +47,7 @@ typedef long SafeLong;
 typedef	double MrBFlt;		/* double used for parameter values and generally for floating point values, if set to float MPI would not work becouse of use MPI_DOUBLE*/
 #define MRBFLT_MAX DBL_MAX; /* maximum possible value that can be stored in MrBFlt */
 #define MRBFLT_MIN DBL_MIN; /* maximum possible value that can be stored in MrBFlt */
+#define MRBFLT_NEG_MAX (-DBL_MAX); /* maximum possible negative value that can be stored in MrBFlt */
 typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
 							/* set CLFlt to double if you want increased precision */
 							/* NOTE: CLFlt = double not compatible with SSE_ENABLED */

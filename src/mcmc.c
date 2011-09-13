@@ -12682,6 +12682,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -12728,6 +12729,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -12905,6 +12907,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -12958,6 +12961,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13054,6 +13058,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13088,6 +13093,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13182,6 +13188,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13233,6 +13240,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13316,6 +13324,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13349,6 +13358,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13465,6 +13475,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //			if (like < LIKE_EPSILON)
 //				{
 //				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+//              (*lnL)=MRBFLT_NEG_MAX;
 //				return ERROR;
 //				}
 //			else	
@@ -13496,6 +13507,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //			if (like < LIKE_EPSILON)
 //				{
 //				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+//              (*lnL)=MRBFLT_NEG_MAX;
 //				return ERROR;
 //				}
 //			else	
@@ -13638,6 +13650,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 		    if (like < LIKE_EPSILON)
 			    {
 			    MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 			    return ERROR;
 			    }
 		    else	
@@ -13681,6 +13694,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -13768,6 +13782,7 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 		if (like < LIKE_EPSILON)
 			{
 			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+            (*lnL)=MRBFLT_NEG_MAX;
 			return ERROR;
 			}
 		else	
@@ -13856,6 +13871,7 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 		if (like < LIKE_EPSILON)
 			{
 			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+            (*lnL)=MRBFLT_NEG_MAX;
 			return ERROR;
 			}
 		else	
@@ -13929,6 +13945,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 	if (pObserved < LIKE_EPSILON)
 		{
 		MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division, pObserved);
+        (*lnL)=MRBFLT_NEG_MAX;
 		return ERROR;
 		}
 
@@ -13944,6 +13961,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 		if (like < LIKE_EPSILON)
 			{
 			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+            (*lnL)=MRBFLT_NEG_MAX;
 			return ERROR;
 			}
 		else	
@@ -14040,6 +14058,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 	if (pObserved < LIKE_EPSILON)
 		{
 		MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division, pObserved);
+        (*lnL)=MRBFLT_NEG_MAX;
 		return ERROR;
 		}
 
@@ -14050,6 +14069,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 		if (like < LIKE_EPSILON)
 			{
 			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+            (*lnL)=MRBFLT_NEG_MAX;
 			return ERROR;
 			}
 		else	
@@ -14163,6 +14183,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -14239,6 +14260,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                (*lnL)=MRBFLT_NEG_MAX;
 				return ERROR;
 				}
 			else	
@@ -14686,7 +14708,11 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 	
 	if (m->upDateCijk == YES)
 		{
-		UpDateCijk(d, chain);
+        if( UpDateCijk(d, chain)== ERROR)
+            {
+            (*lnL) = MRBFLT_NEG_MAX; /*effectively abort the move*/
+            return;
+            }
 		m->upDateAll = YES;
 		}
 	
@@ -14767,6 +14793,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 		}
 	}
 	m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+    return;
 }
 
 
@@ -39019,9 +39046,19 @@ int RemoveTreeSamples (int from, int to)
 			for (j=0; j<chainParams.numRuns; j++)
 				{
 				if (numPrintTreeParams == 1)
-					SafeSprintf(&tempStr, &tempStrSize, "%s.run%d.t", chainParams.chainFileName, j+1);
+                    {
+                    if( chainParams.numRuns == 1 )
+                        SafeSprintf(&tempStr, &tempStrSize, "%s.t", chainParams.chainFileName);
+                    else
+					    SafeSprintf(&tempStr, &tempStrSize, "%s.run%d.t", chainParams.chainFileName, j+1);
+                    }
 				else
-					SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, topologyPrintIndex[i]+1, j+1);
+                    {
+                    if( chainParams.numRuns == 1 )
+                        SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.t", chainParams.chainFileName, topologyPrintIndex[i]+1);
+                    else
+					    SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, topologyPrintIndex[i]+1, j+1);
+                    }
 
 				if ((fp = OpenTextFileR (tempStr)) == NULL)
 						{
@@ -44884,7 +44921,10 @@ int UpDateCijk (int whichPart, int whichChain)
 					}
 				else
 					{
-					MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    if( isComplex == YES )
+					    MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    else
+                        MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
 					goto errorExit;
 					}
 				eigenValues += (n3 + (2 * n));
@@ -44945,7 +44985,10 @@ int UpDateCijk (int whichPart, int whichChain)
 #if defined (BEAGLE_ENABLED)
 				if (isComplex == YES)
 					{
-					MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    if( isComplex == YES )
+					    MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    else
+                        MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
 					goto errorExit;
 					}
                 if (m->useBeagle == YES)
@@ -45043,7 +45086,10 @@ int UpDateCijk (int whichPart, int whichChain)
 #if defined (BEAGLE_ENABLED)
 					if (isComplex == YES)
 						{
-						MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        if( isComplex == YES )
+					        MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        else
+                            MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
 						goto errorExit;
 						}
                     if (m->useBeagle == YES)

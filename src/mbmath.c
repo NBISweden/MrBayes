@@ -2652,6 +2652,8 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 |
 |   GetEigens
 |
+|   returns NO if non complex eigendecomposition, YES if complex eigendecomposition,  ABORT if an error has occured
+|
 ---------------------------------------------------------------------------------*/
 int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs)
 
@@ -2677,6 +2679,8 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
 		{
 		if (rc == EVALUATE_COMPLEX_NUMBERS)
 			isComplex = YES;
+        else
+            isComplex = ABORT;
 		}
 
 	/* invert eigenvectors */
@@ -2687,7 +2691,7 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
 		InvertMatrix (dim, tempWork, dWork, iWork, inverseEigvecs);
 		FreeSquareDoubleMatrix (tempWork);
 		}
-	else
+	else if (isComplex == YES)
 		{
 		for(i=0; i<dim; i++)
 			{
