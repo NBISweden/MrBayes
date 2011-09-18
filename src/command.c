@@ -11428,7 +11428,21 @@ int GetUserHelp (char *helpTkn)
 			MrBayesPrint ("   Nodeagepr        Unconstrained/Calibrated     %s\n", mp->nodeAgePr);
 
 			MrBayesPrint ("   Clockratepr      Fixed/Normal/Lognormal/\n%s", spacer);
-			MrBayesPrint ("                    Exponential/Gamma            %s\n", mp->clockRatePr);
+			MrBayesPrint ("                    Exponential/Gamma            %s", mp->clockRatePr);
+			if (!strcmp(mp->clockRatePr, "Fixed"))
+				MrBayesPrint ("(%1.2lf)\n", mp->clockRateFix);
+			else if (!strcmp(mp->clockRatePr,"Exponential"))
+				MrBayesPrint ("(%1.2lf)\n", mp->clockRateExp);
+            else if (!strcmp(mp->clockRatePr,"Normal"))
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->clockRateNormal[0], mp->clockRateNormal[1]);
+            else if (!strcmp(mp->clockRatePr,"Lognormal"))
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
+            else
+                {
+                assert (!strcmp(mp->clockRatePr,"Gamma"));
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->clockRateGamma[0], mp->clockRateGamma[1]);
+                }
+
 			MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr          %s\n", mp->clockVarPr);
 
 			MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
@@ -11445,8 +11459,23 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.2lf)\n", mp->tk02varFix);
 			else if (!strcmp(mp->tk02varPr,"Exponential"))
 				MrBayesPrint ("(%1.2lf)\n", mp->tk02varExp);
-			else /*if (!strcmp(mp->tk02varPr,"Uniform")) */
+            else
+                {
+                assert (!strcmp(mp->tk02varPr,"Uniform"));
 				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->tk02varUni[0], mp->tk02varUni[1]);
+                }
+
+			MrBayesPrint ("   Igrvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
+			if (!strcmp(mp->igrvarPr, "Fixed"))
+				MrBayesPrint ("(%1.2lf)\n", mp->igrvarFix);
+			else if (!strcmp(mp->igrvarPr,"Exponential"))
+				MrBayesPrint ("(%1.2lf)\n", mp->igrvarExp);
+			else
+                {
+                assert (!strcmp(mp->igrvarPr,"Uniform"));
+				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
+                }
+
 
 			MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
 			if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -11678,7 +11707,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                   increment. An increase/decrease in weight is acheived by      \n");
 		MrBayesPrint ("                   replicating/removing a character in the matrix. This is       \n");
 		MrBayesPrint ("                   only done to non-cold chains. The format for this parameter   \n");
-		MrBayesPrint ("                   is \"reweight=(<number>,<number>)\" or \"reweight=(<number>,\"\n");
+		MrBayesPrint ("                   is \"reweight=(<number>,<number>)\" or \"reweight=(<number>,  \n");
 		MrBayesPrint ("                   <number>,<number>)\".                                         \n");
 		MrBayesPrint ("   Swapfreq     -- This specifies how often swaps of states between chains are   \n");
 		MrBayesPrint ("                   attempted. You must be running at least two chains for this   \n");
@@ -12785,7 +12814,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("   Outputname      <name>                   %s<.parts etc>\n", sumtParams.sumtOutfile);
 		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                  \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
 		MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                  \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
-        MrBayesPrint ("   Hpd             <number>                 %d                                   \n", sumtParams.HPD == YES ? "Yes" : "No");
+        MrBayesPrint ("   Hpd             Yes/No                   %s                                   \n", sumtParams.HPD == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}

@@ -68,7 +68,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 
 #if defined GCC_SSE			/* gcc compiler */
-#define ALIGNED_MALLOC posix_memalign
+#define ALIGNED_MALLOC(X,Y,Z) {int tmp;tmp=posix_memalign(X,Y,Z);} /*To remove warnings*/
 #define ALIGNED_FREE free
 #include <xmmintrin.h>
 #elif defined ICC_SSE		/* icc compiler */
@@ -284,7 +284,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #define	pos(i,j,n)				((i)*(n)+(j))
 
-#define	NUM_ALLOCS				 91
+#define	NUM_ALLOCS				 92
 
 #define	ALLOC_MATRIX			 0
 #define	ALLOC_CHARINFO			 2
@@ -342,6 +342,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_TFILEPOS           87
 #define ALLOC_BEST               88
 #define	ALLOC_SPECIESPARTITIONS	 89
+#define	ALLOC_SS            	 90
 
 
 #define	LINKED					0

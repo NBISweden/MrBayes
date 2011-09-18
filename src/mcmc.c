@@ -156,19 +156,19 @@ typedef void (*sighandler_t)(int);
 #define TNODE TreeNode
 
 #if defined (MPI_ENABLED)
-#define FAIL_EXIT(failString) \
+#define ERROR_TEST2(failString,X1,X2) \
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);\
 	if (sumErrors > 0)\
 		{\
         MrBayesPrint ("%s   "failString"\n", spacer);\
-		return ERROR;\
+		X1;X2;\
 		}
 #	else
-#define FAIL_EXIT(failString) \
-	if (nErrors > 1)\
+#define ERROR_TEST2(failString,X1,X2) \
+	if (nErrors > 0)\
 		{\
         MrBayesPrint ("%s   "failString"\n", spacer);\
-		return ERROR;\
+		X1;X2;\
 		}
 #	endif
 
@@ -395,7 +395,7 @@ void    ResetChainIds (void);
 void    ResetFlips(int chain);
 int     ResetScalers (void);
 void    ResetSiteScalers (ModelInfo *m, int chain);
-int     ReusePreviousResults(int *numSamples);
+int     ReusePreviousResults(int *numSamples, int);
 int     RunChain (SafeLong *seed);
 int     SafeSprintf(char **target, int *targetLen, char *fmt, ...);
 int     SetAARates (void);
@@ -621,7 +621,7 @@ int AddToPrintString (char *tempStr)
 
 
 
-/* AddTreeSamples: Add tree samples to partition counters */
+/* AddTreeSamples: Add tree samples from .t files to partition counters. if saveToList == YES then also save trees in tree list */
 int AddTreeSamples (int from, int to, int saveToList)
 {
 	int	i, j, k, longestLine;
@@ -631,6 +631,9 @@ int AddTreeSamples (int from, int to, int saveToList)
 	Tree	*t;
 	char	*tempStr;
 	int     tempStrSize = TEMPSTRSIZE;
+
+    if( from > to)
+        return (NO_ERROR);
 
 #	if defined (MPI_ENABLED)
 	if (proc_id != 0)
@@ -650,13 +653,25 @@ int AddTreeSamples (int from, int to, int saveToList)
 
 		for (j=0; j<chainParams.numRuns; j++)
 			{
-			if (numPrintTreeParams == 1)
-				SafeSprintf(&tempStr, &tempStrSize, "%s.run%d.t", chainParams.chainFileName, j+1);
+            if (numPrintTreeParams == 1)
+                {
+                if( chainParams.numRuns == 1 )
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.t", chainParams.chainFileName);
+                else
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.run%d.t", chainParams.chainFileName, j+1);
+                }
 			else
-				SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, i+1, j+1);
+                {
+                if( chainParams.numRuns == 1 )
+				    SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.t", chainParams.chainFileName, i+1);
+                else
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, i+1, j+1);
+                }
+
 
 			if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
+                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
 			    free (tempStr);
 				return (ERROR);
 				}
@@ -686,6 +701,8 @@ int AddTreeSamples (int from, int to, int saveToList)
 				do {
 					if (fgets (lineBuf, longestLine, fp) == NULL) 
 					        {
+                            SafeFclose (&fp);
+			                free (lineBuf);
 					        free (tempStr);
 						return ERROR;
                                                 }
@@ -701,14 +718,14 @@ int AddTreeSamples (int from, int to, int saveToList)
 						{
 						SafeFclose (&fp);
 						free (lineBuf);
-                                                free (tempStr);
+                        free (tempStr);
 						return ERROR;
 						}
 					if (AddTreeToPartitionCounters (t, i, j) == ERROR)
 						{
 						SafeFclose (&fp);
 						free (lineBuf);
-                                                free (tempStr);
+                        free (tempStr);
 						return ERROR;
 						}
                     if (saveToList == YES)
@@ -7502,10 +7519,12 @@ int DoMcmc (void)
 {
 
 	SafeLong	seed;
-	int		    rc, i, j;
+	int		    rc, i, j, run;
     char        c;
     FILE        *tempFile;
     char        temp[20];
+    char        *strBuf,*tmpcp;
+    double      tmp;
 
 #if defined (BEST_MPI_ENABLED)
     Tree        *tree;
@@ -7701,6 +7720,45 @@ int DoMcmc (void)
     if (numTopologies > 1 && !strcmp(modelParams[0].topologyPr,"Speciestree"))
         AllocateBestChainVariables();
 
+    /* allocate SS memory for the chains if needed */
+    if(chainParams.isSS == YES)
+        {
+	    if (memAllocs[ALLOC_SS] == YES)
+		    {
+		    MrBayesPrint ("%s   SS is already allocated\n", spacer);
+		    goto errorExit;
+		    }
+        else if ((marginalLnLSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		    {
+		    MrBayesPrint ("%s   Problem allocating marginalLnLSS\n", spacer);
+		    goto errorExit;
+		    }
+        else if ((stepScalerSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		    {
+		    MrBayesPrint ("%s   Problem allocating stepScalerSS\n", spacer);
+            free (marginalLnLSS);
+		    goto errorExit;
+		    }
+        else if ((stepAcumulatorSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
+		    {
+		    MrBayesPrint ("%s   Problem allocating stepAcumulatorSS\n", spacer);
+            free (stepScalerSS);
+            free (marginalLnLSS);
+		    goto errorExit;
+		    }
+	    else if ((splitfreqSS = (MrBFlt *) SafeCalloc (chainParams.numStepsSS*numTopologies, sizeof(MrBFlt))) == NULL)
+		    {
+		    MrBayesPrint ("%s   Problem allocating splitfreqSS\n", spacer);
+            free (stepScalerSS);
+            free (marginalLnLSS);
+            free (stepAcumulatorSS);
+		    goto errorExit;
+		    }
+        else
+		    memAllocs[ALLOC_SS] = YES;
+        }
+
+
     /* Either append to previous run or deal with starting values */
     if (chainParams.append == YES)
         {
@@ -7720,7 +7778,7 @@ int DoMcmc (void)
         if (DoExecute () == ERROR)
             goto errorExit;
 
-        /* Get number of generations to start from */
+        /* Get number of generations to start from and SS information if needed */
         temp[0] = '\0';
         numPreviousGen = 0;
 #if defined (MPI_ENABLED)
@@ -7749,6 +7807,36 @@ int DoMcmc (void)
                 }
             temp[i] = '\0';
             numPreviousGen = atoi(temp);
+            }
+        if ( chainParams.isSS==YES && c!=EOF)
+            {
+            do { c = fgetc(tempFile);
+                } while (c!=':' && c!=EOF);
+            strBuf = (char *) SafeCalloc ( chainParams.numRuns*20,sizeof(char));
+            if( fgets(strBuf,chainParams.numRuns*20,tempFile)==NULL )
+                {
+                MrBayesPrint ("%s   Error: Reading SsAcumulators from .ckp file fails.\n", spacer);
+                free(strBuf);
+                goto errorExit;
+                }
+
+            tmpcp=strtok(strBuf," "); 
+            for (run=0; run<chainParams.numRuns; run++)
+                {
+                if(tmpcp == NULL )
+                    {
+                    MrBayesPrint ("%s   Error: Not enough values in SsAcumulators comment of .ckp file.   \n", spacer);
+                    free(strBuf);
+                    goto errorExit;
+                    }
+                    
+                tmp=atof(tmpcp);
+                stepScalerSS[run]=tmp-10;
+                stepAcumulatorSS[run]=exp(10);
+                tmpcp=strtok(NULL," ]");
+                }
+                      
+            free(strBuf);
             }
 #if defined (MPI_ENABLED)
         }
@@ -9227,20 +9315,21 @@ int DoMcmcParm (char *parmName, char *tkn)
 
 int DoSs (void)
 {
-    int ret, oldBurnin, oldRelativeBurnin, oldAppend;
+    int ret, oldBurnin, oldRelativeBurnin;// oldAppend;
 
     oldBurnin = chainParams.chainBurnIn;
     oldRelativeBurnin = chainParams.burninSS;
-    oldAppend = chainParams.append;
+    //oldAppend = chainParams.append;
 
 
     chainParams.relativeBurnin = YES;
+    /*
     if( chainParams.append == YES)
         {
         MrBayesPrint ("%s   Warning: Appending is not suported yet for Stepping Stone sampling. \"append=no\" is assumed for the run.\n", spacer);
         chainParams.append = NO;
         }
-
+    */
     if( chainParams.burninSS < 0 )
         chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS-chainParams.burninSS)*chainParams.sampleFreq);
 
@@ -9251,7 +9340,7 @@ int DoSs (void)
     chainParams.isSS = NO;
     chainParams.burninSS = oldBurnin;
     chainParams.relativeBurnin = oldRelativeBurnin;
-    chainParams.append=oldAppend;
+    //chainParams.append=oldAppend;
 
     return ret;
 }
@@ -9894,11 +9983,15 @@ void FreeChainMemory (void)
 		{
 		free (maxLnL0); 
 		free (curLnL);
+		memAllocs[ALLOC_CURLNL] = NO;
+		}
+    if (memAllocs[ALLOC_SS] == YES) /*alloc in mcmc()*/
+		{
         free (marginalLnLSS);
         free (stepScalerSS);
         free (stepAcumulatorSS);
         free (splitfreqSS);
-		memAllocs[ALLOC_CURLNL] = NO;
+		memAllocs[ALLOC_SS] = NO;
 		}
 	if (memAllocs[ALLOC_CURLNPR] == YES) /*alloc in RunChain()*/
 		{
@@ -34791,8 +34884,6 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
 
 
-
-
 /*-----------------------------------------------------------------------
 |
 |	PrintCheckPoint: Print checkpoint to file
@@ -34811,7 +34902,8 @@ int PrintCheckPoint (int gen)
 	/*ModelInfo	*m = NULL;*/
 
 #if defined (MPI_ENABLED)
-	int			sumErrors=0;
+	int			sumErrors=0,ierror;
+    MrBFlt      r, sum;
 #endif
 
 	/* allocate tempString */
@@ -34845,26 +34937,68 @@ int PrintCheckPoint (int gen)
 			nErrors++;
 			}
 		}
-		
-    if (nErrors == 0)
-        {
-        /* remove old bkup file ('~~') */
-        remove (oldBkupFileName);
-
-        /* write file header */
-        MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n\nbegin trees;\n\ttranslate\n", stamp, gen);
-
-        /* write translate block */
-		for (i=0; i<numLocalTaxa; i++)
-			{
-			if (i == numLocalTaxa - 1)
-				MrBayesPrintf (fp, "      %2d %s;\n", i+1, localTaxonNames[i]);
-			else
-				MrBayesPrintf (fp, "      %2d %s,\n", i+1, localTaxonNames[i]);
-			}
-        }
+	
 #if defined (MPI_ENABLED)
+	} /* end of if(proc_id == 0)*/
+#endif
+
+    ERROR_TEST2("",free(tempString),return(ERROR));
+
+    /* write file header */
+    MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n", stamp, gen);
+
+    if( chainParams.isSS == YES)
+        {
+        /* dump to .ckp file current step contribution */
+        MrBayesPrintf (fp, "[SsAcumulators:");
+#       if defined (MPI_ENABLED)
+
+        for (j=0; j<chainParams.numRuns ; j++)
+            {
+            if( stepAcumulatorSS[j]==0 )
+                r=0;
+            else
+                r = log( stepAcumulatorSS[j] ) + stepScalerSS[j];
+            ierror = MPI_Reduce (&r,&sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+            if (ierror != MPI_SUCCESS)
+                {
+                MrBayesPrint ("%s   Problem with MPI_Reduce\n", spacer);
+                return ERROR;
+                }
+            if(proc_id == 0 )
+                {
+                MrBayesPrintf (fp, " %.4f", sum);
+                }
+            }
+#	    else
+        for (j=0; j<chainParams.numRuns ; j++)
+            {
+            MrBayesPrintf (fp, " %.4f", log( stepAcumulatorSS[j] ) + stepScalerSS[j]);
+            }
+#       endif
+        MrBayesPrintf (fp, "]\n");
         }
+
+#if defined (MPI_ENABLED)
+if (proc_id == 0)
+	{
+#endif
+    MrBayesPrintf (fp, "\nbegin trees;\n\ttranslate\n");
+
+    /* remove old bkup file ('~~') */
+    remove (oldBkupFileName);
+
+    /* write translate block */
+	for (i=0; i<numLocalTaxa; i++)
+		{
+		if (i == numLocalTaxa - 1)
+			MrBayesPrintf (fp, "      %2d %s;\n", i+1, localTaxonNames[i]);
+		else
+			MrBayesPrintf (fp, "      %2d %s,\n", i+1, localTaxonNames[i]);
+		}
+   
+#if defined (MPI_ENABLED)
+    }
 #endif
 
 	/* allocate space for print string */
@@ -34875,6 +35009,9 @@ int PrintCheckPoint (int gen)
 	else
 		strcpy(printString,"");
 
+
+    ERROR_TEST2("Memory allocation error",free(tempString),return(ERROR));
+    /*
 #	if defined (MPI_ENABLED)
 	MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	if (sumErrors > 0)
@@ -34890,7 +35027,7 @@ int PrintCheckPoint (int gen)
 		return ERROR;
 		}
 #	endif
-
+*/
 	/* print trees */
 	for (i=0; i<numParams; i++)
 		{
@@ -39678,12 +39815,12 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 
 /*----------------------------------------------------------------------
 |
-|	ReusePreviousResults: Save old .p, .t and .mcmc files with ~ extension,
+|	ReusePreviousResults: Save old .p, .t, .ss and .mcmc files with ~ extension,
 |      then prepare new print files with the relevant old values added in
 |      The number of samples is returned in numSamples
 |
 ------------------------------------------------------------------------*/
-int ReusePreviousResults (int *numSamples)
+int ReusePreviousResults (int *numSamples, int steps)
 
 {
 
@@ -39780,6 +39917,24 @@ int ReusePreviousResults (int *numSamples)
             else if (CopyTreeResults(fpTree[k][i],bkupName+strlen(workingDir),numPreviousGen,numSamples) == ERROR)
                 return (ERROR);
 			}
+		}
+
+    /* Store old and prepare new .ss file */
+	if (chainParams.isSS == YES)
+		{
+		sprintf (fileName, "%s%s.ss", workingDir, chainParams.chainFileName);
+		strcpy(bkupName,fileName);
+        strcat(bkupName,"~");
+        remove(bkupName);
+        if (rename(fileName,bkupName) != 0)
+            {
+            MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
+            return ERROR;
+            }
+		if ((fpSS = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
+			return (ERROR);
+        else if (CopyProcessSsFile(fpSS,bkupName+strlen(workingDir),steps,marginalLnLSS,splitfreqSS)==ERROR)
+            return (ERROR);
 		}
 
     /* Store old and prepare new .mcmc file */
@@ -39897,40 +40052,6 @@ int RunChain (SafeLong *seed)
 		{
 		MrBayesPrint ("%s   Problem allocating maxLnL0\n", spacer, numLocalChains * sizeof(MrBFlt));
 		free (curLnL);
-		nErrors++;
-		}
-    else if ((marginalLnLSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
-		{
-		MrBayesPrint ("%s   Problem allocating marginalLnLSS\n", spacer);
-        free (maxLnL0);
-		free (curLnL);
-		nErrors++;
-		}
-    else if ((stepScalerSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
-		{
-		MrBayesPrint ("%s   Problem allocating stepScalerSS\n", spacer);
-        free (marginalLnLSS);
-        free (maxLnL0);
-		free (curLnL);
-		nErrors++;
-		}
-    else if ((stepAcumulatorSS = (MrBFlt *) SafeCalloc (chainParams.numRuns, sizeof(MrBFlt))) == NULL)
-		{
-		MrBayesPrint ("%s   Problem allocating stepAcumulatorSS\n", spacer);
-        free (stepScalerSS);
-        free (marginalLnLSS);
-        free (maxLnL0);
-		free (curLnL);
-		nErrors++;
-		}
-	else if ((splitfreqSS = (MrBFlt *) SafeCalloc (chainParams.numStepsSS*numTopologies, sizeof(MrBFlt))) == NULL)
-		{
-		MrBayesPrint ("%s   Problem allocating splitfreqSS\n", spacer);
-        free (stepScalerSS);
-        free (marginalLnLSS);
-        free (maxLnL0);
-		free (curLnL);
-        free (stepAcumulatorSS);
 		nErrors++;
 		}
     else
@@ -40198,6 +40319,78 @@ int RunChain (SafeLong *seed)
 		MrBayesPrint ("%s   There are %d more chains on the other processor\n\n", spacer, numGlobalChains - numLocalChains);
 #endif
 
+
+    /*All steps are assumed to have the same length. */
+    if ( chainParams.isSS == YES )
+        {
+        numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
+        numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq); /*make muliple of chainParams.sampleFreq*/
+        numGenOld = chainParams.numGen;
+        chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
+        MrBayesPrint ("\n");
+        MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
+        MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
+        MrBayesPrint ("%s   Total of %d generations (%d samples) will be taken while first            \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
+        MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
+        if( numGenOld != chainParams.numGen)
+            {
+            MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
+            MrBayesPrint ("%s   of sampling frequency. That is why, in total it will be taken %d gene-    \n", spacer, chainParams.numGen ); 
+            MrBayesPrint ("%s   rations instead of requested %d.                                          \n", spacer, numGenOld ); 
+            }
+        MrBayesPrint ("\n");
+        if( numGenInStepSS/chainParams.sampleFreq < 1  )
+            {
+            MrBayesPrint ("%s   There is less then one sample in each step of Steppingstone sampling.   \n", spacer);
+            MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
+            MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
+			return ERROR; /*All MPI run will return here since all of them have the same values*/
+            }
+        if( numPreviousGen==0 ||  numPreviousGen < chainParams.burninSS * chainParams.sampleFreq )
+            {
+            lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
+            stepIndexSS = chainParams.numStepsSS-1;
+            powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+            stepLengthSS = 1.0-powerSS;
+            samplesCountSS=0;
+            }
+        else
+            {
+            stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully complited*/
+            lastStepEndSS   = chainParams.burninSS * chainParams.sampleFreq + stepIndexSS*numGenInStepSS;
+            removeTo        = chainParams.burninSS + stepIndexSS*numGenInStepSS/chainParams.sampleFreq + 1;
+            stepIndexSS     = chainParams.numStepsSS-1-stepIndexSS;
+            powerSS         = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+            stepLengthSS    = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+            samplesCountSS  = (numPreviousGen-lastStepEndSS)/chainParams.sampleFreq;
+
+            MrBayesPrint("%s   Continue sampling step %d out of %d steps...\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
+            /*marginalLnLSS will be red from file and destributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if(samplesCountSS!=0) they will be redestributed. */
+            }
+
+        if( samplesCountSS==0 ) /*in appended case it also can happened*/
+            {
+            for (run=0; run<chainParams.numRuns; run++)
+                {
+        	    marginalLnLSS[run] = 0.0;
+        	    stepScalerSS[run] = 0.0;
+        	    stepAcumulatorSS[run] = 0.0;
+                }
+ 
+            for (chn=0; chn<numLocalChains; chn++)
+                {
+                if (chainId[chn] % chainParams.numChains == 0)
+                    {
+                    run = chainId[chn] / chainParams.numChains;
+                    stepScalerSS[run] = curLnL[chn]*stepLengthSS;
+                    }
+                }      
+            }
+
+        }
+
+
+
     /* Append to previous analysis if this is requested, otherwise just open new print files */
     if (chainParams.append == YES)
         {
@@ -40206,39 +40399,58 @@ int RunChain (SafeLong *seed)
 #endif
 
     /* We get the number of samples in i */
-        if (ReusePreviousResults(&i) == ERROR)
+        if (ReusePreviousResults(&i, chainParams.numStepsSS-stepIndexSS-1) == ERROR)
             nErrors++;
         else if (chainParams.numRuns > 1)    /* we potentially need to add tree samples for conv diagn */
             {
             /* Add tree samples to partition counters */
-            if (chainParams.relativeBurnin == YES)
+            if ( chainParams.relativeBurnin == YES )
                 {
-                if (numPreviousGen/(i-1) != chainParams.sampleFreq)
+                if( chainParams.isSS == NO )
                     {
-                    MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to use relative burnin\n", spacer);
-                    nErrors++;
+                    if (numPreviousGen/(i-1) != chainParams.sampleFreq)
+                        {
+                        MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to use relative burnin\n", spacer);
+                        nErrors++;
+                        }
+                    else
+                        {
+                        if (noWarn == YES)
+                            {
+                            /* We definitely know the final number of generations */
+                            j = (chainParams.numGen/chainParams.sampleFreq)+1;
+                            j = (int) (j*chainParams.burninFraction);
+                            }
+                        else /* User may extend chain so save all trees if saving trees */
+                            j = i;
+                        if (j < i)
+                            {
+                            if (AddTreeSamples(1,j,chainParams.saveTrees) == ERROR) nErrors++;
+                            if (AddTreeSamples(j+1,i,NO) == ERROR) nErrors++; /*since we never need to remove trees from partition counter after total burnin we put NO in the last argument. */
+                            }
+                        else
+                            {
+                            if (AddTreeSamples(1,i,chainParams.saveTrees) == ERROR) nErrors++;
+                            }
+                        }
                     }
                 else
                     {
-                    if (noWarn == YES)
+                    if (numPreviousGen/(i-1) != chainParams.sampleFreq)
                         {
-                        /* We definitely know the final number of generations */
-                        j = (chainParams.numGen/chainParams.sampleFreq)+1;
-                        j = (int) (j*chainParams.burninFraction);
-                        }
-                    else /* User may extend chain so save all trees if saving trees */
-                        j = i;
-                    if (j < i)
-                        {
-                        AddTreeSamples(1,j,chainParams.saveTrees);
-                        AddTreeSamples(j+1,i,NO);
+                        MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to append to the SS run\n", spacer);
+                        nErrors++;
                         }
                     else
-                        AddTreeSamples(1,i,chainParams.saveTrees);
+                        {
+                        
+                        if (setFilePositions(removeTo) == ERROR) nErrors++;
+                        if (AddTreeSamples(removeTo+1,i,chainParams.saveTrees) == ERROR) nErrors++;
+                        }
                     }
                 }
             else if (chainParams.chainBurnIn < numPreviousGen)
-                AddTreeSamples((int)(i*(chainParams.chainBurnIn/(MrBFlt)(numPreviousGen)))+1,i,chainParams.saveTrees);
+                if (AddTreeSamples((int)(i*(chainParams.chainBurnIn/(MrBFlt)(numPreviousGen)))+1,i,chainParams.saveTrees) == ERROR) nErrors++;
             }
         if (nErrors == 0)
             {
@@ -40283,6 +40495,29 @@ int RunChain (SafeLong *seed)
                 }
             }
 #if defined (MPI_ENABLED)
+        MPI_Bcast ( marginalLnLSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        if( samplesCountSS != 0)
+            {
+            MPI_Bcast ( stepScalerSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast ( stepAcumulatorSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            }
+        /*Set to zero all runs that we are not responsable for*/
+        for (run=0; run<chainParams.numRuns; run++)
+            {
+            for (chn=0; chn<numLocalChains; chn++)
+                {
+                if (chainId[chn] % chainParams.numChains == 0 && run == chainId[chn] / chainParams.numChains )
+                    break;
+                }
+            if(chn<numLocalChains)
+                continue;
+
+            marginalLnLSS[run] = 0.0;
+    	    stepScalerSS[run] = 0.0;
+    	    stepAcumulatorSS[run] = 0.0;    
+            }
+
         MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         if (sumErrors > 0)
 	        {
@@ -40333,53 +40568,6 @@ int RunChain (SafeLong *seed)
 	CPUTime = 0.0;
 	previousCPUTime = clock();
 
-    if ( chainParams.isSS == YES )
-        {
-        numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
-        numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq);
-        numGenOld = chainParams.numGen;
-        lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
-        chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
-        MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
-        MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s   Total of %d generations (%d samples) will be taken while first            \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
-        MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
-        if( numGenOld != chainParams.numGen)
-            {
-            MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
-            MrBayesPrint ("%s   of sampling frequency. That is why, in total it will be taken %d gene-    \n", spacer, chainParams.numGen ); 
-            MrBayesPrint ("%s   rations instead of requested %d.                                          \n", spacer, numGenOld ); 
-            }
-        MrBayesPrint ("\n");
-        if( numGenInStepSS/chainParams.sampleFreq < 1  )
-            {
-            MrBayesPrint ("%s   There is less then one sample in each step of Steppingstone sampling.   \n", spacer);
-            MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
-            MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
-			return ERROR;
-            }
-        stepIndexSS = chainParams.numStepsSS-1;
-        powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-        stepLengthSS = 1.0-powerSS;
-        for (run=0; run<chainParams.numRuns; run++)
-            {
-        	marginalLnLSS[run] = 0.0;
-        	stepScalerSS[run] = 0.0;
-        	stepAcumulatorSS[run]=0.0;
-            }
-        for (chn=0; chn<numLocalChains; chn++)
-            {
-            if (chainId[chn] % chainParams.numChains == 0)
-                {
-                run = chainId[chn] / chainParams.numChains;
-                stepScalerSS[run] = curLnL[chn]*stepLengthSS;
-                }
-            }
-        samplesCountSS=0;
-        }
-
-
 
 
     /* print headers and starting states */
@@ -40424,7 +40612,7 @@ int RunChain (SafeLong *seed)
 # endif
          if( chainParams.isSS == YES && chainParams.burninSS == 0 )
             { 
-            /* Remove all previouse samples from diagnostics */
+            /* Remove first sample (generation 0) from diagnostics */
             removeTo=1;
             if ( RemoveTreeSamples ( 1,1 ) == ERROR)
 					{
@@ -40723,36 +40911,6 @@ int RunChain (SafeLong *seed)
 #			endif
 			}
 
-        /* print check-point file. Blocking for MPI*/
-		if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
-			{
-#			if defined (MPI_ENABLED)
-			/* reduce errors */
-			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-			if (sumErrors > 0)
-                {
-				MrBayesPrint ("%s   Aborting run.\n");
-                return ERROR;
-                }
-#			endif
-			if (PrintCheckPoint (n) == ERROR)
-                {
-                printf("%s   Error in printing checkpoint\n", spacer);
-#				if defined (MPI_ENABLED)
-				nErrors++;
-#				else
-				return ERROR;
-#				endif
-				}
-#			if defined (MPI_ENABLED)
-			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-			if (sumErrors > 0)
-                {
-				MrBayesPrint ("%s   Aborting run.\n", spacer);
-                return ERROR;
-                }
-#			endif
-			}
 
         /* print mcmc diagnostics. Blocking for MPI*/
 		if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
@@ -40935,7 +41093,7 @@ int RunChain (SafeLong *seed)
                 { 
                 /* Remove all previouse samples from diagnostics */
 				removeFrom = removeTo;
-				removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples */
+				removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples including 0 one*/
                 lastStepEndSS = removeTo*chainParams.sampleFreq;
                 removeTo++;
 				if( removeFrom < removeTo )
@@ -40965,7 +41123,10 @@ int RunChain (SafeLong *seed)
 #                   if defined (MPI_ENABLED)
     	            for (j=0; j<chainParams.numRuns ; j++)
 			            {
-                        r = log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j];
+                        if( stepAcumulatorSS[j]==0 )
+                            r=0;
+                        else
+                            r = log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j];
 			            ierror = MPI_Reduce (&r,&sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 			            if (ierror != MPI_SUCCESS)
 				            {
@@ -40983,6 +41144,11 @@ int RunChain (SafeLong *seed)
                         MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j]);
                         }
 #                   endif
+					for (i=0; i<numTopologies; i++)
+						{
+                        MrBayesPrintf (fpSS, "\t%.6f",splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1]);
+						}
+
                     MrBayesPrintf (fpSS, "\n");
                     fflush (fpSS);
 
@@ -40999,7 +41165,8 @@ int RunChain (SafeLong *seed)
                         if (chainId[chn] % chainParams.numChains == 0)
                             {
                             run = chainId[chn] / chainParams.numChains;
-                            marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
+                            if( samplesCountSS != 0 )
+                                marginalLnLSS[run] += log( stepAcumulatorSS[run]/samplesCountSS ) + stepScalerSS[run];
                             stepScalerSS[run] = curLnL[chn]*stepLengthSS;
                             stepAcumulatorSS[run]=0.0;
                             }
@@ -41013,14 +41180,61 @@ int RunChain (SafeLong *seed)
 		            MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
                     MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
 			        MrBayesPrintf (fpSS, "[   runX                --  Contribution to the Marginal LogLikelihood of run X, i.e. Marginal LogLikelihood for run X is the sum across all steps in column runX.   ]\n");
+                    if (chainParams.diagnStat == AVGSTDDEV)
+                        MrBayesPrintf (fpSS, "[   aSplitX             --  Average standard deviation of split frequencies of tree X.   ]\n");
+                    else
+                        MrBayesPrintf (fpSS, "[   mSplitX             --  Maximal standard deviation of split frequencies of tree X.   ]\n");
                     MrBayesPrintf (fpSS, "Step\tPower");
                     for (j=0; j<chainParams.numRuns ; j++)
                         MrBayesPrintf (fpSS, "\trun%d", j);
+                    if (chainParams.diagnStat == AVGSTDDEV)
+                        {
+                        for (j=0; j<numTopologies; j++)
+                            MrBayesPrintf (fpSS, "\taSplit%d", j);
+                        }
+                    else
+                        {
+                        for (j=0; j<numTopologies; j++)
+                            MrBayesPrintf (fpSS, "\tmSplit%d", j);
+                        }
                     MrBayesPrintf (fpSS, "\n");
                     MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
                     }
                 }             
             }
+
+
+        /* print check-point file. Blocking for MPI*/
+		if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
+			{
+#			if defined (MPI_ENABLED)
+			/* reduce errors */
+			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+			if (sumErrors > 0)
+                {
+				MrBayesPrint ("%s   Aborting run.\n");
+                return ERROR;
+                }
+#			endif
+			if (PrintCheckPoint (n) == ERROR)
+                {
+                printf("%s   Error in printing checkpoint\n", spacer);
+#				if defined (MPI_ENABLED)
+				nErrors++;
+#				else
+				return ERROR;
+#				endif
+				}
+#			if defined (MPI_ENABLED)
+			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+			if (sumErrors > 0)
+                {
+				MrBayesPrint ("%s   Aborting run.\n", spacer);
+                return ERROR;
+                }
+#			endif
+			}
+
 
 		} /* end run chain */
 	endingT = time(0);
@@ -41192,7 +41406,7 @@ int RunChain (SafeLong *seed)
                 {
                 nErrors++;
                 }
-            FAIL_EXIT("Problem allocating memory");
+            ERROR_TEST2("Problem allocating memory", return(ERROR),);
 
             for(i=0; i<chainParams.numStepsSS; i++)
                 {
@@ -41466,6 +41680,102 @@ void SetChainIds (void)
 		
 }
 
+
+
+
+/* setFilePositions sets chainParams.tFilePos[] to point immidiatly after sampled tree in position "samplePos" for all .t files.  */
+int setFilePositions (int samplePos)
+{
+	int	i, j, k, longestLine;
+	SafeLong	lastBlock;
+	char	*lineBuf;
+	FILE	*fp;
+	Tree	*t;
+	char	*tempStr;
+	int     tempStrSize = TEMPSTRSIZE;
+
+#	if defined (MPI_ENABLED)
+	if (proc_id != 0)
+		return (NO_ERROR);
+#	endif
+
+	tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+	if (!tempStr)
+		{
+		MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+		return (ERROR);
+		}
+
+	for (i=0; i<numTopologies; i++)
+		{
+		t = chainParams.dtree;
+
+		for (j=0; j<chainParams.numRuns; j++)
+			{
+			if (numPrintTreeParams == 1)
+                {
+                if( chainParams.numRuns == 1 )
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.t", chainParams.chainFileName);
+                else
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.run%d.t", chainParams.chainFileName, j+1);
+                }
+			else
+                {
+                if( chainParams.numRuns == 1 )
+				    SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.t", chainParams.chainFileName, i+1);
+                else
+                    SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, i+1, j+1);
+                }
+
+			if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
+                {
+                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
+			    free (tempStr);
+				return (ERROR);
+				}
+
+			longestLine = LongestLine (fp);
+			SafeFclose (&fp);
+
+			if ((fp = OpenTextFileR (tempStr)) == NULL) 
+			    {
+				free (tempStr);
+				return (ERROR);
+			    }
+
+			lineBuf = (char *) SafeCalloc (longestLine + 10, sizeof (char));
+			if (!lineBuf)
+				{
+				SafeFclose (&fp);
+                free (tempStr);
+                return (ERROR);
+				}
+
+			lastBlock = LastBlock (fp, lineBuf, longestLine);
+			fseek (fp, lastBlock, SEEK_SET);
+            fseek (fp, FirstTree(fp, lineBuf, longestLine), SEEK_SET);
+
+
+			for (k=0; k<samplePos; k++)
+				{
+				if (fgets (lineBuf, longestLine + 5, fp) == NULL) 
+					{
+                    MrBayesPrint ("%s   Not enough records in file %s.\n", spacer, tempStr);
+                    SafeFclose (&fp);
+					free (tempStr);
+					free (lineBuf);
+					return ERROR;
+					}
+				}
+			fgetpos (fp, &chainParams.tFilePos[j*numTopologies+i]);
+
+			SafeFclose (&fp);
+			free (lineBuf);
+			} /* next run */
+		} /* next tree */
+	free (tempStr);
+	return (NO_ERROR);
+}
 
 
 

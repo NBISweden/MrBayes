@@ -89,3 +89,4 @@ int     Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 FILE	*OpenNewMBPrintFile (char *fileName);
 int		ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq);
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);
+int     setFilePositions (int samplePos);

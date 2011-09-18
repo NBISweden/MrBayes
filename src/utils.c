@@ -118,7 +118,7 @@ void ClearBits (SafeLong *bits, int nLongs)
 
 
 
-/* CopyResults: copy results from one file to another*/
+/* CopyResults: copy results from one file to another up to lastGen*/
 int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
 {
     int     longestLine;
@@ -153,9 +153,76 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
 }
 
 
+/* CopyProcessSsFile: copy results from one file to another up to lastStep. Also marginalLnLSS is collected for processed steps*/
+int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *marginalLnLSS, MrBFlt * splitfreqSS)
+{
+    int     longestLine, run, curStep, i;
+    double  tmp;
+    char    *strBuf, *strCpy, *word, *tmpcp;
+    FILE    *fromFile;
+
+    if ((fromFile = OpenBinaryFileR(fromFileName)) == NULL)
+        return ERROR;
+
+    longestLine = LongestLine(fromFile)+10;
+    SafeFclose(&fromFile);
+    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
+    strCpy = strBuf + longestLine + 2;
+
+    if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        return ERROR;
+    
+    while (fgets(strBuf,longestLine,fromFile)!=NULL)
+        {
+        strncpy(strCpy,strBuf,longestLine);
+        word = strtok(strCpy," \t\n");
+        /* atoi returns 0 when word is not integer number */
+        if (atoi(word)>lastStep)
+            break;
+        fprintf (toFile,"%s",strBuf);
+        fflush (toFile);
+        curStep = atoi(word);
+        if ( curStep > 0 )
+            {
+            strtok(NULL,"\t\n"); /*skip power*/
+            for (run=0; run<chainParams.numRuns; run++)
+                {
+                tmpcp = strtok(NULL,"\t\n");
+                if(tmpcp == NULL )
+                    {
+                    MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
+                    return ERROR;
+                    }
+                tmp = atof(tmpcp);
+                if(tmp == 0.0 )
+                    {
+                    MrBayesPrint ("%s   Error: Value of some step contribution is 0.0 or not a number in .ss file. Sting:%s        \n", spacer, strBuf);
+                    return ERROR;
+                    }
+                marginalLnLSS[run]+=tmp;
+                }
+			for (i=0; i<numTopologies; i++)
+				{
+                tmpcp = strtok(NULL,"\t\n");
+                if(tmpcp == NULL )
+                    {
+                    MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
+                    return ERROR;
+                    }
+                tmp = atof(tmpcp);
+                splitfreqSS[i*chainParams.numStepsSS + curStep-1] = tmp;                
+    			}
+            }
+        }
+    
+    SafeFclose(&fromFile);
+    free(strBuf);
+    return (NO_ERROR);
+}
 
 
-/* CopyTreeResults: copy tree results from one file to another*/
+
+/* CopyTreeResults: copy tree results upto lastGen from one file to another. numTrees is return containing number of trees that were copied. */
 int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTrees)
 {
     int     longestLine;

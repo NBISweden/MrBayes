@@ -25,6 +25,7 @@ void     AlignedSafeFree(void **ptr);
 void     ClearBit (int i, SafeLong *bits);
 void     ClearBits (SafeLong *bits, int nLongs);
 int      CopyResults (FILE *toFile, char *fromFileName, int lastGen);
+int      CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *marginalLnLSS, MrBFlt *splitfreqSS);
 int      CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *treeNum);
 int      FirstTaxonInPartition (SafeLong *partition, int length);
 SafeLong FirstTree (FILE *fp, char *lineBuf, int longestLine);

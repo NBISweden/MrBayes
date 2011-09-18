@@ -2329,7 +2329,7 @@ void GetPolyNodeDownPass (PolyTree *t, PolyNode *p, int *i, int *j)
 
 
 
-/* GetFromTreeList: Get first tree from a tree list */
+/* GetFromTreeList: Get first tree from a tree list and remove it from the list*/
 int GetFromTreeList (TreeList *treeList, Tree *tree)
 
 {
