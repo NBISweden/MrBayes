@@ -4470,9 +4470,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 						MrBayesPrint ("%s   Rate value cannot be greater than %1.2lf\n", spacer, KAPPA_MAX);
 						return (ERROR);
 						}
-					if (tempD < 0.01)
+					if (tempD < 0.0001)
 						{
-						MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.01);
+						MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.0001);
 						return (ERROR);
 						}
 					}
@@ -4604,9 +4604,9 @@ int DoPrsetParm (char *parmName, char *tkn)
 						MrBayesPrint ("%s   Rate value cannot be greater than %1.2lf\n", spacer, KAPPA_MAX);
 						return (ERROR);
 						}
-					if (tempD < 0.01)
+					if (tempD < 0.0001)
 						{
-						MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.01);
+						MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.0001);
 						return (ERROR);
 						}
 					}
@@ -10466,7 +10466,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 
 	
-int FillRelPartsString (Param *p, char relPartString[100])
+int FillRelPartsString (Param *p, char relPartString[PARAM_NAME_SIZE])
 
 {
 
@@ -10500,11 +10500,11 @@ int FillRelPartsString (Param *p, char relPartString[100])
 				{
 				n++;
 				SafeSprintf(&tempStr, &tempStrSize, "%d", p->relParts[i] + 1);
-				if (tempStrSize > 100) 
-				        {
+				if (tempStrSize > PARAM_NAME_SIZE) 
+				    {
 					MrBayesPrint("%s   tempString is too long in FillRelPartsString (bug)\n");
-                                        free (tempStr);
-                                        return (ERROR);
+                    free (tempStr);
+                    return (ERROR);
 					}
 				strcat (relPartString, tempStr);
 				if (n < p->nRelParts)
@@ -16284,7 +16284,7 @@ int SetModelParams (void)
 
 	int			    c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
-	char		    tempCodon[15], tempMult[15], *tempStr, partString[100], temp[30];
+	char		    tempCodon[15], tempMult[15], *tempStr, partString[PARAM_NAME_SIZE], temp[30];
 	Param		    *p;
 	ModelParams     *mp;
     ModelInfo       *m;

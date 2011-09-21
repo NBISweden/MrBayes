@@ -386,6 +386,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define MAX_NUM_USERTREES		200     /* maximum number of user trees MrBayes will read */
 #define	MAX_CHAINS				256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
 
+#define PARAM_NAME_SIZE         400
+
 typedef void * VoidPtr;
 typedef int (*CmdFxn)(void);
 typedef int (*ParmFxn)(char *, char *);
@@ -587,7 +589,7 @@ typedef struct param
 	int				printParam;         /* whether parameter should be printed          */
 	int				nPrintSubParams;    /* number of subparams that should be printed   */
 	char			*paramHeader;       /* a string holding header for param values		*/
-	char			name[100];		    /* string holding name of parameter				*/
+	char			name[PARAM_NAME_SIZE]; /* string holding name of parameter				*/
 	char			*paramTypeName;	    /* pointer to description of parameter type     */
 	int				checkConstraints;   /* is tree parameter constrained?             */
 	int				fill;			    /* flags whether the parameter should be filled */

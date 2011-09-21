@@ -36100,7 +36100,7 @@ int PrintStates (int curGen, int coldId)
 {
 
 	int				d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
-	char			partString[100], stateString[4];
+	char			partString[PARAM_NAME_SIZE], stateString[4];
 	MrBFlt			*st, *sst, sum;
 	Param			*p;
 	ModelInfo		*m;
