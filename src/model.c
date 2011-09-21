@@ -18806,7 +18806,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1000.0; /* alphaPi */
-	mt->minimum[0] = 0.00000001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -19148,7 +19148,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 300.0;  /* alpha-pi */
-	mt->minimum[0] = 0.00001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -19489,7 +19489,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi per site */
-	mt->minimum[0] = 0.00000001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -19546,7 +19546,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
-	mt->minimum[0] = 0.0001;
+	mt->minimum[0] = 0.01;
 	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -19748,7 +19748,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi */
-	mt->minimum[0] = 0.00000001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -19807,7 +19807,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0;  /* alphaPi */
-	mt->minimum[0] = 0.0001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;

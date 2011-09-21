@@ -31286,8 +31286,11 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
         /* select a new rate for r_j */
         dirParm[0] = alphaPi * 1;
         dirParm[1] = alphaPi * (n_i - 1);
-        DirichletRandomVariable(dirParm, rateProps, 2, seed);
-        r_j = rateProps[0] * R_i;
+        do
+            {
+            DirichletRandomVariable(dirParm, rateProps, 2, seed);
+            r_j = rateProps[0] * R_i;
+            }   while ( R_i-r_j < RATE_MIN );
 
         /* update n_i, n_j, R_i and R_j after split */
         n_i -= 1;
