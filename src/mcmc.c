@@ -31173,8 +31173,11 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             {
             dirParm[0] = alphaPi * 1;
             dirParm[1] = alphaPi * (n_j - 1);
-            DirichletRandomVariable(dirParm, rateProps, 2, seed);
-            r_j = rateProps[0] * R_j;
+            do
+                {
+                DirichletRandomVariable(dirParm, rateProps, 2, seed);
+                r_j = rateProps[0] * R_j;
+                } while( R_j - r_j < RATE_MIN )
             }
 
         /* update new growth function */
