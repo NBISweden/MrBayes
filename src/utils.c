@@ -1531,6 +1531,21 @@ char *SafeStrcat (char **target, const char *source)
 
 
 
+/* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
+char *SafeStrcpy (char **target, const char *source)
+{
+int tmp;
+    *target = (char *) SafeRealloc ((void *)*target, (size_t)(tmp=strlen(source)+1)*sizeof(char));
+
+    if (*target)
+        strcpy(*target,source);
+
+    return (*target);
+}
+
+
+
+
 
 /* SetBit: Set a particular bit in a series of longs */
 void SetBit (int i, SafeLong *bits)

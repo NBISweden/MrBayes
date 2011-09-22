@@ -36100,7 +36100,7 @@ int PrintStates (int curGen, int coldId)
 {
 
 	int				d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
-	char			partString[PARAM_NAME_SIZE], stateString[4];
+	char			*partString=NULL, stateString[4];
 	MrBFlt			*st, *sst, sum;
 	Param			*p;
 	ModelInfo		*m;
@@ -36179,14 +36179,14 @@ int PrintStates (int curGen, int coldId)
 				tree = GetTree (p, coldId, state[coldId]);
 				if (tree->isRooted == YES)
 					{
-					if (FillRelPartsString(p, partString) == YES)
+					if (FillRelPartsString(p, &partString) == YES)
 						SafeSprintf (&tempStr, &tempStrSize, "\tTH%s\tTL%s", partString, partString);
 					else
 						SafeSprintf (&tempStr, &tempStrSize, "\tTH\tTL");
 					}
 				else
                     {
-                    if (FillRelPartsString(p, partString) == YES)
+                    if (FillRelPartsString(p, &partString) == YES)
 					    SafeSprintf (&tempStr, &tempStrSize, "\tTL%s", partString);
 				    else
 					    SafeSprintf (&tempStr, &tempStrSize, "\tTL");
@@ -36206,7 +36206,7 @@ int PrintStates (int curGen, int coldId)
 					{
 					if (p->subParams[j]->paramType == P_CPPEVENTS)
 						{
-						if (FillRelPartsString(p->subParams[j], partString) == YES)
+						if (FillRelPartsString(p->subParams[j], &partString) == YES)
 							SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP%s", partString);
 						else
 							SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP");
@@ -36805,6 +36805,7 @@ int PrintStates (int curGen, int coldId)
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 	
 	free (tempStr);
+    SafeFree (&partString);
 	
 	return (NO_ERROR);
 	
@@ -36815,6 +36816,7 @@ int PrintStates (int curGen, int coldId)
 			free (posSelProbs);
 		memAllocs[ALLOC_POSSELPROBS] = NO;
         free (tempStr);
+        SafeFree (&partString);
 		return (ERROR);
 	
 }
@@ -40986,7 +40988,8 @@ int RunChain (SafeLong *seed)
 						f = chainParams.stat[0].max;
     					MrBayesPrint ("%s   Max standard deviation of split frequencies: %.6f\n", spacer, f);
                         }
-                    splitfreqSS[chainParams.numStepsSS-stepIndexSS-1] = f;
+                    if ( chainParams.isSS == YES )
+                        splitfreqSS[chainParams.numStepsSS-stepIndexSS-1] = f;
 					if (chainParams.stat[0].numPartitions > 0 && f <= chainParams.stopVal)
 						stopChain = YES;
 					if (n < chainParams.numGen - chainParams.printFreq && (chainParams.stopRule == NO || stopChain == NO))
@@ -41012,7 +41015,8 @@ int RunChain (SafeLong *seed)
 							f = chainParams.stat[i].max;
     						MrBayesPrint ("%s   Max standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
                             }
-                        splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1] = f;
+                        if ( chainParams.isSS == YES )
+                            splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1] = f;
                         if (chainParams.stat[i].numPartitions == 0 && f > chainParams.stopVal)
 							stopChain = NO;
 						}

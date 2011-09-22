@@ -68,6 +68,7 @@ void     SafeFree(void **ptr);
 void    *SafeMalloc(size_t s);
 void    *SafeRealloc(void *ptr, size_t s);
 char    *SafeStrcat(char **target, const char *source);
+char    *SafeStrcpy (char **target, const char *source);
 void	 SetBit (int i, SafeLong *bits);
 void     SortInts(int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2(int *item, int *assoc, int left, int right, int descendingOrder);

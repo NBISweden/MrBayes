@@ -3788,12 +3788,12 @@ int DoPropsetParm (char *parmName, char *tkn)
 {
 
 	int                 i, j, k, nMatches, tempInt;
-	char		        temp[100], localTkn[100];
+	static char		    *temp=NULL, *localTkn=NULL; /*freed at the end of the call*/
 	MrBFlt				tempFloat;
 	static MCMCMove	    *mv = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
 	static int			jump, runIndex, chainIndex;
-	static char			tempName[100];
+	static char			*tempName=NULL; /*not freed at the end of the call*/
 
 	if (defMatrix == NO)
 		{
@@ -3820,12 +3820,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 			*/
 			
 			/* copy to local move name */
-			if ((int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcpy (tempName, tkn);
+            SafeStrcpy(&tempName, tkn);
 			mv = NULL;
 			foundComma = foundEqual = NO;
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
@@ -3840,12 +3835,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		if (mv == NULL)
 			{
 			/* we are still assembling the move name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+            SafeStrcat(&tempName, tkn);
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 				Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 				Expecting(DOLLAR);
@@ -3853,18 +3843,13 @@ int DoPropsetParm (char *parmName, char *tkn)
 		else
 			{
 			/* we have a parameter name; now find the parameter name, case insensitive */
-			if ((int)strlen(tkn) > 100)
-				{
-				MrBayesPrint ("%s   Too many characters in parameter name\n", spacer);
-				return (ERROR);
-				}
-			strcpy (localTkn, tkn);
+            SafeStrcpy(&localTkn, tkn);
 			for (i=0; i<(int)strlen(localTkn); i++)
 				localTkn[i] = tolower(localTkn[i]);
 			nMatches = j = 0;
 			for (i=0; i<mv->moveType->numTuningParams; i++)
 				{
-				strcpy (temp, mv->moveType->shortTuningName[i]);
+				SafeStrcpy(&temp, mv->moveType->shortTuningName[i]);
 				for (k=0; k<(int)strlen(temp); k++)
 					temp[k] = tolower(temp[k]);
 				if (strncmp(localTkn,temp,strlen(localTkn)) == 0)
@@ -3923,12 +3908,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(LEFTCURL) || expecting == Expecting(RIGHTCURL))
 		{
 		/* we are still assembling the move name */
-		if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-			{
-			MrBayesPrint ("%s   Move name too long\n", spacer);
-			return (ERROR);
-			}
-		strcat (tempName, tkn);
+		SafeStrcat (&tempName, tkn);
 		expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 			Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 			Expecting(DOLLAR);
@@ -3937,8 +3917,9 @@ int DoPropsetParm (char *parmName, char *tkn)
 		{
 		/* we know that the name is complete now; find the move by its name, 
 		   case insensitive */
-		strcpy (localTkn, tempName);
-		for (i=0; i<(int)strlen(localTkn); i++)
+		SafeStrcpy(&localTkn, tempName);
+        j=(int)strlen(localTkn);
+		for (i=0; i<j; i++)
 			localTkn[i] = tolower(localTkn[i]);
 			
 		/* find the move */
@@ -3946,7 +3927,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		for (i=0; i<numApplicableMoves; i++)
 			{
 			mv = moves[i];
-			strcpy(temp,mv->name);
+			SafeStrcpy(&temp,mv->name);
 			for (k=0; k<(int)strlen(temp); k++)
 				temp[k] = tolower(temp[k]);
 			if (strncmp(temp,localTkn,strlen(localTkn)) == 0)
@@ -3976,12 +3957,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		if (mv == NULL)
 			{
 			/* we are still assembling the move name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 				Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 				Expecting(DOLLAR);
@@ -3997,12 +3973,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		if (mv == NULL)
 			{
 			/* we are still assembling the move name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 				Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 				Expecting(DOLLAR);
@@ -4080,12 +4051,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		if (mv == NULL)
 			{
 			/* we are still assembling the move name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 				Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 				Expecting(DOLLAR);
@@ -4102,12 +4068,7 @@ int DoPropsetParm (char *parmName, char *tkn)
 		if (mv == NULL)
 			{
 			/* we are still assembling the move name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Move name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(LEFTCURL) | Expecting(RIGHTCURL) | Expecting(COMMA) |
 				Expecting(LEFTPAR) | Expecting(RIGHTPAR) | Expecting(NUMBER) | Expecting(ALPHA) |
 				Expecting(DOLLAR);
@@ -4123,6 +4084,9 @@ int DoPropsetParm (char *parmName, char *tkn)
 	else
 		return (ERROR);
 
+
+    SafeFree(&temp);
+    SafeFree(&localTkn);
 	return (NO_ERROR);
 }
 
@@ -9043,14 +9007,14 @@ int DoStartvalsParm (char *parmName, char *tkn)
 {
 
 	int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
-	char		        temp[100];
+	static char		    *temp=NULL;
 	MrBFlt				tempFloat, *value, *subValue;
 	Tree				*theTree, *usrTree;
 	PolyTree			*thePolyTree;
 	static Param	    *param = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
 	static int			useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
-	static char			tempName[100];
+	static char			*tempName=NULL;
 
 	if (defMatrix == NO)
 		{
@@ -9078,12 +9042,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			*/
 			
 			/* copy to local parameter name */
-			if ((int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Parameter name too long\n", spacer);
-				return (ERROR);
-				}
-			strcpy (tempName, tkn);
+			SafeStrcpy (&tempName, tkn);
 			param = NULL;
 			runIndex = chainIndex = -1;
 			useSubvalues = NO;
@@ -9100,12 +9059,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		if (param == NULL)
 			{
 			/* we are still assembling the parameter name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Parameter name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(RIGHTCURL) | Expecting(COMMA) | Expecting(LEFTPAR) | Expecting(EQUALSIGN);
 			}
 		else
@@ -9308,23 +9262,13 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(LEFTCURL))
 		{
 		/* we are still assembling the parameter name */
-		if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-			{
-			MrBayesPrint ("%s   Parameter name too long\n", spacer);
-			return (ERROR);
-			}
-		strcat (tempName, tkn);
+		SafeStrcat (&tempName, tkn);
 		expecting = Expecting(NUMBER) | Expecting(ALPHA) | Expecting(LEFTPAR) | Expecting(EQUALSIGN);
 		}
 	else if (expecting == Expecting(RIGHTCURL))
 		{
 		/* we are still assembling the parameter name */
-		if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-			{
-			MrBayesPrint ("%s   Parameter name too long\n", spacer);
-			return (ERROR);
-			}
-		strcat (tempName, tkn);
+		SafeStrcat (&tempName, tkn);
 		foundComma = NO; /*! if there was a comma in the partition part, we should reset this variable. Otherwise we can't parse something like A{1,2}(3,4) */
 		expecting = Expecting(LEFTPAR) | Expecting(EQUALSIGN);
 		}
@@ -9352,12 +9296,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		if (foundName == NO)
 			{
 			/* we are still assembling the parameter name */
-			if ((int)strlen(tempName) + (int)strlen(tkn) >= 100)
-				{
-				MrBayesPrint ("%s   Parameter name too long\n", spacer);
-				return (ERROR);
-				}
-			strcat (tempName, tkn);
+			SafeStrcat (&tempName, tkn);
 			expecting = Expecting(COMMA) | Expecting(LEFTPAR) | Expecting(RIGHTCURL) | Expecting(EQUALSIGN);
 			}
 		else if (foundEqual == YES)
@@ -9502,8 +9441,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			foundComma = YES;
 			expecting = Expecting(RIGHTPAR) | Expecting(NUMBER); 
             /* if the comma is in a list of partitions (so between { and }) we have to add the comma to the parameter name */
-			if (param == NULL && strchr(tempName, '}')==NULL && strchr(tempName, '{')!=NULL && (int)strlen(tempName)<99) 
-			  strcat (tempName, ",");
+			if (param == NULL && strchr(tempName, '}')==NULL && strchr(tempName, '{')!=NULL ) 
+			  SafeStrcat (&tempName, ",");
 			}
 		}
 	else if (expecting == Expecting(RIGHTPAR))
@@ -9561,7 +9500,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		for (i=0; i<numParams; i++)
 			{
 			param = &params[i];
-			strcpy (temp, param->name);
+			SafeStrcpy (&temp, param->name);
 			for (k=0; k<(int)strlen(temp); k++)
 				temp[k] = tolower(temp[k]);
 			if (strcmp(tempName,temp) == 0)
@@ -9577,7 +9516,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			for (i=0; i<numParams; i++)
 				{
 				param = &params[i];
-				strcpy (temp, param->name);
+				SafeStrcpy (&temp, param->name);
 				for (k=0; k<(int)strlen(temp); k++)
 					temp[k] = tolower(temp[k]);
 				if (strncmp(tempName,temp,strlen(tempName)) == 0)
@@ -9654,6 +9593,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	else
 		return (ERROR);
 
+    SafeFree(&temp);
 	return (NO_ERROR);
 }
 
@@ -10466,7 +10406,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 
 
 	
-int FillRelPartsString (Param *p, char relPartString[PARAM_NAME_SIZE])
+int FillRelPartsString (Param *p, char **relPartString)
 
 {
 
@@ -10484,33 +10424,30 @@ int FillRelPartsString (Param *p, char relPartString[PARAM_NAME_SIZE])
 	if (numCurrentDivisions == 1)
 		{
 		filledString = NO;
-		strcpy (relPartString, "");
+        SafeFree(relPartString);
+		SafeStrcat (relPartString, "");
 		}
 	else
 		{
 		filledString = YES;
 		if (p->nRelParts == numCurrentDivisions)
 			{
-			strcpy (relPartString, "{all}");
+            SafeFree(relPartString);
+			SafeStrcat (relPartString, "{all}");
 			}
 		else
 			{
-			strcpy (relPartString, "{");
+            SafeFree(relPartString);
+			SafeStrcat (relPartString, "{");
 			for (i=n=0; i<p->nRelParts; i++)
 				{
 				n++;
 				SafeSprintf(&tempStr, &tempStrSize, "%d", p->relParts[i] + 1);
-				if (tempStrSize > PARAM_NAME_SIZE) 
-				    {
-					MrBayesPrint("%s   tempString is too long in FillRelPartsString (bug)\n");
-                    free (tempStr);
-                    return (ERROR);
-					}
-				strcat (relPartString, tempStr);
+				SafeStrcat (relPartString, tempStr);
 				if (n < p->nRelParts)
-					strcat (relPartString, ",");
+					SafeStrcat (relPartString, ",");
 				}
-			strcat (relPartString, "}");
+			SafeStrcat (relPartString, "}");
 			}
 		}
 	free (tempStr);
@@ -11209,6 +11146,7 @@ int FreeModel (void)
 		{
 		for (i=0; i<numParams; i++)
             {
+            SafeFree(&params[i].name);
             if (params[i].paramHeader)
                 {
                 free (params[i].paramHeader);
@@ -11219,6 +11157,7 @@ int FreeModel (void)
 		free (relevantParts);
 		params = NULL;
 		relevantParts = NULL;
+        numParams = 0;
 		memAllocs[ALLOC_PARAMS] = NO;
 		}
 	if (memAllocs[ALLOC_MCMCTREES] == YES)
@@ -16284,7 +16223,8 @@ int SetModelParams (void)
 
 	int			    c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
-	char		    tempCodon[15], tempMult[15], *tempStr, partString[PARAM_NAME_SIZE], temp[30];
+	char		    tempCodon[15], tempMult[15], *tempStr,temp[30];
+    char static     *partString=NULL;/*mad static to avoid posible memory leak on return ERROR if it would be introduced later */ 
 	Param		    *p;
 	ModelParams     *mp;
     ModelInfo       *m;
@@ -16303,6 +16243,25 @@ int SetModelParams (void)
 	/* only for debugging */
 	MrBFlt		lnPriorRatio = 0.0, lnProposalRatio = 0.0;
 #	endif
+
+    	/* allocate space for parameters */
+	if (memAllocs[ALLOC_PARAMS] == YES)
+		{
+	    for (i=0; i<numParams; i++)
+            {
+            SafeFree(&params[i].name);
+            if (params[i].paramHeader)
+                {
+                free (params[i].paramHeader);
+                params[i].paramHeader = NULL;
+                }
+            }
+        free (params);
+		free (relevantParts);
+		params = NULL;
+		relevantParts = NULL;
+		memAllocs[ALLOC_PARAMS] = NO;
+		}
 
 	/* wipe all chain parameter information */
 	numParams = 0;
@@ -16324,13 +16283,6 @@ int SetModelParams (void)
 			}
 		}
 
-	/* allocate space for parameters */
-	if (memAllocs[ALLOC_PARAMS] == YES)
-		{
-		free (params);
-		free (relevantParts);
-		memAllocs[ALLOC_PARAMS] = NO;
-		}
 	params = (Param *) SafeMalloc (numParams * sizeof(Param));
 	relevantParts = (int *) SafeMalloc (nRelParts * sizeof(int));
 	if (!params || !relevantParts)
@@ -16340,7 +16292,7 @@ int SetModelParams (void)
 			free (params);
 		if (relevantParts)
 			free (relevantParts);
-                free (tempStr);
+        free (tempStr);
 		return ERROR;
 		}
 	else
@@ -16418,8 +16370,9 @@ int SetModelParams (void)
 		p->position = NULL;
 		p->rateMult = NULL;
 
-        /* set header to NULL */
+        /* set header and name to NULL */
         p->paramHeader = NULL;
+        p->name = NULL;
 
         /* set up relevant partitions */
 		p->nRelParts = numRelParts;
@@ -16430,8 +16383,8 @@ int SetModelParams (void)
 				p->relParts[n++] = i;
 
         /* get partition descriptor */
-        strcpy (partString,"");
-        FillRelPartsString (p, partString);
+        SafeStrcat(&partString,"");
+        FillRelPartsString (p, &partString);
             
         /* set up information for parameter */
 		if (j == P_TRATIO)
@@ -16447,8 +16400,8 @@ int SetModelParams (void)
 					modelSettings[i].tRatio = p;
 	
             p->paramTypeName = "Transition and transversion rates";
-			strcpy (p->name, "Tratio");
-            strcat (p->name, partString);			
+			SafeStrcat(&p->name, "Tratio");
+            SafeStrcat(&p->name, partString);			
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->tRatioPr,"Beta"))
@@ -16495,8 +16448,8 @@ int SetModelParams (void)
 					modelSettings[i].revMat = p;
 
             p->paramTypeName = "Rates of reversible rate matrix";
-			strcpy (p->name, "Revmat");
-			strcat (p->name, partString);			
+			SafeStrcat(&p->name, "Revmat");
+			SafeStrcat(&p->name, partString);			
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->nst, "Mixed"))
@@ -16744,8 +16697,8 @@ int SetModelParams (void)
                 SafeStrcat (&p->paramHeader, partString);
 				}
 			p->paramTypeName = "Positive selection (omega) model";
-			strcpy (p->name, "Omega");
-			strcat (p->name, partString);			
+			SafeStrcat(&p->name, "Omega");
+			SafeStrcat(&p->name, partString);			
 			}
 		else if (j == P_PI)
 			{
@@ -16760,7 +16713,7 @@ int SetModelParams (void)
             if (mp->dataType == STANDARD)
 				{
 				p->paramTypeName = "Symmetric diricihlet/beta distribution alpha_i parameter";
-				strcpy (p->name, "Alpha_symdir");
+				SafeStrcat(&p->name, "Alpha_symdir");
                 /* boundaries for alpha_i */
                 p->min = ETA;
                 p->max = POS_INFINITY;
@@ -16768,9 +16721,9 @@ int SetModelParams (void)
 			else
 				{
 				p->paramTypeName = "Stationary state frequencies";
-				strcpy (p->name, "Pi");
+				SafeStrcat(&p->name, "Pi");
 				}
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			/* and the number of values and subvalues needed */
@@ -16939,7 +16892,7 @@ int SetModelParams (void)
 					}
 				else if (m->dataType == PROTEIN)
 					{
-					if (FillRelPartsString (p, partString) == YES)
+					if (FillRelPartsString (p, &partString) == YES)
 						{
 						SafeSprintf(&tempStr, &tempStrSize, "pi(Ala)%s\tpi(Arg)%s\tpi(Asn)%s\tpi(Asp)%s\tpi(Cys)%s\tpi(Gln)%s\tpi(Glu)%s\tpi(Gly)%s\tpi(His)%s\tpi(Ile)%s\tpi(Leu)%s\tpi(Lys)%s\tpi(Met)%s\tpi(Phe)%s\tpi(Pro)%s\tpi(Ser)%s\tpi(Thr)%s\tpi(Trp)%s\tpi(Tyr)%s\tpi(Val)%s",
 						partString, partString, partString, partString, partString, partString, partString, partString, partString, partString,
@@ -16951,7 +16904,7 @@ int SetModelParams (void)
 					}
 				else if (mp->dataType == RESTRICTION)
 					{
-					if (FillRelPartsString (p, partString) == YES)
+					if (FillRelPartsString (p, &partString) == YES)
 						{
 						SafeSprintf(&tempStr, &tempStrSize, "pi(0)%s\tpi(1)%s", partString, partString);
 						SafeStrcat (&p->paramHeader, tempStr);
@@ -16978,8 +16931,8 @@ int SetModelParams (void)
 					modelSettings[i].shape = p;
 
             p->paramTypeName = "Shape of scaled gamma distribution of site rates";
-			strcpy (p->name, "Alpha");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Alpha");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			mp = &modelParams[p->relParts[0]];
@@ -17008,8 +16961,8 @@ int SetModelParams (void)
 					modelSettings[i].pInvar = p;
 
             p->paramTypeName = "Proportion of invariable sites";
-			strcpy (p->name, "Pinvar");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Pinvar");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->pInvarPr,"Uniform"))
@@ -17035,8 +16988,8 @@ int SetModelParams (void)
 					modelSettings[i].correlation = p;
 
             p->paramTypeName = "Autocorrelation of gamma distribution of site rates";
-			strcpy (p->name, "Rho");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Rho");
+			SafeStrcat(&p->name, partString);
 			chainHasAdgamma = YES;
 
 			/* find the parameter x prior type */
@@ -17063,8 +17016,8 @@ int SetModelParams (void)
 					modelSettings[i].switchRates = p;
 
             p->paramTypeName = "Switch rates of covarion model";
-			strcpy (p->name, "s_cov");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "s_cov");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->covSwitchPr,"Uniform"))
@@ -17104,8 +17057,8 @@ int SetModelParams (void)
 					modelSettings[i].rateMult = p;
 
             p->paramTypeName = "Partition-specific rate multiplier";
-			strcpy (p->name, "Ratemultiplier");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Ratemultiplier");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (p->nSubValues == 0)
@@ -17144,8 +17097,8 @@ int SetModelParams (void)
                     modelSettings[i].geneTreeRateMult = p;
 
             p->paramTypeName = "Gene-specific rate multiplier";
-			strcpy (p->name, "Generatemult");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Generatemult");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			p->paramId = GENETREERATEMULT_DIR;
@@ -17179,8 +17132,8 @@ int SetModelParams (void)
 					modelSettings[i].topology = p;
 
             p->paramTypeName = "Topology";
-			strcpy (p->name, "Tau");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Tau");
+			SafeStrcat(&p->name, partString);
 					
 			/* check that the model is not parsimony for all of the relevant partitions */
 			areAllPartsParsimony = YES;
@@ -17321,8 +17274,8 @@ int SetModelParams (void)
 					modelSettings[i].brlens = p;
 
             p->paramTypeName = "Branch lengths";
-			strcpy (p->name, "V");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "V");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (modelSettings[p->relParts[0]].parsModelId == YES)
@@ -17377,8 +17330,8 @@ int SetModelParams (void)
 					modelSettings[i].speciesTree = p;
 
             p->paramTypeName = "Species tree";
-			strcpy (p->name, "Spt");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Spt");
+			SafeStrcat(&p->name, partString);
 					
 			/* check that the model is not parsimony for all of the relevant partitions */
 			areAllPartsParsimony = YES;
@@ -17407,8 +17360,8 @@ int SetModelParams (void)
 					modelSettings[i].speciationRates = p;
 
             p->paramTypeName = "Speciation rate";
-			strcpy (p->name, "Lambda-mu");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Lambda-mu");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->speciationPr,"Uniform"))
@@ -17436,8 +17389,8 @@ int SetModelParams (void)
 					modelSettings[i].extinctionRates = p;
 
             p->paramTypeName = "Extinction rate";
-			strcpy (p->name, "Mu/lambda");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Mu/lambda");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->extinctionPr,"Beta"))
@@ -17466,8 +17419,8 @@ int SetModelParams (void)
 					modelSettings[i].popSize = p;
 
             p->paramTypeName = "Coalescent process population size parameter";
-			strcpy (p->name, "Popsize");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Popsize");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->popSizePr,"Uniform"))
@@ -17524,8 +17477,8 @@ int SetModelParams (void)
 					modelSettings[i].growthRate = p;
 
             p->paramTypeName = "Population growth rate";
-			strcpy (p->name, "R_pop");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "R_pop");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->growthPr,"Uniform"))
@@ -17555,8 +17508,8 @@ int SetModelParams (void)
 					modelSettings[i].aaModel = p;
 
             p->paramTypeName = "Aminoacid model";
-			strcpy (p->name, "Aamodel");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Aamodel");
+			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->aaModelPr,"Mixed"))
@@ -17582,8 +17535,8 @@ int SetModelParams (void)
 					modelSettings[i].cppRate = p;
 
             p->paramTypeName = "Rate of rate-multiplying compound Poisson process";
-			strcpy (p->name, "Lambda_cpp");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Lambda_cpp");
+			SafeStrcat(&p->name, partString);
 					
 			/* find the parameter x prior type */
 			if (!strcmp(mp->cppRatePr,"Exponential"))
@@ -17609,8 +17562,8 @@ int SetModelParams (void)
 					modelSettings[i].cppMultDev = p;
 
             p->paramTypeName = "Standard deviation (log) of CPP rate multipliers";
-			strcpy (p->name, "Sigma_cpp");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Sigma_cpp");
+			SafeStrcat(&p->name, partString);
 					
 			/* find the parameter x prior type */
 			if (!strcmp(mp->cppMultDevPr,"Fixed"))
@@ -17634,8 +17587,8 @@ int SetModelParams (void)
 					modelSettings[i].cppEvents = p;
 
             p->paramTypeName = "Events of rate-multiplying compound Poisson process";
-			strcpy (p->name, "Cpp");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Cpp");
+			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
 			p->paramId = CPPEVENTS;
@@ -17659,8 +17612,8 @@ int SetModelParams (void)
 					modelSettings[i].tk02var = p;
 
             p->paramTypeName = "Variance of lognormal distribution of branch rates";
-			strcpy (p->name, "TK02var");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "TK02var");
+			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
 			if (!strcmp(mp->tk02varPr,"Uniform"))
@@ -17688,8 +17641,8 @@ int SetModelParams (void)
 					modelSettings[i].tk02BranchRates = p;
 			
 			p->paramTypeName = "Branch rates of tk02 relaxed clock";
-			strcpy (p->name, "TK02branchrates");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "TK02branchrates");
+			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
 			p->paramId = TK02BRANCHRATES;
@@ -17713,8 +17666,8 @@ int SetModelParams (void)
 					modelSettings[i].igrvar = p;
 
             p->paramTypeName = "Variance increase of igr model branch lenths";
-			strcpy (p->name, "Igrvar");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Igrvar");
+			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
 			if (!strcmp(mp->igrvarPr,"Uniform"))
@@ -17742,8 +17695,8 @@ int SetModelParams (void)
 					modelSettings[i].igrBranchRates = p;
 			
 			p->paramTypeName = "Branch lengths of relaxed clock";
-			strcpy (p->name, "Igrbranchlens");
-			strcat (p->name, partString);
+			SafeStrcat(&p->name, "Igrbranchlens");
+			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
 			p->paramId = IGRBRANCHLENS;
@@ -17767,8 +17720,8 @@ int SetModelParams (void)
 					modelSettings[i].clockRate = p;
 	
             p->paramTypeName = "Base rate of clock";
-			strcpy (p->name, "Clockrate");
-            strcat (p->name, partString);			
+			SafeStrcat(&p->name, "Clockrate");
+            SafeStrcat(&p->name, partString);			
 
             /* parameter does affect likelihoods */
             p->affectsLikelihood = YES;
@@ -17818,6 +17771,7 @@ int SetModelParams (void)
 		}
 	free (tempStr);
 	free (isPartTouched);
+    SafeFree(&partString);
 
 	return (NO_ERROR);
 }

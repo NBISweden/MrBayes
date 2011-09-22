@@ -1563,7 +1563,8 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns, int nSamples)
 int PrintParamStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
 	int		i, j, len, longestHeader, *sampleCounts=NULL;
-	char	temp[100];
+    static char	*temp=NULL;
+    char    tempf[100];
     Stat    theStats;
     FILE    *fp;
 	
@@ -1571,7 +1572,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	longestHeader = 9;	/* length of 'parameter' */
 	for (i=0; i<nHeaders; i++)
 		{
-        strcpy (temp, headerNames[i]);
+        SafeStrcpy (&temp, headerNames[i]);
 		len = (int) strlen(temp);
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
@@ -1587,9 +1588,9 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		}
 	
     /* open output file */
-    strncpy (temp, fileName, 90);
-    strcat (temp, ".pstat");
-    fp = OpenNewMBPrintFile (temp);
+    strncpy (tempf, fileName, 90);
+    strcat (tempf, ".pstat");
+    fp = OpenNewMBPrintFile (tempf);
     if (!fp)
         return ERROR;
 
@@ -1636,7 +1637,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 	/* print table values */
 	for (i=0; i<nHeaders; i++)
 		{
-        strcpy (temp, headerNames[i]);
+        SafeStrcpy(&temp, headerNames[i]);
 		len = (int) strlen(temp);
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
@@ -1701,6 +1702,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     fclose (fp);
     free (sampleCounts);
+    SafeFree (&temp);
 
     return (NO_ERROR);
 }

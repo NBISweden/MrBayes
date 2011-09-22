@@ -8206,7 +8206,7 @@ int DoTreeParm (char *parmName, char *tkn)
 	MrBFlt				tempD;
 	char				tempName[100];
     static SafeLong     lastExpecting; /* keep track of what we expected before a comment, in case we want to skip a comment */
-	static char 		tempNameString[150]; /* Contains multiple tokens which form name string of param set*/
+	static char 		*tempNameString=NULL; /* Contains multiple tokens which form name string of param set*/
 	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundN, foundFirst,
                         foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
 						foundClockrate, 
@@ -8375,7 +8375,7 @@ int DoTreeParm (char *parmName, char *tkn)
             {
 			if( strcmp("all",tkn) == 0 )
 				{
-				strcat(tempNameString,tkn);
+				SafeStrcat (&tempNameString,tkn);
 				expecting = Expecting(RIGHTCURL);
 				}
 			else
@@ -8398,7 +8398,7 @@ int DoTreeParm (char *parmName, char *tkn)
                 t->rateMult[t->nESets-1] = (MrBFlt **) SafeCalloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
                 t->eSetName = (char **) SafeRealloc ((void *)t->eSetName, t->nESets*sizeof(char **));
                 }
-			strcpy (tempNameString,tkn);
+			SafeStrcpy (&tempNameString,tkn);
 			foundName = YES;
 			expecting = Expecting(LEFTCURL);
             if (foundEqual == YES)
@@ -8419,7 +8419,7 @@ int DoTreeParm (char *parmName, char *tkn)
                 t->bSetName = (char **) SafeRealloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
 				t->bSetName[t->nBSets-1] = (char *) SafeCalloc (strlen(tkn)+1,sizeof(char));
                 }
-			strcpy (tempNameString,tkn);
+			SafeStrcpy (&tempNameString,tkn);
 			foundName = YES;
 			expecting = Expecting(LEFTCURL);
             if (foundEqual == YES)
@@ -8444,7 +8444,7 @@ int DoTreeParm (char *parmName, char *tkn)
                 else
                     t->popSize = (MrBFlt *) SafeCalloc (2*numLocalTaxa-1, sizeof(MrBFlt));
 				}
-			strcpy (tempNameString,tkn);
+			SafeStrcpy (&tempNameString,tkn);
 			foundName = YES;
 			expecting = Expecting(LEFTCURL);
             if (foundEqual == YES)
@@ -8614,7 +8614,7 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
         if (foundName == YES)
             {
-            strcat(tempNameString,",");
+            SafeStrcat (&tempNameString,",");
             expecting = Expecting(NUMBER);
             }
 		else if (foundE == YES)
@@ -8653,7 +8653,7 @@ int DoTreeParm (char *parmName, char *tkn)
         else if (foundName == YES && foundCurly == YES)
             {
             /* still assembling name of a param set */
-			strcat(tempNameString,tkn);		
+			SafeStrcat (&tempNameString,tkn);		
 			expecting = Expecting(RIGHTCURL) | Expecting(COMMA);
             }
         else if (foundN == YES)
@@ -8926,7 +8926,7 @@ int DoTreeParm (char *parmName, char *tkn)
 		if( foundName == YES)
 			{
             foundCurly=YES;
-			strcat(tempNameString,"{");				
+			SafeStrcat (&tempNameString,"{");				
 			expecting = Expecting(NUMBER) | Expecting(ALPHA);
 			}
 		else
@@ -8936,7 +8936,7 @@ int DoTreeParm (char *parmName, char *tkn)
 		{
 		if( foundName == YES)
 			{
-			strcat(tempNameString,"}");
+			SafeStrcat (&tempNameString,"}");
             foundCurly=NO;
 			if (foundEqual == NO)
 				{

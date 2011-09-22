@@ -1939,7 +1939,9 @@ int DoSumt (void)
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
 	PartCtr 	    *x;
-	char		    *s=NULL, tempName[100], tempStr[100], fileName[100], treeName[100], divString[100];
+	char		    *s=NULL, tempName[100], fileName[100], treeName[100], divString[100];
+    char            *tempStr=NULL; /*not static because error ext is handeled*/
+    int             tempStrLength;
 	FILE		    *fp=NULL;
     PartCtr         **treeParts=NULL,*tmp;
     SumtFileInfo    sumtFileInfo;
@@ -1966,6 +1968,8 @@ int DoSumt (void)
 		MrBayesPrint ("%s   Nothing to do, all output parameters (Table, Summary, Consensus) set to 'NO'\n", spacer);
 		goto errorExit;
 		}
+
+	SafeStrcpy(&tempStr, " "); 
 
     /* Initialize sumtParams struct */
     sumtParams.numTaxa = 0;
@@ -2668,8 +2672,8 @@ int DoSumt (void)
             for (i=1; i<numTreePartsToPrint; i++)
 	            {
                 x = treeParts[i];
-
-	            sprintf (tempStr, "length%s[%d]", divString, i);
+                tempStrLength=(int)strlen(tempStr);
+	            SafeSprintf (&tempStr,&tempStrLength, "length%s[%d]", divString, i);
                 len = (int) strlen(tempStr);
 
                 GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2688,8 +2692,8 @@ int DoSumt (void)
                 for (i=0; i<numTreePartsToPrint; i++)
 		            {
                     x = treeParts[i];
-
-                    sprintf (tempStr, "height%s[%d]", divString, i);
+                    tempStrLength=(int)strlen(tempStr);
+	                SafeSprintf (&tempStr,&tempStrLength, "height%s[%d]", divString, i);
                     len = (int) strlen(tempStr);
 
                     GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2708,8 +2712,8 @@ int DoSumt (void)
                 for (i=0; i<numTreePartsToPrint; i++)
 		            {
                     x = treeParts[i];
-
-		            sprintf (tempStr, "age%s[%d]", divString, i);
+                    tempStrLength=(int)strlen(tempStr);
+	                SafeSprintf (&tempStr,&tempStrLength, "age%s[%d]", divString, i);
                     len = (int) strlen(tempStr);
 
                     GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2729,8 +2733,8 @@ int DoSumt (void)
                     for (j=1; j<numTreePartsToPrint; j++)
 		                {
                         x = treeParts[j];
-
-		                sprintf (tempStr, "%s_length[%d]", sumtParams.bSetName[i], j);
+                        tempStrLength=(int)strlen(tempStr);
+	                    SafeSprintf (&tempStr,&tempStrLength, "%s_length[%d]", sumtParams.bSetName[i], j);
                         len = (int) strlen(tempStr);
 
                         GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2743,8 +2747,8 @@ int DoSumt (void)
                     for (j=1; j<numTreePartsToPrint; j++)
 		                {
                         x = treeParts[j];
-
-		                sprintf (tempStr, "%s_rate[%d]", sumtParams.bSetName[i], j);
+                        tempStrLength=(int)strlen(tempStr);
+	                    SafeSprintf (&tempStr,&tempStrLength, "%s_rate[%d]", sumtParams.bSetName[i], j);
                         len = (int) strlen(tempStr);
 
                         GetSummary (x->bRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2760,8 +2764,8 @@ int DoSumt (void)
                     for (j=1; j<numTreePartsToPrint; j++)
 		                {
                         x = treeParts[j];
-
-		                sprintf (tempStr, "%s_nEvents[%d]", sumtParams.eSetName[i], j);
+                        tempStrLength=(int)strlen(tempStr);
+	                    SafeSprintf (&tempStr,&tempStrLength, "%s_nEvents[%d]", sumtParams.eSetName[i], j);
                         len = (int) strlen(tempStr);
 
                         GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2780,8 +2784,8 @@ int DoSumt (void)
                 for (j=1; j<numTreePartsToPrint; j++)
 	                {
                     x = treeParts[j];
-
-	                sprintf (tempStr, "%s[%d]", sumtParams.popSizeSetName, j);
+                    tempStrLength=(int)strlen(tempStr);
+	                SafeSprintf (&tempStr,&tempStrLength, "%s[%d]", sumtParams.popSizeSetName, j);
                     len = (int) strlen(tempStr);
 
                     GetSummary (x->popSize, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
@@ -2881,6 +2885,7 @@ int DoSumt (void)
 
     expecting = Expecting(COMMAND);
 	inSumtCommand = NO;
+    SafeFree(&tempStr);
 
     return (NO_ERROR);
 	
@@ -2914,6 +2919,7 @@ int DoSumt (void)
 
 		expecting = Expecting(COMMAND);
 		inSumtCommand = NO;
+        SafeFree(&tempStr);
 
         return (ERROR);
 }
