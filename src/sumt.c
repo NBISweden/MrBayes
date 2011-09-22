@@ -2885,7 +2885,7 @@ int DoSumt (void)
 
     expecting = Expecting(COMMAND);
 	inSumtCommand = NO;
-    SafeFree(&tempStr);
+    SafeFree ((void **)&tempStr);
 
     return (NO_ERROR);
 	
@@ -2919,7 +2919,7 @@ int DoSumt (void)
 
 		expecting = Expecting(COMMAND);
 		inSumtCommand = NO;
-        SafeFree(&tempStr);
+        SafeFree ((void **)&tempStr);
 
         return (ERROR);
 }

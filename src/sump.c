@@ -1702,7 +1702,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     fclose (fp);
     free (sampleCounts);
-    SafeFree (&temp);
+    SafeFree ((void **)&temp);
 
     return (NO_ERROR);
 }

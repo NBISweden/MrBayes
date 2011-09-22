@@ -36805,7 +36805,7 @@ int PrintStates (int curGen, int coldId)
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 	
 	free (tempStr);
-    SafeFree (&partString);
+    SafeFree ((void **)&partString);
 	
 	return (NO_ERROR);
 	
@@ -36816,7 +36816,7 @@ int PrintStates (int curGen, int coldId)
 			free (posSelProbs);
 		memAllocs[ALLOC_POSSELPROBS] = NO;
         free (tempStr);
-        SafeFree (&partString);
+        SafeFree ((void **)&partString);
 		return (ERROR);
 	
 }
