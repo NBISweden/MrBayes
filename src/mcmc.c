@@ -9317,8 +9317,8 @@ int DoSs (void)
 {
     int ret, oldBurnin, oldRelativeBurnin;// oldAppend;
 
-    oldBurnin = chainParams.chainBurnIn;
-    oldRelativeBurnin = chainParams.burninSS;
+    oldBurnin = chainParams.burninSS;;
+    oldRelativeBurnin = chainParams.relativeBurnin;
     //oldAppend = chainParams.append;
 
 
@@ -40601,24 +40601,27 @@ int RunChain (SafeLong *seed)
             }
 # endif
 
-        if (PrintMCMCDiagnosticsToFile (0) == ERROR)
-            {
-			MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
+        if( chainParams.mcmcDiagn == YES )
+        {
+            if (PrintMCMCDiagnosticsToFile (0) == ERROR)
+                {
+			    MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
 # if defined (MPI_ENABLED)
-			nErrors++;
+			    nErrors++;
 # else
-            return (ERROR);
+                return (ERROR);
 # endif
-            }
+                }
 # if defined (MPI_ENABLED)
-        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		if (sumErrors > 0)
-			{
-            MrBayesPrint ("%s   Aborting run.\n");
-			return ERROR;
-			}
+            MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		    if (sumErrors > 0)
+			    {
+                MrBayesPrint ("%s   Aborting run.\n");
+			    return ERROR;
+			    }
 # endif
-         if( chainParams.isSS == YES && chainParams.burninSS == 0 )
+        
+         if( chainParams.isSS == YES && chainParams.burninSS == 0 && chainParams.numRuns > 1 )
             { 
             /* Remove first sample (generation 0) from diagnostics */
             removeTo=1;
@@ -40641,6 +40644,7 @@ int RunChain (SafeLong *seed)
 #			    endif
             MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
             }
+        }
     }
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
@@ -41102,30 +41106,34 @@ int RunChain (SafeLong *seed)
             if( ( n-lastStepEndSS ) % numGenInStepSS == 0 )      /* prepare sample of next step */
                 { 
                 /* Remove all previouse samples from diagnostics */
-				removeFrom = removeTo;
-				removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples including 0 one*/
-                lastStepEndSS = removeTo*chainParams.sampleFreq;
-                removeTo++;
-				if( removeFrom < removeTo )
-					{
-					if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
-						{
-                 	  	 MrBayesPrint("%s   Problem removing tree samples\n");
-#				         if defined (MPI_ENABLED)
-			     		   nErrors++;
-#	        	         else
-			      		  return ERROR;
-#                        endif
-                    	}
-					}
-#                   if defined (MPI_ENABLED)
-		        MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		        if (sumErrors > 0)
+                if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
                     {
-			        MrBayesPrint ("%s   Aborting run.\n");
-                    return ERROR;
-                    }
+				    removeFrom = removeTo;
+				    removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples including 0 one*/
+                    lastStepEndSS = removeTo*chainParams.sampleFreq;
+                    removeTo++;
+				    if( removeFrom < removeTo )
+					    {
+					    if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
+						    {
+                 	  	     MrBayesPrint("%s   Problem removing tree samples\n");
+#				         if defined (MPI_ENABLED)
+			     		       nErrors++;
+#	        	         else
+			      		      return ERROR;
+#                        endif
+                    	    }
+					    }
+#                   if defined (MPI_ENABLED)
+		            MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		            if (sumErrors > 0)
+                        {
+			            MrBayesPrint ("%s   Aborting run.\n");
+                        return ERROR;
+                        }
 #			        endif
+                    }
+
                 if( n > chainParams.burninSS*chainParams.sampleFreq )
                     {
                     /* dump to file current step contribution */
@@ -41154,10 +41162,20 @@ int RunChain (SafeLong *seed)
                         MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j]);
                         }
 #                   endif
-					for (i=0; i<numTopologies; i++)
-						{
-                        MrBayesPrintf (fpSS, "\t%.6f",splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1]);
-						}
+                    if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
+                        {
+					    for (i=0; i<numTopologies; i++)
+						    {
+                            MrBayesPrintf (fpSS, "\t%.6f",splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1]);
+						    }
+                        }
+                    else{
+                        for (i=0; i<numTopologies; i++)
+						    {
+                            MrBayesPrintf (fpSS, "\t-2.0");
+						    }
+
+                        }
 
                     MrBayesPrintf (fpSS, "\n");
                     fflush (fpSS);

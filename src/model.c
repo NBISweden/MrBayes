@@ -10424,21 +10424,18 @@ int FillRelPartsString (Param *p, char **relPartString)
 	if (numCurrentDivisions == 1)
 		{
 		filledString = NO;
-        SafeFree(relPartString);
-		SafeStrcat (relPartString, "");
+		SafeStrcpy (relPartString, "");
 		}
 	else
 		{
 		filledString = YES;
 		if (p->nRelParts == numCurrentDivisions)
 			{
-            SafeFree(relPartString);
-			SafeStrcat (relPartString, "{all}");
+			SafeStrcpy (relPartString, "{all}");
 			}
 		else
 			{
-            SafeFree(relPartString);
-			SafeStrcat (relPartString, "{");
+			SafeStrcpy (relPartString, "{");
 			for (i=n=0; i<p->nRelParts; i++)
 				{
 				n++;
