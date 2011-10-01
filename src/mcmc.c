@@ -8022,7 +8022,7 @@ int DoSsParm (char *parmName, char *tkn)
 				{
 				sscanf (tkn, "%d", &tempI);
 			    chainParams.burninSS = tempI;
-				MrBayesPrint ("%s   Setting burnin for Steppingstone sampling to %ld\n", spacer, chainParams.burninSS);
+				MrBayesPrint ("%s   Setting burnin for stepping-stone sampling to %ld\n", spacer, chainParams.burninSS);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -39978,7 +39978,7 @@ int RunChain (SafeLong *seed)
 	MCMCMove	*theMove, *mv;
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
-    /* Steppingstone sampling variables */
+    /* Stepping-stone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0;
     MrBFlt      powerSS=0, stepLengthSS=0,meanSS,varSS, *tempX;
     char        ckpFileName[100],bkupFileName[120];
@@ -40333,9 +40333,9 @@ int RunChain (SafeLong *seed)
         numGenOld = chainParams.numGen;
         chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Starting Steppingstone sampling to estimate Marginal Liklihood.           \n", spacer);
+        MrBayesPrint ("%s   Starting stepping-stone sampling to estimate marginal likelihood.         \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s   Total of %d generations (%d samples) will be taken while first            \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
+        MrBayesPrint ("%s   Total of %d generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
         if( numGenOld != chainParams.numGen)
             {
@@ -40346,7 +40346,7 @@ int RunChain (SafeLong *seed)
         MrBayesPrint ("\n");
         if( numGenInStepSS/chainParams.sampleFreq < 1  )
             {
-            MrBayesPrint ("%s   There is less then one sample in each step of Steppingstone sampling.   \n", spacer);
+            MrBayesPrint ("%s   There is less then one sample in each step of stepping-stone sampling.  \n", spacer);
             MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
             MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
 			return ERROR; /*All MPI run will return here since all of them have the same values*/
@@ -41415,23 +41415,23 @@ int RunChain (SafeLong *seed)
     if ( chainParams.isSS == YES )
         {
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Marginal LogLiklihood estimated using Steppingstone sampling based on\n", spacer );
+        MrBayesPrint ("%s   Marginal LogLiklihood estimated using stepping-stone sampling based on\n", spacer );
         MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s       Run   Marginal LogLiklihood\n",spacer);
-        MrBayesPrint ("%s       ------------------------\n",spacer);
+        MrBayesPrint ("%s       Run   Marginal log likelihood\n",spacer);
+        MrBayesPrint ("%s       --------------------------\n",spacer);
         for(j=0; j<chainParams.numRuns; j++)
             {
             MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, j+1, marginalLnLSS[j] );
             }
-        MrBayesPrint ("%s       ------------------------\n",spacer);
+        MrBayesPrint ("%s       --------------------------\n",spacer);
         if(chainParams.numRuns>1)
             {
             MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
             MrBayesPrint ("%s       Mean:  %9.2f\n\n",spacer,meanSS);
-            //MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal LogLiklihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
+            //MrBayesPrint ("%s       Mean:  %9.2lf  Scaled variance: %.2f of Marginal log likelihood estimates among runs.\n",spacer,meanSS,varSS-2*meanSS);
             //MrBayesPrint ("%s       Note: Scaled variance is given in log units and calculated as \"variance/mean^2\"\n",spacer);     
             }
-        MrBayesPrint ("%s   More statistics on Steppingstone sampling is dumped to %s.ss file.\n", spacer, chainParams.chainFileName);
+        MrBayesPrint ("%s   More statistics on stepping-stone sampling is dumped to %s.ss file.\n", spacer, chainParams.chainFileName);
 
         if ( chainParams.mcmcDiagn == YES )
             {
