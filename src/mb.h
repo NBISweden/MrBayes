@@ -1038,6 +1038,7 @@ typedef struct chain
     int         numStepsSS;            /* Number of steps in SS                         */
     int         burninSS;              /* Fixed burnin for SS                           */
     MrBFlt      alphaSS;               /* Beta values are distributed according to quantiles of Beta(alphaSS,1.0) distribution */
+    int         backupCheckSS;         /* Frequency of checkpoints backup               */
 	MrBFlt		chainTemp;             /* chain temperature                             */
 	int			userDefinedTemps;      /* should we use the users temperatures?         */
 	MrBFlt		userTemps[MAX_CHAINS]; /* user-defined chain temperatures               */

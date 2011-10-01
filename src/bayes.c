@@ -531,7 +531,7 @@ int InitializeMrBayes (void)
 #if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #else
-    tryToUseBEAGLE = YES;                            /* try to use the BEAGLE library if not Windows */
+    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Windows (NO untill SSE single prec. works )*/
 #endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
@@ -963,6 +963,7 @@ int ReinitializeMrBayes (void)
     chainParams.numStepsSS = 50;
     chainParams.burninSS = -1;
     chainParams.alphaSS = 0.4;
+    chainParams.backupCheckSS = 0;
 	chainParams.mcmcDiagn = YES;                     /* write MCMC diagnostics to file ?              */
 	chainParams.diagnFreq = 5000;                    /* diagnostics frequency                         */
 	chainParams.minPartFreq = 0.10;                  /* min partition frequency for diagnostics       */

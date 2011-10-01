@@ -34291,7 +34291,7 @@ int PreparePrintFiles (void)
 
 
     /* Remove previous chekpoint file if present */
-    sprintf (fileName, "%s.ckp", chainParams.chainFileName);
+    sprintf (fileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
     strcpy (bkupName, fileName);
     strcat (bkupName, "~");
     remove (bkupName);
@@ -34920,8 +34920,7 @@ int PrintCheckPoint (int gen)
 	if (nErrors == 0)
 		{
 		/* figure out check-point file names */
-		strcpy (ckpFileName, chainParams.chainFileName);
-		strcat (ckpFileName, ".ckp");
+        sprintf(ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
 		strcpy (bkupFileName, ckpFileName);
 		strcat (bkupFileName, "~");
 		strcpy (oldBkupFileName, bkupFileName);
@@ -39982,6 +39981,7 @@ int RunChain (SafeLong *seed)
     /* Steppingstone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0;
     MrBFlt      powerSS=0, stepLengthSS=0,meanSS,varSS, *tempX;
+    char        ckpFileName[100],bkupFileName[120];
 
 
 #if defined (BEAGLE_ENABLED)
@@ -40391,7 +40391,6 @@ int RunChain (SafeLong *seed)
                     }
                 }      
             }
-
         }
 
 
@@ -40639,9 +40638,38 @@ int RunChain (SafeLong *seed)
                 return ERROR;
                 }
 #			    endif
-            MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
             }
         }
+        if( chainParams.isSS == YES)
+            {
+            if(chainParams.burninSS == 0 )
+                MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
+
+            /*Printing SS header*/
+            MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
+            MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
+            MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
+            MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
+            MrBayesPrintf (fpSS, "[   runX                --  Contribution to the Marginal LogLikelihood of run X, i.e. Marginal LogLikelihood for run X is the sum across all steps in column runX.   ]\n");
+            if (chainParams.diagnStat == AVGSTDDEV)
+                MrBayesPrintf (fpSS, "[   aSplitX             --  Average standard deviation of split frequencies of tree X. -2.0 is printed if no diagnostics was requested. -1.0 is printed if there were no splits with frequency above minimum.]\n");
+            else
+                MrBayesPrintf (fpSS, "[   mSplitX             --  Maximal standard deviation of split frequencies of tree X. -2.0 is printed if no diagnostics was requested. -1.0 is printed if there were no splits with frequency above minimum.]\n");
+            MrBayesPrintf (fpSS, "Step\tPower");
+            for (j=0; j<chainParams.numRuns ; j++)
+                MrBayesPrintf (fpSS, "\trun%d", j);
+            if (chainParams.diagnStat == AVGSTDDEV)
+                {
+                for (j=0; j<numTopologies; j++)
+                    MrBayesPrintf (fpSS, "\taSplit%d", j);
+                }
+            else
+                {
+                for (j=0; j<numTopologies; j++)
+                    MrBayesPrintf (fpSS, "\tmSplit%d", j);
+                }
+            MrBayesPrintf (fpSS, "\n");
+            }
     }
 
     for (n=numPreviousGen+1; n<=chainParams.numGen; n++) /* begin run chain */
@@ -41113,22 +41141,10 @@ int RunChain (SafeLong *seed)
 					    {
 					    if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
 						    {
-                 	  	     MrBayesPrint("%s   Problem removing tree samples\n");
-#				         if defined (MPI_ENABLED)
-			     		       nErrors++;
-#	        	         else
-			      		      return ERROR;
-#                        endif
-                    	    }
-					    }
-#                   if defined (MPI_ENABLED)
-		            MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		            if (sumErrors > 0)
-                        {
-			            MrBayesPrint ("%s   Aborting run.\n");
-                        return ERROR;
+                            nErrors++;
+                            }
+                        ERROR_TEST2("Problem removing tree samples",return(ERROR),);
                         }
-#			        endif
                     }
 
                 if( n > chainParams.burninSS*chainParams.sampleFreq )
@@ -41200,31 +41216,41 @@ int RunChain (SafeLong *seed)
                     }
                 else
                     {
-                    MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
-                    MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
-		            MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
-                    MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
-			        MrBayesPrintf (fpSS, "[   runX                --  Contribution to the Marginal LogLikelihood of run X, i.e. Marginal LogLikelihood for run X is the sum across all steps in column runX.   ]\n");
-                    if (chainParams.diagnStat == AVGSTDDEV)
-                        MrBayesPrintf (fpSS, "[   aSplitX             --  Average standard deviation of split frequencies of tree X.   ]\n");
-                    else
-                        MrBayesPrintf (fpSS, "[   mSplitX             --  Maximal standard deviation of split frequencies of tree X.   ]\n");
-                    MrBayesPrintf (fpSS, "Step\tPower");
-                    for (j=0; j<chainParams.numRuns ; j++)
-                        MrBayesPrintf (fpSS, "\trun%d", j);
-                    if (chainParams.diagnStat == AVGSTDDEV)
-                        {
-                        for (j=0; j<numTopologies; j++)
-                            MrBayesPrintf (fpSS, "\taSplit%d", j);
-                        }
-                    else
-                        {
-                        for (j=0; j<numTopologies; j++)
-                            MrBayesPrintf (fpSS, "\tmSplit%d", j);
-                        }
-                    MrBayesPrintf (fpSS, "\n");
                     MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
                     }
+
+                    if( chainParams.backupCheckSS !=0 && (chainParams.numStepsSS-stepIndexSS-1)% chainParams.backupCheckSS == 0 )
+                        {
+                        /* print check-point file. Blocking for MPI*/
+
+                        ERROR_TEST2("Error before printing checkpoint",return(ERROR),);
+		                if (PrintCheckPoint (n) == ERROR)
+                            {
+			                nErrors++;
+                            }
+                        ERROR_TEST2("Error in printing checkpoint",return(ERROR),);
+		               
+#if defined (MPI_ENABLED)
+	            if (proc_id == 0)
+		                {
+#endif
+                                
+		                /* figure out check-point file names */
+                        sprintf (ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
+                        sprintf (bkupFileName,"%s.ss%d", ckpFileName,chainParams.numStepsSS-stepIndexSS);	                
+                        if(rename (ckpFileName, bkupFileName)!=0)
+                            {
+                            MrBayesPrint ("%s   Could not rename file %s to %s\n", spacer, ckpFileName, bkupFileName);
+                            return ERROR;
+                            }
+                        strcpy (bkupFileName, ckpFileName);
+		                strcat (bkupFileName, "~");
+                        rename (bkupFileName,ckpFileName);
+#if defined (MPI_ENABLED)
+	                    } /* end of if(proc_id == 0)*/
+#endif
+                        
+                        }
                 }             
             }
 
@@ -41232,33 +41258,15 @@ int RunChain (SafeLong *seed)
         /* print check-point file. Blocking for MPI*/
 		if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
 			{
-#			if defined (MPI_ENABLED)
-			/* reduce errors */
-			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-			if (sumErrors > 0)
-                {
-				MrBayesPrint ("%s   Aborting run.\n");
-                return ERROR;
-                }
-#			endif
+            ERROR_TEST2("Error before printing checkpoint",return(ERROR),);
 			if (PrintCheckPoint (n) == ERROR)
                 {
-                printf("%s   Error in printing checkpoint\n", spacer);
-#				if defined (MPI_ENABLED)
 				nErrors++;
-#				else
-				return ERROR;
-#				endif
-				}
-#			if defined (MPI_ENABLED)
-			MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-			if (sumErrors > 0)
-                {
-				MrBayesPrint ("%s   Aborting run.\n", spacer);
-                return ERROR;
                 }
-#			endif
+            ERROR_TEST2("Error in printing checkpoint",return(ERROR),);
 			}
+
+
 
 
 		} /* end run chain */

@@ -11885,7 +11885,7 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   and accurate method for estimating the marginal likelihood of the currently   \n");
 	    MrBayesPrint ("   specified model. It is considerably more accurate than the harmonic mean of   \n");
         MrBayesPrint ("   the likelihoods from a standard MCMC run on the model (calculated by the      \n");
-        MrBayesPrint ("   'Sumt' command) but it requires a separate MCMC-like run. To be more specific,\n");
+        MrBayesPrint ("   'Sump' command) but it requires a separate MCMC-like run. To be more specific,\n");
         MrBayesPrint ("   stepping-stone sampling uses importance sampling to estimate each ratio in a  \n");
 		MrBayesPrint ("   series of discrete steps bridging the posterior and prior distributions.      \n");
 		MrBayesPrint ("   The importance distributions that are used are called power posterior distri- \n");

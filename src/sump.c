@@ -1652,18 +1652,36 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 		GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
 		
 		MrBayesPrint ("%s   %-*s ", spacer, longestHeader, temp);
-		MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf  %8.2lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median, theStats.minESS);
+		MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
 		MrBayesPrintf (fp, "%s", temp);
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.mean));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.var));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.lower));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
 		MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.minESS));
+
+        if(theStats.minESS == theStats.minESS)
+            {
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.minESS));
+            MrBayesPrint ("  %8.2lf", theStats.minESS);
+            }
+        else
+            {
+            MrBayesPrint ("       NA ");
+            MrBayesPrintf (fp, "NA");
+            }
 		if (nRuns > 1)
 			{
-            MrBayesPrint ("  %8.2lf", theStats.avrESS);
-            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.avrESS));
+            if(theStats.minESS == theStats.minESS)
+                {
+                MrBayesPrint ("  %8.2lf", theStats.avrESS);
+                MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.avrESS));
+                }
+            else
+                {
+                MrBayesPrint ("       NA ");
+                MrBayesPrintf (fp, "NA");
+                }
 			if (theStats.PSRF < 0.0)
                 {
 				MrBayesPrint ("     NA   ");

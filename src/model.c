@@ -19478,7 +19478,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.5;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
-	mt->minimum[0] = 0.0001;
+	mt->minimum[0] = 0.001;
 	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
