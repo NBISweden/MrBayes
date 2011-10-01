@@ -9827,6 +9827,7 @@ void FreeChainMemory (void)
 #endif
                 }
             free (m->condLikes);
+            m->condLikes = NULL;
             }
 
         if (m->scalers)
@@ -9890,7 +9891,10 @@ void FreeChainMemory (void)
             }
 
         if (m->condLikeScratchIndex)
+            {
 			free (m->condLikeScratchIndex);
+            m->condLikeScratchIndex=NULL;
+            }
 
         if (m->tiProbsIndex)
             {
