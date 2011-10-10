@@ -11019,9 +11019,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset clockratepr = lognormal(-1.61,0.10)                 \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    specifies a lognormal distribution with a mean of log values \n");
-        MrBayesPrint ("                    of -1.61, standard deviation of log values of 0.10. In such  \n");
-        MrBayesPrint ("                    a case mean value of the lognormal distribution is equal to,\n");
-        MrBayesPrint ("                       e^(-1.61 + 0.10^2/2)= 0.2                                 \n");
+        MrBayesPrint ("                    of -1.61 and a standard deviation of log values of 0.10. In  \n");
+        MrBayesPrint ("                    such a case, the mean value of the lognormal distribution is \n");
+        MrBayesPrint ("                    equal to e^(-1.61 + 0.10^2/2) = 0.20.                        \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    Note that the 'Clockratepr' parameter has no effect on non-  \n");
 		MrBayesPrint ("                    clock trees.                                                 \n");

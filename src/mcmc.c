@@ -40654,7 +40654,7 @@ int RunChain (SafeLong *seed)
             MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
             MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
             MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
-            MrBayesPrintf (fpSS, "[   runX                --  Contribution to the Marginal LogLikelihood of run X, i.e. Marginal LogLikelihood for run X is the sum across all steps in column runX.   ]\n");
+            MrBayesPrintf (fpSS, "[   runX                --  Contribution to the marginal log likelihood of run X, i.e. marginal log likelihood for run X is the sum across all steps in column runX.   ]\n");
             if (chainParams.diagnStat == AVGSTDDEV)
                 MrBayesPrintf (fpSS, "[   aSplitX             --  Average standard deviation of split frequencies of tree X. -2.0 is printed if no diagnostics was requested. -1.0 is printed if there were no splits with frequency above minimum.]\n");
             else
@@ -41375,7 +41375,7 @@ int RunChain (SafeLong *seed)
 		maxLnL0[j] = best;
 		}
 
-	/* Collecting  Marginal LogLiklihoods if SS is used */
+	/* Collecting  marginal log likelihoods if SS is used */
     if ( chainParams.isSS == YES )
         {
     	for (j=0; j<chainParams.numRuns ; j++)
@@ -41419,15 +41419,15 @@ int RunChain (SafeLong *seed)
     if ( chainParams.isSS == YES )
         {
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Marginal LogLiklihood estimated using stepping-stone sampling based on\n", spacer );
-        MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
-        MrBayesPrint ("%s       Run   Marginal log likelihood\n",spacer);
-        MrBayesPrint ("%s       --------------------------\n",spacer);
+        MrBayesPrint ("%s   Marginal likelihood (in log units) estimated using the stepping-stone sampling based on\n", spacer );
+        MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
+        MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
+        MrBayesPrint ("%s       ------------------------------\n",spacer);
         for(j=0; j<chainParams.numRuns; j++)
             {
             MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, j+1, marginalLnLSS[j] );
             }
-        MrBayesPrint ("%s       --------------------------\n",spacer);
+        MrBayesPrint ("%s       ------------------------------\n",spacer);
         if(chainParams.numRuns>1)
             {
             MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
