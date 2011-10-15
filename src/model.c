@@ -19318,13 +19318,13 @@ void SetUpMoveTypes (void)
 	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = POPSIZE_UNI;
 	mt->applicableTo[1] = POPSIZE_LOGNORMAL;
-	mt->applicableTo[1] = POPSIZE_NORMAL;
-	mt->applicableTo[1] = POPSIZE_GAMMA;
+	mt->applicableTo[2] = POPSIZE_NORMAL;
+	mt->applicableTo[3] = POPSIZE_GAMMA;
 	mt->nApplicable = 4;
 	mt->moveFxn = &Move_PopSizeM;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;  /* window size */
+	mt->tuningParam[0] = 2.0 * log(1.5);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
@@ -19607,7 +19607,7 @@ void SetUpMoveTypes (void)
 	mt->name = "Species tree move";
 	mt->shortName = "Distmatrixmove";
 	mt->tuningName[0] = "Divider of rate of truncated exponential";
-	mt->shortTuningName[0] = "lambdadivider";
+	mt->shortTuningName[0] = "lambdadiv";
 	mt->applicableTo[0] = SPECIESTREE_UNIFORM;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_SpeciesTree;
@@ -20806,7 +20806,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 {
 
 	int				a, b, d, i, j, k, m, n, run, chain, shouldPrint, isSame, areRunsSame, areChainsSame, nValues,
-					chainIndex, refIndex, numPrinted, numMovedChains;
+					chainIndex, refIndex, numPrinted, numMovedChains, printedCol, screenWidth=100;
 	Param			*p;
 	Model			*mp;
     ModelInfo       *ms;
@@ -20959,7 +20959,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
         else
             {
-            MrBayesPrint ("%s      ERROR: Someone forget to name parameter type %d", spacer, j);
+            MrBayesPrint ("%s      ERROR: Someone forgot to name parameter type %d", spacer, j);
             return (ERROR);
             }
 		
@@ -20994,7 +20994,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		p = &params[i];
 		j = p->paramType;
 		
-		mp = &modelParams[p->relParts[0]];
+        mp = &modelParams[p->relParts[0]];
         ms = &modelSettings[p->relParts[0]];
 		
 		/* print parameter number and name */
@@ -21235,12 +21235,19 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		else if (j == P_GENETREERATE)
 			{
 		    MrBayesPrint ("%s            Prior      = Dirichlet(", spacer);
-		    for (n=0; n<numTrees-1; n++)
+		    printedCol = strlen(spacer) + 25 + 10;
+            for (n=0; n<numTrees-1; n++)
 			    {
+                if (printedCol + 5 > screenWidth)
+                    {
+                    MrBayesPrint("\n%s                                   ", spacer);
+                    printedCol = strlen(spacer) + 25 + 10;
+                    }
                 if (n == numTrees-2)
     			    MrBayesPrint ("1.00)\n");
                 else
     			    MrBayesPrint ("1.00,");
+                printedCol += 5;
                 }
 			}
 		else if (j == P_TOPOLOGY)
@@ -21542,14 +21549,39 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				MrBayesPrint ("%s            Subparam.  = %s\n", spacer, p->subParams[0]->name);
 			else
 				{
-				for (k=0; k<p->nSubParams; k++)
+				printedCol = 0;
+                for (k=0; k<p->nSubParams; k++)
 					{
-					if (k == 0)
+                    if (k == 0)
+                        {
 						MrBayesPrint ("%s            Subparams  = %s", spacer, p->subParams[k]->name);
-					else if (k == p->nSubParams - 1)
-						MrBayesPrint (" and %s\n", p->subParams[k]->name);
-					else
-						MrBayesPrint (", %s", p->subParams[k]->name);
+                        printedCol = strlen(spacer) + 25 + strlen(p->subParams[k]->name);
+                        }
+                    else if (k == p->nSubParams - 1)
+                        {
+                        if (printedCol + 5 > screenWidth)
+                            MrBayesPrint ("\n%s                         and ", spacer);
+                        else if (printedCol + (int)(strlen(p->subParams[k]->name)) + 5 > screenWidth)
+                            MrBayesPrint (" and \n%s                         ", spacer);
+                        else
+                            MrBayesPrint (" and ");
+						MrBayesPrint ("%s\n", p->subParams[k]->name);
+                        }
+                    else
+                        {
+                        if (printedCol + (int)(strlen(p->subParams[k]->name)) + 2 > screenWidth)
+                            {
+                            MrBayesPrint (", \n%s                         ", spacer);
+                            printedCol = strlen(spacer) + 25;
+                            }
+                        else
+                            {
+                            MrBayesPrint(", ");
+                            printedCol += 2;
+                            }
+						MrBayesPrint ("%s", p->subParams[k]->name);
+                        printedCol += strlen(p->subParams[k]->name);
+                        }
 					}
 				}
 			}
@@ -21598,7 +21630,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					}
 
 				/* now print moves */
-				for (chain=0; chain<chainParams.numChains; chain++)
+                for (chain=0; chain<chainParams.numChains; chain++)
 					{
 					if (chain > 0 && areChainsSame == YES)
 						continue;
@@ -21607,6 +21639,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					else
 						MrBayesPrint ("%s                         ", spacer);
 					numPrinted = 0;
+    				printedCol = strlen(spacer) + 25;
 					for (k=0; k<numApplicableMoves; k++)
 						{
 						mv = moves[k];
@@ -21616,9 +21649,25 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						if (mv->relProposalProb[chainIndex] <= 0.000001)
 							continue;
 						if (numPrinted == 0)
+                            {
 							MrBayesPrint ("%s <prob %.1f>", mv->name, mv->relProposalProb[chainIndex]);
+                            printedCol += 9 + strlen(mv->name) + (int)(log10(mv->relProposalProb[chainIndex])) + 3;
+                            }
 						else
-							MrBayesPrint (", %s <prob %.1f>", mv->name, mv->relProposalProb[chainIndex]);
+                            {
+                            if (printedCol + 11 + (int)(strlen(mv->name)) + (int)(log10(mv->relProposalProb[chainIndex])) + 3 > screenWidth)
+                                {
+                                MrBayesPrint(", \n%s                         ", spacer);
+                                printedCol = 25 + strlen(spacer);
+                                }
+                            else
+                                {
+                                MrBayesPrint(", ");
+                                printedCol += 2;
+                                }
+							MrBayesPrint ("%s <prob %.1f>", mv->name, mv->relProposalProb[chainIndex]);
+                            printedCol += (9 + (int)(strlen(mv->name)) + (int)(log10(mv->relProposalProb[chainIndex])) + 3);
+                            }
 						numPrinted++;
 						}
 
@@ -21649,6 +21698,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			/* loop over moves */
 			numPrinted = 0;
+            printedCol = 0;
 			for (k=0; k<numApplicableMoves; k++)
 				{
 				mv = moves[k];
@@ -21667,11 +21717,22 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				if (numMovedChains == 0)
 					{
 					if (numPrinted == 0)
-						MrBayesPrint ("%s            Not used   = %s", spacer, mv->moveType->shortName);
-					else if (numPrinted % 10 != 0)
-						MrBayesPrint (", %s", mv->moveType->shortName);
-					else
-					  MrBayesPrint (",\n%s                         %s", spacer, mv->moveType->shortName);
+                        {
+						MrBayesPrint ("%s            Not used   = ", spacer);
+                        printedCol = strlen(spacer) + 25;
+                        }
+					else if (printedCol + 2 + (int)(strlen(mv->moveType->shortName)) > screenWidth)
+                        {
+					    MrBayesPrint (", \n%s                         ", spacer);
+                        printedCol = strlen(spacer) + 25;
+                        }
+                    else
+                        {
+                        MrBayesPrint (", ");
+                        printedCol += 2;
+                        }
+                    MrBayesPrint("%s", mv->moveType->shortName);
+                    printedCol += strlen(mv->moveType->shortName);
 					numPrinted++;
 					}
 				}
@@ -21680,9 +21741,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			}
 
 		/* show startvals */
-		if (showStartVals == YES && (p->printParam == YES || p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS))
+        if (showStartVals == YES && (p->printParam == YES || p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS || p->paramType == P_SPECIESTREE || p->paramType == P_POPSIZE))
 			{					
-			if (p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS)
+			if (p->paramType == P_TOPOLOGY || p->paramType == P_BRLENS || p->paramType == P_SPECIESTREE)
 				{
 				/* check if they are the same */
 				areRunsSame = YES;
@@ -21701,6 +21762,20 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						}
 					}
 				else if (p->paramType == P_BRLENS)
+					{
+					for (run=1; run<chainParams.numRuns; run++)
+						{
+						for (chain=0; chain<chainParams.numChains; chain++)
+							{
+							if (AreTreesSame (GetTree (p, run*chainParams.numChains + chain, 0), GetTree (p, chain, 0)) == NO)
+								{
+								areRunsSame = NO;
+								break;
+								}
+							}
+						}
+					}
+				else if (p->paramType == P_SPECIESTREE)
 					{
 					for (run=1; run<chainParams.numRuns; run++)
 						{
@@ -21845,7 +21920,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				}
 			else
 				{
-				/* run of the mill parameter */
+                /* run of the mill parameter */
 				areRunsSame = YES;
 				for (run=1; run<chainParams.numRuns; run++)
 					{

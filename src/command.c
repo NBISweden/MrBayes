@@ -682,7 +682,7 @@ int AllocTaxa (void)
     for (i=0; i<numTaxa; i++)
         {
         speciespartitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
-        speciespartitionId[i][0] = i;
+        speciespartitionId[i][0] = i + 1;   /* 1-based taxon index, do not ask me why */
         }
     numDefinedSpeciespartitions = 0;   /* number of defined species partitions */
     memAllocs[ALLOC_SPECIESPARTITIONS] = YES;  /* safe to do free */
