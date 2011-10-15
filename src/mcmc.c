@@ -40647,7 +40647,7 @@ int RunChain (SafeLong *seed)
         if( chainParams.isSS == YES)
             {
             if(chainParams.burninSS == 0 )
-                MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
+                MrBayesPrint("%s   Sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
 
             /*Printing SS header*/
             MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
@@ -41202,9 +41202,7 @@ int RunChain (SafeLong *seed)
                     powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
                     stepLengthSS -= powerSS;
                     if ( n != chainParams.numGen )
-                        MrBayesPrint("%s   Start sampling step %d out of %d steps...\n\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
-                    else
-                        MrBayesPrint("%s   Stepping stone sampling is completed successfuly!!!\n\n",spacer );
+                        MrBayesPrint("%s   Sampling step %d out of %d steps...\n\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
                     for (chn=0; chn<numLocalChains; chn++)
 		                {
                         if (chainId[chn] % chainParams.numChains == 0)
@@ -41220,7 +41218,7 @@ int RunChain (SafeLong *seed)
                     }
                 else
                     {
-                    MrBayesPrint("%s   Start sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
+                    MrBayesPrint("\n%s   Sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
                     }
 
                     if( chainParams.backupCheckSS !=0 && (chainParams.numStepsSS-stepIndexSS-1)% chainParams.backupCheckSS == 0 )
@@ -41419,7 +41417,7 @@ int RunChain (SafeLong *seed)
     if ( chainParams.isSS == YES )
         {
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Marginal likelihood (in log units) estimated using the stepping-stone sampling based on\n", spacer );
+        MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on\n", spacer );
         MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
         MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
         MrBayesPrint ("%s       ------------------------------\n",spacer);
