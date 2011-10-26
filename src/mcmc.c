@@ -7891,6 +7891,15 @@ int DoMcmc (void)
 	        }
         }
 
+
+    for (i=0; i<numParams; i++)
+        for (j=0; j<numGlobalChains; j++)
+            if (SetTreeNodeAges(&params[i], j, 0) == NO) goto errorExit;
+
+    for (i=0; i<numParams; i++)
+        for (j=0; j<numGlobalChains; j++)
+            assert (IsTreeConsistent(&params[i], j, 0) == YES);
+
     /* Initialize vectors of print parameters */
 	if (InitPrintParams () == ERROR)
 		goto errorExit;
@@ -40758,8 +40767,8 @@ int RunChain (SafeLong *seed)
 #if ! defined (NDEBUG)
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
-                printf ("IsTreeConsistent failed before move! Press enter to continue.\n");
-                getchar();
+                printf ("IsTreeConsistent failed before move!\n");
+                return ERROR;
                 }
             if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
                 {
@@ -40784,6 +40793,7 @@ int RunChain (SafeLong *seed)
             		{
             		printf ("DEBUG ERROR: After move '%s'\n", theMove->name);
             		}
+
 #endif
                 abortMove= YES;
                 }
@@ -40819,6 +40829,13 @@ int RunChain (SafeLong *seed)
                     printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
                     return ERROR;
                     }
+                if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES && IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
+					{
+					MrBayesPrint ("%s   Branch lengths of the tree does not satisfy to be a clock tree.\n", spacer);
+					ShowNodes(GetTree (theMove->parm, chn, state[chn])->root,0,YES);
+					return (ERROR);
+					}
+				
 #endif
 
                 /* heat */

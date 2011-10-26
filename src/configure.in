@@ -51,7 +51,7 @@ AC_ARG_WITH([beagle],
    [],
    [with_beagle=yes])
    
-AC_ARG_ENABLE(threads, [  --enable-threads=[no/yes] enable thread-support in BEAGLE [default="no"]],,enable_threads="no")  
+AC_ARG_ENABLE(threads, [  --enable-threads=[no/yes] enable thread-support when using BEAGLE [default="no"]],,enable_threads="no")  
 
 if test "x$with_beagle" != "xno"
 then

@@ -8989,11 +8989,12 @@ int DoReportParm (char *parmName, char *tkn)
 int DoStartvals (void)
 
 {
-    int     i;
 
     MrBayesPrint ("%s   Successfully set starting values\n", spacer);
+    /*
     for (i=0; i<numParams; i++)
         assert (IsTreeConsistent(&params[i], 0, 0) == YES);
+    */
 	return (NO_ERROR);
 	
 }
@@ -9150,6 +9151,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							return (ERROR);
 							}
                         FillTopologySubParams (param, chainId, 0, &globalSeed);
+                        //MrBayesPrint ("%s   Branch lengths and relaxed clock subparamiters of a paramiter '%s' are reset.\n", spacer, param->name);
                         if (param->paramId == TOPOLOGY_SPECIESTREE)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
                         assert (IsTreeConsistent(param, chainId, 0) == YES);
@@ -9161,23 +9163,29 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   User tree '%s' does not have branch lengths so it cannot be used in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
-                        if (theTree->isClock == YES && IsClockSatisfied (usrTree,0.001) == NO)
+                     /*   if (theTree->isClock == YES && IsClockSatisfied (usrTree,0.001) == NO)
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							ShowNodes(usrTree->root,0,YES);
 							return (ERROR);
 							}
-                        if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO)
+                     */
+                      /*  if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO) //no calibration is set up in usertree so do not do this check
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
+                     */
 						if (AreTopologiesSame (theTree, usrTree) == NO)
 							{
 							MrBayesPrint ("%s   Topology of user tree '%s' wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
+                            /* reset node depths to ensure that non-dated tips have node depth 0.0 */
+                        /*if (usrTree->isClock == YES)
+                            SetNodeDepths(usrTree);
+                        */ 
                         if (ResetBrlensFromTree (theTree, usrTree) == ERROR)
 							{
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
@@ -9189,30 +9197,40 @@ int DoStartvalsParm (char *parmName, char *tkn)
                                 ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgeFix);
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
+                        if (theTree->isClock == YES && IsClockSatisfied (theTree,0.001) == NO)
+							{
+							MrBayesPrint ("%s   Non-calibrated tips are not at the same level after setting up starting tree branch lengthes(%s) from user tree '%s'.\n", spacer, param->name, userTree[treeIndex]->name);
+							ShowNodes(theTree->root,0,YES);
+							return (ERROR);
+							}
                         if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (theTree,0.001) == NO)
 							{
 							MrBayesPrint ("%s   Problem setting calibrated tree parameters\n", spacer);
 							return (ERROR);
 							}
+                        
 						FillBrlensSubParams (param, chainId, 0);
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //MrBayesPrint ("%s   Rrelaxed clock subparamiters of a paramiter '%s' are reset.\n", spacer, param->name);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         if (param->paramId == BRLENS_CLOCK_SPCOAL)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
 					else if (param->paramType == P_CPPEVENTS || param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHLENS)
 						{
-						if (IsClockSatisfied (usrTree, 0.0001) == NO)
+						if ( theTree->isCalibrated == NO && IsClockSatisfied (usrTree, 0.0001) == NO ) // user tree is not calibrated so do not check it if calibration is in place
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex], param->name);
 							ShowNodes(usrTree->root,0,YES);
 							return (ERROR);
 							}
+                        /*   
                         if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.0001) == NO)
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
+                        */
 						if (AreTopologiesSame (theTree, usrTree) == NO)
 							{
 							MrBayesPrint ("%s   Topology of user tree '%s' is wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
@@ -9223,7 +9241,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
 							return (ERROR);
 							}
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
                     else if (param->paramType == P_POPSIZE)
                         {
@@ -9253,8 +9271,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         assert (IsTreeConsistent(param, chainId, 0) == YES);
                         }
 					}
+                    /*
                 for (j=0; j<numParams; j++)
                     assert (IsTreeConsistent(&params[j],0,0) == YES);
+                    */
 				}
 			expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 			}
@@ -10527,8 +10547,14 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 			}
 	    else if (tree->isCalibrated == YES)
 			{
+            assert (tree->isClock == YES);
 			clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state );
 			returnVal = InitCalibratedBrlens (tree, clockRate, seed);
+            if ( IsClockSatisfied (tree,0.001) == NO)
+				{
+				MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
+				return (ERROR);
+				}
 			}
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
@@ -10919,7 +10945,13 @@ int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
                     RandResolve (NULL, constraintTree, seed, constraintTree->isRooted);
                     if (tree->nIntNodes != constraintTree->nIntNodes)
 						{
-						MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved or differs in rootedness\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
+                        if(tree->isRooted != constraintTree->isRooted )
+                            {
+						    MrBayesPrint ("%s   Could not fix topology because user tree '%s' differs in rootedness with the model tree.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
+                            MrBayesPrint ("%s   The user tree %s is%srooted, while expected model tree is%srooted.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name, (constraintTree->isRooted?" ":" not "), (tree->isRooted?" ":" not "));
+                            }
+                        else
+                            MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
     					FreePolyTree (constraintTree);
                         return (ERROR);
 						}
@@ -18037,7 +18069,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 				    }
 			    position[p->index][0] = 0.5;
                 if (p->anc->anc == NULL)
-			        rateMult[p->index][j] = 1.0;
+			        rateMult[p->index][0] = 1.0;
                 else
                     {
                     baseRate = 1.0;
@@ -18047,7 +18079,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 		                baseRate *= rateMult[q->index][0];
 		                q = q->anc;
 		                }
-			        rateMult[p->index][j] = 2.0 * effectiveBranchLengthP[pp->index] / (p->length * baseRate) - 1.0;
+			        rateMult[p->index][0] = 2.0 * effectiveBranchLengthP[pp->index] / (p->length * baseRate) - 1.0;
                     }
                 }
             else

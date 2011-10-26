@@ -14338,8 +14338,8 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 		printf ("   ");
 		if (p->left == NULL && p->right == NULL && p->anc != NULL)
 			{
-			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d ", 
-			indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode);
+			printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d isDated=%d ", 
+			indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode, p->isDated);
 			}
 		else if (p->left != NULL && p->right == NULL && p->anc == NULL)
 			{

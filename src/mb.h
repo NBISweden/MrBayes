@@ -569,6 +569,7 @@ typedef struct param
 	MrBFlt			*values;		    /* main values of parameter						*/
 	MrBFlt			*subValues;		    /* subvalues of parameter						*/
 	int			    *intValues;		    /* integer values (model index/growth fxn)      */
+    int             *isStartValuesSet;  /* YES is set for the chains where this paramiter is set by starting value, NO  */
 	int				nValues;		    /* number of values								*/
 	int				nSubValues;		    /* number of subvalues							*/
 	int				nIntValues;		    /* number of intvalues						    */

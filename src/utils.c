@@ -1415,7 +1415,14 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
 /* SafeCalloc: Print error if out of memory */
 void *SafeCalloc(size_t n, size_t s) {
 
-    void *ptr = calloc(n, s);
+    void *ptr;
+    
+    if( s*n == 0 )
+        {
+        //return NULL;
+        }
+
+    ptr= calloc(n, s);
 
     if(ptr==NULL)
         {
@@ -1467,7 +1474,14 @@ void SafeFree (void **ptr)
 /* SafeMalloc: Print error if out of memory; clear memory */
 void *SafeMalloc(size_t s) {
 
-    void *ptr = malloc(s);
+    void *ptr;
+
+    if( s==0 )
+        {
+        //return NULL;
+        }
+
+    ptr= malloc(s);
 
     if(ptr==NULL)
         {
@@ -1488,6 +1502,12 @@ void *SafeMalloc(size_t s) {
 
 /* SafeRealloc: Print error if out of memory */
 void *SafeRealloc(void *ptr, size_t s) {
+
+    if( s==0 )
+        {
+        //free(ptr);
+        //return NULL;
+        }
 
     if (ptr == NULL)
         {

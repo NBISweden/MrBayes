@@ -238,7 +238,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 	int *isScalerNode;
 	TreeNode *p;
     
-    if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) {
+    if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) 
+        {
 	
 #if defined (DEBUG_MB_BEAGLE_FLOW)
 		printf("ALWAYS RESCALING\n");
@@ -256,7 +257,9 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         TreeTiProbs_Beagle(tree, d, chain);
         TreeCondLikes_Beagle(tree, d, chain);
         TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
-    } else { /* MB_BEAGLE_SCALE_DYNAMIC */
+        } 
+    else 
+        { /* MB_BEAGLE_SCALE_DYNAMIC */
 	
 		/* This flag is only valid within this block */
         m->rescaleBeagleAll = NO;        
@@ -267,14 +270,14 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 			m->rescaleFreq[chain]++; /* increase rescaleFreq independent of whether we accept or reject new state*/
 			m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
 			for (i=0; i<tree->nIntNodes; i++)
-			{
-            p = tree->intDownPass[i];
-            if ( p->upDateCl == YES ) {
-                 /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for
-					(p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it */
-                FlipCondLikeSpace (m, chain, p->index);
-               }
-			}
+			    {
+                p = tree->intDownPass[i];
+                if ( p->upDateCl == YES ) {
+                     /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for
+					    (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it */
+                    FlipCondLikeSpace (m, chain, p->index);
+                   }
+			    }
 			goto rescale_all;
 			}
 
@@ -310,8 +313,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 							{
 							rescaleFreqNew-= rescaleFreqNew >> 3;
 							/* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low liklihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
-							/* basicaly the higher probobility of proposing of low liklihood state which needs smaler rescaleFreq would leed to higher probability of hiting this code which should reduce rescaleFreqOld thus reduce further probobility of hiting this code */
-							/* at some point this negative feedback mechanism should get in balance with the mechanism of pereodicaly increasing rescaleFreq when long sequance of successes is achived*/
+							/* basically the higher probability of proposing of low liklihood state which needs smaller rescaleFreq would lead to higher probability of hitting this code which should reduce rescaleFreqOld thus reduce further probability of hitting this code */
+							/* at some point this negative feedback mechanism should get in balance with the mechanism of periodically increasing rescaleFreq when long sequence of successes is achieved*/
 							m->rescaleFreqOld-= m->rescaleFreqOld >> 3;
 							}
 						m->rescaleFreqOld-= m->rescaleFreqOld >> 3;
@@ -335,16 +338,17 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 			isScalerNode = m->isScalerNode[chain];
 	while_loop:
 			ResetScalersPartition ( isScalerNode, tree, rescaleFreqNew );
-			for (i=0; i<m->nCijkParts; i++) {			
+			for (i=0; i<m->nCijkParts; i++) 
+                {			
 				beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
-			}
+			    }
 			
             TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
 			if( TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT )
 				{
 				if( rescaleFreqNew > 1 )
 					{
-					/*Swap back sclalers which swaped in TreeCondLikes_Beagle_Rescale_All() */
+					/*Swap back scalers which were  swapped in TreeCondLikes_Beagle_Rescale_All() */
 					for (i=0; i<tree->nIntNodes; i++)
 						{
 						p = tree->intDownPass[i];
@@ -1066,6 +1070,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #endif
         return beagleReturn;
     }
+    assert(beagleReturn == BEAGLE_SUCCESS);
 	m->succesCount[chain]++;
     
     /* accumulate logs across sites */

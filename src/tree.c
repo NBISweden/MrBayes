@@ -2392,7 +2392,7 @@ int InitBrlens (Tree *t, MrBFlt v)
 
 /* 
 @param levUp		is the number of edges between the "node" and the most resent calibrated predecessor +1,
-					so for the calibrated nodes it should be 1
+					for the calibrated nodes it should be 1
 @param calibrUp		is the age of the most resent calibrated predecessor
 @return				age of the node	
 */
@@ -2605,10 +2605,19 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 			if (p->anc->anc != NULL)
 				{
 				p->length = p->anc->nodeDepth - p->nodeDepth;
-				assert( p->length > 0.0 );
+                if( p->length < BRLENS_MIN )
+                    {
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too small.\n", spacer);
+                    //return (ERROR);
+                    }
+                if( p->length > BRLENS_MAX )
+                    {
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too long.\n", spacer);
+                    //return (ERROR);
+                    }
 				}
 			else
-				p->length = 0.0;
+				p->length = 0.0; //not a problem for root node. 
 			}
 		}
 
@@ -2820,9 +2829,10 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmb
 		
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine sets calibrated clock tree params
+| IsCalibratedClockSatisfied: This routine SETS(not just checks as name suggest) calibrated clock tree nodes age, depth.
 |     and checks that user defined brlens satisfy the specified calibration(s)
 |     up to tolerance tol
+|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(that makes imconsitancy)
 |
 |------------------------------------------------------------------------------*/
 int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
@@ -2853,6 +2863,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 		p->nodeDepth = -1.0;
 		if (p->isDated == YES)
 			{
+            assert(p->calibration->prior == fixed || p->calibration->prior == uniform || p->calibration->prior == offsetExponential);
 			if (p->calibration->prior == fixed)
 				x[p->index] = y[p->index] = p->calibration->age;
 			else if (p->calibration->prior == uniform)
@@ -2875,6 +2886,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 		}
 
 	/* calculate node heights in branch length units */
+    /* node depth will be set from the root for now*/
 	p = t->root->left;
 	p->nodeDepth = 0.0;
 	for (i=t->nNodes-3; i>=0; i--)
@@ -2906,7 +2918,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 		
 
 	/* check potentially constraining calibrations */
-	/* and find minum and maximum possible rate */
+	/* and find minimum and maximum possible rate */
 	maxRateConstrained = NO;
 	minRateConstrained = NO;
 	isViolated = NO;
@@ -3010,7 +3022,7 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 		p->age = p->nodeDepth / clockRate;
 		}
 
-	/* check if there is an age to add */
+	/* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inacuracy)*/
 	ageToAdd = 0.0;
 	for (i=0; i<t->nNodes-1; i++)
 		{
@@ -3064,7 +3076,13 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
 		p = t->allDownPass[i];
 		if (p->left == NULL && p->right == NULL)
 			{
-			length = 0.0;
+            if (p->isDated == YES)
+                {
+                //continue;
+                length = p->nodeDepth;
+                }
+            else
+			    length = 0.0;
 			q = p;
 			while (q->anc != NULL)
 				{
@@ -3079,8 +3097,11 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
 				}
 			else
 				{
-				if (AreDoublesEqual (firstLength, length, tol) == NO)
-					isClockLike = NO;
+                if (AreDoublesEqual (firstLength, length, tol) == NO)
+                    {
+                    MrBayesPrint ("%s   Node (%s) is not at the same depth as some other tip taking colibration into account. \n", spacer, p->label);
+                    isClockLike = NO;
+                    }
 				}
 			}
 		}
@@ -3166,7 +3187,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
         if (p->left == NULL && p->isDated == NO && p->nodeDepth != 0.0) {
                 printf ("Node %d is a nondated tip but has node depth %f\n",
                     p->index, p->nodeDepth);
-                return NO;
+                //return NO;
         }
     }
 
@@ -4933,7 +4954,7 @@ int ResetTopology (Tree *t, char *s)
 
 /*-----------------------------------------------------------------
 |
-|	ResetBrlensFromTree: copies brlens from second tree (vTree) to
+|	ResetBrlensFromTree: copies brlens and depths from second tree (vTree) to
 |       first tree (used to initialize brlen sets for same topology)
 |
 -----------------------------------------------------------------*/
@@ -4957,6 +4978,7 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
 	numTips = tree->nNodes - tree->nIntNodes - (tree->isRooted == YES ? 1 : 0);
 	nLongsNeeded = (int) ((numTips - 1) / nBitsInALong) + 1;
 
+    /*copy lengths and nodeDepthes*/
 	for (i=0; i<vTree->nNodes; i++)
 		{
 		p  = vTree->allDownPass[i];
@@ -4974,8 +4996,10 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
 				}
 			}
 		}
+
     if (tree->isRooted == YES)
         {
+        /*Next compute height for the root. */
     	for (i=0; i<tree->nNodes-1; i++)
 	    	{
 	    	p  = tree->allDownPass[i];
@@ -4994,7 +5018,7 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
         for (i=tree->nNodes-3; i>=0; i--)
             {
             p = tree->allDownPass[i];
-            if (p->left==NULL && p->calibration==NULL)
+            if (p->left==NULL && p->calibration==NULL) 
                 continue;    /* leave at 0.0 */
             p->nodeDepth = p->anc->nodeDepth - p->length;
             }
@@ -5710,6 +5734,72 @@ void SetNodeDepths (Tree *t)
 			p->nodeDepth = p->anc->nodeDepth - p->length;
 		}
 }
+
+
+
+
+
+/* Set ages of a clock tree according to depth and clockrate. Check that resulting ages are consistant with calibration.
+|  return YES if tree is age consistent, No otherwise.
+*/
+int SetTreeNodeAges (Param *param, int chain, int state)
+{
+    Tree        *tree;
+    TreeNode    *p;
+    int         i;
+    MrBFlt      clockRate;
+
+    if (param->paramType != P_TOPOLOGY && param->paramType != P_BRLENS && param->paramType != P_SPECIESTREE)
+        return YES;
+
+    tree      = GetTree(param, chain, state);
+    if (modelSettings[param->relParts[0]].clockRate != NULL)
+        clockRate = *GetParamVals(modelSettings[param->relParts[0]].clockRate, chain, state);
+    else
+        return YES;
+
+
+    /* Clock trees */
+
+    /* Check that lengths and depths are consistant. That would work for the case when we set up branch lenght from starting tree  */
+    for (i=0; i<tree->nNodes-1; i++) {
+        p = tree->allDownPass[i];
+        p->age =  p->nodeDepth / clockRate;
+    }
+
+    /* Check that ages and calibrations are consistent */
+    if (tree->isCalibrated == YES)
+        {
+        for (i=0; i<tree->nNodes-1; i++)
+            {
+            p = tree->allDownPass[i];
+            if (p->isDated == YES) {
+                if (p->calibration->prior == fixed && fabs(p->age - p->calibration->age) > 0.000001)
+                    {
+                    printf ("Node %d has age %f but should be fixed to age %f\n",
+                        p->index, p->age, p->calibration->age);
+                    return NO;
+                    }
+                else if (p->calibration->prior == offsetExponential && p->age < p->calibration->offset)
+                    {
+                    printf ("Node %d has age %f but should be minimally of age %f\n",
+                        p->index, p->age, p->calibration->offset);
+                    return NO;
+                    }
+                else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age > p->calibration->max))
+                    {
+                    printf ("Node %d has age %f but should be in the interval (%f,%f)\n",
+                        p->index, p->age, p->calibration->min, p->calibration->max);
+                    return NO;
+                    }
+                }
+            }
+        }
+
+
+    return YES;
+}
+
 
 
 

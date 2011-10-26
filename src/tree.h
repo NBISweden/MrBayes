@@ -79,6 +79,8 @@ int       RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens);
 int       RetrieveUTopology (Tree *t, int *order);
 int       RetrieveUTree (Tree *t, int *order, MrBFlt *brlens);
 void      SetDatedNodeAges(Param* param, int chain, int state);
+void      SetNodeDepths (Tree *t);
+int       SetTreeNodeAges (Param *param, int chain, int state);
 int		  ShowPolyNodes (PolyTree *pt);
 int       ShowTree (Tree *t);
 int       StoreRPolyTopology (PolyTree *t, int *order);
