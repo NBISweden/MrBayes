@@ -47,6 +47,7 @@ void	SetUpMoveTypes (void);
 int		ShowModel (void);
 int		Unlink (void);
 int	    UpdateTK02EvolLengths (Param *param, Tree *t, int chain);
+int     UpdateClockRate(MrBFlt clockRate, int chain);
 int 	UpdateCppEvolLengths (Param *param, TreeNode *p, int chain);
 int	    UpdateIgrBranchRates (Param *param, Tree *t, int chain);
 

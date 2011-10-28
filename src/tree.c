@@ -728,6 +728,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers only to deleted taxa\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            and will be disregarded\n", spacer);
 			t->constraints[constraintId] = NO;
+            t->nLocks--;
 			continue;
             }
         if (k == 1)
@@ -735,6 +736,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a single tip and\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            will be disregarded\n", spacer);
 			t->constraints[constraintId] = NO;
+            t->nLocks--;
 			continue;
             }
 
@@ -776,6 +778,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			{
 			MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            and will be ignored\n", spacer);
+            t->nLocks--;
 			t->constraints[i] = NO;
 			continue;
 			}
@@ -2013,6 +2016,101 @@ void EraseTreeList (TreeList *treeList)
 
 
 
+void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
+{
+    int i;
+    TreeNode *p;
+
+    if( t->fromUserTree == NO )
+        {
+        /*Set nodeDepth*/
+	    for (i=0; i<t->nNodes; i++)
+		    {
+		    p = t->allDownPass[i];
+		    p->nodeDepth = p->age * clockRate;
+		    }
+
+	    /* calculate branch lengths */
+	    for (i=0; i<t->nNodes; i++)
+		    {
+		    p = t->allDownPass[i];
+		    if (p->anc != NULL)
+			    {
+			    if (p->anc->anc != NULL)
+				    {
+				    p->length = p->anc->nodeDepth - p->nodeDepth;
+				    }
+			    else
+				    p->length = 0.0; //not a problem for root node. 
+			    }
+		    }
+        }
+    else
+        {
+        for (i=0; i<t->nNodes-1; i++)
+		    {
+		    p = t->allDownPass[i];
+		    p->age = p->nodeDepth / clockRate;
+		    }
+        }
+
+}
+
+
+
+
+/*----------------------------------------------------------------
+|
+|	findAllowedClockrate: Finds the range of clock rates allowed for the tree.
+|
+|   @param t        - tree to check (IN)  
+|   @minClockRate   - adress where minimum allowed clock rate is stored (OUT)
+|   @maxClockRate   - adress where maximum allowed clock rate is stored (OUT)
+|
+----------------------------------------------------------------*/
+void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate )
+{
+    int i;
+    TreeNode *p;
+    MrBFlt min, max, tmp;
+
+    min=0.0;
+    max=MRBFLT_MAX;
+
+    *minClockRate = 2.0;
+    *maxClockRate = 1.0;
+
+    if( t->fromUserTree == NO )
+        {
+        for (i=0; i<t->nNodes-1; i++)
+		    {
+		    p = t->allDownPass[i];
+            if (p->anc->anc != NULL)
+                {
+		        tmp = BRLENS_MIN/(p->anc->age - p->age);
+                assert(tmp > 0);
+                if( tmp > min)
+                    min = tmp;
+
+		        tmp = BRLENS_MAX/(p->anc->age - p->age);
+                assert(tmp > 0);
+                if( tmp > max)
+                    max = tmp;
+                }
+		    }
+        *minClockRate= min;
+        *maxClockRate= max;
+        }
+    else
+        {
+        IsCalibratedClockSatisfied (t,minClockRate,maxClockRate, 0.001);
+        }
+
+}
+
+
+
+
 
 /* FreePolyTree: Free memory space for a polytomous tree (unrooted or rooted) */
 void FreePolyTree (PolyTree *pt)
@@ -2832,16 +2930,20 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmb
 | IsCalibratedClockSatisfied: This routine SETS(not just checks as name suggest) calibrated clock tree nodes age, depth.
 |     and checks that user defined brlens satisfy the specified calibration(s)
 |     up to tolerance tol
-|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(that makes imconsitancy)
+|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(that may produce imconsitancy)
 |
 |------------------------------------------------------------------------------*/
-int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
+int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
 
 {
 
 	int				i, j, maxRateConstrained, minRateConstrained, isViolated;
 	MrBFlt			f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
 	TreeNode		*p, *q, *r, *s;
+
+    /*By defauult assume the tree does not have allowed range of clockrate*/
+    *minClockRate = 2.0;
+    *maxClockRate = 1.0;
 
 	if (t->isRooted == NO)
 		return (NO);
@@ -3000,9 +3102,24 @@ int IsCalibratedClockSatisfied (Tree *t, MrBFlt tol)
 		return (NO);
 		}
 	
+    /*Allow tollerance*/
+    if(minRateConstrained == YES && maxRateConstrained == YES && AreDoublesEqual (minRate, maxRate, tol) == YES && minRate > maxRate) 
+        {
+        maxRate = minRate;
+        }
+
+   if (minRateConstrained == YES)
+		*minClockRate = minRate;
+   else
+        *minClockRate = 0.0;
+
+    if (maxRateConstrained == YES)
+        *maxClockRate = maxRate;
+   else
+        *maxClockRate = MRBFLT_MAX;
+
 	/* check that minimum and maximum rates are consistent */
-	if (minRateConstrained == YES && maxRateConstrained == YES
-		&& AreDoublesEqual (minRate, maxRate, tol) == NO && minRate > maxRate)
+	if (minRateConstrained == YES && maxRateConstrained == YES && minRate > maxRate)
 		{
 		MrBayesPrint ("%s   Branch lengths do not satisfy the calibration(s)\n", spacer);
 		free (x);

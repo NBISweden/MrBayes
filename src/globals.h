@@ -121,6 +121,7 @@ extern ReassembleInfo	reassembleParams;		                /* holds parameters for
 extern int				replaceLogFile;                         /* should logfile be replace/appended to         */
 extern SafeLong			runIDSeed;                              /* seed used only for generating run ID [stamp]  */
 extern SafeLong			safeLongWithAllBitsSet;                 /* a SafeLong with all bits set, for bit ops     */
+extern int 				setUpAnalysisSuccess;                   /* Set to YES if analysis is set without error   */
 extern int 				scientific;                             /* use scientific format for samples ?           */
 extern ShowmovesParams	showmovesParams;					    /* holds parameters for Showmoves command        */
 extern char				spacer[10];                             /* holds blanks for printing indentations        */

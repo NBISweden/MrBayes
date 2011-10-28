@@ -123,6 +123,7 @@ Param			*params;								/* vector of parameters						 	    */
 Param			*printParams;						    /* vector of subst model parameters	to print        */
 ShowmovesParams	showmovesParams;						/* holds parameters for Showmoves command           */
 Param			*treePrintparams;						/* vector of tree parameters to print               */
+int             setUpAnalysisSuccess;                   /* Set to YES if analysis is set without error      */
 
 /* globals used to describe and change the current model; allocated in AllocCharacters and SetPartition */
 int         *numVars;                                   /* number of variables in setting arrays         */
@@ -7308,6 +7309,11 @@ int DoPrsetParm (char *parmName, char *tkn)
 								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.6lf)\n", spacer, modelParams[i].clockRateFix);
 							else
 								MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateFix, i+1);
+                            for (k=0; k<numGlobalChains; k++)
+                                {
+                                if( UpdateClockRate(tempD, k) == ERROR) 
+                                    return (ERROR);
+                                }
 							expecting  = Expecting(RIGHTPAR);
 							}
 						}
@@ -9012,6 +9018,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 	MrBFlt				tempFloat, *value, *subValue;
 	Tree				*theTree, *usrTree;
 	PolyTree			*thePolyTree;
+    MrBFlt              minRate, maxRate, clockRate;
 	static Param	    *param = NULL;
 	static MrBFlt		*theValue, theValueMin, theValueMax;
 	static int			useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
@@ -9203,11 +9210,21 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							ShowNodes(theTree->root,0,YES);
 							return (ERROR);
 							}
-                        if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (theTree,0.001) == NO)
+                        if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (theTree,&minRate,&maxRate, 0.001) == NO)
 							{
 							MrBayesPrint ("%s   Problem setting calibrated tree parameters\n", spacer);
 							return (ERROR);
 							}
+                        if (!strcmp(modelParams[theTree->relParts[0]].clockRatePr, "Fixed"))
+                            {
+                            clockRate = modelParams[theTree->relParts[0]].clockRateFix;
+                            if(( clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO ) || ( clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO ))
+                                {
+					            MrBayesPrint("%s   Fixed branch lengths do not satisfy fixed clockrate", spacer);
+					            return (ERROR);
+					            }
+                            }
+                        theTree->fromUserTree=YES;
                         
 						FillBrlensSubParams (param, chainId, 0);
                         //MrBayesPrint ("%s   Rrelaxed clock subparamiters of a paramiter '%s' are reset.\n", spacer, param->name);
@@ -9218,6 +9235,11 @@ int DoStartvalsParm (char *parmName, char *tkn)
 						}
 					else if (param->paramType == P_CPPEVENTS || param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHLENS)
 						{
+                        if( theTree->isCalibrated == YES && theTree->fromUserTree == NO )
+                            {/*if theTree is not set from user tree then we can not garanty that branch lenghts will stay the same by the time we start mcmc run because of clockrate adjustment.*/
+                            MrBayesPrint ("%s    Set starting values for branch lenghtes first! Starting value of relaxed paramiters could be set up only for trees where branch lengths are already set up from user tree.\n", spacer, param->name);
+							return (ERROR);
+                            }
 						if ( theTree->isCalibrated == NO && IsClockSatisfied (usrTree, 0.0001) == NO ) // user tree is not calibrated so do not check it if calibration is in place
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex], param->name);
@@ -9416,6 +9438,13 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             }
                         else
                             return (ERROR);
+                        if( param->paramType == P_CLOCKRATE )
+                            {
+                            if( UpdateClockRate(tempFloat, i*chainParams.numChains+j) == ERROR) 
+                                {
+                                return (ERROR);
+                                }
+                            }
 					    theValue[nValuesRead-1] = tempFloat;
                         }
 					}
@@ -10484,6 +10513,7 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 	Param	    *q;
 	MrBFlt      clockRate;
     PolyTree    *sourceTree;
+    MrBFlt      minRate,maxRate;
 
 	tree = GetTree (param, chn, state);
 	
@@ -10532,16 +10562,27 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 					MrBayesPrint("%s   Fixed branch lengths do not satisfy clock", spacer);
 					return (ERROR);
 					}
-				if (tree->isCalibrated == YES && IsCalibratedClockSatisfied(tree, 1E-6) == NO)
+				if (tree->isCalibrated == YES && IsCalibratedClockSatisfied(tree,&minRate,&maxRate, 1E-6) == NO)
 					{
 					MrBayesPrint("%s   Fixed branch lengths do not satisfy calibrations", spacer);
 					return (ERROR);
 					}
+                if (!strcmp(modelParams[tree->relParts[0]].clockRatePr, "Fixed"))
+                    {
+                    clockRate = modelParams[tree->relParts[0]].clockRateFix;
+                    if(( clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO ) || ( clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO ))
+                        {
+					    MrBayesPrint("%s   Fixed branch lengths do not satisfy fixed clockrate", spacer);
+					    return (ERROR);
+					    }
+                    }
+
+                tree->fromUserTree=YES;
                 returnVal = NO_ERROR;
                 }
 			else
 				{
-				MrBayesPrint("%s   Fixed branch lengths can only be used for a fixed topology", spacer);
+				MrBayesPrint("%s   Fixed branch lengths can only be used for a fixed topology\n", spacer);
 				return (ERROR);
 				}
 			}
@@ -10555,6 +10596,7 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 				MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
 				return (ERROR);
 				}
+            tree->fromUserTree=NO;
 			}
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
@@ -18152,6 +18194,9 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 int SetUpAnalysis (SafeLong *seed)
 
 {
+
+    setUpAnalysisSuccess=NO;
+
     /* calculate number of characters and taxa */
 	numLocalChar = NumNonExcludedChar ();
 
@@ -18221,6 +18266,8 @@ int SetUpAnalysis (SafeLong *seed)
 	/* Set the applicable moves that could be used by the chain. */
 	if (SetMoves () == ERROR)
 		return (ERROR);
+
+    setUpAnalysisSuccess=YES;
 	
     return (NO_ERROR);
 	
@@ -21953,6 +22000,16 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			else
 				{
                 /* run of the mill parameter */
+                if( p->paramType == P_CLOCKRATE )
+                    {
+                     for (j=0; j<numGlobalChains; j++)
+                        {
+                        if( UpdateClockRate(-1.0, j) == ERROR)
+                            {
+                            MrBayesPrint ("%s            Warning: There is no appropriate clock rate that would satisfy all calibrated trees for run:%d chain%d. Some of calibration, trees or clockprior needs to be changed. ", spacer, j/chainParams.numChains, j%chainParams.numChains );
+                            }
+                        }
+                    }
 				areRunsSame = YES;
 				for (run=1; run<chainParams.numRuns; run++)
 					{
@@ -22132,6 +22189,141 @@ int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
         return (ERROR);
 
     return(NO_ERROR);
+}
+
+
+
+
+/*-------------------------------------------------
+|
+|	UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set. Eroor will be returned if fixed clockrate prior may not be respected.  
+|   @param clockRate    is the new clockRate to setup. Clock rate value could be set as positive, 0.0 or negative value. 
+|                       The function does the fallowing depending on one of this three values:
+|                        positive    - check that this 'positive' value is suitable rate. At the end re-enforce(update) the 'positive' value as clock rate on all trees. 
+|                        0.0         - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce(update) the resulting clock rate on all trees. 
+|                        negative    - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce(update) the resulting clock rate ONLY if clock rate was changed 
+|   @return             ERROR if clockRate can not be set up, NO_ERROR otherwise. 
+|
+--------------------------------------------------*/
+int UpdateClockRate(MrBFlt clockRate, int chain)
+{
+
+    int i, updateTrees;
+    MrBFlt      *clockRatep;
+    Tree        *t, *t_calibrated;
+    MrBFlt      mintmp,maxtmp,minClockRate,maxClockRate;   
+
+    clockRatep=NULL;
+    minClockRate = 0.0;
+    maxClockRate = MRBFLT_MAX;
+
+    for (i=0; i<numTrees; i++)
+        {
+        t = GetTreeFromIndex(i, chain, 0);
+        if (t->isCalibrated == NO)
+            continue;
+
+        if( clockRatep == NULL )
+            {
+            clockRatep = GetParamVals(modelSettings[t->relParts[0]].clockRate, chain, 0);
+            t_calibrated = t;
+            assert(clockRatep);
+            }
+
+        findAllowedClockrate (t, &mintmp, &maxtmp );
+
+        if( minClockRate < mintmp )
+            minClockRate = mintmp;
+
+        if( maxClockRate > maxtmp )
+            maxClockRate = maxtmp;
+
+        }
+        /* clock rate is the same for all trees of a given chain*/
+    if( clockRatep != NULL)
+        {
+        if( minClockRate > maxClockRate)
+            {
+            MrBayesPrint ("%s   ERROR: Calibrated trees require uncomatable clockrates for run:%d chain:%d.\n", spacer, chain/chainParams.numChains, chain%chainParams.numChains);
+            *clockRatep=0;
+            return (ERROR);
+            }
+        
+
+        if (!strcmp(modelParams[t_calibrated->relParts[0]].clockRatePr, "Fixed"))
+            {
+            if( clockRate < 0.0 && AreDoublesEqual (*clockRatep, modelParams[t_calibrated->relParts[0]].clockRateFix, 0.0001) == YES )
+                {
+                updateTrees = NO;
+                }
+            else
+                {
+                updateTrees = YES;
+                }
+            *clockRatep = modelParams[t_calibrated->relParts[0]].clockRateFix;
+            if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
+                {
+                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n", spacer, minClockRate, minClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
+                *clockRatep=0;
+                return (ERROR);
+                }
+            if( clockRate > 0.0 )
+                {
+                if ( AreDoublesEqual (*clockRatep, clockRate, 0.0001) == NO )
+                    {
+                    MrBayesPrint ("%s   ERROR: Requested clockrate:%f does not match fixed clockrate prior :%f.\n", spacer, clockRate, *clockRatep);
+                    *clockRatep=0;
+                    return (ERROR);
+                    }
+                }
+            }
+        else
+            {/*clock prior is not fixed*/
+            updateTrees = YES;
+            if( clockRate > 0.0 )
+                {
+                *clockRatep = clockRate;
+                if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
+                    {
+                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n", spacer, minClockRate, minClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
+                    *clockRatep=0;
+                    return (ERROR);
+                    }
+                }
+            else if ( clockRate == 0.0 ) 
+                {
+                if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
+                    {
+                    *clockRatep = minClockRate;
+                    }
+                }
+            else// if ( clockRate < 0.0 ) 
+                {
+                if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
+                    {
+                    *clockRatep = minClockRate;
+                    }
+                else
+                    {
+                    updateTrees = NO;
+                    }
+                }
+            }
+
+        
+        if(updateTrees = YES)
+            {
+            for (i=0; i<numTrees; i++)
+                {
+                t = GetTreeFromIndex(i, chain, 0);
+                if (t->isCalibrated == NO)
+                    continue;
+                UpdateTreeWithClockrate (t,*clockRatep);
+                }
+            }
+        }
+
+return (NO_ERROR);
 }
 
 

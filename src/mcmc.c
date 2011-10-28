@@ -7510,6 +7510,7 @@ void CatchInterrupt(int signum)
 }
 #endif
 
+   
 
 
 
@@ -7525,6 +7526,7 @@ int DoMcmc (void)
     char        temp[20];
     char        *strBuf,*tmpcp;
     double      tmp;
+
 
 #if defined (BEST_MPI_ENABLED)
     Tree        *tree;
@@ -7547,6 +7549,13 @@ int DoMcmc (void)
 		MrBayesPrint ("%s   A character matrix must be defined first\n", spacer);
 		goto errorExit;
 		}
+
+    if ( setUpAnalysisSuccess == NO )
+        {
+        MrBayesPrint ("%s   The analysis could not be started because there was an error during its setup.\n", spacer);
+        MrBayesPrint ("%s   Refer to error messeges printed during modeal set up to adress the problem.\n", spacer);
+		goto errorExit;
+        }
 
     /* set file names */
 	sumtParams.numRuns = chainParams.numRuns;
@@ -7889,12 +7898,15 @@ int DoMcmc (void)
 			        RandPerturb (GetTreeFromIndex(i, j, 0), chainParams.numStartPerts, &seed);
 		        }
 	        }
+        }            
+
+/*Set clockRate if we have calibration */
+   for (j=0; j<numGlobalChains; j++)
+        {
+        if( UpdateClockRate(0.0, j) == ERROR) 
+            goto errorExit;
         }
 
-
-    for (i=0; i<numParams; i++)
-        for (j=0; j<numGlobalChains; j++)
-            if (SetTreeNodeAges(&params[i], j, 0) == NO) goto errorExit;
 
     for (i=0; i<numParams; i++)
         for (j=0; j<numGlobalChains; j++)

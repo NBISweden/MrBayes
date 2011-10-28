@@ -1478,7 +1478,7 @@ void *SafeMalloc(size_t s) {
 
     if( s==0 )
         {
-        //return NULL;
+        return NULL;
         }
 
     ptr= malloc(s);
@@ -1505,8 +1505,8 @@ void *SafeRealloc(void *ptr, size_t s) {
 
     if( s==0 )
         {
-        //free(ptr);
-        //return NULL;
+        free(ptr);
+        return NULL;
         }
 
     if (ptr == NULL)
