@@ -152,6 +152,8 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_SPLITMERGE
 #undef  SHOW_MOVE
 
+#undef  DEBUG_SLOW //defining it enable extra slow debug option  
+
 
 #define TNODE TreeNode
 
@@ -7510,6 +7512,65 @@ void CatchInterrupt(int signum)
 }
 #endif
 
+
+
+
+/*----------------------------------------------------------------
+|
+|	DebugNodeScalers: Calculate node scalers sum
+|
+-----------------------------------------------------------------*/
+CLFlt DebugNodeScalers (TreeNode *p, int division, int chain)
+
+{
+	int				c;
+	CLFlt			*scP;
+    CLFlt           sum=0.0;
+	ModelInfo		*m;
+	
+    m = &modelSettings[division];
+
+    /* find scalers */
+    scP = m->scalers[m->nodeScalerIndex[chain][p->index]];
+
+	/* remove scalers */
+	for (c=0; c<m->numChars; c++)
+		sum += scP[c];
+
+	return sum;
+	
+}
+
+
+
+
+/*----------------------------------------------------------------
+|
+|	DebugTreeScalers: Calculate DebugNodeScalers for each node and printit
+|
+-----------------------------------------------------------------*/
+void DebugTreeScalers(int chain, int d) {
+	int i;
+	TreeNode		*p;
+	ModelInfo		*m;
+	Tree			*tree;
+	
+	m = &modelSettings[d];
+	tree = GetTree(m->brlens, chain, state[chain]);
+	
+	if (m->parsModelId == NO)
+	{
+		for (i=0; i<tree->nIntNodes; i++)
+		{
+			p = tree->intDownPass[i];
+			
+            if (p->scalerNode == YES){			
+                printf("Node:%d Sum scalers:%f\n",p->index,DebugNodeScalers(p, d, chain));
+                }
+				
+        }
+    }
+}
    
 
 
@@ -11840,6 +11901,12 @@ int InitEigenSystemInfo (ModelInfo *m)
 {
     int         ts;
     
+    if (m->dataType == STANDARD)
+        {
+        /* dealt with in ProcessStdChars */
+        return (NO_ERROR);
+        }
+
     m->cijkLength = 0;
     m->nCijkParts = 0;
     if (m->dataType == PROTEIN)
@@ -11852,10 +11919,6 @@ int InitEigenSystemInfo (ModelInfo *m)
             m->cijkLength *= m->numGammaCats;
             m->nCijkParts = m->numGammaCats;
             }
-        }
-    else if (m->dataType == STANDARD)
-        {
-        /* dealt with in ProcessStdChars */
         }
     else if (m->dataType == DNA || m->dataType == RNA)
         {
@@ -40744,6 +40807,19 @@ int RunChain (SafeLong *seed)
 			/* all calculations will be done on this state   */
 			state[chn] ^= 1;  /* XORing with 1 switches between 0 and 1 */
 
+#if ! defined (NDEBUG) && defined (DEBUG_SLOW)
+            TouchAllTrees(chn);
+            TouchAllPartitions();
+			if (fabs((curLnL[chn]-(lnProposalRatio=LogLike(chn)))/curLnL[chn]) > 0.0001)
+                puts("Liklihood of current state is not correct");
+            ResetFlips(chn);
+            state[chn] ^= 1;
+            CopyTrees (chn);
+            CopyParams (chn);
+            state[chn] ^= 1;
+#endif
+
+
             /* decide which move to make */
             whichMove = PickProposal(seed, chainId[chn]);
             theMove = usedMoves[whichMove];
@@ -45011,16 +45087,16 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 			}
 
 		/* now use general algorithm for the other cases */
-		if (m->cijkLength > 0)
+	    if (m->cijkLength > 0)
 			{
-
+            
 			/* first update cijk if necessary */
-			if (m->cijkLength > 0 && m->upDateCijk == YES)
-				{
+			//if (m->cijkLength > 0 && m->upDateCijk == YES)
+				//{
                 /* TODO: (IMPORTANT) This UpDateCijk is probably a bug */
-				if (UpDateCijk (division, chain) == ERROR)
-					return (ERROR);
-				}
+				//if (UpDateCijk (division, chain) == ERROR)
+				//	return (ERROR);
+				//}
 
 			/* then get first set of eigenvalues */
 			eigenValues = m->cijks[m->cijkIndex[chain]];

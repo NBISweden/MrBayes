@@ -18251,13 +18251,14 @@ int SetUpAnalysis (SafeLong *seed)
     /* Set default number of trees for sumt to appropriate number */
     sumtParams.numTrees = numTrees;
 
+	/* Fill in normal parameters */
+	if (FillNormalParams (seed, 0, numGlobalChains) == ERROR) 
+		return (ERROR);
+
 	/* Process standard characters (calculates bsIndex, tiIndex, and more). */
 	if (ProcessStdChars(seed) == ERROR)
 		return (ERROR);
 
-	/* Fill in normal parameters */
-	if (FillNormalParams (seed, 0, numGlobalChains) == ERROR)
-		return (ERROR);
 	
 	/* Fill in trees */
 	if (FillTreeParams (seed, 0, numGlobalChains) == ERROR)

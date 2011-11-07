@@ -348,6 +348,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	LINKED					0
 #define	UNLINKED				1
 
+/*paramType*/
 #define	NUM_LINKED				28
 #define	P_TRATIO				0
 #define	P_REVMAT				1
