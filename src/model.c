@@ -22210,7 +22210,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
 
     int i, updateTrees;
     MrBFlt      *clockRatep;
-    Tree        *t, *t_calibrated;
+    Tree        *t, *t_calibrated=NULL;
     MrBFlt      mintmp,maxtmp,minClockRate,maxClockRate;   
 
     clockRatep=NULL;
@@ -22311,7 +22311,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             }
 
         
-        if(updateTrees = YES)
+        if(updateTrees == YES)
             {
             for (i=0; i<numTrees; i++)
                 {
