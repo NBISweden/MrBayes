@@ -3641,8 +3641,14 @@ int DoSumtTree (void)
                 for (j=0; j<t->nNodes; j++)
                     {
                     p = t->allDownPass[j];
-                    if (p->index == i)
+                    if (p->index == i){
+                         if ( strlen(p->label)>99 )
+                            {
+                            MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, p->label);
+			                return (ERROR);
+                            }
                         AddString(&sumtParams.taxaNames, i, p->label);
+                        }
                     }
                 }
             }

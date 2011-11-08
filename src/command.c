@@ -5393,6 +5393,11 @@ int DoMatrixParm (char *parmName, char *tkn)
 			{
 			/* If this is the first interleaved block, then we need to add the taxon
 			   to the set of taxon names unless there is already a defined taxon set. */
+            if ( strlen(tkn)>99 )
+                {
+                MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
+				goto errorExit;
+                }
 			if (isTaxsetDef == NO && AddString (&taxaNames, taxonCount, tkn) == ERROR)
 				{
 				MrBayesPrint ("%s   Problem adding taxon %s to taxon set\n", spacer, tkn);
@@ -7255,6 +7260,11 @@ int DoTaxlabelsParm (char *parmName, char *tkn)
 		{
         if (CheckString (taxaNames, numNamedTaxa, tkn, &index) == ERROR)
 			{
+            if ( strlen(tkn)>99 )
+                {
+                MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
+				return (ERROR);
+                }
 			if (AddString (&taxaNames, numNamedTaxa, tkn) == ERROR)
 				{
 				MrBayesPrint ("%s   Problem adding label %s to list of taxon labels\n", spacer, tkn);
@@ -14045,6 +14055,11 @@ int SetTaxaFromTranslateTable (void)
 
     for (i=0; i<numTranslates; i++)
         {
+        if ( strlen(transFrom[i])>99 )
+            {
+            MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, transFrom[i]);
+			return (ERROR);
+            }
         AddString(&taxaNames, numTaxa, transFrom[i]);
         numTaxa++;
         }
