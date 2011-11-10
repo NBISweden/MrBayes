@@ -3037,8 +3037,8 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 			if (AreDoublesEqual (p->nodeDepth, q->nodeDepth, tol) == YES)
 				{
 				/* same depth so they must share a possible age */
-				if ((AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index])
-					|| (AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
+				if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index])
+					|| (y[p->index] != -1.0 &&  x[q->index]!=-1.0 && AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
 					{
 					isViolated = YES;
 					break;

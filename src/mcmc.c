@@ -152,7 +152,24 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_SPLITMERGE
 #undef  SHOW_MOVE
 
-#undef  DEBUG_SLOW //defining it enable extra slow debug option  
+#undef  DEBUG_SLOW //defining it enable extra slow debug option 
+
+//#define TIMING_ANALIZ
+#if defined (TIMING_ANALIZ)
+    static clock_t         CPUCondLikeDown;
+    static clock_t         CPUScalers;
+    static clock_t         CPUScalersRemove;
+    static clock_t         CPUCondLikeRoot;
+    static clock_t         CPULilklihood;
+
+#define TIME(X1,CPUtime)\
+                {CPUTimeStart = clock();\
+				X1;\
+                CPUtime += (clock()-CPUTimeStart);}
+#else
+    #define TIME(X1,CPUtime)\
+    X1;
+#endif
 
 
 #define TNODE TreeNode
@@ -173,6 +190,8 @@ typedef void (*sighandler_t)(int);
 		X1;X2;\
 		}
 #	endif
+
+
 
 /* local (to this file) data types */
 typedef struct pfnode
@@ -6781,6 +6800,8 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
     /* rescale values */
+    #pragma omp parallel
+    #pragma omp for private(c) private(k) //schedule(dynamic,1)
     for (c=0; c<m->numChars; c++)
 		{
 		scaler = 0.0;
@@ -14868,7 +14889,6 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 
 
 
-
 /*-----------------------------------------------------------------
 |
 |	LaunchLogLikeForDivision: calculate the log likelihood of the 
@@ -14880,6 +14900,9 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 	TreeNode		*p;
 	ModelInfo		*m;
 	Tree			*tree;
+#if defined (TIMING_ANALIZ)
+    clock_t         CPUTimeStart;
+#endif
 	
 	m = &modelSettings[d];
 	tree = GetTree(m->brlens, chain, state[chain]);
@@ -14943,34 +14966,46 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 			{
 				if (tree->isRooted == NO)
 				{
-					if (p->anc->anc == NULL)
-						m->CondLikeRoot (p, d, chain);
+                    if (p->anc->anc == NULL)
+                        {
+						TIME(m->CondLikeRoot (p, d, chain),CPUCondLikeRoot);
+                        }
 					else
-						m->CondLikeDown (p, d, chain);
+                        {
+						TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);                        
+                        }
 				}
 				else
-					m->CondLikeDown (p, d, chain);
-				
+                    {
+					TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);
+                    }
+
 				if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
                     {
 #if defined (SSE_ENABLED)
                     if (m->useSSE == YES)
-    					RemoveNodeScalers_SSE (p, d, chain);
+                        {
+    					TIME(RemoveNodeScalers_SSE (p, d, chain),CPUScalersRemove);
+                        }
                     else
-                        RemoveNodeScalers (p, d, chain);
+                        {
+                        TIME(RemoveNodeScalers (p, d, chain),CPUScalersRemove);
+                        }
 #else
-				RemoveNodeScalers (p, d, chain);
+				TIME(RemoveNodeScalers (p, d, chain),CPUScalersRemove);
 #endif
                     }
 				FlipNodeScalerSpace (m, chain, p->index);
 				m->scalersSet[chain][p->index] = NO;
 				
-				if (p->scalerNode == YES)
-					m->CondLikeScaler (p, d, chain);
+                if (p->scalerNode == YES)
+                    {
+                    TIME(m->CondLikeScaler (p, d, chain),CPUScalers);
+                    }
 			}
 		}
 	}
-	m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains));
+	TIME(m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains)),CPULilklihood);
     return;
 }
 
@@ -40373,7 +40408,15 @@ int RunChain (SafeLong *seed)
     RedistributeParamVals();
     RedistributeTuningParams();
 #endif
-   
+
+#if defined (TIMING_ANALIZ)
+    CPUCondLikeDown = 0;
+    CPUScalers = 0;
+    CPUScalersRemove = 0;
+    CPUCondLikeRoot = 0;
+    CPULilklihood = 0;
+#endif
+
     /* initialize likelihoods and prior                  */
 	/* touch everything and calculate initial cond likes */
 #if defined (BEAGLE_ENABLED)
@@ -41023,8 +41066,13 @@ int RunChain (SafeLong *seed)
 			}
 
         /* print information to screen . Non-blocking for MPI*/
-		if ( n % chainParams.printFreq == 0)
+        if ( n % chainParams.printFreq == 0)
+            {
 			PrintToScreen(n, numPreviousGen, time(0), startingT);
+#if defined (TIMING_ANALIZ)
+            MrBayesPrint ("%s   Time elapsed:%f CondlikeDownTime:%f CondLikeRoot:%f Lilklihood:%f ScalersTime:%f ScalersRemove:%f\n", spacer, CPUTime,CPUCondLikeDown/(MrBFlt) CLOCKS_PER_SEC,CPUCondLikeRoot/(MrBFlt) CLOCKS_PER_SEC,CPULilklihood/(MrBFlt) CLOCKS_PER_SEC, CPUScalers/(MrBFlt) CLOCKS_PER_SEC, CPUScalersRemove/(MrBFlt) CLOCKS_PER_SEC);
+#endif
+            }
 
         /* print information to files */
 		/* this will also add tree samples to topological convergence diagnostic counters */
