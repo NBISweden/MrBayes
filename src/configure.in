@@ -93,6 +93,7 @@ if test $ac_cv_lib_readline_readline = yes; then
 LDFLAGS="${LDFLAGS} -lreadline"
 AC_MSG_CHECKING(for rl_completion_matches function)
 AC_LINK_IFELSE(
+AC_LANG_SOURCE[(
 [
 #include <stdio.h>
 #include <readline/readline.h>
@@ -105,7 +106,7 @@ extern char *f(const char *, int);
 char **matches = rl_completion_matches (text, f);
 return 0;
 }
-],
+])],
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(COMPLETIONMATCHES), AC_MSG_RESULT(no)
 )
@@ -114,9 +115,11 @@ fi
 dnl check for 64 bit
 AC_MSG_CHECKING(for 32 or 64 bits cpu)
 AC_RUN_IFELSE(
+AC_LANG_SOURCE[(
 [
 int main() { return sizeof(long)==4?1:0; }
-],
+]
+)],
 	AC_MSG_RESULT(64)
 	AC_DEFINE(_64BIT), AC_MSG_RESULT(32)
 )
