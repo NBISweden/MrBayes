@@ -6800,8 +6800,6 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
     /* rescale values */
-    #pragma omp parallel
-    #pragma omp for private(c) private(k) //schedule(dynamic,1)
     for (c=0; c<m->numChars; c++)
 		{
 		scaler = 0.0;

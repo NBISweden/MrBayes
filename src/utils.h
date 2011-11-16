@@ -59,6 +59,7 @@ void     MrBayesPrintf (FILE *f, char *format, ...);
 FILE    *OpenBinaryFileR (char *name);
 FILE 	*OpenTextFileA (char *name);
 FILE    *OpenTextFileR (char *name);
+FILE    *OpenTextFileRQuait (char *name);
 FILE 	*OpenTextFileW (char *name);
 MrBFlt   PotentialScaleReduction (MrBFlt **vals, int nRows, int *count);
 void     EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS);

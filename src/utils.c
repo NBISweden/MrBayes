@@ -1225,7 +1225,6 @@ FILE *OpenBinaryFileR (char *name)
 
 
 FILE *OpenTextFileR (char *name)
-
 {
 
 	FILE		*fp;
@@ -1236,7 +1235,28 @@ FILE *OpenTextFileR (char *name)
 
     if ((fp = fopen (fileName, "r")) == NULL)  
 		{   
-		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
+		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, fileName);
+		return (NULL);
+		}
+	else
+		return (fp);
+	
+}
+
+
+
+
+FILE *OpenTextFileRQuait (char *name)
+{
+
+	FILE		*fp;
+    char        fileName[100];
+
+    strcpy(fileName, workingDir);
+    strncat(fileName, name, 99 - strlen(fileName));
+
+    if ((fp = fopen (fileName, "r")) == NULL)  
+		{   
 		return (NULL);
 		}
 	else

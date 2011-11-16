@@ -367,7 +367,7 @@ CmdType			commands[] =
             { 50,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
             { 51,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
             { 52,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
-            { 53,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels",  IN_CMD, SHOW },
+            { 53,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels", IN_FILE, SHOW },
             { 54,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
             { 55,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
             { 56,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
@@ -4609,7 +4609,7 @@ int DoHelp (void)
 			}
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Commands that should be in a NEXUS file (data                                 \n");
-		MrBayesPrint ("   block or trees block) include:                                                \n");
+		MrBayesPrint ("   block, trees block or taxa block) include:                                                \n");
 	    MrBayesPrint ("                                                                                 \n");
 		for (i=1; i<NUMCOMMANDS; i++)
 			{
@@ -5031,7 +5031,7 @@ int DoManual (void)
 	CmdType	*p;
 	
 	/* try to open file, return error if present */
-	if ((fp = OpenTextFileR(manFileName)) != NULL)
+	if ((fp = OpenTextFileRQuait(manFileName)) != NULL)
 		{
 		MrBayesPrint ("%s   File \"%s\" already exists \n", spacer, manFileName);
 		SafeFclose(&fp);
@@ -5067,7 +5067,7 @@ int DoManual (void)
 	MrBayesPrint ("      %*c%s%*c      \n", i, ' ', title, j, ' ');
 	MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                   (c) John P. Huelsenbeck, Fredrik Ronquist                     \n");
-	MrBayesPrint ("                            and Paul van der Mark                                \n");
+	MrBayesPrint ("                               and Maxim Teslenko                                \n");
 	MrBayesPrint ("                                                                                 \n");
 
 	/* summary */
@@ -6662,12 +6662,12 @@ int DoSetParm (char *parmName, char *tkn)
 					}
 				if (index < 1)
 					{
-					MrBayesPrint ("%s   Speciespartition number %d is not valid. Must be between 1 and %d.\n", spacer, index+1, numDefinedSpeciespartitions);
+					MrBayesPrint ("%s   Speciespartition number %d is not valid. Must be between 1 and %d.\n", spacer, index, numDefinedSpeciespartitions);
 					return (ERROR);
 					}
-				if (SetSpeciespartition (index) == ERROR)
+				if (SetSpeciespartition (index-1) == ERROR)
                     return ERROR;
-				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, speciespartitionNames[index], numSpecies);
+				MrBayesPrint ("%s   Setting %s as the speciespartition, dividing taxa into %d species.\n", spacer, speciespartitionNames[index-1], numSpecies);
 				if (SetModelDefaults () == ERROR)
 					return (ERROR);
 				if (SetUpAnalysis (&globalSeed) == ERROR)
@@ -7516,7 +7516,7 @@ int DoSpeciespartitionParm (char *parmName, char *tkn)
 	else if (expecting == Expecting(NUMBER))
 		{
 		if (strlen(tkn) == 1 && tkn[0] == '.')
-			tempInt = numChar;
+			tempInt = numTaxa;
 		else
 			sscanf (tkn, "%d", &tempInt);
 		if (tempInt <= 0 || tempInt > numTaxa)
@@ -10131,6 +10131,59 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   This command shows the character matrix currently in memory.                  \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
+	else if (!strcmp(helpTkn, "Showbeagle"))
+		{
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		MrBayesPrint ("   Showbeagle                                                                    \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   This command shows available BEAGLE resources.                                \n");
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		}
+    else if (!strcmp(helpTkn, "Speciespartition"))
+		{
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		MrBayesPrint ("   Speciespartition                                                              \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   Defines a partition of tips into species. The format for the speciespartition \n");
+	    MrBayesPrint ("   command is                                                                    \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("      Speciespartition <name> = <species name>:<taxon list> ,...,<sp nm>:<tx lst>\n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   The command enumerates comma separated list of pairs consisting of 'species   \n");
+        MrBayesPrint ("   name' and 'taxon list'. The 'taxon list' is a standard taxon list, as used by \n");
+        MrBayesPrint ("   the 'Taxset' command. This means that you can use either the index or the name\n");
+        MrBayesPrint ("   of a sequence ('taxon'). Ranges are specified using a dash, and a period can  \n");
+        MrBayesPrint ("   be used as a synonym of the last sequence in the matrix.                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   For exammple: speciespartition species = SpeciesA: 1, SpeciesB: 2-.           \n");
+        MrBayesPrint ("   Here, we name two species. SpeciesA is represented by a single sequence while \n");
+        MrBayesPrint ("   SpeciesB is represented by all remaining sequences in the matrix.             \n");
+        MrBayesPrint ("   Each sequence is specified by its row index in the data matrix.               \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   As with ordinary partitioning you may define multiple species partitioning    \n");
+        MrBayesPrint ("   scheme. You have to use command 'set speciespartition' to enable use of one of\n");
+        MrBayesPrint ("   them.                                                                         \n"); 
+	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Currently defined Speciespartitions:                                          \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Number  Speciespartition name        Number of species                        \n");
+        MrBayesPrint ("   --------------------------------------------------------------------------    \n");
+        for (i=0; i<numDefinedSpeciespartitions; i++)
+			{
+            tempInt=0;
+            for (j=0; j<numTaxa; j++)
+		        {
+		        if (tempInt < speciespartitionId[j][i])
+			        tempInt = speciespartitionId[j][i];
+		        }
+            MrBayesPrint ("   %4d    %-24.24s   %4d",i+1, speciespartitionNames[i], tempInt);
+            MrBayesPrint ("\n");
+			}
+	    MrBayesPrint ("                                                                                \n");
+		MrBayesPrint ("   --------------------------------------------------------------------------   \n");
+
+
+		}
 	else if (!strcmp(helpTkn, "Constraint"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -12027,6 +12080,14 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("                   divide up the data at all. The default partition is always    \n");
 		MrBayesPrint ("                   the first partition, so 'set partition=1' is the same as      \n");
 		MrBayesPrint ("                   'set partition=default'.                                      \n");
+        MrBayesPrint ("   Speciespartition -- Set this option to a valid speciespartition id, either the\n");
+		MrBayesPrint ("                   number or name of a defined speciespartition, to enforce a    \n");
+		MrBayesPrint ("                   specific partitioning of taxa to species. When a data matrix  \n");
+		MrBayesPrint ("                   is read in, a speciespartition called \"Default\" is auto-    \n");
+		MrBayesPrint ("                   matically created. It assigns one taxon for each species. The \n"); 
+        MrBayesPrint ("                   default speciespartition is always the first speciespartition,\n");
+		MrBayesPrint ("                   so 'set speciespartition=1' is the same as                    \n");
+		MrBayesPrint ("                   'set speciespartition=default'.                               \n");
 		MrBayesPrint ("   Autoclose    -- If autoclose is set to 'yes', then the program will not prompt\n");
 		MrBayesPrint ("                   you during the course of executing a file. This is particular-\n");
 		MrBayesPrint ("                   ly useful when you run MrBayes in batch mode.                 \n");
@@ -12198,6 +12259,14 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("   You can assign up to 30 taxon sets. This option is best used                  \n");
 		MrBayesPrint ("   not from the command line but rather as a line in the mrbayes block           \n");
 		MrBayesPrint ("   of a file.                                                                    \n");
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		}
+    else if (!strcmp(helpTkn, "Taxlabels"))
+		{
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		MrBayesPrint ("   Taxlabels                                                                     \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   This command defines taxon labels. It could be used within taxa block.        \n"); 
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Charstat"))
@@ -13012,7 +13081,7 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      showmoves allavailable=yes                                                 \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("	  If you want to change any of the tuning parameters for the moves, use the     \n");
+		MrBayesPrint ("   If you want to change any of the tuning parameters for the moves, use the     \n");
 		MrBayesPrint ("   'propset' command.                                                            \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
