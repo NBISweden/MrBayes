@@ -64,7 +64,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    59  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						257
+#define	NUMPARAMS						258
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -360,8 +360,8 @@ CmdType			commands[] =
             { 44,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
             { 45,   "Showusertrees",  NO,   DoShowUserTrees,  0,                                                                                             {-1},       32,                                   "Shows user-defined trees",  IN_CMD, SHOW },
             { 46,"Speciespartition",  NO,DoSpeciespartition,  1,                                                                                            {244},        4,                   "Defines a partition of tips into species",  IN_CMD, SHOW },
-            { 47,              "Ss",  NO,              DoSs, 49,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            														     153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250},       36,                             "Starts stepping-stone sampling",  IN_CMD, SHOW },
+            { 47,              "Ss",  NO,              DoSs, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
+            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,                             "Starts stepping-stone sampling",  IN_CMD, SHOW },
             { 48,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
             { 49,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 50,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
@@ -11963,19 +11963,22 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   tribution. In each of the 'Nsteps' steps, we sample from a new power poster-  \n");
 		MrBayesPrint ("   ior distribution with a distinct beta value. The beta values correspond to    \n");
 		MrBayesPrint ("   'Nsteps' evenly spaced quantiles in a Beta distribution with the parameters   \n");
-		MrBayesPrint ("   'Alpha' and 1.0. For the first sampling step, the beta value is equal to the \n");
+		MrBayesPrint ("   'Alpha' and 1.0. For the first sampling step, the beta value is equal to the  \n");
         MrBayesPrint ("   last quantile, i.e., it is close to 1.0. For each successive step, the beta   \n");
         MrBayesPrint ("   value takes on the value of the next quantile, in decreasing order, until it  \n");
-        MrBayesPrint ("   reaches the value of 0.0.                                                     \n");
+        MrBayesPrint ("   reaches the value of 0.0. If you change value of 'FromPrior' from default 'No'\n");
+        MrBayesPrint ("   to 'Yes' then the direction of SS is opposite to the one described above,     \n");
+        MrBayesPrint ("   i.e. we start from sampling prior and finish close to posterior.              \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The 'Ss' procedure uses the same machinery as the standard 'Mcmc' algorithm,  \n");
         MrBayesPrint ("   and shares most of its parameters with the 'Mcmc' and 'Mcmcp' commands. All   \n");
         MrBayesPrint ("   'Mcmc' parameters, except those related to burnin, have the same meaning and  \n");
-        MrBayesPrint ("   usage in the 'Ss' command as they have in the 'Mcmc' command. However, the    \n");
-        MrBayesPrint ("   'Mcmc' burnin parameters are ignored. Instead, the 'Ss' command uses its own  \n");
-        MrBayesPrint ("   burnin parameter, 'Burninss' (see below for details). The 'Ss' command also has\n");
-        MrBayesPrint ("   its own parameters for specifying the number of steps and the shape of the    \n");
-        MrBayesPrint ("   Beta distribution from which the beta values are computed (see below).        \n");
+        MrBayesPrint ("   usage in the 'Ss' command as they have in the 'Mcmc' command. The 'Mcmc'      \n");
+        MrBayesPrint ("   burnin parameters are used to set up burnin within each step. The 'Ss' command\n");
+        MrBayesPrint ("   also uses its own burnin parameter, 'Burninss' (see below for details). The   \n");
+        MrBayesPrint ("   'Ss' command also has its own parameters for specifying the number of steps   \n");
+        MrBayesPrint ("   and the shape of the Beta distribution from which the beta values are computed\n");
+        MrBayesPrint ("   (see below).                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Note that the 'Ngen' parameter of 'Mcmc' is used to set the maximum number of \n");
         MrBayesPrint ("   generations processed, including both the burnin and the following steps in   \n");
@@ -12032,6 +12035,11 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   same as the length of each of the subsequent steps.           \n");
 		MrBayesPrint ("   Nsteps       -- Number of steps in the stepping-stone algorithm. Typically, a \n");
 		MrBayesPrint ("                   number above 30 is sufficient for accurate results.           \n");
+        MrBayesPrint ("   FromPrior    -- If it is set to 'Yes', it indicates that in first step we     \n"); 
+        MrBayesPrint ("                   sample from prior, with each consequtive step we sample closer\n");
+        MrBayesPrint ("                   to posterior. 'No' indicates the opposite direction of power  \n");
+        MrBayesPrint ("                   posterior change, i.e. in first step we sample close to poste-\n");
+        MrBayesPrint ("                   rior, with each consequent step we sample closer to prior.    \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -12040,6 +12048,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Alpha              <number>              %1.2lf\n", chainParams.alphaSS);
 		MrBayesPrint ("   BurninSS           <number>              %d\n", chainParams.burninSS);
         MrBayesPrint ("   Nsteps             <number>              %d\n", chainParams.numStepsSS);
+        MrBayesPrint ("   FromPrior           Yes/No               %s                                   \n", chainParams.startFromPriorSS == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
@@ -14403,9 +14412,10 @@ void SetUpParms (void)
 	PARAM   (254, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
 	PARAM   (255, "Ibrvar",         DoLinkParm,        "\0");
 	PARAM   (256, "Ibrbranchlens",  DoLinkParm,        "\0");
+    PARAM   (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 257) in paramTable[] at the top of this file. */
+	         change the number of elements (now 258) in paramTable[] at the top of this file. */
 
 }
 

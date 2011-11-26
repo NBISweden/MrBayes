@@ -868,9 +868,12 @@ unsigned FindMaxRevision ( unsigned amount, ...)
 void PrintHeader (void)
 
 {
+char arch[4];
 #ifndef RELEASE
     unsigned rev=FindMaxRevision ( 13, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionPlotC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC); 
 #endif
+
+    strcpy(arch,(sizeof(void*)==4)?"x86":"x64");
 
 #	if defined (MAC_VERSION)
 
@@ -878,9 +881,9 @@ void PrintHeader (void)
 		printf ("\n\n");
 #		endif
 #ifdef RELEASE
-		printf ("                               MrBayes v%s\n\n", VERSION_NUMBER);
+		printf ("                             MrBayes v%s %s\n\n", VERSION_NUMBER,arch);
 #else
-		printf ("                            MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
+		printf ("                        MrBayes v%s(r%d) %s\n\n", VERSION_NUMBER,rev,arch);
 #endif
 		printf ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
@@ -914,9 +917,9 @@ void PrintHeader (void)
 		MrBayesPrint ("\n\n");
 #		endif
 #ifdef RELEASE
-        MrBayesPrint ("                           MrBayes v%s\n\n", VERSION_NUMBER);
+        MrBayesPrint ("                            MrBayes v%s %s\n\n", VERSION_NUMBER,arch);
 #else
-        MrBayesPrint ("                           MrBayes v%s(r%d)\n\n", VERSION_NUMBER,rev);
+        MrBayesPrint ("                        MrBayes v%s(r%d) %s\n\n", VERSION_NUMBER,rev,arch);
 #endif
 		MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #		if defined (MPI_ENABLED)
@@ -960,6 +963,7 @@ int ReinitializeMrBayes (void)
 	chainParams.swapFreq = 1;                        /* frequency of attempting swap of states        */
 	chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
     chainParams.isSS = NO;
+    chainParams.startFromPriorSS = NO;
     chainParams.numStepsSS = 50;
     chainParams.burninSS = -1;
     chainParams.alphaSS = 0.4;

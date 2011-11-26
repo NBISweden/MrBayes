@@ -105,9 +105,9 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 /*#define RELEASE*/
 #ifdef RELEASE
-#define	VERSION_NUMBER			"3.2.0"
+#define	VERSION_NUMBER			"3.2.1"
 #else
-#define VERSION_NUMBER          "3.2-svn"
+#define VERSION_NUMBER          "3.2.1-svn"
 #endif
 
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
@@ -1037,6 +1037,7 @@ typedef struct chain
 	int			numRuns;               /* number of runs                                */
 	int			numChains;             /* number of chains                              */
     int         isSS;                  /* do we do Steppingstone Sampling               */
+    int         startFromPriorSS;      /* If Yes SS is moving from Prior to Posterior  */
     int         numStepsSS;            /* Number of steps in SS                         */
     int         burninSS;              /* Fixed burnin for SS                           */
     MrBFlt      alphaSS;               /* Beta values are distributed according to quantiles of Beta(alphaSS,1.0) distribution */

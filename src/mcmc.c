@@ -485,6 +485,8 @@ int				numLocalChains;              /* number of Markov chains                  
 int				*chainId = NULL;             /* information on the id (0 ...) of the chain   */
 MrBFlt			*curLnL = NULL;              /* stores log likelihood                        */
 MrBFlt			*curLnPr = NULL;             /* stores log prior probability                 */
+int             stepRelativeBurninSS;        /* Should we use relative burn in within each step or not.*/
+MrBFlt          powerSS;                     /* power (betta) in power posterior destribution used in SS*/ 
 MrBFlt			*marginalLnLSS = NULL;       /* marginal liklihood obtained using stepppingstone sampling */
 MrBFlt			*stepAcumulatorSS = NULL;    /* accumulates liklihoods for current step in SS*/
 MrBFlt			*stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale in SS*/
@@ -920,10 +922,20 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 			tempB = Temperature (chainId[whichElementB]);
 			lnLikeA = curLnL[whichElementA];
 			lnLikeB = curLnL[whichElementB];
+            if( chainParams.isSS == YES )
+                {
+                lnLikeA *= powerSS;
+                lnLikeB *= powerSS;
+                }
 			lnPriorA = curLnPr[whichElementA];
 			lnPriorB = curLnPr[whichElementB];
 			if (reweightingChars == YES)
-				lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                {
+                if( chainParams.isSS == YES )
+                    lnR = (tempB * (lnLikeStateAonDataB*powerSS + lnPriorA) + tempA * (lnLikeStateBonDataA*powerSS + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                else
+				    lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                }
 			else
 				lnR = (tempB * (lnLikeA + lnPriorA) + tempA * (lnLikeB + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
 			if (lnR <  -100.0)
@@ -1068,6 +1080,11 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 
 				lnLikeA = curLnL[whichElementA];
 				lnLikeB = partnerStateInfo[0];
+                if( chainParams.isSS == YES )
+                    {
+                    lnLikeA *= powerSS;
+                    lnLikeB *= powerSS;
+                    }
 				lnPriorA = curLnPr[whichElementA];
 				lnPriorB = partnerStateInfo[1];
 				if (reweightingChars == YES)
@@ -1078,8 +1095,13 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				tempA = Temperature (tempIdA);
 				tempB = Temperature (tempIdB);
 
-				if (reweightingChars == YES)
-					lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                if (reweightingChars == YES)
+                    {
+                    if( chainParams.isSS == YES )
+					    lnR = (tempB * (lnLikeStateAonDataB*powerSS + lnPriorA) + tempA * (lnLikeStateBonDataA*powerSS + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                    else
+                        lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                    }
 				else
 					lnR = (tempB * (lnLikeA + lnPriorA) + tempA * (lnLikeB + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
 				if (lnR < -100.0)
@@ -1223,8 +1245,19 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 				tempB = Temperature (tempIdB);
 				tempA = Temperature (tempIdA);
 
-				if (reweightingChars == YES)
-					lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                if( chainParams.isSS == YES )
+                    {
+                    lnLikeA *= powerSS;
+                    lnLikeB *= powerSS;
+                    }
+
+                if (reweightingChars == YES)
+                    {
+                    if( chainParams.isSS == YES )
+                        lnR = (tempB * (lnLikeStateAonDataB*powerSS + lnPriorA) + tempA * (lnLikeStateBonDataA*powerSS + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                    else
+					    lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+                    }
 				else
 					lnR = (tempB * (lnLikeA + lnPriorA) + tempA * (lnLikeB + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
 				if (lnR < -100.0)
@@ -1385,8 +1418,19 @@ int AttemptSwap (int swapA, int swapB, SafeLong *seed)
 	lnPriorA = curLnPr[swapA];
 	lnPriorB = curLnPr[swapB];
 
+    if( chainParams.isSS == YES )
+        {
+        lnLikeA *= powerSS;
+        lnLikeB *= powerSS;
+        }
+
     if (reweightingChars == YES)
-		lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+        {
+        if( chainParams.isSS == YES )
+            lnR = (tempB * (lnLikeStateAonDataB*powerSS + lnPriorA) + tempA * (lnLikeStateBonDataA*powerSS + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+        else
+		    lnR = (tempB * (lnLikeStateAonDataB + lnPriorA) + tempA * (lnLikeStateBonDataA + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
+        }
 	else
 		lnR = (tempB * (lnLikeA + lnPriorA) + tempA * (lnLikeB + lnPriorB)) - (tempA * (lnLikeA + lnPriorA) + tempB * (lnLikeB + lnPriorB));
 	if (lnR < -100.0)
@@ -8101,6 +8145,7 @@ int DoSsParm (char *parmName, char *tkn)
 
 	int			tempI;
 	MrBFlt		tempD;
+    char        tempStr[5];
 	
 
 	if (defMatrix == NO)
@@ -8140,6 +8185,32 @@ int DoSsParm (char *parmName, char *tkn)
 				sscanf (tkn, "%d", &tempI);
 			    chainParams.numStepsSS = tempI;
 				MrBayesPrint ("%s   Setting number of steps in stepping-stone sampling to %ld\n", spacer, chainParams.numStepsSS);
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				}
+			else 
+				{
+				return (ERROR);
+				}                
+			}
+         else if (!strcmp(parmName, "FromPrior"))
+			{
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+				{
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+					{
+					if (!strcmp(tempStr, "Yes"))
+						chainParams.startFromPriorSS = YES;
+					else
+						chainParams.startFromPriorSS = NO;
+					}
+                else
+                	{
+					MrBayesPrint ("%s   Invalid argument for FromPrior paramiter\n", spacer);
+					return (ERROR);
+					}
+                MrBayesPrint ("%s   Setting FromPrior=%s\n", spacer, (chainParams.startFromPriorSS==YES)?"Yes":"No");
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -9416,7 +9487,7 @@ int DoMcmcParm (char *parmName, char *tkn)
 
 int DoSs (void)
 {
-    int ret, oldBurnin, oldRelativeBurnin;
+    int ret, oldBurnin;
 
     if( chainParams.numGen/chainParams.sampleFreq <= chainParams.burninSS )
         {/*Do not change print out to generations vs samples because of danger of overflow*/
@@ -9425,7 +9496,7 @@ int DoSs (void)
         }
 
     oldBurnin = chainParams.burninSS;;
-    oldRelativeBurnin = chainParams.relativeBurnin;
+    stepRelativeBurninSS = chainParams.relativeBurnin;
 
 
     chainParams.relativeBurnin = YES;
@@ -9438,7 +9509,7 @@ int DoSs (void)
 
     chainParams.isSS = NO;
     chainParams.burninSS = oldBurnin;
-    chainParams.relativeBurnin = oldRelativeBurnin;
+    chainParams.relativeBurnin = stepRelativeBurninSS;
 
     return ret;
 }
@@ -40100,8 +40171,8 @@ int RunChain (SafeLong *seed)
 	time_t		startingT, endingT, stoppingT1, stoppingT2;
 	clock_t		previousCPUTime, currentCPUTime;
     /* Stepping-stone sampling variables */
-    int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0;
-    MrBFlt      powerSS=0, stepLengthSS=0,meanSS,varSS, *tempX;
+    int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
+    MrBFlt      stepLengthSS=0,meanSS,varSS, *tempX;
     char        ckpFileName[100],bkupFileName[120];
 
 
@@ -40461,11 +40532,21 @@ int RunChain (SafeLong *seed)
         numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq); /*make muliple of chainParams.sampleFreq*/
         numGenOld = chainParams.numGen;
         chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
+        if(stepRelativeBurninSS==YES)
+            numGenInStepBurninSS = ((int)(numGenInStepSS*chainParams.burninFraction / chainParams.sampleFreq))*chainParams.sampleFreq;
+        else
+            numGenInStepBurninSS = chainParams.chainBurnIn * chainParams.sampleFreq;
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Starting stepping-stone sampling to estimate marginal likelihood.         \n", spacer);
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq );
         MrBayesPrint ("%s   Total of %d generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq );
-        MrBayesPrint ("%s   %d generations (%d samples) will be discarded as burnin.                  \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
+        MrBayesPrint ("%s   %d generations (%d samples) will be discarded as initial burnin.          \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
+        MrBayesPrint ("%s   Additionally at the begining of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
+        if(chainParams.startFromPriorSS==YES)
+            MrBayesPrint ("%s   First step samples from prior.  \n", spacer);
+        else
+            MrBayesPrint ("%s   First step samples from close to posterior.  \n", spacer);
         if( numGenOld != chainParams.numGen)
             {
             MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
@@ -40473,7 +40554,7 @@ int RunChain (SafeLong *seed)
             MrBayesPrint ("%s   rations instead of requested %d.                                          \n", spacer, numGenOld ); 
             }
         MrBayesPrint ("\n");
-        if( numGenInStepSS/chainParams.sampleFreq < 1  )
+        if( (numGenInStepSS-numGenInStepBurninSS)/chainParams.sampleFreq < 1  )
             {
             MrBayesPrint ("%s   There is less then one sample in each step of stepping-stone sampling.  \n", spacer);
             MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
@@ -40484,18 +40565,35 @@ int RunChain (SafeLong *seed)
             {
             lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
             stepIndexSS = chainParams.numStepsSS-1;
-            powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-            stepLengthSS = 1.0-powerSS;
+            if(chainParams.startFromPriorSS==YES)
+                {
+                //powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+                powerSS = 0.0;
+                stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+                }
+            else
+                {
+                powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+                stepLengthSS = 1.0-powerSS;
+                }
             samplesCountSS=0;
             }
         else
             {
             stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully complited*/
             lastStepEndSS   = chainParams.burninSS * chainParams.sampleFreq + stepIndexSS*numGenInStepSS;
-            removeTo        = chainParams.burninSS + stepIndexSS*numGenInStepSS/chainParams.sampleFreq + 1;
+            removeTo        = chainParams.burninSS + (stepIndexSS*numGenInStepSS+numGenInStepBurninSS)/chainParams.sampleFreq + 1;
             stepIndexSS     = chainParams.numStepsSS-1-stepIndexSS;
-            powerSS         = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-            stepLengthSS    = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+            if(chainParams.startFromPriorSS==YES)
+                {
+                powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+                stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+                }
+            else
+                {
+                powerSS         = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+                stepLengthSS    = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+                }
             samplesCountSS  = (numPreviousGen-lastStepEndSS)/chainParams.sampleFreq;
 
             MrBayesPrint("%s   Continue sampling step %d out of %d steps...\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
@@ -41108,7 +41206,7 @@ int RunChain (SafeLong *seed)
 		if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
                                              || ( chainParams.isSS == YES && ( n-lastStepEndSS ) % numGenInStepSS == 0 ) ) )
 			{
-			if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || n > chainParams.burninSS * chainParams.sampleFreq ))
+			if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && ( n-lastStepEndSS )> numGenInStepBurninSS ) ))
 				                            || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
 				{
 				/* we need some space for coming output */
@@ -41264,7 +41362,7 @@ int RunChain (SafeLong *seed)
         /* Do stepping sampling staf if needed */
         if ( chainParams.isSS == YES && n >= chainParams.burninSS*chainParams.sampleFreq )
             {
-            if( ( n-lastStepEndSS ) % chainParams.sampleFreq == 0 && n > chainParams.burninSS*chainParams.sampleFreq )
+            if( ( n-lastStepEndSS ) % chainParams.sampleFreq == 0 && n > chainParams.burninSS*chainParams.sampleFreq &&  ( n-lastStepEndSS > numGenInStepBurninSS) )
                 { /* do sampling*/
                 for (chn=0; chn<numLocalChains; chn++)
 		            {
@@ -41283,14 +41381,13 @@ int RunChain (SafeLong *seed)
                 samplesCountSS++;
                 }
 
-            if( ( n-lastStepEndSS ) % numGenInStepSS == 0 )      /* prepare sample of next step */
-                { 
+            if( ( n-lastStepEndSS ) == numGenInStepBurninSS )
+                {
                 /* Remove all previouse samples from diagnostics */
                 if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
                     {
 				    removeFrom = removeTo;
 				    removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples including 0 one*/
-                    lastStepEndSS = removeTo*chainParams.sampleFreq;
                     removeTo++;
 				    if( removeFrom < removeTo )
 					    {
@@ -41300,7 +41397,13 @@ int RunChain (SafeLong *seed)
                             }
                         ERROR_TEST2("Problem removing tree samples",return(ERROR),);
                         }
-                    }
+                    }               
+                } 
+
+            if( ( n-lastStepEndSS ) % numGenInStepSS == 0 )      /* prepare sample of next step */
+                {
+                assert( n-lastStepEndSS <= numGenInStepSS );
+                lastStepEndSS=n;
 
                 if( n > chainParams.burninSS*chainParams.sampleFreq )
                     {
@@ -41349,9 +41452,18 @@ int RunChain (SafeLong *seed)
                     fflush (fpSS);
 
                     stepIndexSS--;
-                    stepLengthSS = powerSS; 
-                    powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-                    stepLengthSS -= powerSS;
+
+                    if(chainParams.startFromPriorSS==YES)
+                        {
+                        powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+                        stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-powerSS;
+                        }
+                    else
+                        {
+                        stepLengthSS = powerSS; 
+                        powerSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+                        stepLengthSS -= powerSS;
+                        }
                     if ( n != chainParams.numGen )
                         MrBayesPrint("%s   Sampling step %d out of %d steps...\n\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
                     for (chn=0; chn<numLocalChains; chn++)
