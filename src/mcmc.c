@@ -40594,7 +40594,9 @@ int RunChain (SafeLong *seed)
                 powerSS         = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
                 stepLengthSS    = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
                 }
-            samplesCountSS  = (numPreviousGen-lastStepEndSS)/chainParams.sampleFreq;
+            samplesCountSS  = (numPreviousGen-lastStepEndSS-numGenInStepBurninSS)/chainParams.sampleFreq;
+            if( samplesCountSS < 0)
+                samplesCountSS=0;
 
             MrBayesPrint("%s   Continue sampling step %d out of %d steps...\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS );
             /*marginalLnLSS will be red from file and destributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if(samplesCountSS!=0) they will be redestributed. */
@@ -41415,7 +41417,7 @@ int RunChain (SafeLong *seed)
                         if( stepAcumulatorSS[j]==0 )
                             r=0;
                         else
-                            r = log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j];
+                            r = log( stepAcumulatorSS[j] ) + stepScalerSS[j];
 			            ierror = MPI_Reduce (&r,&sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 			            if (ierror != MPI_SUCCESS)
 				            {
@@ -41430,7 +41432,7 @@ int RunChain (SafeLong *seed)
 #			        else
                     for (j=0; j<chainParams.numRuns ; j++)
 			            {
-                        MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j]);
+                        MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j] ) + stepScalerSS[j]);
                         }
 #                   endif
                     if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
