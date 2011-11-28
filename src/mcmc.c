@@ -40544,9 +40544,12 @@ int RunChain (SafeLong *seed)
         MrBayesPrint ("%s   Additionally at the begining of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if(chainParams.startFromPriorSS==YES)
-            MrBayesPrint ("%s   First step samples from prior.  \n", spacer);
+            MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior. \n", spacer);
         else
-            MrBayesPrint ("%s   First step samples from close to posterior.  \n", spacer);
+            {
+            MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to.\n", spacer);
+            MrBayesPrint ("%s   posterior.\n", spacer);
+            }
         if( numGenOld != chainParams.numGen)
             {
             MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
@@ -41417,7 +41420,7 @@ int RunChain (SafeLong *seed)
                         if( stepAcumulatorSS[j]==0 )
                             r=0;
                         else
-                            r = log( stepAcumulatorSS[j] ) + stepScalerSS[j];
+                            r = log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j];
 			            ierror = MPI_Reduce (&r,&sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 			            if (ierror != MPI_SUCCESS)
 				            {
@@ -41432,7 +41435,7 @@ int RunChain (SafeLong *seed)
 #			        else
                     for (j=0; j<chainParams.numRuns ; j++)
 			            {
-                        MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j] ) + stepScalerSS[j]);
+                        MrBayesPrintf (fpSS, "\t%.6f", log( stepAcumulatorSS[j]/samplesCountSS ) + stepScalerSS[j]);
                         }
 #                   endif
                     if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
