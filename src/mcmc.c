@@ -123,6 +123,7 @@ typedef void (*sighandler_t)(int);
 #define	CALFILE						2
 #define MCMCFILE                    3
 #define MAXLOGTUNINGPARAM           100000      /* limit to ensure convergence for autotuning */
+//#define SAMPLE_ALL_SS               /*if defined makes ss sample every generation instead of every sample frequency*/
 
 
 /* debugging compiler statements */
@@ -40597,7 +40598,11 @@ int RunChain (SafeLong *seed)
                 powerSS         = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
                 stepLengthSS    = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
                 }
+#ifdef SAMPLE_ALL_SS
+            samplesCountSS  = (numPreviousGen-lastStepEndSS-numGenInStepBurninSS);
+#else
             samplesCountSS  = (numPreviousGen-lastStepEndSS-numGenInStepBurninSS)/chainParams.sampleFreq;
+#endif
             if( samplesCountSS < 0)
                 samplesCountSS=0;
 
@@ -41367,23 +41372,28 @@ int RunChain (SafeLong *seed)
         /* Do stepping sampling staf if needed */
         if ( chainParams.isSS == YES && n >= chainParams.burninSS*chainParams.sampleFreq )
             {
-            if( ( n-lastStepEndSS ) % chainParams.sampleFreq == 0 && n > chainParams.burninSS*chainParams.sampleFreq &&  ( n-lastStepEndSS > numGenInStepBurninSS) )
-                { /* do sampling*/
-                for (chn=0; chn<numLocalChains; chn++)
-		            {
-                    if (chainId[chn] % chainParams.numChains == 0)
-                        {
-                        run = chainId[chn] / chainParams.numChains;
-                        if( curLnL[chn]*stepLengthSS > stepScalerSS[run] + 200.0 )
+#ifndef SAMPLE_ALL_SS
+            if(( n-lastStepEndSS ) % chainParams.sampleFreq == 0 )
+#endif
+                {
+                if(  n > chainParams.burninSS*chainParams.sampleFreq &&  ( n-lastStepEndSS > numGenInStepBurninSS) )
+                    { /* do sampling*/
+                    for (chn=0; chn<numLocalChains; chn++)
+		                {
+                        if (chainId[chn] % chainParams.numChains == 0)
                             {
-                            // adjust scaler;
-                            stepAcumulatorSS[run] /= exp( curLnL[chn]*stepLengthSS - 100.0 - stepScalerSS[run] ); 
-                            stepScalerSS[run]= curLnL[chn]*stepLengthSS - 100.0;
+                            run = chainId[chn] / chainParams.numChains;
+                            if( curLnL[chn]*stepLengthSS > stepScalerSS[run] + 200.0 )
+                                {
+                                // adjust scaler;
+                                stepAcumulatorSS[run] /= exp( curLnL[chn]*stepLengthSS - 100.0 - stepScalerSS[run] ); 
+                                stepScalerSS[run]= curLnL[chn]*stepLengthSS - 100.0;
+                                }
+                            stepAcumulatorSS[run] += exp( curLnL[chn]*stepLengthSS - stepScalerSS[run] );
                             }
-                        stepAcumulatorSS[run] += exp( curLnL[chn]*stepLengthSS - stepScalerSS[run] );
                         }
+                    samplesCountSS++;
                     }
-                samplesCountSS++;
                 }
 
             if( ( n-lastStepEndSS ) == numGenInStepBurninSS )
