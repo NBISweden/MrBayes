@@ -36,8 +36,8 @@ If you wish to make the program available to all users in this way, you can use
 after having compiled the program.
 
 
-Options
-=======
+Configuration options
+=====================
 
 1) BEAGLE
 
@@ -98,4 +98,32 @@ This will print the lines onto the screen as they get added to the file "output.
 To stop the output, simply press ctrl-C (this will stop the output from the tail
 command, it will not stop the MrBayes run).
 
-See the manual for more instructions.
+
+Trouble shooting compilation problems
+=====================================
+
+Problem: The compilation process hangs on model.c when using compiler that comes with
+developer kit on MacOSX 10.7.X Lion.
+
+Solution: Install another compiler. For example you can use MacPorts (macports.org) 
+to install gcc, openmpi and other open source tools.
+
+To install openmpi using MacPorts type in terminal:
+
+>sudo port install openmpi
+
+Installing openmpi will give you a compiler which is newer than the one bundled
+with Apple's Developer Tools. It will not hang while compiling mrbayes.
+Openmpi installed by the command above will be installed into /opt/local.
+Unfortunately, it will NOT install the required "mpicc", but "openmpicc" instead.
+That means that configuring MrBayes won't work.
+
+Fix this after the installation by creating a symbolic link to openmpicc:
+
+>cd /opt/local/bin
+>sudo ln -s openmpicc mpicc
+
+
+Further references
+==================
+See the manual for more compilation/installation instructions.
