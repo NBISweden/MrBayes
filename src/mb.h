@@ -1267,8 +1267,8 @@ typedef struct sumt
     int        *absentTaxa;            /* information on absent taxa                    */
     int         brlensDef;             /* branch lengths defined?                       */
 	char		sumtFileName[100];     /* name of input file                            */
-    char        sumtOutfile[100];      /* name of output file                           */
-    char        curFileName[100];      /* name of file being processed                  */
+    char        sumtOutfile[120];      /* name of output file                           */
+    char        curFileName[120];      /* name of file being processed                  */
 	int			burnin;                /* actual burnin when parsing tree files         */
 	char		sumtConType[100];      /* consensus tree type                           */
 	int			calcTreeprobs;         /* should the individual tree probs be calculated*/
@@ -1314,9 +1314,9 @@ typedef struct sumt
 
 typedef struct comptree
 	{
-	char		comptFileName1[100];    /* name of first input file                      */
-	char		comptFileName2[100];    /* name of second input file                     */
-	char		comptOutfile[100];      /* name of output file                           */
+	char		comptFileName1[120];    /* name of first input file                      */
+	char		comptFileName2[120];    /* name of second input file                     */
+	char		comptOutfile[120];      /* name of output file                           */
 	int			burnin;                 /* actual burnin used when parsing tree files    */
     MrBFlt      minPartFreq;            /* use partitions with frequency >= minPartFreq  */
 	} Comptree;
@@ -1324,7 +1324,7 @@ typedef struct comptree
 typedef struct sump
 	{
 	char		sumpFileName[100];     /* name of input file                            */
-	char		sumpOutfile[100];      /* name of output file                            */
+	char		sumpOutfile[120];      /* name of output file                            */
 	int			plot;                  /* output plot (y/n)?                            */
 	int			table;                 /* output table (y/n)?                           */
 	int			margLike;              /* output marginal likelihood (y/n)?             */
@@ -1336,7 +1336,7 @@ typedef struct sump
 
 typedef struct plot
 	{
-	char		plotFileName[100];     /* name of input file                            */
+	char		plotFileName[120];     /* name of input file                            */
 	char		parameter[100];        /* parameter(s) to be plotted                    */
 	char		match[100];            /* whether the match needs to be perfect         */
 	} Plot;

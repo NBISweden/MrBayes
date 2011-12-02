@@ -118,7 +118,7 @@ int DoSump (void)
 	int			    i, n, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
 				    unreliable, oneUnreliable, burnin, longestHeader, len;
 	MrBFlt		    mean, harm_mean;
-	char		    **headerNames=NULL, temp[100];
+	char		    **headerNames=NULL, temp[120];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
     FILE            *fpLstat=NULL;
@@ -481,6 +481,12 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
+                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                    {
+                    MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
+                    MrBayesPrint ("%s      '%s'\n", spacer,tkn);
+                    return (ERROR);
+                    } 
 				sscanf (tkn, "%s", tempStr);
 				strcpy (sumpParams.sumpFileName, tempStr);
 				strcpy (sumpParams.sumpOutfile, tempStr);
@@ -500,6 +506,12 @@ int DoSumpParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
+                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                    {
+                    MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
+                    MrBayesPrint ("%s      '%s'\n", spacer,tkn);
+                    return (ERROR);
+                    }
 				sscanf (tkn, "%s", tempStr);
 				strcpy (sumpParams.sumpOutfile, tempStr);
 				MrBayesPrint ("%s   Setting sump output file name to \"%s\"\n", spacer, sumpParams.sumpOutfile);

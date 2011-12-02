@@ -3815,6 +3815,13 @@ int DoExecuteParm (char *parmName, char *tkn)
 
 {
 	
+    if(strlen(tkn)>99)
+        {
+        MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
+        MrBayesPrint ("%s      '%s'\n", spacer,tkn);
+        MrBayesPrint ("%s   has %d characters.\n", spacer,strlen(tkn));
+        return (ERROR);
+        }
 	strcpy (inputFileName, tkn);
 	
 	expecting = Expecting (SEMICOLON);
@@ -6727,6 +6734,13 @@ int DoSetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
+                if(strlen(tkn)>99)
+                    {
+                    MrBayesPrint ("%s   Maximum allowed length of working directory name is 99 characters. The given name:\n", spacer);
+                    MrBayesPrint ("%s      '%s'\n", spacer,tkn);
+                    MrBayesPrint ("%s   has %d characters.\n", spacer,strlen(tkn));
+                    return (ERROR);
+                    }
 				strcpy (workingDir, tkn);
 #if defined (WIN_VERSION)
                 /* Reformat to Windows with trailing '\' */

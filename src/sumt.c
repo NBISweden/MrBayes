@@ -1939,7 +1939,7 @@ int DoSumt (void)
 	MrBFlt		    f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
 	PartCtr 	    *x;
-	char		    *s=NULL, tempName[100], fileName[100], treeName[100], divString[100];
+	char		    *s=NULL, tempName[120], fileName[120], treeName[100], divString[100];
     char            *tempStr=NULL; /*not static because error ext is handeled*/
     int             tempStrLength;
 	FILE		    *fp=NULL;
@@ -3012,6 +3012,13 @@ int DoSumtParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(ALPHA))
 				{
+                if(strlen(tkn)>99)
+                    {
+                    MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
+                    MrBayesPrint ("%s      '%s'\n", spacer,tkn);
+                    MrBayesPrint ("%s   has %d characters.\n", spacer,strlen(tkn));
+                    return (ERROR);
+                    }
 			    strcpy (sumtParams.sumtFileName, tkn);
                 strcpy(sumtParams.sumtOutfile, tkn);
 				MrBayesPrint ("%s   Setting sumt filename and outputname to %s\n", spacer, sumtParams.sumtFileName);

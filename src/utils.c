@@ -1205,10 +1205,10 @@ FILE *OpenBinaryFileR (char *name)
 {
 
 	FILE		*fp;
-    char        fileName[100];
+    char        fileName[200];
 
     strcpy(fileName, workingDir);
-    strncat(fileName, name, 99 - strlen(fileName));
+    strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "rb")) == NULL)  
 		{   
@@ -1228,10 +1228,10 @@ FILE *OpenTextFileR (char *name)
 {
 
 	FILE		*fp;
-    char        fileName[100];
+    char        fileName[200];
 
     strcpy(fileName, workingDir);
-    strncat(fileName, name, 99 - strlen(fileName));
+    strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "r")) == NULL)  
 		{   
@@ -1250,10 +1250,10 @@ FILE *OpenTextFileRQuait (char *name)
 {
 
 	FILE		*fp;
-    char        fileName[100];
+    char        fileName[200];
 
     strcpy(fileName, workingDir);
-    strncat(fileName, name, 99 - strlen(fileName));
+    strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "r")) == NULL)  
 		{   
@@ -1273,10 +1273,10 @@ FILE *OpenTextFileA (char *name)
 {
 
 	FILE		*fp;
-    char        fileName[100];
+    char        fileName[200];
 
     strcpy(fileName, workingDir);
-    strncat(fileName, name, 99 - strlen(fileName));
+    strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "a+")) == NULL)  
 		{   
@@ -1297,10 +1297,10 @@ FILE *OpenTextFileW (char *name)
 {
 
 	FILE		*fp;
-    char        fileName[100];
+    char        fileName[200];
 
     strcpy(fileName, workingDir);
-    strncat(fileName, name, 99 - strlen(fileName));
+    strncat(fileName, name, 199 - strlen(fileName));
 
 	if ((fp = fopen (fileName, "w+")) == NULL)  
 		{   
