@@ -1094,12 +1094,12 @@ int AreDoublesEqual (MrBFlt x, MrBFlt y, MrBFlt tol)
 int ChangeNumChains (int from, int to)
 
 {
-	int			i, i1, j, k, nRuns, fromIndex, toIndex, run, chn, *tempIntVals, nCppEventParams, *toEvents, *fromEvents;
+	int			i, i1, j, k, m, st, nRuns, fromIndex, toIndex, run, chn, *tempIntVals, nCppEventParams, *toEvents, *fromEvents;
 	MCMCMove	**tempMoves, *fromMove, *toMove;
 	Tree		**tempTrees;
 	MrBFlt		*tempVals, **toRateMult, **toPosition, **fromRateMult, **fromPosition, *stdStateFreqsOld;
     Param       *p, *q, *cppEventParams = NULL;
-	Tree		**oldMcmcTree;
+	Tree		**oldMcmcTree, *tree;
 
     if(from == to)
         return (NO_ERROR);
@@ -1261,7 +1261,19 @@ int ChangeNumChains (int from, int to)
 				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
 				if (to > from)
 					for (run=0; run<nRuns; run++)
-						{
+					    {
+                        /*rename old trees because each run has more chains*/
+                        for (m=0; m<from; m++)
+		                    {
+		                    for (st=0; st<2; st++)
+			                    {
+			                    tree = GetTree (q,run*to + m, st);
+			                    if (numTrees > 1)
+				                    sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, run*to + m +1);
+			                    else /* if (numTrees == 1) */
+				                    sprintf (tree->name, "mcmc.tree_%d", run*to + m +1);
+                                }
+                            }
 						InitializeChainTrees (q, run*to + from, run*to + to , GetTree (q, 0, 0)->isRooted);
 						}
 				}
