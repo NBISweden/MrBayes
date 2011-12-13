@@ -981,6 +981,9 @@ int DoCompareTree (void)
 	/* set file pointer to NULL */
 	fp = NULL;
 
+    strcpy(treeName[0],"tree"); //in case if paramiter is not specified in a .t file
+    strcpy(treeName[1],"tree");
+
 	/* Check that a data set has been read in. We check taxon names against
 	   those read in. */
 	if (isTaxsetDef == NO)
@@ -1961,6 +1964,8 @@ int DoSumt (void)
 
 	/* set file pointers to NULL */
 	fp = fpParts = fpTstat = fpVstat = fpCon = fpTrees = NULL;
+
+    strcpy(treeName,"tree"); //in case if paramiter is not specified in a .t file
 
 	/* Check if there is anything to do */
     if (sumtParams.table == NO && sumtParams.summary == NO && sumtParams.showConsensus == NO)

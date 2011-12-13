@@ -1,3 +1,10 @@
+Content
+=======
+1) How to compile MrBayes from source
+2) Configuration options
+3) Trouble shooting compilation problems
+4) Further references
+
 
 How to compile MrBayes from source
 ==================================
