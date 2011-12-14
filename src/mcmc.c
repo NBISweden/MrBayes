@@ -37830,18 +37830,18 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 			}
 		}
 
-	i = 0;
+	i = 1;
 	for (chn=0; chn<numLocalChains; chn++)
 		{
 		if (i > chainParams.printMax)	
 			{
-			if (i == chainParams.printMax + 1)
+			if (i == chainParams.printMax +1)
 				{
 				i++;
 				if (numLocalColdChains > 0 && numLocalColdChains > numFirstAndLastCold)
-					MrBayesPrint ("[...%d more local chains...] ", numLocalChains - 2);
+					MrBayesPrint ("[...%d more local chains...] ", numLocalChains - chainParams.printMax);
 				else
-					MrBayesPrint ("(...%d more local chains...) ", numLocalChains - 2);
+					MrBayesPrint ("(...%d more local chains...) ", numLocalChains - chainParams.printMax);
 				continue;
 				}
 			else
@@ -40548,7 +40548,7 @@ int RunChain (SafeLong *seed)
             MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior. \n", spacer);
         else
             {
-            MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to.\n", spacer);
+            MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to\n", spacer);
             MrBayesPrint ("%s   posterior.\n", spacer);
             }
         if( numGenOld != chainParams.numGen)
@@ -40736,35 +40736,38 @@ int RunChain (SafeLong *seed)
                 }
             }
 #if defined (MPI_ENABLED)
-        MPI_Bcast ( marginalLnLSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if ( chainParams.isSS == YES )
+            {
+            MPI_Bcast ( marginalLnLSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        if( samplesCountSS != 0)
-            {
-            MPI_Bcast ( stepScalerSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Bcast ( stepAcumulatorSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            }
-        /*Set to zero all runs that we are not responsable for*/
-        for (run=0; run<chainParams.numRuns; run++)
-            {
-            for (chn=0; chn<numLocalChains; chn++)
+            if( samplesCountSS != 0)
                 {
-                if (chainId[chn] % chainParams.numChains == 0 && run == chainId[chn] / chainParams.numChains )
-                    break;
+                MPI_Bcast ( stepScalerSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+                MPI_Bcast ( stepAcumulatorSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
                 }
-            if(chn<numLocalChains)
-                continue;
+            /*Set to zero all runs that we are not responsable for*/
+            for (run=0; run<chainParams.numRuns; run++)
+                {
+                for (chn=0; chn<numLocalChains; chn++)
+                    {
+                    if (chainId[chn] % chainParams.numChains == 0 && run == chainId[chn] / chainParams.numChains )
+                        break;
+                    }
+                if(chn<numLocalChains)
+                    continue;
 
-            marginalLnLSS[run] = 0.0;
-    	    stepScalerSS[run] = 0.0;
-    	    stepAcumulatorSS[run] = 0.0;    
+                marginalLnLSS[run] = 0.0;
+    	        stepScalerSS[run] = 0.0;
+    	        stepAcumulatorSS[run] = 0.0;    
+                }
             }
 
         MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         if (sumErrors > 0)
-	        {
-	        MrBayesPrint ("%s    Error appending to previous run\n", spacer);
-	        return ERROR;
-	        }
+            {
+            MrBayesPrint ("%s    Error appending to previous run\n", spacer);
+            return ERROR;
+            }            
 #	else
         if (nErrors == 1)
 	        {
