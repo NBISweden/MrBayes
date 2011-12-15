@@ -128,6 +128,8 @@ int DoSump (void)
 		return NO_ERROR;
 #	endif
 
+    chainParams.isSS = YES;
+
 	/* tell user we are ready to go */
 	if (sumpParams.numRuns == 1)
 		MrBayesPrint ("%s   Summarizing parameters in file %s.p\n", spacer, sumpParams.sumpFileName);
@@ -213,7 +215,8 @@ int DoSump (void)
 		if (len > longestHeader)
 			longestHeader = len;
 		}
-			
+
+
 	/* Print header */
 	PrintPlotHeader ();
 
@@ -228,6 +231,74 @@ int DoSump (void)
 		MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
         return ERROR;
         }
+
+/*
+unsigned numSamplesInStepSS, stepBeginSS, stepBurnin;
+MrBFlt  *lnlp, *nextSteplnlp;
+
+    if ( chainParams.isSS == YES )
+        {
+        if(chainParams.burninSS > 0)
+            {
+            stepBeginSS = chainParams.burninSS + 1;
+            numSamplesInStepSS = (numRows - stepBeginSS)/chainParams.numStepsSS;
+            if( (numRows - stepBeginSS)%chainParams.numStepsSS!=0 )
+                {
+                MrBayesPrint ("%s   Error:  Number of samples could not be evenly devided among steps (%d samples among %d steps). \n", spacer,(numRows - stepBeginSS),chainParams.numStepsSS);
+                goto errorExit;
+                }
+            }
+        else
+            {
+            if( (numRows-1)%(chainParams.numStepsSS-chainParams.burninSS)!=0 )
+                {
+                MrBayesPrint ("%s   Error:  Number of samples could not be evenly devided among burnin and steps (%d samples among %d steps + burnin). \n", spacer,(numRows-1),(chainParams.numStepsSS-chainParams.burninSS) );
+                goto errorExit;
+                }
+            numSamplesInStepSS = (numRows-1)/(chainParams.numStepsSS-chainParams.burninSS);
+            stepBeginSS = numSamplesInStepSS + 1;
+            }
+
+        if( chainParams.relativeBurnin == YES )
+            {
+            stepBurnin = numSamplesInStepSS*chainParams.burninFraction;
+            }
+        else
+            {
+            stepBurnin = chainParams.chainBurnIn;
+            if(stepBurnin >= numSamplesInStepSS )
+                {
+                MrBayesPrint ("%s   Error:  Burnin in each step(%d) is longer then the step itself(%d). \n", spacer,stepBurnin, numSamplesInStepSS );
+                goto errorExit;               
+                }
+            }
+        MrBayesPrint ("\n");
+        MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on\n", spacer );
+        MrBayesPrint ("%s   %d steps with %d samples within each step. \n\n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
+        MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
+        MrBayesPrint ("%s       ------------------------------\n",spacer);
+        for(i=0; i<sumpParams.numRuns; i++)
+            {
+            marginalLnLSS = 0.0;
+            lnlp= parameterSamples[whichIsY].values[i] + stepBeginSS;
+            nextSteplnlp=lnlp;
+            for(stepIndex=0; stepIndex<chainParams.numStepsSS; stepIndex++)
+                {
+                lnlp+=stepBurnin;
+                nextSteplnlp +=numSamplesInStepSS;
+                while( lnlp<nextSteplnlp )
+                    {
+                    marginalLnLSS+=*lnlp...;
+                    lnlp++;
+                    }
+                }
+            MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, i+1, marginalLnLSS );
+            }
+        MrBayesPrint ("%s       ------------------------------\n",spacer);
+
+        }
+*/
+
     if (sumpParams.numRuns > 1)
 		{
 		if (sumpParams.allRuns == YES)
@@ -833,10 +904,17 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 		}
 
     /* calculate burnin */
-    if (chainParams.relativeBurnin == YES)
-        burnin = (int) (chainParams.burninFraction * numParamLines);
+    if ( chainParams.isSS == YES )
+        {
+        burnin = 0;
+        }
     else
-        burnin = chainParams.chainBurnIn;
+        {
+        if (chainParams.relativeBurnin == YES)
+            burnin = (int) (chainParams.burninFraction * numParamLines);
+        else
+            burnin = chainParams.chainBurnIn;
+        }
     
 	/* check against burnin */
 	if (burnin > numParamLines)

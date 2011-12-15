@@ -11981,8 +11981,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   last quantile, i.e., it is close to 1.0. For each successive step, the beta   \n");
         MrBayesPrint ("   value takes on the value of the next quantile, in decreasing order, until it  \n");
         MrBayesPrint ("   reaches the value of 0.0. If you change value of 'FromPrior' from default 'No'\n");
-        MrBayesPrint ("   to 'Yes' then the direction of SS is opposite to the one described above,     \n");
-        MrBayesPrint ("   i.e. we start from sampling prior and finish close to posterior.              \n");
+        MrBayesPrint ("   to 'Yes' then the direction of power posterior change during SS analizes is   \n");
+        MrBayesPrint ("   opposite to the one described above, i.e. we start from sampling prior and    \n");
+        MrBayesPrint ("   finish close to posterior.                                                    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The 'Ss' procedure uses the same machinery as the standard 'Mcmc' algorithm,  \n");
         MrBayesPrint ("   and shares most of its parameters with the 'Mcmc' and 'Mcmcp' commands. All   \n");
@@ -12053,7 +12054,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   sample from prior, with each consequtive step we sample closer\n");
         MrBayesPrint ("                   to posterior. 'No' indicates the opposite direction of power  \n");
         MrBayesPrint ("                   posterior change, i.e. in first step we sample close to poste-\n");
-        MrBayesPrint ("                   rior, with each consequent step we sample closer to prior.    \n");
+        MrBayesPrint ("                   rior, with each consequtive step we sample closer to prior.   \n");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Current settings:                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -12703,7 +12704,7 @@ else if (!strcmp(helpTkn, "Set"))
 		else
 			MrBayesPrint ("   Filename        <name>                   %s<.run<i>.p>\n", sumpParams.sumpFileName);
 		MrBayesPrint ("   Outputname      <name>                   %s<.pstat etc>\n", sumpParams.sumpOutfile);
-        MrBayesPrint ("   Hpd             <number>                 %d                                   \n", sumpParams.HPD == YES ? "Yes" : "No");
+        MrBayesPrint ("   Hpd             Yes/No                   %s                                   \n", sumpParams.HPD == YES ? "Yes" : "No");
         MrBayesPrint ("   Minprob         <number>                 %1.3lf                               \n", sumpParams.minProb);
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");

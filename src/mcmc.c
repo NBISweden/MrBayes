@@ -8998,6 +8998,13 @@ int DoMcmcParm (char *parmName, char *tkn)
 			else if (expecting == Expecting(ALPHA))
 				{
 				sscanf (tkn, "%s", tempStr);
+                if(strlen(tempStr)>99)
+                    {
+                    MrBayesPrint ("%s   Maximum allowed length of chain file name is 99 characters. The given name:\n", spacer);
+                    MrBayesPrint ("%s      '%s'\n", spacer,tempStr);
+                    MrBayesPrint ("%s   has %d characters.\n", spacer,strlen(tempStr));
+                    return (ERROR);
+                    }
 				strcpy (chainParams.chainFileName, tempStr);
 				fileNameChanged = YES;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -34309,7 +34316,7 @@ int PreparePrintFiles (void)
 {
 
 	int			i, k, n, previousResults, oldAutoOverwrite, oldNoWarn;
-	char		localFileName[100], fileName[100], bkupName[100];
+	char		localFileName[100], fileName[220], bkupName[220];
     FILE        *tempFile;
 
 #if defined (MPI_ENABLED)
@@ -35089,7 +35096,7 @@ int PrintCheckPoint (int gen)
 
 {
 	int			i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE, hasEvents, *intValue;
-	char		bkupFileName[100], oldBkupFileName[100], ckpFileName[100], *tempString=NULL;
+	char		bkupFileName[220], oldBkupFileName[220], ckpFileName[220], *tempString=NULL;
 	MrBFlt		*value, clockRate;
 	Param		*p = NULL, *subParm = NULL;
 	Tree		*t;
@@ -39496,7 +39503,7 @@ int RemoveTreeSamples (int from, int to)
 int ReopenMBPrintFiles (void)
 {
 	int		i, k, n;
-	char	fileName[100], localFileName[100];
+	char	fileName[120], localFileName[100];
 	
 	/* Get root of local file name */
 	strcpy (localFileName, chainParams.chainFileName);
@@ -40022,7 +40029,7 @@ int ReusePreviousResults (int *numSamples, int steps)
 {
 
 	int			i, k, n;
-	char		localFileName[100], fileName[100], bkupName[100];
+	char		localFileName[100], fileName[220], bkupName[220];
 
     (*numSamples) = 0;
 
@@ -40174,7 +40181,7 @@ int RunChain (SafeLong *seed)
     /* Stepping-stone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
     MrBFlt      stepLengthSS=0,meanSS,varSS, *tempX;
-    char        ckpFileName[100],bkupFileName[120];
+    char        ckpFileName[220],bkupFileName[220];
 
 
 #if defined (BEAGLE_ENABLED)
@@ -40549,7 +40556,7 @@ int RunChain (SafeLong *seed)
         else
             {
             MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to\n", spacer);
-            MrBayesPrint ("%s   posterior.\n", spacer);
+            MrBayesPrint ("%s   posterior.                                                             \n", spacer);
             }
         if( numGenOld != chainParams.numGen)
             {

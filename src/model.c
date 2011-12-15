@@ -9227,7 +9227,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Problem setting calibrated tree parameters\n", spacer);
 							return (ERROR);
 							}
-                        if (!strcmp(modelParams[theTree->relParts[0]].clockRatePr, "Fixed"))
+                        if (theTree->isCalibrated == YES && !strcmp(modelParams[theTree->relParts[0]].clockRatePr, "Fixed"))
                             {
                             clockRate = modelParams[theTree->relParts[0]].clockRateFix;
                             if(( clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO ) || ( clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO ))
@@ -10579,7 +10579,7 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 					MrBayesPrint("%s   Fixed branch lengths do not satisfy calibrations", spacer);
 					return (ERROR);
 					}
-                if (!strcmp(modelParams[tree->relParts[0]].clockRatePr, "Fixed"))
+                if (tree->isCalibrated == YES && !strcmp(modelParams[tree->relParts[0]].clockRatePr, "Fixed"))
                     {
                     clockRate = modelParams[tree->relParts[0]].clockRateFix;
                     if(( clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO ) || ( clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO ))
