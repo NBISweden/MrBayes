@@ -2927,10 +2927,10 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmb
 		
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS(not just checks as name suggest) calibrated clock tree nodes age, depth.
+| IsCalibratedClockSatisfied: This routine SETS(not just checks as name suggest) calibrated clock tree nodes age, depth. based on branch lengthes
 |     and checks that user defined brlens satisfy the specified calibration(s)
 |     up to tolerance tol
-|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(that may produce imconsitancy)
+|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(make sure that it does not produce imconsitancy)
 |
 |------------------------------------------------------------------------------*/
 int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
@@ -3034,7 +3034,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 			q = t->allDownPass[j];
 			if (x[q->index] < 0.0 && y[q->index] < 0.0)
 				continue;
-			if (AreDoublesEqual (p->nodeDepth, q->nodeDepth, tol) == YES)
+			if ( p->nodeDepth == q->nodeDepth) // becouse clock rate could be as low as possible we can not take approximate equality. 
 				{
 				/* same depth so they must share a possible age */
 				if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index])
@@ -3059,8 +3059,10 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 				if (x[r->index] >= 0.0 && y[s->index] >= 0.0)
 					{
 					f = (r->nodeDepth - s->nodeDepth) / (x[r->index] - y[s->index]);
-					if (f <= 0.0)
+					if (f <= 0.0 || x[r->index] == y[s->index])
 						{
+                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.000001) == YES) //if defference is very very small we do not bail out. It could heppened becouse of numerical inacuracy, one node which supose to be slitly below the other one become on top.  
+                            continue;
 						isViolated = YES;
 						break;
 						}
@@ -3075,8 +3077,10 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 				if (y[r->index] >= 0.0 && x[s->index] >= 0.0)
 					{
 					f = (r->nodeDepth - s->nodeDepth) / (y[r->index] - x[s->index]);
-					if (f <= 0.0)
+					if (f <= 0.0 || y[r->index] == x[s->index])
 						{
+                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.00001) == YES)
+                            continue;
 						isViolated = YES;
 						break;
 						}

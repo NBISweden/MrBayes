@@ -3419,7 +3419,7 @@ int DoSumtParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Invalid argument for 'Summary' (valid arguments are 'yes' and 'no')\n", spacer);
 					return (ERROR);
 					}
-				if (sumpParams.plot == YES)
+				if (sumtParams.summary == YES)
 					MrBayesPrint ("%s   Setting sumt to summary statistics\n", spacer);
 				else
 					MrBayesPrint ("%s   Setting sumt not to compute summary statistics\n", spacer);
@@ -3447,7 +3447,7 @@ int DoSumtParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Invalid argument for Consensus (valid arguments are 'yes' and 'no')\n", spacer);
 					return (ERROR);
 					}
-				if (sumpParams.plot == YES)
+				if (sumtParams.showConsensus == YES)
 					MrBayesPrint ("%s   Setting sumt to show consensus trees\n", spacer);
 				else
 					MrBayesPrint ("%s   Setting sumt not to show consensus trees\n", spacer);

@@ -138,6 +138,7 @@ extern Sump				sumpParams;                             /* holds parameters for s
 extern char				sumpToken[];							/* string holding a .p file token                */
 extern char				*sumpTokenP;							/* pointer to a .p file token					 */
 extern Sumt				sumtParams;                             /* holds parameters for sumt command             */
+extern Sumss			sumssParams;                            /* holds parameters for sumss command            */
 extern char				stamp[11];                   			/* holds a unique identifier for each analysis   */
 extern int				stdStateFreqsRowSize;					/* row size for stdStateFreqs					 */
 extern int				*sympiIndex;							/* sympi state freq index for multistate chars   */

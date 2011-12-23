@@ -1325,7 +1325,7 @@ typedef struct sump
 	{
 	char		sumpFileName[100];     /* name of input file                            */
 	char		sumpOutfile[120];      /* name of output file                            */
-	int			plot;                  /* output plot (y/n)?                            */
+	//int			plot;                  /* output plot (y/n)?                            */
 	int			table;                 /* output table (y/n)?                           */
 	int			margLike;              /* output marginal likelihood (y/n)?             */
 	int			numRuns;			   /* number of independent analyses to summarize   */
@@ -1333,6 +1333,18 @@ typedef struct sump
     int         HPD;                   /* use highest posterior density?                */
     MrBFlt      minProb;               /* cut-off for model probabilities to show       */
 	} Sump;
+
+typedef struct sumss
+	{
+	//int			plot;                  /* output plot (y/n)?                            */
+	int			numRuns;			   /* number of independent analyses to summarize   */
+	int			allRuns;			   /* should data for all runs be printed (yes/no)? */
+    int         stepToPlot;            /* Which step to plot in the step plot           */
+    int         askForMorePlots;       /* Should user be asked to plot for different discardfraction (y/n)?  */
+    unsigned    smoothing;             /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
+    MrBFlt      discardFraction;       /* Proportion of samples discarded when ploting step plot.*/
+	} Sumss;
+
 
 typedef struct plot
 	{

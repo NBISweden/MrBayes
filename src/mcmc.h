@@ -6,6 +6,7 @@ int	    DoMcmc (void);
 int	    DoMcmcp (void);
 int	    DoMcmcParm (char *parmName, char *tkn);
 int	    DoSs (void);
+int	    DoSsp (void);
 int     DoSsParm (char *parmName, char *tkn);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF);
 int     LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth);

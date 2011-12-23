@@ -26,6 +26,8 @@ typedef struct {
 int     AllocateParameterSamples (ParameterSample **parameterSamples, int numRuns, int numRows, int numColumns);
 int     DoSump (void);
 int     DoSumpParm (char *parmName, char *tkn);
+int     DoSumSs (void);
+int     DoSumSsParm (char *parmName, char *tkn);
 int     ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames, int *nHeaders);
 int     FindHeader (char *token, char **headerNames, int nHeaders, int *index);
 void    FreeParameterSamples (ParameterSample *parameterSamples);

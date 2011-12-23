@@ -123,7 +123,7 @@ typedef void (*sighandler_t)(int);
 #define	CALFILE						2
 #define MCMCFILE                    3
 #define MAXLOGTUNINGPARAM           100000      /* limit to ensure convergence for autotuning */
-//#define SAMPLE_ALL_SS               /*if defined makes ss sample every generation instead of every sample frequency*/
+#define SAMPLE_ALL_SS               /*if defined makes ss sample every generation instead of every sample frequency*/
 
 
 /* debugging compiler statements */
@@ -7685,6 +7685,7 @@ int DoMcmc (void)
     /* set file names */
 	sumtParams.numRuns = chainParams.numRuns;
 	sumpParams.numRuns = chainParams.numRuns;
+    sumssParams.numRuns = chainParams.numRuns;
 	
 	if (fileNameChanged == YES)
 		{
@@ -9520,6 +9521,15 @@ int DoSs (void)
     chainParams.relativeBurnin = stepRelativeBurninSS;
 
     return ret;
+}
+
+
+
+
+
+int DoSsp (void)
+{
+    return NO_ERROR;
 }
 
 

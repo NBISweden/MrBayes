@@ -62,9 +62,9 @@
 
 const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
-#define	NUMCOMMANDS					    59  /* Note: NUMCOMMANDS gives the total number  */
+#define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program           */
-#define	NUMPARAMS						258
+#define	NUMPARAMS						268
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -250,6 +250,7 @@ char            **speciespartitionNames;    /* hold names of speciespartitions (
 int				speciespartitionNum;   /* index of current speciespartition             */
 Sump			sumpParams;            /* holds parameters for sump command             */
 Sumt			sumtParams;            /* holds parameters for sumt command             */
+Sumss			sumssParams;           /* holds parameters for sumss command            */
 TaxaInformation *taxaInfo;             /* holds critical information about taxa         */
 char			**taxaNames;           /* holds name of taxa                            */
 SafeLong        **taxaSet;             /* holds information about defined taxasets      */
@@ -362,17 +363,20 @@ CmdType			commands[] =
             { 46,"Speciespartition",  NO,DoSpeciespartition,  1,                                                                                            {244},        4,                   "Defines a partition of tips into species",  IN_CMD, SHOW },
             { 47,              "Ss",  NO,              DoSs, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
             														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,                             "Starts stepping-stone sampling",  IN_CMD, SHOW },
-            { 48,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-            { 49,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 50,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
-            { 51,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
-            { 52,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
-            { 53,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels", IN_FILE, SHOW },
-            { 54,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
-            { 55,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-            { 56,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
-            { 57,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
-            { 58,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
+            { 48,             "Ssp",  NO,             DoSsp, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
+            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36, "Sets the parameters of a stepping-stone (without starting)",  IN_CMD, SHOW },
+            { 49,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
+            { 50,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+            { 51,           "Sumss",  NO,           DoSumSs, 10,                                                        {258,259,260,261,262,263,264,265,266,267},       36,         "Summarizes parameters from stepping-stone analysis",  IN_CMD, SHOW },
+            { 52,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
+            { 53,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
+            { 54,          "Taxset",  NO,         DoTaxaset,  1,                                                                                             {49},        4,                           "Assigns a group of taxa to a set",  IN_CMD, SHOW },
+            { 55,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels", IN_FILE, SHOW },
+            { 56,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
+            { 57,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
+            { 58,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+            { 59,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
+            { 60,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
 		    { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
 		};
@@ -12067,6 +12071,29 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
+else if (!strcmp(helpTkn, "Ssp"))
+		{
+		PrintYesNo (chainParams.saveBrlens, yesNoStr);
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		MrBayesPrint ("   Ssp                                                                           \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   This command sets the parameters of the stepping-stone sampling               \n");
+		MrBayesPrint ("   analysis without actually starting the chain. This command is identical       \n");
+		MrBayesPrint ("   in all respects to Ss, except that the analysis will not start after          \n");
+		MrBayesPrint ("   this command is issued. For more details on the options, check the help       \n");
+		MrBayesPrint ("   menu for Ss.\n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Current settings:                                                             \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Parameter          Options               Current Setting                      \n");
+		MrBayesPrint ("   --------------------------------------------------------                      \n");
+        MrBayesPrint ("   Alpha              <number>              %1.2lf\n", chainParams.alphaSS);
+		MrBayesPrint ("   BurninSS           <number>              %d\n", chainParams.burninSS);
+        MrBayesPrint ("   Nsteps             <number>              %d\n", chainParams.numStepsSS);
+        MrBayesPrint ("   FromPrior           Yes/No               %s                                   \n", chainParams.startFromPriorSS == YES ? "Yes" : "No");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+		}
 else if (!strcmp(helpTkn, "Set"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -14428,6 +14455,16 @@ void SetUpParms (void)
 	PARAM   (255, "Ibrvar",         DoLinkParm,        "\0");
 	PARAM   (256, "Ibrbranchlens",  DoLinkParm,        "\0");
     PARAM   (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
+	PARAM   (258, "Filename",       DoSumSsParm,        "\0");
+	PARAM   (259, "Burnin",         DoSumSsParm,        "\0");
+	PARAM   (260, "Nruns",	        DoSumSsParm,        "\0");
+	PARAM   (261, "Allruns",	    DoSumSsParm,        "Yes|No|\0");
+	PARAM   (262, "Askmore",   		DoSumSsParm,        "Yes|No|\0");
+	PARAM   (263, "Relburnin",	    DoSumSsParm,        "Yes|No|\0");
+	PARAM   (264, "Burninfrac",	    DoSumSsParm,        "\0");
+	PARAM   (265, "Discardfrac",	DoSumSsParm,        "\0");
+	PARAM   (266, "Smoothing",		DoSumSsParm,        "\0");
+	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
 
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 258) in paramTable[] at the top of this file. */
