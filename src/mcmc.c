@@ -40586,6 +40586,8 @@ int RunChain (SafeLong *seed)
             {
             lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
             stepIndexSS = chainParams.numStepsSS-1;
+            if(numPreviousGen != 0)
+                removeTo=(numPreviousGen/chainParams.sampleFreq)+1;
             if(chainParams.startFromPriorSS==YES)
                 {
                 //powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
@@ -40604,6 +40606,8 @@ int RunChain (SafeLong *seed)
             stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully complited*/
             lastStepEndSS   = chainParams.burninSS * chainParams.sampleFreq + stepIndexSS*numGenInStepSS;
             removeTo        = chainParams.burninSS + (stepIndexSS*numGenInStepSS+numGenInStepBurninSS)/chainParams.sampleFreq + 1;
+            if(numPreviousGen < (removeTo-1)*chainParams.sampleFreq)
+                removeTo=numPreviousGen/chainParams.sampleFreq+1;
             stepIndexSS     = chainParams.numStepsSS-1-stepIndexSS;
             if(chainParams.startFromPriorSS==YES)
                 {
