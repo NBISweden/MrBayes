@@ -1341,7 +1341,7 @@ typedef struct sumss
 	int			allRuns;			   /* should data for all runs be printed (yes/no)? */
     int         stepToPlot;            /* Which step to plot in the step plot           */
     int         askForMorePlots;       /* Should user be asked to plot for different discardfraction (y/n)?  */
-    unsigned    smoothing;             /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
+    int         smoothing;             /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
     MrBFlt      discardFraction;       /* Proportion of samples discarded when ploting step plot.*/
 	} Sumss;
 

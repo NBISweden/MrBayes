@@ -1041,8 +1041,8 @@ int ReinitializeMrBayes (void)
 	sumssParams.numRuns= 2;			                /* number of independent analyses to summarize   */
 	sumssParams.allRuns = YES;			            /* should data for all runs be printed (yes/no)? */
     sumssParams.stepToPlot = 0;                     /* Which step to plot in the step plot, 0 means burnin     */
-    sumssParams.askForMorePlots = NO;               /* Should user be asked to plot for different discardfraction (y/n)?  */
-    sumssParams.smoothing = 0;                      /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
+    sumssParams.askForMorePlots = YES;               /* Should user be asked to plot for different discardfraction (y/n)?  */
+    sumssParams.smoothing = 3;                      /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
     sumssParams.discardFraction = 0.8;              /* Proportion of samples discarded when ploting step plot.*/
 
 	/* comparetree parameters */

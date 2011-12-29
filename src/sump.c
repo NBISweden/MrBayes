@@ -460,9 +460,8 @@ errorExit:
 int DoSumSs (void)
 {
 
-	int			    i, n, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
-				    unreliable, oneUnreliable, burnin, longestHeader, len;
-	MrBFlt		    mean, harm_mean;
+	int			    i, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
+				    longestHeader, len;
 	char		    **headerNames=NULL, temp[120];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
@@ -472,6 +471,11 @@ int DoSumSs (void)
     MrBFlt  *lnlp, *nextSteplnlp, *firstlnlp;
     MrBFlt  marginalLnLSS,stepScalerSS,stepAcumulatorSS, stepLengthSS; 
     int     beginPrint, countPrint;
+    float   tmpf;
+
+    MrBFlt **plotArrayY=NULL,**plotArrayX=NULL;
+    int j,k,count;
+    MrBFlt sum;
 
 #	if defined (MPI_ENABLED)
     if (proc_id != 0)
@@ -612,9 +616,25 @@ int DoSumSs (void)
             goto errorExit;               
             }
         }
+
+    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows );
     MrBayesPrint ("\n");
-    MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on\n", spacer );
-    MrBayesPrint ("%s   %d steps with %d samples within each step. \n\n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
+    MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling\n", spacer );
+    MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
+    MrBayesPrint ("%s   First %d samples (including generation 0) are discarded as initial burn-in.\n", spacer, stepBeginSS);
+    if( chainParams.relativeBurnin == YES )
+        MrBayesPrint ("%s   Additionally, at the begining of each step %d samples (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction) );
+    else
+        MrBayesPrint ("%s   Additionally, at the begining of each step %d samples     \n", spacer, stepBurnin);
+    MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
+        if(chainParams.startFromPriorSS==YES)
+            MrBayesPrint ("%s   Sampling is assumed to be done from prior to posterior.\n", spacer);
+        else
+            {
+            MrBayesPrint ("%s   Sampling is assumed to be done from posterior to prior.\n", spacer);
+            }
+
+
     MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
     MrBayesPrint ("%s       ------------------------------\n",spacer);
     for(i=0; i<sumssParams.numRuns; i++)
@@ -655,13 +675,8 @@ int DoSumSs (void)
     MrBayesPrint ("%s       ------------------------------\n",spacer);
         
 	MrBayesPrint ("\n");
-
-    if( sumssParams.stepToPlot == 0 )
-        {
-        beginPrint=0;
-        countPrint=stepBeginSS;
-
-        if (sumssParams.numRuns > 1)
+/*
+            if (sumssParams.numRuns > 1)
 		    {
 		    MrBayesPrint ("%s   Below are rough plots of the generations (x-axis) during burn in  \n", spacer);
 		    MrBayesPrint ("%s   phase versus the log probability of observing the data (y-axis).  \n", spacer);
@@ -681,89 +696,189 @@ int DoSumSs (void)
 		    MrBayesPrint ("%s   burn in phase. This burn in, unlike burn in within each step, is  \n", spacer);
 		    MrBayesPrint ("%s   fixed and can not be changed.                                     \n", spacer);
 		    }
-
-        }
-    else
+            */
+    MrBayesPrint ("\n\n%s   Step plot(s).\n",spacer);
+    while(1)
         {
-        if( sumssParams.stepToPlot > chainParams.numStepsSS )
+         MrBayesPrint ("\n",);
+        if( sumssParams.stepToPlot == 0 )
             {
-            MrBayesPrint ("%s   Chosen index of step to print %d is out of range of step indices[0,...,%d].\n", spacer,sumssParams.stepToPlot,chainParams.numStepsSS);
-            goto errorExit;
+            beginPrint=(int)(sumssParams.discardFraction*stepBeginSS);
+            countPrint=stepBeginSS-beginPrint;
+            MrBayesPrint ("%s   Ploting step 0, i.e initial burn-in phase consisting of %d samples.\n", spacer,stepBeginSS);
+            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,beginPrint);
             }
-        beginPrint=stepBeginSS+(sumssParams.stepToPlot-1)*numSamplesInStepSS+stepBurnin;
-        countPrint=numSamplesInStepSS-stepBurnin;
-        }
-
-
-    if (sumssParams.numRuns > 1)
-		{
-		if (sumpParams.allRuns == YES)
-			{
-			for (i=0; i<sumssParams.numRuns; i++)
-				{
-				MrBayesPrint ("\n%s   Samples from run %d:\n", spacer, i+1);
-				if (PrintPlot (parameterSamples[whichIsX].values[i]+beginPrint, parameterSamples[whichIsY].values[i]+beginPrint, countPrint) == ERROR)
-					goto errorExit;
-				}
-			}
-		else
+        else
             {
-            if (PrintOverlayPlot (parameterSamples[whichIsX].values, parameterSamples[whichIsY].values, numRuns, beginPrint, countPrint) == ERROR)
+            if( sumssParams.stepToPlot > chainParams.numStepsSS )
+                {
+                MrBayesPrint ("%s   Chosen index of step to print %d is out of range of step indices[0,...,%d].\n", spacer,sumssParams.stepToPlot,chainParams.numStepsSS);
+                goto errorExit;
+                }
+            beginPrint=stepBeginSS+(sumssParams.stepToPlot-1)*numSamplesInStepSS + (int)(sumssParams.discardFraction*numSamplesInStepSS);
+            countPrint=numSamplesInStepSS-(int)(sumssParams.discardFraction*numSamplesInStepSS);
+            MrBayesPrint ("%s   Ploting step %d consisting of %d samples.\n", spacer,sumssParams.stepToPlot,numSamplesInStepSS);
+            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,(int)(sumssParams.discardFraction*numSamplesInStepSS));
+            }
+
+
+        if (sumssParams.numRuns > 1)
+		    {
+		    if (sumpParams.allRuns == YES)
+			    {
+			    for (i=0; i<sumssParams.numRuns; i++)
+				    {
+				    MrBayesPrint ("\n%s   Samples from run %d:\n", spacer, i+1);
+				    if (PrintPlot (parameterSamples[whichIsX].values[i]+beginPrint, parameterSamples[whichIsY].values[i]+beginPrint, countPrint) == ERROR)
+					    goto errorExit;
+				    }
+			    }
+		    else
+                {
+                if (PrintOverlayPlot (parameterSamples[whichIsX].values, parameterSamples[whichIsY].values, numRuns, beginPrint, countPrint) == ERROR)
+			        goto errorExit;
+                }
+		    }
+	    else
+		    {
+		    if (PrintPlot (parameterSamples[whichIsX].values[0]+beginPrint, parameterSamples[whichIsY].values[0]+beginPrint, countPrint) == ERROR)
 			    goto errorExit;
             }
-		}
-	else
-		{
-		if (PrintPlot (parameterSamples[whichIsX].values[0]+beginPrint, parameterSamples[whichIsY].values[0]+beginPrint, countPrint) == ERROR)
-			goto errorExit;
-        }
+
+         if( sumssParams.askForMorePlots == NO)
+         break;
+
+         MrBayesPrint (" Since paramiter 'Askmore ' of 'sumss' command is set to 'YES', you can \n");
+         MrBayesPrint (" choose to print new step plots for different steps or discard fractions.\n");
+         MrBayesPrint (" Allowed range of 'Steptoplot' are from 0 to %d.\n", chainParams.numStepsSS);
+         MrBayesPrint (" If the next entered value is negative, no more step plots will be printed.\n");
+         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
+         MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
+         MrBayesPrint (" Enter new step number 'Steptoplot':");
+         scanf("%d",&j);
+        if(j < 0 )
+            break;
+        if(j > chainParams.numStepsSS)
+            {
+            do
+                {
+                MrBayesPrint (" Enter new value for 'Discardfrac', should be in range 0.0 to 1.0:");
+                scanf("%f",&tmpf);
+                sumssParams.discardFraction =  (MrBFlt)tmpf;
+                }
+            while(sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
+            }
+        else
+            sumssParams.stepToPlot=j;
+    }
 			
 
     /*Preparing and printing joined plot.*/
+    plotArrayY = (MrBFlt **) SafeCalloc (sumssParams.numRuns+1, sizeof(MrBFlt*));
+    for(i=0; i<sumssParams.numRuns+1; i++)
+        plotArrayY[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
 
-   for(i=0; i<sumssParams.numRuns; i++)
+    plotArrayX = (MrBFlt **) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt*));
+    for(i=0; i<sumssParams.numRuns; i++)
         {
-        lnlp= parameterSamples[whichIsY].values[i] + stepBeginSS + numSamplesInStepSS;
-        nextSteplnlp=lnlp;       
-        for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>0; stepIndexSS--)
-            {
-            firstlnlp=parameterSamples[whichIsY].values[i] + stepBeginSS + stepBurnin;
-            lnlp+=stepBurnin;
-            nextSteplnlp +=numSamplesInStepSS;
-            while( lnlp<nextSteplnlp )
-                {
-                *firstlnlp+=*lnlp;
-                firstlnlp++;
-                lnlp++;
-                }
-            }
+        plotArrayX[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
+        for(j=0; j<numSamplesInStepSS; j++)
+            plotArrayX[i][j]=j+1;
         }
 
-   beginPrint=stepBeginSS + stepBurnin;
-   countPrint=numSamplesInStepSS-stepBurnin;
-
-       if (sumssParams.numRuns > 1)
-		{
-		if (sumpParams.allRuns == YES)
-			{
-			for (i=0; i<sumssParams.numRuns; i++)
-				{
-				MrBayesPrint ("\n%s   Samples from run %d:\n", spacer, i+1);
-				if (PrintPlot (parameterSamples[whichIsX].values[i]+beginPrint, parameterSamples[whichIsY].values[i]+beginPrint, countPrint) == ERROR)
-					goto errorExit;
-				}
-			}
-		else
+    MrBayesPrint ("\n\n%s   Joined plot(s).\n",spacer);
+    while(1)
+        {
+        for(i=0; i<sumssParams.numRuns; i++)
             {
-            if (PrintOverlayPlot (parameterSamples[whichIsX].values, parameterSamples[whichIsY].values, numRuns, beginPrint, countPrint) == ERROR)
+            for(j=stepBurnin;j<numSamplesInStepSS;j++)
+                plotArrayY[sumssParams.numRuns][j]=0.0;
+            lnlp= parameterSamples[whichIsY].values[i] + stepBeginSS;
+            nextSteplnlp=lnlp;
+            for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>0; stepIndexSS--)
+                {
+                firstlnlp=plotArrayY[sumssParams.numRuns] + stepBurnin;
+                lnlp+=stepBurnin;
+                nextSteplnlp += numSamplesInStepSS;
+                while( lnlp<nextSteplnlp )
+                    {
+                    *firstlnlp+=*lnlp;
+                    firstlnlp++;
+                    lnlp++;
+                    }
+                }
+            for(j=stepBurnin;j<numSamplesInStepSS;j++)
+                {
+                sum=0.0;
+                count=0;
+                for(k=j-sumssParams.smoothing;k<=j+sumssParams.smoothing;k++)
+                    {
+                    if(k>=stepBurnin && k<numSamplesInStepSS)
+                        {
+                        sum += plotArrayY[sumssParams.numRuns][k];
+                        count++;
+                        }
+                    }
+                plotArrayY[i][j] = sum/count;
+                /*
+                if( max < plotArrayY[i][j])
+                    max=plotArrayY[i][j];
+                    */
+                }
+        /*    for(j=stepBurnin;j<numSamplesInStepSS;j++)
+                {
+                plotArrayY[i][j] /= max;
+                }*/
+            }
+
+       beginPrint=stepBurnin;
+       countPrint=numSamplesInStepSS-stepBurnin;
+
+           if (sumssParams.numRuns > 1)
+		    {
+		    if (sumpParams.allRuns == YES)
+			    {
+			    for (i=0; i<sumssParams.numRuns; i++)
+				    {
+				    MrBayesPrint ("\n%s   Samples from run %d:\n", spacer, i+1);
+				    if (PrintPlot (plotArrayX[i]+beginPrint, plotArrayY[i]+beginPrint, countPrint) == ERROR)
+					    goto errorExit;
+				    }
+			    }
+		    else
+                {
+                if (PrintOverlayPlot (plotArrayX, plotArrayY, numRuns, beginPrint, countPrint) == ERROR)
+			        goto errorExit;
+                }
+		    }
+	    else
+		    {
+		    if (PrintPlot (plotArrayX[0]+beginPrint, plotArrayY[0]+beginPrint, countPrint) == ERROR)
 			    goto errorExit;
             }
-		}
-	else
-		{
-		if (PrintPlot (parameterSamples[whichIsX].values[0]+beginPrint, parameterSamples[whichIsY].values[0]+beginPrint, countPrint) == ERROR)
-			goto errorExit;
-        }
+
+         if( sumssParams.askForMorePlots == NO)
+             break;
+
+         MrBayesPrint (" Since paramiter 'Askmore ' of 'sumss' command is set to 'YES', you can \n");
+         MrBayesPrint (" choose to print new joined plots with different step burn-in or smoothing.\n");
+         MrBayesPrint (" Allowed range of burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
+         MrBayesPrint (" If the next entered value is negative, no more joined plots will be printed.\n");
+         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
+         MrBayesPrint (" to change 'Smoothimg'.\n");
+         MrBayesPrint (" Enter new step burn-in:");
+         scanf("%d",&j);
+        if(j < 0 )
+            break;
+        if(j >= numSamplesInStepSS)
+            {
+            MrBayesPrint (" Enter new value for 'Smoothing':");
+            scanf("%d",&j);
+            sumssParams.smoothing = abs(j);
+            }
+        else
+            stepBurnin=j;
+    }
 
  
     /* free memory */
@@ -775,6 +890,12 @@ int DoSumSs (void)
     expecting = Expecting(COMMAND);
 	strcpy (spacer, "");
     chainParams.isSS=NO;
+    for(i=0; i<sumssParams.numRuns+1; i++)
+        free(plotArrayY[i]);
+    free(plotArrayY);
+    for(i=0; i<sumssParams.numRuns; i++)
+        free(plotArrayX[i]);
+    free(plotArrayX);
 	
 	return (NO_ERROR);
 	
@@ -789,6 +910,12 @@ errorExit:
     expecting = Expecting(COMMAND);    
 	strcpy (spacer, "");
     chainParams.isSS=NO;
+    for(i=0; i<sumssParams.numRuns+1; i++)
+        free(plotArrayY[i]);
+    free(plotArrayY);
+    for(i=0; i<sumssParams.numRuns; i++)
+        free(plotArrayX[i]);
+    free(plotArrayX);
 
 	return (ERROR);
 }
