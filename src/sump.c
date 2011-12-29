@@ -700,7 +700,7 @@ int DoSumSs (void)
     MrBayesPrint ("\n\n%s   Step plot(s).\n",spacer);
     while(1)
         {
-         MrBayesPrint ("\n",);
+         MrBayesPrint ("\n");
         if( sumssParams.stepToPlot == 0 )
             {
             beginPrint=(int)(sumssParams.discardFraction*stepBeginSS);
