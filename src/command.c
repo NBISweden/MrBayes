@@ -12766,6 +12766,10 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   purpose of the table is to summarize marginal liklihood for different values  \n");
         MrBayesPrint ("   of step burn-in after stepping stone  analizes is finished. Burn-in is        \n");
         MrBayesPrint ("   controled by 'Relburnin', 'Burnin' and 'Burninfrac' settings.                 \n");
+        MrBayesPrint ("   Note that during stepping-stone analyzes, step contributions to marginal      \n");
+        MrBayesPrint ("   liklihood are calculated based on all generations excluding burn-in. ‘Sumss’  \n");
+        MrBayesPrint ("   on the other hand makes estimates based only on sampled generations. That may \n");
+        MrBayesPrint ("   lead to slight difference in results compared to the one printed to .ss file. \n");
 	    MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   'Step plot'                                                                   \n");
         MrBayesPrint ("   The main objective of the plot is to give close look at the given step of the \n");
