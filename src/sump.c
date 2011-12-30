@@ -465,17 +465,15 @@ int DoSumSs (void)
 	char		    **headerNames=NULL, temp[120];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
-    FILE            *fpLstat=NULL;
-
-    int     stepIndexSS,numSamplesInStepSS, stepBeginSS, stepBurnin;
-    MrBFlt  *lnlp, *nextSteplnlp, *firstlnlp;
-    MrBFlt  marginalLnLSS,stepScalerSS,stepAcumulatorSS, stepLengthSS; 
-    int     beginPrint, countPrint;
-    float   tmpf;
-
-    MrBFlt **plotArrayY=NULL,**plotArrayX=NULL;
-    int j,k,count;
-    MrBFlt sum;
+    int             stepIndexSS,numSamplesInStepSS, stepBeginSS, stepBurnin;
+    MrBFlt          *lnlp, *nextSteplnlp, *firstlnlp;
+    MrBFlt          *marginalLnLSS=NULL,stepScalerSS,stepAcumulatorSS, stepLengthSS, tmpMfl; 
+    int             beginPrint, countPrint;
+    float           tmpf;
+    MrBFlt          **plotArrayY=NULL,**plotArrayX=NULL;
+    int             j,k,count,result;
+    MrBFlt          sum;
+    int             firstPass = YES;
 
 #	if defined (MPI_ENABLED)
     if (proc_id != 0)
@@ -617,45 +615,78 @@ int DoSumSs (void)
             }
         }
 
-    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows );
-    MrBayesPrint ("\n");
-    MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling\n", spacer );
-    MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
-    MrBayesPrint ("%s   First %d samples (including generation 0) are discarded as initial burn-in.\n", spacer, stepBeginSS);
-    if( chainParams.relativeBurnin == YES )
-        MrBayesPrint ("%s   Additionally, at the begining of each step %d samples (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction) );
-    else
-        MrBayesPrint ("%s   Additionally, at the begining of each step %d samples     \n", spacer, stepBurnin);
-    MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
-        if(chainParams.startFromPriorSS==YES)
-            MrBayesPrint ("%s   Sampling is assumed to be done from prior to posterior.\n", spacer);
-        else
-            {
-            MrBayesPrint ("%s   Sampling is assumed to be done from posterior to prior.\n", spacer);
-            }
+    marginalLnLSS = (MrBFlt *) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt));
+        /*Preparing and printing joined plot.*/
+    plotArrayY = (MrBFlt **) SafeCalloc (sumssParams.numRuns+1, sizeof(MrBFlt*));
+    for(i=0; i<sumssParams.numRuns+1; i++)
+        plotArrayY[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
 
-
-    MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
-    MrBayesPrint ("%s       ------------------------------\n",spacer);
+    plotArrayX = (MrBFlt **) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt*));
     for(i=0; i<sumssParams.numRuns; i++)
         {
-        marginalLnLSS = 0.0;
-        lnlp= parameterSamples[whichIsY].values[i] + stepBeginSS;
-        nextSteplnlp=lnlp;       
-        for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>=0; stepIndexSS--)
+        plotArrayX[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
+        for(j=0; j<numSamplesInStepSS; j++)
+            plotArrayX[i][j]=j+1;
+        }
+
+    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows );
+    MrBayesPrint ("\n");
+    MrBayesPrint ("%s   Marginal likelihood (in natural log units) is estimated using stepping-stone sampling\n", spacer );
+    MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
+    MrBayesPrint ("%s   First %d samples (including generation 0) are discarded as initial burn-in.\n", spacer, stepBeginSS);
+        if(chainParams.startFromPriorSS==YES)
+            MrBayesPrint ("%s   Sampling is assumed have being done from prior to posterior.\n", spacer);
+        else
             {
-            lnlp+=stepBurnin;
-            if(chainParams.startFromPriorSS==YES)
-                {
-                stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
-                }
-            else
-                {
-                stepLengthSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS) - BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
-                }
+            MrBayesPrint ("%s   Sampling is assumed have being done from posterior to prior.\n", spacer);
+            }
+
+sumssTable:
+
+    MrBayesPrint ("\n\n%s   Step contribution table.\n\n",spacer);
+    MrBayesPrint ("   Columns in the table: \n");
+    MrBayesPrint ("   Step -- Index of the step \n");
+    MrBayesPrint ("   runX -- Contribution to the marginal log likelihood of run X, i.e. marginal \n"); 
+    MrBayesPrint ("           log likelihood for run X is the sum across all steps in column runX.\n\n");
+
+    if( firstPass == YES && chainParams.relativeBurnin == YES )
+        MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples  (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction) );
+    else
+        MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples      \n", spacer, stepBurnin);
+    MrBayesPrint ("%s   discarded at the begining of each step.  \n\n", spacer);
+
+    //MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
+    //MrBayesPrint ("%s       ------------------------------\n",spacer);
+    MrBayesPrint ("   Step");
+    for (j=0; j<sumssParams.numRuns ; j++)
+        {
+        if(j<9)
+            MrBayesPrint (" ");
+        MrBayesPrint ("      run%d", j);
+        }
+    MrBayesPrint ("\n");
+    for(i=0; i<sumssParams.numRuns; i++)
+        {
+        marginalLnLSS[i] = 0.0;  
+        }
+    for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>=0; stepIndexSS--)   
+        {
+        if(chainParams.startFromPriorSS==YES)
+            {
+            stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+            }
+        else
+            {
+            stepLengthSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS) - BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+            }
+        MrBayesPrint ("   %3d   ", chainParams.numStepsSS-stepIndexSS);
+        for(i=0; i<sumssParams.numRuns; i++)
+            {
+            lnlp = parameterSamples[whichIsY].values[i] + stepBeginSS + (chainParams.numStepsSS-stepIndexSS-1)*numSamplesInStepSS;
+            nextSteplnlp = lnlp+numSamplesInStepSS;
+            lnlp+= stepBurnin;
             stepAcumulatorSS = 0.0;
             stepScalerSS = *lnlp*stepLengthSS;
-            nextSteplnlp +=numSamplesInStepSS;
             while( lnlp<nextSteplnlp )
                 {
                if( *lnlp*stepLengthSS > stepScalerSS + 200.0 )
@@ -667,12 +698,24 @@ int DoSumSs (void)
                 stepAcumulatorSS += exp( *lnlp*stepLengthSS - stepScalerSS );
                 lnlp++;
                 }
-
-            marginalLnLSS += (log( stepAcumulatorSS/(numSamplesInStepSS-stepBurnin) ) + stepScalerSS);
+            tmpMfl = (log( stepAcumulatorSS/(numSamplesInStepSS-stepBurnin) ) + stepScalerSS);
+            MrBayesPrint (" %10.3lf", tmpMfl);
+            marginalLnLSS[i] += tmpMfl;
             }
-        MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, i+1, marginalLnLSS );
+        MrBayesPrint ("\n");
+        //MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, i+1, marginalLnLSS );
         }
-    MrBayesPrint ("%s       ------------------------------\n",spacer);
+    MrBayesPrint ("         ");
+    for (j=0; j<sumssParams.numRuns ; j++)
+        {
+        if(j<9)
+            MrBayesPrint ("-");
+        MrBayesPrint ("----------");
+        }
+    MrBayesPrint ("\n");
+    MrBayesPrint ("   Sum:  ");
+    for (j=0; j<sumssParams.numRuns ; j++)
+        MrBayesPrint (" %10.3lf", marginalLnLSS[j]);
         
 	MrBayesPrint ("\n");
 /*
@@ -697,6 +740,12 @@ int DoSumSs (void)
 		    MrBayesPrint ("%s   fixed and can not be changed.                                     \n", spacer);
 		    }
             */
+
+    if( firstPass == NO )
+        goto sumssExitOptions;
+
+    sumssStepPlot:
+
     MrBayesPrint ("\n\n%s   Step plot(s).\n",spacer);
     while(1)
         {
@@ -745,17 +794,16 @@ int DoSumSs (void)
 			    goto errorExit;
             }
 
-         if( sumssParams.askForMorePlots == NO)
-         break;
+         if( sumssParams.askForMorePlots == NO || firstPass == YES )
+            break;
 
-         MrBayesPrint (" Since paramiter 'Askmore ' of 'sumss' command is set to 'YES', you can \n");
-         MrBayesPrint (" choose to print new step plots for different steps or discard fractions.\n");
+         MrBayesPrint (" You can choose to print new step plots for different steps or discard fractions.\n");
          MrBayesPrint (" Allowed range of 'Steptoplot' are from 0 to %d.\n", chainParams.numStepsSS);
-         MrBayesPrint (" If the next entered value is negative, no more step plots will be printed.\n");
+         MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing step plots.\n");
          MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
          MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
          MrBayesPrint (" Enter new step number 'Steptoplot':");
-         scanf("%d",&j);
+         result=scanf("%d",&j);
         if(j < 0 )
             break;
         if(j > chainParams.numStepsSS)
@@ -763,7 +811,7 @@ int DoSumSs (void)
             do
                 {
                 MrBayesPrint (" Enter new value for 'Discardfrac', should be in range 0.0 to 1.0:");
-                scanf("%f",&tmpf);
+                result=scanf("%f",&tmpf);
                 sumssParams.discardFraction =  (MrBFlt)tmpf;
                 }
             while(sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
@@ -771,24 +819,19 @@ int DoSumSs (void)
         else
             sumssParams.stepToPlot=j;
     }
-			
 
-    /*Preparing and printing joined plot.*/
-    plotArrayY = (MrBFlt **) SafeCalloc (sumssParams.numRuns+1, sizeof(MrBFlt*));
-    for(i=0; i<sumssParams.numRuns+1; i++)
-        plotArrayY[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
+    if( firstPass == NO )
+        goto sumssExitOptions;
 
-    plotArrayX = (MrBFlt **) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt*));
-    for(i=0; i<sumssParams.numRuns; i++)
-        {
-        plotArrayX[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
-        for(j=0; j<numSamplesInStepSS; j++)
-            plotArrayX[i][j]=j+1;
-        }
+	sumssJoinedPlot:		
 
     MrBayesPrint ("\n\n%s   Joined plot(s).\n",spacer);
     while(1)
         {
+        MrBayesPrint ("\n");
+        MrBayesPrint ("%s   Joined plot of %d samples of all steps together. 'smoothing' is set to:%d\n", spacer,numSamplesInStepSS,sumssParams.smoothing);
+        MrBayesPrint ("%s   According to step burn-in, first %d samples are not ploted.\n", spacer,stepBurnin);
+
         for(i=0; i<sumssParams.numRuns; i++)
             {
             for(j=stepBurnin;j<numSamplesInStepSS;j++)
@@ -857,29 +900,66 @@ int DoSumSs (void)
 			    goto errorExit;
             }
 
-         if( sumssParams.askForMorePlots == NO)
+         if( sumssParams.askForMorePlots == NO || firstPass == YES )
              break;
 
-         MrBayesPrint (" Since paramiter 'Askmore ' of 'sumss' command is set to 'YES', you can \n");
-         MrBayesPrint (" choose to print new joined plots with different step burn-in or smoothing.\n");
-         MrBayesPrint (" Allowed range of burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
-         MrBayesPrint (" If the next entered value is negative, no more joined plots will be printed.\n");
+         MrBayesPrint (" You can choose to print new joined plots with different step burn-in or smoothing.\n");
+         MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
+         MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing joined plots.\n");
          MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
          MrBayesPrint (" to change 'Smoothimg'.\n");
          MrBayesPrint (" Enter new step burn-in:");
-         scanf("%d",&j);
+         result=scanf("%d",&j);
         if(j < 0 )
             break;
         if(j >= numSamplesInStepSS)
             {
             MrBayesPrint (" Enter new value for 'Smoothing':");
-            scanf("%d",&j);
+            result=scanf("%d",&j);
             sumssParams.smoothing = abs(j);
             }
         else
             stepBurnin=j;
     }
 
+    firstPass = NO;
+sumssExitOptions:
+    if(sumssParams.askForMorePlots == YES )
+        {
+        MrBayesPrint ("\n");
+        MrBayesPrint (" Sumss is interactive, because of paramiter 'Askmore=YES' setting. \n");
+        MrBayesPrint (" What would you like to do next?\n");
+        MrBayesPrint ("   1) Print updated table according to new step burn-in.\n");
+        MrBayesPrint ("   2) Print Step plot(s).\n");
+        MrBayesPrint ("   3) Print Joined plot(s).\n");
+        MrBayesPrint ("   4) Exit 'sumss'.\n");
+        MrBayesPrint (" Enter a number that corresponds to one of the options:");
+        do
+            {
+            result=scanf("%d",&j);
+            }while(j<1 || j>4);
+
+        if(j == 1)
+            {
+            MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d\n", numSamplesInStepSS-1);
+            MrBayesPrint (" Current step burn-in value is:%d\n", stepBurnin);
+            MrBayesPrint (" Enter new step burn-in:");
+            do
+                {
+                result=scanf("%d",&stepBurnin);
+                }
+            while(stepBurnin < 0 || stepBurnin > numSamplesInStepSS-1);
+            MrBayesPrint ("\n"); 
+            goto sumssTable;
+            }
+        else if(j == 2)
+            {
+            goto sumssStepPlot;
+            }
+        else if(j == 3)
+            goto sumssJoinedPlot; 
+
+        }
  
     /* free memory */
     FreeParameterSamples(parameterSamples);
@@ -896,6 +976,7 @@ int DoSumSs (void)
     for(i=0; i<sumssParams.numRuns; i++)
         free(plotArrayX[i]);
     free(plotArrayX);
+    free(marginalLnLSS);
 	
 	return (NO_ERROR);
 	
@@ -916,6 +997,7 @@ errorExit:
     for(i=0; i<sumssParams.numRuns; i++)
         free(plotArrayX[i]);
     free(plotArrayX);
+    free(marginalLnLSS);
 
 	return (ERROR);
 }
@@ -1226,7 +1308,7 @@ int DoSumSsParm (char *parmName, char *tkn)
 				return (ERROR);
 			}
 		/* set Outputname (sumpParams.sumpOutfile) *******************************************************/
-		else if (0 && !strcmp(parmName, "Outputname"))
+		/*else if (!strcmp(parmName, "Outputname"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				{
@@ -1248,7 +1330,7 @@ int DoSumSsParm (char *parmName, char *tkn)
 				}
 			else
 				return (ERROR);
-			}
+			}*/
 		/* set Relburnin (chainParams.relativeBurnin) ********************************************************/
 		else if (!strcmp(parmName, "Relburnin"))
 			{
