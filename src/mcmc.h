@@ -86,6 +86,7 @@ int     Move_SwitchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 int     Move_SwitchRate_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+int 	Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp); /* Code added by Jeremy Brown*/
 int     Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 FILE	*OpenNewMBPrintFile (char *fileName);
 int		ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq);

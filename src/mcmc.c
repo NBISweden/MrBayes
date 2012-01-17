@@ -32903,6 +32903,102 @@ int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
+/* Code added by Jeremy Brown and modified by Maxim Teslenko */
+int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+
+	/* change all branch lengths */
+
+	MrBFlt		begin_tl, treescaler, tuning, maxV, minV, brlensPrExp=0.0;
+	TreeNode	*p;
+	ModelParams *mp;
+	Tree		*t;
+	int i,branch_counter;
+
+
+	tuning = mvp[0]; /* Larget & Simon's tuning parameter lambda */
+
+	mp = &modelParams[param->relParts[0]];
+
+    /* max and min brlen */
+	if (param->paramId == BRLENS_UNI)
+		{
+		minV = mp->brlensUni[0];
+		maxV = mp->brlensUni[1];
+		}
+	else
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		brlensPrExp = mp->brlensExp;
+		}
+
+	/* get tree */
+	t = GetTree (param, chain, state[chain]);
+
+    assert(t->isRooted == NO);
+
+#if defined (DEBUG_CONSTRAINTS)
+    if (CheckConstraints(t) == ERROR) {
+        printf ("Constraint error in input tree to treelen multiplier\n");
+        getchar();
+        }
+#endif
+
+	treescaler = exp(tuning * (RandomNumber(seed) - 0.5));
+	
+	begin_tl = 0.0;
+	branch_counter=0;
+
+	for (i=0; i<t->nNodes; i++)
+	    {
+		p = t->allDownPass[i];
+		if (p->anc != NULL)
+		    {
+            if(p->length*treescaler < minV || p->length*treescaler > maxV)
+                {
+                abortMove = YES;
+                return NO_ERROR;
+                }
+		    begin_tl += p->length;
+		    branch_counter++;				
+		    }
+	    }
+    assert(branch_counter==t->nNodes-1);
+	
+	/* iterate scaling over all branches */
+	for (i=0; i < t->nNodes; i++)
+	    {
+		p = t->allDownPass[i];
+ 		if ( p->anc != NULL )
+		    {
+			/* set new length */
+			p->length *= treescaler;
+
+			/* set flags for update of transition probabilities at p */
+			p->upDateTi = YES;
+            p->anc->upDateCl = YES; 
+		    }
+	    }
+
+
+
+
+	/* calculate proposal ratio */
+	(*lnProposalRatio) = branch_counter * log(treescaler); 
+
+
+	/* update prior if exponential prior on branch lengths */
+	if (param->paramId == BRLENS_EXP)
+		(*lnPriorRatio) = brlensPrExp * (begin_tl*( 1 - treescaler));
+
+	return (NO_ERROR);
+	
+}
+
+
+
 
 /*-----------------------------------------------------------------------------------
 |

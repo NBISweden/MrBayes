@@ -19878,6 +19878,30 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
+    	/***************************			Begin Code added by Jeremy Brown 		*************************/
+
+	/* Move_TreeLen */
+	mt = &moveTypes[i++];
+	mt->name = "Whole treelength hit with multiplier";
+	mt->shortName = "TLMultiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";	
+	mt->applicableTo[0] = BRLENS_UNI;
+	mt->applicableTo[1] = BRLENS_EXP;
+	mt->nApplicable = 2;
+	mt->moveFxn = &Move_TreeLen;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
+	/***************************			End Code added by Jeremy Brown 		*************************/
+
 	/* Move_UnrootedSlider */
 	/* Non-clock version of the SPRclock; this move is not correctly balanced yet */
 	mt = &moveTypes[i++];
