@@ -41006,7 +41006,7 @@ int RunChain (SafeLong *seed)
             MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
             MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
             MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
-            MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from Distribution ~(Likelihood^Power)*Prior ]\n");
+            MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from the distribution with density (Likelihood^Power)*Prior ]\n");
             MrBayesPrintf (fpSS, "[   runX                --  Contribution to the marginal log likelihood of run X, i.e. marginal log likelihood for run X is the sum across all steps in column runX.   ]\n");
             if (chainParams.diagnStat == AVGSTDDEV)
                 MrBayesPrintf (fpSS, "[   aSplitX             --  Average standard deviation of split frequencies of tree X. -2.0 is printed if no diagnostics was requested. -1.0 is printed if there were no splits with frequency above minimum.]\n");
@@ -41014,7 +41014,7 @@ int RunChain (SafeLong *seed)
                 MrBayesPrintf (fpSS, "[   mSplitX             --  Maximal standard deviation of split frequencies of tree X. -2.0 is printed if no diagnostics was requested. -1.0 is printed if there were no splits with frequency above minimum.]\n");
             MrBayesPrintf (fpSS, "Step\tPower");
             for (j=0; j<chainParams.numRuns ; j++)
-                MrBayesPrintf (fpSS, "\trun%d", j);
+                MrBayesPrintf (fpSS, "\trun%d", j+1);
             if (chainParams.diagnStat == AVGSTDDEV)
                 {
                 for (j=0; j<numTopologies; j++)

@@ -662,7 +662,7 @@ sumssTable:
         {
         if(j<9)
             MrBayesPrint (" ");
-        MrBayesPrint ("      run%d", j);
+        MrBayesPrint ("      run%d", j+1);
         }
     MrBayesPrint ("\n");
     for(i=0; i<sumssParams.numRuns; i++)
