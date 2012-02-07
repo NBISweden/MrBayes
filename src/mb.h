@@ -105,9 +105,9 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 /*#define RELEASE*/
 #ifdef RELEASE
-#define	VERSION_NUMBER			"3.2.1"
+#define	VERSION_NUMBER			"3.2.2"
 #else
-#define VERSION_NUMBER          "3.2.1-svn"
+#define VERSION_NUMBER          "3.2.2-svn"
 #endif
 
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
