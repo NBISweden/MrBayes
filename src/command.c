@@ -12778,7 +12778,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   the step burn-in after the stepping stone  analysis has finished. The burn-in \n");
         MrBayesPrint ("   is controlled by the 'Relburnin', 'Burnin' and 'Burninfrac' settings.         \n");
         MrBayesPrint ("   Note that during stepping-stone analyses, step contributions to marginal      \n");
-        MrBayesPrint ("   likelihood are calculated based on all generations excluding burn-in. ‘Sumss’ \n");
+        MrBayesPrint ("   likelihood are calculated based on all generations excluding burn-in. 'Sumss' \n");
         MrBayesPrint ("   on the other hand makes estimates based only on the sampled generations. This \n");
         MrBayesPrint ("   may lead to slight difference in results compared to the one printed to the   \n");
 	    MrBayesPrint ("   .ss file.                                                                     \n");
@@ -12816,9 +12816,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   appear as white noise around the estimated value. If you see an increasing or \n");
         MrBayesPrint ("   decreasing tendency in the beginning of the graph, you should increase the    \n");
         MrBayesPrint ("   step burn-in. If you see an increasing or decreasing tendency across the whole\n");
-        MrBayesPrint ("   graph, then the initial phase when you sample from the posterior was not long \n");
-        MrBayesPrint ("   enough. In this case, you need to rerun the analysis with a longer initial    \n");
-        MrBayesPrint ("   phase of sampling from the posterior.                                         \n");
+        MrBayesPrint ("   graph, then the initial burn-in phase was not long enough. In this case, you  \n");
+        MrBayesPrint ("   need to rerun the analysis with a longer initial burn-in.                     \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   To make it easier to observe tendencies in the plotted graph you can choose   \n");
         MrBayesPrint ("   different levels of curve smoothing. If 'Smoothing' is set to k, it means that\n");
@@ -12836,11 +12835,11 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                   take several minutes. If you want to investigate different    \n");
         MrBayesPrint ("                   aspects of your analyses, it could be very inconvenient to    \n");
         MrBayesPrint ("                   wait for several minutes each time you want to get a new sum- \n");
-        MrBayesPrint ("                   mary for different settings. If you set 'Askmore’ to ‘YES',   \n");
+        MrBayesPrint ("                   mary for different settings. If you set 'Askmore' to 'YES',   \n");
         MrBayesPrint ("                   sumss will read .p files only once. After responding to the   \n");
         MrBayesPrint ("                   original query, it will interactivaly ask you if you wish to  \n");
         MrBayesPrint ("                   produce more tables and plots for different settings of       \n");
-        MrBayesPrint ("                   ‘Burnin’ or ‘Smoothing' (see below).                          \n");
+        MrBayesPrint ("                   'Burnin' or 'Smoothing' (see below).                          \n");
         MrBayesPrint ("   Relburnin    -- If this option is set to 'Yes', then a proportion of the      \n");
 		MrBayesPrint ("                   samples from each step will be discarded as burnin when calcu-\n");
         MrBayesPrint ("                   lsting summary statistics. The proportion to be discarded is  \n");

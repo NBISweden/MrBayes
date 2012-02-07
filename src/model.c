@@ -19890,7 +19890,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[1] = BRLENS_EXP;
 	mt->nApplicable = 2;
 	mt->moveFxn = &Move_TreeLen;
-	mt->relProposalProb = 5.0;
+	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.00001;

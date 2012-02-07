@@ -543,7 +543,7 @@ int DoSumSs (void)
 
     /* allocate space to hold parameter information */
     if (AllocateParameterSamples (&parameterSamples, numRuns, numRows, numColumns) == ERROR)
-        return ERROR;
+        goto errorExit;
 
     /* read samples */
     for (i=0; i<sumssParams.numRuns; i++)
@@ -573,12 +573,12 @@ int DoSumSs (void)
     if (FindHeader("Gen", headerNames, nHeaders, &whichIsX) == ERROR)
         {
 		MrBayesPrint ("%s   Could not find the 'Gen' column\n", spacer);
-        return ERROR;
+        goto errorExit;
         }
     if (FindHeader("LnL", headerNames, nHeaders, &whichIsY) == ERROR)
         {
 		MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
-        return ERROR;
+        goto errorExit;
         }
                     
 
@@ -984,18 +984,21 @@ errorExit:
 
     /* free memory */
     FreeParameterSamples (parameterSamples);
-    for (i=0; i<nHeaders; i++)
-        free (headerNames[i]);
+    if( headerNames!=NULL )
+        for (i=0; i<nHeaders; i++)
+            free (headerNames[i]);
     free (headerNames);
 
     expecting = Expecting(COMMAND);    
 	strcpy (spacer, "");
     chainParams.isSS=NO;
-    for(i=0; i<sumssParams.numRuns+1; i++)
-        free(plotArrayY[i]);
+    if( plotArrayY!=NULL )
+        for(i=0; i<sumssParams.numRuns+1; i++)
+            free(plotArrayY[i]);
     free(plotArrayY);
-    for(i=0; i<sumssParams.numRuns; i++)
-        free(plotArrayX[i]);
+    if( plotArrayX!=NULL )
+        for(i=0; i<sumssParams.numRuns; i++)
+            free(plotArrayX[i]);
     free(plotArrayX);
     free(marginalLnLSS);
 
