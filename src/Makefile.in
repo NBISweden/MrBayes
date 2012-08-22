@@ -5,13 +5,14 @@ CFLAGS    = @CFLAGS@ -DUSECONFIG_H
 LDFLAGS   = @LDFLAGS@ -lm
 INSTALL   = @INSTALL@
 
-SRC       =  bayes.c command.c mbmath.c mcmc.c model.c plot.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
-OBJECTS   =  bayes.o command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
+SRC       =  mb.c bayes.c command.c mbmath.c mcmc.c model.c plot.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
+OBJECTS   =  mb.o bayes.o command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
 PROGS     =  mb
 
 all: $(PROGS)
 
 mb: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	$(RM) -f *.o *~ mb
