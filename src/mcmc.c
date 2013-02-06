@@ -31006,7 +31006,7 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 	/* change revMat using Dirichlet proposal */
 	
-	int			    i, nRates, isValid;
+	int			    i, nRates;
 	MrBFlt		    oldRate[200], newRate[200], dirParm[200], *value, sum, x, y, *alphaDir, alphaPi;
 	ModelParams     *mp;
     ModelInfo       *m;
@@ -31036,20 +31036,22 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	for (i=0; i<nRates; i++)
 		dirParm[i] = oldRate[i] * alphaPi;
 	
+	
 	/* get new values */
-	isValid = NO;
-    do {
-        DirichletRandomVariable (dirParm, newRate, nRates, seed);
-    	isValid = YES;
-        for (i=0; i<nRates; i++)
-            {
-            if (newRate[i] < RATE_MIN)
-                {
-                isValid = NO;
-                break;
-                }
-            }
-        } while (isValid == NO);
+	DirichletRandomVariable (dirParm, newRate, nRates, seed);
+
+	/* check new values */
+	sum = 0.0;
+	for (i=0; i<nRates; i++)
+		{
+		if (newRate[i] < RATE_MIN)
+			newRate[i] = RATE_MIN;
+		sum += newRate[i];
+		}
+
+	for (i=0; i<nRates; i++)
+		newRate[i] /= sum;
+
 
 	/* copy new rate ratio values back */
 	for (i=0; i<nRates; i++)
@@ -31113,7 +31115,7 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 
 {
 
-	int			i, j, k, *growthFxn, nRates, isValid, groupSize[6];
+	int			i, j, k, *growthFxn, nRates, groupSize[6];
 	MrBFlt		*value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, x, y;
 	ModelParams *mp;
     ModelInfo   *m;
@@ -31149,21 +31151,22 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	/* multiply old ratesum props with some large number to get new values close to the old ones */
 	for (i=0; i<nRates; i++)
 		dirParm[i] = oldRate[i] * alphaPi;
-	
+
 	/* get new values */
-	isValid = NO;
-    do {
-        DirichletRandomVariable (dirParm, newRate, nRates, seed);
-    	isValid = YES;
-        for (i=0; i<nRates; i++)
-            {
-            if (newRate[i] < RATE_MIN)
-                {
-                isValid = NO;
-                break;
-                }
-            }
-        } while (isValid == NO);
+	DirichletRandomVariable (dirParm, newRate, nRates, seed);
+
+	/* check new values */
+	sum = 0.0;
+	for (i=0; i<nRates; i++)
+		{
+		if (newRate[i] < RATE_MIN)
+			newRate[i] = RATE_MIN;
+		sum += newRate[i];
+		}
+
+	for (i=0; i<nRates; i++)
+		newRate[i] /= sum;
+
 
 	/* copy new unique rate ratio values back into the value array */
 	for (i=0; i<nRates; i++)
@@ -31600,11 +31603,27 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
         /* propose new rates */
         dirParm[0] = alphaPi * n_i;
         dirParm[1] = alphaPi * n_j;
-        do {
-            DirichletRandomVariable(dirParm, rateProps, 2, seed);
-            R_i = rateProps[0] * R;
-            R_j = rateProps[1] * R;
-        }   while (R_i/n_i < RATE_MIN || R_j/n_j < RATE_MIN);
+
+        DirichletRandomVariable(dirParm, rateProps, 2, seed);
+        R_i = rateProps[0] * R;
+        R_j = rateProps[1] * R;
+
+		if(R_i/n_i < RATE_MIN)
+			{
+			R_i = RATE_MIN*n_i;
+			rateProps[0] = R_i/R;
+			rateProps[1] = 1-rateProps[0];
+			R_j = rateProps[1] * R;
+			assert(R_j/n_j < RATE_MIN);
+			} 
+		else if(R_j/n_j < RATE_MIN)
+				{
+				R_j = RATE_MIN*n_j;
+				rateProps[1] = R_j/R;
+				rateProps[0] = 1-rateProps[1];
+				R_i = rateProps[0] * R;
+				assert(R_i/n_i < RATE_MIN);
+				}
 
         /* set the new rates */
         for (i=0; i<nNewRates; i++)
@@ -31752,11 +31771,16 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             {
             dirParm[0] = alphaPi * 1;
             dirParm[1] = alphaPi * (n_j - 1);
-            do
-                {
-                DirichletRandomVariable(dirParm, rateProps, 2, seed);
-                r_j = rateProps[0] * R_j;
-                } while( R_j - r_j < RATE_MIN );
+
+            DirichletRandomVariable(dirParm, rateProps, 2, seed);
+            r_j = rateProps[0] * R_j;   
+
+			if(R_j - r_j < RATE_MIN)
+				{
+				r_j = R_j - RATE_MIN;
+				rateProps[0] = r_j/R_j;
+				rateProps[1] = 1 - rateProps[0];
+				}
             }
 
         /* update new growth function */
@@ -31868,11 +31892,16 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
         /* select a new rate for r_j */
         dirParm[0] = alphaPi * 1;
         dirParm[1] = alphaPi * (n_i - 1);
-        do
-            {
-            DirichletRandomVariable(dirParm, rateProps, 2, seed);
-            r_j = rateProps[0] * R_i;
-            }   while ( R_i-r_j < RATE_MIN );
+
+        DirichletRandomVariable(dirParm, rateProps, 2, seed);
+        r_j = rateProps[0] * R_i;
+
+		if(R_i-r_j < RATE_MIN)
+			{
+			r_j = R_i - RATE_MIN;
+			rateProps[0] = r_j/R_i;
+			rateProps[1] = 1 - rateProps[0];
+			}
 
         /* update n_i, n_j, R_i and R_j after split */
         n_i -= 1;
