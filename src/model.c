@@ -6655,7 +6655,25 @@ int DoPrsetParm (char *parmName, char *tkn)
 								if (activeParts[i] == YES || nApplied == 0)
 									strcpy(modelParams[i].unconstrainedPr, "Exponential");
 							}
-						else
+						else if (IsSame ("GammaDirichlet", tkn) == SAME || IsSame ("GammaDirichlet", tkn) == CONSISTENT_WITH)
+							{
+							for (i=0; i<numCurrentDivisions; i++)
+								if (activeParts[i] == YES || nApplied == 0)
+									strcpy(modelParams[i].unconstrainedPr, "GammaDir");
+							}
+						else if (IsSame ("invGamDirichlet", tkn) == SAME || IsSame ("invGamDirichlet", tkn) == CONSISTENT_WITH)
+							{
+							for (i=0; i<numCurrentDivisions; i++)
+								if (activeParts[i] == YES || nApplied == 0)
+									strcpy(modelParams[i].unconstrainedPr, "invGamDir");
+							}
+                        else if (IsSame ("twoExponential", tkn) == SAME || IsSame ("twoExponential", tkn) == CONSISTENT_WITH)
+                            {
+							for (i=0; i<numCurrentDivisions; i++)
+								if (activeParts[i] == YES || nApplied == 0)
+									strcpy(modelParams[i].unconstrainedPr, "twoExp");
+                            }
+                        else
 							{
 							MrBayesPrint ("%s   Do not understand %s\n", spacer, tkn);
 							return (ERROR);
@@ -6798,11 +6816,76 @@ int DoPrsetParm (char *parmName, char *tkn)
 								{
 								sscanf (tkn, "%lf", &tempD);
 								modelParams[i].brlensExp = tempD;
+                                if (modelParams[i].brlensExp <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Value for exponential must > 0.0\n", spacer);
+                                    return (ERROR);
+                                    }
 								if (nApplied == 0 && numCurrentDivisions == 1)
 									MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Exponential(%1.2lf)\n", spacer, modelParams[i].brlensExp);
 								else
 									MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].brlensExp, i+1);
 								expecting  = Expecting(RIGHTPAR);
+								}
+							else if (!strcmp(modelParams[i].unconstrainedPr,"GammaDir"))
+								{
+								sscanf (tkn, "%lf", &tempD);
+								modelParams[i].brlensDir[numVars[i]++] = tempD;
+								if (numVars[i] == 1 || numVars[i] == 2 || numVars[i] == 3)
+									expecting  = Expecting(COMMA);
+								else
+									{
+									if (modelParams[i].brlensDir[0] <= 0.0 || modelParams[i].brlensDir[1] <= 0.0 || modelParams[i].brlensDir[2] <= 0.0 || modelParams[i].brlensDir[3] <= 0.0)
+										{
+										MrBayesPrint ("%s   alphaT & betaT & a & c for GammaDir prior must > 0.0\n", spacer);
+										return (ERROR);
+										}
+									if (nApplied == 0 && numCurrentDivisions == 1)
+										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:GammaDir(%1.2lf,%1.4lf,%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlensDir[0], modelParams[i].brlensDir[1], modelParams[i].brlensDir[2], modelParams[i].brlensDir[3]);
+									else
+										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:GammaDir(%1.2lf,%1.4lf,%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlensDir[0], modelParams[i].brlensDir[1], modelParams[i].brlensDir[2], modelParams[i].brlensDir[3], i+1);
+									expecting  = Expecting(RIGHTPAR);
+									}
+								}
+							else if (!strcmp(modelParams[i].unconstrainedPr,"invGamDir"))
+								{
+								sscanf (tkn, "%lf", &tempD);
+								modelParams[i].brlensDir[numVars[i]++] = tempD;
+								if (numVars[i] == 1 || numVars[i] == 2 || numVars[i] == 3)
+									expecting  = Expecting(COMMA);
+								else
+									{
+									if (modelParams[i].brlensDir[0] <= 0.0 || modelParams[i].brlensDir[1] <= 0.0 || modelParams[i].brlensDir[2] <= 0.0 || modelParams[i].brlensDir[3] <= 0.0)
+										{
+										MrBayesPrint ("%s   alphaT & betaT & a & c for invGamDir prior must > 0.0\n", spacer);
+										return (ERROR);
+										}
+									if (nApplied == 0 && numCurrentDivisions == 1)
+										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:invGamDir(%1.2lf,%1.4lf,%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlensDir[0], modelParams[i].brlensDir[1], modelParams[i].brlensDir[2], modelParams[i].brlensDir[3]);
+									else
+										MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:invGamDir(%1.2lf,%1.4lf,%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlensDir[0], modelParams[i].brlensDir[1], modelParams[i].brlensDir[2], modelParams[i].brlensDir[3], i+1);
+									expecting  = Expecting(RIGHTPAR);
+									}
+								}
+                            else if (!strcmp(modelParams[i].unconstrainedPr,"twoExp"))
+								{
+                                    sscanf (tkn, "%lf", &tempD);
+                                    modelParams[i].brlens2Ex[numVars[i]++] = tempD;
+                                    if (numVars[i] == 1)
+                                        expecting  = Expecting(COMMA);
+                                    else
+									{
+                                        if (modelParams[i].brlens2Ex[0] <= 0.0 || modelParams[i].brlens2Ex[1] <= 0.0)
+                                            {
+                                            MrBayesPrint ("%s   Values for 2exponential must > 0.0\n", spacer);
+                                            return (ERROR);
+                                            }
+                                        if (nApplied == 0 && numCurrentDivisions == 1)
+                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlens2Ex[0], modelParams[i].brlens2Ex[1]);
+                                        else
+                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlens2Ex[0], modelParams[i].brlens2Ex[1], i+1);
+                                        expecting  = Expecting(RIGHTPAR);
+									}
 								}
 							}
 						}
@@ -12767,11 +12850,29 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						if (AreDoublesEqual (modelParams[part1].brlensUni[1], modelParams[part2].brlensUni[1], (MrBFlt) 0.00001) == NO)
 							isSame = NO;
 						}
-					else
+					else if (!strcmp(modelParams[part1].unconstrainedPr, "Exponential"))
 						{
 						if (AreDoublesEqual (modelParams[part1].brlensExp, modelParams[part2].brlensExp, (MrBFlt) 0.00001) == NO)
 							isSame = NO;
 						}
+                    else if (!strcmp(modelParams[part1].unconstrainedPr, "twoExp"))
+						{
+                            if (AreDoublesEqual (modelParams[part1].brlens2Ex[0], modelParams[part2].brlens2Ex[0], (MrBFlt) 0.00001) == NO)
+                                isSame = NO;
+                            if (AreDoublesEqual (modelParams[part1].brlens2Ex[1], modelParams[part2].brlens2Ex[1], (MrBFlt) 0.00001) == NO)
+                                isSame = NO;
+						}
+                    else
+						{
+						if (AreDoublesEqual (modelParams[part1].brlensDir[0], modelParams[part2].brlensDir[0], (MrBFlt) 0.00001) == NO)  
+							isSame = NO;
+						if (AreDoublesEqual (modelParams[part1].brlensDir[1], modelParams[part2].brlensDir[1], (MrBFlt) 0.00001) == NO) 
+							isSame = NO;
+						if (AreDoublesEqual (modelParams[part1].brlensDir[2], modelParams[part2].brlensDir[2], (MrBFlt) 0.00001) == NO)  
+							isSame = NO;
+						if (AreDoublesEqual (modelParams[part1].brlensDir[3], modelParams[part2].brlensDir[3], (MrBFlt) 0.00001) == NO) 
+							isSame = NO;
+						}	
 					}
 				}
 			
@@ -17384,6 +17485,12 @@ int SetModelParams (void)
 						p->paramId = BRLENS_UNI;
 					else if (!strcmp(mp->unconstrainedPr,"Exponential"))
 						p->paramId = BRLENS_EXP;
+					else if (!strcmp(mp->unconstrainedPr,"GammaDir"))
+						p->paramId = BRLENS_GamDir;
+					else if (!strcmp(mp->unconstrainedPr,"invGamDir"))
+						p->paramId = BRLENS_iGmDir;
+                    else if (!strcmp(mp->unconstrainedPr,"twoExp"))
+						p->paramId = BRLENS_twoExp;
 					}
 				else if (!strcmp(mp->brlensPr,"Fixed"))
 					{
@@ -18546,13 +18653,16 @@ void SetUpMoveTypes (void)
 	mt->shortTuningName[0] = "lambda";	
 	mt->applicableTo[0] = BRLENS_UNI;
 	mt->applicableTo[1] = BRLENS_EXP;
-	mt->nApplicable = 2;
+	mt->applicableTo[2] = BRLENS_GamDir;
+	mt->applicableTo[3] = BRLENS_iGmDir;
+    mt->applicableTo[4] = BRLENS_twoExp;
+	mt->nApplicable = 5;  //was 2
 	mt->moveFxn = &Move_BrLen;
 	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 100.0;  /* change it smaller to avoid overflow in the exp function, same for following "smaller" */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -18573,8 +18683,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -18592,7 +18702,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.0;  /* window size */
-	mt->minimum[0] = 0.00001;
+	mt->minimum[0] = 0.0001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -18830,8 +18940,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -18850,7 +18960,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1000.0; /* alphaPi */
 	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 1000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
@@ -19043,7 +19153,10 @@ void SetUpMoveTypes (void)
 	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = BRLENS_UNI;
 	mt->applicableTo[1] = BRLENS_EXP;
-	mt->nApplicable = 2;
+	mt->applicableTo[2] = BRLENS_GamDir;
+	mt->applicableTo[3] = BRLENS_iGmDir;
+    mt->applicableTo[4] = BRLENS_twoExp;
+	mt->nApplicable = 5;  //was 2
 	mt->moveFxn = &Move_NodeSlider;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
@@ -19124,8 +19237,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19155,8 +19268,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00000001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19222,8 +19335,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00000001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19533,7 +19646,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi per site */
 	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 1000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
@@ -19687,8 +19800,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19707,7 +19820,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.2;       /* Default tuning parameter value */
 	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
-	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
+	mt->maximum[0] = 10000.0;       /* Maximum value of tuning param */
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a mutliplier move (larger is more bold) */
@@ -19792,7 +19905,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi */
 	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 1000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
@@ -19831,8 +19944,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19871,14 +19984,14 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log(1.01); /* lambda */
-	mt->minimum[0] = 0.00000001;
+	mt->minimum[0] = 0.0001;
 	mt->maximum[0] = 2.0 * log(2.0);
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-    	/***************************			Begin Code added by Jeremy Brown 		*************************/
+	/***************************			Begin Code added by Jeremy Brown 		*************************/
 
 	/* Move_TreeLen */
 	mt = &moveTypes[i++];
@@ -19888,13 +20001,16 @@ void SetUpMoveTypes (void)
 	mt->shortTuningName[0] = "lambda";	
 	mt->applicableTo[0] = BRLENS_UNI;
 	mt->applicableTo[1] = BRLENS_EXP;
-	mt->nApplicable = 2;
+	mt->applicableTo[2] = BRLENS_GamDir;
+	mt->applicableTo[3] = BRLENS_iGmDir;
+    mt->applicableTo[4] = BRLENS_twoExp;
+	mt->nApplicable = 5;  //was 2
 	mt->moveFxn = &Move_TreeLen;
 	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19962,8 +20078,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19981,8 +20097,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 0.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20013,8 +20129,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20052,8 +20168,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;                /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -21389,8 +21505,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					MrBayesPrint ("%s            Prior      = Unconstrained:%s", spacer, mp->unconstrainedPr);
 					if (!strcmp(mp->unconstrainedPr, "Uniform"))
 						MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->brlensUni[0], mp->brlensUni[1]);
-					else
+					else if (!strcmp(mp->unconstrainedPr, "Exponential"))
 						MrBayesPrint ("(%1.1lf)\n", mp->brlensExp);
+                    else if (!strcmp(mp->unconstrainedPr, "twoExp"))
+						MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->brlens2Ex[0], mp->brlens2Ex[1]);
+                    else
+						MrBayesPrint ("(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n", mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
 					}
 				else if (!strcmp(mp->brlensPr, "Clock"))
 					{

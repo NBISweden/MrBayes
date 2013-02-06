@@ -2305,6 +2305,36 @@ int DoCitations (void)
     MrBayesPrint ("         selection. Syst. Biol. 60: 150-160.                                     \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   For unconstrained branch lengths, MrBayes implements the compound Dirichlet   \n");
+    MrBayesPrint ("   priors for branch lengths described by Rannala et al. (2012) and Zhang et al. \n");
+    MrBayesPrint ("   (2012). Compared with the i.i.d. exponential and uniform priors for branch    \n");
+    MrBayesPrint ("   lengthes in the previous versions of MrBayes, the Dirichlet priors appear more\n");
+    MrBayesPrint ("   reasonable and may avoid the problem of extremely long trees, as discussed by \n");
+    MrBayesPrint ("   Brown et al. (2010) and Marshall (2010). The two-exponential prior on internal\n");
+    MrBayesPrint ("   and external branch lengths described by Yang & Rannala (2005) and Yang (2007)\n");
+    MrBayesPrint ("   is also implemented in this version.                                          \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Brown, J. M., S. M. Hedtke, A. R. Lemmon, and E. M. Lemmon. 2010. When     \n");
+    MrBayesPrint ("         trees  grow too long: investigating the causes of highly inaccurate     \n");
+    MrBayesPrint ("         Bayesian branch-length estimates. Syst. Biol. 59:145-161.               \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Marshall, D. C. 2010. Cryptic failure of partitioned Bayesian phylogenetic \n");
+    MrBayesPrint ("         analyses: lost in the land of long trees. Syst. Biol. 59:108-117.       \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Rannala, B., T. Zhu, and Z. Yang. 2012. Tail paradox, partial              \n");
+    MrBayesPrint ("         identifiability and influential priors in Bayesian branch length        \n");
+    MrBayesPrint ("         inference. Mol. Biol. Evol. 29:325-335.                                 \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Zhang, C., B. Rannala, and Z. Yang. 2012. Robustness of compound Dirichlet \n");
+    MrBayesPrint ("         priors for Bayesian inference of branch lengths. Syst. Biol. 61:779-784.\n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Yang, Z. 2007. Fair-balance paradox, star-tree paradox and Bayesian        \n");
+    MrBayesPrint ("         phylogenetics. Mol. Biol. Evol. 24:1639-1655.                           \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Yang, Z., and B. Rannala. 2005. Branch-length prior influences Bayesian    \n");
+    MrBayesPrint ("         posterior probability of phylogeny. Syst. Biol. 54:455-470.             \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("                                                                                 \n");
 	MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
@@ -10970,6 +11000,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset brlenspr = unconstrained:uniform(<num>,<num>)       \n");
 		MrBayesPrint ("                       prset brlenspr = unconstrained:exponential(<number>)      \n");
+        MrBayesPrint ("                       prset brlenspr = unconstrained:twoexp(<num>,<num>)        \n");
+		MrBayesPrint ("                       prset brlenspr = unconstrained:gammadir(<num>,<num>,<num>,<num>) \n");
+		MrBayesPrint ("                       prset brlenspr = unconstrained:invgamdir(<num>,<num>,<num>,<num>)\n");
 		MrBayesPrint ("                       prset brlenspr = clock:uniform                            \n");
 		MrBayesPrint ("                       prset brlenspr = clock:birthdeath                         \n");
 		MrBayesPrint ("                       prset brlenspr = clock:coalescence                        \n");
@@ -10991,6 +11024,52 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    varies across the species tree using the 'popvarpr' setting. \n");
         MrBayesPrint ("                    Branch lengths can also be fixed but only if the topology is \n");
 		MrBayesPrint ("                    fixed.                                                       \n");
+        MrBayesPrint ("                    For unconstrained branch lengths, MrBayes offers five alter- \n");
+        MrBayesPrint ("                    native prior distributions. The first two are the simple     \n");
+        MrBayesPrint ("                    'uniform' and 'exponential' priors. The 'uniform' prior takes\n");
+        MrBayesPrint ("                    two parameters, the lower and upper bound of the uniform dis-\n");
+        MrBayesPrint ("                    tribution, respectively. The 'exponential' prior takes a sin-\n");
+        MrBayesPrint ("                    gle parameter, the rate of the exponential distribution. The \n");
+        MrBayesPrint ("                    mean of the exponential distribution is the inverse of the   \n");
+        MrBayesPrint ("                    rate. For instance, an 'exp(10)' distribution has an expected\n");
+        MrBayesPrint ("                    mean of 0.1. MrBayes also offers three more complex prior    \n");
+        MrBayesPrint ("                    distributions on unconstrained branch lengths. The two-expo- \n");
+        MrBayesPrint ("                    nential prior (Yang and Rannala 2005; Yang 2007) uses two    \n"); 
+        MrBayesPrint ("                    different exponential distributions, one for internal and one\n");
+        MrBayesPrint ("                    for external branch lengths. The two-exponential prior is in-\n");
+        MrBayesPrint ("                    voked using 'twoexp(<r_I>,<r_E>)', where '<r_I>' is a number \n");
+        MrBayesPrint ("                    specifying the rate of the exponential distribution on inter-\n");
+        MrBayesPrint ("                    nal branch lengths, while '<r_E>' is the rate for external   \n");
+        MrBayesPrint ("                    branch lengths. The expected prior mean for internal branch  \n");
+        MrBayesPrint ("                    lengths is then 1/r_I, and for external ones it is 1/r_E.    \n");
+        MrBayesPrint ("                    For instance, to set r_I = 100 and r_E = 10, use 'twoexp(100,\n");
+        MrBayesPrint ("                    10)'. The setting 'twoexp(10,10)' is equivalent to 'exp(10)'.\n");
+        MrBayesPrint ("                    The compound Dirichlet priors, 'gammadir(<a_T>,<b_T>,<a>,<c>)'\n");
+        MrBayesPrint ("                    and 'invgamdir(<a_T>,<b_T>,<a>,<c>)', specify a fairly diffuse\n");
+        MrBayesPrint ("                    prior on tree length 'T' and then partitions the tree length \n");
+        MrBayesPrint ("                    into branch lengths according to a Dirichlet distribution    \n");
+        MrBayesPrint ("                    (Rannala et al. 2012). If 'T' is considered drawn from a     \n");
+        MrBayesPrint ("                    gamma distribution with parameters a_T and b_T, and with mean\n");
+        MrBayesPrint ("                    a_T/b_T, we recommend setting a_T = 1; if it is instead con- \n");
+        MrBayesPrint ("                    sidered drawn from an inverse gamma (invgamma) distribution  \n");
+        MrBayesPrint ("                    with parameters a_T and b_T, and with mean b_T/(a_T -1), then\n");
+        MrBayesPrint ("                    we reccommend setting a_T = 3. In the latter case, b_T should\n");
+        MrBayesPrint ("                    be chosen so that the prior mean of T is reasonable for the  \n");
+        MrBayesPrint ("                    data. In the former case, setting b_T = 0.1 (corresponding to\n");
+        MrBayesPrint ("                    a mean tree length of 10) should be appropriate for a wide   \n");
+        MrBayesPrint ("                    range of tree lengths (at least in the interval 1 to 100).   \n");
+        MrBayesPrint ("                    The concentration parameter a of the Dirichlet distribution  \n");
+        MrBayesPrint ("                    is inversely related to the variance of the branch lengths,  \n");
+        MrBayesPrint ("                    while c is the ratio of the prior means for the internal and \n");
+        MrBayesPrint ("                    external branch lengths. The default setting, a = c = 1,     \n");
+        MrBayesPrint ("                    specifies a uniform Dirichlet distribution of branch lengths \n");
+        MrBayesPrint ("                    given the tree length. For instance, 'gammadir(1,0.1,1,1)'   \n");
+        MrBayesPrint ("                    specifies a compound Dirichlet prior on branch lengths, where\n");
+        MrBayesPrint ("                    tree length is associated with a gamma distribution with mean\n");
+        MrBayesPrint ("                    10, and branch length proportions are associated with a uni- \n");
+        MrBayesPrint ("                    form Dirichlet distribution. The default prior for uncon-    \n");
+        MrBayesPrint ("                    strained branch lengths is 'exp(10)'.                        \n");
+        MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior probability distribution  \n");
 		MrBayesPrint ("                    on the tree age when a uniform prior is used on the branch   \n");
 		MrBayesPrint ("                    lengths of a clock tree.                                     \n");
@@ -11451,7 +11530,15 @@ int GetUserHelp (char *helpTkn)
 				{
 				if (!strcmp(mp->unconstrainedPr, "Uniform"))
 					MrBayesPrint (":Uni(%1.1lf,%1.1lf)\n", mp->brlensUni[0], mp->brlensUni[1]);
-				else
+				else if (!strcmp(mp->unconstrainedPr, "GammaDir"))
+					MrBayesPrint (":GamDir(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n",
+                                mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
+				else if (!strcmp(mp->unconstrainedPr, "invGamDir"))
+					MrBayesPrint (":iGamDir(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n",
+                                mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
+                else if (!strcmp(mp->unconstrainedPr, "twoExp"))
+					MrBayesPrint (":2Exp(%1.1lf,%1.1lf)\n", mp->brlens2Ex[0], mp->brlens2Ex[1]);
+                else
 					MrBayesPrint (":Exp(%1.1lf)\n", mp->brlensExp);
 				}
 			else if (!strcmp(mp->brlensPr, "Clock"))

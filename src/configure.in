@@ -81,7 +81,7 @@ then
    	  with_beagle=/usr/local
    fi
 
-   AC_CHECK_FILE($with_beagle/include/libhmsbeagle-1,[BEAGLE_CFLAGS="-I$with_beagle/include/libhmsbeagle-1"],[AC_MSG_ERROR([beagle library not found in ${with_beagle}]. You should either install beagle library from http://code.google.com/p/beagle-lib/ or disable use of beagle library by invoking configure script with option --with-beagle=no. Note: without beagle library MrBayes may run slower. )])
+   AC_CHECK_FILE($with_beagle/include/libhmsbeagle,[BEAGLE_CFLAGS="-I$with_beagle/include/libhmsbeagle"],[AC_MSG_ERROR([beagle library not found in ${with_beagle}]. You should either install beagle library from http://code.google.com/p/beagle-lib/ or disable use of beagle library by invoking configure script with option --with-beagle=no. Note: without beagle library MrBayes may run slower. )])
    AC_CHECK_FILE($with_beagle/lib,[BEAGLE_LIBS="-L$with_beagle/lib -lhmsbeagle"],[AC_MSG_ERROR([beagle library not found in ${with_beagle}]. You should either install beagle library from http://code.google.com/p/beagle-lib/ or disable use of beagle library by invoking configure script with option --with-beagle=no. Note: without beagle library MrBayes may run slower.)])
 
    AC_DEFINE(BEAGLE_ENABLED)

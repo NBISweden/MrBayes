@@ -713,7 +713,16 @@ int InitializeMrBayes (void)
     defaultModel.brlensFix = -1;                        /* user tree index to use for fixed brlens      */
 	defaultModel.brlensUni[0] = BRLENS_MIN;
 	defaultModel.brlensUni[1] = 10.0;
-	defaultModel.brlensExp = 10.0;
+	defaultModel.brlensExp    = 10.0;
+    defaultModel.brlens2Ex[0] = 100.0;                  /* 1st param of twoExp prior (for internal branches) */
+	defaultModel.brlens2Ex[1] = 10.0;                   /* 2nd param of twoExp prior (for external branches) */
+	defaultModel.brlensDir[0] = 1.0;                    /* 1st param of GammaDir prior   */
+//  defaultModel.brlensDir[0] = 3.0;                    /* 1st param of invGamDir prior  */
+    defaultModel.brlensDir[1] = 0.1;                    /* 2nd param of GammaDir prior   */
+//  defaultModel.brlensDir[1] = 20.0;                   /* 2nd param of invGamDir prior  */
+	defaultModel.brlensDir[2] = 1.0;                    /* 3rd param of Dirichlet priors */
+	defaultModel.brlensDir[3] = 1.0;                    /* 4th param of Dirichlet priors */
+	
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
 	strcpy(defaultModel.treeAgePr, "Exponential");      /* prior on tree age                            */
@@ -868,7 +877,7 @@ unsigned FindMaxRevision ( unsigned amount, ...)
 void PrintHeader (void)
 
 {
-char arch[4];
+    char arch[4];
 #ifndef RELEASE
     unsigned rev=FindMaxRevision ( 13, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionPlotC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC); 
 #endif

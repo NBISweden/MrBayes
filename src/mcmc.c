@@ -551,6 +551,78 @@ int				lowestLocalRunId;			 /* lowest local run Id                          */
 int				highestLocalRunId;			 /* highest local run Id                         */
 #endif
 
+
+/* ------------------------------------------------------------------------------------------------------------- */
+/* Joint distribution of branch lengths t under gamma-Dirichlet prior:                                           */
+/* (Zhang et al. 2012, Eq. 4; Rannala et al. 2012, Eq. 36):                                                      */
+/* ln[f(t|aT,bT,a,c)] =  (aT - a*s - a*c*(s-3)) * ln(T) - bT * T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
+/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
+/*                                                                                                               */
+/* Joint distribution of branch lengths t under invgamma-Dirichlet prior:                                        */
+/* (Zhang et al. 2012, Eq. 6; Rannala et al. 2012, Eq. 39):                                                      */
+/* ln[f(t|aT,bT,a,c)] = (-aT - a*s - a*c*(s-3)) * ln(T) - bT / T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
+/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
+/* also see DoCitations()                                                                                        */
+/* ------------------------------------------------------------------------------------------------------------- */
+
+
+/* external (tip): 1, internal: 0 */
+#define IsTip(Node) (Node->index<numTaxa || (Node->anc)->index<numTaxa)
+
+/* ln prior prob. under Dirichlet priors and twoExp prior */
+MrBFlt lnDirPrior (Tree *t, ModelParams *mp, int PV)
+{
+	int    i, istip, nb[2] = {0,0};
+	MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
+	MrBFlt aT, bT, a, c;
+	TreeNode  *p;
+	
+	/* PV is 2 or 3: Dirichlet priors */    
+	if (PV == 2 || PV == 3)
+    {
+    /* partially for calculating lnPriorRatio, full part is in LogPrior() */
+        aT = mp->brlensDir[0];
+        bT = mp->brlensDir[1];
+        a  = mp->brlensDir[2];
+        c  = mp->brlensDir[3];
+	
+        for (i = 0; i < t->nNodes; i++)
+        {
+            p = t->allDownPass[i];
+            if (p->anc != NULL)
+            {
+                treeL += p->length;
+                istip = IsTip(p);
+                nb[istip]++;
+                tb[istip] += log(p->length);
+            }
+        }
+        lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
+        if (PV == 2)
+            lnprior += ( aT - a*nb[1] - a*c*nb[0])*log(treeL) - bT*treeL;
+        else
+            lnprior += (-aT - a*nb[1] - a*c*nb[0])*log(treeL) - bT/treeL;
+    }
+    /* or 4: twoExp prior */
+    else if (PV == 4)
+	{
+		for (i = 0; i < t->nNodes; i++) {
+			p = t->allDownPass[i];
+			if (p->anc != NULL)
+            {
+				istip = IsTip(p);
+				nb[istip]++;
+				tb[istip] += p->length;
+			}
+		}
+		for (i = 0; i < 2; i++)
+			lnprior += nb[i]*log(mp->brlens2Ex[i]) - tb[i]*(mp->brlens2Ex[i]);
+    }
+    
+	return lnprior;
+}
+
+
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
 PFNODE *AddPartition (PFNODE *r, SafeLong *p, int runId)
 {
@@ -15649,6 +15721,24 @@ MrBFlt LogPrior (int chain)
 							lnPrior += log(mp->brlensExp) - mp->brlensExp * branch->length;
 						}
 					}
+				/* Dirichlet priors */
+				else if (p->paramId == BRLENS_GamDir)  
+					{
+					lnPrior += lnDirPrior(t, mp, 2);
+					lnPrior += (mp->brlensDir[0])*log(mp->brlensDir[1]) -LnGamma(mp->brlensDir[0])
+					+LnGamma( mp->brlensDir[2] *numTaxa + mp->brlensDir[2] * mp->brlensDir[3] *(numTaxa-3) ) 
+					-numTaxa*LnGamma(mp->brlensDir[2]) -(numTaxa-3)*LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+					} 
+				else if (p->paramId == BRLENS_iGmDir)
+					{
+					lnPrior += lnDirPrior(t, mp, 3);
+					lnPrior += (mp->brlensDir[0])*log(mp->brlensDir[1]) -LnGamma(mp->brlensDir[0])
+					+LnGamma( mp->brlensDir[2] *numTaxa + mp->brlensDir[2] * mp->brlensDir[3] *(numTaxa-3) ) 
+					-numTaxa*LnGamma(mp->brlensDir[2]) -(numTaxa-3)*LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+					}
+                /* twoExp priors */
+                else if (p->paramId == BRLENS_twoExp)
+                    lnPrior += lnDirPrior(t, mp, 4);
 				}
 			}
 		else if (p->paramType == P_SPECRATE)
@@ -17217,7 +17307,6 @@ int Move_TK02BranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 
 
 
-
 int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -17228,7 +17317,8 @@ int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 	TreeNode	*p;
 	ModelParams *mp;
 	Tree		*t;
-
+	int isVPriorExp;
+	
 	tuning = mvp[0]; /* Larget & Simon's tuning parameter lambda */
 
 	mp = &modelParams[param->relParts[0]];
@@ -17238,16 +17328,40 @@ int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 		{
 		minV = mp->brlensUni[0];
 		maxV = mp->brlensUni[1];
+		isVPriorExp = NO;
 		}
+	else if (param->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
 		brlensPrExp = mp->brlensExp;
+		isVPriorExp = YES;	
 		}
 
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 #if defined (DEBUG_CONSTRAINTS)
     if (CheckConstraints(t) == ERROR) {
@@ -17298,6 +17412,9 @@ int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 	/* update prior if exponential prior on branch lengths */
 	if (param->paramId == BRLENS_EXP)
 		(*lnPriorRatio) = brlensPrExp * (m - newM);
+	/* Dirichlet or twoExp prior */
+    else if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -17905,7 +18022,6 @@ int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-
 int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -17924,11 +18040,11 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	TreeNode	*p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
 	Tree		*t;
 	ModelParams *mp;
-
+	
 	/* these parameters should be possible to set by user */
 	extensionProb = mvp[0];	/* extension probability */
 	tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
-	
+
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
@@ -17942,6 +18058,24 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -17950,6 +18084,10 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		isVPriorExp = YES;
 		}
 
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
+	
 	topologyHasChanged = NO;
 
 #	if defined (DEBUG_ExtSPR)
@@ -18436,6 +18574,10 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 #endif
 
     assert (nCrownNodes > 0 || nRootNodes > 0);
+	
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
     return (NO_ERROR);
 	
@@ -18898,7 +19040,6 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
 
 
-
 int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -18944,13 +19085,35 @@ int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
-	else
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
+    else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -19362,6 +19525,10 @@ int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 	printf ("directionUp = %d -- directionLeft = %d\n", directionUp, directionLeft);
 	getchar();
 #	endif
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -19784,7 +19951,6 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-
 int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -19828,13 +19994,35 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
-	else
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
+    else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -20267,10 +20455,13 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
     assert (nCrownNodes > 0 || nRootNodes > 0);
 
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
+
 	return (NO_ERROR);
 	
 }
-
 
 
 
@@ -20324,6 +20515,24 @@ int Move_ExtTBR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -20331,6 +20540,10 @@ int Move_ExtTBR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -20792,6 +21005,10 @@ int Move_ExtTBR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		}
 #endif
 
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
+
 	return (NO_ERROR);
 	
 }
@@ -20851,6 +21068,24 @@ int Move_ExtTBR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -20858,6 +21093,10 @@ int Move_ExtTBR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+	
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -21368,6 +21607,10 @@ int Move_ExtTBR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		}
 #endif
 
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
+
 	return (NO_ERROR);
 	
 }
@@ -21429,6 +21672,24 @@ int Move_ExtTBR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -21436,6 +21697,10 @@ int Move_ExtTBR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -21987,6 +22252,10 @@ int Move_ExtTBR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		getchar();
 		}
 #endif
+    
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -22047,6 +22316,24 @@ int Move_ExtTBR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -22054,6 +22341,10 @@ int Move_ExtTBR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+	
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	topologyHasChanged = NO;
 
@@ -22510,6 +22801,10 @@ int Move_ExtTBR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		getchar();
 		}
 #endif
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -23052,7 +23347,25 @@ int Move_Local (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
-	else
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
+    else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
@@ -23060,6 +23373,10 @@ int Move_Local (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 		isVPriorExp = YES;
 		}
 
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
+	
 	topologyHasChanged = NO;
 
 #	if defined (DEBUG_LOCAL)
@@ -23308,6 +23625,10 @@ int Move_Local (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 		getchar();
 		}
 #endif
+	
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -23845,7 +24166,7 @@ int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 /*--------------------------------------------------------------------
 |
 |	Move_LSPR: Change topology using move based on likelihood scores
-|
+|	
 |--------------------------------------------------------------------*/
 int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
@@ -24027,7 +24348,7 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 	nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
 	if (!nSitesOfPat)
 		{
-		MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_MLSPR\n", spacer);
+		MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_LSPR\n", spacer);
 		free (tempCondLikes);
 		free (tempCondLikePtr);
 		return (ERROR);
@@ -24268,8 +24589,8 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 
 
 
-/* change topology using MLSPR1 */
-int Move_MLSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+/* change topology using LSPR1 */
+int Move_LSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -24662,7 +24983,7 @@ int Move_MLSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 
-/* change topology using NNI move */
+/* Move_NNI, change topology using NNI move */
 int Move_NNI (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -24962,7 +25283,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 
 
-/* change topology with unlinked brlens using NNI */
+/* Move_NNI_Hetero, change topology with unlinked brlens using NNI */
 int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -24998,7 +25319,7 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 				
 		/* get tree */
 		t = GetTree (param->subParams[i], chain, state[chain]);
-
+			
 		/* find p */
 		p = t->intDownPass[brIndex];
 
@@ -25052,7 +25373,7 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 		/* reset tree downpass sequences */
 		GetDownPass(t);
-
+		
 		}
 	
 	return (NO_ERROR);
@@ -25068,7 +25389,6 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |	Move_NodeSlider: move the position of one node without changing topology
 |
 -------------------------------------------------------------------------------------*/
-
 int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -25076,7 +25396,8 @@ int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	TreeNode	*p, *q;
 	ModelParams *mp;
 	Tree		*t;
-
+	int isVPriorExp;
+	
 	tuning = mvp[0]; /* Larget & Simon's tuning parameter lambda */
 
 	mp = &modelParams[param->relParts[0]];
@@ -25086,16 +25407,40 @@ int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		{
 		minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
 		maxV = mp->brlensUni[1];
+		isVPriorExp = NO;
 		}
+	else if (param->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
 		brlensPrExp = mp->brlensExp;
+		isVPriorExp = YES;
 		}
     
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 	/* pick an interior branch */
 	do
@@ -25147,6 +25492,9 @@ int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	/* update prior if exponential prior on branch lengths */
 	if (param->paramId == BRLENS_EXP)
 		(*lnPriorRatio) = brlensPrExp * (oldM - newM);
+    /* Dirichlet or twoExp prior */
+    else if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -26443,7 +26791,7 @@ int Move_ParsEraser1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
-	else
+    else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
@@ -26452,7 +26800,7 @@ int Move_ParsEraser1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 		}
 	minP = 3.0 * ((1.0 / 4.0) - ((1.0 / 4.0) * exp (-4.0 * minV / 3.0)));
 	maxP = 3.0 * ((1.0 / 4.0) - ((1.0 / 4.0) * exp (-4.0 * maxV / 3.0)));
-			
+
 	/* allocate some memory for this move */
 	brlensCur = (MrBFlt *) SafeMalloc (8 * nSubTerminals * sizeof (MrBFlt));
 	if (!brlensCur)
@@ -26667,7 +27015,6 @@ errorExit:
 
 
 
-
 int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -26708,6 +27055,24 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		maxV = mp->brlensUni[1];
 		isVPriorExp = NO;
 		}
+	else if (param->subParams[0]->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->subParams[0]->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+    else if (param->subParams[0]->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
 	else
 		{
 		minV = BRLENS_MIN;
@@ -26715,6 +27080,10 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 #if defined (DEBUG_CONSTRAINTS)
 	CheckConstraints (t);
@@ -27091,6 +27460,10 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
 	CheckConstraints (t);
 #endif
+	
+    /* Dirichlet or twoExp prior */
+    if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 
@@ -27969,7 +28342,6 @@ int Move_PosRealMultiplier (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 
 	return (NO_ERROR);
 }
-
 
 
 
@@ -32914,7 +33286,7 @@ int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	TreeNode	*p;
 	ModelParams *mp;
 	Tree		*t;
-	int i,branch_counter;
+	int i,branch_counter,  isVPriorExp;
 
 
 	tuning = mvp[0]; /* Larget & Simon's tuning parameter lambda */
@@ -32926,18 +33298,42 @@ int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		{
 		minV = mp->brlensUni[0];
 		maxV = mp->brlensUni[1];
+		isVPriorExp = NO;
 		}
-	else
+	else if (param->paramId == BRLENS_GamDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 2;
+		}
+	else if (param->paramId == BRLENS_iGmDir)
+		{
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 3;
+		}
+	else if (param->paramId == BRLENS_twoExp)
+        {
+		minV = BRLENS_MIN;
+		maxV = BRLENS_MAX;
+		isVPriorExp = 4;
+        }
+    else
 		{
 		minV = BRLENS_MIN;
 		maxV = BRLENS_MAX;
 		brlensPrExp = mp->brlensExp;
+		isVPriorExp = YES;
 		}
 
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
     assert(t->isRooted == NO);
+
+    /* Dirichlet or twoExp prior */
+	if (isVPriorExp > 1)
+		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
 
 #if defined (DEBUG_CONSTRAINTS)
     if (CheckConstraints(t) == ERROR) {
@@ -32992,6 +33388,9 @@ int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	/* update prior if exponential prior on branch lengths */
 	if (param->paramId == BRLENS_EXP)
 		(*lnPriorRatio) = brlensPrExp * (begin_tl*( 1 - treescaler));
+    /* Dirichlet or twoExp prior */
+    else if (isVPriorExp > 1)
+		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 
 	return (NO_ERROR);
 	
@@ -33222,10 +33621,10 @@ int Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 		brlensExp = mp->brlensExp;
 		isVPriorExp = YES;
 		}
-		
+	
 	/* min brlen */
 	minV = BRLENS_MIN;
-	
+
 	/* Calculate log prior probability before the branch lengths of the tree have 
 	   been changed. */
 	if (isVPriorExp == YES)
@@ -33756,7 +34155,7 @@ int Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 				*lnPriorRatio += log(brlensExp) - brlensExp * p->length;
 			}
 		}
-				
+
 	return (NO_ERROR);
 
 }

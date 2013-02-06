@@ -671,6 +671,9 @@ typedef struct s_launch_struct
 #define TOPOLOGY_PARSIMONY_FIXED        48
 #define BRLENS_UNI						49
 #define BRLENS_EXP						50
+#define BRLENS_GamDir					141
+#define BRLENS_iGmDir					142
+#define BRLENS_twoExp                   143
 #define BRLENS_FIXED                    51
 #define BRLENS_CLOCK_UNI                52
 #define BRLENS_CLOCK_COAL				53
@@ -967,6 +970,8 @@ typedef struct model
 	int         brlensFix;         /* user tree index for fixed brlens             */
 	MrBFlt		brlensUni[2];
 	MrBFlt		brlensExp;
+    MrBFlt		brlens2Ex[2];
+    MrBFlt		brlensDir[4];
 	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
