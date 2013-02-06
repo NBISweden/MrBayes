@@ -18826,7 +18826,7 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[1] = 2.0 * log (1.05);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99;
-	mt->minimum[1] = 0.00001;
+	mt->minimum[1] = 0.00000001;
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
