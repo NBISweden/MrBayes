@@ -22824,8 +22824,8 @@ int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 {
 
-	int			i, nRates;
-	MrBFlt		alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum,
+	int			i, nRates, isValid;
+	MrBFlt		alphaPi, rate_pot, *value, *subValue, numSites, *alphaDir, x, y, sum,
 				*dirParm, *oldRate, *newRate;
 
     /* allocate memory */
@@ -22860,16 +22860,35 @@ int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
-	/* check new values */
-	sum = 0.0;
-	for (i=0; i<nRates; i++)
+	/* check new values. we rely on newRate be already normalized  */
+	while(1)
 		{
-		if (newRate[i] < DIR_MIN)
-			newRate[i] = DIR_MIN;
-		sum += newRate[i];
+		sum = 0.0;
+		rate_pot = 1.0;
+		isValid=1;
+		for (i=0; i<nRates; i++)
+			{
+			if (newRate[i] <= DIR_MIN)
+				{
+				if (newRate[i] < DIR_MIN)
+					{
+					newRate[i] = DIR_MIN;
+					isValid=0;
+					}
+				rate_pot -= DIR_MIN;
+				}
+			else
+				sum += newRate[i];
+			}
+
+		if(isValid==1) break;
+
+		for (i=0; i<nRates; i++)
+			{
+			if(newRate[i]!=DIR_MIN)
+				newRate[i] = rate_pot * newRate[i] / sum;
+			}
 		}
-	for (i=0; i<nRates; i++)
-		newRate[i] /= sum;
 
 	/* calculate and copy new rate ratio values back */
 	for (i=0; i<nRates; i++)
@@ -30809,8 +30828,8 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 {
 
-	int			i, nRates;
-	MrBFlt		alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum,
+	int			i, nRates, isValid;
+	MrBFlt		alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum, rate_pot,
 				*dirParm, *oldRate, *newRate;
 
     /* allocate memory */
@@ -30845,16 +30864,37 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
-	/* check new values */
-	sum = 0.0;
-	for (i=0; i<nRates; i++)
+	
+	/* check new values. we rely on newRate be already normalized  */
+	while(1)
 		{
-		if (newRate[i] < DIR_MIN)
-			newRate[i] = DIR_MIN;
-		sum += newRate[i];
+		sum = 0.0;
+		rate_pot = 1.0;
+		isValid=1;
+		for (i=0; i<nRates; i++)
+			{
+			if (newRate[i] <= DIR_MIN)
+				{
+				if (newRate[i] < DIR_MIN)
+					{
+					newRate[i] = DIR_MIN;
+					isValid=0;
+					}
+				rate_pot -= DIR_MIN;
+				}
+			else
+				sum += newRate[i];
+			}
+
+		if(isValid==1) break;
+
+		for (i=0; i<nRates; i++)
+			{
+			if(newRate[i]!=DIR_MIN)
+				newRate[i] = rate_pot * newRate[i] / sum;
+			}
 		}
-	for (i=0; i<nRates; i++)
-		newRate[i] /= sum;
+
 
 	/* calculate and copy new rate ratio values back */
 	for (i=0; i<nRates; i++)
@@ -31006,8 +31046,8 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 	/* change revMat using Dirichlet proposal */
 	
-	int			    i, nRates;
-	MrBFlt		    oldRate[200], newRate[200], dirParm[200], *value, sum, x, y, *alphaDir, alphaPi;
+	int			    i, nRates,isValid;
+	MrBFlt		    oldRate[200], newRate[200], dirParm[200], *value, sum, x, y, rate_pot, *alphaDir, alphaPi;
 	ModelParams     *mp;
     ModelInfo       *m;
 
@@ -31040,18 +31080,35 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
-	/* check new values */
-	sum = 0.0;
-	for (i=0; i<nRates; i++)
+	/* check new values. we rely on newRate be already normalized  */
+	while(1)
 		{
-		if (newRate[i] < RATE_MIN)
-			newRate[i] = RATE_MIN;
-		sum += newRate[i];
+		sum = 0.0;
+		rate_pot = 1.0;
+		isValid=1;
+		for (i=0; i<nRates; i++)
+			{
+			if (newRate[i] <= RATE_MIN)
+				{
+				if (newRate[i] < RATE_MIN)
+					{
+					newRate[i] = RATE_MIN;
+					isValid=0;
+					}
+				rate_pot -= RATE_MIN;
+				}
+			else
+				sum += newRate[i];
+			}
+
+		if(isValid==1) break;
+
+		for (i=0; i<nRates; i++)
+			{
+			if(newRate[i]!=RATE_MIN)
+				newRate[i] = rate_pot * newRate[i] / sum;
+			}
 		}
-
-	for (i=0; i<nRates; i++)
-		newRate[i] /= sum;
-
 
 	/* copy new rate ratio values back */
 	for (i=0; i<nRates; i++)
@@ -31115,8 +31172,8 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 
 {
 
-	int			i, j, k, *growthFxn, nRates, groupSize[6];
-	MrBFlt		*value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, x, y;
+	int			i, j, k, isValid, *growthFxn, nRates, groupSize[6];
+	MrBFlt		*value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, rate_pot, x, y;
 	ModelParams *mp;
     ModelInfo   *m;
 
@@ -31155,17 +31212,36 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
-	/* check new values */
-	sum = 0.0;
-	for (i=0; i<nRates; i++)
+		/* check new values. we rely on newRate be already normalized  */
+	while(1)
 		{
-		if (newRate[i] < RATE_MIN)
-			newRate[i] = RATE_MIN;
-		sum += newRate[i];
+		sum = 0.0;
+		rate_pot = 1.0;
+		isValid=1;
+		for (i=0; i<nRates; i++)
+			{
+			if (newRate[i] <= RATE_MIN)
+				{
+				if (newRate[i] < RATE_MIN)
+					{
+					newRate[i] = RATE_MIN;
+					isValid=0;
+					}
+				rate_pot -= RATE_MIN;
+				}
+			else
+				sum += newRate[i];
+			}
+
+		if(isValid==1) break;
+
+		for (i=0; i<nRates; i++)
+			{
+			if(newRate[i]!=RATE_MIN)
+				newRate[i] = rate_pot * newRate[i] / sum;
+			}
 		}
 
-	for (i=0; i<nRates; i++)
-		newRate[i] /= sum;
 
 
 	/* copy new unique rate ratio values back into the value array */
@@ -33245,15 +33321,17 @@ int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	/* get new values */
 	DirichletRandomVariable (dirParm, newProp, 2, seed);
 
-	sum = 0.0;
-	for (i=0; i<2; i++)
+	if(newProp[0] < DIR_MIN)
 		{
-		if (newProp[i] < DIR_MIN)
-			newProp[i] = DIR_MIN;
-		sum += newProp[i];
+		newProp[0] = DIR_MIN;
+		newProp[1] = 1.0-DIR_MIN;
 		}
-	for (i=0; i<2; i++)
-		newProp[i] /= sum;
+	else if(newProp[1] < DIR_MIN)
+			{
+			newProp[1] = DIR_MIN;
+			newProp[0] = 1.0-DIR_MIN;
+			}
+
 
 	/* calculate and copy new kappa value back */
 	*GetParamVals(param, chain, state[chain]) = newProp[0] / newProp[1];
