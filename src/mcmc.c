@@ -16019,7 +16019,6 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |            (1 + f*b*t_1)    i=1   (1 + f*b*t_i)^2
 |
 ---------------------------------------------------------------------------------*/
-
 int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
 
@@ -16075,46 +16074,9 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
 
 /*---------------------------------------------------------------------------------
  |
- |   LnBirthDeathPriorPrRandom
- |
- |   We assume a rooted tree that satisfies the molecular clock constraint. The
- |   tree is labelled as follows:
- |
- |                                      t_4 (age of tips)
- |     \         \         \        /            
- |      \         \         \      /              
- |       \         \         \    /         
- |        \         \         \  /          
- |         \         \         \/       t_3 
- |          \         \        /            
- |           \         \      /             
- |            \         \    /              
- |             \         \  /               
- |              \         \/            t_2  
- |               \        /                 
- |                \      /                  
- |                 \    /                        
- |                  \  /                         
- |                   \/                 t_1 (age of most recent common ancestor)
- |    
- |
- |   This function calculates the probability of such a tree under the neutral
- |   birth death prior with constant birth and death rates, conditioned on
- |   a particular time of the first split, t_1, and a particular number of
- |   species, n. We assume diversity-sampling, that is, a constant sampling frac-
- |   tion rho, which is known, across tips of the tree. Variables:
- |
- |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
- |        speciation times from a point process
- |   tau: the labeled unoriented tree
- |   b:   birth (speciation) rate
- |   d:   death (extintion) rate
- |   f:   sampling fraction
- |   n:   number of species in the sampled tree
- |
+ |   LnBirthDeathPriorPrDiversity
  |
  ---------------------------------------------------------------------------------*/
-
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
     
@@ -16173,46 +16135,9 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 
 /*---------------------------------------------------------------------------------
  |
- |   LnBirthDeathPriorPrRandom
- |
- |   We assume a rooted tree that satisfies the molecular clock constraint. The
- |   tree is labelled as follows:
- |
- |                                      t_4 (age of tips)
- |     \         \         \        /            
- |      \         \         \      /              
- |       \         \         \    /         
- |        \         \         \  /          
- |         \         \         \/       t_3 
- |          \         \        /            
- |           \         \      /             
- |            \         \    /              
- |             \         \  /               
- |              \         \/            t_2  
- |               \        /                 
- |                \      /                  
- |                 \    /                        
- |                  \  /                         
- |                   \/                 t_1 (age of most recent common ancestor)
- |    
- |
- |   This function calculates the probability of such a tree under the neutral
- |   birth death prior with constant birth and death rates, conditioned on
- |   a particular time of the first split, t_1, and a particular number of
- |   species, n. We assume cluster-sampling, that is, a constant sampling frac-
- |   tion rho, which is known, across tips of the tree. Variables:
- |
- |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
- |        speciation times from a point process
- |   tau: the labeled unoriented tree
- |   b:   birth (speciation) rate
- |   d:   death (extintion) rate
- |   f:   sampling fraction
- |   n:   number of species in the sampled tree
- |
+ |   LnBirthDeathPriorPrCluster
  |
  ---------------------------------------------------------------------------------*/
-
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
     
@@ -22880,9 +22805,7 @@ int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			else
 				sum += newRate[i];
 			}
-
 		if(isValid==1) break;
-
 		for (i=0; i<nRates; i++)
 			{
 			if(newRate[i]!=DIR_MIN)
@@ -25529,7 +25452,6 @@ int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |      In calibrated trees, we need to move also calibrated terminal nodes.
 |
 -------------------------------------------------------------------------------------*/
-    
 int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
@@ -30863,7 +30785,6 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
-
 	
 	/* check new values. we rely on newRate be already normalized  */
 	while(1)
@@ -30885,16 +30806,13 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			else
 				sum += newRate[i];
 			}
-
 		if(isValid==1) break;
-
 		for (i=0; i<nRates; i++)
 			{
 			if(newRate[i]!=DIR_MIN)
 				newRate[i] = rate_pot * newRate[i] / sum;
 			}
 		}
-
 
 	/* calculate and copy new rate ratio values back */
 	for (i=0; i<nRates; i++)
@@ -31076,7 +30994,6 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	for (i=0; i<nRates; i++)
 		dirParm[i] = oldRate[i] * alphaPi;
 	
-	
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
@@ -31100,9 +31017,7 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 			else
 				sum += newRate[i];
 			}
-
 		if(isValid==1) break;
-
 		for (i=0; i<nRates; i++)
 			{
 			if(newRate[i]!=RATE_MIN)
@@ -31212,7 +31127,7 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	/* get new values */
 	DirichletRandomVariable (dirParm, newRate, nRates, seed);
 
-		/* check new values. we rely on newRate be already normalized  */
+	/* check new values. we rely on newRate be already normalized  */
 	while(1)
 		{
 		sum = 0.0;
@@ -31232,17 +31147,13 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 			else
 				sum += newRate[i];
 			}
-
 		if(isValid==1) break;
-
 		for (i=0; i<nRates; i++)
 			{
 			if(newRate[i]!=RATE_MIN)
 				newRate[i] = rate_pot * newRate[i] / sum;
 			}
 		}
-
-
 
 	/* copy new unique rate ratio values back into the value array */
 	for (i=0; i<nRates; i++)
@@ -31693,13 +31604,13 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 			assert(R_j/n_j < RATE_MIN);
 			} 
 		else if(R_j/n_j < RATE_MIN)
-				{
-				R_j = RATE_MIN*n_j;
-				rateProps[1] = R_j/R;
-				rateProps[0] = 1-rateProps[1];
-				R_i = rateProps[0] * R;
-				assert(R_i/n_i < RATE_MIN);
-				}
+			{
+			R_j = RATE_MIN*n_j;
+			rateProps[1] = R_j/R;
+			rateProps[0] = 1-rateProps[1];
+			R_i = rateProps[0] * R;
+			assert(R_i/n_i < RATE_MIN);
+			}
 
         /* set the new rates */
         for (i=0; i<nNewRates; i++)
@@ -33327,10 +33238,10 @@ int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		newProp[1] = 1.0-DIR_MIN;
 		}
 	else if(newProp[1] < DIR_MIN)
-			{
-			newProp[1] = DIR_MIN;
-			newProp[0] = 1.0-DIR_MIN;
-			}
+		{
+		newProp[1] = DIR_MIN;
+		newProp[0] = 1.0-DIR_MIN;
+		}
 
 
 	/* calculate and copy new kappa value back */
@@ -44981,35 +44892,60 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 
     /* numerical errors will ensue if we allow very large or very small branch lengths, which might
        occur in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs and initial probs but for now we truncate lengths at small or large values */
+       probs and initial probs but for now we truncate lengths at small or large values
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
     else if (length < BRLENS_MIN)
         length = BRLENS_MIN;
+    */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
 		t =  length * baseRate * catRate[k];
 
-		/* calculate probabilities */
-		for (i=0; i<4; i++)
-			{
-			for (j=0; j<4; j++)
-				{
-				bigPij = bigPi_j[j];
-				pij =  pis[j];
-				u =  1.0/bigPij -  1.0;
-				x =  exp(-beta * t);
-				z = (bigPij - pij) / bigPij;
-				
-				if (i == j)
-					tiP[index++] = (CLFlt) (pij + pij * u * x + z * x);
-				else
-					tiP[index++] = (CLFlt) (pij + pij * u * x - (pij/bigPij) * x);
-				}
-			}
-		}
+        if (t < BRLENS_MIN)
+            {
+            /* Fill in identity matrix //chi Dec2012 */
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    if (i == j)
+                        tiP[index++] = 1.0;
+                    else
+                        tiP[index++] = 0.0;
+                    }
+                }
+            }
+        else if (t > BRLENS_MAX)
+            {
+            /* Fill in stationary matrix //chi */
+            for (i=0; i<4; i++)
+                for (j=0; j<4; j++)
+                    tiP[index++] = (CLFlt) pis[j];
+            }
+        else
+            {
+            /* calculate probabilities */
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    bigPij = bigPi_j[j];
+                    pij =  pis[j];
+                    u =  1.0/bigPij -  1.0;
+                    x =  exp(-beta * t);
+                    z = (bigPij - pij) / bigPij;
+                    
+                    if (i == j)
+                        tiP[index++] = (CLFlt) (pij + pij * u * x + z * x);
+                    else
+                        tiP[index++] = (CLFlt) (pij + pij * u * x - (pij/bigPij) * x);
+                    }
+                }
+            }
+        }
 
 	return NO_ERROR;
 
@@ -45319,38 +45255,63 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 
     /* numerical errors will ensue if we allow very large or very small branch lengths, which might
        occur in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs and initial probs but for now we truncate lengths at small or large values */
+       probs and initial probs but for now we truncate lengths at small or large values
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
     else if (length < BRLENS_MIN)
         length = BRLENS_MIN;
+    */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
 		t =  length * baseRate * catRate[k];
 
-		/* calculate probabilities */
-		for (i=0; i<4; i++)
-			{
-			for (j=0; j<4; j++)
-				{
-				bigPij = bigPi_j[j];
-				pij = pis[j];
-				u =  1.0/bigPij -  1.0;
-				w = -beta * ( 1.0 + bigPij * (kap -  1.0));
-				x =  exp(-beta * t);
-				y =  exp(w * t);
-				z = (bigPij - pij) / bigPij;
-				
-				if (i == j)
-					tiP[index++] = (CLFlt) (pij + pij * u * x + z * y);
-				else if ((i == 0 && j == 2) || (i == 2 && j == 0) || (i == 1 && j == 3) || (i == 3 && j == 1))
-					tiP[index++] = (CLFlt) (pij + pij * u * x - (pij/bigPij) * y);
-				else
-					tiP[index++] = (CLFlt) (pij * ( 1.0 - x));
-				}
-			}
+        if (t < BRLENS_MIN)
+            {
+            /* Fill in identity matrix //chi Dec2012 */
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    if (i == j)
+                        tiP[index++] = 1.0;
+                    else
+                        tiP[index++] = 0.0;
+                    }
+                }
+            }
+        else if (t > BRLENS_MAX)
+            {
+            /* Fill in stationary matrix //chi */
+            for (i=0; i<4; i++)
+                for (j=0; j<4; j++)
+                    tiP[index++] = (CLFlt) pis[j];
+            }
+        else
+            {
+            /* calculate probabilities */
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    bigPij = bigPi_j[j];
+                    pij = pis[j];
+                    u =  1.0/bigPij -  1.0;
+                    w = -beta * ( 1.0 + bigPij * (kap -  1.0));
+                    x =  exp(-beta * t);
+                    y =  exp(w * t);
+                    z = (bigPij - pij) / bigPij;
+                    
+                    if (i == j)
+                        tiP[index++] = (CLFlt) (pij + pij * u * x + z * y);
+                    else if ((i == 0 && j == 2) || (i == 2 && j == 0) || (i == 1 && j == 3) || (i == 3 && j == 1))
+                        tiP[index++] = (CLFlt) (pij + pij * u * x - (pij/bigPij) * y);
+                    else
+                        tiP[index++] = (CLFlt) (pij * ( 1.0 - x));
+                    }
+                }
+            }
 		}
 		
 	return NO_ERROR;
@@ -45375,7 +45336,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 	/* calculate Jukes Cantor transition probabilities */
 	
 	int			i, j, k, index;
-	MrBFlt		*catRate, baseRate, length;
+	MrBFlt		t, *catRate, baseRate, length;
 	CLFlt		pNoChange, pChange, *tiP;
 	ModelInfo	*m;
 	
@@ -45408,28 +45369,55 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 
     /* numerical errors will ensue if we allow very large or very small branch lengths, which might
        occur in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs and initial probs but for now we truncate lengths at small or large values */
+       probs and initial probs but for now we truncate lengths at small or large values
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
     else if (length < BRLENS_MIN)
         length = BRLENS_MIN;
+    */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
 		{
-		/* calculate probabilities */
-		pChange   = (CLFlt) (0.25 - 0.25 * exp(-(4.0/3.0)*length*catRate[k]));
-		pNoChange = (CLFlt) (0.25 + 0.75 * exp(-(4.0/3.0)*length*catRate[k]));
-		for (i=0; i<4; i++)
-			{
-			for (j=0; j<4; j++)
-				{
-				if (i == j)
-					tiP[index++] = pNoChange;
-				else
-					tiP[index++] = pChange;
-				}
-			}
+        t = length*catRate[k];
+            
+        if (t < BRLENS_MIN)
+            {
+            /* Fill in identity matrix //chi Dec2012 */
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    if (i == j)
+                        tiP[index++] = 1.0;
+                    else
+                        tiP[index++] = 0.0;
+                    }
+                }
+            }
+        else if (t > BRLENS_MAX)
+            {
+            /* Fill in stationary matrix //chi */
+            for (i=0; i<4; i++)
+                for (j=0; j<4; j++)
+                    tiP[index++] = 0.25;
+            }
+        else
+            {
+            /* calculate probabilities */
+            pChange   = (CLFlt) (0.25 - 0.25 * exp(-(4.0/3.0)*t));
+            pNoChange = (CLFlt) (0.25 + 0.75 * exp(-(4.0/3.0)*t));
+            for (i=0; i<4; i++)
+                {
+                for (j=0; j<4; j++)
+                    {
+                    if (i == j)
+                        tiP[index++] = pNoChange;
+                    else
+                        tiP[index++] = pChange;
+                    }
+                }
+            }
 		}
 
 	return NO_ERROR;
@@ -45493,23 +45481,44 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 
     /* numerical errors will ensue if we allow very large or very small branch lengths, which might
        occur in relaxed clock models; an elegant solution would be to substitute the stationary
-       probs and initial probs but for now we truncate lengths at small or large values */
+       probs and initial probs but for now we truncate lengths at small or large values
     if (length > BRLENS_MAX)
         length = BRLENS_MAX;
     else if (length < BRLENS_MIN)
         length = BRLENS_MIN;
+    */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
-		{
-		/* calculate probabilities */
+		{		
 		v =  length * baseRate * catRate[k];
-		eV =  exp(-mu * v);
-		tiP[index++] = (CLFlt) (bs[0] + bs[1] * eV);
-		tiP[index++] = (CLFlt) (bs[1] - bs[1] * eV);
-		tiP[index++] = (CLFlt) (bs[0] - bs[0] * eV);
-		tiP[index++] = (CLFlt) (bs[1] + bs[0] * eV);
-		}
+            
+        if (v < BRLENS_MIN)
+            {
+            /* Fill in identity matrix //chi Dec2012 */
+            tiP[index++] = (CLFlt) (bs[0] + bs[1]);
+            tiP[index++] = (CLFlt) (bs[1] - bs[1]);
+            tiP[index++] = (CLFlt) (bs[0] - bs[0]);
+            tiP[index++] = (CLFlt) (bs[1] + bs[0]);
+            }
+        else if (v > BRLENS_MAX)
+            {
+            /* Fill in stationary matrix //chi */
+            tiP[index++] = (CLFlt) bs[0];
+            tiP[index++] = (CLFlt) bs[1];
+            tiP[index++] = (CLFlt) bs[0];
+            tiP[index++] = (CLFlt) bs[1];
+            }
+        else
+            {
+            /* calculate probabilities */
+            eV =  exp(-mu * v);
+            tiP[index++] = (CLFlt) (bs[0] + bs[1] * eV);
+            tiP[index++] = (CLFlt) (bs[1] - bs[1] * eV);
+            tiP[index++] = (CLFlt) (bs[0] - bs[0] * eV);
+            tiP[index++] = (CLFlt) (bs[1] + bs[0] * eV);
+            }
+        }
 
 	return NO_ERROR;
 

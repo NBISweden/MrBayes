@@ -1299,7 +1299,7 @@ int ChangeNumChains (int from, int to)
         }
 
 
-    	/* fix stationary frequencies for standard data */
+    /* fix stationary frequencies for standard data */
 	if(   stdStateFreqsRowSize > 0 )
 		{
 		assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
@@ -12924,7 +12924,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                             isSame = NO;
 						if (strcmp(modelParams[part1].sampleStrat,modelParams[part2].sampleStrat))
                             isSame = NO;
-							
                         }
 					else if (!strcmp(modelParams[part1].clockPr, "Coalescence") || !strcmp(modelParams[part1].clockPr, "Speciestreecoalescence"))
 						{

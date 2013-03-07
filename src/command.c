@@ -14714,10 +14714,8 @@ void SetUpParms (void)
 	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
     PARAM   (268, "Precision",      DoSetParm,          "\0");
 
-
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 269) in paramTable[] at the top of this file. */
-
 }
 
 
@@ -14727,7 +14725,6 @@ void SetUpParms (void)
 void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 
 {
-
 	if (p != NULL)
 		{
 		printf ("   ");
