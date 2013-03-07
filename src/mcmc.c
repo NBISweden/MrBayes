@@ -44906,9 +44906,8 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 
         if (t < BRLENS_MIN)
             {
-            /* Fill in identity matrix //chi Dec2012 */
+            /* Fill in identity matrix */
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     if (i == j)
@@ -44916,11 +44915,10 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = 0.0;
                     }
-                }
             }
         else if (t > BRLENS_MAX)
             {
-            /* Fill in stationary matrix //chi */
+            /* Fill in stationary matrix */
             for (i=0; i<4; i++)
                 for (j=0; j<4; j++)
                     tiP[index++] = (CLFlt) pis[j];
@@ -44929,7 +44927,6 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
             {
             /* calculate probabilities */
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     bigPij = bigPi_j[j];
@@ -44943,7 +44940,6 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = (CLFlt) (pij + pij * u * x - (pij/bigPij) * x);
                     }
-                }
             }
         }
 
@@ -45269,9 +45265,8 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 
         if (t < BRLENS_MIN)
             {
-            /* Fill in identity matrix //chi Dec2012 */
+            /* Fill in identity matrix */
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     if (i == j)
@@ -45279,11 +45274,10 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = 0.0;
                     }
-                }
             }
         else if (t > BRLENS_MAX)
             {
-            /* Fill in stationary matrix //chi */
+            /* Fill in stationary matrix */
             for (i=0; i<4; i++)
                 for (j=0; j<4; j++)
                     tiP[index++] = (CLFlt) pis[j];
@@ -45292,7 +45286,6 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
             {
             /* calculate probabilities */
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     bigPij = bigPi_j[j];
@@ -45310,7 +45303,6 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = (CLFlt) (pij * ( 1.0 - x));
                     }
-                }
             }
 		}
 		
@@ -45383,9 +45375,8 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
             
         if (t < BRLENS_MIN)
             {
-            /* Fill in identity matrix //chi Dec2012 */
+            /* Fill in identity matrix */
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     if (i == j)
@@ -45393,11 +45384,10 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = 0.0;
                     }
-                }
             }
         else if (t > BRLENS_MAX)
             {
-            /* Fill in stationary matrix //chi */
+            /* Fill in stationary matrix */
             for (i=0; i<4; i++)
                 for (j=0; j<4; j++)
                     tiP[index++] = 0.25;
@@ -45408,7 +45398,6 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
             pChange   = (CLFlt) (0.25 - 0.25 * exp(-(4.0/3.0)*t));
             pNoChange = (CLFlt) (0.25 + 0.75 * exp(-(4.0/3.0)*t));
             for (i=0; i<4; i++)
-                {
                 for (j=0; j<4; j++)
                     {
                     if (i == j)
@@ -45416,7 +45405,6 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
                     else
                         tiP[index++] = pChange;
                     }
-                }
             }
 		}
 
@@ -45495,7 +45483,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
             
         if (v < BRLENS_MIN)
             {
-            /* Fill in identity matrix //chi Dec2012 */
+            /* Fill in identity matrix */
             tiP[index++] = (CLFlt) (bs[0] + bs[1]);
             tiP[index++] = (CLFlt) (bs[1] - bs[1]);
             tiP[index++] = (CLFlt) (bs[0] - bs[0]);
@@ -45503,7 +45491,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
             }
         else if (v > BRLENS_MAX)
             {
-            /* Fill in stationary matrix //chi */
+            /* Fill in stationary matrix */
             tiP[index++] = (CLFlt) bs[0];
             tiP[index++] = (CLFlt) bs[1];
             tiP[index++] = (CLFlt) bs[0];
