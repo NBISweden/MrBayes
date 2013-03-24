@@ -22419,7 +22419,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             *clockRatep = modelParams[t_calibrated->relParts[0]].clockRateFix;
             if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
                 {
-                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n", spacer, minClockRate, minClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
+                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n", spacer, minClockRate, maxClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
                 *clockRatep=0;
                 return (ERROR);
                 }
@@ -22441,7 +22441,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
                 *clockRatep = clockRate;
                 if((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO) )
                     {
-                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n", spacer, minClockRate, minClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
+                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n", spacer, minClockRate, maxClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
                     *clockRatep=0;
                     return (ERROR);
                     }
