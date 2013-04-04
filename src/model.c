@@ -18655,9 +18655,9 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[2] = BRLENS_GamDir;
 	mt->applicableTo[3] = BRLENS_iGmDir;
     mt->applicableTo[4] = BRLENS_twoExp;
-	mt->nApplicable = 5;  //was 2
+	mt->nApplicable = 5;  // was 2
 	mt->moveFxn = &Move_BrLen;
-	mt->relProposalProb = 20.0;
+	mt->relProposalProb = 15.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.0001;
@@ -18824,11 +18824,35 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[0] = 0.5;  /* extension probability */
 	mt->tuningParam[1] = 2.0 * log (1.05);  /* lambda */
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 0.99;
+	mt->maximum[0] = 0.99999;
 	mt->minimum[1] = 0.00000001;
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+
+	/* Move_ExtTBR0, original ExtTBR in 3.2 */
+	mt = &moveTypes[i++];
+	mt->name = "Extending TBR variant 0";
+	mt->shortName = "ExtTBR0";
+    mt->subParams = YES;
+	mt->tuningName[0] = "Extension probability";
+	mt->shortTuningName[0] = "p_ext";
+	mt->tuningName[1] = "Multiplier tuning parameter";
+	mt->shortTuningName[1] = "lambda";
+	mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+	mt->nApplicable = 2;
+	mt->moveFxn = &Move_ExtTBR0;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 2;
+	mt->tuningParam[0] = 0.7;  /* extension probability */
+	mt->tuningParam[1] = 2.0 * log (1.5);  /* lambda */
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 0.99999;
+	mt->minimum[1] = 0.00000001;
+	mt->maximum[1] = 10000000.0;
+	mt->parsimonyBased = NO;
+	mt->level = DEVELOPER;
 
 	/* Move_ExtTBR1 */
 	mt = &moveTypes[i++];
@@ -19155,7 +19179,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[2] = BRLENS_GamDir;
 	mt->applicableTo[3] = BRLENS_iGmDir;
     mt->applicableTo[4] = BRLENS_twoExp;
-	mt->nApplicable = 5;  //was 2
+	mt->nApplicable = 5;  // was 2
 	mt->moveFxn = &Move_NodeSlider;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
@@ -20003,7 +20027,7 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[2] = BRLENS_GamDir;
 	mt->applicableTo[3] = BRLENS_iGmDir;
     mt->applicableTo[4] = BRLENS_twoExp;
-	mt->nApplicable = 5;  //was 2
+	mt->nApplicable = 5;  // was 2
 	mt->moveFxn = &Move_TreeLen;
 	mt->relProposalProb = 2.0;
 	mt->numTuningParams = 1;
