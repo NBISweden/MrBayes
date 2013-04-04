@@ -63,7 +63,7 @@
 const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 #define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
-											/*       of commands in the program           */
+											/*       of commands in the program          */
 #define	NUMPARAMS						269
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
@@ -11076,19 +11076,18 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    The options are:                                             \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = Gamma(<num>,<num>)                      \n");
-		MrBayesPrint ("                       prset treeagepr = Exponential(<number>)                   \n");
-		MrBayesPrint ("                       prset treeagepr = Fixed(<number>)                         \n");
+		MrBayesPrint ("                       prset treeagepr = gamma(<num>,<num>)                      \n");
+		MrBayesPrint ("                       prset treeagepr = uniform(<num>,<num>)                    \n");
+		MrBayesPrint ("                       prset treeagepr = fixed(<number>)                         \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    (And, yes, we know the exponential is a special case of the  \n");
-		MrBayesPrint ("                    gamma distribution.) The tree age is simply the age of the   \n");
-		MrBayesPrint ("                    most recent common ancestor of the tree. If the clock rate   \n");
-		MrBayesPrint ("                    is fixed to 1.0, which is the default, the tree age is equi- \n");
-        MrBayesPrint ("                    valent to the expected number of substitutions from the root \n");
-        MrBayesPrint ("                    to the tip of the tree. The tree age prior ensures that the  \n");
-		MrBayesPrint ("                    joint prior probability distribution for the uniform prior   \n");
+		MrBayesPrint ("                    The tree age is simply the age of the most recent common     \n");
+		MrBayesPrint ("                    ancestor of the tree. If the clock rate is fixed to 1.0,     \n");
+		MrBayesPrint ("                    which is the default, the tree age is equivalent to the      \n");
+        MrBayesPrint ("                    expected number of substitutions from the root to the tip of \n");
+        MrBayesPrint ("                    the tree. The tree age prior ensures that the joint prior    \n");
+		MrBayesPrint ("                    probability for the uniform prior (or fossilization prior)   \n");
 		MrBayesPrint ("                    model of branch lengths on a clock tree is proper. The de-   \n");
-		MrBayesPrint ("                    fault setting is 'Exponential(1)'. If the root node in the   \n");
+		MrBayesPrint ("                    fault setting is 'gamma(1,1)'. If the root node in the       \n");
 		MrBayesPrint ("                    tree is calibrated, the root calibration replaces the tree   \n");
 		MrBayesPrint ("                    age prior.                                                   \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
@@ -11551,13 +11550,13 @@ int GetUserHelp (char *helpTkn)
 			else if (!strcmp(mp->brlensPr, "Fixed"))
 				MrBayesPrint("(%s)\n", userTree[mp->brlensFix]->name);
 			
-			MrBayesPrint ("   Treeagepr        Exponential/Gamma/Fixed      %s", mp->treeAgePr);
+			MrBayesPrint ("   Treeagepr        Gamma/Uniform/Fixed      %s", mp->treeAgePr);
 			if (!strcmp(mp->treeAgePr, "Gamma"))
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
-			else if (!strcmp(mp->treeAgePr, "Fixed"))
+            else if (!strcmp(mp->treeAgePr, "Uniform"))
+                    MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->treeAgeUni[0], mp->treeAgeUni[1]);
+			else
 				MrBayesPrint ("(%1.1lf)\n", mp->treeAgeFix);
-			else /* if (!strcmp(mp->speciationPr, "Exponential")) */
-				MrBayesPrint ("(%1.1lf)\n", mp->treeAgeExp);
 			
 			MrBayesPrint ("   Speciationpr     Uniform/Exponential/Fixed    %s", mp->speciationPr);
 			if (!strcmp(mp->speciationPr, "Uniform"))
@@ -14577,7 +14576,7 @@ void SetUpParms (void)
 	PARAM   (130, "Burnin",         DoCompareTreeParm, "\0");
 	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|Zlinked|\0");
 	PARAM   (132, "Swapadjacent",   DoMcmcParm,        "Yes|No|\0");
-	PARAM   (133, "Treeagepr",      DoPrsetParm,       "Gamma|Exponential|Fixed|\0");
+	PARAM   (133, "Treeagepr",      DoPrsetParm,       "Gamma|Uniform|Fixed|\0");
 	PARAM   (134, "Ancstates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (135, "Siterates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (136, "Possel",         DoReportParm,      "Yes|No|\0");

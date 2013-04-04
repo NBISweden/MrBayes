@@ -16383,9 +16383,11 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
         }
     else
         {
-        if (!strcmp(mp->treeAgePr, "Exponential"))
-		    lnProb += log(mp->treeAgeExp) - mp->treeAgeExp * treeAge;
-	    else if (!strcmp(mp->treeAgePr, "Gamma"))
+        /* if (!strcmp(mp->treeAgePr, "Exponential"))
+		    lnProb += log(mp->treeAgeExp) - mp->treeAgeExp * treeAge;  */
+        if (!strcmp(mp->treeAgePr, "Uniform"))
+            lnProb += log(1.0) - log(mp->treeAgeUni[1] - mp->treeAgeUni[0]);
+        else if (!strcmp(mp->treeAgePr, "Gamma"))
 		    lnProb += mp->treeAgeGamma[0] * log(mp->treeAgeGamma[1]) - LnGamma(mp->treeAgeGamma[0]) + (mp->treeAgeGamma[0] - 1.0) * log(treeAge) - mp->treeAgeGamma[1] * treeAge;
         }
 
@@ -19872,6 +19874,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
     return (NO_ERROR);
 	
 }
+
 
 
 
@@ -32095,15 +32098,15 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 			rateProps[1] = 1-rateProps[0];
 			R_j = rateProps[1] * R;
 			assert(R_j/n_j < RATE_MIN);
-			} 
-		else if(R_j/n_j < RATE_MIN)
-			{
-			R_j = RATE_MIN*n_j;
-			rateProps[1] = R_j/R;
-			rateProps[0] = 1-rateProps[1];
-			R_i = rateProps[0] * R;
-			assert(R_i/n_i < RATE_MIN);
 			}
+		else if(R_j/n_j < RATE_MIN)
+            {
+            R_j = RATE_MIN*n_j;
+            rateProps[1] = R_j/R;
+            rateProps[0] = 1-rateProps[1];
+            R_i = rateProps[0] * R;
+            assert(R_i/n_i < RATE_MIN);
+            }
 
         /* set the new rates */
         for (i=0; i<nNewRates; i++)

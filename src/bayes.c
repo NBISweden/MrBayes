@@ -725,10 +725,11 @@ int InitializeMrBayes (void)
 	
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
-	strcpy(defaultModel.treeAgePr, "Exponential");      /* prior on tree age                            */
+	strcpy(defaultModel.treeAgePr, "Gamma");            /* prior on tree age                            */
 	defaultModel.treeAgeGamma[0] = 1.0;
 	defaultModel.treeAgeGamma[1] = 1.0;
-	defaultModel.treeAgeExp = 1.0;
+	defaultModel.treeAgeUni[0] = 0.0;                   //chi Mar2013
+	defaultModel.treeAgeUni[1] = 1000000.0;
 	defaultModel.treeAgeFix = 1.0;
 	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
 	defaultModel.clockRateNormal[0] = 1.0;

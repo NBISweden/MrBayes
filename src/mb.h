@@ -989,7 +989,7 @@ typedef struct model
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
 	char		treeAgePr[100];       /* prior on tree age for uniform clock prior */
 	MrBFlt		treeAgeGamma[2];
-	MrBFlt		treeAgeExp;
+	MrBFlt		treeAgeUni[2];
 	MrBFlt		treeAgeFix;
 	char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
 	MrBFlt		clockRateNormal[2];

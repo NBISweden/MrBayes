@@ -7230,7 +7230,22 @@ int DoPrsetParm (char *parmName, char *tkn)
 								expecting  = Expecting(RIGHTPAR);
 								}
 							}
-						else if (!strcmp(modelParams[i].treeAgePr,"Exponential"))
+                        else if (!strcmp(modelParams[i].treeAgePr,"Uniform"))
+                            {
+							sscanf (tkn, "%lf", &tempD);
+							modelParams[i].treeAgeUni[numVars[i]++] = tempD;
+							if (numVars[i] == 1)
+								expecting  = Expecting(COMMA);
+							else
+                                {
+								if (nApplied == 0 && numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Treeagepr to Unifrom(%1.2lf,%1.2lf)\n", spacer, modelParams[i].treeAgeUni[0], modelParams[i].treeAgeUni[1]);
+								else
+									MrBayesPrint ("%s   Setting Treeagepr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeUni[0], modelParams[i].treeAgeUni[1], i+1);
+								expecting  = Expecting(RIGHTPAR);
+                            }
+                        }
+						/* else if (!strcmp(modelParams[i].treeAgePr,"Exponential"))
 							{
 							sscanf (tkn, "%lf", &tempD);
 							modelParams[i].treeAgeExp = tempD;
@@ -7239,7 +7254,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 							else
 								MrBayesPrint ("%s   Setting Treeagepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeExp, i+1);
 							expecting  = Expecting(RIGHTPAR);
-							}
+							}  */
 						else if (!strcmp(modelParams[i].treeAgePr,"Fixed"))
 							{
 							sscanf (tkn, "%lf", &tempD);
@@ -12968,17 +12983,19 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						}
 					if (strcmp(modelParams[part1].clockPr, "Uniform") == 0 && strcmp(modelParams[part1].nodeAgePr, "Calibrated") != 0)
 						{
-						if (strcmp(modelParams[part1].treeAgePr,modelParams[part2].treeAgePr) != 0)
+						if (strcmp(modelParams[part1].treeAgePr, modelParams[part2].treeAgePr) != 0)
 							isSame = NO;
 						else if (!strcmp(modelParams[part1].treeAgePr,"Fixed"))
 							{
 							if (AreDoublesEqual (modelParams[part1].treeAgeFix, modelParams[part2].treeAgeFix, (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
-						else if (!strcmp(modelParams[part1].treeAgePr,"Exponential"))
+						else if (!strcmp(modelParams[part1].treeAgePr,"Uniform"))
 							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeExp, modelParams[part2].treeAgeExp, (MrBFlt) 0.00001) == NO)
+                            if (AreDoublesEqual (modelParams[part1].treeAgeUni[0], modelParams[part2].treeAgeUni[0], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
+                            if (AreDoublesEqual (modelParams[part1].treeAgeUni[1], modelParams[part2].treeAgeUni[1], (MrBFlt) 0.00001) == NO)
+                                isSame = NO;
 							}
 						else if (!strcmp(modelParams[part1].treeAgePr,"Gamma"))
 							{
@@ -13093,7 +13110,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		else
 			isSame = NO;
 		
-		/* Check to see if the speciation rates are inapplicable for either partition. */
+		/* Check to see if the extinction rates are inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 
 
@@ -18830,7 +18847,7 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
 
-	/* Move_ExtTBR0, original ExtTBR in 3.2 */
+	/* Move_ExtTBR in v3.1.2 */
 	mt = &moveTypes[i++];
 	mt->name = "Extending TBR variant 0";
 	mt->shortName = "ExtTBR0";
@@ -21540,12 +21557,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
 					if (!strcmp(mp->clockPr,"Uniform") && !strcmp(mp->nodeAgePr,"Unconstrained"))
 						{
-						if (!strcmp(mp->treeAgePr, "Fixed"))
-							MrBayesPrint ("%s                         Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
+						if (!strcmp(mp->treeAgePr, "Uniform"))
+							MrBayesPrint ("%s                         Tree age has a Uniform(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeUni[0], mp->treeAgeUni[1]);
 						else if (!strcmp(mp->treeAgePr, "Gamma"))
 							MrBayesPrint ("%s                         Tree age has a Gamma(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
-						else
-							MrBayesPrint ("%s                         Tree age has an Exponential(%1.3lf) distribution\n", spacer, mp->treeAgeExp);
+                        else
+                            MrBayesPrint ("%s                         Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
 						}
                     else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
                         {
@@ -21593,12 +21610,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             {
 					        if (!strcmp(mp->clockPr,"Uniform"))
 						        {
-						        if (!strcmp(mp->treeAgePr, "Fixed"))
-							        MrBayesPrint ("%s                         -- Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
+                                if (!strcmp(mp->treeAgePr, "Uniform"))
+                                    MrBayesPrint ("%s                         -- Tree age has a Uniform(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeUni[0], mp->treeAgeUni[1]);
 						        else if (!strcmp(mp->treeAgePr, "Gamma"))
 							        MrBayesPrint ("%s                         -- Tree age has a Gamma(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
 						        else
-							        MrBayesPrint ("%s                         -- Tree age has an Exponential(%1.3lf) distribution\n", spacer, mp->treeAgeExp);
+                                    MrBayesPrint ("%s                         -- Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
 						        }
 					        else if (!strcmp(mp->clockPr,"Birthdeath"))
 						        {
