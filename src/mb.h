@@ -91,8 +91,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #if defined (DEBUGOUTPUT)
 #define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__);printf(fmt,arg);
-#else
-#define DEBUG(a,b) 
+// #else
+// #define DEBUG(a,b) 
 #endif
 
 #if defined (MPI_ENABLED)

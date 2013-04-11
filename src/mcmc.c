@@ -17978,6 +17978,12 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
+    /* this move doesn't work for 4 taxa */
+    if (t->nIntNodes == 2) {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
+
 	/* max and min brlen */
 	if (param->subParams[0]->paramId == BRLENS_UNI)
 		{
@@ -19915,6 +19921,12 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
+    /* this move doesn't work for 4 taxa */
+    if (t->nIntNodes == 2) {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
+
 	/* max and min brlen */
 	if (param->subParams[0]->paramId == BRLENS_UNI)
 		{
@@ -27543,15 +27555,15 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		p->d = 0;
 		}
 
-	/* pick a random branch, making sure it can move either up or down */
-	do
-		{
-		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
-		if (p->anc->left == p)
-			q = p->anc->right;
-		else
-			q = p->anc->left;
-		} while ((p->anc->anc->anc == NULL || p->anc->isLocked == YES) && (q->left == NULL || q->isLocked == YES));
+	/* pick a random branch */
+    p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
+    q = p->anc->right;
+    if (q == p)
+        q = p->anc->left;
+    if ((p->anc->anc->anc == NULL || p->anc->isLocked == YES) && (q->left == NULL || q->isLocked == YES)) {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
 		
 	/* set up pointers for nodes around the picked branch */
 	v = p;
