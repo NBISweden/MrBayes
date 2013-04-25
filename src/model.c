@@ -7555,7 +7555,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 						else if (!strcmp(modelParams[i].popSizePr,"Gamma"))
 							{
 							sscanf (tkn, "%lf", &tempD);
-                            modelParams[i].popSizeLognormal[numVars[i]++] = tempD;
+                            modelParams[i].popSizeGamma[numVars[i]++] = tempD;
 							if (numVars[i] == 1)
                                 {
 								if (modelParams[i].popSizeGamma[0] <= 0.0)

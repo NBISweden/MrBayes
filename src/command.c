@@ -1408,19 +1408,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(NUMBER))
 		{
-		if (calibrationPtr->prior == fixed)
-			{
-			sscanf (tkn, "%lf", &tempD);
-			if (tempD < 0.0)
-				{
-				MrBayesPrint ("%s   Age must be nonnegative\n", spacer);
-				calibrationPtr->prior = unconstrained;
-				return (ERROR);
-				}
-			calibrationPtr->age = tempD;
-			expecting = Expecting(RIGHTPAR);
-			}
-		else if (calibrationPtr->prior == uniform)
+		if (calibrationPtr->prior == uniform)
 			{
 			sscanf (tkn, "%lf", &tempD);
 			if (tempD < 0.0)
@@ -1478,7 +1466,19 @@ int DoCalibrateParm (char *parmName, char *tkn)
 				expecting = Expecting(RIGHTPAR);
 				}
 			}
-		sprintf (s, "%1.2lf", tempD);
+        else  // if (calibrationPtr->prior == fixed)
+			{
+                sscanf (tkn, "%lf", &tempD);
+                if (tempD < 0.0)
+				{
+                    MrBayesPrint ("%s   Age must be nonnegative\n", spacer);
+                    calibrationPtr->prior = unconstrained;
+                    return (ERROR);
+				}
+                calibrationPtr->age = tempD;
+                expecting = Expecting(RIGHTPAR);
+			}
+        sprintf (s, "%1.2lf", tempD);
 		strcat (calibrationPtr->name, s);
 		}
 	else if (expecting == Expecting(COMMA))
