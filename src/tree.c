@@ -420,7 +420,7 @@ int AllocateTreePartitions (Tree *t)
 int AreTopologiesSame (Tree *t1, Tree *t2)
 
 {
-	int			i, j, k, nLongsNeeded, nTaxa, revertBits;
+	int			i, j, k, nLongsNeeded, nTaxa;
 	SafeLong	*bitsets, *mask;
 	TreeNode	*p, *q;
 
@@ -428,11 +428,6 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 		return (NO);
 	if (t1->nIntNodes != t2->nIntNodes)
 		return (NO);
-	
-	if (t1->isRooted == NO && (t1->root->index != t2->root->index))
-		revertBits = YES;
-	else
-		revertBits = NO;
 	
 	if (t1->isRooted == YES)
 		nTaxa = t1->nNodes - t1->nIntNodes - 1;
@@ -515,7 +510,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 int AreTreesSame (Tree *t1, Tree *t2)
 
 {
-	int			i, j, k, nLongsNeeded, nTaxa, revertBits;
+	int			i, j, k, nLongsNeeded, nTaxa;
 	SafeLong	*bitsets, *mask;
 	TreeNode	*p, *q;
 
@@ -525,11 +520,6 @@ int AreTreesSame (Tree *t1, Tree *t2)
 		return (NO);
 	if (t1->nIntNodes != t2->nIntNodes)
 		return (NO);
-	
-	if (t1->isRooted == NO && (t1->root->index != t2->root->index))
-		revertBits = YES;
-	else
-		revertBits = NO;
 	
 	if (t1->isRooted == YES)
 		nTaxa = t1->nNodes - t1->nIntNodes - 1;
@@ -1577,7 +1567,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 
 {
 
-	int			i, j, nNodesNeeded;
+	int			i, j;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
 
@@ -1585,19 +1575,12 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
     assert (!(from->isRooted == NO && to->isRooted == YES));
     if ( (from->isRooted == NO) && (to->isRooted == YES) )
         {
-        MrBayesPrint ("%s   Fail to copy trees due to difference in rootedness of source and destination. \n", spacer);
+        MrBayesPrint ("%s   Failed to copy trees due to difference in rootedness of source and destination. \n", spacer);
         return (ERROR);
         }
-    /* calculate space needed */
-    if (from->isRooted == YES && to->isRooted == YES)
-		nNodesNeeded    = from->nNodes + 1;
-	else if (from->isRooted == YES && to->isRooted == NO)
-        nNodesNeeded    = from->nNodes;
-    else /* if (from->isRooted = NO && to->isRooted == NO) */
-		nNodesNeeded    = from->nNodes;
 
     /* make sure assumptions are in order */
-    assert (to->memNodes >= nNodesNeeded);
+    assert (to->memNodes >= from->nNodes + (to->isRooted == NO ? 0 : 1));
     assert (localOutGroup >= 0 && localOutGroup < numLocalTaxa);
     assert (numLocalTaxa == from->nNodes - from->nIntNodes);
     assert (!(from->isRooted == YES && from->nNodes != 2*from->nIntNodes + 1));
