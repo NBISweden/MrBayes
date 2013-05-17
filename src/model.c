@@ -6942,7 +6942,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Speciationpr (speciationPr) ****************************************************/
+		/* set Speciationpr (speciationPr) *************************************************/
 		else if (!strcmp(parmName, "Speciationpr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -7035,7 +7035,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set Extinctionpr (extinctionPr) ****************************************************/
+		/* set Extinctionpr (extinctionPr) *************************************************/
 		else if (!strcmp(parmName, "Extinctionpr"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
@@ -7118,7 +7118,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
-		/* set SampleStrat (sampleStrat) *****************************************************/
+		/* set SampleStrat (sampleStrat) ***************************************************/
 		else if (!strcmp(parmName, "Samplestrat"))
         {
 			if (expecting == Expecting(EQUALSIGN))
@@ -10390,7 +10390,7 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 				if (p->paramId == EXTRATE_FIX)
 					value[0] = mp->extinctionFix;
 				else
-					value[0] =  0.2;
+					value[0] =  0.5;
 				}
 			else if (p->paramType == P_POPSIZE)
 				{

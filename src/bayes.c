@@ -728,29 +728,29 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.treeAgePr, "Gamma");            /* prior on tree age                            */
 	defaultModel.treeAgeGamma[0] = 1.0;
 	defaultModel.treeAgeGamma[1] = 1.0;
-	defaultModel.treeAgeUni[0] = 0.0;                   //chi Mar2013
+	defaultModel.treeAgeUni[0] = 0.0;
 	defaultModel.treeAgeUni[1] = 1000000.0;
 	defaultModel.treeAgeFix = 1.0;
 	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
 	defaultModel.clockRateNormal[0] = 1.0;
 	defaultModel.clockRateNormal[1] = 1.0;
 	defaultModel.clockRateLognormal[0] = 0.0;           /* mean 0.0 on log scale corresponds to mean rate 1.0 */
-	defaultModel.clockRateLognormal[1] = 0.7;           /* double or half the rate in one standard deviation     */
+	defaultModel.clockRateLognormal[1] = 0.7;           /* double or half the rate in one standard deviation  */
 	defaultModel.clockRateGamma[0] = 1.0;
 	defaultModel.clockRateGamma[1] = 1.0;
 	defaultModel.clockRateExp = 1.0;
 	defaultModel.clockRateFix = 1.0;
-	strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate                     */
+	strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate (net diversification) */
 	defaultModel.speciationFix = 1.0;
 	defaultModel.speciationUni[0] = 0.0;
 	defaultModel.speciationUni[1] = 10.0;
 	defaultModel.speciationExp = 1.0;
-	strcpy(defaultModel.extinctionPr, "Beta");      /* prior on extinction rate                     */
-	defaultModel.extinctionFix = 1.0;
+	strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover) */
+	defaultModel.extinctionFix = 0.5;
 	defaultModel.extinctionBeta[0] = 1;
 	defaultModel.extinctionBeta[1] = 1;
-	strcpy(defaultModel.sampleStrat, "Random");     /* taxon sampling strategy                      */
-	defaultModel.sampleProb = 1.0;                  /* taxon sampling fraction                      */
+	strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                       */
+	defaultModel.sampleProb = 1.0;                      /* taxon sampling fraction                       */
 	strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
 	defaultModel.popSizeFix = 10.0;
 	defaultModel.popSizeUni[0] = 1.0;
@@ -761,8 +761,8 @@ int InitializeMrBayes (void)
 	defaultModel.popSizeLognormal[1] = 2.3;         /* factor 10 in one standard deviation          */
 	defaultModel.popSizeGamma[0] = 100.0;
 	defaultModel.popSizeGamma[1] = 1000.0;
-	strcpy(defaultModel.popVarPr, "Equal");         /* prior on pop. size variation across tree      */
-	strcpy(defaultModel.growthPr, "Fixed");         /* prior on coalescence growth rate prior      */
+	strcpy(defaultModel.popVarPr, "Equal");         /* prior on pop. size variation across tree     */
+	strcpy(defaultModel.growthPr, "Fixed");         /* prior on coalescence growth rate prior       */
 	defaultModel.growthFix = 0.0;
 	defaultModel.growthUni[0] = 0.0;
 	defaultModel.growthUni[1] = 100.0;
@@ -770,8 +770,8 @@ int InitializeMrBayes (void)
 	defaultModel.growthNorm[0] = 0.0;
 	defaultModel.growthNorm[1] = 1.0;
 	strcpy(defaultModel.nodeAgePr, "Unconstrained");    /* prior on node depths                     */
-	strcpy(defaultModel.clockVarPr, "Strict");          /* prior on clock rate variation               */
-	strcpy(defaultModel.cppRatePr, "Exponential") ;	    /* prior on rate of CPP for relaxed clock     */
+	strcpy(defaultModel.clockVarPr, "Strict");          /* prior on clock rate variation            */
+	strcpy(defaultModel.cppRatePr, "Exponential") ;	    /* prior on rate of CPP for relaxed clock   */
 	defaultModel.cppRateExp = 0.1;
 	defaultModel.cppRateFix = 1.0;
 	strcpy(defaultModel.cppMultDevPr, "Fixed") ;	/* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
@@ -786,7 +786,7 @@ int InitializeMrBayes (void)
 	defaultModel.igrvarFix = 0.1;
 	defaultModel.igrvarUni[0] = 0.0;
 	defaultModel.igrvarUni[1] = 0.5;
-	strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition                */
+	strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition              */
 	defaultModel.ratePrDir = 1.0;
 
 	defaultModel.nStates = 4;			            /* number of states for partition             */

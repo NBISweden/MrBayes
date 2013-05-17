@@ -1478,7 +1478,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
                 calibrationPtr->age = tempD;
                 expecting = Expecting(RIGHTPAR);
 			}
-        sprintf (s, "%1.2lf", tempD);
+		sprintf (s, "%1.2lf", tempD);
 		strcat (calibrationPtr->name, s);
 		}
 	else if (expecting == Expecting(COMMA))

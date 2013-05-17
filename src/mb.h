@@ -92,7 +92,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #if defined (DEBUGOUTPUT)
 #define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__);printf(fmt,arg);
 // #else
-// #define DEBUG(a,b) 
+// #define DEBUG(a,b)
 #endif
 
 #if defined (MPI_ENABLED)
@@ -970,24 +970,24 @@ typedef struct model
 	int         brlensFix;         /* user tree index for fixed brlens             */
 	MrBFlt		brlensUni[2];
 	MrBFlt		brlensExp;
-    MrBFlt		brlens2Ex[2];
-    MrBFlt		brlensDir[4];
+	MrBFlt		brlens2Ex[2];
+	MrBFlt		brlensDir[4];
 	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
 	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, mb(rateautocorr))   */
 	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
-	char		speciationPr[100];    /* prior on speciation rate                          */
+	char		speciationPr[100];    /* prior on speciation rate                     */
 	MrBFlt		speciationFix;
 	MrBFlt		speciationUni[2];
 	MrBFlt		speciationExp;
 	char		extinctionPr[100];    /* prior on extinction rate                     */
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
-	MrBFlt		extinctionExp;
+//	MrBFlt		extinctionExp;
 	char		sampleStrat[30];      /* taxon sampling strategy (for b-d process)    */
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
-	char		treeAgePr[100];       /* prior on tree age for uniform clock prior */
+	char		treeAgePr[100];       /* prior on tree age for uniform clock prior    */
 	MrBFlt		treeAgeGamma[2];
 	MrBFlt		treeAgeUni[2];
 	MrBFlt		treeAgeFix;
@@ -997,19 +997,19 @@ typedef struct model
 	MrBFlt		clockRateGamma[2];
 	MrBFlt		clockRateExp;
 	MrBFlt		clockRateFix;
-	char		popSizePr[100];       /* prior on population size                    */
+	char		popSizePr[100];       /* prior on population size                     */
 	MrBFlt		popSizeFix;
 	MrBFlt		popSizeUni[2];
 	MrBFlt		popSizeLognormal[2];
 	MrBFlt		popSizeGamma[2];
     MrBFlt      popSizeNormal[2];
-	char		popVarPr[100];        /* prior on pop. size variation across tree    */
-	char		growthPr[100];        /* prior on coalescence growth rate            */
+	char		popVarPr[100];        /* prior on pop. size variation across tree     */
+	char		growthPr[100];        /* prior on coalescence growth rate             */
 	MrBFlt		growthFix;
 	MrBFlt		growthUni[2];
 	MrBFlt		growthExp;
 	MrBFlt		growthNorm[2];
-	char		cppRatePr[100];     /* prior on CPP rate                           */
+	char		cppRatePr[100];     /* prior on CPP rate                              */
 	MrBFlt		cppRateFix;
 	MrBFlt		cppRateExp;
 	char		cppMultDevPr[100];  /* prior on CPP rate multiplier Lognormal variance */
@@ -1042,7 +1042,7 @@ typedef struct chain
 	int			numRuns;               /* number of runs                                */
 	int			numChains;             /* number of chains                              */
     int         isSS;                  /* do we do Steppingstone Sampling               */
-    int         startFromPriorSS;      /* If Yes SS is moving from Prior to Posterior  */
+    int         startFromPriorSS;      /* If Yes SS is moving from Prior to Posterior   */
     int         numStepsSS;            /* Number of steps in SS                         */
     int         burninSS;              /* Fixed burnin for SS                           */
     MrBFlt      alphaSS;               /* Beta values are distributed according to quantiles of Beta(alphaSS,1.0) distribution */

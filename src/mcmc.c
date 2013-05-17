@@ -8098,8 +8098,8 @@ int DoMcmc (void)
 	        }
         }            
 
-/*Set clockRate if we have calibration */
-   for (j=0; j<numGlobalChains; j++)
+	/* Set clockRate if we have calibration */
+	for (j=0; j<numGlobalChains; j++)
         {
         if( UpdateClockRate(0.0, j) == ERROR) 
             goto errorExit;
@@ -15222,7 +15222,7 @@ MrBFlt LogLike (int chain)
 			{	
 			/* Work has been delegated to a separate function so we can wrap    */
 			/* a thread around it                                               */				
-			LaunchLogLikeForDivision(chain, d, &(m->lnLike[2 * chain + state[chain]]));							
+			LaunchLogLikeForDivision(chain, d, &(m->lnLike[2 * chain + state[chain]]));
 			}
 		chainLnLike += m->lnLike[2*chain + state[chain]];	
 		}
@@ -15348,7 +15348,8 @@ MrBFlt LogPrior (int chain)
 			if (p->paramId == TRATIO_DIR)
 				{
 				alphaDir = mp->tRatioDir;
-				newProp[0] =  (st[0] / (st[0] + 1.0));
+                newProp[0] =  st[0];
+				// newProp[0] =  st[0] / (st[0] + 1.0);
 				newProp[1] =  (1.0 - newProp[0]);
 				x = 0.0;
 				for (i=0; i<2; i++)
@@ -15418,7 +15419,8 @@ MrBFlt LogPrior (int chain)
 			if (p->paramId == OMEGA_DIR)
 				{
 				alphaDir = mp->omegaDir;
-				newProp[0] = st[0] / (st[0] + 1.0);
+				newProp[0] = st[0];
+				// newProp[0] = st[0] / (st[0] + 1.0);
 				newProp[1] = 1.0 - newProp[0];
                 sum = 0.0;
                 for (i=0; i<2; i++)
@@ -15448,7 +15450,7 @@ MrBFlt LogPrior (int chain)
                 p->paramId == OMEGA_BFD || p->paramId == OMEGA_BFF)
 				{
                 alphaDir = mp->ny98omega1Beta;
-				newProp[0] = st[0] / (st[0] + 1.0);
+				newProp[0] = st[0];
 				newProp[1] = 1.0 - newProp[0];
 				x = 0.0;
 				for (i=0; i<2; i++)
@@ -15759,7 +15761,7 @@ MrBFlt LogPrior (int chain)
 			if (p->paramId == EXTRATE_BETA)
 				{
 				alphaDir = mp->extinctionBeta;
-				newProp[0] =  (st[0] / (st[0] + 1.0));
+				newProp[0] =  st[0];
 				newProp[1] =  (1.0 - newProp[0]);
 				x = 0.0;
 				for (i=0; i<2; i++)
@@ -15921,13 +15923,13 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 		return LnBirthDeathPriorPrRandom (t, clockRate, prob, sR, eR, sF);
 		}
 	else if (!strcmp(sS, "Diversity")) 
-    	{
+		{
         return LnBirthDeathPriorPrDiversity (t, clockRate, prob, sR, eR, sF);
-    	}
+		}
 	else if (!strcmp(sS, "Cluster")) 
-    	{
+		{
         return LnBirthDeathPriorPrCluster (t, clockRate, prob, sR, eR, sF);
-    	}
+		}
 	else 
 		{
 		printf ("\n   ERROR: Sampling strategy for birth-death process not implemented.\n");
@@ -17853,6 +17855,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, SafeLong *seed, MrBFlt *
 
 
 int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
 {
 
 	/* change relative extinction rate using sliding window */
@@ -17865,7 +17868,7 @@ int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	ModelInfo	*m;
 	Tree		*t;
 
-	/* get size of window, centered on current mu value */
+	/* get size of window, centered on current value */
 	window = mvp[0];
 
 	/* get model params */
@@ -17937,7 +17940,6 @@ int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	for (i=0; i<2; i++)
 		y += (alphaDir[i]-1.0)*log(oldProp[i]);
 	(*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;
-		
 	
 	/* copy new mu value back */
 	*GetParamVals(param, chain, state[chain]) = newM;
@@ -20475,7 +20477,7 @@ int Move_ExtTBR0 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		isVPriorExp = YES;
     }
     
-    /* Dirichlet or twoExp prior //chi */
+    /* Dirichlet or twoExp prior */
 	if (isVPriorExp > 1)
 		(*lnPriorRatio) = -lnDirPrior(t, mp, isVPriorExp);
    
@@ -20887,7 +20889,7 @@ int Move_ExtTBR0 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
     }
 #endif
 
-    /* Dirichlet or twoExp prior //chi */
+    /* Dirichlet or twoExp prior */
 	if (isVPriorExp > 1)
 		(*lnPriorRatio) += lnDirPrior(t, mp, isVPriorExp);
 	
@@ -25501,8 +25503,8 @@ int Move_NNI (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrB
 
 
 
-/* change clock tree using nni */
 int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
 {
 
 	/* Change clock tree using NNI move */
@@ -27460,6 +27462,7 @@ errorExit:
 	return (ERROR);
 
 }
+
 
 
 
@@ -32502,7 +32505,7 @@ int Move_Speciation (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	ModelInfo	*m;
 	Tree		*t;
 
-	/* get size of window, centered on current lambda value */
+	/* get size of window, centered on current value */
 	window = mvp[0];
 
 	/* get model params */
@@ -42100,7 +42103,7 @@ int RunChain (SafeLong *seed)
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
-                        printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
+                    printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
                     return ERROR;
                     }
                 ResetFlips(chn);
