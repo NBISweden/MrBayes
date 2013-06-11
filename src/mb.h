@@ -393,6 +393,12 @@ typedef void * VoidPtr;
 typedef int (*CmdFxn)(void);
 typedef int (*ParmFxn)(char *, char *);
 
+/* typedef for a ln prior prob fxn */
+typedef MrBFlt (*LnPriorProbFxn)(MrBFlt val, MrBFlt *priorParams);
+
+/* typedef for a ln prior prob ratio fxn */
+typedef MrBFlt (*LnPriorRatioFxn)(MrBFlt newVal, MrBFlt oldVal, MrBFlt *priorParams);
+
 typedef struct
 	{
 	MrBFlt			sum;            /* sum of standard deviations */
@@ -403,13 +409,18 @@ typedef struct
 	MrBFlt			**pair;
 	} STATS;
 
-/* enumeration for calibration prior */
+/* enumeration for calibration prior type */
 enum CALPRIOR
 	{
 	unconstrained,
 	fixed,
-	offsetExponential,
-	uniform
+    uniform,
+    offsetExponential,
+    truncatedNormal,
+    logNormal,
+    offsetLogNormal,
+    standardGamma,
+    offsetGamma 
 	};
 
 enum ConstraintType
@@ -422,13 +433,13 @@ enum ConstraintType
 /* typedef for calibration */
 typedef struct calibration
 	{
-	char			name[100];
-	enum CALPRIOR   prior;
-	MrBFlt			max;
-	MrBFlt			min;
-	MrBFlt			offset;
-	MrBFlt			lambda;
-	MrBFlt			age;
+	char			    name[100];
+	enum CALPRIOR       prior;
+	MrBFlt              priorParams[3];
+	LnPriorProbFxn      LnPriorProb;
+    LnPriorRatioFxn     LnPriorRatio;
+    MrBFlt			    min;
+    MrBFlt			    max;
 	}
 	Calibration;
 
@@ -555,12 +566,6 @@ typedef struct
     char            *popSizeSetName;     /*!< name of the population size set             */
 	}
 	PolyTree;
-
-/* typedef for a ln prior prob fxn */
-typedef MrBFlt (*LnPriorProbFxn)(MrBFlt val, MrBFlt *priorParams);
-
-/* typedef for a ln prior prob ratio fxn */
-typedef MrBFlt (*LnPriorRatioFxn)(MrBFlt newVal, MrBFlt oldVal, MrBFlt *priorParams);
 
 /* struct for holding model parameter info for the mcmc run */
 typedef struct param
@@ -975,7 +980,7 @@ typedef struct model
 	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
-	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, mb(rateautocorr))   */
+	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, bm(rateautocorr))   */
 	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
 	char		speciationPr[100];    /* prior on speciation rate                     */
 	MrBFlt		speciationFix;
@@ -987,10 +992,7 @@ typedef struct model
 //	MrBFlt		extinctionExp;
 	char		sampleStrat[30];      /* taxon sampling strategy (for b-d process)    */
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
-	char		treeAgePr[100];       /* prior on tree age for uniform clock prior    */
-	MrBFlt		treeAgeGamma[2];
-	MrBFlt		treeAgeUni[2];
-	MrBFlt		treeAgeFix;
+	Calibration treeAgePr;            /* prior on tree age for uniform clock trees    */
 	char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
 	MrBFlt		clockRateNormal[2];
 	MrBFlt		clockRateLognormal[2];

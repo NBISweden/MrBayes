@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -42,10 +42,11 @@
 #include <string.h>
 #include <ctype.h>
 #include "mb.h"
-#include "mbbeagle.h"
 #include "globals.h"
-#include "command.h"
+#include "mbbeagle.h"
 #include "bayes.h"
+#include "command.h"
+#include "mbmath.h"
 #include "model.h"
 #include "mcmc.h"
 #include "plot.h"
@@ -285,11 +286,11 @@ char			*tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
 Calibration     defaultCalibration = {
                     /* name   = */ "Unconstrained",
                     /* prior  = */ 0,   /* = unconstrained */
-                    /* max    = */ -1.0,
-                    /* min    = */ -1.0,
-                    /* offset = */ -1.0,
-                    /* lambda = */ -1.0,
-                    /* age    = */ -1.0};
+                    /* priorParams = */ { -1.0, -1.0, -1.0 },
+                    /* LnPriorProb = */ NULL,
+                    /* LnPriorRatio = */ NULL,
+                    /* min = */ -1.0,
+                    /* max = */ -1.0};
 
 CmdType			commands[] =
 				{
@@ -1298,11 +1299,13 @@ int DoCalibrateParm (char *parmName, char *tkn)
 
 {
 
-	static int		isTaxon;
-	static char		nodeName[100];
-	int				howMany, index;
-	char			s[20], tempStr[100];
-	MrBFlt			tempD;
+	static int		        isTaxon, paramIndex;
+	static char		        nodeName[100], calName[100];
+    static MrBFlt           priorParams[3];
+    static enum CALPRIOR    calPrior;
+	int				        howMany, index;
+	char			        s[20], tempStr[100];
+	MrBFlt			        tempD;
 		
 	if (defMatrix == NO)
 		{
@@ -1352,20 +1355,6 @@ int DoCalibrateParm (char *parmName, char *tkn)
 			return (ERROR);
 			}
 
-		if (calibrationPtr->prior != unconstrained)
-			{
-			MrBayesPrint ("%s   Resetting previous calibration for ""%s""\n", spacer, tkn);
-			}
-
-		/* reset the values of the calibration */
-		calibrationPtr->prior  = defaultCalibration.prior;
-		calibrationPtr->age    = defaultCalibration.age;
-        calibrationPtr->lambda = defaultCalibration.lambda;
-        calibrationPtr->offset = defaultCalibration.offset;
-        calibrationPtr->min    = defaultCalibration.min;
-        calibrationPtr->max    = defaultCalibration.max;
-        strcpy(calibrationPtr->name, defaultCalibration.name);
-
 		/* get ready to find the equal sign */
 		expecting = Expecting(EQUALSIGN);
 		}
@@ -1381,20 +1370,50 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		/* set the calibration prior type */
 		if (IsArgValid(tkn,tempStr) == NO_ERROR)
 			{
-			if (!strcmp (tempStr, "Uniform"))
-				calibrationPtr->prior = uniform;
-			else if (!strcmp (tempStr, "Offsetexponential"))
-				calibrationPtr->prior = offsetExponential;
+			if (!strcmp (tempStr, "Unconstrained"))
+				calPrior = unconstrained;
 			else if (!strcmp (tempStr, "Fixed"))
-				calibrationPtr->prior = fixed;
-			else /* if (!strcmp (tempStr, "Unconstrained")) */
-				calibrationPtr->prior = unconstrained;
-			strcpy (calibrationPtr->name, tempStr);
-			if (calibrationPtr->prior == unconstrained)
-				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				calPrior = fixed;
+			else if (!strcmp (tempStr, "Uniform"))
+				calPrior = uniform;
+			else if (!strcmp (tempStr, "Offsetexponential"))
+				calPrior = offsetExponential;
+			else if (!strcmp (tempStr, "Truncatednormal"))
+				calPrior = truncatedNormal;
+			else if (!strcmp (tempStr, "Lognormal"))
+				calPrior = logNormal;
+			else if (!strcmp (tempStr, "Offsetlognormal"))
+				calPrior = offsetLogNormal;
+			else if (!strcmp (tempStr, "Gamma"))
+				calPrior = standardGamma;
+			else if (!strcmp (tempStr, "Offsetgamma"))
+				calPrior = offsetGamma;
+
+			if (calPrior == unconstrained)
+                {
+		        /* reset the values of the calibration */
+                MrBayesPrint ("%s   Resetting previous calibration for ""%s""\n", spacer, nodeName);
+
+		        calibrationPtr->prior           = defaultCalibration.prior;
+                calibrationPtr->priorParams[0]  = defaultCalibration.priorParams[0];
+                calibrationPtr->priorParams[1]  = defaultCalibration.priorParams[1];
+                calibrationPtr->priorParams[2]  = defaultCalibration.priorParams[2];
+                calibrationPtr->LnPriorProb     = defaultCalibration.LnPriorProb;
+                calibrationPtr->LnPriorRatio    = defaultCalibration.LnPriorRatio;
+                calibrationPtr->min             = defaultCalibration.min;
+                calibrationPtr->max             = defaultCalibration.max;
+                strcpy(calibrationPtr->name, defaultCalibration.name);
+			
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
 			else
+                {
+			    strcpy (calName, tempStr);
+                paramIndex = 0;
+                priorParams[0] = priorParams[1] = priorParams[2] =  -1.0;
 				expecting = Expecting(LEFTPAR);
-			}
+			    }
+            }
 		else
 			{
 			MrBayesPrint ("%s   Invalid calibration prior argument \n", spacer);
@@ -1403,96 +1422,273 @@ int DoCalibrateParm (char *parmName, char *tkn)
 		}
 	else if (expecting == Expecting(LEFTPAR))
 		{
-		strcat (calibrationPtr->name, "(");
+		strcat (calName, "(");
 		expecting  = Expecting(NUMBER);
 		}
 	else if (expecting == Expecting(NUMBER))
 		{
-		if (calibrationPtr->prior == uniform)
-			{
-			sscanf (tkn, "%lf", &tempD);
-			if (tempD < 0.0)
-				{
-				MrBayesPrint ("%s   Age must be nonnegative\n", spacer);
-				calibrationPtr->prior = unconstrained;
-				return (ERROR);
-				}
-			if (calibrationPtr->min < 0.0)
-				{
-				calibrationPtr->min = tempD;
-				expecting = Expecting(COMMA);
-				}
-			else
-				{
-				if (tempD <= calibrationPtr->min)
-					{
-					MrBayesPrint ("%s   Maximum age must be larger than minimum age\n", spacer);
-					calibrationPtr->prior = unconstrained;
-					return (ERROR);
-					}
-				calibrationPtr->max = tempD;
-				expecting = Expecting(RIGHTPAR);
-				}
-			}
-		else if (calibrationPtr->prior == offsetExponential)
-			{
-			sscanf (tkn, "%lf", &tempD);
-			if (calibrationPtr->offset < 0.0)
-				{
-				if (tempD < 0.0)
-					{
-					MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
-					calibrationPtr->prior = unconstrained;
-					return (ERROR);
-					}
-				calibrationPtr->offset = tempD;
-				expecting = Expecting(COMMA);
-				}
-			else
-				{
-				if (tempD <= OFFSETEXPLAMBDA_MIN)
-					{
-					MrBayesPrint ("%s   Offset exponential lambda parameter must be larger than %lf\n", spacer, OFFSETEXPLAMBDA_MIN);
-					calibrationPtr->prior = unconstrained;
-					return (ERROR);
-					}
-				else if (tempD >= OFFSETEXPLAMBDA_MAX)
-					{
-					MrBayesPrint ("%s   Offset exponential lambda parameter must be smaller than %lf\n", spacer, OFFSETEXPLAMBDA_MAX);
-					calibrationPtr->prior = unconstrained;
-					return (ERROR);
-					}
-				calibrationPtr->lambda = tempD;
-				expecting = Expecting(RIGHTPAR);
-				}
-			}
-        else  // if (calibrationPtr->prior == fixed)
-			{
-                sscanf (tkn, "%lf", &tempD);
+        sscanf (tkn, "%lf", &tempD);
+		if (paramIndex == 0)
+            {
+            if (calPrior == logNormal)
+                {
                 if (tempD < 0.0)
-				{
-                    MrBayesPrint ("%s   Age must be nonnegative\n", spacer);
-                    calibrationPtr->prior = unconstrained;
+                    {
+                    MrBayesPrint ("%s   Mean age must be nonnegative\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the lognormal distribution used for dating are mean age\n", spacer);
+                    MrBayesPrint ("%s   and standard deviation, both specified on the linear scale, not as log values.\n", spacer);
+				    return (ERROR);
+                    }
+                }
+            else if (calPrior == standardGamma)
+			    {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Mean parameter must be positive\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the gamma distribution used for dating are mean age and\n", spacer);
+                    MrBayesPrint ("%s   standard deviation. In terms of the common shape (alpha) and rate (beta)\n", spacer);
+                    MrBayesPrint ("%s   parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                    MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
                     return (ERROR);
-				}
-                calibrationPtr->age = tempD;
+                    }
+                }
+            else
+                {
+			    if (tempD < 0.0)
+				    {
+				    if (calPrior == fixed)
+                        MrBayesPrint ("%s   Fixed age must be nonnegative\n", spacer);
+				    else if (calPrior == uniform)
+                        {
+                        MrBayesPrint ("%s   Minimum age must be nonnegative\n", spacer);
+                        MrBayesPrint ("%s   Parameters of the uniform are minimum age and maximum age.\n", spacer);
+                        }
+                    else if (calPrior == truncatedNormal)
+                        {
+                        MrBayesPrint ("%s   Offset (minimum or truncation) age must be nonnegative.\n", spacer);
+                        MrBayesPrint ("%s   Parameters of the truncated normal distribution are offset (minimum\n", spacer);
+                        MrBayesPrint ("%s   or truncation) age, mean age and standard deviation.\n", spacer);
+                        }
+                    else if (calPrior == offsetGamma)
+                        {
+                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                        MrBayesPrint ("%s   Parameters of the offset gamma distribution used for dating are offset age,\n", spacer);
+                        MrBayesPrint ("%s   mean age, and standard deviation. In terms of the common shape (alpha) and\n", spacer);
+                        MrBayesPrint ("%s   rate (beta) parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                        MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
+                        }
+                    else if (calPrior == offsetExponential)
+                        {
+                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                        MrBayesPrint ("%s   From version 3.2.2, parameters of the offset exponential are offset age and\n", spacer);
+                        MrBayesPrint ("%s   mean age.\n", spacer);
+                        }
+                    else if (calPrior == offsetLogNormal)
+                        {
+                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                        MrBayesPrint ("%s   Parameters of the offset lognormal distribution are offset age, mean age,\n", spacer);
+                        MrBayesPrint ("%s   and standard deviation. All values are specified on the linear scale, not\n", spacer);
+                        MrBayesPrint ("%s   as log values.\n", spacer);
+				        }
+                    return (ERROR);
+				    }
+                }
+            priorParams[0] = tempD;
+            if (calPrior == fixed)
                 expecting = Expecting(RIGHTPAR);
-			}
+            else
+                expecting = Expecting(COMMA);
+            }
+        else if (paramIndex == 1)
+            {
+            if (calPrior == uniform)
+                {
+                if (tempD <= priorParams[0])
+                    {
+                    MrBayesPrint ("%s   Maximum age of uniform distribution must be larger than minimum age\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == offsetExponential)
+                {
+                if (tempD <= priorParams[0])
+                    {
+                    MrBayesPrint ("%s   Mean age must be larger than offset age.\n", spacer);
+                    MrBayesPrint ("%s   Note that fromm version 3.2.2, MrBayes uses offset and mean rather than\n", spacer);
+                    MrBayesPrint ("%s   offset and rate as the parameters for the offset exponential distribution.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == truncatedNormal)
+                {
+                if (tempD <= priorParams[0])
+                    {
+                    MrBayesPrint ("%s   Mean age must be larger than offset (truncation) age.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the truncated normal distribution are offset (minimum\n", spacer);
+                    MrBayesPrint ("%s   or truncation) age, mean age and standard deviation\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == logNormal)
+                {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Standard deviation must be positive.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the lognormal distribution used for dating are mean age\n", spacer);
+                    MrBayesPrint ("%s   and standard deviation, both specified on the linear scale, not as log values.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == offsetLogNormal)
+                {
+                if (tempD <= priorParams[0])
+                    {
+                    MrBayesPrint ("%s   Mean age must be larger than offset age.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset lognormal distribution are offset age, mean age,\n", spacer);
+                    MrBayesPrint ("%s   and standard deviation. All values are specified on the linear scale, not\n", spacer);
+                    MrBayesPrint ("%s   as log values.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == standardGamma)
+                {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Standard deviation must be positive.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the gamma distribution used for dating are mean age and\n", spacer);
+                    MrBayesPrint ("%s   standard deviation. In terms of the common shape (alpha) and rate (beta)\n", spacer);
+                    MrBayesPrint ("%s   parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                    MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == offsetGamma)
+                {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Mean age must be positive.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset gamma distribution used for dating are offset age,\n", spacer);
+                    MrBayesPrint ("%s   mean age, and standard deviation. In terms of the common shape (alpha) and\n", spacer);
+                    MrBayesPrint ("%s   rate (beta) parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                    MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
+                    return (ERROR);
+                    }
+                }
+
+            priorParams[1] = tempD;
+            if (calPrior == uniform || calPrior == standardGamma || calPrior == logNormal || calPrior == offsetExponential)
+                expecting = Expecting(RIGHTPAR);
+            else
+                expecting = Expecting(COMMA);
+            }
+        else /* if (paramIndex == 2) */
+            {
+            if (calPrior == offsetGamma)
+                {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Standard deviation must be positive.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset gamma distribution used for dating are offset age,\n", spacer);
+                    MrBayesPrint ("%s   mean age, and standard deviation. In terms of the common shape (alpha) and\n", spacer);
+                    MrBayesPrint ("%s   rate (beta) parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                    MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (calPrior == offsetLogNormal)
+                {
+                if (tempD <= 0.0)
+                    {
+                    MrBayesPrint ("%s   Standard deviation must be positive.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset lognormal distribution are offset age, mean age,\n", spacer);
+                    MrBayesPrint ("%s   and standard deviation. All values are specified on the linear scale, not\n", spacer);
+                    MrBayesPrint ("%s   as log values.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            priorParams[2] = tempD;
+            expecting = Expecting(RIGHTPAR);
+            }
 		sprintf (s, "%1.2lf", tempD);
-		strcat (calibrationPtr->name, s);
+		strcat (calName, s);
 		}
 	else if (expecting == Expecting(COMMA))
 		{
-		strcat (calibrationPtr->name, ",");
+		strcat (calName, ",");
+        paramIndex++;
 		expecting  = Expecting(NUMBER);
 		}
 	else if (expecting == Expecting(RIGHTPAR))
 		{
-		strcat (calibrationPtr->name, ")");
+		strcat (calName, ")");
 		if (isTaxon == YES)
-			MrBayesPrint ("%s   Setting age of taxon '%s' to %s\n", spacer, nodeName, calibrationPtr->name);
+			MrBayesPrint ("%s   Setting age of taxon '%s' to %s\n", spacer, nodeName, calName);
 		else
-			MrBayesPrint ("%s   Setting age of constraint node '%s' to %s\n", spacer, nodeName, calibrationPtr->name);
+			MrBayesPrint ("%s   Setting age of constraint node '%s' to %s\n", spacer, nodeName, calName);
+
+        /* set calibration based on collected values and settings */
+        strcpy(calibrationPtr->name, calName);
+        calibrationPtr->priorParams[0]  = priorParams[0];
+        calibrationPtr->priorParams[1]  = priorParams[1];
+        calibrationPtr->priorParams[2]  = priorParams[2];
+        calibrationPtr->prior           = calPrior;
+        if (calPrior == fixed)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbFix;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioFix;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = priorParams[0];
+            }
+        else if (calPrior == uniform)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbUniform;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioUniform;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = priorParams[1];
+            }
+        else if (calPrior == offsetExponential)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbOffsetExponential_Param_Offset_Mean;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetExponential_Param_Offset_Mean;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = POS_INFINITY;
+            }
+        else if (calPrior == truncatedNormal)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = POS_INFINITY;
+            }
+        else if (calPrior == logNormal)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbLognormal_Param_Mean_Sd;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioLognormal_Param_Mean_Sd;
+            calibrationPtr->min             = 0.0;
+            calibrationPtr->max             = POS_INFINITY;
+            }
+        else if (calPrior == offsetLogNormal)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = POS_INFINITY;
+            }
+        else if (calPrior == standardGamma)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbGamma_Param_Mean_Sd;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioGamma_Param_Mean_Sd;
+            calibrationPtr->min             = 0.0;
+            calibrationPtr->max             = POS_INFINITY;
+            }
+        else if (calPrior == offsetGamma)
+            {
+            calibrationPtr->LnPriorProb     = &LnPriorProbOffsetGamma_Param_Offset_Mean_Sd;
+            calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetGamma_Param_Offset_Mean_Sd;
+            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->max             = POS_INFINITY;
+            }
+
 		/* get ready to find more calibrated nodes or taxa, if present */
 		expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 		}
@@ -2454,12 +2650,14 @@ int DoConstraint (void)
 	
     /* add a default node calibration */
     nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
-    nodeCalibration[numDefinedConstraints].prior  = defaultCalibration.prior;
-    nodeCalibration[numDefinedConstraints].offset = defaultCalibration.offset;
-    nodeCalibration[numDefinedConstraints].lambda = defaultCalibration.lambda;
-    nodeCalibration[numDefinedConstraints].min    = defaultCalibration.min;
-    nodeCalibration[numDefinedConstraints].max    = defaultCalibration.max;
-    nodeCalibration[numDefinedConstraints].age    = defaultCalibration.age;
+    nodeCalibration[numDefinedConstraints].prior            = defaultCalibration.prior;
+    nodeCalibration[numDefinedConstraints].priorParams[0]   = defaultCalibration.priorParams[0];
+    nodeCalibration[numDefinedConstraints].priorParams[1]   = defaultCalibration.priorParams[1];
+    nodeCalibration[numDefinedConstraints].priorParams[2]   = defaultCalibration.priorParams[2];
+    nodeCalibration[numDefinedConstraints].min              = defaultCalibration.min;
+    nodeCalibration[numDefinedConstraints].max              = defaultCalibration.max;
+    nodeCalibration[numDefinedConstraints].LnPriorProb      = defaultCalibration.LnPriorProb;
+    nodeCalibration[numDefinedConstraints].LnPriorRatio     = defaultCalibration.LnPriorRatio;
     strcpy(nodeCalibration[numDefinedConstraints].name, defaultCalibration.name);
 
     /* increment number of defined constraints */
@@ -9340,6 +9538,9 @@ int FreeCharacters (void)
 
     ResetCharacterFlags();
 
+	if (memoryLetFree == YES)
+		MrBayesPrint ("%s   Deleting previously defined characters\n", spacer);
+
 	return (NO_ERROR);
 }
 
@@ -9463,7 +9664,7 @@ int FreeTaxa (void)
     FreeCharacters();
 
 	if (memoryLetFree == YES)
-		MrBayesPrint ("%s   Deleting previously defined taxon set\n", spacer);
+		MrBayesPrint ("%s   Deleting previously defined taxa\n", spacer);
 
     /* reinitialize taxa variables */
     ResetTaxaFlags();
@@ -10361,16 +10562,50 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   where <node_name> is the name of a defined interior constraint node or the    \n");
 	    MrBayesPrint ("   name of a terminal node (tip) and <age_prior> is a prior probability distribu-\n");
-	    MrBayesPrint ("   tion on the age of the node. The latter can either be a fixed date, a uniform \n");
-	    MrBayesPrint ("   probability distribution between a minimum and a maximum age, or an offset    \n");
-	    MrBayesPrint ("   exponential distribution with a minimum age and a rate parameter. The         \n");
-		MrBayesPrint ("   format is:                                                                    \n");
+	    MrBayesPrint ("   tion on the age of the node. The latter can either be a fixed date or a date  \n");
+	    MrBayesPrint ("   drawn from one of the available prior probability distributions. In general,  \n");
+	    MrBayesPrint ("   the available prior probability distributions are parameterized in terms of   \n");
+	    MrBayesPrint ("   the expected mean age of the distribution to facilitate for users. Some dis-  \n");
+	    MrBayesPrint ("   tributions put a positive probability on all ages above 0.0, while others in- \n");
+	    MrBayesPrint ("   clude a minimum-age constraint and sometimes a maximum-age constraint. The    \n");
+		MrBayesPrint ("   available distributions and their parameters are:                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      calibrate <node_name> = fixed(<age>)                                       \n");
 	    MrBayesPrint ("      calibrate <node_name> = uniform(<min_age>,<max_age>)                       \n");
-	    MrBayesPrint ("      calibrate <node_name> = offsetexponential(<min_age>,<rate>)                \n");
+	    MrBayesPrint ("      calibrate <node_name> = offsetexponential(<min_age>,<mean_age>)            \n");
+	    MrBayesPrint ("      calibrate <node_name> = truncatednormal(<min_age>,<mean_age>,<stdev>)      \n");
+	    MrBayesPrint ("      calibrate <node_name> = lognormal(<mean_age>,<stdev>)                      \n");
+	    MrBayesPrint ("      calibrate <node_name> = offsetlognormal(<min_age>,<mean_age>,<stdev>)      \n");
+	    MrBayesPrint ("      calibrate <node_name> = gamma(<mean_age>,<stdev>)                          \n");
+	    MrBayesPrint ("      calibrate <node_name> = offsetgamma(<min_age>,<mean_age>,<stdev>)          \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("   For instance, assume that we had three fossil terminals in our analyses named \n");
+	    MrBayesPrint ("   Note that mean_age is always the mean age and stdev the standard deviation of \n");
+	    MrBayesPrint ("   the distribution measured in user-defined time units. This way of specifying  \n");
+	    MrBayesPrint ("   the distribution parameters is often different from the parameterization used \n");
+	    MrBayesPrint ("   elsewhere in the program. For instance, the standard parameters of the gamma  \n");
+	    MrBayesPrint ("   distribution used by MrBayes are shape (alpha) and rate (beta). If you want   \n");
+	    MrBayesPrint ("   to use the standard parameterization, the conversions are as follows:         \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("      exponential distributon: mean = 1 / rate                                   \n");
+	    MrBayesPrint ("      gamma distributon:       mean    = alpha / beta                            \n");
+	    MrBayesPrint ("                               st.dev. = square_root( alpha / beta^2 )           \n");
+	    MrBayesPrint ("      lognormal distributon:   mean    = exp( mean_log + st.dev._log^2/2 )       \n");
+	    MrBayesPrint ("                               st.dev. = square_root(( exp( st.dev._log^2 ) - 1 )\n");
+	    MrBayesPrint ("                                         * ( exp( 2*mean_log + st.dev._log^2 ))  \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   The truncated normal distribution is an exception in that the mean_age and    \n");
+	    MrBayesPrint ("   stdev parameters are the mean and standard deviation of the underlying non-   \n");
+	    MrBayesPrint ("   truncated normal distribution. The truncation will cause the modified distri- \n");
+	    MrBayesPrint ("   bution to have a higher mean and lower standard deviation. The magnitude of   \n");
+	    MrBayesPrint ("   that effect depends on how much of the tail of the distribution is removed.   \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   Note that previous to version 3.2.2, MrBayes used the standard rate parameter-\n");
+	    MrBayesPrint ("   ization of the offset exponential. This should not cause a problem in most    \n");
+	    MrBayesPrint ("   cases because the old parameterization will result in an error in more recent \n");
+	    MrBayesPrint ("   versions of MrBayes, and the likely source of the error is given in the error \n");
+	    MrBayesPrint ("   message.                                                                      \n");
+	    MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("   For a practical example, assume that we had three fossil terminals named      \n");
 	    MrBayesPrint ("   'FossilA', 'FossilB', and 'FossilC'. Assume further that we want to fix the   \n");
 	    MrBayesPrint ("   age of FossilA to 100.0 million years, we think that FossilB is somewhere     \n");
 	    MrBayesPrint ("   between 100.0 and 200.0 million years old, and that FossilC is at least 300.0 \n");
@@ -10378,14 +10613,11 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   400.0 million years old. Then we might use the commands:                      \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      calibrate FossilA = fixed(100) FossilB = uniform(100,200)                  \n");
-	    MrBayesPrint ("      calibrate FossilC = offsetexponential(300,0.01)                            \n");
+	    MrBayesPrint ("      calibrate FossilC = offsetexponential(300,400)                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   Note that it is possible to give more than one calibration for each           \n");
-	    MrBayesPrint ("   'calibrate' statement. The offset exponential distribution has its expectation\n");
-	    MrBayesPrint ("   at the minimum age plus the inverse of the rate parameter. That is, the       \n");
-	    MrBayesPrint ("   offsetexponential(300,0.01) has the minimum 300 , the expectation 400 =       \n");
-	    MrBayesPrint ("   = 300 + 1/0.01 and the mode < 400, so that most of the probability distribu-  \n");
-	    MrBayesPrint ("   tion is on values smaller than 400.                                           \n");
+	    MrBayesPrint ("   'calibrate' statement. Thus, 'calibrate FossilA=<setting> FossilB=<setting>'  \n");
+	    MrBayesPrint ("   would be a valid statement.                                                   \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   To actually use the calibrations to obtain dated trees, you also need to set  \n");
 	    MrBayesPrint ("   a clock model using relevant 'brlenspr' and 'nodeagepr' options of the 'prset'\n");
@@ -10996,18 +11228,22 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    tree defined in a trees block. Branch lengths will still be  \n");
 		MrBayesPrint ("                    sampled as usual on the fixed topology.                      \n");
 		MrBayesPrint ("   Brlenspr      -- This parameter specifies the prior probability dist-         \n");
-		MrBayesPrint ("                    ribution on branch lengths. The options are:                 \n");
+		MrBayesPrint ("                    ribution on branch lengths. The options are specified using: \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset brlenspr = unconstrained:uniform(<num>,<num>)       \n");
-		MrBayesPrint ("                       prset brlenspr = unconstrained:exponential(<number>)      \n");
-        MrBayesPrint ("                       prset brlenspr = unconstrained:twoexp(<num>,<num>)        \n");
-		MrBayesPrint ("                       prset brlenspr = unconstrained:gammadir(<num>,<num>,<num>,<num>) \n");
-		MrBayesPrint ("                       prset brlenspr = unconstrained:invgamdir(<num>,<num>,<num>,<num>)\n");
-		MrBayesPrint ("                       prset brlenspr = clock:uniform                            \n");
-		MrBayesPrint ("                       prset brlenspr = clock:birthdeath                         \n");
-		MrBayesPrint ("                       prset brlenspr = clock:coalescence                        \n");
-		MrBayesPrint ("                       prset brlenspr = clock:speciestreecoalescence             \n");
-		MrBayesPrint ("                       prset brlenspr = fixed(<treename>)                        \n");
+		MrBayesPrint ("                       prset brlenspr = <setting>                                \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                    where <setting> is one of                                    \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                       unconstrained:uniform(<num>,<num>)                        \n");
+		MrBayesPrint ("                       unconstrained:exponential(<number>)                       \n");
+        MrBayesPrint ("                       unconstrained:twoexp(<num>,<num>)                         \n");
+		MrBayesPrint ("                       unconstrained:gammadir(<num>,<num>,<num>,<num>)           \n");
+		MrBayesPrint ("                       unconstrained:invgamdir(<num>,<num>,<num>,<num>)          \n");
+		MrBayesPrint ("                       clock:uniform                                             \n");
+		MrBayesPrint ("                       clock:birthdeath                                          \n");
+		MrBayesPrint ("                       clock:coalescence                                         \n");
+		MrBayesPrint ("                       clock:speciestreecoalescence                              \n");
+		MrBayesPrint ("                       fixed(<treename>)                                         \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    Trees with unconstrained branch lengths are unrooted         \n");
 		MrBayesPrint ("                    whereas clock-constrained trees are rooted. The option       \n");
@@ -11024,6 +11260,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    varies across the species tree using the 'popvarpr' setting. \n");
         MrBayesPrint ("                    Branch lengths can also be fixed but only if the topology is \n");
 		MrBayesPrint ("                    fixed.                                                       \n");
+		MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For unconstrained branch lengths, MrBayes offers five alter- \n");
         MrBayesPrint ("                    native prior distributions. The first two are the simple     \n");
         MrBayesPrint ("                    'uniform' and 'exponential' priors. The 'uniform' prior takes\n");
@@ -11032,21 +11269,24 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    gle parameter, the rate of the exponential distribution. The \n");
         MrBayesPrint ("                    mean of the exponential distribution is the inverse of the   \n");
         MrBayesPrint ("                    rate. For instance, an 'exp(10)' distribution has an expected\n");
-        MrBayesPrint ("                    mean of 0.1. MrBayes also offers three more complex prior    \n");
-        MrBayesPrint ("                    distributions on unconstrained branch lengths. The two-expo- \n");
-        MrBayesPrint ("                    nential prior (Yang and Rannala 2005; Yang 2007) uses two    \n"); 
-        MrBayesPrint ("                    different exponential distributions, one for internal and one\n");
-        MrBayesPrint ("                    for external branch lengths. The two-exponential prior is in-\n");
-        MrBayesPrint ("                    voked using 'twoexp(<r_I>,<r_E>)', where '<r_I>' is a number \n");
-        MrBayesPrint ("                    specifying the rate of the exponential distribution on inter-\n");
-        MrBayesPrint ("                    nal branch lengths, while '<r_E>' is the rate for external   \n");
-        MrBayesPrint ("                    branch lengths. The expected prior mean for internal branch  \n");
-        MrBayesPrint ("                    lengths is then 1/r_I, and for external ones it is 1/r_E.    \n");
-        MrBayesPrint ("                    For instance, to set r_I = 100 and r_E = 10, use 'twoexp(100,\n");
-        MrBayesPrint ("                    10)'. The setting 'twoexp(10,10)' is equivalent to 'exp(10)'.\n");
-        MrBayesPrint ("                    The compound Dirichlet priors, 'gammadir(<a_T>,<b_T>,<a>,<c>)'\n");
-        MrBayesPrint ("                    and 'invgamdir(<a_T>,<b_T>,<a>,<c>)', specify a fairly diffuse\n");
-        MrBayesPrint ("                    prior on tree length 'T' and then partitions the tree length \n");
+        MrBayesPrint ("                    mean of 0.1.                                                 \n");
+		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    MrBayes also offers three more complex prior distributions   \n");
+        MrBayesPrint ("                    on unconstrained branch lengths. The two-exponential prior   \n");
+        MrBayesPrint ("                    (Yang and Rannala 2005; Yang 2007) uses two different expo-  \n"); 
+        MrBayesPrint ("                    nential distributions, one for internal and one for external \n");
+        MrBayesPrint ("                    branch lengths. The two-exponential prior is invoked using   \n");
+        MrBayesPrint ("                    'twoexp(<r_I>,<r_E>)', where '<r_I>' is a number specifying  \n");
+        MrBayesPrint ("                    the rate of the exponential distribution on internal branch  \n");
+        MrBayesPrint ("                    lengths, while '<r_E>' is the rate for external branch       \n");
+        MrBayesPrint ("                    lengths. The expected prior mean for internal branch lengths \n");
+        MrBayesPrint ("                    is then 1/r_I, and for external ones it is 1/r_E. For in-    \n");
+        MrBayesPrint ("                    stance, to set r_I = 100 and r_E = 10, use 'twoexp(100,10)'. \n");
+        MrBayesPrint ("                    The setting 'twoexp(10,10)' is equivalent to 'exp(10)'.      \n");
+		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    The compound Dirichlet priors 'gammadir(<a_T>,<b_T>,<a>,<c>)'\n");
+        MrBayesPrint ("                    and 'invgamdir(<a_T>,<b_T>,<a>,<c>)' specify a fairly diffuse\n");
+        MrBayesPrint ("                    prior on tree length 'T', and then partitions the tree length\n");
         MrBayesPrint ("                    into branch lengths according to a Dirichlet distribution    \n");
         MrBayesPrint ("                    (Rannala et al. 2012). If 'T' is considered drawn from a     \n");
         MrBayesPrint ("                    gamma distribution with parameters a_T and b_T, and with mean\n");
@@ -11069,27 +11309,45 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    10, and branch length proportions are associated with a uni- \n");
         MrBayesPrint ("                    form Dirichlet distribution. The default prior for uncon-    \n");
         MrBayesPrint ("                    strained branch lengths is 'exp(10)'.                        \n");
-        MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior probability distribution  \n");
 		MrBayesPrint ("                    on the tree age when a uniform prior is used on the branch   \n");
 		MrBayesPrint ("                    lengths of a clock tree.                                     \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    The options are:                                             \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset treeagepr = gamma(<num>,<num>)                      \n");
-		MrBayesPrint ("                       prset treeagepr = uniform(<num>,<num>)                    \n");
-		MrBayesPrint ("                       prset treeagepr = fixed(<number>)                         \n");
+	    MrBayesPrint ("                       prset treeagepr = <setting>                               \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                    where <setting> is one of                                    \n");
+		MrBayesPrint ("                                                                                 \n");
+	    MrBayesPrint ("                       fixed(<age>)                                              \n");
+	    MrBayesPrint ("                       uniform(<min_age>,<max_age>)                              \n");
+	    MrBayesPrint ("                       offsetexponential(<min_age>,<mean_age>)                   \n");
+	    MrBayesPrint ("                       truncatednormal(<min_age>,<mean_age>,<st.dev.>)           \n");
+	    MrBayesPrint ("                       lognormal(<mean_age>,<st.dev.>)                           \n");
+	    MrBayesPrint ("                       offsetlognormal(<min_age>,<mean_age>,<st.dev.>)           \n");
+	    MrBayesPrint ("                       gamma(<mean_age>,<st.dev.>)                               \n");
+	    MrBayesPrint ("                       offsetgamma(<min_age>,<mean_age>,<st.dev.>)               \n");
+		MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("                    These are the same options used for the 'Calibrate' command. \n");
+		MrBayesPrint ("                    Note that, unlike elsewhere in MrMayes, we always use the    \n");
+		MrBayesPrint ("                    mean and standard deviation of the resulting age distribution\n");
+		MrBayesPrint ("                    rather than the standard parameterization, if different. This\n");
+		MrBayesPrint ("                    is to facilitate for the users who want to focus on the in-  \n");
+		MrBayesPrint ("                    formation conveyed about the age. For those who wish to use  \n");
+		MrBayesPrint ("                    the standard parameterization, there are simple conversions  \n");
+		MrBayesPrint ("                    between the two. See the 'Calibrate' command for more infor- \n");
+		MrBayesPrint ("                    mation.                                                      \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    The tree age is simply the age of the most recent common     \n");
 		MrBayesPrint ("                    ancestor of the tree. If the clock rate is fixed to 1.0,     \n");
 		MrBayesPrint ("                    which is the default, the tree age is equivalent to the      \n");
         MrBayesPrint ("                    expected number of substitutions from the root to the tip of \n");
-        MrBayesPrint ("                    the tree. The tree age prior ensures that the joint prior    \n");
-		MrBayesPrint ("                    probability for the uniform prior (or fossilization prior)   \n");
-		MrBayesPrint ("                    model of branch lengths on a clock tree is proper. The de-   \n");
-		MrBayesPrint ("                    fault setting is 'gamma(1,1)'. If the root node in the       \n");
-		MrBayesPrint ("                    tree is calibrated, the root calibration replaces the tree   \n");
-		MrBayesPrint ("                    age prior.                                                   \n");
+        MrBayesPrint ("                    the tree, that is, tree height. The tree age prior ensures   \n");
+        MrBayesPrint ("                    that the joint probability for the uniform prior (or fossil- \n");
+		MrBayesPrint ("                    ization prior) model of branch lengths on a clock tree is    \n");
+		MrBayesPrint ("                    proper. The default setting is 'gamma(1,1)'. If the root node\n");
+		MrBayesPrint ("                    in the tree is calibrated, the root calibration replaces the \n");
+		MrBayesPrint ("                    tree age prior.                                              \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
         MrBayesPrint ("                    that is, lambda - mu in the birth-death model. Options are:  \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11550,13 +11808,10 @@ int GetUserHelp (char *helpTkn)
 			else if (!strcmp(mp->brlensPr, "Fixed"))
 				MrBayesPrint("(%s)\n", userTree[mp->brlensFix]->name);
 			
-			MrBayesPrint ("   Treeagepr        Gamma/Uniform/Fixed      %s", mp->treeAgePr);
-			if (!strcmp(mp->treeAgePr, "Gamma"))
-				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
-            else if (!strcmp(mp->treeAgePr, "Uniform"))
-                    MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->treeAgeUni[0], mp->treeAgeUni[1]);
-			else
-				MrBayesPrint ("(%1.1lf)\n", mp->treeAgeFix);
+			MrBayesPrint ("   Treeagepr        Gamma/Uniform/Fixed/         %s\n", mp->treeAgePr.name);
+			MrBayesPrint ("                    Truncatednormal/Lognormal/   \n");
+			MrBayesPrint ("                    Offsetlognormal/Offsetgamma/ \n");
+			MrBayesPrint ("                    Offsetexponential            \n");
 			
 			MrBayesPrint ("   Speciationpr     Uniform/Exponential/Fixed    %s", mp->speciationPr);
 			if (!strcmp(mp->speciationPr, "Uniform"))
@@ -13785,6 +14040,7 @@ int ParseCommand (char *s)
 	int				rc, tokenType, inError, numMatches, skipCmd;
 	char			errStr[100];
 
+    numMatches = 0;     /* Avoid gcc warnings (actually set in call to FindValidCommand) */
 	cmdStr = s;
 	tokenP = &s[0];
 
@@ -14562,7 +14818,7 @@ void SetUpParms (void)
 	PARAM   (116, "Pbfsampleburnin",DoMcmcParm,        "\0");
 	PARAM   (117, "Growthpr",       DoPrsetParm,       "Uniform|Exponential|Fixed|Normal|\0");
 	PARAM   (118, "Growthrate",     DoLinkParm,        "\0");
-	PARAM   (119, "Xxxxxxxxxx",     DoCalibrateParm,   "Uniform|Offsetexponential|Fixed|Unconstrained|\0");
+	PARAM   (119, "Xxxxxxxxxx",     DoCalibrateParm,   "Unconstrained|Fixed|Uniform|Offsetexponential|Truncatednormal|Lognormal|Offsetlognormal|Gamma|Offsetgamma|\0");
     PARAM   (120, "Calwaitpr",      DoPrsetParm,       "Exponential|Fixed|\0");     /* not used but leave it in to not destroy mapping to commands */
     PARAM   (121, "M3omegapr",      DoPrsetParm,       "Exponential|Fixed|\0");
 	PARAM   (122, "Applyto",        DoReportParm,      "\0");
@@ -14576,7 +14832,7 @@ void SetUpParms (void)
 	PARAM   (130, "Burnin",         DoCompareTreeParm, "\0");
 	PARAM   (131, "Ploidy",         DoLsetParm,        "Haploid|Diploid|Zlinked|\0");
 	PARAM   (132, "Swapadjacent",   DoMcmcParm,        "Yes|No|\0");
-	PARAM   (133, "Treeagepr",      DoPrsetParm,       "Gamma|Uniform|Fixed|\0");
+	PARAM   (133, "Treeagepr",      DoPrsetParm,       "Fixed|Uniform|Offsetexponential|Truncatednormal|Lognormal|Offsetlognormal|Gamma|Offsetgamma|\0");
 	PARAM   (134, "Ancstates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (135, "Siterates",      DoReportParm,      "Yes|No|\0");
 	PARAM   (136, "Possel",         DoReportParm,      "Yes|No|\0");

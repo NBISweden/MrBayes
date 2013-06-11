@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -7193,8 +7193,26 @@ int DoPrsetParm (char *parmName, char *tkn)
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
 						if (activeParts[i] == YES || nApplied == 0)
-							strcpy(modelParams[i].treeAgePr, tempStr);
-					}
+                            {
+							strcpy(modelParams[i].treeAgePr.name, tempStr);
+					        if (!strcmp(tempStr,"Fixed"))
+                                modelParams[i].treeAgePr.prior = fixed;
+					        else if (!strcmp(tempStr,"Uniform"))
+                                modelParams[i].treeAgePr.prior = uniform;
+					        else if (!strcmp(tempStr,"Offsetexponential"))
+                                modelParams[i].treeAgePr.prior = offsetExponential;
+					        else if (!strcmp(tempStr,"Truncatednormal"))
+                                modelParams[i].treeAgePr.prior = truncatedNormal;
+					        else if (!strcmp(tempStr,"Lognormal"))
+                                modelParams[i].treeAgePr.prior = logNormal;
+					        else if (!strcmp(tempStr,"Offsetlognormal"))
+                                modelParams[i].treeAgePr.prior = offsetLogNormal;
+					        else if (!strcmp(tempStr,"Gamma"))
+                                modelParams[i].treeAgePr.prior = standardGamma;
+					        else if (!strcmp(tempStr,"Offsetgamma"))
+                                modelParams[i].treeAgePr.prior = offsetGamma;
+                            }
+                    }
 				else
 					{
 					MrBayesPrint ("%s   Invalid Treeagepr argument\n", spacer);
@@ -7206,74 +7224,172 @@ int DoPrsetParm (char *parmName, char *tkn)
 				}
 			else if (expecting == Expecting(LEFTPAR))
 				{
+				nApplied = NumActiveParts ();
+				for (i=0; i<numCurrentDivisions; i++)
+					if (activeParts[i] == YES || nApplied == 0)
+						strcat(modelParams[i].treeAgePr.name, "(");
 				expecting  = Expecting(NUMBER);
 				}
 			else if (expecting == Expecting(NUMBER))
 				{
+			    sscanf (tkn, "%lf", &tempD);
+                sprintf(tempStr, "%1.2lf", tempD);
 				nApplied = NumActiveParts ();
-				for (i=0; i<numCurrentDivisions; i++)
+                for (i=0; i<numCurrentDivisions; i++)
 					{
 					if (activeParts[i] == YES || nApplied == 0)
 						{
-						if (!strcmp(modelParams[i].treeAgePr,"Gamma"))
-							{
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].treeAgeGamma[numVars[i]++] = tempD;
-							if (numVars[i] == 1)
-								expecting  = Expecting(COMMA);
-							else
-								{
-								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Treeagepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].treeAgeGamma[0], modelParams[i].treeAgeGamma[1]);
-								else
-									MrBayesPrint ("%s   Setting Treeagepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeGamma[0], modelParams[i].treeAgeGamma[1], i+1);
-								expecting  = Expecting(RIGHTPAR);
-								}
-							}
-                        else if (!strcmp(modelParams[i].treeAgePr,"Uniform"))
+						if (numVars[i] == 0 && tempD < 0.0)
                             {
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].treeAgeUni[numVars[i]++] = tempD;
-							if (numVars[i] == 1)
-								expecting  = Expecting(COMMA);
-							else
+                            if (modelParams[i].treeAgePr.prior == uniform ||
+                                modelParams[i].treeAgePr.prior == offsetExponential ||
+                                modelParams[i].treeAgePr.prior == truncatedNormal ||
+                                modelParams[i].treeAgePr.prior == offsetLogNormal ||
+                                modelParams[i].treeAgePr.prior == offsetGamma)
+                                MrBayesPrint("%s   Minimum, offset or truncation point must be nonnegative\n", spacer);
+                            else if (modelParams[i].treeAgePr.prior == fixed)
+                                MrBayesPrint("%s   Fixed age must be nonnegative\n", spacer);
+                            else
+                                MrBayesPrint("%s   Mean must be nonnegative\n", spacer);
+                            break;
+                            }
+                        else if (numVars[i] == 1)
+                            {
+                            if (modelParams[i].treeAgePr.prior == uniform && tempD <= modelParams[i].treeAgePr.priorParams[0])
                                 {
-								if (nApplied == 0 && numCurrentDivisions == 1)
-									MrBayesPrint ("%s   Setting Treeagepr to Unifrom(%1.2lf,%1.2lf)\n", spacer, modelParams[i].treeAgeUni[0], modelParams[i].treeAgeUni[1]);
-								else
-									MrBayesPrint ("%s   Setting Treeagepr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeUni[0], modelParams[i].treeAgeUni[1], i+1);
-								expecting  = Expecting(RIGHTPAR);
+                                MrBayesPrint("%s   Max of uniform distribution must be larger than min\n", spacer);
+                                break;
+                                }
+                            else if ((modelParams[i].treeAgePr.prior == standardGamma || modelParams[i].treeAgePr.prior == logNormal) && tempD <= 0.0)
+                                {
+                                MrBayesPrint("%s   Standard deviation must be positive\n", spacer);
+                                break;
+                                }
+                            else if ((modelParams[i].treeAgePr.prior == offsetExponential ||
+                                      modelParams[i].treeAgePr.prior == offsetGamma ||
+                                      modelParams[i].treeAgePr.prior == offsetLogNormal)  && tempD <= modelParams[i].treeAgePr.priorParams[0])
+                                {
+                                MrBayesPrint("%s   Mean must be larger than offset\n", spacer);
+                                break;
+                                }
+                            }
+                        else if (numVars[i] == 2 && tempD <= 0.0)
+                            {
+                            MrBayesPrint("%s   Standard deviation must be positive\n", spacer);
+                            break;
+                            }
+                        modelParams[i].treeAgePr.priorParams[numVars[i]++] = tempD;
+                        sprintf(tempStr, "%1.2lf", tempD);
+						strcat(modelParams[i].treeAgePr.name, tempStr);
+                        if (modelParams[i].treeAgePr.prior == fixed || numVars[i] == 3)
+                            expecting = Expecting(RIGHTPAR);
+                        else if (numVars[i] == 1)
+                            expecting = Expecting(COMMA);
+                        else if (modelParams[i].treeAgePr.prior == standardGamma ||
+                                 modelParams[i].treeAgePr.prior == uniform ||
+                                 modelParams[i].treeAgePr.prior == offsetExponential ||
+                                 modelParams[i].treeAgePr.prior == logNormal)
+                            expecting = Expecting(RIGHTPAR);
+                        else
+                            expecting = Expecting(COMMA);
+                        }
+                    }
+                if (i < numCurrentDivisions)
+                    {
+                    /* An error occurred. Reset calibrations and bail out */
+				    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                        {
+                        if (activeParts[i] == YES || nApplied == 0)
+                            {
+                            strcpy(modelParams[i].treeAgePr.name, "Gamma(1.00,1.00)");
+                            modelParams[i].treeAgePr.prior = standardGamma;
+                            modelParams[i].treeAgePr.priorParams[0] = 1.0;
+                            modelParams[i].treeAgePr.priorParams[1] = 1.0;
+                            modelParams[i].treeAgePr.priorParams[2] = -1.0;
+                            modelParams[i].treeAgePr.min = 0.0;
+                            modelParams[i].treeAgePr.max = POS_INFINITY;
                             }
                         }
-						/* else if (!strcmp(modelParams[i].treeAgePr,"Exponential"))
-							{
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].treeAgeExp = tempD;
-							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Treeagepr to Exponential(%1.2lf)\n", spacer, modelParams[i].treeAgeExp);
-							else
-								MrBayesPrint ("%s   Setting Treeagepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeExp, i+1);
-							expecting  = Expecting(RIGHTPAR);
-							}  */
-						else if (!strcmp(modelParams[i].treeAgePr,"Fixed"))
-							{
-							sscanf (tkn, "%lf", &tempD);
-							modelParams[i].treeAgeFix = tempD;
-							if (nApplied == 0 && numCurrentDivisions == 1)
-								MrBayesPrint ("%s   Setting Treeagepr to Fixed(%1.2lf)\n", spacer, modelParams[i].treeAgeFix);
-							else
-								MrBayesPrint ("%s   Setting Treeagepr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].treeAgeFix, i+1);
-							expecting  = Expecting(RIGHTPAR);
-							}
-						}
-					}
-				}
+                    return (ERROR);
+                    }
+                }
 			else if (expecting == Expecting(COMMA))
 				{
+				nApplied = NumActiveParts ();
+				for (i=0; i<numCurrentDivisions; i++)
+					if (activeParts[i] == YES || nApplied == 0)
+						strcat(modelParams[i].treeAgePr.name, ",");
 				expecting  = Expecting(NUMBER);
 				}
 			else if (expecting == Expecting(RIGHTPAR))
 				{
+				nApplied = NumActiveParts ();
+				for (i=0; i<numCurrentDivisions; i++)
+                    {
+					if (activeParts[i] == YES || nApplied == 0)
+                        {
+						strcat(modelParams[i].treeAgePr.name, ")");
+						MrBayesPrint ("%s   Setting Treeagepr to %s\n", spacer, modelParams[i].treeAgePr.name);
+
+                        if (modelParams[i].treeAgePr.prior == fixed)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbFix;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioFix;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = modelParams[i].treeAgePr.priorParams[0];
+                            }
+                        else if (modelParams[i].treeAgePr.prior == uniform)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbUniform;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioUniform;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = modelParams[i].treeAgePr.priorParams[1];
+                            }
+                        else if (modelParams[i].treeAgePr.prior == offsetExponential)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbOffsetExponential_Param_Offset_Mean;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioOffsetExponential_Param_Offset_Mean;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        else if (modelParams[i].treeAgePr.prior == truncatedNormal)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        else if (modelParams[i].treeAgePr.prior == logNormal)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbLognormal_Param_Mean_Sd;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioLognormal_Param_Mean_Sd;
+                            modelParams[i].treeAgePr.min           = 0.0;
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        else if (modelParams[i].treeAgePr.prior == offsetLogNormal)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        else if (modelParams[i].treeAgePr.prior == standardGamma)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbGamma_Param_Mean_Sd;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioGamma_Param_Mean_Sd;
+                            modelParams[i].treeAgePr.min           = 0.0;
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        else if (modelParams[i].treeAgePr.prior == offsetGamma)
+                            {
+                            modelParams[i].treeAgePr.LnPriorProb   = &LnPriorProbOffsetGamma_Param_Offset_Mean_Sd;
+                            modelParams[i].treeAgePr.LnPriorRatio  = &LnProbRatioOffsetGamma_Param_Offset_Mean_Sd;
+                            modelParams[i].treeAgePr.min           = modelParams[i].treeAgePr.priorParams[0];
+                            modelParams[i].treeAgePr.max           = POS_INFINITY;
+                            }
+                        }
+                    }
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -9308,10 +9424,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
 							return (ERROR);
 							}
-                        if (theTree->isClock == YES && !strcmp(modelParams[theTree->relParts[0]].treeAgePr,"Fixed"))
+                        if (theTree->isClock == YES && modelParams[theTree->relParts[0]].treeAgePr.prior == fixed)
                             {
                             if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform"))
-                                ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgeFix);
+                                ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgePr.priorParams[0]);
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isClock == YES && IsClockSatisfied (theTree,0.001) == NO)
@@ -10696,12 +10812,12 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 				return (ERROR);
 				}
 			}
-	    else if (tree->isCalibrated == YES)
+        else if (tree->isCalibrated == YES || (tree->isClock == YES && !strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform")))
 			{
             assert (tree->isClock == YES);
 			clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state );
 			returnVal = InitCalibratedBrlens (tree, clockRate, seed);
-            if ( IsClockSatisfied (tree,0.001) == NO)
+            if (IsClockSatisfied (tree,0.001) == NO)
 				{
 				MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
 				return (ERROR);
@@ -11044,9 +11160,10 @@ int DoesTreeSatisfyConstraints(Tree *t){
 /*------------------------------------------------------------------
 |
 |	FillTreeParams: Fill in trees and branch lengths
-|					Note: should be run after FillNormalParams becouse
-|                   clockrate needs to be set if calibrated tree needs
-|                   to be filled.
+|					
+|   Note: Should be run after FillNormalParams because
+|   clockrate needs to be set if calibrated tree needs
+|   to be filled.
 |
 ------------------------------------------------------------------*/
 int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
@@ -11954,22 +12071,14 @@ int InitializeTreeCalibrations (Tree *t)
 			{
 			p->isDated = YES;
 			p->calibration = localTaxonCalibration[p->index];
-			if (p->calibration->prior == fixed)
-				p->age = p->calibration->age;
-			else if (p->calibration->prior == uniform)
-				p->age = p->calibration->min;
-			else
-				{
-				assert(p->calibration->prior == offsetExponential);
-				p->age = p->calibration->offset;
-				}
+		    p->age = p->calibration->min;
 			}
         else if (p->left == NULL && p->right == NULL)
             {
             p->isDated = NO;
             p->calibration = NULL;
             p->age = -1.0;
-            }            
+            } 
 		}
 
     /* Initialize interior calibrations */
@@ -12983,27 +13092,31 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						}
 					if (strcmp(modelParams[part1].clockPr, "Uniform") == 0 && strcmp(modelParams[part1].nodeAgePr, "Calibrated") != 0)
 						{
-						if (strcmp(modelParams[part1].treeAgePr, modelParams[part2].treeAgePr) != 0)
+						if (modelParams[part1].treeAgePr.prior != modelParams[part2].treeAgePr.prior)
 							isSame = NO;
-						else if (!strcmp(modelParams[part1].treeAgePr,"Fixed"))
+						if (modelParams[part1].treeAgePr.prior == fixed)
 							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeFix, modelParams[part2].treeAgeFix, (MrBFlt) 0.00001) == NO)
+							if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[0], modelParams[part2].treeAgePr.priorParams[0], (MrBFlt) 0.00001) == NO)
 								isSame = NO;
 							}
-						else if (!strcmp(modelParams[part1].treeAgePr,"Uniform"))
-							{
-                            if (AreDoublesEqual (modelParams[part1].treeAgeUni[0], modelParams[part2].treeAgeUni[0], (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-                            if (AreDoublesEqual (modelParams[part1].treeAgeUni[1], modelParams[part2].treeAgeUni[1], (MrBFlt) 0.00001) == NO)
-                                isSame = NO;
-							}
-						else if (!strcmp(modelParams[part1].treeAgePr,"Gamma"))
-							{
-							if (AreDoublesEqual (modelParams[part1].treeAgeGamma[0], modelParams[part2].treeAgeGamma[0], (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							if (AreDoublesEqual (modelParams[part1].treeAgeGamma[1], modelParams[part2].treeAgeGamma[1], (MrBFlt) 0.00001) == NO)
-								isSame = NO;
-							}
+                        else if (modelParams[part1].treeAgePr.prior == offsetLogNormal ||
+                            modelParams[part1].treeAgePr.prior == truncatedNormal ||
+                            modelParams[part1].treeAgePr.prior == offsetGamma)
+                            {
+                            for (i=0; i<3; i++)
+							    {
+							    if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[i], modelParams[part2].treeAgePr.priorParams[i], (MrBFlt) 0.00001) == NO)
+								    isSame = NO;
+						    	}
+                            }
+                        else
+                            {
+                            for (i=0; i<2; i++)
+							    {
+							    if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[i], modelParams[part2].treeAgePr.priorParams[i], (MrBFlt) 0.00001) == NO)
+								    isSame = NO;
+						    	}
+                            }
 						}
 					}
 
@@ -21557,12 +21670,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
 					if (!strcmp(mp->clockPr,"Uniform") && !strcmp(mp->nodeAgePr,"Unconstrained"))
 						{
-						if (!strcmp(mp->treeAgePr, "Uniform"))
-							MrBayesPrint ("%s                         Tree age has a Uniform(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeUni[0], mp->treeAgeUni[1]);
-						else if (!strcmp(mp->treeAgePr, "Gamma"))
-							MrBayesPrint ("%s                         Tree age has a Gamma(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
-                        else
-                            MrBayesPrint ("%s                         Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
+					    MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
 						}
                     else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
                         {
@@ -21610,12 +21718,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             {
 					        if (!strcmp(mp->clockPr,"Uniform"))
 						        {
-                                if (!strcmp(mp->treeAgePr, "Uniform"))
-                                    MrBayesPrint ("%s                         -- Tree age has a Uniform(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeUni[0], mp->treeAgeUni[1]);
-						        else if (!strcmp(mp->treeAgePr, "Gamma"))
-							        MrBayesPrint ("%s                         -- Tree age has a Gamma(%1.3lf,%1.3lf) distribution\n", spacer, mp->treeAgeGamma[0], mp->treeAgeGamma[1]);
-						        else
-                                    MrBayesPrint ("%s                         -- Tree age is fixed to %1.3lf\n", spacer, mp->treeAgeFix);
+                                MrBayesPrint ("%s                         -- Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
 						        }
 					        else if (!strcmp(mp->clockPr,"Birthdeath"))
 						        {

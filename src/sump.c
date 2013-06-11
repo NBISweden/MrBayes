@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -471,7 +471,7 @@ int DoSumSs (void)
     int             beginPrint, countPrint;
     float           tmpf;
     MrBFlt          **plotArrayY=NULL,**plotArrayX=NULL;
-    int             j,k,count,result;
+    int             j, k, count;
     MrBFlt          sum;
     int             firstPass = YES;
 
@@ -803,7 +803,7 @@ sumssTable:
          MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
          MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
          MrBayesPrint (" Enter new step number 'Steptoplot':");
-         result=scanf("%d",&j);
+         scanf("%d",&j);
         if(j < 0 )
             break;
         if(j > chainParams.numStepsSS)
@@ -811,7 +811,7 @@ sumssTable:
             do
                 {
                 MrBayesPrint (" Enter new value for 'Discardfrac', should be in range 0.0 to 1.0:");
-                result=scanf("%f",&tmpf);
+                scanf("%f",&tmpf);
                 sumssParams.discardFraction =  (MrBFlt)tmpf;
                 }
             while(sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
@@ -907,15 +907,15 @@ sumssTable:
          MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
          MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing joined plots.\n");
          MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
-         MrBayesPrint (" to change 'Smoothimg'.\n");
+         MrBayesPrint (" to change 'Smoothing'.\n");
          MrBayesPrint (" Enter new step burn-in:");
-         result=scanf("%d",&j);
+         scanf("%d",&j);
         if(j < 0 )
             break;
         if(j >= numSamplesInStepSS)
             {
             MrBayesPrint (" Enter new value for 'Smoothing':");
-            result=scanf("%d",&j);
+            scanf("%d",&j);
             sumssParams.smoothing = abs(j);
             }
         else
@@ -927,7 +927,7 @@ sumssExitOptions:
     if(sumssParams.askForMorePlots == YES )
         {
         MrBayesPrint ("\n");
-        MrBayesPrint (" Sumss is interactive, because of paramiter 'Askmore=YES' setting. \n");
+        MrBayesPrint (" Sumss is interactive, because of parameter 'Askmore=YES' setting. \n");
         MrBayesPrint (" What would you like to do next?\n");
         MrBayesPrint ("   1) Print updated table according to new step burn-in.\n");
         MrBayesPrint ("   2) Print Step plot(s).\n");
@@ -936,7 +936,7 @@ sumssExitOptions:
         MrBayesPrint (" Enter a number that corresponds to one of the options:");
         do
             {
-            result=scanf("%d",&j);
+            scanf("%d",&j);
             }while(j<1 || j>4);
 
         if(j == 1)
@@ -946,7 +946,7 @@ sumssExitOptions:
             MrBayesPrint (" Enter new step burn-in:");
             do
                 {
-                result=scanf("%d",&stepBurnin);
+                scanf("%d",&stepBurnin);
                 }
             while(stepBurnin < 0 || stepBurnin > numSamplesInStepSS-1);
             MrBayesPrint ("\n"); 
@@ -1577,8 +1577,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 {
     char    *sumpTokenP, sumpToken[CMD_STRING_LENGTH], *s=NULL, *headerLine, *t;
     int     i, lineTerm, inSumpComment, lineNum, lastNonDigitLine, numParamLines, allDigitLine,
-            lastTokenWasDash, nNumbersOnThisLine, tokenType, burnin, nLines, firstNumCols,
-            numRows, numColumns;
+            lastTokenWasDash, nNumbersOnThisLine, tokenType, burnin, nLines, firstNumCols;
     MrBFlt  tempD;
     FILE    *fp = NULL;
 
@@ -1733,7 +1732,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 
 	inSumpComment = NO;
 	nLines = 0;
-	numRows = numColumns = firstNumCols = 0;
+	firstNumCols = 0;
 	while (fgets (s, fileInfo->longestLineLength + 2, fp) != NULL)
         {
 		sumpTokenP = &s[0];

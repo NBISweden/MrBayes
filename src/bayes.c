@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -43,6 +43,7 @@
 #include "globals.h"
 #include "bayes.h"
 #include "command.h"
+#include "mbmath.h"
 #include "mcmc.h"
 #include "model.h"
 #include "sumt.h"
@@ -725,12 +726,15 @@ int InitializeMrBayes (void)
 	
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
-	strcpy(defaultModel.treeAgePr, "Gamma");            /* prior on tree age                            */
-	defaultModel.treeAgeGamma[0] = 1.0;
-	defaultModel.treeAgeGamma[1] = 1.0;
-	defaultModel.treeAgeUni[0] = 0.0;
-	defaultModel.treeAgeUni[1] = 1000000.0;
-	defaultModel.treeAgeFix = 1.0;
+	defaultModel.treeAgePr.prior = standardGamma;       /* calibration prior on tree age for uniform model */
+	strcpy(defaultModel.treeAgePr.name, "Gamma(1.00,1.00)");
+	defaultModel.treeAgePr.priorParams[0] = 1.0;
+	defaultModel.treeAgePr.priorParams[1] = 1.0;
+	defaultModel.treeAgePr.priorParams[2] = -1.0;
+	defaultModel.treeAgePr.LnPriorProb = &LnPriorProbGamma_Param_Mean_Sd;
+	defaultModel.treeAgePr.LnPriorRatio = &LnProbRatioGamma_Param_Mean_Sd;
+	defaultModel.treeAgePr.min = 0.0;
+	defaultModel.treeAgePr.max = POS_INFINITY;
 	strcpy(defaultModel.clockRatePr, "Fixed");          /* prior on base subst. rate for clock trees    */
 	defaultModel.clockRateNormal[0] = 1.0;
 	defaultModel.clockRateNormal[1] = 1.0;

@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -4200,7 +4200,7 @@ MrBFlt LnGamma (MrBFlt alp)
 
 
 /* Calculate probability of a realization for exponential random variable */
-MrBFlt LnPriorProbExponential(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbExponential (MrBFlt val, MrBFlt *params)
 {
     return log(params[0]) - params[0] * val;
 }
@@ -4209,10 +4209,20 @@ MrBFlt LnPriorProbExponential(MrBFlt val, MrBFlt *params)
 
 
 
-/* Calculate probability of a realization for a fixed variable */
-MrBFlt LnPriorProbFix(MrBFlt val, MrBFlt *params)
+/* Calculate probability of a realization for exponential random variable; parameter mean and not rate */
+MrBFlt LnPriorProbExponential_Param_Mean (MrBFlt val, MrBFlt *params)
 {
-    if (AreDoublesEqual(val, params[0], 0.00001) == YES)
+    return -log(params[0]) - val / params[0];
+}
+
+
+
+
+
+/* Calculate probability of a realization for a fixed variable */
+MrBFlt LnPriorProbFix (MrBFlt val, MrBFlt *params)
+{
+    if (fabs((val - params[0])/val) < 1E-4)
         return 0.0;
     else
         return NEG_INFINITY;
@@ -4223,7 +4233,7 @@ MrBFlt LnPriorProbFix(MrBFlt val, MrBFlt *params)
 
 
 /* Calculate probability of a realization for gamma random variable */
-MrBFlt LnPriorProbGamma(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbGamma (MrBFlt val, MrBFlt *params)
 {
     return (params[0] - 1) * log(val) + params[0] * log(params[1]) - params[1] * val - LnGamma(params[0]);
 }
@@ -4232,8 +4242,23 @@ MrBFlt LnPriorProbGamma(MrBFlt val, MrBFlt *params)
 
 
 
+/* Calculate probability of a realization for gamma random variable; parameters mean and sd */
+MrBFlt LnPriorProbGamma_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt  alpha, beta;
+
+    beta  = params[0] / (params[1]*params[1]);
+    alpha = params[0] * beta;
+
+    return (alpha - 1) * log(val) + alpha * log(beta) - beta * val - LnGamma(alpha);
+}
+
+
+
+
+
 /* Calculate probability of a realization for lognormal random variable */
-MrBFlt LnPriorProbLognormal(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbLognormal (MrBFlt val, MrBFlt *params)
 {
     MrBFlt z;
 
@@ -4246,8 +4271,25 @@ MrBFlt LnPriorProbLognormal(MrBFlt val, MrBFlt *params)
 
 
 
+/* Calculate probability of a realization for lognormal random variable; parameters mean and sd on linear scale */
+MrBFlt LnPriorProbLognormal_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt z, mean_log, sd_log;
+
+    sd_log      = sqrt( log( (params[1]*params[1])/(params[0]*params[0]) + 1 ) );
+    mean_log    = log( params[0] ) - sd_log * sd_log / 2.0;
+
+    z= (log(val) - mean_log) / sd_log;
+
+    return -log(sd_log * val * sqrt(2.0 * PI)) - z * z / 2.0;
+}
+
+
+
+
+
 /* Calculate probability of a realization for normal random variable */
-MrBFlt LnPriorProbNormal(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbNormal (MrBFlt val, MrBFlt *params)
 {
     MrBFlt z;
 
@@ -4260,8 +4302,106 @@ MrBFlt LnPriorProbNormal(MrBFlt val, MrBFlt *params)
 
 
 
+/* Calculate probability of a realization for an offset exponential random variable */
+MrBFlt LnPriorProbOffsetExponential (MrBFlt val, MrBFlt *params)
+{
+    return log(params[1]) - params[1] * (val - params[0]);
+}
+
+
+
+
+
+/* Calculate probability of a realization for an offset exponential random variable; parameters offset and mean */
+MrBFlt LnPriorProbOffsetExponential_Param_Offset_Mean (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt  x, rate;
+
+    x    = val - params[0];
+    rate = 1.0 / (params[1] - params[0]);
+
+    return log(rate) - rate * x;
+}
+
+
+
+
+
+/* Calculate probability of a realization for an offset gamma random variable */
+MrBFlt LnPriorProbOffsetGamma (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt x, alpha, beta;
+    
+    x     = val - params[0];
+    alpha = params[1];
+    beta  = params[2];
+
+    return (alpha - 1) * log(x) + alpha * log(beta) - beta * x - LnGamma(alpha);
+}
+
+
+
+
+
+/* Calculate probability of a realization for an offset gamma random variable; parameters offset, mean and sd */
+MrBFlt LnPriorProbOffsetGamma_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt  x, mean, sd, alpha, beta;
+
+    x     = val - params[0];
+    mean  = params[1] - params[0];
+    sd    = params[2];
+
+    beta  = mean / (sd*sd);
+    alpha = mean * beta;
+
+    return (alpha - 1) * log(x) + alpha * log(beta) - beta * x - LnGamma(alpha);
+}
+
+
+
+
+
+/* Calculate probability of a realization for an offset lognormal random variable */
+MrBFlt LnPriorProbOffsetLognormal (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt x, mean_log, sd_log, z;
+
+    x        = val - params[0];
+    mean_log = params[1] - params[0];
+    sd_log   = params[2];
+
+    z = (log(x) - mean_log) / sd_log;
+
+    return -log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+}
+
+
+
+
+
+/* Calculate probability of a realization for an offset lognormal random variable; parameters offset, mean and sd */
+MrBFlt LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt x, mean, sd, mean_log, sd_log, z;
+
+    x        = val - params[0];
+    mean     = params[1] - params[0];
+    sd       = params[2];
+    sd_log      = sqrt( log( (sd*sd)/(mean*mean) + 1 ) );
+    mean_log    = log( mean ) - sd_log * sd_log / 2.0;
+
+    z = (log(x) - mean_log) / sd_log;
+
+    return -log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+}
+
+
+
+
+
 /* Calculate probability of a realization for truncated (only positive values) normal random variable */
-MrBFlt LnPriorProbTruncatedNormal(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
 {
     MrBFlt z, z_0, normConst;
 
@@ -4277,8 +4417,25 @@ MrBFlt LnPriorProbTruncatedNormal(MrBFlt val, MrBFlt *params)
 
 
 
+/* Calculate probability of a realization for arbitrarily truncated normal random variable; parameters truncation point, mean and sd */
+MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *params)
+{
+    MrBFlt z, z_trunc, normConst;
+
+    z = (val - params[1]) / params[2];
+
+    z_trunc = (params[0] - params[1]) / params[2];
+    normConst = CdfNormal(z_trunc);
+
+    return -log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
+}
+
+
+
+
+
 /* Calculate probability of a realization for uniform random variable */
-MrBFlt LnPriorProbUniform(MrBFlt val, MrBFlt *params)
+MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
     return - log(params[1] - params[0]);
 }
@@ -4288,8 +4445,11 @@ MrBFlt LnPriorProbUniform(MrBFlt val, MrBFlt *params)
 
 
 /* Calculate probability ratio of realizations for exponential random variable */
-MrBFlt LnProbRatioExponential(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+MrBFlt LnProbRatioExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
+    if (newX < 0.0 || oldX < 0.0)
+        return NEG_INFINITY;
+
     return params[0] * (oldX - newX);
 }
 
@@ -4297,10 +4457,62 @@ MrBFlt LnProbRatioExponential(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
 
 
-/* Calculate probability ratio of realizations for gamma random variable */
-MrBFlt LnProbRatioGamma(MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+/* Calculate probability ratio of realizations for exponential random variable; parameter mean and not rate */
+MrBFlt LnProbRatioExponential_Param_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    return (params[1] - 1.0) * (log(newX) - log(oldX)) - params[0] * (newX - oldX);
+    if (newX < 0.0 || oldX < 0.0)
+        return NEG_INFINITY;
+
+    return (oldX - newX) / params[0];
+}
+
+
+
+
+
+/* Calculate probability of a realization for a fixed variable */
+MrBFlt LnProbRatioFix (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    if (fabs((newX - params[0])/newX) < 1E-6 && fabs((oldX - params[0])/oldX) < 1E-6)
+        return 0.0;
+    else
+        return NEG_INFINITY;
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for gamma random variable */
+MrBFlt LnProbRatioGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  alpha, beta;
+
+    alpha   = params[0];
+    beta    = params[1];
+
+    if (newX < 0.0 || oldX < 0.0)
+        return NEG_INFINITY;
+
+    return (alpha - 1.0) * (log(newX) - log(oldX)) - beta * (newX - oldX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for gamma random variable; parameters mean and sd */
+MrBFlt LnProbRatioGamma_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  alpha, beta;
+
+    if (newX < 0.0 || oldX < 0.0)
+        return NEG_INFINITY;
+
+    beta  = params[0] / (params[1]*params[1]);
+    alpha = params[0] * beta;
+
+    return (alpha - 1.0) * (log(newX) - log(oldX)) - beta * (newX - oldX);
 }
 
 
@@ -4312,8 +4524,32 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  newZ, oldZ;
 
+    if (newX <= 0.0 || oldX <= 0.0)
+        return NEG_INFINITY;
+
     newZ = (log(newX) - params[0]) / params[1];
     oldZ = (log(oldX) - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX) - log(newX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for log normal random variable; parameters mean and sd */
+MrBFlt LnProbRatioLognormal_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{    
+    MrBFlt newZ, oldZ, mean_log, sd_log;
+
+    if (newX <= 0.0 || oldX <= 0.0)
+        return NEG_INFINITY;
+
+    sd_log      = sqrt( log( (params[1]*params[1])/(params[0]*params[0]) + 1 ) );
+    mean_log    = log( params[0] ) - sd_log * sd_log / 2.0;
+
+    newZ = (log(newX) - mean_log) / sd_log;
+    oldZ = (log(oldX) - mean_log) / sd_log;
 
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX) - log(newX);
 }
@@ -4337,6 +4573,116 @@ MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
 
 
+/* Calculate probability ratio of realizations for offset exponential random variable */
+MrBFlt LnProbRatioOffsetExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    if (newX < params[0] || oldX < params[0])
+        return NEG_INFINITY;
+
+    return params[1] * (oldX - newX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for offset exponential random variable; parameters offset and mean */
+MrBFlt LnProbRatioOffsetExponential_Param_Offset_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    if (newX < params[0] || oldX < params[0])
+        return NEG_INFINITY;
+
+    return (oldX - newX) / (params[1] - params[0]);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for offset gamma random variable */
+MrBFlt LnProbRatioOffsetGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  alpha, beta, newZ, oldZ;
+   
+    if (newX <= params[0] || oldX <= params[0])
+        return NEG_INFINITY;
+
+    alpha = params[1];
+    beta  = params[2];
+    newZ  = newX - params[0];
+    oldZ  = oldX - params[0];
+
+    return (alpha - 1.0) * (log(newZ) - log(oldZ)) - beta * (newZ - oldZ);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for offset gamma random variable; parameters offset, mean and sd */
+MrBFlt LnProbRatioOffsetGamma_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  mean, sd, alpha, beta;
+
+    if (newX <= params[0] || oldX <= params[0])
+        return NEG_INFINITY;
+
+    mean  = params[1] - params[0];
+    sd    = params[2];
+
+    beta  = mean / (sd*sd);
+    alpha = mean * beta;
+
+    newX  -= params[0];
+    oldX  -= params[0];
+
+    return (alpha - 1.0) * (log(newX) - log(oldX)) - beta * (newX - oldX);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for offset lognormal random variable */
+MrBFlt LnProbRatioOffsetLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt newZ, oldZ, mean_log, sd_log;
+
+    sd_log      = params[2];
+    mean_log    = params[1];
+
+    newZ = (log(newX-params[0]) - mean_log) / sd_log;
+    oldZ = (log(oldX-params[0]) - mean_log) / sd_log;
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX-params[0]) - log(newX-params[0]);
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for offset lognormal random variable; parameters offset, mean and sd */
+MrBFlt LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt newZ, oldZ, mean, sd, mean_log, sd_log;
+
+    mean        = params[1] - params[0];
+    sd          = params[2];
+    sd_log      = sqrt( log( (sd*sd)/(mean*mean) + 1 ) );
+    mean_log    = log( mean ) - sd_log * sd_log / 2.0;
+
+    newX -= params[0];
+    oldX -= params[0];
+    newZ = (log(newX) - mean_log) / sd_log;
+    oldZ = (log(oldX) - mean_log) / sd_log;
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0 - log(newX/oldX);
+}
+
+
+
+
+
 /* Calculate probability ratio of realizations for truncated normal random variable */
 MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -4349,6 +4695,26 @@ MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
     newZ = (newX - params[0]) / params[1];
     oldZ = (oldX - params[0]) / params[1];
+
+    return (oldZ * oldZ - newZ * newZ) / 2.0;
+}
+
+
+
+
+
+/* Calculate probability ratio of realizations for arbitrarily truncated normal random variable; parameters truncation point, mean and sd */
+MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
+{
+    MrBFlt  newZ, oldZ;
+
+    if (newX <= params[0])
+        return NEG_INFINITY;
+    else if (oldX <= params[0])
+        return (POS_INFINITY);
+
+    newZ = (newX - params[1]) / params[2];
+    oldZ = (oldX - params[1]) / params[2];
 
     return (oldZ * oldZ - newZ * newZ) / 2.0;
 }
@@ -4776,7 +5142,7 @@ int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
 			}
 			
 		/* TempIn is Mat^numSquares. Now, multiply it by Mat numRemaining times */
-		for (k=0; k<numSquares; k++)
+		for (k=0; k<numRemaining; k++)
 			{
 			MultiplyMatrices (dim, TempIn, Mat, TempOut);
 			CopyDoubleMatrices (dim, TempOut, TempIn);
@@ -5175,9 +5541,8 @@ MrBFlt QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta)
 
 {
 
-	MrBFlt		lnga1, quantile;
+	MrBFlt		quantile;
 
-	lnga1 = LnGamma(alfa + 1.0);
 	quantile = POINTGAMMA(x, alfa, beta);
 	
 	return (quantile);

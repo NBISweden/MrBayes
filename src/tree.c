@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -1121,7 +1121,7 @@ int CheckSetConstraints (Tree *t)
     /* set mask (needed to take care of unused bits when flipping partitions) */
 	for (i=0; i<numLocalTaxa; i++)
 		SetBit (i, mask);
-	
+
 	for (a=0; a<numDefinedConstraints; a++)
 		{
 		if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[a] != HARD )
@@ -1169,7 +1169,7 @@ int CheckSetConstraints (Tree *t)
 					}
                 t->nLocks++;
 				break;
-				}				
+				}
 			}
 	
 		if (foundIt == NO)
@@ -2524,12 +2524,13 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 
 {
 
-	int				i, treeAgeFixed;
+	int				i;
 	TreeNode		*p;
     Model           *mp;
-    MrBFlt          treeAge;
+    MrBFlt          treeAgeMin, treeAgeMax;
+    Calibration     *calibrationPtr;
 
-#if 0
+#if 0 
     printf ("Before initializing calibrated brlens\n");
     ShowNodes(t->root, 0, YES);
 #endif
@@ -2540,19 +2541,23 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 		return (ERROR);
 		}
 
-    /* Check whether root is fixed indirectly */
+    /* Check whether root has age constraints */
     mp = &modelParams[t->relParts[0]];
-    if (!strcmp(mp->clockPr, "Uniform") && !strcmp(mp->treeAgePr,"Fixed"))
+    treeAgeMin = 0.0;
+    treeAgeMax = POS_INFINITY;
+    if ( t->root->left->isDated == YES)
         {
-        treeAgeFixed = YES;
-        treeAge = mp->treeAgeFix;
+        treeAgeMin = t->root->left->calibration->min;
+        treeAgeMax = t->root->left->calibration->max;
         }
-    else
+    else if (!strcmp(mp->clockPr, "Uniform"))
         {
-        treeAgeFixed = NO;
-        treeAge = -1.0;
+        if (mp->treeAgePr.min > treeAgeMin)
+            treeAgeMin = mp->treeAgePr.min;
+        if (mp->treeAgePr.max < treeAgeMax)
+            treeAgeMax = mp->treeAgePr.max;
         }
-	
+
 	/* date all nodes from top to bottom with min. age as nodeDepth*/
 	for (i=0; i<t->nNodes; i++)
 		{
@@ -2569,11 +2574,9 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 				else
 					{
 					if (p->calibration->prior == fixed)
-						p->nodeDepth = p->age = p->calibration->age;
-					else if (p->calibration->prior == uniform)
+						p->nodeDepth = p->age = p->calibration->priorParams[0];
+					else
 						p->nodeDepth = p->age = p->calibration->min;
-					else /* if (p->calibration->prior == offsetExponential) */
-						p->nodeDepth = p->age = p->calibration->offset;
 					}
 				}
 			else
@@ -2582,52 +2585,28 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 					p->nodeDepth = p->left->nodeDepth;
 				else
 					p->nodeDepth = p->right->nodeDepth;
-				if (p->isDated == YES || (p->anc->anc == NULL && treeAgeFixed))
+				if (p->isDated == YES || (p->anc->anc == NULL && !strcmp(mp->clockPr,"Uniform")))
 					{
                     if (p->isDated == NO)
-                        {
-                        if (treeAge <= p->nodeDepth)
-                            {
+                        calibrationPtr = &mp->treeAgePr;
+                    else
+                        calibrationPtr = p->calibration;
+
+					if (calibrationPtr->max <= p->nodeDepth)
+						{
+                        if (p->isDated == NO)
 						    MrBayesPrint ("%s   Calibration inconsistency for root node\n", spacer);
-                            return (ERROR);
-                            }
                         else
-                            p->age = p->nodeDepth = treeAge;
-                        }
-					else if (p->calibration->prior == fixed)
-						{
-						if (p->calibration->age <= p->nodeDepth)
-							{
-                            if (p->anc->anc == NULL)
-							    MrBayesPrint ("%s   Calibration inconsistency for root node\n", spacer);
-                            else
-                                MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
-							return (ERROR);
-							}
-						else
-							p->age = p->nodeDepth = p->calibration->age;
+						    MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
+						MrBayesPrint ("%s   Cannot make a tree where the node is %s\n", spacer, calibrationPtr->name);
+						return (ERROR);
 						}
-					else if (p->calibration->prior == uniform)
+					else
 						{
-						if (p->calibration->max <= p->nodeDepth)
-							{
-							MrBayesPrint ("%s   Calibration inconsistency for node '%s'\n", spacer, constraintNames[p->lockID]);
-							return (ERROR);
-							}
-						else
-							{
-							if (p->calibration->min < p->nodeDepth)
-								p->age = p->nodeDepth;
-							else
-								p->age = p->nodeDepth = p->calibration->min;
-							}
-						}
-					else /* if (p->calibration.prior == offsetExponential) */
-						{
-						if (p->calibration->offset < p->nodeDepth)
+						if (calibrationPtr->min < p->nodeDepth)
 							p->age = p->nodeDepth;
 						else
-							p->age = p->nodeDepth = p->calibration->offset;
+							p->age = p->nodeDepth = calibrationPtr->min;
 						}
 					}
 				else
@@ -2639,35 +2618,13 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 
 	/* try to make root node deeper than minimum age */
     p = t->root->left;
-    if (p->calibration == NULL && treeAgeFixed == NO)
-        {
-		if( p->nodeDepth==0.0 ) p->nodeDepth = 1.0;
-        p->age = p->nodeDepth *= 1.5;
-        }
-    else if (treeAgeFixed == YES || p->calibration->prior == fixed)
-        {
-        /* can't do much ... */
-        }
-    else if (p->calibration->prior == uniform)
-        {
-        if (p->nodeDepth * 1.5 < p->calibration->max)
-            p->nodeDepth = p->age = 1.5 * p->nodeDepth;
-        else
-            p->nodeDepth = p->age = p->calibration->max;
-        }
-    else /* if (t->root->calibration->prior == offsetExponential */
-        {
-		assert( p->calibration->prior == offsetExponential );
-        /* Make random draw */
-        p->age = p->calibration->offset - log (RandomNumber(seed)) / p->calibration->lambda;
-        if (p->age > 1.5 * p->nodeDepth)
-            p->nodeDepth = p->age;
-        else
-            p->age = p->nodeDepth = 1.5 * p->nodeDepth;
-        }
+	if( p->nodeDepth==0.0 ) p->nodeDepth = 1.0;
+    if (p->nodeDepth * 1.5 < treeAgeMax)
+        p->nodeDepth = p->age = 1.5 * p->nodeDepth;
+    else
+        p->nodeDepth = p->age = treeAgeMax;
 
 	SetNodeCalibratedAge( p, 1, p->age );
-
 
     /* Setup node depths */
 	for (i=0; i<t->nNodes; i++)
@@ -2948,19 +2905,9 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 		p->nodeDepth = -1.0;
 		if (p->isDated == YES)
 			{
-            assert(p->calibration->prior == fixed || p->calibration->prior == uniform || p->calibration->prior == offsetExponential);
-			if (p->calibration->prior == fixed)
-				x[p->index] = y[p->index] = p->calibration->age;
-			else if (p->calibration->prior == uniform)
-				{
-				x[p->index] = p->calibration->min;
-				y[p->index] = p->calibration->max;
-				}
-			else /* if (p->calibration->prior == offsetExponential) */
-				{	
-				x[p->index] = p->calibration->offset;
-				y[p->index] = -1.0;
-				}
+            assert(p->calibration->prior != unconstrained);
+			x[p->index] = p->calibration->min;
+			y[p->index] = p->calibration->max;
 			}
 		else if (p->left == NULL && p->right == NULL)
 			x[p->index] = y[p->index] = 0.0;
@@ -3044,7 +2991,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
 					f = (r->nodeDepth - s->nodeDepth) / (x[r->index] - y[s->index]);
 					if (f <= 0.0 || x[r->index] == y[s->index])
 						{
-                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.000001) == YES) //if defference is very very small we do not bail out. It could heppened becouse of numerical inacuracy, one node which supose to be slitly below the other one become on top.  
+                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.000001) == YES) //if difference is very very small we do not bail out. It could happen because of numerical inaccuracy that one node that is supposed to be slightly below the other one ends up on top
                             continue;
 						isViolated = YES;
 						break;
@@ -3302,28 +3249,34 @@ int IsTreeConsistent (Param *param, int chain, int state)
             {
             p = tree->allDownPass[i];
             if (p->isDated == YES) {
-                if (fabs(p->age - p->nodeDepth/clockRate) > 0.000001)
+                if (fabs((p->age - p->nodeDepth/clockRate)/p->age) > 0.000001)
                     {
                     printf ("Node %d has age %f but nodeDepth %f when clock rate is %f\n",
                         p->index, p->age, p->nodeDepth, clockRate);
                     return NO;
                     }
-                if (p->calibration->prior == fixed && fabs(p->age - p->calibration->age) > 0.000001)
+                if (p->calibration->prior == fixed && fabs((p->age - p->calibration->priorParams[0])/p->age) > 0.000001)
                     {
                     printf ("Node %d has age %f but should be fixed to age %f\n",
-                        p->index, p->age, p->calibration->age);
+                        p->index, p->age, p->calibration->priorParams[0]);
                     return NO;
                     }
-                else if (p->calibration->prior == offsetExponential && p->age < p->calibration->offset)
+                else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age >p->calibration->max))
                     {
-                    printf ("Node %d has age %f but should be minimally of age %f\n",
-                        p->index, p->age, p->calibration->offset);
-                    return NO;
-                    }
-                else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age > p->calibration->max))
-                    {
-                    printf ("Node %d has age %f but should be in the interval (%f,%f)\n",
+                    printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
+                    return NO;
+                    }
+                else if (p->age < p->calibration->min)
+                    {
+                    printf ("Node %d has age %f but should be at least of age %f\n",
+                        p->index, p->age, p->calibration->min);
+                    return NO;
+                    }
+                else if (p->age > p->calibration->max)
+                    {
+                    printf ("Node %d has age %f but should be no older than %f\n",
+                        p->index, p->age, p->calibration->max);
                     return NO;
                     }
                 }
@@ -5878,28 +5831,33 @@ int SetTreeNodeAges (Param *param, int chain, int state)
             {
             p = tree->allDownPass[i];
             if (p->isDated == YES) {
-                if (p->calibration->prior == fixed && fabs(p->age - p->calibration->age) > 0.000001)
+                if (p->calibration->prior == fixed && fabs((p->age - p->calibration->priorParams[0])/p->age) > 0.000001)
                     {
                     printf ("Node %d has age %f but should be fixed to age %f\n",
-                        p->index, p->age, p->calibration->age);
-                    return NO;
-                    }
-                else if (p->calibration->prior == offsetExponential && p->age < p->calibration->offset)
-                    {
-                    printf ("Node %d has age %f but should be minimally of age %f\n",
-                        p->index, p->age, p->calibration->offset);
+                        p->index, p->age, p->calibration->priorParams[0]);
                     return NO;
                     }
                 else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age > p->calibration->max))
                     {
-                    printf ("Node %d has age %f but should be in the interval (%f,%f)\n",
+                    printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
+                    return NO;
+                    }
+                else if (p->age < p->calibration->min)
+                    {
+                    printf ("Node %d has age %f but should be minimally of age %f\n",
+                        p->index, p->age, p->calibration->min);
+                    return NO;
+                    }
+                else if (p->age > p->calibration->max)
+                    {
+                    printf ("Node %d has age %f but should be minimally of age %f\n",
+                        p->index, p->age, p->calibration->max);
                     return NO;
                     }
                 }
             }
         }
-
 
     return YES;
 }

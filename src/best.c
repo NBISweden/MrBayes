@@ -328,7 +328,7 @@ int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
 ----------------------------------------------------------------------*/
 int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
 
-    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets;
+    int         i, left, right, index, nLongsNeeded, freeBitsets;
     double      dist, minDist=0.0, distSum;
     TreeNode    *p;
 
@@ -344,9 +344,6 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
         ResetTreePartitions(speciesTree);   // just in case
         freeBitsets = NO;
         }
-
-    // Calculate number of values in the upper triangular matrix
-    numUpperTriang = numSpecies * (numSpecies - 1) / 2;
 
     // Number of longs needed in a bitfield representing a species set
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;
@@ -887,11 +884,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
    	int         i, k, index, nEvents, trace=0;
    	double      N, lnProb, ploidyFactor, theta, timeInterval;
     TreeNode    *p, *q=NULL, *r;
-    ModelInfo   *m;
     ModelParams *mp;
-
-    // Get model info
-    m = &modelSettings[speciesTree->relParts[0]];
 
     // Get model params
     mp = &modelParams[speciesTree->relParts[0]];
@@ -1011,7 +1004,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 ----------------------------------------------------------------------*/
 double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate) {
 
-    int         i, left, right, numUpperTriang, index, nLongsNeeded, freeBitsets;
+    int         i, left, right, index, nLongsNeeded, freeBitsets;
     double      dist, normConst, negLambdaX, eNegLambdaX, density, prob,
                 sumDensRatio, prodProb, lnProb;
     TreeNode    *p;
@@ -1023,9 +1016,6 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
     else
         freeBitsets = NO;
     AllocateTreePartitions(speciesTree);
-
-    // Calculate number of values in the upper triangular matrix
-    numUpperTriang = numSpecies * (numSpecies - 1) / 2;
 
     // Number of longs needed in a bitfield representing a species set
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;
@@ -1044,7 +1034,7 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
                 {
                 p->x++;
                 index         = UpperTriangIndex(left, right, numSpecies);
-                assert (index < numUpperTriang);
+                assert (index < numSpecies*(numSpecies - 1) / 2);
                 dist          = depthMatrix[index] - p->nodeDepth;          // distance between depth matrix entry and actual species-tree node
                 normConst     = 1.0 - exp(-expRate * depthMatrix[index]);   // normalization constant because of truncation of exp distribution
                 negLambdaX    = - expRate * dist;
@@ -1191,14 +1181,10 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
     Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
-    ModelParams     *mp;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-    // Get model params
-	mp = &modelParams[param->relParts[0]];
-	
 	// Get model settings
     m = &modelSettings[param->relParts[0]];
 
@@ -1296,14 +1282,10 @@ int Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
     Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
-    ModelParams     *mp;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-    // Get model params
-	mp = &modelParams[param->relParts[0]];
-	
 	// Get model settings
     m = &modelSettings[param->relParts[0]];
 
@@ -1401,14 +1383,10 @@ int Move_GeneTree3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
     Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
-    ModelParams     *mp;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-    // Get model params
-	mp = &modelParams[param->relParts[0]];
-	
 	// Get model settings
     m = &modelSettings[param->relParts[0]];
 
@@ -1503,7 +1481,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 				oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
                 *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL, *popSizePtr;
 	TreeNode	*p, *q;
-	ModelParams	*mp;
 	ModelInfo	*m;
 	Tree		*geneTree, *speciesTree;
 	Param		*subParm;
@@ -1511,7 +1488,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 	window = mvp[0]; /* window size */
  
 	m = &modelSettings[param->relParts[0]];
-	mp = &modelParams[param->relParts[0]];
 
 	/* get gene tree and species tree */
 	geneTree    = GetTree (param, chain, state[chain]);
@@ -1769,7 +1745,6 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                     forwardLambda, backwardLambda, lambdaDiv, mean;
     Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
-    ModelParams     *mp;
 
     /* get tuning parameter (lambda divider) */
     lambdaDiv = mvp[0];
@@ -1777,9 +1752,6 @@ int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     /* calculate number of gene trees */
     numGeneTrees = param->nSubParams;
 
-    /* get model params */
-	mp = &modelParams[param->relParts[0]];
-	
 	/* get model settings */
     m = &modelSettings[param->relParts[0]];
 

@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2010
+ *  (c) 2002-2013
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -1732,7 +1732,7 @@ int BuildParsTrees (SafeLong *seed)
 
 {
 
-	int			k, chn, nTaxa;
+	int			k, chn;
 	Param		*p, *q;
 	Tree		*tree;
 
@@ -1747,10 +1747,6 @@ int BuildParsTrees (SafeLong *seed)
                 assert (p->nSubParams == 1);
 				q = p->subParams[0];
 				tree = GetTree (q, chn, 0);
-				if (tree->isRooted == YES)
-					nTaxa = tree->nNodes - tree->nIntNodes - 1;
-				else
-					nTaxa = tree->nNodes - tree->nIntNodes;
                 /* fixed topology */
                 if (p->paramId == TOPOLOGY_RCL_FIXED ||
                     p->paramId == TOPOLOGY_RCCL_FIXED ||
@@ -2849,8 +2845,7 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 {
 
 	int				a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
-					nObsStates, nStates, nStatesSquared, preLikeJump,
-					nGammaCats;
+					nObsStates, nStates, nStatesSquared, nGammaCats;
 	CLFlt			likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
 	ModelInfo		*m;
 #	if !defined (DEBUG_NOSHORTCUTS)
@@ -2862,7 +2857,6 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 	nObsStates = m->numStates;
 	nStates = m->numModelStates;
 	nStatesSquared = nStates * nStates;
-	preLikeJump = nObsStates * nStates;
 
 	/* flip conditional likelihood space */
 	FlipCondLikeSpace (m, chain, p->index);
@@ -4729,7 +4723,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 
 	int				a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL,
 					*rState=NULL, *aState=NULL, nObsStates, nStates,
-					nStatesSquared, preLikeJump, nGammaCats;
+					nStatesSquared, nGammaCats;
 	CLFlt			likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
 					*tiPL, *tiPR, *tiPA;
 	ModelInfo		*m;
@@ -4742,7 +4736,6 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 	nObsStates = m->numStates;
 	nStates = m->numModelStates;
 	nStatesSquared = nStates * nStates;
-	preLikeJump = nObsStates * nStates;
 
 	/* flip conditional likelihood space */
 	FlipCondLikeSpace (m, chain, p->index);
@@ -6711,7 +6704,7 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
 int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
 
 {
-	int				c, i, k, n, nStates;
+	int				c, k, n, nStates;
 	CLFlt			*scP, *lnScaler;
 	__m128          *clPtr, **clP, m1;
 	ModelInfo		*m;
@@ -6739,7 +6732,6 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
 	/* rescale */
-	i  = 0;
 	for (c=0; c<m->numSSEChars; c++)
 		{
 		//scaler = 0.0;
@@ -7142,7 +7134,7 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
 
 {
-	int				c, i, k, n, nStates;
+	int				c, k, n, nStates;
 	CLFlt			scaler, **clP, *clPtr, *scP, *lnScaler;
 	ModelInfo		*m;
 #if defined (FAST_LOG)
@@ -7168,7 +7160,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
 	/* rescale */
-	i  = 0;
 	for (c=0; c<m->numChars; c++)
 		{
 		scaler = 0.0;
@@ -7224,7 +7215,7 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
 int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
 
 {
-	int				c, i, k, n, nStates;
+	int				c, k, n, nStates;
 	CLFlt			*scP, *lnScaler;
 	__m128          *clPtr, **clP, m1;
 	ModelInfo		*m;
@@ -7252,7 +7243,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
 	/* rescale */
-	i  = 0;
 	for (c=0; c<m->numSSEChars; c++)
 		{
 		//scaler = 0.0;
@@ -8098,13 +8088,12 @@ int DoMcmc (void)
 	        }
         }            
 
-	/* Set clockRate if we have calibration */
-	for (j=0; j<numGlobalChains; j++)
+    /*Set clockRate if we have calibration */
+    for (j=0; j<numGlobalChains; j++)
         {
         if( UpdateClockRate(0.0, j) == ERROR) 
             goto errorExit;
         }
-
 
     for (i=0; i<numParams; i++)
         for (j=0; j<numGlobalChains; j++)
@@ -11415,8 +11404,8 @@ int InitChainCondLikes (void)
                 {
                 if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 		            {
-		            MrBayesPrint ("%s   Non-beagle version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, d+1);
-                    MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+		            MrBayesPrint ("%s   Non-beagle version of conditional likelihood calculator will be used for division %d due to request\n", spacer, d+1);
+                    MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 		            }                
                 else if (m->gibbsGamma == NO)
                     m->useBeagle = YES;
@@ -12206,7 +12195,6 @@ int InitInvCondLikes (void)
 	SafeLong	*charBits;
 	CLFlt		*cI;
 	ModelInfo	*m;
-    ModelParams *mp;
 
 #if defined (SSE_ENABLED)
     int         c1;
@@ -12248,7 +12236,6 @@ int InitInvCondLikes (void)
 		{
 
 		m = &modelSettings[d];
-		mp = &modelParams[d];
 		
 		if (m->pInvar == NULL)
 			continue;
@@ -13164,7 +13151,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 	MrBFlt			s01, s10, probOn, probOff, *swr, covBF[40], freq, likeI, pInvar=0.0, lnLike;
 	CLFlt			*lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
     __m128          *clPtr, **clP, *clInvar=NULL;
-	__m128			m1, mCatLike, mLike, mFreq, mPInvar;
+	__m128			m1, mCatLike, mLike, mFreq;
 	ModelInfo		*m;
 
 
@@ -13179,7 +13166,6 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 		{
 		hasPInvar = YES;
 		pInvar =  *(GetParamVals (m->pInvar, chain, state[chain]));
-        mPInvar = _mm_set1_ps ((CLFlt)(pInvar));
 		clInvar = (__m128 *) (m->invCondLikes);
 		}
 
@@ -14795,6 +14781,7 @@ int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int
 
 {
 
+#if 0
 	int				x, y;
 	TreeNode		*q;
 	
@@ -14804,6 +14791,7 @@ int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int
 	y = chain;
 	*lnL = 0.0;
 	x = whichSitePats;
+#endif
 
 	MrBayesPrint ("%s   Parsimony calculator for codons not yet implemented\n", spacer);
 	
@@ -14849,7 +14837,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 {
 	
 	int				c, i, *nStates;
-	SafeLong			*pL, *pR, *pP, *pA, *oldpP, x;
+	SafeLong		*pL, *pR, *pP, *pA, x;
 	CLFlt			*treeLength;
 	CLFlt			*nSitesOfPat;
 	Tree			*t;
@@ -14881,7 +14869,6 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
         /* find parsimony sets for the node and its environment */
 		pL    = m->parsSets[m->condLikeIndex[chain][p->left->index ]];
         pR    = m->parsSets[m->condLikeIndex[chain][p->right->index]];
-		oldpP = m->parsSets[m->condLikeScratchIndex[p->index       ]];
         pP    = m->parsSets[m->condLikeIndex[chain][p->index       ]];
 
 		if (t->isRooted == NO && p->anc->anc == NULL)
@@ -15036,8 +15023,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
             assert (j != oldTree->nNodes-1);
             if (p->isDated == YES && p->calibration->prior != fixed)
                 {
-                if (p->calibration->prior == offsetExponential)
-                    (*lnPriorRatio) += p->calibration->lambda * (q->age - p->age);
+                (*lnPriorRatio) += p->calibration->LnPriorRatio(p->age, q->age, p->calibration->priorParams);
                 }
             }
         }
@@ -15278,6 +15264,8 @@ MrBFlt LogLike (int chain)
 
 	return (chainLnLike);	
 }
+
+
 
 
 
@@ -15695,10 +15683,7 @@ MrBFlt LogPrior (int chain)
                         q = t->allDownPass[i];
                         if (q->isDated == YES && q->calibration->prior != fixed)
                             {
-                            if (q->calibration->prior == uniform)
-                                lnPrior += -log(q->calibration->max-q->calibration->min);
-                            else if (q->calibration->prior == offsetExponential)
-                                lnPrior +=  log (q->calibration->lambda) - q->calibration->lambda*(q->age - q->calibration->offset);
+                            lnPrior += q->calibration->LnPriorProb(q->age, q->calibration->priorParams);
                             }
                         }
                     }
@@ -16083,7 +16068,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 {
     
 	int				i, nTaxa, n, m;
-	MrBFlt			*nt, lambda, mu, rho;
+	MrBFlt			*nt, lambda, mu;
 	TreeNode		*p;
     
 	/* allocate space for the speciation times */
@@ -16095,12 +16080,11 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     }
     
     /* transform to standard variables */
-    rho    = sF;
     lambda = sR / (1.0 - eR);
     mu     = eR * lambda;
     
     n      = t->nIntNodes+1;
-    m      = (int)floor(n/sF+0.5);/*equal to round(n/sF) plus it is compartable with MS Visula Studio*/
+    m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
@@ -16144,7 +16128,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 {
     
 	int				i, nTaxa, n, m;
-	MrBFlt			*nt, lambda, mu, rho;
+	MrBFlt			*nt, lambda, mu;
 	TreeNode		*p;
     
 	/* allocate space for the speciation times */
@@ -16156,12 +16140,11 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     }
     
     /* transform to standard variables */
-    rho    = sF;
     lambda = sR / (1.0 - eR);
     mu     = eR * lambda;
     
     n      = t->nIntNodes+1;
-    m      = (int)floor(n/sF+0.5);/*equal to round(n/sF) plus it is compartable with MS Visula Studio*/
+    m      = (int)floor(n/sF+0.5);/* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
@@ -16381,16 +16364,11 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
     /* First take tree age into account f(t_0) */
     if (t->root->left->isDated == YES)
         {
-        lnProb += 0.0;  /* calibrations are dealt with separately */
+        lnProb += 0.0;  /* calibrations are dealt with separately in calling function */
         }
     else
         {
-        /* if (!strcmp(mp->treeAgePr, "Exponential"))
-		    lnProb += log(mp->treeAgeExp) - mp->treeAgeExp * treeAge;  */
-        if (!strcmp(mp->treeAgePr, "Uniform"))
-            lnProb += log(1.0) - log(mp->treeAgeUni[1] - mp->treeAgeUni[0]);
-        else if (!strcmp(mp->treeAgePr, "Gamma"))
-		    lnProb += mp->treeAgeGamma[0] * log(mp->treeAgeGamma[1]) - LnGamma(mp->treeAgeGamma[0]) + (mp->treeAgeGamma[0] - 1.0) * log(treeAge) - mp->treeAgeGamma[1] * treeAge;
+        lnProb += mp->treeAgePr.LnPriorProb(treeAge, mp->treeAgePr.priorParams);
         }
 
     /* If tree is not calibrated or only root is calibrated, it is easy */
@@ -16501,6 +16479,9 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
         root->x = root->anc->x;
 
         }
+
+
+    assert (lnProb == (nTips - 1.0)*log(2.0) - LnFactorial(nTips) - log(nTips-1.0) - (nTips - 2.0)*log(treeAge));
 
     free (nodeDepths);
     free (nLineages);
@@ -16689,11 +16670,8 @@ int Move_Aamodel (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 		AAMODEL_BLOSUM			9 */
 
 	int			i, oldM, newM;
-	MrBFlt		*bs, x, *subValue;
+	MrBFlt		*bs, *subValue;
 	ModelParams *mp;
-	
-	/* no warnings */
-	x = mvp[0];
 	
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
@@ -16795,14 +16773,12 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 	/* add or delete one Poisson process event */
 	
 	int			i, k, addEvent, *nEvents, numEvents;
-	MrBFlt		sigma, m, lognormalLnProb, **position, **rateMultiplier, *brlens, length, pos, rate;
+	MrBFlt		sigma, m, lognormalLnProb, **position, **rateMultiplier, length, pos, rate;
 	TreeNode	*p, *q;
-	ModelParams *mp;
 	ModelInfo	*model;
 	Tree		*t;
 
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
+	/* get the model settings */
 	model = &modelSettings[param->relParts[0]];
 
 	/* get cpp rate */
@@ -16815,7 +16791,6 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 	nEvents = param->nEvents[2*chain+state[chain]];
 	position = param->position[2*chain+state[chain]];
 	rateMultiplier = param->rateMult[2*chain+state[chain]];
-	brlens = GetParamSubVals(param, chain, state[chain]);
 
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
@@ -17147,18 +17122,16 @@ int Move_TK02BranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 	int			i;
 	MrBFlt		newRate, oldRate, tuning, minR, maxR, nu, *tk02Rate, *brlens;
 	TreeNode	*p = NULL;
-	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
 	TreeNode	*q;
 
+    /* get model settings */
+    m = &modelSettings[param->relParts[0]];
+
 	/* get the tuning parameter */
 	tuning = mvp[0];
 	
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
-	m = &modelSettings[param->relParts[0]];
-
     /* get the TK02 branch rate and effective branch length data */
 	tk02Rate = GetParamVals (param, chain, state[chain]);
 	brlens   = GetParamSubVals (param, chain, state[chain]);
@@ -17496,11 +17469,7 @@ int Move_CPPEventPosition (Param *param, int chain, SafeLong *seed, MrBFlt *lnPr
 	int			i, j, k, *nEvents;
 	MrBFlt		pos, temp, **position, **rateMultiplier;
 	TreeNode	*p=NULL, *q;
-	ModelParams *mp;
 	Tree		*t;
-
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
 
 	/* get the cpp event data */
 	nEvents = param->nEvents[2*chain+state[chain]];
@@ -17595,7 +17564,6 @@ int Move_CPPRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 	int			i, j, *nEvents, sumEvents;
 	MrBFlt		oldLambda, newLambda, treeLength, tuning;
-	ModelInfo	*m;
 	Model		*mp;
 	TreeNode	*p;
 	Tree		*t;
@@ -17603,8 +17571,7 @@ int Move_CPPRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	/* get tuning parameter */
 	tuning = mvp[0];
 
-	/* get model settings */
-	m = &modelSettings[param->relParts[0]];
+	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 
 	/* get the CPP rate */
@@ -17673,7 +17640,6 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, SafeLong *seed, MrBFlt 
 	int			i, j, k, *nEvents;
 	MrBFlt		newRateMultiplier, oldRateMultiplier, tuning, minM, maxM, sigma, **rateMultiplier;
 	TreeNode	*p = NULL;
-	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
 	TreeNode	*q;
@@ -17681,8 +17647,7 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, SafeLong *seed, MrBFlt 
 	/* get the tuning parameter */
 	tuning = mvp[0];
 	
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
+	/* get the model settings */
 	m = &modelSettings[param->relParts[0]];
 
 	/* get tree */
@@ -17774,12 +17739,10 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, SafeLong *seed, MrBFlt *
 	int			i, j, k, *nEvents;
 	MrBFlt		sigma, newRateMultiplier, oldRateMultiplier, **rateMultiplier;
 	TreeNode	*p=NULL, *q;
-	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
 
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
+	/* get the model settings */
 	m = &modelSettings[param->relParts[0]];
 
 	/* get the CPP event data */
@@ -18545,12 +18508,9 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 		        n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
 	MrBFlt		x, y, oldBrlen=0.0, newBrlen=0.0, extensionProb, igrvar, *igrRate=NULL,
 			    v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda, *tk02Rate=NULL,
-				**position=NULL, **rateMultiplier=NULL, *brlens, nu, origProp, origBrlenProp=1.0,
-                minV, maxV, minB, maxB;
+				**position=NULL, **rateMultiplier=NULL, *brlens, nu, minV, minB, maxB;
     TreeNode	*p, *a, *b, *u, *v, *oldA;
 	Tree		*t;
-	ModelParams *mp;
-	ModelInfo	*m = NULL;
 	Param		*subParm;
 
     extensionProb = mvp[0];	/* extension probability */
@@ -18560,13 +18520,8 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
-	/* get model params and model info */
-	mp = &modelParams[param->relParts[0]];
-	m = &modelSettings[param->relParts[0]];
-	
     /* get min and max branch lengths in relative time and substitution units */
     minV = BRLENS_MIN;
-    maxV = BRLENS_MAX;
     minB = RELBRLENS_MIN;
     maxB = RELBRLENS_MAX;
 
@@ -18603,8 +18558,6 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	v1 = a->length;
 	v2 = u->length;
 	v3 = v->length;
-
-    origProp = u->length / oldBrlen;
 
     /* reassign events for CPP */
 	for (i=0; i<param->subParams[0]->nSubParams; i++)
@@ -18658,9 +18611,6 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
-
-            /* no proposal ratio effect or dealt with below, record value here */
-            origBrlenProp = brlens[u->index] / (brlens[a->index] + brlens[u->index]);
 
              /* adjust prior ratio for old branches */
             (*lnPriorRatio) -= LnProbTruncGamma(a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
@@ -19489,12 +19439,10 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	
 	int		    i, *nEvents, numFreeOld, numFreeNew;
 	MrBFlt		x, oldALength, oldCLength, extensionProb, igrvar, *igrRate,
-			    lambda, *tk02Rate, *brlens, nu, ran, cumulativeProb, forwardProb,
-                backwardProb, minV, maxV, minB, maxB;
+			    *tk02Rate, *brlens, nu, ran, cumulativeProb, forwardProb,
+                backwardProb, minV, minB, maxB;
     TreeNode	*p, *q, *a, *c;
 	Tree		*t;
-	ModelParams *mp;
-	ModelInfo	*m;
 	Param		*subParm;
 
     extensionProb = mvp[0];	/* extension probability */
@@ -19504,13 +19452,8 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
-	/* get model params and model info */
-	mp = &modelParams[param->relParts[0]];
-	m = &modelSettings[param->relParts[0]];
-	
     /* get min and max brlens in relative time and subst units */
     minV = BRLENS_MIN;
-    maxV = BRLENS_MAX;
     minB = RELBRLENS_MIN;
     maxB = RELBRLENS_MAX;
 
@@ -19819,7 +19762,6 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
         if (subParm->paramType == P_CPPEVENTS)
 			{
 			nEvents = subParm->nEvents[2*chain+state[chain]];
-			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
 
             /* proposal ratio */
             (*lnProposalRatio) += nEvents[a->index] * log (a->length / oldALength);
@@ -23585,7 +23527,6 @@ int Move_IgrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	int			i;
 	MrBFlt		newBrlen, oldBrlen, tuning, minB, maxB, igrvar, *igrRate, *brlens;
 	TreeNode	*p = NULL;
-	ModelParams *mp;
 	ModelInfo	*m;
 	Tree		*t;
 	TreeNode	*q;
@@ -23593,8 +23534,7 @@ int Move_IgrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	/* get the tuning parameter */
 	tuning = mvp[0];
 	
-	/* get the model parameters */
-	mp = &modelParams[param->relParts[0]];
+	/* get the model settings */
 	m = &modelSettings[param->relParts[0]];
 
     /* get the TK02 branch rate and effective branch length data */
@@ -23672,7 +23612,6 @@ int Move_IgrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 	int			i, j;
 	MrBFlt		oldIgrvar, newIgrvar, minIgrvar, maxIgrvar, tuning, *brlens;
-	ModelInfo	*m;
 	Model		*mp;
 	TreeNode	*p;
 	Tree		*t;
@@ -23680,8 +23619,7 @@ int Move_IgrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get tuning parameter */
 	tuning = mvp[0];
 
-	/* get model settings */
-	m = &modelSettings[param->relParts[0]];
+	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 
 	/* get the min and max values */
@@ -24114,7 +24052,7 @@ int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 {
 	
 	int				i, topologyHasChanged, vIsRoot, aSister, bSister, cSister, *nEvents;
-	MrBFlt			x, y, tuning, minV, maxV, h1, h2, h3, h[3], tempD, ran, distUv, distCv,
+	MrBFlt			x, y, h1, h2, h3, h[3], tempD, ran, distUv, distCv,
                     oldALength, oldBLength, oldCLength, oldULength, oldVLength, lambda, nu,
                     *tk02Rate=NULL, *brlens, oldTreeLength, newTreeLength;
 #if 0   /* test */
@@ -24122,23 +24060,10 @@ int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 #endif
     TreeNode		*u, *v, *w=NULL, *a, *b, *c, *deepestChild, *p;
 	Tree			*t;
-	ModelParams		*mp;
     Param           *subParm;
 
-    /* tuning parameter ("lambda" in Larget and Simon, 1999) */
-	tuning = mvp[0];
-	
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
-			
-	/* min brlen */
-	minV = BRLENS_MIN;
-
-	/* max brlen */
-	maxV = BRLENS_MAX;
 
 #if defined (DEBUG_LOCAL)
 	/* check branch lengths and node depths */
@@ -24446,7 +24371,7 @@ int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 		c->length = u->nodeDepth - c->nodeDepth;
 		topologyHasChanged = YES;
 		}
-	else
+	else if (aSister == YES)
 		{
 		if (v->left == u)
 			v->right = a;
@@ -25510,12 +25435,10 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 	/* Change clock tree using NNI move */
 	
 	int		    i, *nEvents, numFreeOld, numFreeNew;
-	MrBFlt		minV, maxV, minB, maxB, x, lambda, *tk02Rate=NULL,
+	MrBFlt		minV, minB, maxB, x, *tk02Rate=NULL,
 				*brlens, *igrRate=NULL, igrvar=0.0, nu=0.0, oldALength, oldCLength;
-	TreeNode	*p, *q, *a, *b, *c, *u, *v;
+	TreeNode	*p, *q, *a, *c, *u, *v;
 	Tree		*t;
-	ModelParams *mp;
-	ModelInfo	*m = NULL;
 	Param		*subParm;
 
     /* no tuning parameter */
@@ -25526,13 +25449,8 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 	/* get tree */
 	t = GetTree (param, chain, state[chain]);
 
-	/* get model params and model info */
-	mp = &modelParams[param->relParts[0]];
-	m = &modelSettings[param->relParts[0]];
-	
     /* get min and max branch lengths in relative time and substitution units */
     minV = BRLENS_MIN;
-    maxV = BRLENS_MAX;
     minB = RELBRLENS_MIN;
     maxB = RELBRLENS_MAX;
 
@@ -25576,11 +25494,9 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 	if (RandomNumber(seed) < 0.5)
         {
         a = p->left;
-        b = p->right;
         }
     else
         {
-        b = p->left;
         a = p->right;
         }
     v = p;
@@ -25659,7 +25575,6 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 		if (subParm->paramType == P_CPPEVENTS)
 			{
 			nEvents = subParm->nEvents[2*chain+state[chain]];
-			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
 
             /* proposal ratio */
             (*lnProposalRatio) += nEvents[a->index] * log (a->length / oldALength);
@@ -25743,7 +25658,6 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	int			i, brIndex, moveType;
 	TreeNode	*p, *u, *v, *a, *b, *c;
 	Tree		*t;
-	ModelParams *mp;
 	
 	(*lnPriorRatio) = (*lnProposalRatio) = 0.0;
 		
@@ -25766,9 +25680,6 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 	/* cycle through trees */
 	for (i=0; i<param->nSubParams; i++)
 		{
-		/* get model params */
-		mp = &modelParams[param->relParts[0]];
-				
 		/* get tree */
 		t = GetTree (param->subParams[i], chain, state[chain]);
 			
@@ -25967,13 +25878,14 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 {
 	int			i, *nEvents;
 	MrBFlt	    window, minDepth, maxDepth, oldDepth, newDepth,
-				oldLeftLength=0.0, oldRightLength=0.0, x, clockRate,
+	            oldLeftLength=0.0, oldRightLength=0.0, x, clockRate,
 				oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0, *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL;
 	TreeNode	*p, *q;
 	ModelParams	*mp;
 	ModelInfo	*m;
-	Tree		*t;
+	Tree        *t;
 	Param		*subParm;
+    Calibration *calibrationPtr;
 
 	window = mvp[0]; /* window size */
  
@@ -25991,7 +25903,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 
     /* check whether or not we can change root */
     if (!strcmp(mp->clockPr, "Uniform") &&
-        ((!strcmp(mp->treeAgePr, "Fixed") && t->root->left->isDated == NO) ||
+        ((mp->treeAgePr.prior == fixed && t->root->left->isDated == NO) ||
          (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed)))
         i = t->nNodes - 2;
     else
@@ -26038,22 +25950,20 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
     	maxDepth = p->anc->nodeDepth - BRLENS_MIN;
 	
     if (p->isDated == YES)
+        calibrationPtr = p->calibration;
+    else if (p->anc->anc == NULL && !strcmp(mp->clockPr,"Uniform"))
+        calibrationPtr = &mp->treeAgePr;
+    else
+        calibrationPtr = NULL;
+
+    if (calibrationPtr != NULL)
 		{
-		if (p->calibration->prior == uniform)
-			{
-			if (p->calibration->max * clockRate < maxDepth)
-				maxDepth = p->calibration->max * clockRate;
-			if (p->calibration->min * clockRate > minDepth)
-				minDepth = p->calibration->min * clockRate;
-			}
-		else /* if (p->calibration->prior == offsetExponential) */
-			{
-            assert(p->calibration->prior == offsetExponential);
-			if (p->calibration->offset * clockRate > minDepth)
-				minDepth = p->calibration->offset * clockRate;
-			}
+	    if (calibrationPtr->max * clockRate < maxDepth)
+			maxDepth = calibrationPtr->max * clockRate;
+		if (calibrationPtr->min * clockRate > minDepth)
+			minDepth = calibrationPtr->min * clockRate;
 		}
-		
+
     /* abort if impossible */
 	if (minDepth >= maxDepth)
 		{
@@ -26100,7 +26010,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
         }
 
     /* adjust age of p if dated */
-    if (p->isDated == YES)
+    if (calibrationPtr != NULL)
         {
         p->age = p->nodeDepth / clockRate;
         }
@@ -26263,7 +26173,6 @@ int Move_Nu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBF
 
 	int			i, j;
 	MrBFlt		oldNu, newNu, minNu, maxNu, tuning, *tk02Rate;
-	ModelInfo	*m;
 	Model		*mp;
 	TreeNode	*p;
 	Tree		*t;
@@ -26271,8 +26180,7 @@ int Move_Nu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBF
 	/* get tuning parameter */
 	tuning = mvp[0];
 
-	/* get model settings */
-	m = &modelSettings[param->relParts[0]];
+	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 
 	/* get the min and max values */
@@ -26814,13 +26722,9 @@ int Move_OmegaM3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 	int			i, isValidO, whichOmega;
 	MrBFlt		newO, window, minO, maxO, ran, *value, *oldValue, x, y;
-	ModelParams *mp;
 
 	/* get size of window, centered on current omega value */
 	window = mvp[0];
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
 
 	/* get old value of omega */
 	value = GetParamVals(param, chain, state[chain]);
@@ -26897,13 +26801,9 @@ int Move_OmegaNeu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 	int			i, isOPriorExp, isValidO;
 	MrBFlt		oldO, newO, window, minO, maxO, ran, *value, x, y;
-	ModelParams *mp;
 
 	/* get size of window, centered on current omega value */
 	window = mvp[0];
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
 
 	/* get old value of omega */
 	value = GetParamVals(param, chain, state[chain]);
@@ -27092,13 +26992,9 @@ int Move_OmegaPur (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 	int			i, isOPriorExp, isValidO;
 	MrBFlt		oldO, newO, window, minO, maxO, ran, *value, x, y;
-	ModelParams *mp;
 
 	/* get size of window, centered on current omega value */
 	window = mvp[0];
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
 
 	/* get old value of omega */
 	value = GetParamVals(param, chain, state[chain]);
@@ -27476,7 +27372,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 	int		    i, j, n, division, topologyHasChanged, isVPriorExp;
 	SafeLong	*pA, *pV, *pP, y[2];
-	MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, curLength=0.0, length = 0.0,
+	MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, sum, ran, tuning, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, v_typical;
 	CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
@@ -27695,8 +27591,6 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 			minLength = p->d;
 		else if (p->d < minLength)
 			minLength = p->d;
-		if (p == a)
-			curLength = p->d;
 		}
 
 	/* find the sum given the warp factor */
@@ -27941,13 +27835,12 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
     SafeLong    *pA, *pV, *pP, y[2];
 	MrBFlt		x, newPos, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, *tk02Rate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
-                igrvar, *igrRate, nu, origProp, newProp, minLength=0.0, curLength=0.0, length = 0.0,
+                igrvar, *igrRate, nu, newProp, minLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, sum, ran, increaseProb, decreaseProb,
-				divFactor, nStates, rateMult, v_typical, minV, maxV, minB, maxB;
+				divFactor, nStates, rateMult, v_typical, minV, minB, maxB;
 	CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-	TreeNode	*p, *a, *b, *u, *v, *c=NULL, *d, *oldA;
+	TreeNode	*p, *a, *b, *u, *v, *c=NULL, *d;
 	Tree		*t;
-	ModelParams *mp;
 	ModelInfo	*m = NULL;
 	Param		*subParm;
 
@@ -27961,12 +27854,10 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	t = GetTree (param, chain, state[chain]);
 
 	/* get model params and model info */
-	mp = &modelParams[param->relParts[0]];
 	m = &modelSettings[param->relParts[0]];
 	
     /* get min and max brlen in relative time and subst units */
     minV = BRLENS_MIN;
-    maxV = BRLENS_MAX;
     minB = RELBRLENS_MIN;
     maxB = RELBRLENS_MAX;
 
@@ -27990,7 +27881,6 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	else
 		a = u->left;
 	b = u->anc;
-    oldA = a;
 
 	/* record branch length for insertion in back move */
 	if (v->nodeDepth > a->nodeDepth)
@@ -28001,8 +27891,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	v1 = a->length;
 	v2 = u->length;
 	v3 = v->length;
-    origProp = u->length / oldBrlen;
-    
+
     /* reassign events for CPP */
 	for (i=0; i<param->subParams[0]->nSubParams; i++)
 		{
@@ -28212,8 +28101,6 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			minLength = p->d;
 		else if (p->d < minLength)
 			minLength = p->d;
-		if (p == a)
-			curLength = p->d;
 		}
 
 	/* find the sum given the warp factor */
@@ -28570,7 +28457,7 @@ int Move_PopSizeM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 {
 
-	int				isNPriorExp, isValidN, valIndex;
+	int				isValidN, valIndex;
 	MrBFlt			*valPtr, oldN, newN, tuning, minN, maxN, ran, oldLnPrior, newLnPrior, growth,
                     oldT, newT, clockRate;
 	ModelParams 	*mp;
@@ -28591,7 +28478,6 @@ int Move_PopSizeM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 		{
 		minN = mp->popSizeUni[0];
 		maxN = mp->popSizeUni[1];
-		isNPriorExp = NO;
 		}
 	else
 		{
@@ -31601,11 +31487,9 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 	int			i, j, k, isValid, *growthFxn, nRates, groupSize[6];
 	MrBFlt		*value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, rate_pot, x, y;
 	ModelParams *mp;
-    ModelInfo   *m;
 
 	/* get model params and settings */
 	mp = &modelParams[param->relParts[0]];
-	m  = &modelSettings[param->relParts[0]];
 
 	/* get growthFunction and nRates */
     value     = GetParamVals (param, chain, state[chain]);
@@ -31852,11 +31736,9 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 	MrBFlt		R, R_i, R_j, *newValue, *oldValue, newRate[6], oldRate[6], symDir,
                 prob_split, prob_merge, dirParm[2], rateProps[2], x, alphaPi;
 	ModelParams *mp;
-    ModelInfo   *m;
 
 	/* get model params and settings */
 	mp = &modelParams[param->relParts[0]];
-    m  = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
     oldValue     = GetParamVals(param, chain, state[chain] ^ 1);
@@ -32216,11 +32098,9 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 	MrBFlt		R_i, R_j, r_j, alphaPi, *newValue, *oldValue, symDir,
                 dirParm[2], rateProps[2], x;
 	ModelParams *mp;
-    ModelInfo   *m;
 
 	/* get model params and settings */
 	mp = &modelParams[param->relParts[0]];
-    m  = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
     oldValue     = GetParamVals(param, chain, state[chain] ^ 1);
@@ -32700,10 +32580,9 @@ int Move_SPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 	int				i, stopLoop, topologyHasChanged, direction=0, nTipsOnSideA=0, nTipsOnSideB=0, whichTip, tempI, isPathTerminusRoot=0;
 	MrBFlt			attachmentRate, lnProbForward, lnProbReverse, dist=0.0, pathLength=0.0, pathLengthA=0.0, pathLengthB=0.0,
 					oldAttachmentDepth=0.0, newAttachmentDepth=0.0, newD, oldD, oldCeiling=0.0, newCeiling=0.0, alphaPi, x, y, sum, len, baseOfPath=0.0,
-					dirichletParameters[2], oldProportions[2], newProportions[2], newPathLengthA, newPathLengthB;
+					dirichletParameters[2], oldProportions[2], newProportions[2], newPathLengthA;
 	TreeNode		*p, *q, *nodeToMove=NULL, *nodeToDetach=NULL, *oldAttachmentNode=NULL, *newAttachmentNode=NULL, *pathEndA=NULL, *pathEndB=NULL;
 	Tree			*t;
-	ModelParams 	*mp;
 	
 	/* Parameters used in this move. */
 	alphaPi = mvp[0];              /* Dirichlet parameter.                           */
@@ -32724,9 +32603,6 @@ int Move_SPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 	printf ("Before:\n");
 	ShowNodes (t->root, 2, YES);
 #	endif
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
 
     /* Pick a branch to move and get pointers to nodes in area of rearrangement. */
 	stopLoop = NO;
@@ -32922,7 +32798,6 @@ int Move_SPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 			
 		lnProbForward += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
 		newPathLengthA = pathLengthA - dist;
-		newPathLengthB = pathLengthB + dist;
 		if (isPathTerminusRoot == NO)
 			{
 			len = pathLengthB - oldCeiling;
@@ -32952,7 +32827,6 @@ int Move_SPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 			lnProbForward += log(attachmentRate) - attachmentRate*dist;
 			}
 		newPathLengthA = pathLengthA + dist;
-		newPathLengthB = pathLengthB - dist;
 		len = newPathLengthA - oldCeiling;
 		lnProbReverse += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
 		}
@@ -33357,10 +33231,6 @@ int Move_Statefreqs_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 
 	int			i, j, nStates, isValid;
 	MrBFlt		delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
-	ModelParams *mp;
-
-	/* get model params */
-	mp = &modelParams[param->relParts[0]];
 
 	/* get the values we need */
 	nStates = param->nSubValues;
@@ -33943,6 +33813,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 	ModelInfo	*m;
 	Tree		*t, *oldT;
 	Param		*subParm;
+    Calibration *calibrationPtr;
 
 	tuning = mvp[0]; /* Larget & Simon tuning parameter lambda */
  
@@ -33967,21 +33838,27 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        if ((p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && param->paramId == BRLENS_CLOCK_UNI && !strcmp(mp->treeAgePr,"Fixed"))) ||
+        if ((p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && param->paramId == BRLENS_CLOCK_UNI && mp->treeAgePr.prior == fixed)) ||
             (p->isDated == YES && p->calibration->prior != fixed))
             {
-            if ((p->isDated == YES && p->calibration->prior == offsetExponential && p->age*factor < p->calibration->offset) ||
-                (p->isDated == YES && p->calibration->prior == uniform &&
-                (p->age*factor < p->calibration->min || p->age*factor > p->calibration->max)))
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
-            numChangedNodes++;
-            p->nodeDepth *= factor;
             if (p->isDated == YES)
+                calibrationPtr = p->calibration;
+            else if (p->anc->anc == NULL && !strcmp(mp->clockPr,"Uniform"))
+                calibrationPtr = &mp->treeAgePr;
+            else
+                calibrationPtr = NULL;
+            if (calibrationPtr != NULL)
+                {
                 p->age *= factor;
-            if (p->left != NULL) 
+                if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
+                    {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                    }
+                }
+            p->nodeDepth *= factor;
+            numChangedNodes++;
+            if (p->left != NULL)
                 {
                 p->left ->length = p->nodeDepth - p->left ->nodeDepth;
                 p->right->length = p->nodeDepth - p->right->nodeDepth;
@@ -34075,7 +33952,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
                 igrRate[p->index] = brlens[p->index] / p->length;
                 }
 
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+            /* The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
             if (*lnPriorRatio != *lnPriorRatio)
                 {
                 abortMove=YES;
@@ -37036,7 +36913,6 @@ int PrintParsMatrix (void)
 	SafeLong		x, y;
 	char			ch;
 	ModelInfo		*m;
-	ModelParams		*mp;
 
 	printWidth = 79;
 
@@ -37045,7 +36921,6 @@ int PrintParsMatrix (void)
 		MrBayesPrint ("\nParsimony (bitset) matrix for division %d\n\n", d+1);
 
 		m = &modelSettings[d];
-		mp = &modelParams[d];
 
 		nChars = 1 + (int) (log((1 << m->numStates) - 1) / log(16));
 	
@@ -40364,7 +40239,7 @@ int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
 int RemoveTreeSamples (int from, int to)
 {
 	int		    i, j, k, longestLine, line;
-	char	    c, *word, *s, *lineBuf=0;
+	char	    c, *s, *lineBuf=0;
 	FILE	    *fp;
 	Tree	    *t;
 	TreeList	*treeList;
@@ -40491,7 +40366,6 @@ int RemoveTreeSamples (int from, int to)
 						return ERROR;
 						}
 
-					word = strtok (lineBuf, " ");					
 					for (s = strtok (NULL, ";"); *s != '('; s++)
 						;
 					
@@ -42079,7 +41953,7 @@ int RunChain (SafeLong *seed)
             		}
 
 #endif
-                abortMove= YES;
+                abortMove = YES;
                 }
 
             /* calculate likelihood ratio */
@@ -42115,7 +41989,7 @@ int RunChain (SafeLong *seed)
                     }
                 if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES && IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
 					{
-					MrBayesPrint ("%s   Branch lengths of the tree does not satisfy to be a clock tree.\n", spacer);
+					MrBayesPrint ("%s   Branch lengths of the tree do not satisfy the requirements of a clock tree.\n", spacer);
 					ShowNodes(GetTree (theMove->parm, chn, state[chn])->root,0,YES);
 					return (ERROR);
 					}
@@ -43050,7 +42924,6 @@ int setFilePositions (int samplePos)
 	SafeLong	lastBlock;
 	char	*lineBuf;
 	FILE	*fp;
-	Tree	*t;
 	char	*tempStr;
 	int     tempStrSize = TEMPSTRSIZE;
 
@@ -43068,8 +42941,6 @@ int setFilePositions (int samplePos)
 
 	for (i=0; i<numTopologies; i++)
 		{
-		t = chainParams.dtree;
-
 		for (j=0; j<chainParams.numRuns; j++)
 			{
 			if (numPrintTreeParams == 1)
@@ -43230,8 +43101,8 @@ int SetLikeFunctions (void)
 #if defined (SSE_ENABLED)
 					    if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 						    {
-                            MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
-                            MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                            MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 						    }
 
                         m->CondLikeUp = &CondLikeUp_NUC4;
@@ -43355,8 +43226,8 @@ int SetLikeFunctions (void)
                             
 					        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 						        {
-                                MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
-                                MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                                MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                                MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 						        }
                             else
                                 {
@@ -43379,8 +43250,8 @@ int SetLikeFunctions (void)
 
                          if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 						        {
-						        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
-                                MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+						        MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                                MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 						        }
                             else
                                 {
@@ -43487,8 +43358,8 @@ int SetLikeFunctions (void)
 #if defined (SSE_ENABLED)
                 if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 			        {
-			        MrBayesPrint ("%s   Non-SSE version of conditional liklihood calculator will be used for devision %d due to request\n", spacer, i+1);
-                    MrBayesPrint ("%s   of reprting 'ancestaral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+			        MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                    MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
 			        }
                 else
                     {
@@ -44285,10 +44156,8 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
 	int				aaModelID;
 	MrBFlt			scaler, probOn, sum, *swr, s01, s10, *bs, *rt;
 	ModelInfo		*m;
-	ModelParams 	*mp;
 		
 	/* set up pointers to the appropriate model information */
-	mp = &modelParams[division];
 	m = &modelSettings[division];
 
 	/* get amino acid model ID 
@@ -44867,7 +44736,7 @@ int SetUpTermState (void)
 
 {
 
-	int			i, k, n, c, d, x=0, nReps, *termStatePtr;
+	int			i, k, n, c, d, x=0, *termStatePtr;
 	SafeLong	*p;
 	ModelInfo	*m;
 	ModelParams *mp;
@@ -44926,17 +44795,12 @@ int SetUpTermState (void)
 		if (mp->dataType == CONTINUOUS)
 			continue;
 		
-		if (m->numModelStates > m->numStates)
-			nReps = m->numModelStates / mp->nStates;
-
         m->termState   = (int **) SafeCalloc (numLocalTaxa, sizeof(int *));
         if (!m->termState)
             {
             MrBayesPrint("%s   Problems allocating termState pointers for division %d\n", spacer, d+1);
             return ERROR;
             }
-
-
 
 #if defined SSE_ENABLED
 		if( m->dataType != STANDARD && m->gibbsGamma == NO )
@@ -44981,8 +44845,8 @@ int SetUpTermState (void)
 				}
 			for (; c<numComprChars; c++)
 				{
-					 /*Setting to fully ambyg state all padding chars*/
-					m->termState[i][c] = m->numStates * m->numModelStates;
+				/* Setting to fully ambig state all padding chars */
+				m->termState[i][c] = m->numStates * m->numModelStates;
 				}
 			}
 		}
