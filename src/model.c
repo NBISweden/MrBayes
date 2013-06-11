@@ -1960,7 +1960,8 @@ int CheckModel (void)
         for (i=0; i<numTrees; i++)
             {
             t = GetTreeFromIndex(i,0,0);
-            if (t->isCalibrated == YES && strcmp(modelParams[t->relParts[0]].clockPr, "Uniform") != 0)
+            if (t->isCalibrated == YES && strcmp(modelParams[t->relParts[0]].clockPr, "Uniform") != 0
+                                       && strcmp(modelParams[t->relParts[0]].clockPr, "Fossilization") != 0)
                 {
                 for (k=0; k<t->nNodes-1; k++)
                     {
@@ -2923,6 +2924,11 @@ int DoLinkParm (char *parmName, char *tkn)
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_EXTRATE][i] = tempLinkUnlinkVec[i];
 			}
+        else if (!strcmp(parmName, "Fossilizationrate")) 
+			{
+			for (i=0; i<numCurrentDivisions; i++)
+				tempLinkUnlink[P_FOSLRATE][i] = tempLinkUnlinkVec[i];
+			}                                                             
 		else if (!strcmp(parmName, "Popsize"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
@@ -6740,6 +6746,20 @@ int DoPrsetParm (char *parmName, char *tkn)
 								}
 						    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 							}
+                        else if (IsSame ("Fossilization", tkn) == SAME || IsSame ("Fossilization", tkn) == CONSISTENT_WITH)
+                            {
+                            strcpy (clockPr, "Fossilization");
+							for (i=0; i<numCurrentDivisions; i++)
+                                {
+								if (activeParts[i] == YES || nApplied == 0)
+									strcpy(modelParams[i].clockPr, "Fossilization");
+								if (nApplied == 0 && numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Brlenspr to Clock:Fossilization\n", spacer);
+								else
+									MrBayesPrint ("%s   Setting Brlenspr to Clock:Fossilization for partition %d\n", spacer, i+1);
+                                }
+						    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                            }
 						else if (IsSame ("Fixed", tkn) == SAME || IsSame ("Fixed", tkn) == CONSISTENT_WITH)
 							{
 					        strcpy (clockPr, "Fixed");
@@ -7118,22 +7138,112 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+        /* set Fossilizationpr (fossilizationPr) */
+        else if (!strcmp(parmName, "Fossilizationpr"))
+            {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+                    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                        if (activeParts[i] == YES || nApplied == 0)
+                            strcpy(modelParams[i].fossilizationPr, tempStr);
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s   Invalid Fossilization argument\n", spacer);
+                    return (ERROR);
+                    }
+                expecting  = Expecting(LEFTPAR);
+                for (i=0; i<numCurrentDivisions; i++)
+                    numVars[i] = 0;
+                }
+            else if (expecting == Expecting(LEFTPAR))
+                {
+                expecting  = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(NUMBER))
+                {
+                nApplied = NumActiveParts ();
+                for (i=0; i<numCurrentDivisions; i++)
+                    {
+                    if (activeParts[i] == YES || nApplied == 0)
+                        {
+                        if (!strcmp(modelParams[i].fossilizationPr,"Beta"))
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Beta parameter must be positive\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].fossilizationBeta[numVars[i]++] = tempD;
+                            if (numVars[i] == 1)
+                                expecting  = Expecting(COMMA);
+                            else
+                                {
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Fossilizationpr to Beta(%1.2lf,%1.2lf)\n", spacer, modelParams[i].fossilizationBeta[0], modelParams[i].fossilizationBeta[1]);
+                                else
+                                    MrBayesPrint ("%s   Setting Fossilizationpr to Beta(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].fossilizationBeta[0], modelParams[i].fossilizationBeta[1], i+1);
+                                expecting  = Expecting(RIGHTPAR);
+                                }
+                            }
+                        else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD < 0.0 || tempD > 1.0)
+                                {
+                                MrBayesPrint ("%s   Fossilization rate must be in the range [0,1]\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].fossilizationFix = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Fossilizationpr to Fixed(%1.2lf)\n", spacer, modelParams[i].fossilizationFix);
+                            else
+                                MrBayesPrint ("%s   Setting Fossilizationpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].fossilizationFix, i+1);
+                            expecting  = Expecting(RIGHTPAR);
+                            }
+                        }
+                    }
+                }
+            else if (expecting == Expecting(COMMA))
+                {
+                expecting  = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(RIGHTPAR))
+                {
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
 		/* set SampleStrat (sampleStrat) ***************************************************/
 		else if (!strcmp(parmName, "Samplestrat"))
-        {
+        	{
 			if (expecting == Expecting(EQUALSIGN))
-            {
+            	{
 				expecting = Expecting(ALPHA);
-            }
+            	}
 			else if (expecting == Expecting(ALPHA))
-            {
-				
+            	{
 				if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {
+                	{
 					nApplied = NumActiveParts ();
 					for (i=0; i<numCurrentDivisions; i++)
-						if (activeParts[i] == YES || nApplied == 0)
+						{
+                        if (activeParts[i] == YES || nApplied == 0)
+                            {
 							strcpy(modelParams[i].sampleStrat, tempStr);
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting SampleStrat to %s\n", spacer, modelParams[i].sampleStrat);
+                            else
+                                MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
+                            }
+                        }
 					}
 				else
 					{
@@ -7141,13 +7251,13 @@ int DoPrsetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+            	}
 			else
-            {
+            	{
                 MrBayesPrint ("%s   Invalid Samplestrat argument\n", spacer);
 				return (ERROR);
-            }
-        }
+            	}
+       	 	}
 		/* set Sampleprob (sampleProb) *****************************************************/
 		else if (!strcmp(parmName, "Sampleprob"))
 			{
@@ -9426,7 +9536,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							}
                         if (theTree->isClock == YES && modelParams[theTree->relParts[0]].treeAgePr.prior == fixed)
                             {
-                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform"))
+                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform")
+                                || !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
                                 ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgePr.priorParams[0]);
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
@@ -10508,6 +10619,14 @@ int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
 				else
 					value[0] =  0.5;
 				}
+            else if (p->paramType == P_FOSLRATE)
+				{
+				/* Fill in fossilization rates */
+				if (p->paramId == FOSLRATE_FIX)
+					value[0] = mp->fossilizationFix;
+				else
+					value[0] =  0.5;
+				}
 			else if (p->paramType == P_POPSIZE)
 				{
 				/* Fill in population size ****************************************************************************************/
@@ -10812,7 +10931,7 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 				return (ERROR);
 				}
 			}
-        else if (tree->isCalibrated == YES || (tree->isClock == YES && !strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform")))
+        else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") || (!strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization")))))
 			{
             assert (tree->isClock == YES);
 			clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state );
@@ -13118,6 +13237,89 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 						    	}
                             }
 						}
+					else if (strcmp(modelParams[part1].clockPr, "Fossilization") == 0)
+                    	{
+						if (modelParams[part1].treeAgePr.prior != modelParams[part2].treeAgePr.prior)
+							isSame = NO;
+						if (modelParams[part1].treeAgePr.prior == fixed)
+							{
+							if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[0], modelParams[part2].treeAgePr.priorParams[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							}
+                        else if (modelParams[part1].treeAgePr.prior == offsetLogNormal ||
+                            modelParams[part1].treeAgePr.prior == truncatedNormal ||
+                            modelParams[part1].treeAgePr.prior == offsetGamma)
+                            {
+                            for (i=0; i<3; i++)
+							    {
+							    if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[i], modelParams[part2].treeAgePr.priorParams[i], (MrBFlt) 0.00001) == NO)
+								    isSame = NO;
+						    	}
+                            }
+                        else
+                            {
+                            for (i=0; i<2; i++)
+							    {
+							    if (AreDoublesEqual (modelParams[part1].treeAgePr.priorParams[i], modelParams[part2].treeAgePr.priorParams[i], (MrBFlt) 0.00001) == NO)
+								    isSame = NO;
+						    	}
+                            }
+						
+                        if (!strcmp(modelParams[part1].speciationPr,"Uniform") && !strcmp(modelParams[part2].speciationPr,"Uniform"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].speciationUni[0], modelParams[part2].speciationUni[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].speciationUni[1], modelParams[part2].speciationUni[1], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else if (!strcmp(modelParams[part1].speciationPr,"Exponential") && !strcmp(modelParams[part2].speciationPr,"Exponential"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].speciationExp, modelParams[part2].speciationExp, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else if (!strcmp(modelParams[part1].speciationPr,"Fixed") && !strcmp(modelParams[part2].speciationPr,"Fixed"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].speciationFix, modelParams[part2].speciationFix, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else
+							isSame = NO;
+                        
+						if (!strcmp(modelParams[part1].extinctionPr,"Beta") && !strcmp(modelParams[part2].extinctionPr,"Beta"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].extinctionBeta[0], modelParams[part2].extinctionBeta[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].extinctionBeta[1], modelParams[part2].extinctionBeta[1], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else if (!strcmp(modelParams[part1].extinctionPr,"Fixed") && !strcmp(modelParams[part2].extinctionPr,"Fixed"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].extinctionFix, modelParams[part2].extinctionFix, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else
+							isSame = NO;
+                        
+                        if (!strcmp(modelParams[part1].fossilizationPr,"Beta") && !strcmp(modelParams[part2].fossilizationPr,"Beta"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].fossilizationBeta[0], modelParams[part2].fossilizationBeta[0], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+							if (AreDoublesEqual (modelParams[part1].fossilizationBeta[1], modelParams[part2].fossilizationBeta[1], (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else if (!strcmp(modelParams[part1].fossilizationPr,"Fixed") && !strcmp(modelParams[part2].fossilizationPr,"Fixed"))
+                            {
+							if (AreDoublesEqual (modelParams[part1].fossilizationFix, modelParams[part2].fossilizationFix, (MrBFlt) 0.00001) == NO)
+								isSame = NO;
+                            }
+						else
+							isSame = NO;
+                        
+						if (AreDoublesEqual (modelParams[part1].sampleProb, modelParams[part2].sampleProb, 0.00001) == NO)
+                            isSame = NO;
+                        if (strcmp(modelParams[part1].sampleStrat,modelParams[part2].sampleStrat))
+                            isSame = NO;
+                        }
 					}
 
 				/* if the same clock prior, we need to check calibrations */
@@ -13150,14 +13352,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (!strcmp(modelParams[part2].parsModel, "Yes"))
 			*isApplic2 = NO; 
 			
-		/* Check that the branch length prior is a clock:birthdeath for both partitions. */
+		/* Check that the branch length prior is a clock:birthdeath or clock:fossilization for both partitions. */
 		if (strcmp(modelParams[part1].brlensPr, "Clock"))
 			*isApplic1 = NO;
 		if (strcmp(modelParams[part2].brlensPr, "Clock"))
 			*isApplic2 = NO;
-		if (strcmp(modelParams[part1].clockPr, "Birthdeath"))
+		if (strcmp(modelParams[part1].clockPr, "Birthdeath") != 0 && strcmp(modelParams[part1].clockPr, "Fossilization") != 0)
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockPr, "Birthdeath"))
+		if (strcmp(modelParams[part2].clockPr, "Birthdeath") != 0 && strcmp(modelParams[part2].clockPr, "Fossilization") != 0)
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on the speciation rates are the same. */
@@ -13197,14 +13399,14 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if (!strcmp(modelParams[part2].parsModel, "Yes"))
 			*isApplic2 = NO; 
 			
-		/* Check that the branch length prior is a clock:birthdeath for both partitions. */
+		/* Check that the branch length prior is a clock:birthdeath or clock:fossilization for both partitions. */
 		if (strcmp(modelParams[part1].brlensPr, "Clock"))
 			*isApplic1 = NO;
 		if (strcmp(modelParams[part2].brlensPr, "Clock"))
 			*isApplic2 = NO;
-		if (strcmp(modelParams[part1].clockPr, "Birthdeath"))
+		if (strcmp(modelParams[part1].clockPr, "Birthdeath")!= 0 && strcmp(modelParams[part1].clockPr, "Fossilization") != 0)
 			*isApplic1 = NO;
-		if (strcmp(modelParams[part2].clockPr, "Birthdeath"))
+		if (strcmp(modelParams[part2].clockPr, "Birthdeath")!= 0 && strcmp(modelParams[part2].clockPr, "Fossilization") != 0)
 			*isApplic2 = NO;
 		
 		/* Now, check that the prior on the extinction rates are the same. */
@@ -13228,6 +13430,47 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 			isSame = NO; 
 
 		}
+	else if (whichParam == P_FOSLRATE)
+    	{
+		/* Check the fossilization rates for partitions 1 and 2. */
+        
+		/* Check if the model is parsimony for either partition. */
+		if (!strcmp(modelParams[part1].parsModel, "Yes"))
+			*isApplic1 = NO;
+		if (!strcmp(modelParams[part2].parsModel, "Yes"))
+			*isApplic2 = NO;
+        
+        /* Check that the branch length prior is a clock:birthdeath or clock:fossilization for both partitions. */
+		if (strcmp(modelParams[part1].brlensPr, "Clock"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].brlensPr, "Clock"))
+			*isApplic2 = NO;
+		if (strcmp(modelParams[part1].clockPr, "Fossilization") != 0)
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].clockPr, "Fossilization") != 0)
+			*isApplic2 = NO;
+		
+		/* Now, check that the prior on the fossilization rates are the same. */
+		if (!strcmp(modelParams[part1].fossilizationPr,"Beta") && !strcmp(modelParams[part2].fossilizationPr,"Beta"))
+        	{
+			if (AreDoublesEqual (modelParams[part1].fossilizationBeta[0], modelParams[part2].fossilizationBeta[0], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			if (AreDoublesEqual (modelParams[part1].fossilizationBeta[1], modelParams[part2].fossilizationBeta[1], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+        	}
+		else if (!strcmp(modelParams[part1].fossilizationPr,"Fixed") && !strcmp(modelParams[part2].fossilizationPr,"Fixed"))
+        	{
+			if (AreDoublesEqual (modelParams[part1].fossilizationFix, modelParams[part2].fossilizationFix, (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+        	}
+		else
+			isSame = NO;
+		
+		/* Check to see if the fossilization rates are inapplicable for either partition. */
+		if ((*isApplic1) == NO || (*isApplic2) == NO)
+			isSame = NO;
+        
+    	}
 	else if (whichParam == P_POPSIZE)
 		{
 		/* Check population size for partitions 1 and 2. */
@@ -16174,6 +16417,7 @@ int SetModelInfo (void)
 		m->brlens = NULL;
 		m->speciationRates = NULL;
 		m->extinctionRates = NULL;
+        m->fossilizationRates = NULL;
 		m->popSize = NULL;
 		m->aaModel = NULL;
 		m->cppRate = NULL;
@@ -17605,6 +17849,8 @@ int SetModelParams (void)
 						p->paramId = BRLENS_CLOCK_BD;
 					else if (!strcmp(mp->clockPr,"Speciestreecoalescence"))
 						p->paramId = BRLENS_CLOCK_SPCOAL;
+                    else if (!strcmp(mp->clockPr,"Fossilization"))
+						p->paramId = BRLENS_CLOCK_FOSSIL;
                     else if (!strcmp(mp->clockPr,"Fixed"))
                         p->paramId = BRLENS_CLOCK_FIXED;
 					}
@@ -17679,7 +17925,7 @@ int SetModelParams (void)
 					modelSettings[i].speciationRates = p;
 
             p->paramTypeName = "Speciation rate";
-			SafeStrcat(&p->name, "Lambda-mu");
+			SafeStrcat(&p->name, "Lambda-mu(-psi)");
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
@@ -17692,7 +17938,7 @@ int SetModelParams (void)
 
 			if (p->paramId != SPECRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "lambda-mu");
+			SafeStrcat (&p->paramHeader, "lambda-mu(-psi)");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_EXTRATE)
@@ -17708,7 +17954,7 @@ int SetModelParams (void)
 					modelSettings[i].extinctionRates = p;
 
             p->paramTypeName = "Extinction rate";
-			SafeStrcat(&p->name, "Mu/lambda");
+			SafeStrcat(&p->name, "Mu(+psi)/lambda");
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
@@ -17719,7 +17965,34 @@ int SetModelParams (void)
 
 			if (p->paramId != EXTRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "mu/lambda");
+			SafeStrcat (&p->paramHeader, "mu(+psi)/lambda");
+			SafeStrcat (&p->paramHeader, partString);
+			}
+        else if (j == P_FOSLRATE)
+			{
+			/* Set up fossilization rates */
+			p->paramType = P_FOSLRATE;
+			p->nValues = 1;
+			p->nSubValues = 0;
+            p->min = 0.0;
+            p->max = POS_INFINITY;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].fossilizationRates = p;
+            
+            p->paramTypeName = "Fossilization rate";
+			SafeStrcat(&p->name, "Psi/(mu+psi)");
+			SafeStrcat(&p->name, partString);
+            
+			/* find the parameter x prior type */
+			if (!strcmp(mp->fossilizationPr,"Beta"))
+				p->paramId = FOSLRATE_BETA;
+			else
+				p->paramId = FOSLRATE_FIX;
+            
+			if (p->paramId != FOSLRATE_FIX)
+				p->printParam = YES;
+			SafeStrcat (&p->paramHeader, "psi/(mu+psi)");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_POPSIZE)
@@ -18828,7 +19101,26 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = EXTRATE_BETA;
 	mt->nApplicable = 1;
 	mt->moveFxn = &Move_Extinction;
-	mt->relProposalProb = 1.0;
+	mt->relProposalProb = 1.1;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 1.0;  /* window size */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 100.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+    /* Move_Fossilization */
+    mt = &moveTypes[i++];
+	mt->name = "Sliding window";
+	mt->shortName = "Slider";
+	mt->tuningName[0] = "Sliding window size";
+	mt->shortTuningName[0] = "delta";
+	mt->applicableTo[0] = FOSLRATE_BETA;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_Fossilization;
+	mt->relProposalProb = 1.1;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.0;  /* window size */
 	mt->minimum[0] = 0.0001;
@@ -19328,7 +19620,8 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = BRLENS_CLOCK_UNI;
 	mt->applicableTo[1] = BRLENS_CLOCK_COAL;
 	mt->applicableTo[2] = BRLENS_CLOCK_BD;
-	mt->nApplicable = 3;
+	mt->applicableTo[3] = BRLENS_CLOCK_FOSSIL;
+	mt->nApplicable = 4;
 	mt->moveFxn = &Move_NodeSliderClock;
 	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
@@ -19618,6 +19911,35 @@ void SetUpMoveTypes (void)
 	mt->maximum[2] = 0.30;
 	mt->parsimonyBased = YES;
 	mt->level = STANDARD_USER;
+
+    /* Move_ParsSPR1 */
+	mt = &moveTypes[i++];
+	mt->name = "Parsimony-biased SPR version 1";
+	mt->shortName = "ParsSPR1";
+    mt->subParams = YES;
+	mt->tuningName[0] = "parsimony warp factor";
+	mt->shortTuningName[0] = "warp";
+	mt->tuningName[1] = "multiplier tuning parameter";
+	mt->shortTuningName[1] = "lambda";
+	mt->tuningName[2] = "reweighting probability";
+	mt->shortTuningName[2] = "r";
+	mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+	mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+	mt->nApplicable = 2;
+	mt->moveFxn = &Move_ParsSPR1;
+	mt->relProposalProb = 0.0;
+	mt->numTuningParams = 3;
+	mt->tuningParam[0] = 0.1; /* warp */
+	mt->tuningParam[1] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+	mt->tuningParam[2] = 0.05; /* upweight and downweight probability */
+	mt->minimum[0] = 0.0;
+	mt->maximum[0] = 1.0;
+	mt->minimum[1] = 2.0 * log (0.001);
+	mt->maximum[1] = 2.0 * log (1000.0);
+	mt->minimum[2] = 0.0;
+	mt->maximum[2] = 0.30;
+	mt->parsimonyBased = YES;
+	mt->level = DEVELOPER;
 
 	/* Move_ParsSPRClock */
 	mt = &moveTypes[i++];
@@ -20132,7 +20454,8 @@ void SetUpMoveTypes (void)
 	mt->applicableTo[0] = BRLENS_CLOCK_UNI;
 	mt->applicableTo[1] = BRLENS_CLOCK_BD;
 	mt->applicableTo[2] = BRLENS_CLOCK_COAL;
-	mt->nApplicable = 3;
+	mt->applicableTo[3] = BRLENS_CLOCK_FOSSIL;
+	mt->nApplicable = 4;
 	mt->moveFxn = &Move_TreeStretch;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
@@ -21286,6 +21609,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Extinctionrate ", spacer);
 			}
+        else if (j == P_FOSLRATE)
+			{
+			MrBayesPrint ("%s      Fossilizationrate ", spacer);
+			}
 		else if (j == P_POPSIZE)
 			{
 			MrBayesPrint ("%s      Popsize        ", spacer);
@@ -21672,7 +21999,11 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						{
 					    MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
 						}
-                    else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
+					else if (!strcmp(mp->clockPr,"Fossilization") && !strcmp(mp->nodeAgePr,"Unconstrained"))
+						{
+					    MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
+						}
+					else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
                         {
 						MrBayesPrint ("%s                         Tree age has a Uniform(0,infinity) distribution\n", spacer);
                         }
@@ -21716,7 +22047,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 							}
                         if (b == 0) /* we need to use default calibration for root for uniform and birthdeath */
                             {
-					        if (!strcmp(mp->clockPr,"Uniform"))
+					        if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))
 						        {
                                 MrBayesPrint ("%s                         -- Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
 						        }
@@ -21752,6 +22083,13 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				MrBayesPrint ("%s            Prior      = Beta(%1.2lf,%1.2lf)\n", spacer, mp->extinctionBeta[0], mp->extinctionBeta[1]);
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->extinctionFix);
+			}
+        else if (j == P_FOSLRATE)
+			{
+			if (!strcmp(mp->fossilizationPr,"Beta"))
+				MrBayesPrint ("%s            Prior      = Beta(%1.2lf,%1.2lf)\n", spacer, mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
+			else
+				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->fossilizationFix);
 			}
 		else if (j == P_POPSIZE)
 			{

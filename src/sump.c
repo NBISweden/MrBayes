@@ -794,16 +794,16 @@ sumssTable:
 			    goto errorExit;
             }
 
-         if( sumssParams.askForMorePlots == NO || firstPass == YES )
+        if( sumssParams.askForMorePlots == NO || firstPass == YES )
             break;
 
-         MrBayesPrint (" You can choose to print new step plots for different steps or discard fractions.\n");
-         MrBayesPrint (" Allowed range of 'Steptoplot' are from 0 to %d.\n", chainParams.numStepsSS);
-         MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing step plots.\n");
-         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
-         MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
-         MrBayesPrint (" Enter new step number 'Steptoplot':");
-         scanf("%d",&j);
+        MrBayesPrint (" You can choose to print new step plots for different steps or discard fractions.\n");
+        MrBayesPrint (" Allowed range of 'Steptoplot' are from 0 to %d.\n", chainParams.numStepsSS);
+        MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing step plots.\n");
+        MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
+        MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
+        MrBayesPrint (" Enter new step number 'Steptoplot':");
+        scanf("%d",&j);
         if(j < 0 )
             break;
         if(j > chainParams.numStepsSS)

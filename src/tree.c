@@ -2550,7 +2550,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
         treeAgeMin = t->root->left->calibration->min;
         treeAgeMax = t->root->left->calibration->max;
         }
-    else if (!strcmp(mp->clockPr, "Uniform"))
+    else if (!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
             treeAgeMin = mp->treeAgePr.min;
@@ -2585,7 +2585,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 					p->nodeDepth = p->left->nodeDepth;
 				else
 					p->nodeDepth = p->right->nodeDepth;
-				if (p->isDated == YES || (p->anc->anc == NULL && !strcmp(mp->clockPr,"Uniform")))
+				if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) ))
 					{
                     if (p->isDated == NO)
                         calibrationPtr = &mp->treeAgePr;
@@ -3392,6 +3392,28 @@ void Mark (TreeNode *p)
         p->marked = YES;
         Mark (p->left);
         Mark (p->right);
+        }
+}
+
+
+
+
+
+/*-------------------------------------------------------------------------------------------
+ |
+ |   MarkUnconstrained: This routine will mark up an unconstrained subtree rooted at p
+ |
+ ---------------------------------------------------------------------------------------------*/
+void MarkUnconstrained (TreeNode *p)
+{
+    if (p != NULL)
+        {
+        p->marked = YES;
+        if (p->isLocked == NO)
+            {
+            Mark (p->left);
+            Mark (p->right);
+            }
         }
 }
 

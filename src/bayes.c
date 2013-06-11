@@ -726,7 +726,7 @@ int InitializeMrBayes (void)
 	
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
-	defaultModel.treeAgePr.prior = standardGamma;       /* calibration prior on tree age for uniform model */
+	defaultModel.treeAgePr.prior = standardGamma;       /* calibration prior on tree age */
 	strcpy(defaultModel.treeAgePr.name, "Gamma(1.00,1.00)");
 	defaultModel.treeAgePr.priorParams[0] = 1.0;
 	defaultModel.treeAgePr.priorParams[1] = 1.0;
@@ -755,6 +755,10 @@ int InitializeMrBayes (void)
 	defaultModel.extinctionBeta[1] = 1;
 	strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                       */
 	defaultModel.sampleProb = 1.0;                      /* taxon sampling fraction                       */
+    strcpy(defaultModel.fossilizationPr, "Beta");       /* prior on fossilization rate (sampling proportion) */
+	defaultModel.fossilizationFix = 0.5;
+    defaultModel.fossilizationBeta[0] = 1;
+	defaultModel.fossilizationBeta[1] = 1;
 	strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
 	defaultModel.popSizeFix = 10.0;
 	defaultModel.popSizeUni[0] = 1.0;

@@ -65,7 +65,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program          */
-#define	NUMPARAMS						269
+#define	NUMPARAMS						270
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -347,8 +347,8 @@ CmdType			commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 41,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
-                                                                                                             168,172,173,174,183,184,185,218,241,246,247,251,254},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
+            { 33,           "Prset",  NO,           DoPrset, 42,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+                                                                                                        168,172,173,174,183,184,185,218,241,246,247,251,254, 269},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
@@ -11242,6 +11242,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       clock:uniform                                             \n");
 		MrBayesPrint ("                       clock:birthdeath                                          \n");
 		MrBayesPrint ("                       clock:coalescence                                         \n");
+		MrBayesPrint ("                       clock:fossilization                                       \n");
 		MrBayesPrint ("                       clock:speciestreecoalescence                              \n");
 		MrBayesPrint ("                       fixed(<treename>)                                         \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11349,7 +11350,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    in the tree is calibrated, the root calibration replaces the \n");
 		MrBayesPrint ("                    tree age prior.                                              \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
-        MrBayesPrint ("                    that is, lambda - mu in the birth-death model. Options are:  \n");
+        MrBayesPrint ("                    that is, lambda - mu in the birth-death model; or,           \n");
+        MrBayesPrint ("                    lambda - mu - psi in the fossilized birth-death model.       \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset speciationpr = uniform(<number>,<number>)           \n");
 		MrBayesPrint ("                       prset speciationpr = exponential(<number>)                \n");
@@ -11358,7 +11360,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
 		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the relative extinction     \n");
-		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; values  \n");
+		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; or,     \n");
+        MrBayesPrint ("                    (mu + psi) / lambda in the fossilization model. Values       \n");
         MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset extinctionpr = beta(<number>,<number>)              \n");
@@ -11369,9 +11372,29 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
 		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
 		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
-		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of species that are         \n");
-		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-        \n");
-		MrBayesPrint ("                    death prior on trees (see Yang and Rannala, 1997).           \n");
+        MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
+        MrBayesPrint ("                    fossilized birth-death prior (see Stadler, 2010).            \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset samplestrat = random                                \n");
+        MrBayesPrint ("                       prset samplestrat = diversity                             \n");
+        MrBayesPrint ("                       prset samplestrat = cluster                               \n");
+        MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");
+        MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
+		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
+		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997), and the         \n");
+        MrBayesPrint ("                    fossilization prior (rho, see Stadler, 2010).                \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset sampleprob = <number>                               \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint (" Fossilizationpr -- This parameter sets the fossilization rate (sampling frac.)  \n");
+        MrBayesPrint ("                    sampled in the analysis (psi/(mu+psi), see Stadler, 2010).   \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset fossilizationpr = beta(<number>,<number>)           \n");
+        MrBayesPrint ("                       prset fossilizationpr = fixed(<number>)                   \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    This parameter is only relevant if the fossilized birth-death\n");
+        MrBayesPrint ("                    is selected as the prior (fossilizationpr) on branch lengths.\n");
 		MrBayesPrint ("   Popsizepr     -- This parameter sets the prior on the population size compo-  \n");
 		MrBayesPrint ("                    nent of the coalescent parameter. The options are:           \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11826,7 +11849,15 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->extinctionBeta[0], mp->extinctionBeta[1]);
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
-			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster     %s\n", mp->sampleStrat);
+            
+            MrBayesPrint ("   Fossilizationpr   Beta/Fixed                  %s", mp->fossilizationPr);
+            if (!strcmp(mp->fossilizationPr, "Beta"))
+                MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
+            else
+                MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
+                
+			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
+            MrBayesPrint ("                    FossilTip                      \n");
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
@@ -14946,7 +14977,7 @@ void SetUpParms (void)
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
 	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-	PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|\0");
+	PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|\0");
     PARAM   (248, "Burninss",       DoSsParm,          "\0");
     PARAM   (249, "Nsteps",         DoSsParm,          "\0");
     PARAM   (250, "Alpha",          DoSsParm,          "\0");
@@ -14968,9 +14999,11 @@ void SetUpParms (void)
 	PARAM   (266, "Smoothing",		DoSumSsParm,        "\0");
 	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
     PARAM   (268, "Precision",      DoSetParm,          "\0");
+	PARAM   (269, "Fossilizationpr", DoPrsetParm,       "Beta|Fixed|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
 	         change the number of elements (now 269) in paramTable[] at the top of this file. */
+    /* CmdType commands[] */
 }
 
 

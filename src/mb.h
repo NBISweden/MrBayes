@@ -349,7 +349,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	UNLINKED				1
 
 /*paramType*/
-#define	NUM_LINKED				28
+#define	NUM_LINKED				29
 #define	P_TRATIO				0
 #define	P_REVMAT				1
 #define	P_OMEGA					2
@@ -378,6 +378,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_CLOCKRATE             25
 #define P_SPECIESTREE           26
 #define P_GENETREERATE          27
+#define P_FOSLRATE              28
 
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
@@ -685,12 +686,15 @@ typedef struct s_launch_struct
 #define BRLENS_CLOCK_BD					54
 #define BRLENS_CLOCK_FIXED              55
 #define BRLENS_CLOCK_SPCOAL				56
+#define BRLENS_CLOCK_FOSSIL             144
 #define	BRLENS_PARSIMONY				57
 #define SPECRATE_UNI					60
 #define SPECRATE_EXP					61
 #define SPECRATE_FIX					62
 #define EXTRATE_BETA					63
 #define EXTRATE_FIX						65
+#define FOSLRATE_BETA					145
+#define FOSLRATE_FIX					146
 #define POPSIZE_UNI						66
 #define POPSIZE_GAMMA					67
 #define POPSIZE_FIX						68
@@ -990,6 +994,9 @@ typedef struct model
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
 //	MrBFlt		extinctionExp;
+    char		fossilizationPr[100]; /* prior on fossilization rate                  */
+    MrBFlt		fossilizationFix;
+    MrBFlt		fossilizationBeta[2];
 	char		sampleStrat[30];      /* taxon sampling strategy (for b-d process)    */
 	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
 	Calibration treeAgePr;            /* prior on tree age for uniform clock trees    */
@@ -1124,6 +1131,7 @@ typedef struct modelinfo
 	Param		*geneTreeRateMult;          /* ptr to gene tree rateMult used in model  */
 	Param		*speciationRates;			/* ptr to speciationRates used in model		*/
 	Param		*extinctionRates;			/* ptr to extinctionRates used in model		*/
+    Param       *fossilizationRates;        /* ptr to fossilizationRates                */
 	Param		*popSize;			        /* ptr to population size used in model		*/
 	Param		*growthRate;				/* ptr to growth rate used in model			*/
 	Param		*topology;					/* ptr to topology used in model			*/
