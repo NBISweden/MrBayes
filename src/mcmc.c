@@ -16283,10 +16283,10 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS)
 {
 	if (!strcmp(sS, "Random"))
+    /* todo: change LnFossilizedBDPriorTip to LnFossilizedBDPriorAll here after they are all programmed */
 		return LnFossilizedBDPriorTip (t, clockRate, prob, sR, eR, sF, fR);
 	else if (!strcmp(sS, "FossilTip"))
-		return LnFossilizedBDPriorAll (t, clockRate, prob, sR, eR, sF, fR);
-    /* todo: exchange LnFossilizedBDPriorTip and LnFossilizedBDPriorAll here after they are all programmed */
+		return LnFossilizedBDPriorTip (t, clockRate, prob, sR, eR, sF, fR);
 	else
     {
 		printf ("\n   ERROR: Fossil sampling strategy for fossilized birth-death process not implemented.\n");
@@ -26321,7 +26321,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 	
     if (p->isDated == YES)
         calibrationPtr = p->calibration;
-    else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr, "Fossilization")) )
+    else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr, "Fossilization")))
         calibrationPtr = &mp->treeAgePr;
     else
         calibrationPtr = NULL;
@@ -35164,7 +35164,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
             {
             if (p->isDated == YES)
                 calibrationPtr = p->calibration;
-            else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) )
+            else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")))
                 calibrationPtr = &mp->treeAgePr;
             else
                 calibrationPtr = NULL;

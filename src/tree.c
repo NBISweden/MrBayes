@@ -2585,7 +2585,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
 					p->nodeDepth = p->left->nodeDepth;
 				else
 					p->nodeDepth = p->right->nodeDepth;
-				if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) ))
+				if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))))
 					{
                     if (p->isDated == NO)
                         calibrationPtr = &mp->treeAgePr;

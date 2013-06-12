@@ -10931,7 +10931,8 @@ int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
 				return (ERROR);
 				}
 			}
-        else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") || (!strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization")))))
+        else if (tree->isCalibrated == YES ||(tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
+                                                                       !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization")) ))
 			{
             assert (tree->isClock == YES);
 			clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state );
@@ -21995,11 +21996,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				else if (!strcmp(mp->brlensPr, "Clock"))
 					{
 					MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
-					if (!strcmp(mp->clockPr,"Uniform") && !strcmp(mp->nodeAgePr,"Unconstrained"))
-						{
-					    MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
-						}
-					else if (!strcmp(mp->clockPr,"Fossilization") && !strcmp(mp->nodeAgePr,"Unconstrained"))
+					if ((!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) && !strcmp(mp->nodeAgePr,"Unconstrained"))
 						{
 					    MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
 						}
