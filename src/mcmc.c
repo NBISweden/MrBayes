@@ -37351,7 +37351,7 @@ int PrintCheckPoint (int gen)
 	if (nErrors == 0)
 		{
 		/* figure out check-point file names */
-        sprintf(ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
+        sprintf(ckpFileName, "%s.ckp", chainParams.chainFileName);
 		strcpy (bkupFileName, ckpFileName);
 		strcat (bkupFileName, "~");
 		strcpy (oldBkupFileName, bkupFileName);
@@ -37363,10 +37363,9 @@ int PrintCheckPoint (int gen)
 		rename (ckpFileName, bkupFileName);
 
 		/* create new ckp file */
-		if ((fp = OpenTextFileW (ckpFileName)) == NULL)
+        if ((fp = OpenTextFileW (ckpFileName)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem opening checkpoint file\n", spacer);
-			free (tempString);
 			nErrors++;
 			}
 		}
