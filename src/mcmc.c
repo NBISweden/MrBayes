@@ -29113,7 +29113,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 	MrBFlt		x, newPos, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, *tk02Rate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate, nu, newProp, minLength=0.0, length = 0.0,
-		        cumulativeProb, warpFactor, sum, ran, increaseProb, decreaseProb,
+		        cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, v_typical, minV, minB, maxB;
 	CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
 	TreeNode	*p, *a, *b, *u, *v, *c=NULL, *d;
@@ -29318,8 +29318,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			}
 		}
 
-	/* cycle through the possibilities and record the parsimony length of each in p->d */
-	minLength = - 1.0;
+	/* cycle through the possibilities and record the parsimony length */
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
@@ -29374,27 +29373,32 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 			p->d += divFactor * length;
 			p->d += divFactor * length;
 			}
-		if (minLength < 0.0)
-			minLength = p->d;
-		else if (p->d < minLength)
-			minLength = p->d;
 		}
 
-	/* find the sum given the warp factor */
-	sum = 0.0;
+	/* find the min length and the sum for the forward move */
+    minLength = -1.0;
+	for (i=0; i<t->nNodes; i++)
+        {
+		p = t->allDownPass[i];
+		if (p->marked == NO || p == a)
+			continue;
+        if (minLength < 0.0)
+            minLength = p->d;
+        else if (p->d < minLength)
+            minLength = p->d;
+        }
+	sum1 = 0.0;
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
-		if (p->marked == YES)
+		if (p->marked == YES && p != a)
 			{
-			p->d = exp (minLength - p->d);
-            if (p != a)
-    			sum += p->d;
+			sum1 += exp (minLength - p->d);
 			}
 		}
 
 	/* generate a random uniform */
-	ran = RandomNumber (seed);
+	ran = RandomNumber(seed) * sum1;
 
 	/* select the appropriate reattachment point (not a!) */
 	cumulativeProb = 0.0;
@@ -29404,14 +29408,39 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 		if (p->marked == YES && p != a)
 			{
 			c = p;
-			cumulativeProb += p->d / sum;
+			cumulativeProb += exp (minLength - p->d);
 			if (cumulativeProb > ran)
 				break;
 			}
 		}
 
     /* calculate the proposal ratio */
-	(*lnProposalRatio) = log ( (a->d /(sum - c->d + a->d)) / (c->d / sum) );
+	(*lnProposalRatio) = c->d - minLength + log(sum1);
+
+	/* find the min length and the sum for the backward move */
+    minLength = -1.0;
+	for (i=0; i<t->nNodes; i++)
+        {
+		p = t->allDownPass[i];
+		if (p->marked == NO || p == c)
+			continue;
+        if (minLength < 0.0)
+            minLength = p->d;
+        else if (p->d < minLength)
+            minLength = p->d;
+        }
+	sum2 = 0.0;
+	for (i=0; i<t->nNodes; i++)
+        {
+		p = t->allDownPass[i];
+		if (p->marked == YES && p != c)
+            {
+			sum2 += exp (minLength - p->d);
+            }
+        }
+    
+    /* calculate the proposal ratio */
+	(*lnProposalRatio) += minLength - a->d - log(sum2);
 
 	/* reattach u */
 	d = c->anc;
