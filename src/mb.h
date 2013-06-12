@@ -68,7 +68,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 
 #if defined GCC_SSE			/* gcc compiler */
-#define ALIGNED_MALLOC(X,Y,Z) {int tmp;tmp=posix_memalign(X,Y,Z);} /*To remove warnings*/
+#define ALIGNED_MALLOC(X,Y,Z)  posix_memalign(X,Y,Z)
 #define ALIGNED_FREE free
 #include <xmmintrin.h>
 #elif defined ICC_SSE		/* icc compiler */

@@ -16341,13 +16341,13 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     /* Calculate Eq.5 in Th.3.8 under fossil being only tips: k = 0, also omit p_0(y_i) */
     
 	int				i, j, nTaxa, nFossil, nExtant;
-	MrBFlt			*x, *y,  lambda, mu, rho, psi, treeAge, tmrca, c1, c2;
+	MrBFlt			*x, *y,  lambda, rho, psi, treeAge, tmrca, c1, c2;
 	TreeNode		*p;
     Model           *mp;
     
     /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
     lambda = sR / (1.0 - eR);
-    mu     = lambda * eR * (1.0 - fR);
+    // mu     = lambda * eR * (1.0 - fR);
     rho    = sF;
     psi    = lambda * eR * fR;
     
@@ -28240,7 +28240,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode	*p, *q, *r, *a, *b, *u, *v, *c, *d, *newA, *newB, *old, *tmp;
+    TreeNode	*p, *q, *r, *a, *b, *u, *v, *c=NULL, *d, *newA=NULL, *newB, *old, *tmp;
     Tree		*t;
     ModelParams *mp;
     ModelInfo	*m = NULL;
@@ -47637,12 +47637,10 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 				for (k=0; k<m->numGammaCats; k++)
 					{
 					v =  length * baseRate * catRate[k];
-					
 			        cijk = eigenValues + (2 * n);
 
 					for (s=0; s<n; s++)
 						EigValexp[s] =  exp(eigenValues[s] * v);
-
 					for (i=0; i<n; i++)
 						{
 						for (j=0; j<n; j++)
