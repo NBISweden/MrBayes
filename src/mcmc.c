@@ -27975,7 +27975,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	for (i=0; i<t->nNodes; i++)
 		{
 		p = t->allDownPass[i];
-		if (p->marked == YES && p!= a)
+		if (p->marked == YES && p != a)
 			{
             /* Kahan summation to reduce numerical error */
             tempy = exp (minLength - p->d) - tempc;
@@ -28025,7 +28025,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	for (i=0; i<t->nNodes; i++)
         {
 		p = t->allDownPass[i];
-		if (p->marked == YES && p!= c)
+		if (p->marked == YES && p != c)
             {
             /* Kahan summation to reduce numerical error */
             tempy = exp (minLength - p->d) - tempc;
@@ -28480,7 +28480,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p!= a)
+            if (p->marked == YES && p != a)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -28530,7 +28530,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p!= c)
+            if (p->marked == YES && p != c)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -28856,7 +28856,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p!= c)
+            if (p->marked == YES && p != c)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -28906,7 +28906,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p!= newA)
+            if (p->marked == YES && p != newA)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -35188,8 +35188,9 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        if ((p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && param->paramId == BRLENS_CLOCK_UNI && mp->treeAgePr.prior == fixed)) ||
-            (p->isDated == YES && p->calibration->prior != fixed))
+        if ((p->isDated == NO && p->left != NULL && 
+             !(p->anc->anc == NULL && (param->paramId == BRLENS_CLOCK_UNI || param->paramId == BRLENS_CLOCK_FOSSIL) && mp->treeAgePr.prior == fixed))
+         || (p->isDated == YES && p->calibration->prior != fixed))
             {
             if (p->isDated == YES)
                 calibrationPtr = p->calibration;
@@ -37392,7 +37393,7 @@ int PrintCheckPoint (int gen)
 		rename (ckpFileName, bkupFileName);
 
 		/* create new ckp file */
-        if ((fp = OpenTextFileW (ckpFileName)) == NULL)
+		if ((fp = OpenTextFileW (ckpFileName)) == NULL)
 			{
 			MrBayesPrint ("%s   Problem opening checkpoint file\n", spacer);
 			nErrors++;
@@ -47670,6 +47671,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 
 					for (s=0; s<n; s++)
 						EigValexp[s] =  exp(eigenValues[s] * v);
+
 					for (i=0; i<n; i++)
 						{
 						for (j=0; j<n; j++)

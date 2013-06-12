@@ -900,16 +900,16 @@ sumssTable:
 			    goto errorExit;
             }
 
-         if( sumssParams.askForMorePlots == NO || firstPass == YES )
-             break;
+        if( sumssParams.askForMorePlots == NO || firstPass == YES )
+            break;
 
-         MrBayesPrint (" You can choose to print new joined plots with different step burn-in or smoothing.\n");
-         MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
-         MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing joined plots.\n");
-         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
-         MrBayesPrint (" to change 'Smoothing'.\n");
-         MrBayesPrint (" Enter new step burn-in:");
-         scanf("%d",&j);
+        MrBayesPrint (" You can choose to print new joined plots with different step burn-in or smoothing.\n");
+        MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d.\n", numSamplesInStepSS-1);
+        MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing joined plots.\n");
+        MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
+        MrBayesPrint (" to change 'Smoothing'.\n");
+        MrBayesPrint (" Enter new step burn-in:");
+        scanf("%d",&j);
         if(j < 0 )
             break;
         if(j >= numSamplesInStepSS)
