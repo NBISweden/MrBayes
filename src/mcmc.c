@@ -15955,6 +15955,9 @@ MrBFlt LogPrior (int chain)
 }
 
 
+
+
+
 int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF)
 {
 	if (!strcmp(sS, "Random")) 
@@ -16128,10 +16131,10 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 	/* allocate space for the speciation times */
 	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
 	if (!nt)
-    {
+        {
 		printf ("\n   ERROR: Problem allocating nt\n");
 		return (ERROR);
-    }
+        }
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -16142,15 +16145,15 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
-    {
+        {
 		p = t->intDownPass[i];
 		nt[i] = p->nodeDepth / clockRate;
-    }
+        }
     nTaxa = t->nIntNodes + 1;
     
 	/* calculate probability of tree using standard variables */
 	if (AreDoublesEqual(lambda,mu,ETA)==NO)
-    {
+        {
 		// birth rate != death rate
         MrBFlt p0_t1;
         p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
@@ -16159,12 +16162,12 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 		for (i=0; i<t->nIntNodes-1; i++)
 			(*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-    }
+        }
 	else
-    {
+        {
 		printf ("\n   ERROR: Critical branchin process for diversity sampling not implemented\n");
 		return (ERROR);
-    }
+        }
     
 	/* free memory */
 	free (nt);
@@ -16188,10 +16191,10 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 	/* allocate space for the speciation times */
 	nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
 	if (!nt)
-    {
+        {
 		printf ("\n   ERROR: Problem allocating nt\n");
 		return (ERROR);
-    }
+        }
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -16202,15 +16205,15 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     
     /* get the node times and put them into a vector */
 	for (i=0; i<t->nIntNodes; i++)
-    {
+        {
 		p = t->intDownPass[i];
 		nt[i] = p->nodeDepth / clockRate;
-    }
+        }
     nTaxa = t->nIntNodes + 1;
     
 	/* calculate probability of tree using standard variables */
 	if (AreDoublesEqual(lambda,mu,ETA)==NO)
-    {
+        {
 		// birth rate != death rate
         MrBFlt p0_t1;
         p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
@@ -16219,18 +16222,20 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 		for (i=0; i<t->nIntNodes-1; i++)
 			(*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-    }
+        }
 	else
-    {
+        {
 		printf ("\n   ERROR: Critical branchin process for cluster sampling not implemented\n");
 		return (ERROR);
-    }
+        }
     
 	/* free memory */
 	free (nt);
 	
 	return (NO_ERROR);
 }
+
+
 
 
 
@@ -16288,10 +16293,10 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 	else if (!strcmp(sS, "FossilTip"))
 		return LnFossilizedBDPriorTip (t, clockRate, prob, sR, eR, sF, fR);
 	else
-    {
+        {
 		printf ("\n   ERROR: Fossil sampling strategy for fossilized birth-death process not implemented.\n");
 		return (ERROR);
-    }
+        }
 }
 
 MrBFlt lnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, MrBFlt c2)
@@ -16341,7 +16346,7 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     /* Calculate Eq.5 in Th.3.8 under fossil being only tips: k = 0, also omit p_0(y_i) */
     
 	int				i, j, nTaxa, nFossil, nExtant;
-	MrBFlt			*x, *y,  lambda, rho, psi, treeAge, tmrca, c1, c2;
+	MrBFlt			*x, *y,  lambda, rho, psi, tmrca, c1, c2;
 	TreeNode		*p;
     Model           *mp;
     
@@ -16355,44 +16360,45 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 	x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
 	y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
 	if (!x || !y)
-    {
-		printf ("\n   ERROR: Problem allocating x&y \n");
+        {
+		printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorTip\n");
 		return (ERROR);
-    }
+        }
 
     /* get the interior node times (x_i) */
     for (i = 0; i < t->nIntNodes; i++)
-    {
+        {
 		p = t->intDownPass[i];
 		x[i] = p->nodeDepth / clockRate;
-    }
+        }
 
     /* get the fossil node times (y_i), also calculate the number of taxa */
     nFossil = nExtant = 0;
     for (i = j = 0; i < t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL)
-        {
-            if (p->nodeDepth > 0.0)
             {
-                nFossil++;
+            if (p->nodeDepth > 0.0)
+                {
                 y[j++] = p->nodeDepth / clockRate;
-            }
+                nFossil++;
+                }
             else
                 nExtant++;
+            }
         }
-    }
     nTaxa = nFossil + nExtant;
        
     /* calculate probability of tree using standard variables */
+    // tmrca = t->root->left->nodeDepth / clockRate;
     tmrca = x[t->nIntNodes-1];
     
     c1 = sqrt(sR*sR + 4 *lambda *psi);
     c2 = (2 *lambda *rho - sR) / c1;
     
-    (*prob)  = (nTaxa - 2) * log(lambda) + nFossil * log(psi)
-               + lnP1_fossil(tmrca, rho, c1, c2) - 2 * log(1 - hatP0_tip(tmrca, sR, lambda, rho));
+    (*prob) = (nTaxa - 2) * log(lambda) + nFossil * log(psi)
+            + lnP1_fossil(tmrca, rho, c1, c2) - 2 * log(1 - hatP0_tip(tmrca, sR, lambda, rho));
 
     for (i = 0; i < nTaxa-1; i++)
         (*prob) += lnP1_fossil(x[i], rho, c1, c2);
@@ -16404,10 +16410,9 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     
     /* condition on tmrca, f(tmrca) */
     mp = &modelParams[t->relParts[0]];
-    treeAge = t->root->left->nodeDepth / clockRate;
     if (t->root->left->isDated == NO)
     	{
-        (*prob) += mp->treeAgePr.LnPriorProb(treeAge, mp->treeAgePr.priorParams);
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
         }
     /* calibrations are dealt with separately in calling function */
     
@@ -16422,7 +16427,84 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
 
 {
-    /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */   
+    /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */
+    
+    int				i, j, nExtant, mFossil, kFossil;
+	MrBFlt			*x, *y,  lambda, mu, rho, psi, tmrca, c1, c2;
+	TreeNode		*p;
+    Model           *mp;
+    
+    /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
+    lambda = sR / (1.0 - eR);
+    mu     = lambda * eR * (1.0 - fR);
+    rho    = sF;
+    psi    = lambda * eR * fR;
+    
+    /* allocate space for the speciation and extinction times */
+	x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+	y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+	if (!x || !y)
+        {
+		printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorAll\n");
+		return (ERROR);
+        }
+    
+    mFossil = kFossil = nExtant = 0;
+    /* get the interior node times (x_i), excluding fossil nodes. also calculate k */
+    for (i = j = 0; i < t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        if (p->left->length > 0.0 && p->right->length > 0.0)
+            x[j++] = p->nodeDepth / clockRate;
+        else
+            kFossil++;
+        }    
+    /* get the fossil tip times (y_i), also calculate m, n */
+    for (i = j = 0; i < t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL && p->right == NULL && p->length > 0.0)
+            {
+            if (p->nodeDepth > 0.0)
+                {
+                y[j++] = p->nodeDepth / clockRate;
+                mFossil++;
+                }
+            else
+                nExtant++;
+            }
+        }
+    
+    /* calculate probability of tree using standard variables */
+    tmrca = t->root->left->nodeDepth / clockRate;
+    
+    c1 = sqrt(sR*sR + 4 *lambda *psi);
+    c2 = (2 *lambda *rho - sR) / c1;
+    
+    (*prob) = (nExtant +mFossil -2) *log(lambda) + (kFossil +mFossil) *log(psi)
+            + lnP1_fossil(tmrca, rho, c1, c2) - 2 *log(1 - hatP0(tmrca, lambda, mu, rho));
+    
+    for (i = 0; i < nExtant +mFossil -1; i++)
+        (*prob) += lnP1_fossil(x[i], rho, c1, c2);
+    for (i = 0; i < mFossil; i++)
+        (*prob) -= lnP1_fossil(y[i], rho, c1, c2);
+    for (i = 0; i < mFossil; i++)
+        (*prob) += lnP0_fossil(y[i], lambda, mu, psi, c1, c2);
+    
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (nExtant +mFossil -1) * log(2.0) - LnFactorial(nExtant) - LnFactorial(mFossil +kFossil);
+    
+    /* condition on tmrca, f(tmrca) */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        {
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
+        }
+    /* calibrations are dealt with separately in calling function */
+    
+	/* free memory */
+    free(x);
+    free(y);
     
     return (NO_ERROR);
 }
