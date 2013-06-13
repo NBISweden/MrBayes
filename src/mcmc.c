@@ -41800,6 +41800,7 @@ int RemoveTreeSamples (int from, int to)
 						return ERROR;
 						}
 
+                    s = strtok (lineBuf, " ");
 					for (s = strtok (NULL, ";"); *s != '('; s++)
 						;
 					
