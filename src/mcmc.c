@@ -16362,6 +16362,7 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 	if (!x || !y)
         {
 		printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorTip\n");
+        free(x); free(y);
 		return (ERROR);
         }
 
@@ -16430,7 +16431,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */
     
     int				i, j, nExtant, mFossil, kFossil;
-	MrBFlt			*x, *y,  lambda, mu, rho, psi, tmrca, c1, c2;
+	MrBFlt			*x, *y, lambda, mu, rho, psi, tmrca, c1, c2;
 	TreeNode		*p;
     Model           *mp;
     
@@ -16446,6 +16447,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 	if (!x || !y)
         {
 		printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorAll\n");
+        free(x); free(y);
 		return (ERROR);
         }
     
