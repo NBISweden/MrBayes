@@ -46622,7 +46622,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 		length = p->length;
 
     /* numerical errors will ensue if we allow very large or very small branch lengths,
-     which might occur in relaxed clock models */
+       which might occur in relaxed clock models */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -46881,7 +46881,7 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 		length = p->length;
 
     /* numerical errors will ensue if we allow very large or very small branch lengths,
-     which might occur in relaxed clock models */
+       which might occur in relaxed clock models */
 
 	/* fill in values */
 	for (k=index=0; k<m->nCijkParts; k++)
@@ -47021,7 +47021,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 		length = p->length;
 
     /* numerical errors will ensue if we allow very large or very small branch lengths,
-     which might occur in relaxed clock models */
+       which might occur in relaxed clock models */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
@@ -47129,7 +47129,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 		length = p->length;
 
     /* numerical errors will ensue if we allow very large or very small branch lengths,
-     which might occur in relaxed clock models */
+       which might occur in relaxed clock models */
 
 	/* fill in values */
 	for (k=index=0; k<m->numGammaCats; k++)
