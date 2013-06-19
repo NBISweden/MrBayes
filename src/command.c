@@ -11242,7 +11242,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       clock:uniform                                             \n");
 		MrBayesPrint ("                       clock:birthdeath                                          \n");
 		MrBayesPrint ("                       clock:coalescence                                         \n");
-		MrBayesPrint ("                       clock:fossilization                                       \n");
+/*		MrBayesPrint ("                       clock:fossilization                                       \n");  will bring back after release */
 		MrBayesPrint ("                       clock:speciestreecoalescence                              \n");
 		MrBayesPrint ("                       fixed(<treename>)                                         \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11350,8 +11350,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    in the tree is calibrated, the root calibration replaces the \n");
 		MrBayesPrint ("                    tree age prior.                                              \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
-        MrBayesPrint ("                    that is, lambda - mu in the birth-death model; or,           \n");
-        MrBayesPrint ("                    lambda - mu - psi in the fossilized birth-death model.       \n");
+		MrBayesPrint ("                    that is, lambda - mu in the birth-death model;               \n");
+		MrBayesPrint ("                    or, lambda - mu - psi in the fossilized birth-death model.   \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset speciationpr = uniform(<number>,<number>)           \n");
 		MrBayesPrint ("                       prset speciationpr = exponential(<number>)                \n");
@@ -11361,8 +11361,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
 		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the relative extinction     \n");
 		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; or,     \n");
-        MrBayesPrint ("                    (mu + psi) / lambda in the fossilization model. Values       \n");
-        MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
+		MrBayesPrint ("                    (mu + psi) / lambda in the fossilization model. Values       \n");
+		MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset extinctionpr = beta(<number>,<number>)              \n");
 		MrBayesPrint ("                       prset extinctionpr = fixed(<number>)                      \n");
@@ -11372,29 +11372,29 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
 		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
 		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
-        MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
-        MrBayesPrint ("                    fossilized birth-death prior (see Stadler, 2010).            \n");
+/*      MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
+        MrBayesPrint ("                    fossilized birth-death prior (see Stadler, 2010).            \n");  */
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset samplestrat = random                                \n");
         MrBayesPrint ("                       prset samplestrat = diversity                             \n");
         MrBayesPrint ("                       prset samplestrat = cluster                               \n");
-        MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");
+/*      MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");  */
         MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
 		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
-		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997), and the         \n");
-        MrBayesPrint ("                    fossilization prior (rho, see Stadler, 2010).                \n");
+		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997),                 \n");
+/*      MrBayesPrint ("                    and the fossilization prior (rho, see Stadler, 2010).        \n");  */
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset sampleprob = <number>                               \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint (" Fossilizationpr -- This parameter sets the fossilization rate (sampling frac.)  \n");
+/*      MrBayesPrint (" Fossilizationpr -- This parameter sets the fossilization rate (sampling frac.)  \n");
         MrBayesPrint ("                    sampled in the analysis (psi/(mu+psi), see Stadler, 2010).   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset fossilizationpr = beta(<number>,<number>)           \n");
         MrBayesPrint ("                       prset fossilizationpr = fixed(<number>)                   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    This parameter is only relevant if the fossilized birth-death\n");
-        MrBayesPrint ("                    is selected as the prior (fossilizationpr) on branch lengths.\n");
+        MrBayesPrint ("                    is selected as the prior (fossilizationpr) on branch lengths.\n");  */
 		MrBayesPrint ("   Popsizepr     -- This parameter sets the prior on the population size compo-  \n");
 		MrBayesPrint ("                    nent of the coalescent parameter. The options are:           \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11410,7 +11410,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    mines whether the population size is the same for the entire \n");
 		MrBayesPrint ("                    species tree ('popvarpr = equal', the default), or varies    \n");
 		MrBayesPrint ("                    across branches of the species tree ('popvarpr=variable').   \n");
-	/*	MrBayesPrint ("   Growthpr      -- This parameter sets the prior on the exponential growth      \n");
+/*		MrBayesPrint ("   Growthpr      -- This parameter sets the prior on the exponential growth      \n");
 		MrBayesPrint ("                    parameter of the coalescence process. The options are:       \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset growthpr = uniform(<number>,<number>)               \n");
@@ -11418,7 +11418,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       prset growthpr = fixed(<number>)                          \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    This parameter is only relevant if the coalescence           \n");
-		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");*/
+		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");  */
 		MrBayesPrint ("   Nodeagepr     -- This parameter specifies the assumptions concerning the age  \n");
 		MrBayesPrint ("                    of the terminal and interior nodes in the tree. The default  \n");
 		MrBayesPrint ("                    model ('nodeagepr = unconstrained') assumes that all terminal\n");
@@ -11850,14 +11850,14 @@ int GetUserHelp (char *helpTkn)
 			else
 				MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
             
-            MrBayesPrint ("   Fossilizationpr   Beta/Fixed                  %s", mp->fossilizationPr);
+            MrBayesPrint ("   Fossilizationpr  Beta/Fixed                   %s", mp->fossilizationPr);
             if (!strcmp(mp->fossilizationPr, "Beta"))
                 MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
 			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
-            MrBayesPrint ("                    FossilTip                      \n");
+/*          MrBayesPrint ("                    FossilTip                      \n");                      will bring back after release */
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
