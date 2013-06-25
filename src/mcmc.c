@@ -38897,15 +38897,14 @@ int PrintStates (int curGen, int coldId)
 				mp = &modelParams[d];
                 if ( m->printAncStates != YES )
                     continue;
-    			for (j=0; j<numChar; j++)
-    				{ 
-                    if (partitionId[j][partitionNum] - 1 != d ||
-                        charInfo[j].isExcluded == YES || printedChar[j] == YES)
-    					continue;
-					for (i=0; i<numDefinedConstraints; i++)
-						{
-                        if (mp->activeConstraints[i] == NO || definedConstraintsType[i] != HARD )
-                            continue;
+				for (i=0; i<numDefinedConstraints; i++)
+					{
+                    if (mp->activeConstraints[i] == NO || definedConstraintsType[i] != HARD )
+                        continue;
+                    for (j=0; j<numChar; j++)
+    					{
+                    	if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || printedChar[j] == YES)
+                    		continue;
 						if (mp->dataType == STANDARD)
 							{
 							for (k=0; k<m->nStates[compCharPos[j] - m->compCharStart]; k++)
