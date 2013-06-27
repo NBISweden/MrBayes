@@ -525,7 +525,7 @@ int InitializeMrBayes (void)
 	mode = INTERACTIVE;								 /* set default mode							  */
 	numOpenExeFiles = 0;							 /* no execute files open yet   				  */
     scientific = YES;                                /* print to file using scientific format?        */
-    precision = 15;                                  /* set default precision                         */
+    precision = 6;                                   /* set default precision                         */
 	showmovesParams.allavailable = NO;				 /* do not show all available moves				  */
 	strcpy(workingDir,"");				             /* working directory		                      */
 #if defined (BEAGLE_ENABLED)

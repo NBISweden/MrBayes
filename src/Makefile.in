@@ -40,3 +40,4 @@ tree.o: tree.c bayes.h mb.h mcmc.h mbmath.h model.h globals.h tree.h \
 utils.o: utils.c mb.h globals.h utils.h
 mbbeagle.o: mbbeagle.c mbbeagle.h utils.h
 best.o: best.c best.h
+

@@ -342,7 +342,7 @@ CmdType			commands[] =
             { 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
             																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},      36,                    "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
             { 28,           "Mcmcp",  NO,           DoMcmcp, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},        4, "Sets the parameters of a chain (without starting analysis)",  IN_CMD, SHOW },
+            																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},        4,     "Sets parameters of a chain (without starting analysis)",  IN_CMD, SHOW },
             { 29,        "Outgroup", YES,        DoOutgroup,  1,                                                                                             {78},    49152,                                     "Changes outgroup taxon",  IN_CMD, SHOW },
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
@@ -365,7 +365,7 @@ CmdType			commands[] =
             { 47,              "Ss",  NO,              DoSs, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
             														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,                             "Starts stepping-stone sampling",  IN_CMD, SHOW },
             { 48,             "Ssp",  NO,             DoSsp, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36, "Sets the parameters of a stepping-stone (without starting)",  IN_CMD, SHOW },
+            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,"Sets parameters of stepping-stone analysis (without starting)",  IN_CMD, SHOW },
             { 49,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
             { 50,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 51,           "Sumss",  NO,           DoSumSs, 10,                                                        {258,259,260,261,262,263,264,265,266,267},       36,         "Summarizes parameters from stepping-stone analysis",  IN_CMD, SHOW },
@@ -8706,9 +8706,9 @@ int DoTreeParm (char *parmName, char *tkn)
                     }
                 t->popSizeSet = YES;
                 if (isTranslateDef == YES && isTranslateDiff == YES)
-                    t->popSize = (MrBFlt *) SafeCalloc (2*numTranslates-1, sizeof(MrBFlt));
+                    t->popSize = (MrBFlt *) SafeCalloc (2*numTranslates, sizeof(MrBFlt));
                 else
-                    t->popSize = (MrBFlt *) SafeCalloc (2*numLocalTaxa-1, sizeof(MrBFlt));
+                    t->popSize = (MrBFlt *) SafeCalloc (2*numLocalTaxa, sizeof(MrBFlt));
 				}
 			SafeStrcpy (&tempNameString,tkn);
 			foundName = YES;
@@ -12638,6 +12638,8 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("   \"Homo_sapiens\" to be the outgroup (assuming that there is a taxon named     \n");
 		MrBayesPrint ("   \"Homo_sapiens\" in the matrix). Only a single taxon can be assigned to       \n");
 		MrBayesPrint ("   be the outgroup.                                                              \n");
+	    MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Current outgroup: %s (taxon no. %d)\n", taxaNames[outGroupNum], outGroupNum+1);
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Showusertrees"))

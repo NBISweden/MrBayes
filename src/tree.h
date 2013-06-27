@@ -61,6 +61,7 @@ void      OrderTips (PolyTree *t);
 void      PrintNewick (char **s, int *len, Tree *t);
 void      PrintNodes (Tree *t);
 void      PrintPolyNodes (PolyTree *pt);
+void      PrintTranslateBlock (FILE *fp, Tree *t);
 int       PrunePolyTree (PolyTree *pt);
 int       RandPerturb (Tree *t, int nPert, SafeLong *seed);
 int       RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted);

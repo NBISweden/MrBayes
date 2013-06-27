@@ -421,7 +421,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa;
-	SafeLong	*bitsets, *mask;
+	SafeLong	*mask;
 	TreeNode	*p, *q;
 
     if (t1->nNodes != t2->nNodes)
@@ -434,46 +434,17 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 	else
 		nTaxa = t1->nNodes - t1->nIntNodes;
 	
-    /* allocate space */
+    /* allocate space for mask */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    bitsets = (SafeLong *) SafeCalloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
-    mask = bitsets + 4*nLongsNeeded*nTaxa;
+    mask = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof(SafeLong));
 	
     /* set mask */
     for (i=0; i<nTaxa; i++)
         SetBit(i, mask);
 	
-    /* set partition pointers */
-	for (i=0; i<t1->nNodes; i++) 
-		{
-		p = t1->allDownPass[i];
-		q = t2->allDownPass[i];
-		p->partition = bitsets + i*2*nLongsNeeded;
-		q->partition = p->partition + nLongsNeeded;
-		}
-    
-    /* set terminal partitions */
-    for (i=0; i<t1->nNodes; i++)
-        {
-        p = t1->allDownPass[i];
-        q = t2->allDownPass[i];
-        if (p->right == NULL)
-            SetBit (p->index, p->partition);
-        if (q->right == NULL)
-            SetBit (q->index, q->partition);
-        }
-	
-    /* set internal partitions */
-    for (i=0; i<t1->nIntNodes; i++)
-        {
-        p = t1->intDownPass[i];
-        q = t2->intDownPass[i];
-        for (j=0; j<nLongsNeeded; j++)
-            {
-            p->partition[j] = p->left->partition[j] | p->right->partition[j];
-            q->partition[j] = q->left->partition[j] | q->right->partition[j];
-            }
-        }
+    /* allocate and set partition pointers */
+	AllocateTreePartitions (t1);
+    AllocateTreePartitions (t2);
 
 	/* check for congruence */
 	for (i=0; i<t1->nIntNodes; i++)
@@ -494,12 +465,16 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 			}
 		if (j == t2->nIntNodes)
 			{
-			free (bitsets);
-			return (NO);			
+			FreeTreePartitions (t1);
+            FreeTreePartitions (t2);
+			free (mask);
+            return (NO);			
 			}
 		}
 
-    free (bitsets);
+    FreeTreePartitions (t1);
+    FreeTreePartitions (t2);
+    free (mask);
     return (YES);
 }
 
@@ -511,7 +486,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa;
-	SafeLong	*bitsets, *mask;
+	SafeLong	*mask;
 	TreeNode	*p, *q;
 
 	extern void ShowNodes(TreeNode*, int, int);
@@ -526,46 +501,17 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	else
 		nTaxa = t1->nNodes - t1->nIntNodes;
 	
-	/* allocate space */
+	/* allocate space for mask */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    bitsets = (SafeLong *) SafeCalloc (4*nLongsNeeded*nTaxa+nLongsNeeded, sizeof(SafeLong));
-    mask = bitsets + 4*nLongsNeeded*nTaxa;
+    mask = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof(SafeLong));
 	
     /* set mask */
     for (i=0; i<nTaxa; i++)
         SetBit(i, mask);
 
-	/* set partition pointers */
-	for (i=0; i<t1->nNodes; i++) 
-		{
-		p = t1->allDownPass[i];
-		q = t2->allDownPass[i];
-		p->partition = bitsets + i*2*nLongsNeeded;
-		q->partition = p->partition + nLongsNeeded;
-		}
-	
-	/* set terminal partitions */
-	for (i=0; i<t1->nNodes; i++)
-		{
-		p = t1->allDownPass[i];
-		q = t2->allDownPass[i];
-		if (p->right == NULL)
-			SetBit (p->index, p->partition);
-		if (q->right == NULL)
-			SetBit (q->index, q->partition);
-		}
-
-    /* set internal partitions */
-    for (i=0; i<t1->nIntNodes; i++)
-        {
-        p = t1->intDownPass[i];
-        q = t2->intDownPass[i];
-        for (j=0; j<nLongsNeeded; j++)
-            {
-            p->partition[j] = p->left->partition[j] | p->right->partition[j];
-            q->partition[j] = q->left->partition[j] | q->right->partition[j];
-            }
-        }
+	/* allocate and set partition pointers */
+	AllocateTreePartitions (t1);
+    AllocateTreePartitions (t2);
 
 	/* check for congruence */
 	for (i=0; i<t1->nNodes; i++)
@@ -587,17 +533,24 @@ int AreTreesSame (Tree *t1, Tree *t2)
 				break;
             else if (k == nLongsNeeded)
                 {
-                free (bitsets);
+                FreeTreePartitions (t1);
+                FreeTreePartitions (t2);
+                free (mask);
                 return (NO);
                 }
 			}
 		if (j == t2->nNodes)
 			{
-			free (bitsets);
+            FreeTreePartitions (t1);
+            FreeTreePartitions (t2);
+			free (mask);
 			return (NO);			
 			}
 		}
-	free (bitsets);
+
+    FreeTreePartitions (t1);
+    FreeTreePartitions (t2);
+	free (mask);
 	return (YES);
 }
 
@@ -1341,7 +1294,6 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
         nLongsNeeded = (from->memNodes/2 - 1) / nBitsInALong + 1;
         }
 
-
 	/* copy nodes */
 	for (i=0; i<from->nNodes; i++)
 		{
@@ -1431,8 +1383,8 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
     to->popSizeSet = from->popSizeSet;
     if (to->popSizeSet == YES)
         {
-        to->popSize = (MrBFlt *) SafeCalloc (to->nNodes-1, sizeof(MrBFlt));
-        for (i=0; i<to->nNodes-1; i++)
+        to->popSize = (MrBFlt *) SafeCalloc (to->nNodes, sizeof(MrBFlt));
+        for (i=0; i<to->nNodes; i++)
             to->popSize[i] = from->popSize[i];
         to->popSizeSetName = (char *) SafeCalloc (strlen(from->popSizeSetName) + 1, sizeof(char));
         strcpy (to->popSizeSetName, from->popSizeSetName);
@@ -1776,7 +1728,7 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 
 
 
-/* Copeing node q to node p. nLongsNeeded is the length of partition that the node represents. */
+/* Copy node q to node p */
 void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 {
 
@@ -1796,7 +1748,6 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 	p->isLocked				  = q->isLocked;
 	p->lockID				  = q->lockID;
 	p->d					  = q->d;
-	//p->partition			  = q->partition;//the content should be copied not the pointers. Otherwise we are risking to have segmentation faults
     if( nLongsNeeded!=0 )
         {
         assert(p->partition);
@@ -3966,10 +3917,38 @@ void PrintPolyNodes (PolyTree *pt)
 
 
 
+/* PrintTranslateBlock: Print a translate block to file fp for tree t */
+void PrintTranslateBlock (FILE *fp, Tree *t)
+{
+    int     i, j, nTaxa;
+
+    if (t->isRooted == NO)
+        nTaxa = t->nNodes - t->nIntNodes;
+    else
+        nTaxa = t->nNodes - t->nIntNodes - 1;
+
+    fprintf (fp, "\ttranslate\n");
+
+    for (i=0; i<nTaxa; i++)
+        {
+        for (j=0; j<t->nNodes; j++)
+            if (t->allDownPass[j]->index == i)
+                break;
+        if (i == nTaxa-1)
+            fprintf(fp, "\t\t%d\t%s;\n", i+1, t->allDownPass[j]->label);
+        else
+            fprintf(fp, "\t\t%d\t%s,\n", i+1, t->allDownPass[j]->label);
+        }
+}
+
+
+
+
+
 /**
-Update relaxed clock paramiter of the branch of a node with index "b" after node with index "a" is removed. 
+Update relaxed clock parameter of the branch of a node with index "b" after node with index "a" is removed. 
 i.e. make branch of node with index "b" be a concatenation of its original branch and the branch of node with index "a"
-Relaxed clock paramiter of node with index "a" become invalid in the process.
+Relaxed clock parameter of node with index "a" become invalid in the process.
 Note: For Non-clock models the routine has no effect. 
 
 |       |
@@ -4531,15 +4510,16 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
 
 {
 
-	int			i, j, k, nextNode, stopNode, rand1, rand2, nLongsNeeded, tmp;
+	int			i, j, k, nextNode, stopNode, rand1, rand2, nTaxa, nLongsNeeded, tmp;
 	PolyNode	*p=NULL, *q, *r, *u, *w1, *w2;
     int         nodeArrayAllowedSize, nodeArraySize, activeConstraintsSize;
     PolyNode	**nodeArray;
     int         *activeConstraints;
 
     assert(tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
-    assert( numLocalTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
-    nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first numLocalTaxa bits are used */
+    nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
+    assert( nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
@@ -4576,9 +4556,9 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
 
 	/* add one node at a time */
 	if (destinationIsRooted == NO)
-		stopNode = 2*numLocalTaxa - 2;
+		stopNode = 2*nTaxa - 2;
 	else
-		stopNode = 2*numLocalTaxa - 1;
+		stopNode = 2*nTaxa - 1;
 	for (nextNode=t->nNodes; nextNode < stopNode; nextNode++)
 		{
 		/* find a polytomy to break */
@@ -4598,7 +4578,7 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
             }
 
         nodeArraySize=0;
-        /*Collect initial list of condidate nodes to join*/
+        /*Collect initial list of candidate nodes to join*/
         for (q = p->left; q!= NULL; q = q->sib)
             {
             nodeArray[nodeArraySize++]=q;
@@ -4671,9 +4651,9 @@ int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
-        p->index = numLocalTaxa + i;
+        p->index = nTaxa + i;
         }
-	return NO_ERROR;
+    return NO_ERROR;
 }
 
 

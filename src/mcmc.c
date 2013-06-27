@@ -7547,15 +7547,9 @@ void CopyTrees (int chain)
 
 {
 
-	int			i, j, n;
+	int			i, j, n, nTaxa, nLongsNeeded;
 	TreeNode	*p, *q;
 	Tree		*from, *to;
-    int         numTaxa, nLongsNeeded, nLongsNeededTmp;
-
-    /* get some handy numbers */
-    from = GetTreeFromIndex (0, chain, state[chain]);
-    numTaxa = from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0);
-    nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
     /* reset division update flags */
     for (i=0; i<numCurrentDivisions; i++)
@@ -7565,11 +7559,16 @@ void CopyTrees (int chain)
 		{
 		from = GetTreeFromIndex (n, chain, state[chain]);		
 		to = GetTreeFromIndex (n, chain, (state[chain]^1));
-        assert( from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0) == numTaxa );/*so that nLongsNeeded is correct*/
-        if( from->bitsets!=NULL && to->bitsets!=NULL )
-            nLongsNeededTmp=nLongsNeeded;
+        if (from->bitsets != NULL)
+            {
+            if (from->isRooted == NO)
+                nTaxa = from->nNodes - from->nIntNodes;
+            else
+                nTaxa = from->nNodes - from->nIntNodes - 1;
+            nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
+            }
         else
-            nLongsNeededTmp=0;
+            nLongsNeeded = 0;
 
         /* copy nodes */
 		for (j=0; j<from->nNodes; j++)
@@ -7593,7 +7592,7 @@ void CopyTrees (int chain)
 			else
 				q->right = NULL;
 
-			CopyTreeNodes (q, p, nLongsNeededTmp);
+			CopyTreeNodes (q, p, nLongsNeeded);
             q->upDateCl = q->upDateTi = NO;     /* reset update flags */
 			}
 		
@@ -26566,7 +26565,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 {
                 brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
-                if (brlens[p->left->index] < RELBRLENS_MIN || brlens[p->left->index] > RELBRLENS_MAX ||
+                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
                     brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
                     {
                     abortMove = YES;
@@ -26593,14 +26592,14 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
                 }
             if (p->anc->anc != NULL)
     			(*lnPriorRatio) += LnProbTruncGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
+           
+            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */ 
             if (*lnPriorRatio != *lnPriorRatio)
                 {
-                abortMove=YES;
+                abortMove = YES;
                 return (NO_ERROR);
                 }
-            }          
+            }
 		}
 
 #if defined (DEBUG_CSLIDER)
@@ -28318,7 +28317,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
     /* Change branch lengths and topology (potentially) using SPR-type move
        biased according to parsimony scores. */
     
-    int		    i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot;
+    int		    i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa, nLongsNeeded;
     SafeLong	*pA, *pV, *pP, *pU, y[2];
     MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
@@ -29004,9 +29003,6 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         (*lnProposalRatio) += minLength - c->d - log(sum2);
 
         /* alloc temp tree nodes */
-        nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
-        if(t->bitsets == NULL)
-            nLongsNeeded = 0;
         old = (TreeNode *) SafeCalloc (1, sizeof (TreeNode));
         tmp = (TreeNode *) SafeCalloc (1, sizeof (TreeNode));
         if (old == NULL || tmp == NULL)
@@ -29020,6 +29016,8 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
         /* label node we come from as r, node we rotate q, and next node p */
         r = newA;
         q = r->anc;
+        nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
+        nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
         CopyTreeNodes (old, r, nLongsNeeded);
         do {
             p = q->anc; /* get next node before we rotate!! */
@@ -37574,11 +37572,11 @@ if (proc_id == 0)
 		}
 #	endif
 */
-	/* print trees */
+	/* print trees (but not species trees) */
 	for (i=0; i<numParams; i++)
 		{
 		p = &params[i];
-		if (p->paramType != P_BRLENS && p->paramType != P_TOPOLOGY && p->paramType != P_SPECIESTREE)
+		if (p->paramType != P_BRLENS && p->paramType != P_TOPOLOGY)
 			continue;
 		if (p->paramType == P_TOPOLOGY && p->subParams[0] != p)
 			continue;
@@ -37610,16 +37608,7 @@ if (proc_id == 0)
                         }
                     }
                 }
-            if (p->paramType == P_SPECIESTREE)
-                {
-                subParm = modelSettings[p->relParts[0]].popSize;
-                if (subParm->nValues > 1)
-                    {
-                	if (SafeSprintf (&tempString, &tempStrSize, " [&N %s]", subParm->name) == ERROR) nErrors++;
-	                if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
-                    }
-                }
-            
+
             if (t->isRooted == YES && t->isClock == NO)
     	        SafeSprintf (&tempString, &tempStrSize, " = ");
             else if (t->isRooted == YES && t->isClock == YES)
@@ -37662,6 +37651,77 @@ if (proc_id == 0)
 		}
 	MrBayesPrintf (fp, "end;\n\n");
 
+	/* print species trees */
+    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
+        {
+        /* get the first species tree */
+	    for (i=0; i<numParams; i++)
+		    {
+		    p = &params[i];
+		    if (p->paramType == P_SPECIESTREE)
+			    break;
+            }
+        t = GetTree(p, 0, state[0]);
+
+#if defined (MPI_ENABLED)
+if (proc_id == 0)
+        {
+#endif
+        /* write the block header and translate block */
+        MrBayesPrintf (fp, "\nbegin trees;\n");
+        PrintTranslateBlock (fp, t);
+#if defined (MPI_ENABLED)
+        }
+#endif
+
+        for (j=0; j<numLocalChains; j++)
+            {
+		    t = GetTree (p, j, state[j]);
+
+            /* write the tree preamble */
+			if (nErrors == 0 && SafeSprintf (&tempString, &tempStrSize, "\ttree %s", t->name) == ERROR)
+			    nErrors++;
+			if (nErrors == 0 && AddToPrintString (tempString) == ERROR)
+			    nErrors++;
+                
+            subParm = modelSettings[p->relParts[0]].popSize;
+            if (subParm->nValues > 1)
+                {
+             	if (SafeSprintf (&tempString, &tempStrSize, " [&N %s]", subParm->name) == ERROR) nErrors++;
+	            if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
+                }
+
+            clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, j, state[j]);
+    	    SafeSprintf (&tempString, &tempStrSize, " = [&R] [&clockrate = %s] ", MbPrintNum(clockRate));
+            if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
+
+            /* write the tree in (extended) Newick format */
+			if (nErrors == 0)
+			    {
+				WriteTreeToPrintString (p, j, t->root->left, YES, t->isRooted);
+			    if (AddToPrintString (";\n") == ERROR)
+				nErrors++;
+			    }
+			}
+	    MrBayesPrintf (fp, "%s", printString);
+#if defined (MPI_ENABLED)
+	    MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	    if (sumErrors > 0)
+		    {
+		    MrBayesPrint ("%s   Print error on at least one processor\n", spacer);
+            goto errorExit;
+		    }
+	    if (PrintMPISlaves(fp) == ERROR)
+            goto errorExit;
+#else
+	    if (nErrors > 0)
+            goto errorExit;
+#endif
+	    strcpy (printString, "");
+	    strcpy (tempString, "");
+        MrBayesPrintf (fp, "end;\n\n");
+        }
+            
 	/* start startvals block */
 	MrBayesPrintf (fp,"begin mrbayes;\n");
 	MrBayesPrintf (fp, "\tstartvals\n");
@@ -42962,7 +43022,7 @@ int RunChain (SafeLong *seed)
             /*marginalLnLSS will be red from file and destributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if(samplesCountSS!=0) they will be redestributed. */
             }
 
-        if( samplesCountSS==0 ) /*in appended case it also can happened*/
+        if( samplesCountSS==0 ) /*in appended case it also can happen*/
             {
             for (run=0; run<chainParams.numRuns; run++)
                 {
@@ -43042,8 +43102,13 @@ int RunChain (SafeLong *seed)
                         }
                     }
                 }
-            else if (chainParams.chainBurnIn < numPreviousGen)
-                if (AddTreeSamples((int)(i*(chainParams.chainBurnIn/(MrBFlt)(numPreviousGen)))+1,i,chainParams.saveTrees) == ERROR) nErrors++;
+            else if (chainParams.chainBurnIn < i)
+                {
+                /* AddTreeSamples uses chainParams.dtree, so this will have to be allocated */
+                if ((chainParams.dtree = AllocateTree(numLocalTaxa)) == NULL) nErrors++;
+                else if (AddTreeSamples(chainParams.chainBurnIn,i-1,chainParams.saveTrees) == ERROR) nErrors++;
+                else FreeTree (chainParams.dtree);
+                }
             }
         if (nErrors == 0)
             {
@@ -43650,17 +43715,41 @@ int RunChain (SafeLong *seed)
                         f=-1.0;
                         if (chainParams.stat[i].numPartitions == 0)
                             {
-    					    MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: NA (no splits above min. frequency)\n", spacer, i+1);
+    					    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
+                                {
+                                if (i == numTopologies-1)
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree: NA (no splits above min. frequency)\n", spacer);
+                                else
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for gene tree %d: NA (no splits above min. frequency)\n", spacer, i+1);
+                                }
+                            else
+                                MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: NA (no splits above min. frequency)\n", spacer, i+1);
                             }
 						else if (chainParams.diagnStat == AVGSTDDEV)
                             {
 							f = chainParams.stat[i].avgStdDev;
-    						MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
+    					    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
+                                {
+                                if (i == numTopologies-1)
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree: %.6f\n", spacer, f);
+                                else
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for gene tree %d: %.6f\n", spacer, i+1, f);
+                                }
+                            else
+    						    MrBayesPrint ("%s   Average standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
                             }
 						else
                             {
 							f = chainParams.stat[i].max;
-    						MrBayesPrint ("%s   Max standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
+    					    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
+                                {
+                                if (i == numTopologies-1)
+                                    MrBayesPrint ("%s   Max standard deviation of split frequencies for species tree: %.6f\n", spacer, f);
+                                else
+                                    MrBayesPrint ("%s   Max standard deviation of split frequencies for gene tree %d: %.6f\n", spacer, i+1, f);
+                                }
+                            else
+    						    MrBayesPrint ("%s   Max standard deviation of split frequencies for topology %d: %.6f\n", spacer, i+1, f);
                             }
                         if ( chainParams.isSS == YES )
                             splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1] = f;

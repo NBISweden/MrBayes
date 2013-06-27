@@ -93,8 +93,6 @@ typedef struct
     }
     SumtFileInfo;
 
-/*#define	MAX_PARTITIONS		    10000
-#define	MAX_TREES				1000 */
 #define ALLOC_LEN               100     /* number of values to allocate each time in partition counter nodes */
 
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
@@ -552,7 +550,7 @@ treeConstruction:
 	p = t->root = &t->nodes[sumtParams.numTaxa];
 	p->anc = p->sib = NULL;
 	p->x = sumtParams.numTaxa;
-	p->age = MRBFLT_MAX; /* temporally set to maximum value to allow any insertion in front of the root before actual values of age and depth are available */
+	p->age = MRBFLT_MAX; /* temporarily set to maximum value to allow any insertion in front of the root before actual values of age and depth are available */
 	p->depth = MRBFLT_MAX;
     j = localOutGroup;
     q = &t->nodes[j];
@@ -1965,7 +1963,7 @@ int DoSumt (void)
 	/* set file pointers to NULL */
 	fp = fpParts = fpTstat = fpVstat = fpCon = fpTrees = NULL;
 
-    strcpy(treeName,"tree"); //in case if paramiter is not specified in a .t file
+    strcpy(treeName,"tree"); //in case if parameter is not specified in a .t file
 
 	/* Check if there is anything to do */
     if (sumtParams.table == NO && sumtParams.summary == NO && sumtParams.showConsensus == NO)
@@ -2000,6 +1998,8 @@ int DoSumt (void)
     else
         memAllocs[ALLOC_SUMTPARAMS] = YES;
 
+    /* Make sure outgroup is set correctly */
+    
     for (treeNo = 0; treeNo < sumtParams.numTrees; treeNo++)
 		{
 		/* initialize across-file tree and partition counters */
@@ -3564,7 +3564,15 @@ int DoSumtTree (void)
                     }
                 for (i=0; i<numTaxa; i++)
                     sumtParams.absentTaxa[i] = NO;
-                localOutGroup = 0;      /* no previous outgroup assignment is valid */
+                for (i=numTranslates; i<numTaxa; i++)
+                    sumtParams.absentTaxa[i] = YES;
+                for (i=0; i<numTranslates; i++)
+                    if (strcmp(transFrom[i], taxaNames[outGroupNum]) == 0)
+                        break;
+                if (i == numTranslates)
+                    localOutGroup = 0;      /* no previous outgroup assignment is valid */
+                else
+                    localOutGroup = i;
                 }
             else
                 {
@@ -3590,17 +3598,12 @@ int DoSumtTree (void)
                 }
 
             /* now we can safely prune the tree based on taxaInfo[].isDeleted */
-            /* the following block was conditioned with if(isTranslateDef == NO || isTranslateDiff == NO) 
-            The reason was not clearly stated  but it prevents exclusion of taxa to work in case when the condition does not hold.
-            My guess is that before PrunePolyTree() relied on indeses of tips be set as in original matrix.
-            Now it is not needed after PrunePolyTree and ResetTipIndices ware modified to use labels istead of indexes to recognize tips.*/
-                {
-                PrunePolyTree(t);
+            /* note that PrunePolyTree relies on labels to recognize tips */
+            PrunePolyTree(t);
 
-                /* reset tip and int node indices in case some taxa deleted */
-                ResetTipIndices (t);
-                ResetIntNodeIndices(t);
-                }
+            /* reset tip and int node indices in case some taxa deleted */
+            ResetTipIndices (t);
+            ResetIntNodeIndices(t);
 
             /* set basic parameters */
             sumtParams.numTaxa = t->nNodes - t->nIntNodes;
@@ -5604,17 +5607,12 @@ int TreeProb (void)
 			MrBayesPrintf (fpTrees, "cumulative posterior probability.]\n\n");
 			MrBayesPrintf (fpTrees, "begin trees;\n");
 			MrBayesPrintf (fpTrees, "   translate\n");
-			j = 0;
-			for (i=0; i<numTaxa; i++)
+			for (i=0; i<sumtParams.numTaxa; i++)
 				{
-				if (taxaInfo[i].isDeleted == NO && sumtParams.absentTaxa[i] == NO)
-					{
-					if (j+1 == sumtParams.numTaxa)
-						MrBayesPrintf (fpTrees, "   %2d %s;\n", j+1, taxaNames[i]);
-					else
-						MrBayesPrintf (fpTrees, "   %2d %s,\n", j+1, taxaNames[i]);
-					j++;
-					}
+				if (i == sumtParams.numTaxa - 1)
+					MrBayesPrintf (fpTrees, "   %2d %s;\n", i+1, sumtParams.taxaNames[i]);
+				else
+					MrBayesPrintf (fpTrees, "   %2d %s,\n", i+1, sumtParams.taxaNames[i]);
 				}
 			}
 		MrBayesPrintf (fpTrees, "   tree tree_%d [p = %1.3lf, P = %1.3lf] = [&W %1.6lf] ", num+1, treeProb, cumTreeProb, treeProb);
@@ -5740,7 +5738,10 @@ void WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
         if (p->partitionIndex >= 0 && p->partitionIndex < numUniqueSplitsFound)
             {
             if (p->anc == NULL)
-                PrintFigTreeNodeInfo(fp,treeParts[p->partitionIndex], -1.0);
+                {
+                if (sumtParams.isClock == YES)
+                    PrintFigTreeNodeInfo(fp,treeParts[p->partitionIndex], -1.0);
+                }
             else if (sumtParams.isClock == NO)
                 PrintFigTreeNodeInfo(fp, treeParts[p->partitionIndex], p->length);
             else if (sumtParams.isCalibrated == YES)

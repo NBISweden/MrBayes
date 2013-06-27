@@ -9444,7 +9444,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             thePolyTree = AllocatePolyTree(numSpecies);
                         else
                             thePolyTree = AllocatePolyTree (numTaxa);
-					    CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
+                        CopyToPolyTreeFromPolyTree (thePolyTree, userTree[treeIndex]);
 					    if (param->paramType == P_SPECIESTREE)
                             {
                             ResetIntNodeIndices(thePolyTree);
@@ -9454,9 +9454,13 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             PrunePolyTree (thePolyTree);
                             ResetTipIndices(thePolyTree);
                             }
-					    RandResolve (NULL, thePolyTree, &globalSeed, theTree->isRooted);
+                        RandResolve (NULL, thePolyTree, &globalSeed, theTree->isRooted);
+                        GetPolyDownPass(thePolyTree);
+                        ResetIntNodeIndices(thePolyTree);
                         if (param->paramType == P_SPECIESTREE)
+                            {
                             ret=CopyToSpeciesTreeFromPolyTree (usrTree, thePolyTree);
+                            }
 					    else
                             ret=CopyToTreeFromPolyTree (usrTree, thePolyTree);
 					    FreePolyTree (thePolyTree);
@@ -18001,7 +18005,7 @@ int SetModelParams (void)
 			/* Set up population size *****************************************************************************************/
 			p->paramType = P_POPSIZE;
 			if (!strcmp(mp->topologyPr,"Speciestree") && !strcmp(mp->popVarPr, "Variable"))
-                p->nValues = 2 * numSpecies - 1;
+                p->nValues = 2 * numSpecies;
             else
                 p->nValues = 1;
 			p->nSubValues = 0;
@@ -19637,7 +19641,7 @@ void SetUpMoveTypes (void)
 	/* Move_NodeSliderGeneTree */
 	mt = &moveTypes[i++];
 	mt->name = "Node depth slider for gene trees";
-	mt->shortName = "Nodeslider";
+	mt->shortName = "NodesliderGenetree";
 	mt->tuningName[0] = "Window size";
 	mt->shortTuningName[0] = "delta";
 	mt->applicableTo[0] = BRLENS_CLOCK_SPCOAL;
@@ -22831,12 +22835,12 @@ int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
 
 /*-------------------------------------------------
 |
-|	UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set. Eroor will be returned if fixed clockrate prior may not be respected.  
+|	UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set. Error will be returned if fixed clockrate prior may not be respected.  
 |   @param clockRate    is the new clockRate to setup. Clock rate value could be set as positive, 0.0 or negative value. 
 |                       The function does the fallowing depending on one of this three values:
-|                        positive    - check that this 'positive' value is suitable rate. At the end re-enforce(update) the 'positive' value as clock rate on all trees. 
-|                        0.0         - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce(update) the resulting clock rate on all trees. 
-|                        negative    - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce(update) the resulting clock rate ONLY if clock rate was changed 
+|                        positive    - check that this 'positive' value is suitable rate. At the end re-enforce (update) the 'positive' value as clock rate on all trees. 
+|                        0.0         - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce (update) the resulting clock rate on all trees. 
+|                        negative    - check if current rate is suitable, if not update it with minimal suitable value. At the end re-enforce (update) the resulting clock rate ONLY if clock rate was changed 
 |   @return             ERROR if clockRate can not be set up, NO_ERROR otherwise. 
 |
 --------------------------------------------------*/

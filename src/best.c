@@ -1678,17 +1678,18 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 			
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength   /igrvar, 1.0/igrvar, brlens[p->left->index ]);
-			    (*lnPriorRatio) -= LnProbGamma (oldRightLength  /igrvar, 1.0/igrvar, brlens[p->right->index]);
+                (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength   /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
+			    (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength  /igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
 			if (p->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
+                (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 
             if (p->left != NULL)
                 {
                 brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
-                if (brlens[p->left->index] <= 0.0 || brlens[p->right->index] <= 0.0)
+                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
+                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
@@ -1699,7 +1700,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             if (p->anc->anc != NULL)
                 {
                 brlens[p->index] = igrRate[p->index] * p->length;
-                if (brlens[p->index] <= 0.0)
+                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                     {
                     abortMove = YES;
                     return (NO_ERROR);
@@ -1709,11 +1710,18 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) += LnProbGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ]);
-			    (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index]);
+                (*lnPriorRatio) += LnProbTruncGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
+			    (*lnPriorRatio) += LnProbTruncGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
 			if (p->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index]);
+                (*lnPriorRatio) += LnProbTruncGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+
+            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical inaccuracies */
+            if (*lnPriorRatio != *lnPriorRatio)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
             }
 		}
 
