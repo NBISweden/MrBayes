@@ -5528,7 +5528,7 @@ int TreeProb (void)
 
 {
 
-	int			i, j, num, nInSets[5];
+	int			i, num, nInSets[5];
 	MrBFlt		treeProb, cumTreeProb;
     TreeCtr     **trees;
     Tree        *theTree;
