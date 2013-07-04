@@ -50,7 +50,7 @@ int      LongestLine (FILE *fp);
 void     LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var);
-void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst );
+void     MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst );
 int      NextTaxonInPartition (int currentTaxon, SafeLong *partition, int length);
 int      NumBits (SafeLong *x, int len);
 char    *MbPrintNum (MrBFlt num);

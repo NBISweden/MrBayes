@@ -1969,7 +1969,7 @@ int DoCharStat (void)
 		MrBayesPrint ("%s   %d character partitions defined:\n", spacer, numDefinedPartitions);
 	for (i=0; i<numDefinedPartitions; i++)
 		{
-		numDivs = GetNumPartDivisions (i+1);
+		numDivs = GetNumPartDivisions (i);
 		if (numDivs == 1)
 			MrBayesPrint ("%s      Partition %d (\"%s\") does not divide the characters\n", spacer, i+1, partitionNames[i]);
 		else
@@ -6064,12 +6064,12 @@ int DoPartition (void)
 	/* check that all characters are included */
 	for (i=0; i<numChar; i++)
 		{
+		/* MrBayesPrint ("%4d %4d \n", i, tempSet[i]); */
 		if (tempSet[i] == 0)
 			{
 			MrBayesPrint ("%s   Character %d not included in partition\n", spacer, i+1);
 			return (ERROR);
 			}
-		/*MrBayesPrint ("%4d %4d \n", i, tempSet[i]);*/
         }
 
 			
@@ -6097,10 +6097,6 @@ int DoPartition (void)
 		}
 
 	/* check if partition overruns data types */
-    /* partTypes[i] = -1 is already set in previouse loop
-	  for (i=0; i<numDivisions; i++)
-		partTypes[i] = -1;
-	*/
 	for (i=0; i<numChar; i++)
 		{
 		if (partTypes[ tempSet[i]-1 ] == -1)
@@ -9702,7 +9698,7 @@ int GetNumPartDivisions (int n)
     
     free (divFound);
 
-	return (numDivs);
+	return (numDivs + 1);
 	
 }
 

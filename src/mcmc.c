@@ -7909,6 +7909,10 @@ int DoMcmc (void)
 	/* Initialize conditional likelihoods and transition probabilities for chain (the working space). */
 	if (InitChainCondLikes () == ERROR)
 		goto errorExit;
+
+    /* Initialize adgamma conditional likelihoods */
+    if (InitAdGamma () == ERROR )
+        goto errorExit;
 	
 	/* Initialize invariable conditional likelihoods. */
 	if (InitInvCondLikes() == ERROR)
@@ -10279,20 +10283,20 @@ void FreeChainMemory (void)
         preLikeL = NULL;
 		memAllocs[ALLOC_PRELIKES] = NO;
 		}
-	if (memAllocs[ALLOC_RATEPROBS] == YES) /*alloc in InitAdGamma() not used */
+	if (memAllocs[ALLOC_RATEPROBS] == YES) /*alloc in InitAdGamma() */
 		{
 		free (rateProbSpace);
 		free (rateProbs);
         rateProbs = NULL;
 		memAllocs[ALLOC_RATEPROBS] = NO;
 		}
-	if (memAllocs[ALLOC_SITEJUMP] == YES) /*alloc in InitAdGamma() not used */
+	if (memAllocs[ALLOC_SITEJUMP] == YES) /*alloc in InitAdGamma() */
 		{
 		free (siteJump);
         siteJump = NULL;
 		memAllocs[ALLOC_SITEJUMP] = NO;
 		}
-	if (memAllocs[ALLOC_MARKOVTIS] == YES)  /*alloc in InitAdGamma() not used */
+	if (memAllocs[ALLOC_MARKOVTIS] == YES)  /*alloc in InitAdGamma() */
 		{
 		for (i=0; i<MAX_SMALL_JUMP; i++)
 			if (markovTi[i] != NULL)
@@ -11342,7 +11346,8 @@ int InitAugmentedModels (void)
 |       and scaler arrays; (2) allocate space for cond like, tiprob and
 |		scaler arrays; (3) allocate and set node indices pointing to
 |       cond like and scaler arrays; (4) initialize tip cond likes;
-|		(5) allocate space for precalculated cond likes;
+|		(5) allocate space for precalculated cond likes; (6) allocate
+|       space for adgamma probs, if used.
 |
 -------------------------------------------------------------------------*/
 int InitChainCondLikes (void)
@@ -12054,7 +12059,7 @@ int InitChainCondLikes (void)
 		preLikeR = preLikeL + j;
 		preLikeA = preLikeR + j;
 		}
-	
+
     return NO_ERROR;
 }
 

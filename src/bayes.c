@@ -169,8 +169,6 @@ int main (int argc, char *argv[])
 	/*mtrace();*/
 	/* calculate the size of a long - used by bit manipulation functions */
 	nBitsInALong = sizeof(SafeLong) * 8;
-	if (nBitsInALong > 32) /* Do not use more than 32 bits until we    */
-		nBitsInALong = 32; /* understand how 64-bit longs are handled. */
     for (i=0; i<nBitsInALong; i++)
         SetBit(i, &safeLongWithAllBitsSet);
 
