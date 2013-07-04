@@ -335,6 +335,7 @@ void    GetStamp (void);
 void    GetSwappers (int *swapA, int *swapB, int curGen);
 void    GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp);
 MrBFlt	GibbsSampleGamma (int chain, int division, SafeLong *seed);
+int     InitAdGamma(void);
 int     InitChainCondLikes (void);
 int     InitClockBrlens (Tree *t);
 int     InitEigenSystemInfo (ModelInfo *m);
@@ -15434,8 +15435,8 @@ MrBFlt LogPrior (int chain)
 			if (p->paramId == OMEGA_DIR)
 				{
 				alphaDir = mp->omegaDir;
-				newProp[0] = st[0];
-				// newProp[0] = st[0] / (st[0] + 1.0);
+				/* convert from ratio parameterization to simplex representation */
+				newProp[0] = st[0] / (st[0] + 1.0);
 				newProp[1] = 1.0 - newProp[0];
                 sum = 0.0;
                 for (i=0; i<2; i++)
