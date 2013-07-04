@@ -15357,8 +15357,9 @@ MrBFlt LogPrior (int chain)
 			if (p->paramId == TRATIO_DIR)
 				{
 				alphaDir = mp->tRatioDir;
-                newProp[0] =  st[0];
-				// newProp[0] =  st[0] / (st[0] + 1.0);
+                /* we convert here from the ratio parameterization used in the parameter
+                   struct to the simplex parameterization used for the prior */
+                newProp[0] =  st[0] / (st[0] + 1.0);
 				newProp[1] =  (1.0 - newProp[0]);
 				x = 0.0;
 				for (i=0; i<2; i++)
