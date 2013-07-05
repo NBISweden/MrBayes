@@ -12,14 +12,15 @@ How to compile MrBayes from source
 Pre-requirements:
 
 You will need the following software to build MrBayes:
-* gcc (or other C++ compiler)
+* gcc (or other C++ compiler) (version 4.6 or later)
 * autotools (autoconf, automake, etc)
 * Optional: MPI compiler and library
 * Optional: Beagle library
 
 Compilation: 
-To compile MrBayes in UNIX-like environment, first navigate to the folder
-containing the source code. Then execute the following commands in your terminal:
+For instructions on how to compile MrBayes on a Mac, see below. To compile MrBayes
+in other UNIX-like environments, first navigate to the folder containing the source
+code. Then execute the following commands in your terminal:
 
 > autoconf
 > ./configure 
@@ -105,35 +106,72 @@ To stop the output, simply press ctrl-C (this will stop the output from the tail
 command, it will not stop the MrBayes run).
 
 
-Troubleshooting compilation problems
-====================================
+Compiling on a Mac
+=================
 
-Problem: The compilation process hangs on model.c when using compiler that comes with
-developer kit on MacOSX 10.7.X Lion or later (using gcc version 4.2).
+The standard modified gcc version shipping with Xcode is too old to compile
+MrBayes (see gcc version requirement above). Also, Xcode no longer ships
+with autotools, including autoconf that is used by MrBayes and most other
+open source Unix software packages. We recommend using MacPorts
+(macports.org) to install autoconf gcc, openmpi and other open-source tools.
 
-Solution: Install a newer compiler. For example you can use MacPorts (macports.org) 
-to install gcc, openmpi and other open-source tools.
-
-To install gcc version 4.6, which does not hang on model.c, use the following
+To install gcc version 4.7, which does not hang on model.c, use the following
 command after having installed MacPorts:
 
-> sudo port install gcc46
+> sudo port install gcc47
 
-Check the web for the latest version of gcc. To install openmpi using MacPorts,
-type:
+Check the web for the latest version of gcc. MacPorts does not allow you to
+just say gcc, you need to specify the version number you want.
+
+To install autoconf, use:
+
+> sudo port install autoconf
+
+To install openmpi, type:
 
 > sudo port install openmpi
 
-Again, installing openmpi will give you a compiler which is newer than the one
-bundled with Apple's Developer Tools. It will not hang while compiling mrbayes.
-Openmpi installed by the command above will be installed into /opt/local.
-Unfortunately, it will NOT install the required "mpicc", but "openmpicc" instead.
-That means that the default configuration of MrBayes will not work.
+This will install the most recent openmpi version but the install requires
+a little bit of afterwork for your mpi environment to work as expected.
+Specifically, you want your mpicc and mpirun commands to link to the openmpi
+version you just installed, which is in /opt/local/ and uses the openmpicc
+and openmpirun commands.
 
-Fix this after the installation by creating a symbolic link to openmpicc:
+Typically, your shell will be looking for at least mpirun in /usr/local/bin.
+Therefore, the best fix is to create symbolic links to openmpicc and
+openmpirun in that directory. Do that by typing:
 
->cd /opt/local/bin
->sudo ln -s openmpicc mpicc
+> sudo ln -s /opt/local/bin/openmpicc  /usr/local/bin/mpicc
+> sudo ln -s /opt/local/bin/openmpirun /usr/local/bin/mpirun
+
+You can check that the recently installed openmpicc is called by the mpicc
+command by typing:
+
+> which mpicc
+
+and making sure the output is
+
+/opt/local/bin/mpicc
+
+Even if you pass this test, you may run into problems if the environment
+variables point your shell to a different directory. This appears to be the
+case for mpirun in the default bash shell on the Mac: issuing the mpirun
+command will look for mpirun in /usr/local/bin and not in your path.
+
+Once you have installed autoconf, a recent version of gcc and openmpi you
+can install the different versions of MrBayes as in a standard Unix
+environment (see above).
+
+
+Troubleshooting compilation problems
+====================================
+
+Problem: The compilation process hangs on model.c. For instance, this happens
+when using the compiler that currently ships with Xcode (in the command line
+tools).
+
+Solution: Install a newer compiler. For instructions on how to install a newer
+gcc version and the other tools for Mac from MacPorts, see above.
 
 
 Further references

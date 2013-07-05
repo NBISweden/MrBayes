@@ -36349,7 +36349,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
 							else
 								{
 								/* treat likeI as if 0.0, that is, ignore it completely */
-								like = like;
+								like = like + 0.0;
 								}
 							}
 						else	/* take both likeI and like into account */
