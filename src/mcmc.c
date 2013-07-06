@@ -9241,13 +9241,13 @@ int DoMcmcParm (char *parmName, char *tkn)
 						return (ERROR);
 						}
 					else
-						strcpy(chainParams.startTree, tempStr);
-					}
+                        strcpy(chainParams.startTree, tempStr);
+ 					}
 				else
 					{
-					MrBayesPrint ("%s   Invalid 'Starttree' argument\n", spacer);
-					free(tempStr);
-					return (ERROR);
+                    MrBayesPrint ("%s   Invalid 'Starttree' argument '%s'. This is a bug -- please report.\n", spacer, tempStr);
+                    free(tempStr);
+                    return (ERROR);
 					}
 				MrBayesPrint ("%s   Setting 'Starttree' to \"%s\"\n", spacer, chainParams.startTree);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);

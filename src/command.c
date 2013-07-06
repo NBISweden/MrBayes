@@ -6224,7 +6224,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 			{
 			if (IsBitSet (i, charSet[index]) == YES)
 				tempSet[i] = whichPartition + 1;
-			}
+            }
 		fromI = toJ = everyK = -1;
 
 		expecting  = Expecting(ALPHA);

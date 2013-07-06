@@ -14118,9 +14118,9 @@ int LargestMovableSubtree(Param *treeParam)
     /* This is difficult because we cannot rely on the tree being initialized.
        We need to retrieve the bitfields ourselves and figure out what they mean. */
     nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
-    subtreePartition = (BitsLong *) SafeCalloc(3, sizeof(BitsLong));
+    subtreePartition = (BitsLong *) SafeCalloc(3*nLongsNeeded, sizeof(BitsLong));
     constraintPartition = (BitsLong **) SafeCalloc (numDefinedConstraints+1, sizeof(BitsLong *));
-    constraintPartition[0] = (BitsLong *) SafeCalloc (nLongsNeeded*(numDefinedConstraints+1), sizeof(BitsLong));
+    constraintPartition[0] = (BitsLong *) SafeCalloc ((numDefinedConstraints+1)*nLongsNeeded, sizeof(BitsLong));
     for (i=1; i<numDefinedConstraints+1; i++)
         constraintPartition[i] = constraintPartition[i-1] + nLongsNeeded;
     testPartition = subtreePartition + nLongsNeeded;

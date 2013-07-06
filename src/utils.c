@@ -91,11 +91,11 @@ void AlignedSafeFree (void **ptr)
 /* ClearBit: Clear one bit in a bitfield */
 void ClearBit (int i, BitsLong *bits)
 {
-	BitsLong		x;
+	BitsLong		x, bitsLongOne=1;
 
 	bits += i / nBitsInALong;
 
-	x = 1 << (i % nBitsInALong);
+	x = bitsLongOne << (i % nBitsInALong);
     x ^= bitsLongWithAllBitsSet;
 
 	(*bits) &= x;
@@ -289,14 +289,14 @@ int FirstTaxonInPartition (BitsLong *partition, int length)
 {
 
     int         i, j, nBits, taxon;
-    BitsLong    x;
+    BitsLong    x, bitsLongOne=1;
 
     nBits = sizeof(BitsLong) * 8;
 
     taxon = 0;
     for (i=0; i<length; i++)
 		{
-		x = 1;
+		x = bitsLongOne;
 		for (j=0; j<nBits; j++)
 			{
 			if (partition[i] & x)
@@ -315,13 +315,13 @@ int FirstTaxonInPartition (BitsLong *partition, int length)
 
 
 /* FirstTree: Return file position of first tree after current position */
-BitsLong FirstTree (FILE *fp, char *lineBuf, int longestLine)
+long FirstTree (FILE *fp, char *lineBuf, int longestLine)
 {
-	BitsLong	firstTree;
-	char		*word;
+	long    firstTree;
+	char	*word;
 	
 	do {
-		firstTree = (int) ftell(fp);
+		firstTree = ftell(fp);
 		if ((fgets (lineBuf, longestLine, fp)) == NULL)
 			return 0;
 		word = strtok (lineBuf, " ");
@@ -374,10 +374,10 @@ void FlipOneBit (int n, BitsLong *p)
 
 {
 
-	BitsLong		x;
+	BitsLong		x, bitsLongOne=1;
 
 	p += n/nBitsInALong;
-	x = 1 << (n % nBitsInALong);
+	x = bitsLongOne << (n % nBitsInALong);
 	(*p) ^= x;
 
 }
@@ -672,11 +672,11 @@ int IsBitSet (int i, BitsLong *bits)
 
 {
 
-	BitsLong		x;
+	BitsLong		x, bitsLongOne=1;
 
 	bits += i / nBitsInALong;
 
-	x = 1 << (i % nBitsInALong);
+	x = bitsLongOne << (i % nBitsInALong);
 
 	if ((*bits) & x)
 		return (YES);
@@ -795,9 +795,9 @@ int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField
 
 
 /* LastBlock: Return file position of last block in file */
-BitsLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
+long LastBlock (FILE *fp, char *lineBuf, int longestLine)
 {
-	BitsLong	lastBlock;
+	long	lastBlock;
 	char	*word;
 	
 	lastBlock = 0L;
@@ -807,7 +807,7 @@ BitsLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
 		{
 		word = strtok (lineBuf, " ");
 		if (strcmp (word, "begin") == 0)
-			lastBlock = (int) ftell (fp);
+			lastBlock = ftell (fp);
 		}
 
 	return lastBlock;
@@ -1159,11 +1159,11 @@ void MrBayesPrintf (FILE *f, char *format, ...)
 int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
 {
     int         i, j, taxon;
-    BitsLong    x;
+    BitsLong    x, bitsLongOne=1;
 
     taxon = currentTaxon + 1;
     i = taxon / nBitsInALong;
-    x = (1 << taxon % nBitsInALong);
+    x = (bitsLongOne << taxon % nBitsInALong);
     for (j=taxon%nBitsInALong; j<nBitsInALong; j++)
         {
         if (partition[i] & x)
@@ -1603,11 +1603,11 @@ char *SafeStrcpy (char **target, const char *source)
 /* SetBit: Set a particular bit in a series of longs */
 void SetBit (int i, BitsLong *bits)
 {
-	BitsLong		x;
+	BitsLong		x, bitsLongOne=1;
 
 	bits += i / nBitsInALong;
 
-	x = 1 << (i % nBitsInALong);
+	x = bitsLongOne << (i % nBitsInALong);
 
 	(*bits) |= x;
 }

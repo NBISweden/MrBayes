@@ -30,16 +30,20 @@
 
 //#define SSE_ENABLED
 
-/* Previous problems with bitfield operations are presumably due to the use of signed ints or longs.
-   Some compilers generate code that behaves differently when bit operations are applied to signed
-   ints or signed longs. Presumably, therefore, all such problems will be solved by using unsigned
-   longs, which should also be a good container for bitfields.
-
-   This change has not been introduced before because of the reliance on the random number generator
-   on a signed long, and both this and the bitfield variables were defined as BitsLong.
+/* Previous problems with bitfield operations may have been due to several things. One possibility
+   is that some compilers treat signed ints and longs differently from unsigned ints and longs.
+   Another possibility is that the bitshift operations have been performed on an integer constant
+   that has been interpreted as a signed int and not as a signed long or even better an unsigned
+   long.
+ 
+   Both of these problems are fixed now by using unsigned longs for the bitfield operations and
+   by setting the "1" value needed by some bitfield functions using a variable defined as the same
+   type as the bitfield containers themselves. Furthermore, I have separated out the cases where
+   a signed long is required or more appropriate than the same type used by the bitfield functions.
  
    FR 2013-07-06
  */
+
 typedef unsigned long BitsLong;
 typedef long RandLong;
 
