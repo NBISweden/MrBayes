@@ -27,21 +27,21 @@
 #endif
 #endif
 
-/* found out that mrbayes crashes on 64 bit platform
-   especially in sumt function. If every long is substituted with
-   an int, it works. I'm going to define a SafeLong and an unsigned
-   SafeLong for 64 bit platforms...
-   Davide Cittaro - daweonline(at)gmail.com
-*/
 
 //#define SSE_ENABLED
 
-/* This is a configuration option from the configure script. */
-#ifdef _64BIT
-typedef int SafeLong;
-#else
-typedef long SafeLong;
-#endif
+/* Previous problems with bitfield operations are presumably due to the use of signed ints or longs.
+   Some compilers generate code that behaves differently when bit operations are applied to signed
+   ints or signed longs. Presumably, therefore, all such problems will be solved by using unsigned
+   longs, which should also be a good container for bitfields.
+
+   This change has not been introduced before because of the reliance on the random number generator
+   on a signed long, and both this and the bitfield variables were defined as BitsLong.
+ 
+   FR 2013-07-06
+ */
+typedef unsigned long BitsLong;
+typedef long RandLong;
 
 
 typedef	double MrBFlt;		/* double used for parameter values and generally for floating point values, if set to float MPI would not work becouse of use MPI_DOUBLE*/
@@ -477,7 +477,7 @@ typedef struct node
     int             isLocked;               /*!< is node locked?                            */
     int             lockID;                 /*!< id of lock                                 */
     int             isDated;                /*!< is node dated (calibrated)?                */
-	SafeLong 		*partition;             /*!< pointer to bitfield describing splits      */
+	BitsLong 		*partition;             /*!< pointer to bitfield describing splits      */
 	MrBFlt			length;                 /*!< length of pending branch                   */
     MrBFlt          nodeDepth;              /*!< node depth (height)                        */
     MrBFlt          age;                    /*!< age of node                                */
@@ -507,8 +507,8 @@ typedef struct
 	TreeNode		**intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
 	TreeNode		*root;              /*!< pointer to root (lower root in rooted trees) */
 	TreeNode		*nodes;             /*!< array containing the nodes                   */
-	SafeLong		*bitsets;           /*!< pointer to bitsets describing splits         */
-	SafeLong		*flags;             /*!< pointer to cond like flags                   */
+	BitsLong		*bitsets;           /*!< pointer to bitsets describing splits         */
+	BitsLong		*flags;             /*!< pointer to cond like flags                   */
     int             fromUserTree;       /*!< YES is set for the trees whoes branch lengthes are set from user tree(as start tree or fix branch length prior ), NO otherwise */       
 	}
 	Tree;
@@ -530,7 +530,7 @@ typedef struct pNode
 	MrBFlt			depth;              /*!< depth (height) of node                       */
     MrBFlt          age;                /*!< age of node                                  */
     MrBFlt          support, f;         /*!< scratch variables                            */
-	SafeLong		*partition;         /*!< pointer to partition (split) bitset          */
+	BitsLong		*partition;         /*!< pointer to partition (split) bitset          */
 	Calibration		*calibration;       /*!< pointer to dating of node                    */
 	}
 	PolyNode;
@@ -547,7 +547,7 @@ typedef struct
 	PolyNode		**intDownPass;       /*!< downpass array over interior nodes          */
 	PolyNode		*root;               /*!< pointer to root (lower for rooted trees     */
 	PolyNode		*nodes;              /*!< array holding the tree nodes                */  
-	SafeLong		*bitsets;            /*!< bits describing partitions (splits)         */
+	BitsLong		*bitsets;            /*!< bits describing partitions (splits)         */
 	int				nBSets;              /*!< number of effective branch length sets      */
     int             nESets;              /*!< number of breakpoint rate sets              */
     char            **bSetName;          /*!< names of effective branch length sets       */
@@ -781,7 +781,7 @@ typedef struct s_launch_struct
 
 
 /* typedef for a MoveFxn */
-typedef int (MoveFxn)(Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
+typedef int (MoveFxn)(Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
 /* typedef for an ApplicFxn */
 typedef int (ApplicFxn)(Param *param);
@@ -1182,7 +1182,7 @@ typedef struct modelinfo
 	
     /* Variables for parsimony sets and parsimony calculations */
     MrBFlt		parsTreeLength[MAX_CHAINS*2];   /* parsimony tree lengths for chains        */
-    SafeLong    **parsSets;                 /* parsimony sets                               */
+    BitsLong    **parsSets;                 /* parsimony sets                               */
     int         numParsSets;                /* number of parsimony sets                     */
     CLFlt       *parsNodeLens;              /* parsimony node lengths                       */
     int         numParsNodeLens;            /* number of parsimony node lengths             */
@@ -1314,7 +1314,7 @@ typedef struct sumt
     char      **eSetName;              /* name of event sets                            */
     int         popSizeSet;            /* do sumt trees have population size set?       */
     char       *popSizeSetName;        /* name of population size set                   */
-    int         SafeLongsNeeded;       /* number of safe longs needed for taxon bits    */
+    int         BitsLongsNeeded;       /* number of safe longs needed for taxon bits    */
     int         runId;                 /* id of run being processed                     */
     int         numTaxa;               /* number of sumt taxa                           */
     char      **taxaNames;             /* names of sumt taxa                            */
@@ -1376,12 +1376,12 @@ typedef struct
 
 typedef struct doublet
 	{
-	SafeLong	first, second;
+	BitsLong	first, second;
 	} Doublet;
 
 typedef struct matrix
 	{
-	SafeLong *origin;
+	BitsLong *origin;
 	int rowSize;
 	int nRows;
 	int column;

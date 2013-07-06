@@ -171,7 +171,7 @@ int      SetPartition (int part);
 int      SetSpeciespartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
-void     WhatVariableExp (SafeLong exp, char *st);
+void     WhatVariableExp (BitsLong exp, char *st);
 char     WhichAA (int x);
 MrBFlt   WhichCont (int x);
 char     WhichRes (int x);
@@ -184,19 +184,19 @@ int				autoClose;             /* autoclose                                     *
 int 			autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes   */
 Calibration		*calibrationPtr;       /* ptr to calibration being set                  */
 CharInformation *charInfo;             /* holds critical information about characters   */
-SafeLong        **charSet;             /* holds information about defined charsets      */
+BitsLong        **charSet;             /* holds information about defined charsets      */
 char			**charSetNames;        /* holds names of character sets                 */
 Comptree		comptreeParams;        /* holds parameters for comparetree command      */
 char			**constraintNames;     /* holds names of constraints               */
 int				dataType;              /* type of data                                  */
 Calibration     defaultCalibration;    /* default calibration                           */
-SafeLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints                                                   */
-SafeLong        **definedConstraintTwo;/* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)             */
-SafeLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
-SafeLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
+BitsLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints                                                   */
+BitsLong        **definedConstraintTwo;/* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)             */
+BitsLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
+BitsLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
                                              /* taxa are removed and for NEGATIVE constraint it contains complements of definedConstraintPruned     */
 int				echoMB;				   /* flag used by Manual to prevent echoing        */
-SafeLong        expecting;             /* variable denoting expected token type         */
+BitsLong        expecting;             /* variable denoting expected token type         */
 int				foundNewLine;          /* whether a new line has been found             */
 int 			inComment;             /* flag for whether input stream is commented    */
 int				inComparetreeCommand;  /* flag set whenever you enter comparetree cmd   */
@@ -254,7 +254,7 @@ Sumt			sumtParams;            /* holds parameters for sumt command             *
 Sumss			sumssParams;           /* holds parameters for sumss command            */
 TaxaInformation *taxaInfo;             /* holds critical information about taxa         */
 char			**taxaNames;           /* holds name of taxa                            */
-SafeLong        **taxaSet;             /* holds information about defined taxasets      */
+BitsLong        **taxaSet;             /* holds information about defined taxasets      */
 char			**taxaSetNames;        /* holds names of taxa sets                      */
 int             *tempActiveConstraints;/* temporarily holds active constraints size allcated          */
 enum ConstraintType  *definedConstraintsType;/* Store type of constraint                     */
@@ -2642,7 +2642,7 @@ int DoConstraint (void)
         }
     else
         {
-        definedConstraintTwo = (SafeLong **) SafeRealloc ((void *)(definedConstraintTwo), (size_t)((numDefinedConstraints+1)*sizeof(SafeLong *)));
+        definedConstraintTwo = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwo), (size_t)((numDefinedConstraints+1)*sizeof(BitsLong *)));
         if ( definedConstraintTwo==NULL )
             return ERROR;
         definedConstraintTwo[numDefinedConstraints]=NULL;
@@ -2679,13 +2679,13 @@ int DoConstraint (void)
         return ERROR;
     definedConstraintsType[numDefinedConstraints-1] = consrtainType;
 
-    definedConstraintPruned = (SafeLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)((numDefinedConstraints)*sizeof(SafeLong *)));
+    definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
     if ( definedConstraintPruned==NULL )
         return ERROR;
     definedConstraintPruned[numDefinedConstraints-1]=NULL;
 
 
-    definedConstraintTwoPruned = (SafeLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(SafeLong *)));
+    definedConstraintTwoPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
     if ( definedConstraintTwoPruned==NULL )
         return ERROR;
     definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
@@ -8467,7 +8467,7 @@ int DoTreeParm (char *parmName, char *tkn)
 	int					i, tempInt, index;
 	MrBFlt				tempD;
 	char				tempName[100];
-    static SafeLong     lastExpecting; /* keep track of what we expected before a comment, in case we want to skip a comment */
+    static BitsLong     lastExpecting; /* keep track of what we expected before a comment, in case we want to skip a comment */
 	static char 		*tempNameString=NULL; /* Contains multiple tokens which form name string of param set*/
 	static int			foundAmpersand, foundColon, foundComment, foundE, foundB, foundN, foundFirst,
                         foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
@@ -9310,13 +9310,13 @@ int DoVersion (void)
 
 
 
-SafeLong Expecting (int y)
+BitsLong Expecting (int y)
 
 {
 
-	SafeLong x;
+	BitsLong x;
 	
-	x = (SafeLong)pow(2.0, (MrBFlt)y);
+	x = (BitsLong)pow(2.0, (MrBFlt)y);
 	
 	return (x);
 
@@ -15229,7 +15229,7 @@ int StateCode_Std (int n)
 
 
 
-void WhatVariableExp (SafeLong exp, char *st)
+void WhatVariableExp (BitsLong exp, char *st)
 
 {
 

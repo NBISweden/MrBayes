@@ -85,14 +85,19 @@ void      GetPossibleRestrictionSites (int resSiteCode, int *sites);
 int       GetUserTreeFromName (int *index, char *treeName);
 void	  InitializeMcmcTrees (Param *p);
 int       IsApplicable (Param *param);
+int       IsApplicable_FiveTaxaOrMore (Param *param);
+int       IsApplicable_FourTaxaOrMore (Param *param);
+int       IsApplicable_ThreeTaxaOrMore (Param *param);
 int       IsApplicableTreeAgeMove (Param *param);
 int		  IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
+int       LargestMovableSubtree(Param *treeParam);
 int		  NumActiveParts (void);
+int       NumInformativeHardConstraints (ModelParams *mp);
 int       NumNonExcludedChar (void);
 int		  NumStates (int part);
 int	      PrintCompMatrix (void);
 int	      PrintMatrix (void);
-int       ProcessStdChars (SafeLong *seed);
+int       ProcessStdChars (RandLong *seed);
 int		  SetModelParams (void);
 int       SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt);
 int       SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
@@ -185,7 +190,7 @@ int AddDummyChars (void)
 	int			i, j, k, d, numIncompatible, numDeleted, numStdChars, oldRowSize,
 				newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
 				isCompat, *tempChar, numIncompatibleChars;
-	SafeLong	*tempMatrix;
+	BitsLong	*tempMatrix;
 	CLFlt		*tempSitesOfPat;
 	ModelInfo	*m;
 	ModelParams	*mp;
@@ -250,7 +255,7 @@ int AddDummyChars (void)
 	numCompressedChars += numDummyChars;
 
 	/* allocate space for new data */
-	tempMatrix = (SafeLong *) SafeCalloc (numLocalTaxa * newRowSize, sizeof(SafeLong));
+	tempMatrix = (BitsLong *) SafeCalloc (numLocalTaxa * newRowSize, sizeof(BitsLong));
 	tempSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
 	tempChar = (int *) SafeCalloc (compMatrixRowSize, sizeof(int));
 	if (!tempMatrix || !tempSitesOfPat || !tempChar)
@@ -2299,124 +2304,6 @@ int CheckExpandedModels (void)
 
 
 
-/*----------------------------------------------------------------------
-|
-|   InitializeChainTrees: 'Constructor' for chain trees
-|
------------------------------------------------------------------------*/
-int InitializeChainTrees (Param *p, int from, int to, int isRooted)
-
-{
-
-	int     i, st, isCalibrated, isClock, nTaxa, numActiveHardConstraints=0;
-	Tree	*tree, **treeHandle;
-	Model	*mp;
-	
-	mp = &modelParams[p->relParts[0]];
-
-    if (p->paramType == P_SPECIESTREE)
-        nTaxa = numSpecies;
-    else
-        nTaxa = numLocalTaxa;
-
-	/* figure out whether the trees are clock */
-	if (!strcmp(mp->brlensPr,"Clock"))
-		isClock = YES;
-	else
-		isClock = NO;
-
-	/* figure out whether the trees are calibrated */
-	if (!strcmp(mp->brlensPr,"Clock") && (strcmp(mp->nodeAgePr,"Calibrated") == 0 || strcmp(mp->clockRatePr,"Fixed") != 0 ||
-        (strcmp(mp->clockRatePr, "Fixed") == 0 && AreDoublesEqual(mp->clockRateFix, 1.0, 1E-6) == NO)))
-		isCalibrated = YES;
-	else
-		isCalibrated = NO;
-
-    if (p->checkConstraints == YES)
-		{
-
-        for (i=0; i<numDefinedConstraints; i++)
-		    {
-		    if (mp->activeConstraints[i] == YES && definedConstraintsType[i] == HARD )
-			    numActiveHardConstraints++;
-            }
-		}
-
-	/* allocate space for and construct the trees */
-    /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
-	for (i=from; i<to; i++)
-		{
-		treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
-		if (*treeHandle)
-            free(*treeHandle);
-		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
-			{
-			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
-			return (ERROR);
-			}
-		treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
-        if (*treeHandle)
-            free(*treeHandle);
-		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
-			{
-			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
-			return (ERROR);
-			}
-		}
-
-	/* initialize the trees */
-	for (i=from; i<to; i++)
-		{
-		for (st=0; st<2; st++)
-			{
-			tree = GetTree (p, i, st);
-			if (numTrees > 1)
-				sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+1);
-			else /* if (numTrees == 1) */
-				sprintf (tree->name, "mcmc.tree_%d", i+1);
-            tree->nRelParts = p->nRelParts;
-			tree->relParts = p->relParts;
-            tree->isRooted = isRooted;
-			tree->isClock = isClock;
-			tree->isCalibrated = isCalibrated;
-            if (p->paramType == P_SPECIESTREE)
-                {
-                tree->nNodes = 2*numSpecies;
-                tree->nIntNodes = numSpecies - 1;
-                }
-            else if (tree->isRooted == YES)
-                {
-                tree->nNodes = 2*numLocalTaxa;
-                tree->nIntNodes = numLocalTaxa - 1;
-                }
-            else /* if (tree->isRooted == NO) */
-                {
-                tree->nNodes = 2*numLocalTaxa - 2;
-                tree->nIntNodes = numLocalTaxa - 2;
-                }
-			if (p->checkConstraints == YES)
-				{
-				tree->checkConstraints = YES;
-				tree->nConstraints = mp->numActiveConstraints;
-				tree->nLocks = numActiveHardConstraints;
-				tree->constraints = mp->activeConstraints;
-				}
-			else
-				{
-				tree->checkConstraints = NO;
-				tree->nConstraints = tree->nLocks = 0;
-				tree->constraints = NULL;
-				}
-			}
-		}
-
-	return (NO_ERROR);
-}
-
-
-
-
-
 /*-----------------------------------------------------------
 |
 |   CompressData: compress original data matrix
@@ -2428,7 +2315,7 @@ int CompressData (void)
 
 	int				a, c, d, i, j, k, t, col[3], isSame, newRow, newColumn,
 					*isTaken, *tempSitesOfPat, *tempChar;
-	SafeLong        *tempMatrix;
+	BitsLong        *tempMatrix;
 	ModelInfo		*m;
 	ModelParams		*mp;
 
@@ -2480,7 +2367,7 @@ int CompressData (void)
 	/* allocate space for temporary matrix, tempSitesOfPat,             */
 	/* vector keeping track of whether a character has been compressed, */
 	/* and vector indexing first original char for each compressed char */
-	tempMatrix = (SafeLong *) SafeCalloc (numLocalTaxa * numLocalChar, sizeof(SafeLong));
+	tempMatrix = (BitsLong *) SafeCalloc (numLocalTaxa * numLocalChar, sizeof(BitsLong));
 	tempSitesOfPat = (int *) SafeCalloc (numLocalChar, sizeof(int));
 	isTaken = (int *) SafeCalloc (numChar, sizeof(int));
 	tempChar = (int *) SafeCalloc (numLocalChar, sizeof(int));
@@ -2668,10 +2555,10 @@ int CompressData (void)
         compMatrix = NULL;
         memAllocs[ALLOC_COMPMATRIX] = NO;
 		}
-	compMatrix = (SafeLong *) SafeCalloc (compMatrixRowSize * numLocalTaxa, sizeof(SafeLong));
+	compMatrix = (BitsLong *) SafeCalloc (compMatrixRowSize * numLocalTaxa, sizeof(BitsLong));
 	if (!compMatrix)
 		{
-		MrBayesPrint ("%s   Problem allocating compMatrix (%d)\n", spacer, compMatrixRowSize * numLocalTaxa * sizeof(SafeLong));
+		MrBayesPrint ("%s   Problem allocating compMatrix (%d)\n", spacer, compMatrixRowSize * numLocalTaxa * sizeof(BitsLong));
 		goto errorExit;
 		}
 	memAllocs[ALLOC_COMPMATRIX] = YES;
@@ -9498,7 +9385,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 							return (ERROR);
 							}
                         FillTopologySubParams (param, chainId, 0, &globalSeed);
-                        //MrBayesPrint ("%s   Branch lengths and relaxed clock subparamiters of a paramiter '%s' are reset.\n", spacer, param->name);
+                        //MrBayesPrint ("%s   Branch lengths and relaxed clock subparameters of a parameter '%s' are reset.\n", spacer, param->name);
                         if (param->paramId == TOPOLOGY_SPECIESTREE)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
                         assert (IsTreeConsistent(param, chainId, 0) == YES);
@@ -10199,7 +10086,7 @@ int DoShowParams (void)
 |	FillNormalParams: Allocate and fill in non-tree parameters
 |
 -------------------------------------------------------------------------*/
-int FillNormalParams (SafeLong *seed, int fromChain, int toChain)
+int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 
 {
 
@@ -10855,7 +10742,7 @@ int FillRelPartsString (Param *p, char **relPartString)
 
 
 /* FillTopologySubParams: Fill subparams (brlens) for a topology */
-int FillTopologySubParams (Param *param, int chn, int state, SafeLong *seed)
+int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
 {
 	int		    i,returnVal;
 	Tree	    *tree, *tree1;
@@ -11035,7 +10922,7 @@ int PruneConstraintPartitions()
 
     for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
 		{
-	    definedConstraintPruned[constraintId] = (SafeLong *) SafeRealloc ((void *)definedConstraintPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+	    definedConstraintPruned[constraintId] = (BitsLong *) SafeRealloc ((void *)definedConstraintPruned[constraintId], nLongsNeeded*sizeof(BitsLong));
 	    if (!definedConstraintPruned[constraintId])
 		    {
 		    MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
@@ -11057,7 +10944,7 @@ int PruneConstraintPartitions()
 
         if (definedConstraintsType[constraintId] == PARTIAL )
             {
-        	definedConstraintTwoPruned[constraintId] = (SafeLong *) SafeRealloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+        	definedConstraintTwoPruned[constraintId] = (BitsLong *) SafeRealloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(BitsLong));
 	        if (!definedConstraintTwoPruned[constraintId])
 		        {
 		        MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
@@ -11079,7 +10966,7 @@ int PruneConstraintPartitions()
         else if (definedConstraintsType[constraintId] == NEGATIVE || (definedConstraintsType[constraintId] == HARD) )
             {
             /* Here we create definedConstraintTwoPruned[constraintId] which is complemente of definedConstraintPruned[constraintId] */
-            definedConstraintTwoPruned[constraintId] = (SafeLong *) SafeRealloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(SafeLong));
+            definedConstraintTwoPruned[constraintId] = (BitsLong *) SafeRealloc ((void *)definedConstraintTwoPruned[constraintId], nLongsNeeded*sizeof(BitsLong));
 	        if (!definedConstraintTwoPruned[constraintId])
 		        {
 		        MrBayesPrint ("%s   Problems allocating constraintPartition in PruneConstraintPartitions", spacer);
@@ -11113,7 +11000,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather coresonding set(first/second) of partial constraint has to be checked*/
 #if ! defined (NDEBUG)
-    int 	locs_count=0;
+    int         locks_count=0;
 #endif
 
     if( t->checkConstraints == NO)
@@ -11143,14 +11030,14 @@ int DoesTreeSatisfyConstraints(Tree *t){
         		}
         	else
         		{
-        		locs_count++;
+        		locks_count++;
         		}
         	}
         }
 
-    if(locs_count != t->nLocks)
+    if(locks_count != t->nLocks)
     	{
-    	printf("DEBUG ERROR: lock_count:%d should be lock_count:%d\n", locs_count, t->nLocks);
+    	printf("DEBUG ERROR: locks_count:%d should be locks_count:%d\n", locks_count, t->nLocks);
     	return ABORT;
     	}
 #endif
@@ -11290,7 +11177,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
 |   to be filled.
 |
 ------------------------------------------------------------------*/
-int FillTreeParams (SafeLong *seed, int fromChain, int toChain)
+int FillTreeParams (RandLong *seed, int fromChain, int toChain)
 
 {
 
@@ -12156,6 +12043,127 @@ int GetUserTreeFromName (int *index, char *treeName)
 
 
 
+/*----------------------------------------------------------------------
+ |
+ |   InitializeChainTrees: 'Constructor' for chain trees
+ |
+ -----------------------------------------------------------------------*/
+int InitializeChainTrees (Param *p, int from, int to, int isRooted)
+
+{
+    
+	int     i, st, isCalibrated, isClock, nTaxa, numActiveHardConstraints=0;
+	Tree	*tree, **treeHandle;
+	Model	*mp;
+	
+	mp = &modelParams[p->relParts[0]];
+    
+    if (p->paramType == P_SPECIESTREE)
+        nTaxa = numSpecies;
+    else
+        nTaxa = numLocalTaxa;
+    
+	/* figure out whether the trees are clock */
+	if (!strcmp(mp->brlensPr,"Clock"))
+		isClock = YES;
+	else
+		isClock = NO;
+    
+	/* figure out whether the trees are calibrated */
+	if (!strcmp(mp->brlensPr,"Clock") && (strcmp(mp->nodeAgePr,"Calibrated") == 0 || strcmp(mp->clockRatePr,"Fixed") != 0 ||
+                                          (strcmp(mp->clockRatePr, "Fixed") == 0 && AreDoublesEqual(mp->clockRateFix, 1.0, 1E-6) == NO)))
+		isCalibrated = YES;
+	else
+		isCalibrated = NO;
+    
+    if (p->checkConstraints == YES)
+    {
+        
+        for (i=0; i<numDefinedConstraints; i++)
+        {
+		    if (mp->activeConstraints[i] == YES && definedConstraintsType[i] == HARD )
+			    numActiveHardConstraints++;
+        }
+    }
+    
+	/* allocate space for and construct the trees */
+    /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
+	for (i=from; i<to; i++)
+    {
+		treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
+		if (*treeHandle)
+            free(*treeHandle);
+		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
+        {
+			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
+			return (ERROR);
+        }
+		treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
+        if (*treeHandle)
+            free(*treeHandle);
+		if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
+        {
+			MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
+			return (ERROR);
+        }
+    }
+    
+	/* initialize the trees */
+	for (i=from; i<to; i++)
+    {
+		for (st=0; st<2; st++)
+        {
+			tree = GetTree (p, i, st);
+			if (numTrees > 1)
+				sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+1);
+			else /* if (numTrees == 1) */
+				sprintf (tree->name, "mcmc.tree_%d", i+1);
+            tree->nRelParts = p->nRelParts;
+			tree->relParts = p->relParts;
+            tree->isRooted = isRooted;
+			tree->isClock = isClock;
+			tree->isCalibrated = isCalibrated;
+            if (p->paramType == P_SPECIESTREE)
+            {
+                tree->nNodes = 2*numSpecies;
+                tree->nIntNodes = numSpecies - 1;
+            }
+            else if (tree->isRooted == YES)
+            {
+                tree->nNodes = 2*numLocalTaxa;
+                tree->nIntNodes = numLocalTaxa - 1;
+            }
+            else /* if (tree->isRooted == NO) */
+            {
+                tree->nNodes = 2*numLocalTaxa - 2;
+                tree->nIntNodes = numLocalTaxa - 2;
+            }
+			if (p->checkConstraints == YES)
+            {
+                tree->nLocks = NumInformativeHardConstraints(mp);
+                if (tree->nLocks > 0)
+                {
+                    tree->checkConstraints = YES;
+                    tree->nConstraints = mp->numActiveConstraints;  /* nConstraints is number of constraints to check */
+                    tree->constraints = mp->activeConstraints;
+                }
+            }
+			else
+            {
+				tree->checkConstraints = NO;
+				tree->nConstraints = tree->nLocks = 0;
+				tree->constraints = NULL;
+            }
+        }
+    }
+    
+	return (NO_ERROR);
+}
+
+
+
+
+
 int InitializeLinks (void)
 
 {
@@ -12222,6 +12230,42 @@ int IsApplicable (Param *param)
         return NO;
 
     return YES;
+}
+
+
+
+
+
+int IsApplicable_ThreeTaxaOrMore (Param *param)
+{
+    if (LargestMovableSubtree (param) >= 3)
+        return YES;
+    else
+        return NO;
+}
+
+
+
+
+
+int IsApplicable_FourTaxaOrMore (Param *param)
+{
+    if (LargestMovableSubtree (param) >= 4)
+        return YES;
+    else
+        return NO;
+}
+
+
+
+
+
+int IsApplicable_FiveTaxaOrMore (Param *param)
+{
+    if (LargestMovableSubtree (param) >= 5)
+        return YES;
+    else
+        return NO;
 }
 
 
@@ -14060,6 +14104,102 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 
 
 
+int LargestMovableSubtree(Param *treeParam)
+{
+    int         i, j, k, a, nLongsNeeded, numPartitions, largestSubtree;
+    BitsLong    **constraintPartition, *subtreePartition, *testPartition, *mask;
+    ModelParams *mp;
+
+    mp = &modelParams[treeParam->relParts[0]];
+
+    if (treeParam->paramType == P_SPECIESTREE)
+        return numLocalTaxa;    /* no constraints allowed in species tree; set constraints in gene trees instead */
+    
+    /* This is difficult because we cannot rely on the tree being initialized.
+       We need to retrieve the bitfields ourselves and figure out what they mean. */
+    nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
+    subtreePartition = (BitsLong *) SafeCalloc(3, sizeof(BitsLong));
+    constraintPartition = (BitsLong **) SafeCalloc (numDefinedConstraints+1, sizeof(BitsLong *));
+    constraintPartition[0] = (BitsLong *) SafeCalloc (nLongsNeeded*(numDefinedConstraints+1), sizeof(BitsLong));
+    for (i=1; i<numDefinedConstraints+1; i++)
+        constraintPartition[i] = constraintPartition[i-1] + nLongsNeeded;
+    testPartition = subtreePartition + nLongsNeeded;
+    mask = testPartition + nLongsNeeded;
+    
+    /* set mask (needed to take care of unused bits when flipping partitions) */
+    for (i=0; i<numLocalTaxa; i++)
+        SetBit (i, mask);
+    
+    /* retrieve partitions */
+    numPartitions = 0;
+    for (a=0; a<numDefinedConstraints; a++)
+        {
+        if (mp->activeConstraints[a] == NO || definedConstraintsType[a] != HARD )
+            continue;
+        
+        /* set bits in partition under consideration */
+        ClearBits(constraintPartition[numPartitions], nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+            {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            if (IsBitSet(i, definedConstraint[a]) == YES)
+                SetBit(j, constraintPartition[numPartitions]);
+            j++;
+            }
+        
+        /* make sure outgroup is outside constrained partition (marked 0) */
+        if (strcmp(mp->brlensPr,"Clock") != 0 && IsBitSet(localOutGroup, constraintPartition[numPartitions]) == YES)
+            FlipBits(constraintPartition[numPartitions], nLongsNeeded, mask);
+        
+        /* skip partition if uninformative */
+        k = NumBits(constraintPartition[numPartitions], nLongsNeeded);
+        if (k == 0 || k == 1)
+            continue;
+        
+        numPartitions++;
+        }
+    
+    /* Add all-species partition */
+    CopyBits(constraintPartition[numPartitions], mask, nLongsNeeded);
+    numPartitions++;
+    
+    /* Now we have all constraints. Calculate the movable subtree for each */
+    largestSubtree = 0;
+    for(i=0; i<numPartitions; i++)
+        {
+        CopyBits (subtreePartition, constraintPartition[i], nLongsNeeded);
+        for (j=0; j<numPartitions; j++)
+            {
+            if (j==i)
+                continue;
+            if (IsPartNested(constraintPartition[j], constraintPartition[i], nLongsNeeded))
+                {
+                CopyBits (testPartition, constraintPartition[j], nLongsNeeded);
+                FlipBits (testPartition, nLongsNeeded, mask);
+                for (k=0; k<nLongsNeeded; k++)
+                    subtreePartition[k] = subtreePartition[k] & testPartition[k];
+                }
+            }
+        k = NumBits (subtreePartition, nLongsNeeded);
+        if (strcmp(mp->brlensPr,"Clock") != 0 && NumBits (constraintPartition[i], nLongsNeeded) == numLocalTaxa - 1)
+            k++;
+        if (k>largestSubtree)
+            largestSubtree = k;
+        }
+
+    free(subtreePartition);
+    free(constraintPartition[0]);
+    free(constraintPartition);
+    
+    return largestSubtree;
+    
+}
+
+
+
+
+
 int Link (void)
 
 {
@@ -14095,6 +14235,63 @@ int NumActiveParts (void)
 
 	return (nApplied);
 	
+}
+
+
+
+
+
+int NumInformativeHardConstraints (ModelParams *mp)
+
+{
+    int             i, j, k, a, numInformativeHardConstraints, nLongsNeeded;
+    BitsLong        *constraintPartition, *mask;
+	   
+    numInformativeHardConstraints = 0;
+    
+    nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
+    constraintPartition = (BitsLong *) SafeCalloc (2*nLongsNeeded, sizeof(BitsLong));
+    if (!constraintPartition)
+		{
+            MrBayesPrint ("%s   Problems allocating constraintPartition", spacer);
+            return ERROR;
+		}
+    mask = constraintPartition + nLongsNeeded;
+
+    /* set mask (needed to take care of unused bits when flipping partitions) */
+    for (i=0; i<numLocalTaxa; i++)
+        SetBit (i, mask);
+        
+    for (a=0; a<numDefinedConstraints; a++)
+		{
+        if (mp->activeConstraints[a] == NO || definedConstraintsType[a] != HARD )
+            continue;
+            
+        /* set bits in partition to add */
+        ClearBits(constraintPartition, nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+            {
+                if (taxaInfo[i].isDeleted == YES)
+                    continue;
+                if (IsBitSet(i, definedConstraint[a]) == YES)
+                    SetBit(j, constraintPartition);
+                j++;
+            }
+            
+        /* make sure outgroup is outside constrained partition (marked 0) */
+        if (strcmp(mp->brlensPr,"Clock") != 0 && IsBitSet(localOutGroup, constraintPartition) == YES)
+            FlipBits(constraintPartition, nLongsNeeded, mask);
+            
+        /* skip partition if uninformative */
+        k = NumBits(constraintPartition, nLongsNeeded);
+        if (k == 0 || k == 1)
+            continue;
+
+        numInformativeHardConstraints++;
+        }
+        
+    return numInformativeHardConstraints;
+    
 }
 
 
@@ -14396,7 +14593,7 @@ int PrintMatrix (void)
 |	ProcessStdChars: process standard characters
 |
 ---------------------------------------------------------------*/
-int ProcessStdChars (SafeLong *seed)
+int ProcessStdChars (RandLong *seed)
 
 {
 
@@ -14797,7 +14994,7 @@ int ProcessStdChars (SafeLong *seed)
 |  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains  in range [chfrom, chto)
 |
 ---------------------------------------------------------------*/
-void FillStdStateFreqs(int chfrom, int chto, SafeLong *seed)
+void FillStdStateFreqs(int chfrom, int chto, RandLong *seed)
 {
 
 	int		chn, n, i, j, k, b, c, nb, index;
@@ -17705,9 +17902,6 @@ int SetModelParams (void)
 					areAllPartsParsimony = NO;
 				}
 
-			if (areAllPartsParsimony == YES)
-				p->paramTypeName = "Topology"; /*Why again we set it to "Topology" we did it unconditionally 1 lines before*/
-			
 			/* check if topology is clock or nonclock */
 			nClockBrlens = 0;
 			nCalibratedBrlens = 0;
@@ -18717,7 +18911,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 |	SetUpAnalysis: Set parameters and moves
 |
 ------------------------------------------------------------------------*/
-int SetUpAnalysis (SafeLong *seed)
+int SetUpAnalysis (RandLong *seed)
 
 {
 
@@ -19158,6 +19352,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtSPRClock */
 	mt = &moveTypes[i++];
@@ -19183,6 +19378,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 0.99999;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
 	/* Move_ExtSS */
 	mt = &moveTypes[i++];
@@ -19207,6 +19403,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_ExtSSClock */
 	mt = &moveTypes[i++];
@@ -19232,6 +19429,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 0.99999;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
     /* Move_ExtTBR */
 	mt = &moveTypes[i++];
@@ -19256,6 +19454,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtTBR in v3.1.2 */
 	mt = &moveTypes[i++];
@@ -19280,6 +19479,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtTBR1 */
 	mt = &moveTypes[i++];
@@ -19304,6 +19504,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtTBR2 */
 	mt = &moveTypes[i++];
@@ -19328,6 +19529,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtTBR3 */
 	mt = &moveTypes[i++];
@@ -19352,6 +19554,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_ExtTBR4 */
 	mt = &moveTypes[i++];
@@ -19376,6 +19579,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
 	/* Move_GammaShape_M */
 	mt = &moveTypes[i++];
@@ -19508,6 +19712,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_LocalClock */
 	mt = &moveTypes[i++];
@@ -19529,6 +19734,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
 	/* Move_NNI */
 	mt = &moveTypes[i++];
@@ -19542,6 +19748,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;	/* no extra parsimony scores are needed */
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_NNIClock */
 	mt = &moveTypes[i++];
@@ -19562,6 +19769,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
 	/* Move_NNI */
 	mt = &moveTypes[i++];
@@ -19578,6 +19786,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_NNI_Hetero */
 	mt = &moveTypes[i++];
@@ -19594,6 +19803,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[0] = 10000000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_NodeSlider */
 	mt = &moveTypes[i++];
@@ -19916,6 +20126,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[2] = 0.30;
 	mt->parsimonyBased = YES;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ParsSPR1 */
 	mt = &moveTypes[i++];
@@ -19945,6 +20156,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[2] = 0.30;
 	mt->parsimonyBased = YES;
 	mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
 	/* Move_ParsSPRClock */
 	mt = &moveTypes[i++];
@@ -19975,6 +20187,7 @@ void SetUpMoveTypes (void)
 	mt->maximum[1] = 0.30;
 	mt->parsimonyBased = YES;
 	mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
 	/* Move_Pinvar */
 	mt = &moveTypes[i++];
@@ -20305,31 +20518,6 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a mutliplier move (larger is more bold) */
     mt->targetRate = 0.25;              /* Target acceptance rate */
-
-	/* Move_SPRClock */
-	/* not correctly balanced yet !! */
-	mt = &moveTypes[i++];
-	mt->name = "Clock-constrained SPR";
-	mt->shortName = "cSPR";
-    mt->subParams = YES;
-	mt->tuningName[0] = "Dirichlet parameter";
-	mt->shortTuningName[0] = "alpha";
-	mt->tuningName[1] = "Exponential parameter";
-	mt->shortTuningName[1] = "lambda";
-	mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
-	mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
-	mt->nApplicable = 2;
-	mt->moveFxn = &Move_SPRClock;
-	mt->relProposalProb = 0.0;
-	mt->numTuningParams = 2;
-	mt->tuningParam[0] = 10.0;  /* alphaPi */
-	mt->tuningParam[1] = 10.0;  /* lambda */
-	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000.0;
-	mt->minimum[1] = 0.00001;
-	mt->maximum[1] = 10000.0;
-	mt->parsimonyBased = NO;
-	mt->level = DEVELOPER;
 
 	/* Move_Statefreqs */
 	mt = &moveTypes[i++];

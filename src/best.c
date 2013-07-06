@@ -43,11 +43,11 @@ void        LineagesIn (TreeNode* geneTreeNode, TreeNode* speciesTreeNode);
 double      LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr);
 double      LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate);
 void        MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree);
-int         ModifyDepthMatrix (double expRate, double *depthMatrix, SafeLong *seed);
+int         ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed);
 
 
 /* Global BEST variables */
-SafeLong    **speciesPairSets;
+BitsLong    **speciesPairSets;
 double      *depthMatrix;
 
 
@@ -63,8 +63,8 @@ void AllocateBestChainVariables (void)
     // Allocate space for upper triangular pair sets
     numUpperTriang     = (numSpecies * (numSpecies-1)) / 2;
     nLongsNeeded       = ((numSpecies - 1) / nBitsInALong) + 1;
-    speciesPairSets    = (SafeLong **) SafeCalloc (numUpperTriang, sizeof(SafeLong *));
-    speciesPairSets[0] = (SafeLong *)  SafeCalloc (numUpperTriang*nLongsNeeded, sizeof(SafeLong));
+    speciesPairSets    = (BitsLong **) SafeCalloc (numUpperTriang, sizeof(BitsLong *));
+    speciesPairSets[0] = (BitsLong *)  SafeCalloc (numUpperTriang*nLongsNeeded, sizeof(BitsLong));
     for (i=1; i<numUpperTriang; i++)
         speciesPairSets[i] = speciesPairSets[0] + i*nLongsNeeded;
 
@@ -153,7 +153,7 @@ int CompareNodesByX (const void *x, const void *y) {
 |	FillSpeciesTreeParams: Fill in species trees (start value)
 |
 ------------------------------------------------------------------*/
-int FillSpeciesTreeParams (SafeLong *seed, int fromChain, int toChain)
+int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
 
 {
     int			i, k, chn, numGeneTrees, freeBestChainVars;
@@ -409,12 +409,12 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 	int         i, j, w, nLongsNeeded, numUpperTriang, index, trace=0;
     double      maxDepth;
     TreeNode    *p;
-    SafeLong    **speciesSets;
+    BitsLong    **speciesSets;
 
     // Allocate space for species partitions
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
-    speciesSets    = (SafeLong **) SafeCalloc (2*numLocalTaxa-1, sizeof(SafeLong *));
-    speciesSets[0] = (SafeLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
+    speciesSets    = (BitsLong **) SafeCalloc (2*numLocalTaxa-1, sizeof(BitsLong *));
+    speciesSets[0] = (BitsLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
     for (i=1; i<2*numLocalTaxa-1; i++)
         speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
 
@@ -1141,7 +1141,7 @@ void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
 |   @param      seed            Pointer to seed for random number generator (in/ut)
 |   @returns    Returns ERROR or NO_ERROR
 ----------------------------------------------------------------------*/
-int ModifyDepthMatrix (double expRate, double *depthMatrix, SafeLong *seed)
+int ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed)
 {
     int     i, numUpperTriang;
     double  u, interval, delta;
@@ -1173,7 +1173,7 @@ int ModifyDepthMatrix (double expRate, double *depthMatrix, SafeLong *seed)
 |   @param lnProposalRatio  Pointer to the log proposal (Hastings) ratio (out)
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
-int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     int             i, numGeneTrees, numUpperTriang;
@@ -1274,7 +1274,7 @@ int Move_GeneTree1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 |   @param lnProposalRatio  Pointer to the log proposal (Hastings) ratio (out)
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
-int Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     int             i, numGeneTrees, numUpperTriang;
@@ -1375,7 +1375,7 @@ int Move_GeneTree2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 |   @param lnProposalRatio  Pointer to the log proposal (Hastings) ratio (out)
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
-int Move_GeneTree3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     int             i, numGeneTrees, numUpperTriang;
@@ -1472,7 +1472,7 @@ int Move_GeneTree3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRati
 |
 -------------------------------------------------------------------------------------*/
     
-int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	int			i, *nEvents;
@@ -1746,7 +1746,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 |	Move_SpeciesTree: Propose a new species tree
 |
 ------------------------------------------------------------------*/
-int Move_SpeciesTree (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb, *modMinDepths,

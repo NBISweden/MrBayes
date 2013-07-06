@@ -1,5 +1,5 @@
 int         AddString (char ***list, int len, char *token);
-SafeLong    Expecting (int y);
+BitsLong    Expecting (int y);
 int         CheckString (char **list, int len, char *token, int *matchIndex);
 int         CheckStringValidity (char *s);
 int         DoExecute (void);

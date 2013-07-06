@@ -47,17 +47,17 @@
 const char* const svnRevisionUtilsC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
 /* AddBitfield: Add bitfield to list of bitfields */
-int AddBitfield (SafeLong ***list, int listLen, int *set, int setLen)
+int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 {
     int     i, nLongsNeeded;
 
     nLongsNeeded = (setLen - 1) / nBitsInALong + 1;
 
-    (*list) = (SafeLong **) SafeRealloc ((void *)(*list), (size_t)((listLen+1)*sizeof(SafeLong *)));
+    (*list) = (BitsLong **) SafeRealloc ((void *)(*list), (size_t)((listLen+1)*sizeof(BitsLong *)));
     if (!(*list))
         return ERROR;
     
-    (*list)[listLen] = (SafeLong *) SafeMalloc ((size_t)(nLongsNeeded*sizeof(SafeLong)));
+    (*list)[listLen] = (BitsLong *) SafeMalloc ((size_t)(nLongsNeeded*sizeof(BitsLong)));
     if (!(*list)[listLen])
         return ERROR;
 
@@ -89,14 +89,14 @@ void AlignedSafeFree (void **ptr)
 
 
 /* ClearBit: Clear one bit in a bitfield */
-void ClearBit (int i, SafeLong *bits)
+void ClearBit (int i, BitsLong *bits)
 {
-	SafeLong		x;
+	BitsLong		x;
 
 	bits += i / nBitsInALong;
 
 	x = 1 << (i % nBitsInALong);
-    x ^= safeLongWithAllBitsSet;
+    x ^= bitsLongWithAllBitsSet;
 
 	(*bits) &= x;
 }
@@ -106,12 +106,25 @@ void ClearBit (int i, SafeLong *bits)
 
 
 /* ClearBits: Clear all bits in a bitfield */
-void ClearBits (SafeLong *bits, int nLongs)
+void ClearBits (BitsLong *bits, int nLongs)
 {
 	int     i;
     
     for (i=0; i<nLongs; i++)
         bits[i] = 0;
+}
+
+
+
+
+
+/* Copy bitfields */
+void CopyBits (BitsLong *dest, BitsLong *source, int length)
+{
+    int     i;
+
+    for (i=0; i<length; i++)
+        dest[i] = source[i];
 }
 
 
@@ -271,14 +284,14 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
 
 
 /* FirstTaxonInPartition: Find index of first taxon in partition */
-int FirstTaxonInPartition (SafeLong *partition, int length)
+int FirstTaxonInPartition (BitsLong *partition, int length)
 
 {
 
     int         i, j, nBits, taxon;
-    SafeLong    x;
+    BitsLong    x;
 
-    nBits = sizeof(SafeLong) * 8;
+    nBits = sizeof(BitsLong) * 8;
 
     taxon = 0;
     for (i=0; i<length; i++)
@@ -302,9 +315,9 @@ int FirstTaxonInPartition (SafeLong *partition, int length)
 
 
 /* FirstTree: Return file position of first tree after current position */
-SafeLong FirstTree (FILE *fp, char *lineBuf, int longestLine)
+BitsLong FirstTree (FILE *fp, char *lineBuf, int longestLine)
 {
-	SafeLong	firstTree;
+	BitsLong	firstTree;
 	char		*word;
 	
 	do {
@@ -336,7 +349,7 @@ int Flip01 (int x)
 
 
 
-void FlipBits (SafeLong *partition, int length, SafeLong *mask)
+void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 
 {
 
@@ -354,14 +367,14 @@ void FlipBits (SafeLong *partition, int length, SafeLong *mask)
 
 /*-----------------------------------------------------------------
 |
-|	FlipOneBit: flip bit n in SafeLong *p
+|	FlipOneBit: flip bit n in BitsLong *p
 |
 ------------------------------------------------------------------*/
-void FlipOneBit (int n, SafeLong *p)
+void FlipOneBit (int n, BitsLong *p)
 
 {
 
-	SafeLong		x;
+	BitsLong		x;
 
 	p += n/nBitsInALong;
 	x = 1 << (n % nBitsInALong);
@@ -654,12 +667,12 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
 
 
 
-/* IsBitSet: Is bit i set in SafeLong *bits ? */
-int IsBitSet (int i, SafeLong *bits)
+/* IsBitSet: Is bit i set in BitsLong *bits ? */
+int IsBitSet (int i, BitsLong *bits)
 
 {
 
-	SafeLong		x;
+	BitsLong		x;
 
 	bits += i / nBitsInALong;
 
@@ -701,7 +714,7 @@ int IsConsistentWith (const char *token, const char *expected)
 
 /* IsPartCompatible: Determine whether two partitions are nonoverlapping or nested (compatible) or
         incompatible (partially overlapping) */
-int IsPartCompatible (SafeLong *smaller, SafeLong *larger, int length)
+int IsPartCompatible (BitsLong *smaller, BitsLong *larger, int length)
 {
 	int i;
 
@@ -728,7 +741,7 @@ int IsPartCompatible (SafeLong *smaller, SafeLong *larger, int length)
 
 
 /* IsPartNested: Test whether smaller partition is nested in larger partition */
-int IsPartNested (SafeLong *smaller, SafeLong *larger, int length)
+int IsPartNested (BitsLong *smaller, BitsLong *larger, int length)
 
 {
 
@@ -750,7 +763,7 @@ int IsPartNested (SafeLong *smaller, SafeLong *larger, int length)
 
 
 /* IsSectionEmpty: Test whether section of two bitfields is empty */
-int IsSectionEmpty (SafeLong *bitField1, SafeLong *bitField2, int length)
+int IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length)
 {
 	int i;
 
@@ -766,7 +779,7 @@ int IsSectionEmpty (SafeLong *bitField1, SafeLong *bitField2, int length)
 
 
 /* IsSectionEmpty: Test whether union of bitField1 and bitField2 equal to bitField3*/
-int IsUnionEqThird (SafeLong *bitField1, SafeLong *bitField2, SafeLong *bitField3, int length)
+int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField3, int length)
 {
 	int i;
 
@@ -782,9 +795,9 @@ int IsUnionEqThird (SafeLong *bitField1, SafeLong *bitField2, SafeLong *bitField
 
 
 /* LastBlock: Return file position of last block in file */
-SafeLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
+BitsLong LastBlock (FILE *fp, char *lineBuf, int longestLine)
 {
-	SafeLong	lastBlock;
+	BitsLong	lastBlock;
 	char	*word;
 	
 	lastBlock = 0L;
@@ -1143,10 +1156,10 @@ void MrBayesPrintf (FILE *f, char *format, ...)
 
 
 /** Next taxon in partition, for cycling over set bits in bit fields */
-int NextTaxonInPartition(int currentTaxon, SafeLong *partition, int length)
+int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
 {
     int         i, j, taxon;
-    SafeLong    x;
+    BitsLong    x;
 
     taxon = currentTaxon + 1;
     i = taxon / nBitsInALong;
@@ -1179,10 +1192,10 @@ int NextTaxonInPartition(int currentTaxon, SafeLong *partition, int length)
 
 
 /* NumBits: Count bits in a bitfield */
-int NumBits (SafeLong *x, int len)
+int NumBits (BitsLong *x, int len)
 {
 	int         i, n=0;
-    SafeLong    y;
+    BitsLong    y;
 
 	for (i=0; i<len; i++)
         {
@@ -1588,9 +1601,9 @@ char *SafeStrcpy (char **target, const char *source)
 
 
 /* SetBit: Set a particular bit in a series of longs */
-void SetBit (int i, SafeLong *bits)
+void SetBit (int i, BitsLong *bits)
 {
-	SafeLong		x;
+	BitsLong		x;
 
 	bits += i / nBitsInALong;
 

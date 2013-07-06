@@ -200,18 +200,18 @@ typedef struct pfnode
     struct pfnode   *left;
     struct pfnode   *right;
     int             *count;
-    SafeLong        *partition;
+    BitsLong        *partition;
     } PFNODE;
 
 
 /* local prototypes */
 int     AddTreeSamples (int from, int to, int saveToList);
-PFNODE *AddPartition (PFNODE *r, SafeLong *p, int runId);
+PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId);
 int     AddTreeToPartitionCounters (Tree *tree, int treeId, int runId);
-int     AttemptSwap (int swapA, int swapB, SafeLong *seed);
-int	    Bit (int n, SafeLong *p);
+int     AttemptSwap (int swapA, int swapB, RandLong *seed);
+int	    Bit (int n, BitsLong *p);
 void    BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo);
-int     BuildStepwiseTree (Tree *t, int chain, SafeLong *seed);
+int     BuildStepwiseTree (Tree *t, int chain, RandLong *seed);
 int     CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL);
 void    CalcPartFreqStats (PFNODE *p, STATS *stat);
 void    CalculateTopConvDiagn (int numSamples);
@@ -334,7 +334,7 @@ MrBFlt  GetRate (int division, int chain);
 void    GetStamp (void);
 void    GetSwappers (int *swapA, int *swapB, int curGen);
 void    GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp);
-MrBFlt	GibbsSampleGamma (int chain, int division, SafeLong *seed);
+MrBFlt	GibbsSampleGamma (int chain, int division, RandLong *seed);
 int     InitAdGamma(void);
 int     InitChainCondLikes (void);
 int     InitClockBrlens (Tree *t);
@@ -373,7 +373,7 @@ MrBFlt  MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt  MinimumValue (MrBFlt x, MrBFlt y);
 int     NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain);
 void    NodeToNodeDistances (Tree *t, TreeNode *fromNode);
-int     PickProposal (SafeLong *seed, int chainIndex);
+int     PickProposal (RandLong *seed, int chainIndex);
 int     NumCppEvents (Param *p, int chain);
 int     PosSelProbs (TreeNode *p, int division, int chain);
 int		PreparePrintFiles (void);
@@ -412,7 +412,7 @@ int     RemoveNodeScalers(TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
 int     RemoveNodeScalers_SSE(TreeNode *p, int division, int chain);
 #endif
-int     RemovePartition (PFNODE *r, SafeLong *p, int runId);
+int     RemovePartition (PFNODE *r, BitsLong *p, int runId);
 int     RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId);
 int     RemoveTreeSamples (int from, int to);
 int     ReopenMBPrintFiles (void);
@@ -421,7 +421,7 @@ void    ResetFlips(int chain);
 int     ResetScalers (void);
 void    ResetSiteScalers (ModelInfo *m, int chain);
 int     ReusePreviousResults(int *numSamples, int);
-int     RunChain (SafeLong *seed);
+int     RunChain (RandLong *seed);
 int     SafeSprintf(char **target, int *targetLen, char *fmt, ...);
 int     SetAARates (void);
 void    SetChainIds (void);
@@ -467,7 +467,7 @@ int				*bsIndex;				     /* compressed std stat freq index               */
 Chain			chainParams;                 /* parameters of Markov chain                   */
 int				*compCharPos;		         /* char position in compressed matrix           */
 int				*compColPos;		         /* column position in compressed matrix		 */
-SafeLong		*compMatrix;		         /* compressed character matrix					 */
+BitsLong		*compMatrix;		         /* compressed character matrix					 */
 int				compMatrixRowSize;	         /* row size of compressed matrix				 */
 char			inputFileName[100];          /* input (NEXUS) file name                      */
 MoveType		moveTypes[NUM_MOVE_TYPES];   /* holds information on the move types          */
@@ -504,8 +504,8 @@ int				augmentData;		         /* are data being augmented for any division?	 */
 int				*nAccepted;			         /* counter of accepted moves					 */
 int				*termState = NULL;			 /* stores character states of tips              */
 int				*isPartAmbig = NULL;         /* records whether tips are partially ambiguous */
-SafeLong		**parsPtrSpace = NULL;	     /* space holding pointers to parsimony sets     */
-SafeLong		***parsPtr = NULL;		     /* pointers to pars state sets for chain & node */
+BitsLong		**parsPtrSpace = NULL;	     /* space holding pointers to parsimony sets     */
+BitsLong		***parsPtr = NULL;		     /* pointers to pars state sets for chain & node */
 CLFlt			*parsNodeLengthSpace = NULL; /* space for parsimony node lengths			 */
 CLFlt			**parsNodeLen = NULL;        /* pointers to pars node lengths for chains     */
 char			*printString;                /* string for printing to a file                */
@@ -537,7 +537,7 @@ int				tempIndex;                   /* keeps track of which user temp is specifi
 int				abortMove;					 /* flag determining whether to abort move       */
 PFNODE			**partFreqTreeRoot;			 /* root of tree(s) holding partition freqs      */
 int				nLongsNeeded;				 /* number of longs needed for partitions        */
-SafeLong		**partition;                 /* matrix holding partitions                    */
+BitsLong		**partition;                 /* matrix holding partitions                    */
 MrBFlt          *maxLnL0 = NULL;             /* maximum likelihood                           */
 FILE			*fpMcmc = NULL;              /* pointer to .mcmc file                        */
 FILE			**fpParm = NULL;             /* pointer to .p file(s)                        */
@@ -627,7 +627,7 @@ MrBFlt lnDirPrior (Tree *t, ModelParams *mp, int PV)
 
 
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
-PFNODE *AddPartition (PFNODE *r, SafeLong *p, int runId)
+PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId)
 {
 	int		i, comp;
 	
@@ -724,7 +724,7 @@ int AddToPrintString (char *tempStr)
 int AddTreeSamples (int from, int to, int saveToList)
 {
 	int	i, j, k, longestLine;
-	SafeLong	lastBlock;
+	BitsLong	lastBlock;
 	char	*word, *s, *lineBuf;
 	FILE	*fp;
 	Tree	*t;
@@ -884,7 +884,7 @@ int AddTreeToPartitionCounters (Tree *tree, int treeId, int runId)
 
 
 
-int AttemptSwap (int swapA, int swapB, SafeLong *seed)
+int AttemptSwap (int swapA, int swapB, RandLong *seed)
 {
 
 	int			    d, tempX, reweightingChars, isSwapSuccessful, chI, chJ, runId;
@@ -1628,15 +1628,15 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
 
 /*----------------------------------------------------------------
 |
-|	Bit: return 1 if bit n is set in SafeLong *p
+|	Bit: return 1 if bit n is set in BitsLong *p
 |		else return 0
 |
 -----------------------------------------------------------------*/
-int Bit (int n, SafeLong *p)
+int Bit (int n, BitsLong *p)
 
 {
 
-	SafeLong		x;
+	BitsLong		x;
 
 	p += n / nBitsInALong;
 	x = 1 << (n % nBitsInALong);
@@ -1731,7 +1731,7 @@ void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tI
 |	BuildParsTrees: Fill in trees using random add seq with parsimony
 |
 ------------------------------------------------------------------*/
-int BuildParsTrees (SafeLong *seed)
+int BuildParsTrees (RandLong *seed)
 
 {
 
@@ -1788,7 +1788,7 @@ int BuildParsTrees (SafeLong *seed)
 
 
 /* build (starting) topology stepwise */
-int BuildStepwiseTree (Tree *t, int chain, SafeLong *seed) {
+int BuildStepwiseTree (Tree *t, int chain, RandLong *seed) {
 
     int         i, j, nTips;
     TreeNode    *p, *q, *r;
@@ -1888,7 +1888,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	CLFlt			freq, *lnScaler;
 	ModelInfo		*m;
     ModelParams     *mp;
-    SafeLong        *inHMM;
+    BitsLong        *inHMM;
 	
     /* find nRates for first division in HMM */
 	m = &modelSettings[d];
@@ -1924,7 +1924,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	rP = rateProbs[chain] + state[chain] * rateProbRowSize;
 	
 	/* set bit vector indicating divisions in this HMM */
-	inHMM = (SafeLong *) SafeCalloc (((param->nRelParts/nBitsInALong) + 1), sizeof(SafeLong));
+	inHMM = (BitsLong *) SafeCalloc (((param->nRelParts/nBitsInALong) + 1), sizeof(BitsLong));
 	for (i=0; i<param->nRelParts; i++)
 		{
 		if (modelSettings[param->relParts[i]].shape ==
@@ -7708,7 +7708,7 @@ int DoMcmc (void)
 
 {
 
-	SafeLong	seed;
+	RandLong	seed;
 	int		    rc, i, j, run;
     char        c;
     FILE        *tempFile;
@@ -9870,7 +9870,7 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLengt
 
     int         c, n, division;
     TreeNode    *q=NULL, *r=NULL;
-    SafeLong    *pA, *pP, *pX;
+    BitsLong    *pA, *pP, *pX;
     CLFlt       *nSitesOfPat, fpLength, length;
     ModelInfo   *m;
 
@@ -10392,7 +10392,7 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
 {
 
     int         c, i;
-    SafeLong    x[2], *pS1, *pS2, *pD;
+    BitsLong    x[2], *pS1, *pS2, *pD;
     MrBFlt      length = 0.0;
     CLFlt       *nSitesOfPat;
     
@@ -10490,7 +10490,7 @@ void GetParsFP (Tree *t, TreeNode *p, int chain)
 {
 	
 	int				i, c, n, division;
-	SafeLong		*pL, *pR, *pP, *pA, x[2];
+	BitsLong		*pL, *pR, *pP, *pA, x[2];
 	ModelInfo		*m;
 
 	if (p->left != NULL)
@@ -10565,7 +10565,7 @@ int GetParsimonyBrlens (Tree *t, int chain, MrBFlt *brlens)
 {
 	
 	int				c, i, j, n, division;
-	SafeLong		*pP, *pA;
+	BitsLong		*pP, *pA;
 	CLFlt			*nSitesOfPat;
 	TreeNode        *p;
 	ModelInfo		*m;
@@ -10630,7 +10630,7 @@ MrBFlt GetParsimonyLength (Tree *t, int chain)
 {
 	
 	int				c, i, n, division;
-	SafeLong		*pP, *pA;
+	BitsLong		*pP, *pA;
 	CLFlt			*nSitesOfPat;
 	MrBFlt			length;
 	TreeNode		*p;
@@ -10696,7 +10696,7 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
 {
 	
 	int				c, i, n, division;
-	SafeLong        *pD, *pP, *pA, x[2];
+	BitsLong        *pD, *pP, *pA, x[2];
 	TreeNode		*p;
 	ModelInfo		*m;
 
@@ -10904,7 +10904,7 @@ void GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp)
 
 
 
-MrBFlt GibbsSampleGamma (int chain, int division, SafeLong *seed)
+MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
 {
 
 	int				c, i, k, *rateCat, nStates, nRateCats, nGammaCats, id;
@@ -11357,7 +11357,7 @@ int InitChainCondLikes (void)
 
 	int			c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
                 clIndex, tiIndex, scalerIndex, indexStep;
-	SafeLong	*charBits;
+	BitsLong	*charBits;
 	CLFlt		*cL;
 	ModelInfo	*m;
 #if defined (SSE_ENABLED)
@@ -12199,7 +12199,7 @@ int InitInvCondLikes (void)
 {
 
 	int			c, d, i, s, isConstant, usingInvCondLikes;
-	SafeLong	*charBits;
+	BitsLong	*charBits;
 	CLFlt		*cI;
 	ModelInfo	*m;
 
@@ -12398,7 +12398,7 @@ int InitParsSets (void)
 
 	int				c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode, allAmbig;
-	SafeLong        x, x1, x2, x3, *longPtr;
+	BitsLong        x, x1, x2, x3, *longPtr;
 	ModelInfo		*m;
 	ModelParams		*mp;
 
@@ -12412,7 +12412,7 @@ int InitParsSets (void)
 		m  = &modelSettings[d];
 		mp = &modelParams[d];
 
-        /* find how many parsimony ints (SafeLong) are needed for each model site */
+        /* find how many parsimony ints (BitsLong) are needed for each model site */
 		if (mp->dataType == CONTINUOUS)
 			{
 			/* scale continuous characters down to an ordered parsimony character */
@@ -12446,12 +12446,12 @@ int InitParsSets (void)
 		m = &modelSettings[d];
 		mp = &modelParams[d];
 
-        m->parsSets = (SafeLong **) SafeCalloc (m->numParsSets, sizeof(SafeLong*));
+        m->parsSets = (BitsLong **) SafeCalloc (m->numParsSets, sizeof(BitsLong*));
         if (!m->parsSets)
             return (ERROR);
         for (i=0; i<m->numParsSets; i++)
             {
-            m->parsSets[i] = (SafeLong *) SafeCalloc (m->numChars*m->nParsIntsPerSite, sizeof(SafeLong));
+            m->parsSets[i] = (BitsLong *) SafeCalloc (m->numChars*m->nParsIntsPerSite, sizeof(BitsLong));
             if (!m->parsSets[i])
                 return (ERROR);
             }
@@ -14663,7 +14663,7 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 {
 	
 	int 			c, i, nStates;
-	SafeLong		done, *pL, *pR, *pP, *pA, *oldpP, x;
+	BitsLong		done, *pL, *pR, *pP, *pA, *oldpP, x;
 	CLFlt			nParsChars, treeLength;
 	CLFlt			length, *nSitesOfPat, *newNodeLength, oldNodeLength;
 	Tree			*t;
@@ -14844,7 +14844,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 {
 	
 	int				c, i, *nStates;
-	SafeLong		*pL, *pR, *pP, *pA, x;
+	BitsLong		*pL, *pR, *pP, *pA, x;
 	CLFlt			*treeLength;
 	CLFlt			*nSitesOfPat;
 	Tree			*t;
@@ -16992,7 +16992,7 @@ MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
 
 
 
-int Move_Aamodel (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17106,7 +17106,7 @@ int Move_Aamodel (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17260,7 +17260,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 
 
 
-int Move_Adgamma (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 
 	/* Change correlation parameter (-1, 1) of adgamma model */
@@ -17331,7 +17331,7 @@ int Move_Adgamma (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_Beta (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17453,7 +17453,7 @@ int Move_Beta (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 
 
 
-int Move_TK02BranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17549,7 +17549,7 @@ int Move_TK02BranchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
 
 
 
-int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17666,7 +17666,7 @@ int Move_BrLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 
 
 
-int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 
 	/* change clock rate using multiplier */
@@ -17801,7 +17801,7 @@ int Move_ClockRateM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-int Move_CPPEventPosition (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	/* move the position of one CPP event */
@@ -17896,7 +17896,7 @@ int Move_CPPEventPosition (Param *param, int chain, SafeLong *seed, MrBFlt *lnPr
 
 
 
-int Move_CPPRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_CPPRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -17971,7 +17971,7 @@ int Move_CPPRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_CPPRateMultiplierMult (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -18070,7 +18070,7 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, SafeLong *seed, MrBFlt 
 
 
 
-int Move_CPPRateMultiplierRnd (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -18157,7 +18157,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, SafeLong *seed, MrBFlt *
 
 
 
-int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -18276,7 +18276,7 @@ int Move_Extinction (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-int Move_Fossilization (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     
@@ -18374,7 +18374,7 @@ int Move_Fossilization (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 
 
 
-int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -18403,12 +18403,6 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
-    /* this move doesn't work for 4 taxa */
-    if (t->nIntNodes == 2) {
-        abortMove = YES;
-        return (NO_ERROR);
-    }
-
 	/* max and min brlen */
 	if (param->subParams[0]->paramId == BRLENS_UNI)
 		{
@@ -18945,7 +18939,7 @@ int Move_ExtSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 
-int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -19385,7 +19379,7 @@ int Move_ExtSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 
 
 
-int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -19883,7 +19877,7 @@ int Move_ExtSS (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 
 
 
-int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -20289,7 +20283,7 @@ int Move_ExtSSClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -20325,12 +20319,6 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 	/* get model params */
 	mp = &modelParams[param->relParts[0]];
 	
-    /* this move doesn't work for 4 taxa */
-    if (t->nIntNodes == 2) {
-        abortMove = YES;
-        return (NO_ERROR);
-    }
-
 	/* max and min brlen */
 	if (param->subParams[0]->paramId == BRLENS_UNI)
 		{
@@ -20811,7 +20799,7 @@ int Move_ExtTBR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 /* Move_ExtTBR in v3.1.2 */
-int Move_ExtTBR0 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     
@@ -21303,7 +21291,7 @@ int Move_ExtTBR0 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_ExtTBR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -21854,7 +21842,7 @@ int Move_ExtTBR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_ExtTBR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -22456,7 +22444,7 @@ int Move_ExtTBR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_ExtTBR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -23102,7 +23090,7 @@ int Move_ExtTBR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_ExtTBR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -23657,7 +23645,7 @@ int Move_ExtTBR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 |      proposal.
 |
 ----------------------------------------------------------------*/
-int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -23776,7 +23764,7 @@ int Move_GeneRate_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_GammaShape_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -23866,7 +23854,7 @@ int Move_GammaShape_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_Growth (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Growth (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -23978,7 +23966,7 @@ int Move_Growth (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 
-int Move_IgrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_IgrBranchLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -24063,7 +24051,7 @@ int Move_IgrBranchLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_IgrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -24164,7 +24152,7 @@ int Move_IgrVar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 |		   the boundary conditions into account
 |
 ----------------------------------------------------------------*/
-int Move_Local (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	
@@ -24507,7 +24495,7 @@ int Move_Local (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 |           a move that does not change tree height.
 |
 ----------------------------------------------------------------*/
-int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	
@@ -25005,7 +24993,7 @@ int Move_LocalClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |	Move_LSPR: Change topology using move based on likelihood scores
 |	
 |--------------------------------------------------------------------*/
-int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -25015,7 +25003,7 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 	/* TODO: Make this work for constrained trees */
 	
 	int		    i, j, n, division, topologyHasChanged, isVPriorExp, nNodes;
-	SafeLong	*pA, *pV, *pP;
+	BitsLong	*pA, *pV, *pP;
 	MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, curLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, sum, ran, tuning, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, temp;
@@ -25427,7 +25415,7 @@ int Move_LSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, Mr
 
 
 /* change topology using LSPR1 */
-int Move_LSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -25437,7 +25425,7 @@ int Move_LSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 	/* TODO: Make this work for constrained trees */
 	
 	int		    i, j, n, division, topologyHasChanged, isVPriorExp, nNodes;
-	SafeLong	*pA, *pV, *pP;
+	BitsLong	*pA, *pV, *pP;
 	MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, curLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, sum, ran, tuning, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, temp;
@@ -25821,7 +25809,7 @@ int Move_LSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 
 
 /* Move_NNI, change topology using NNI move */
-int Move_NNI (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -25888,7 +25876,7 @@ int Move_NNI (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrB
 
 
 
-int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26111,7 +26099,7 @@ int Move_NNIClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 
 /* Move_NNI_Hetero, change topology with unlinked brlens using NNI */
-int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26212,7 +26200,7 @@ int Move_NNI_Hetero (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |	Move_NodeSlider: move the position of one node without changing topology
 |
 -------------------------------------------------------------------------------------*/
-int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	MrBFlt		tuning, maxV, minV, oldM, newM, brlensPrExp=0.0, newMin, newMax, oldMin, oldMax;
@@ -26333,7 +26321,7 @@ int Move_NodeSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |      In calibrated trees, we need to move also calibrated terminal nodes.
 |
 -------------------------------------------------------------------------------------*/
-int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	int			i, *nEvents;
@@ -26625,7 +26613,7 @@ int Move_NodeSliderClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 
 
 
-int Move_Nu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26710,7 +26698,7 @@ int Move_Nu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBF
 |      Note that this is appropriate when omegavar=equal
 |
 ----------------------------------------------------------------*/
-int Move_Omega (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26796,7 +26784,7 @@ int Move_Omega (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, M
 |      omegavar=equal
 |
 ----------------------------------------------------------------*/
-int Move_Omega_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Omega_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26879,7 +26867,7 @@ int Move_Omega_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 |      appropriate when omegavar=M10
 |
 ----------------------------------------------------------------*/
-int Move_OmegaBeta_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaBeta_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -26967,7 +26955,7 @@ int Move_OmegaBeta_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 |      appropriate whenomegavar=M10
 |
 ----------------------------------------------------------------*/
-int Move_OmegaGamma_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaGamma_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27061,7 +27049,7 @@ int Move_OmegaGamma_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_OmegaCat (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaCat (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27176,7 +27164,7 @@ int Move_OmegaCat (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 |      of one class of the M3 model
 |
 ----------------------------------------------------------------*/
-int Move_OmegaM3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaM3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27255,7 +27243,7 @@ int Move_OmegaM3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 |      for neutral sites
 |
 ----------------------------------------------------------------*/
-int Move_OmegaNeu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaNeu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27338,7 +27326,7 @@ int Move_OmegaNeu (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 |      for positively selected sites
 |
 ----------------------------------------------------------------*/
-int Move_OmegaPos (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaPos (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27446,7 +27434,7 @@ int Move_OmegaPos (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 |      for purifying selection sites
 |
 ----------------------------------------------------------------*/
-int Move_OmegaPur (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27538,7 +27526,7 @@ int Move_OmegaPur (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 |      Programmed by FR 2004-10-23--
 |
 ----------------------------------------------------------------*/
-int Move_ParsEraser1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27823,7 +27811,7 @@ errorExit:
 
 
 
-int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -27831,7 +27819,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 	   biased according to parsimony scores. */
 
 	int		    i, j, n, division, topologyHasChanged, isVPriorExp;
-	SafeLong	*pA, *pV, *pP, y[2];
+	BitsLong	*pA, *pV, *pP, y[2];
 	MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
 		        cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
 				divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
@@ -28317,7 +28305,7 @@ int Move_ParsSPR (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 /* Move_ParsSPR1 */
-int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
     
@@ -28325,7 +28313,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
        biased according to parsimony scores. */
     
     int		    i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa, nLongsNeeded;
-    SafeLong	*pA, *pV, *pP, *pU, y[2];
+    BitsLong	*pA, *pV, *pP, *pU, y[2];
     MrBFlt		x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
@@ -29185,7 +29173,7 @@ int Move_ParsSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 
 
-int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -29198,7 +29186,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
        the move is Metropolized to improve efficiency. */
 	
 	int		    i, j, n, division, n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
-    SafeLong    *pA, *pV, *pP, y[2];
+    BitsLong    *pA, *pV, *pP, y[2];
 	MrBFlt		x, newPos, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, *tk02Rate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate, nu, newProp, minLength=0.0, length = 0.0,
@@ -29753,7 +29741,7 @@ int Move_ParsSPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_Pinvar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -29848,7 +29836,7 @@ int Move_Pinvar (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, 
 
 
 
-int Move_PopSizeM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -29974,7 +29962,7 @@ int Move_PopSizeM (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio
 
 
 /* Generalized lognormal move for positive real random variables */
-int Move_PosRealLognormal (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_PosRealLognormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	int			i;
 	MrBFlt		oldX, newX, minX, maxX, tuning, u, z;
@@ -30025,7 +30013,7 @@ int Move_PosRealLognormal (Param *param, int chain, SafeLong *seed, MrBFlt *lnPr
 
 
 /* Generalized multiplier move for positive real random variables */
-int Move_PosRealMultiplier (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_PosRealMultiplier (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	int			i, isValid;
 	MrBFlt		oldX, newX, minX, maxX, tuning, ran, factor;
@@ -30079,7 +30067,7 @@ int Move_PosRealMultiplier (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 
 
 
-int Move_RanSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -30642,7 +30630,7 @@ int Move_RanSPR1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_RanSPR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -31211,7 +31199,7 @@ int Move_RanSPR2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_RanSPR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -31848,7 +31836,7 @@ int Move_RanSPR3 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_RanSPR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -32538,7 +32526,7 @@ int Move_RanSPR4 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 |      proposal.
 |
 ----------------------------------------------------------------*/
-int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -32663,7 +32651,7 @@ int Move_RateMult_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 |      proposal.
 |
 ----------------------------------------------------------------*/
-int Move_RateMult_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -32750,7 +32738,7 @@ int Move_RateMult_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPri
 |      mechanism.
 |
 ----------------------------------------------------------------*/
-int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -32875,7 +32863,7 @@ int Move_Revmat_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |      to 6, not to 1.
 |
 ----------------------------------------------------------------*/
-int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_DirMix (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -33023,7 +33011,7 @@ int Move_Revmat_DirMix (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 |       (1-newProp)*(piA+piB). The Hastings ratio of this move is 1.0.
 |
 ----------------------------------------------------------------*/
-int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -33121,7 +33109,7 @@ int Move_Revmat_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrior
 |      used instead of a uniform to propose new rate proportions.
 |
 ----------------------------------------------------------------*/
-int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -33484,7 +33472,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 |	Move_Revmat_SplitMerge2: Componentwise split or merge move.
 |
 ----------------------------------------------------------------*/
-int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Revmat_SplitMerge2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -33766,7 +33754,7 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, SafeLong *seed, MrBFlt *ln
 
 
 
-int Move_Speciation (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -33886,7 +33874,7 @@ int Move_Speciation (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-int Move_Speciation_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -34003,575 +33991,7 @@ int Move_Speciation_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-/*----------------------------------------------------------------
-|
-|	Move_SPRClock: This proposal mechanism changes the topology and
-|      branch lengths of a rooted tree. 
-|
-|      Programmed by JH 2002-11-18
-|
-----------------------------------------------------------------*/
-int Move_SPRClock (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
-{
-
-
-	int				i, stopLoop, topologyHasChanged, direction=0, nTipsOnSideA=0, nTipsOnSideB=0, whichTip, tempI, isPathTerminusRoot=0;
-	MrBFlt			attachmentRate, lnProbForward, lnProbReverse, dist=0.0, pathLength=0.0, pathLengthA=0.0, pathLengthB=0.0,
-					oldAttachmentDepth=0.0, newAttachmentDepth=0.0, newD, oldD, oldCeiling=0.0, newCeiling=0.0, alphaPi, x, y, sum, len, baseOfPath=0.0,
-					dirichletParameters[2], oldProportions[2], newProportions[2], newPathLengthA;
-	TreeNode		*p, *q, *nodeToMove=NULL, *nodeToDetach=NULL, *oldAttachmentNode=NULL, *newAttachmentNode=NULL, *pathEndA=NULL, *pathEndB=NULL;
-	Tree			*t;
-	
-	/* Parameters used in this move. */
-	alphaPi = mvp[0];              /* Dirichlet parameter.                           */
-	attachmentRate = mvp[1];       /* The parameter of the exponential distribution. */
-	
-	/* Set the proposal ratio. */
-	lnProbForward = lnProbReverse = (*lnProposalRatio) = 0.0;
-	
-	/* Set the prior ratio. */
-	(*lnPriorRatio) = 0.0;
-	
-	/* Get the tree. */
-	t = GetTree (param, chain, state[chain]);
-
-#	if defined (DEBUG_SPRCLOCK)
-	for (i=0; i<0; i++)
-		RandomNumber(seed);
-	printf ("Before:\n");
-	ShowNodes (t->root, 2, YES);
-#	endif
-
-    /* Pick a branch to move and get pointers to nodes in area of rearrangement. */
-	stopLoop = NO;
-	do
-		{
-		nodeToMove = t->allDownPass[(int)(RandomNumber(seed)*t->nNodes)];
-		if (nodeToMove->anc != NULL)
-			if (nodeToMove->anc->anc != NULL)
-				stopLoop = YES;
-		} while (stopLoop == NO);
-	nodeToDetach = nodeToMove->anc;
-	if (nodeToMove->anc->left == nodeToMove)
-		oldAttachmentNode = nodeToMove->anc->right;
-	else
-		oldAttachmentNode = nodeToMove->anc->left;
-
-	/* Pick two tips to be the ends of the path. */
-	nTipsOnSideA = nTipsOnSideB = 0;
-	pathEndA = pathEndB = NULL;
-	for (i=t->nNodes-1; i>=0; i--)
-		{
-		p = t->allDownPass[i];
-		p->marked = NO;
-		if (p == nodeToDetach)
-			p->marked = YES;
-		else if (p == nodeToMove)
-			p->marked = 2;
-			
-		if (p->anc != NULL)
-			{
-			if (p != nodeToMove && p->anc->marked == YES)
-				p->marked = YES;
-			else if (p->anc->marked == 2)
-				p->marked = 2;
-			}
-		if (p->left == NULL && p->right == NULL && p->marked == YES)
-			nTipsOnSideA++;
-		else if (p->left == NULL && p->right == NULL && p->marked == NO)
-			{
-			if (p != nodeToMove)
-				nTipsOnSideB++;
-			}
-		}
-	nTipsOnSideB++;
-	whichTip = (int)(RandomNumber(seed)*nTipsOnSideA);
-	tempI = 0;
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		if (p->left == NULL && p->right == NULL && p->marked == YES)
-			{
-			if (tempI == whichTip)
-				{
-				pathEndA = p;
-				break;
-				}
-			tempI++;
-			}
-		}
-	whichTip = (int)(RandomNumber(seed)*nTipsOnSideB);
-	if (whichTip == 0)
-		pathEndB = t->root;
-	else
-		{
-		tempI = 1;
-		for (i=0; i<t->nNodes; i++)
-			{
-			p = t->allDownPass[i];
-			if (p->left == NULL && p->right == NULL && p->marked == NO && p != nodeToMove)
-				{
-				if (tempI == whichTip)
-					{
-					pathEndB = p;
-					break;
-					}
-				tempI++;
-				}
-			}
-		}
-	isPathTerminusRoot = NO;
-	if (pathEndB == t->root)
-		isPathTerminusRoot = YES;
-	if (pathEndA == NULL || pathEndB == NULL)
-		{
-		MrBayesPrint ("%s   Problem getting path ends in SPRClock\n", spacer);
-		goto errorExit;
-		}
-	else if (pathEndA == t->root)
-		{
-		MrBayesPrint ("%s   Path end A should not be the root\n", spacer);
-		goto errorExit;
-		}
-				
-	/* Mark the nodes on the path. */
-	pathLength = baseOfPath = 0.0;
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		p->marked = NO;
-		if (p == pathEndA || p == pathEndB)
-			p->marked = YES;
-		if (p->left != NULL && p->right != NULL)
-			{
-			if (p->left->marked == YES && p->right->marked == NO)
-				p->marked = YES;
-			else if (p->left->marked == NO && p->right->marked == YES)
-				p->marked = YES;
-			else if (p->left->marked == YES && p->right->marked == YES)
-				baseOfPath = p->nodeDepth;
-			}
-		if (p->marked == YES)
-			pathLength += p->length;
-		}	
-
-	/* Get length of path above nodeToDetach */
-	pathLengthA = oldAttachmentNode->anc->nodeDepth;
-	if (isPathTerminusRoot == NO)
-		{
-		pathLength = 2.0 * baseOfPath;
-		pathLengthB = 2.0 * baseOfPath - pathLengthA;
-		}
-	else
-		{
-		pathLength = 0.0;
-		pathLengthB = 0.0;
-		}
-	
-	/* Readjust time of node to be moved and lengths of branches above the node-to-move. Also,
-	   get the old and new ceilings. */
-	oldAttachmentDepth = oldAttachmentNode->anc->nodeDepth;
-	if (nodeToMove->left == NULL && nodeToMove->right == NULL)
-		{
-		oldD = newD = 0.0;
-		(*lnProposalRatio) += 0.0;
-		}
-	else
-		{
-		if (nodeToMove->left->length < nodeToMove->right->length)
-			oldD = nodeToMove->left->length;
-		else
-			oldD = nodeToMove->right->length;
-		len = oldD + nodeToMove->length;
-		oldProportions[0] = oldD / len;
-		oldProportions[1] = 1.0 - oldProportions[0];
-		dirichletParameters[0] = oldProportions[0] * alphaPi;
-		dirichletParameters[1] = oldProportions[1] * alphaPi;
-		DirichletRandomVariable (dirichletParameters, newProportions, 2, seed);
-		for (i=0; i<2; i++)
-			if (newProportions[i] < 0.01)
-				newProportions[i] = 0.01;
-		sum = newProportions[0] + newProportions[1];
-		newProportions[0] /= sum;
-		newProportions[1] /= sum;
-		sum = newProportions[0]*alphaPi + newProportions[1]*alphaPi;
-		x = LnGamma(sum) - LnGamma(newProportions[0]*alphaPi) -  LnGamma(newProportions[1]*alphaPi);
-		x += (newProportions[0]*alphaPi-1.0)*log(oldProportions[0]) + (newProportions[1]*alphaPi-1.0)*log(oldProportions[1]);
-		sum = oldProportions[0]*alphaPi + oldProportions[1]*alphaPi;
-		y = LnGamma(sum) - LnGamma(oldProportions[0]*alphaPi) - LnGamma(oldProportions[1]*alphaPi);
-		y += (oldProportions[0]*alphaPi-1.0)*log(newProportions[0]) + (oldProportions[1]*alphaPi-1.0)*log(newProportions[1]);
-		(*lnProposalRatio) += x - y;
-		newD = newProportions[0] * len;
-		/*printf ("%1.10lf %1.10lf %1.10lf %1.10lf \n", oldProportions[0], oldProportions[1], newProportions[0], newProportions[1]);*/
-		}
-	oldCeiling = nodeToMove->nodeDepth;
-	newCeiling = oldCeiling + (newD - oldD);
-	nodeToMove->nodeDepth = newCeiling;
-	if (nodeToMove->left != NULL)
-		nodeToMove->left->length = nodeToMove->nodeDepth - nodeToMove->left->nodeDepth;
-	if (nodeToMove->right != NULL)
-		nodeToMove->right->length = nodeToMove->nodeDepth - nodeToMove->right->nodeDepth;
-	
-	/* pick a direction to slide the node in */
-	if (RandomNumber(seed) < 0.5)
-		direction = UP;
-	else
-		direction = DOWN;
-		
-	/* pick the distance to move the node */
-	if (direction == UP)
-		{
-		len = pathLengthA - newCeiling;
-		
-		do
-			{
-			dist = -(1.0 / attachmentRate) * log(1.0 - RandomNumber(seed) * (1.0 - exp(-attachmentRate*len)));
-			if (dist > len)
-				{
-				MrBayesPrint ("%s   Problem with new attachment point (%lf %lf)\n", spacer, len, dist);
-				goto errorExit;
-				}
-			newAttachmentDepth = oldAttachmentDepth - dist;
-			} while (oldAttachmentDepth - dist < newCeiling);
-			
-		lnProbForward += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
-		newPathLengthA = pathLengthA - dist;
-		if (isPathTerminusRoot == NO)
-			{
-			len = pathLengthB - oldCeiling;
-			lnProbReverse += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
-			}
-		else
-			{
-			lnProbReverse += log(attachmentRate) - attachmentRate*dist;
-			}
-		}
-	else
-		{
-		if (isPathTerminusRoot == NO)
-			{
-			len = pathLengthB - newCeiling;
-			dist = -(1.0 / attachmentRate) * log(1.0 - RandomNumber(seed) * (1.0 - exp(-attachmentRate*len)));
-			if (dist > len)
-				{
-				MrBayesPrint ("%s   Problem with new attachment point\n", spacer);
-				goto errorExit;
-				}
-			lnProbForward += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
-			}
-		else
-			{
-			dist = -(1.0 / attachmentRate) * log(1.0 - RandomNumber(seed));
-			lnProbForward += log(attachmentRate) - attachmentRate*dist;
-			}
-		newPathLengthA = pathLengthA + dist;
-		len = newPathLengthA - oldCeiling;
-		lnProbReverse += log(attachmentRate) - attachmentRate*dist - log(1.0 - exp(-attachmentRate*len));
-		}
-	
-	/* figure out the new attachment depth */
-	if (direction == UP)
-		{
-		/* figured out above */
-		}
-	else	
-		{
-		if (isPathTerminusRoot == NO)
-			{
-			if (oldAttachmentDepth + dist < baseOfPath)
-				newAttachmentDepth = oldAttachmentDepth + dist;
-			else
-				{
-				dist -= baseOfPath - oldAttachmentDepth;
-				newAttachmentDepth = baseOfPath - dist;
-				}
-			}
-		else
-			{
-			newAttachmentDepth = oldAttachmentDepth + dist;
-			}		
-		}
-	if (newAttachmentDepth < newCeiling)
-		{
-		MrBayesPrint ("%s   Problem with new attachment point 1 (dist = %1.10lf len = %lf\n", spacer, dist, len);
-		goto errorExit;
-		}
-		
-	/* find the new attachment node */
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		if (p->anc != NULL)
-			{
-			if (p->anc->anc != NULL)
-				{
-				if (p->marked == YES && p->nodeDepth < newAttachmentDepth && p->anc->nodeDepth > newAttachmentDepth)
-					{
-					newAttachmentNode = p;
-					break;
-					}
-				}
-			else
-				{
-				if (p->marked == YES && p->nodeDepth < newAttachmentDepth)
-					{
-					newAttachmentNode = p;
-					break;
-					}
-				}
-			}
-		}	
-
-#	if defined (DEBUG_SPRCLOCK)
-	printf ("nodeToMove        = %d\n", nodeToMove->index);
-	printf ("nodeToDetach      = %d\n", nodeToDetach->index);
-	printf ("oldAttachmentNode = %d\n", oldAttachmentNode->index);
-	printf ("nTipsOnSideA      = %d\n", nTipsOnSideA);
-	printf ("nTipsOnSideB      = %d\n", nTipsOnSideB);
-	printf ("pathLength        = %lf\n", pathLength);
-	printf ("pathLengthA       = %lf\n", pathLengthA);
-	printf ("baseOfPath        = %lf\n", baseOfPath);
-	if (isPathTerminusRoot == NO)
-		printf ("pathLengthB       = %lf\n", pathLengthB);
-	else
-		printf ("pathLengthB       = infinity\n");
-	if (pathEndA != NULL)
-		printf ("pathEndA          = %d\n", pathEndA->index);
-	if (pathEndB != NULL)
-		printf ("pathEndB          = %d\n", pathEndB->index);
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		printf ("%4d -- %d\n", p->index, p->marked);
-		}
-	printf ("oldCeiling        = %lf\n", oldCeiling);
-	printf ("newCeiling        = %lf\n", newCeiling);
-	if (direction == UP)
-		printf ("dist up           = %lf\n", dist);
-	else
-		printf ("dist down         = %lf\n", dist);
-	printf ("oldAttachmentDepth= %lf\n", oldAttachmentDepth);
-	printf ("newAttachmentDepth= %lf\n", newAttachmentDepth);
-	printf ("newAttachmentNode = %d\n", newAttachmentNode->index);
-#	endif
-			
-	/* Check to see if the topology of the tree has changed. */
-	if (newAttachmentNode == oldAttachmentNode || newAttachmentNode == nodeToDetach)
-		topologyHasChanged = NO;
-	else
-		topologyHasChanged = YES;
-
-	/* Make the rearrangement by detaching and reattaching the subtree. */
-	if (topologyHasChanged == NO)
-		{
-		p = nodeToDetach->anc;
-		nodeToDetach->nodeDepth = newAttachmentDepth;
-		nodeToDetach->length = p->nodeDepth - nodeToDetach->nodeDepth;
-		nodeToMove->length = nodeToDetach->nodeDepth - nodeToMove->nodeDepth;
-		newAttachmentNode->length = newAttachmentNode->anc->nodeDepth - newAttachmentNode->nodeDepth;
-		oldAttachmentNode->length = oldAttachmentNode->anc->nodeDepth - oldAttachmentNode->nodeDepth;
-		if (newAttachmentNode->anc->anc == NULL)
-			nodeToDetach->length = 0.0;
-		}
-	else
-		{
-		p = nodeToDetach->anc;
-		if (p->left == nodeToDetach)
-			p->left = oldAttachmentNode;
-		else
-			p->right = oldAttachmentNode;
-		oldAttachmentNode->anc = p;
-		oldAttachmentNode->length += nodeToDetach->length;
-		nodeToDetach->left = nodeToDetach->right = nodeToDetach->anc = NULL;
-		nodeToDetach->length = 0.0;
-		nodeToDetach->nodeDepth = newAttachmentDepth;
-		p = newAttachmentNode->anc;
-		if (p->left == newAttachmentNode)
-			{
-			p->left = nodeToDetach;
-			nodeToDetach->anc = p;
-			nodeToDetach->left = newAttachmentNode;
-			newAttachmentNode->anc = nodeToDetach;
-			nodeToDetach->right = nodeToMove;
-			nodeToMove->anc = nodeToDetach;
-			}
-		else
-			{
-			p->right = nodeToDetach;
-			nodeToDetach->anc = p;
-			nodeToDetach->right = newAttachmentNode;
-			newAttachmentNode->anc = nodeToDetach;
-			nodeToDetach->left = nodeToMove;
-			nodeToMove->anc = nodeToDetach;
-			}
-		nodeToDetach->length = p->nodeDepth - nodeToDetach->nodeDepth;
-		nodeToMove->length = nodeToDetach->nodeDepth - nodeToMove->nodeDepth;
-		newAttachmentNode->length = nodeToDetach->nodeDepth - newAttachmentNode->nodeDepth;
-		if (newAttachmentNode->anc->anc == NULL)
-			nodeToDetach->length = 0.0;
-		}
-	
-	/* Get the downpass sequence for the new tree if the topology has changed. */
-	if (topologyHasChanged == YES)
-		GetDownPass (t);
-		
-	/* Calculate another term in the proposal ratio */
-	if (topologyHasChanged == YES)
-		{
-		lnProbForward += log(1.0 / nTipsOnSideA) + log(1.0 / nTipsOnSideB);
-
-		nTipsOnSideA = nTipsOnSideB = 0;
-		for (i=t->nNodes-1; i>=0; i--)
-			{
-			p = t->allDownPass[i];
-			p->marked = NO;
-			if (p == nodeToDetach)
-				p->marked = YES;
-			else if (p == nodeToMove)
-				p->marked = 2;
-				
-			if (p->anc != NULL)
-				{
-				if (p != nodeToMove && p->anc->marked == YES)
-					p->marked = YES;
-				else if (p->anc->marked == 2)
-					p->marked = 2;
-				}
-			if (p->left == NULL && p->right == NULL && p->marked == YES)
-				nTipsOnSideA++;
-			else if (p->left == NULL && p->right == NULL && p->marked == NO)
-				{
-				if (p != nodeToMove)
-					nTipsOnSideB++;
-				}
-			}
-		nTipsOnSideB++;
-		lnProbReverse += log(1.0 / nTipsOnSideA) + log(1.0 / nTipsOnSideB);
-		}
-
-	/* Update proposal ratio. */
-	(*lnProposalRatio) += lnProbReverse + lnProbForward;
-
-	/* Set flags for update of transition probabilities. */
-	oldAttachmentNode->upDateTi = YES;
-	nodeToDetach->upDateTi = YES;
-	nodeToMove->upDateTi = YES;
-	newAttachmentNode->upDateTi = YES;
-	if (nodeToMove->left != NULL && nodeToMove->right != NULL)
-		nodeToMove->left->upDateTi = nodeToMove->right->upDateTi = YES;
-		
-	/* readjust branch lengths if they are too small */
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		if (p->left != NULL && p->right != NULL && p->anc != NULL)
-			{
-			if (p->nodeDepth - p->left->nodeDepth < BRLENS_MIN || p->nodeDepth - p->right->nodeDepth < BRLENS_MIN)
-				{
-				if (p->left->nodeDepth > p->right->nodeDepth)
-					p->nodeDepth = p->left->nodeDepth + BRLENS_MIN;
-				else
-					p->nodeDepth = p->right->nodeDepth + BRLENS_MIN;
-				p->left->length  = p->nodeDepth - p->left->nodeDepth;
-				p->right->length = p->nodeDepth - p->right->nodeDepth;
-				p->length = p->anc->nodeDepth - p->nodeDepth;
-				p->upDateTi = p->left->upDateTi = p->right->upDateTi = YES;
-				q = p;
-				while (q->anc != NULL)
-					{
-					q->upDateCl = YES;
-					q = q->anc;
-					}
-				}
-			}
-		}
-
-	/* check all of the branch lengths */
-	for (i=0; i<t->nNodes; i++)
-		{
-		p = t->allDownPass[i];
-		if (p->anc != NULL)
-			{
-			if (p->anc->anc != NULL)
-				{
-				if (p->length < 0.0)
-					{
-					MrBayesPrint ("%s   Negative branch length in SPR clock\n", spacer);
-					goto errorExit;
-					}
-				}
-			}
-		}
-		
-	/* Set flags for update of conditional likelihoods. */
-	p = oldAttachmentNode->anc;
-	while (p->anc != NULL)
-		{
-		p->upDateCl = YES;
-		p = p->anc;
-		}
-	p = nodeToMove;
-	while (p->anc != NULL)
-		{
-		p->upDateCl = YES;
-		p = p->anc;
-		}
-
-	/* calculate prior ratio for clock trees */
-	if (LogClockTreePriorRatio (param, chain, lnPriorRatio) == ERROR)
-        return (ERROR);
-
-#	if defined (DEBUG_SPRCLOCK)
-	printf ("After:\n");
-	ShowNodes (t->root, 2, YES);
-	getchar();
-#	endif
-
-	return (NO_ERROR);
-	
-	errorExit:
-		printf ("Before:\n");
-		ShowNodes (t->root, 2, YES);
-		printf ("nodeToMove        = %d\n", nodeToMove->index);
-		printf ("nodeToDetach      = %d\n", nodeToDetach->index);
-		printf ("oldAttachmentNode = %d\n", oldAttachmentNode->index);
-		printf ("nTipsOnSideA      = %d\n", nTipsOnSideA);
-		printf ("nTipsOnSideB      = %d\n", nTipsOnSideB);
-		printf ("pathLength        = %lf\n", pathLength);
-		printf ("pathLengthA       = %lf\n", pathLengthA);
-		printf ("baseOfPath        = %lf\n", baseOfPath);
-		if (isPathTerminusRoot == NO)
-			printf ("pathLengthB       = %lf\n", pathLengthB);
-		else
-			printf ("pathLengthB       = infinity\n");
-		if (pathEndA != NULL)
-			printf ("pathEndA          = %d\n", pathEndA->index);
-		if (pathEndB != NULL)
-			printf ("pathEndB          = %d\n", pathEndB->index);
-		for (i=0; i<t->nNodes; i++)
-			{
-			p = t->allDownPass[i];
-			printf ("%4d -- %d\n", p->index, p->marked);
-			}
-		printf ("oldCeiling        = %lf\n", oldCeiling);
-		printf ("newCeiling        = %lf\n", newCeiling);
-		if (direction == UP)
-			printf ("dist up           = %lf\n", dist);
-		else
-			printf ("dist down         = %lf\n", dist);
-		printf ("oldAttachmentDepth= %lf\n", oldAttachmentDepth);
-		printf ("newAttachmentDepth= %lf\n", newAttachmentDepth);
-		printf ("newAttachmentNode = %d\n", newAttachmentNode->index);
-		return (ERROR);
-
-}
-
-
-
-
-
-int Move_Statefreqs (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -34664,7 +34084,7 @@ int Move_Statefreqs (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 |       The Hastings ratio of this move is 1.0.
 |
 ----------------------------------------------------------------*/
-int Move_Statefreqs_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -34744,7 +34164,7 @@ int Move_Statefreqs_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnP
 
 
 
-int Move_StatefreqsSymDirMultistate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -34837,7 +34257,7 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, SafeLong *seed, Mr
 
 
 
-int Move_SwitchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -34930,7 +34350,7 @@ int Move_SwitchRate (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 
-int Move_SwitchRate_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -35019,7 +34439,7 @@ int Move_SwitchRate_M (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Tratio_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -35113,7 +34533,7 @@ int Move_Tratio_Dir (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 /* Code added by Jeremy Brown and modified by Maxim Teslenko */
-int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -35241,7 +34661,7 @@ int Move_TreeLen (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio,
 |	Move_TreeStretch: Shrink or grow a clock tree
 |
 -------------------------------------------------------------------------------------*/
-int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	int			i, j, *nEvents, numChangedNodes;
@@ -35425,7 +34845,7 @@ int Move_TreeStretch (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRa
 |      Programmed by JH 2003-08-13
 |
 ----------------------------------------------------------------*/
-int Move_UnrootedSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
@@ -36519,7 +35939,7 @@ FILE *OpenNewMBPrintFile (char *fileName)
 
 
 
-int PickProposal (SafeLong *seed, int chainIndex)
+int PickProposal (RandLong *seed, int chainIndex)
 
 {
 	
@@ -38411,7 +37831,7 @@ int PrintParsMatrix (void)
 {
 
 	int				i, j=0, k, c, d, printWidth, nextColumn, nChars, inputChar;
-	SafeLong		x, y;
+	BitsLong		x, y;
 	char			ch;
 	ModelInfo		*m;
 
@@ -40539,7 +39959,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
 
 
 /* Generalized normal move for real random variables */
-int Move_RealNormal (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RealNormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	int             i;
     MrBFlt			oldX, newX, tuning, minX, maxX, u, z;
@@ -40590,7 +40010,7 @@ int Move_RealNormal (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRat
 
 
 /* Generalized slider move for real random variables */
-int Move_RealSlider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RealSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	int				i, isValid;
 	MrBFlt			oldX, newX, window, minX, maxX, u;
@@ -41642,7 +41062,7 @@ int RemoveNodeScalers_SSE (TreeNode *p, int division, int chain)
 
 
 /* RemovePartition: Remove a partition from the tree keeping track of partition frequencies */
-int RemovePartition (PFNODE *r, SafeLong *p, int runId)
+int RemovePartition (PFNODE *r, BitsLong *p, int runId)
 {
 	int		i, comp;
 	
@@ -41698,7 +41118,7 @@ int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
 	int			i, j, nTaxa;
 	TreeNode	*p;
 
-    extern void ShowParts (FILE *,SafeLong *,int);
+    extern void ShowParts (FILE *,BitsLong *,int);
 
     if (tree->isRooted == YES)
         nTaxa = tree->nNodes - tree->nIntNodes - 1;
@@ -42574,7 +41994,7 @@ int ReusePreviousResults (int *numSamples, int steps)
 
 
 
-int RunChain (SafeLong *seed)
+int RunChain (RandLong *seed)
 
 {
 	
@@ -44451,7 +43871,7 @@ void SetChainIds (void)
 int setFilePositions (int samplePos)
 {
 	int	i, j, k, longestLine;
-	SafeLong	lastBlock;
+	BitsLong	lastBlock;
 	char	*lineBuf;
 	FILE	*fp;
 	char	*tempStr;
@@ -46215,13 +45635,13 @@ int SetUpPartitionCounters (void)
 		MrBayesPrint ("%s   ERROR: pfcounters not free in SetUpPartitionCounters\n", spacer);
 		return ERROR;
 		}
-	partition = (SafeLong **) SafeCalloc (2*numLocalTaxa, sizeof (SafeLong *));
+	partition = (BitsLong **) SafeCalloc (2*numLocalTaxa, sizeof (BitsLong *));
 	if (partition == NULL)
 		{
 		MrBayesPrint ("%s   Failed to allocate partition in SetUpPartitionCounters\n", spacer);
 		return ERROR;
 		}
-	partition[0] = (SafeLong *) SafeCalloc (2*numLocalTaxa * nLongsNeeded, sizeof(SafeLong));
+	partition[0] = (BitsLong *) SafeCalloc (2*numLocalTaxa * nLongsNeeded, sizeof(BitsLong));
 	if (partition[0] == NULL)
 		{
 		free (partition);
@@ -46267,7 +45687,7 @@ int SetUpTermState (void)
 {
 
 	int			i, k, n, c, d, x=0, *termStatePtr;
-	SafeLong	*p;
+	BitsLong	*p;
 	ModelInfo	*m;
 	ModelParams *mp;
 	int			numComprChars = 0; 
@@ -46683,7 +46103,7 @@ PFNODE *Talloc (void)
 	if (temp == NULL)
 		return NULL;
 
-	temp->partition = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof (SafeLong));
+	temp->partition = (BitsLong *) SafeCalloc (nLongsNeeded, sizeof (BitsLong));
 	if (temp->partition == NULL)
 		{
 		free (temp);

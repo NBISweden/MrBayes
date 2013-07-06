@@ -10,14 +10,14 @@ extern CharInformation	*charInfo;								/* holds critical information about cha
 extern char				**charSetNames;                         /* holds names of character sets                 */
 extern int				*compCharPos;		                    /* char position in compressed matrix            */
 extern int				*compColPos;		                    /* column position in compressed matrix		     */
-extern SafeLong		    *compMatrix;		                    /* compressed character matrix					 */
+extern BitsLong		    *compMatrix;		                    /* compressed character matrix					 */
 extern int				compMatrixRowSize;	                    /* row size of compressed matrix				 */
 extern Comptree			comptreeParams;                         /* holds parameters for comparetree command      */
 extern char				**constraintNames;					    /* holds names of constraints                    */
-extern SafeLong         **definedConstraint;                    /* holds information about defined constraints   */
-extern SafeLong        **definedConstraintTwo;                  /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)                                  */
-extern SafeLong        **definedConstraintPruned;               /* bitfields representing taxa sets of defined constraints after delited taxa are removed                                         */
-extern SafeLong        **definedConstraintTwoPruned;            /* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
+extern BitsLong         **definedConstraint;                    /* holds information about defined constraints   */
+extern BitsLong        **definedConstraintTwo;                  /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)                                  */
+extern BitsLong        **definedConstraintPruned;               /* bitfields representing taxa sets of defined constraints after delited taxa are removed                                         */
+extern BitsLong        **definedConstraintTwoPruned;            /* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
 extern int				dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */
@@ -28,11 +28,11 @@ extern int				defPartition;                           /* flag for whether charac
 extern int				defTaxa;                                /* are taxon labels defined ?                    */
 extern Doublet			doublet[16];                            /* holds information on states for doublets      */
 extern int				echoMB;							   	    /* flag used by Manual to prevent echoing        */
-extern SafeLong         expecting;								/* variable denoting expected token type         */
+extern BitsLong         expecting;								/* variable denoting expected token type         */
 extern int				fileNameChanged;					    /* has file name been changed?                   */
 extern int				foundNewLine;                           /* whether a new line has been found             */
 extern char				gapId;                                  /* gap character Id                              */
-extern SafeLong			globalSeed;                             /* seed that is initialized at start up          */
+extern long             globalSeed;                             /* seed that is initialized at start up          */
 extern char				**headerNames;                          /* string to hold headers in sump and plot       */
 extern int 				inComment;                              /* flag for whether input stream is commented    */
 extern int				inferAncStates;					   	    /* should ancestral states be inferred (y/n)     */
@@ -69,7 +69,7 @@ extern char				missingId;                              /* missing character Id  
 extern Tree				**mcmcTree;								/* pointers to mcmc trees						 */
 extern Model			*modelParams;							/* holds model params for partitions             */
 extern ModelInfo		*modelSettings;							/* stores important info on model params         */
-extern int              nBitsInALong;                           /* number of bits in a SafeLong                  */
+extern int              nBitsInALong;                           /* number of bits in a BitsLong                  */
 extern Calibration      *nodeCalibration;                       /* holds information about node calibrations     */
 extern int				noWarn;                					/* no warnings on overwriting files              */
 extern int              nPThreads;                              /* number of pthreads to use                     */
@@ -119,8 +119,8 @@ extern int				readComment;							/* should we read comment (looking for &)?     
 extern int				readWord;							    /* should we read a word next?                   */
 extern ReassembleInfo	reassembleParams;		                /* holds parameters for reassemble command       */
 extern int				replaceLogFile;                         /* should logfile be replace/appended to         */
-extern SafeLong			runIDSeed;                              /* seed used only for generating run ID [stamp]  */
-extern SafeLong			safeLongWithAllBitsSet;                 /* a SafeLong with all bits set, for bit ops     */
+extern long             runIDSeed;                              /* seed used only for generating run ID [stamp]  */
+extern BitsLong			bitsLongWithAllBitsSet;                 /* a BitsLong with all bits set, for bit ops     */
 extern int 				setUpAnalysisSuccess;                   /* Set to YES if analysis is set without error   */
 extern int 				scientific;                             /* use scientific format for samples ?           */
 extern ShowmovesParams	showmovesParams;					    /* holds parameters for Showmoves command        */
@@ -130,7 +130,7 @@ extern int              **speciespartitionId;                   /* holds info ab
 extern char				**speciespartitionNames;                /* hold names of speciespartitions (first is "default") */
 extern int				speciespartitionNum;                    /* index of current species partition            */
 extern char			    stamp[11];                              /* holds a unique identifier for each analysis   */
-extern SafeLong			swapSeed;                               /* seed used only for determining which to swap  */
+extern long             swapSeed;                               /* seed used only for determining which to swap  */
 extern int				state[MAX_CHAINS];						/* state of chain								 */
 extern MrBFlt			*stdStateFreqs;				            /* std char state frequencies					 */
 extern int				*stdType;				                /* compressed std char type: ord, unord, irrev  */
@@ -145,7 +145,7 @@ extern int				*sympiIndex;							/* sympi state freq index for multistate chars 
 extern TaxaInformation	*taxaInfo;								/* holds critical information about taxa         */
 extern char				**taxaNames;                            /* holds name of taxa                            */
 extern char				**taxaSetNames;                         /* holds names of taxa sets                      */
-extern SafeLong         **taxaSet;                              /* holds information about defined taxasets      */
+extern BitsLong         **taxaSet;                              /* holds information about defined taxasets      */
 extern int              *tempActiveConstraints;                 /* info on the active constraints in prset       */
 extern int              *tempLinkUnlink[NUM_LINKED];            /* for changing parameter linkage                */
 extern int              *tempLinkUnlinkVec;                     /* for changing parameter linkage                */

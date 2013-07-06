@@ -86,7 +86,8 @@ int  CommandLine (int argc, char **argv);
 void PrintHeader (void);
 
 /* global variables, declared in this file */
-ModelParams defaultModel;                /* Default model; values set in InitializeMrBayes */
+BitsLong    bitsLongWithAllBitsSet;      /* BitsLong with all bits set, for bit ops       */
+ModelParams defaultModel;                /* Default model; vals set in InitializeMrBayes  */
 int			defTaxa;                     /* flag for whether number of taxa is known      */
 int			defChars;                    /* flag for whether number of chars is known     */
 int			defMatrix;                   /* flag for whether matrix is successfull read   */
@@ -94,17 +95,16 @@ int			defPartition;                /* flag for whether character partition is re
 int			defPairs;                    /* flag for whether pairs are read               */
 Doublet		doublet[16];                 /* holds information on states for doublets      */
 int			fileNameChanged;			 /* has file name been changed ?                  */
-SafeLong	globalSeed;                  /* seed that is initialized at start up          */
+RandLong    globalSeed;                  /* seed that is initialized at start up          */
 char        **modelIndicatorParams;      /* model indicator params                        */
 char        ***modelElementNames;        /* names for component models                    */
-int			nBitsInALong;                /* number of bits in a SafeLong                  */
+int			nBitsInALong;                /* number of bits in a BitsLong                  */
 int			nPThreads;					 /* number of pthreads to use                     */
 int			numUserTrees;			     /* number of defined user trees		    	  */
 int			readComment;			     /* should we read comment (looking for &) ?      */
 int			readWord;					 /* should we read word next ?                    */
-SafeLong	runIDSeed;                   /* seed used only for determining run ID [stamp] */
-SafeLong    safeLongWithAllBitsSet;      /* SafeLong with all bits set, for bit ops       */
-SafeLong	swapSeed;                    /* seed used only for determining which to swap  */
+RandLong    runIDSeed;                   /* seed used only for determining run ID [stamp] */
+RandLong    swapSeed;                    /* seed used only for determining which to swap  */
 int         userLevel;                   /* user level                                    */
 PolyTree	*userTree[MAX_NUM_USERTREES];/* array of user trees							  */
 char        workingDir[100];             /* working directory                             */
@@ -168,9 +168,9 @@ int main (int argc, char *argv[])
 
 	/*mtrace();*/
 	/* calculate the size of a long - used by bit manipulation functions */
-	nBitsInALong = sizeof(SafeLong) * 8;
+	nBitsInALong = sizeof(BitsLong) * 8;
     for (i=0; i<nBitsInALong; i++)
-        SetBit(i, &safeLongWithAllBitsSet);
+        SetBit(i, &bitsLongWithAllBitsSet);
 
 #	if defined (__MWERKS__) & defined (MAC_VERSION)
 	/* Set up interface when using the Metrowerks compiler. This
@@ -419,7 +419,7 @@ void GetTimeSeed (void)
 	if (proc_id == 0)
 		{
 		curTime = time(NULL);
-		globalSeed  = (SafeLong)curTime;
+		globalSeed  = (BitsLong)curTime;
 		if (globalSeed < 0)
 			globalSeed = -globalSeed;
 		}
@@ -433,7 +433,7 @@ void GetTimeSeed (void)
 		{
 		/* Note: swapSeed will often be same as globalSeed */
 		curTime = time(NULL);
-		swapSeed  = (SafeLong)curTime;
+		swapSeed  = (BitsLong)curTime;
 		if (swapSeed < 0)
 			swapSeed = -swapSeed;
 		}
@@ -447,7 +447,7 @@ void GetTimeSeed (void)
 		{
 		/* Note: runIDSeed will often be same as globalSeed */
 		curTime = time(NULL);
-		runIDSeed  = (SafeLong)curTime;
+		runIDSeed  = (BitsLong)curTime;
 		if (runIDSeed < 0)
 			runIDSeed = -runIDSeed;
 		}
@@ -459,19 +459,19 @@ void GetTimeSeed (void)
 
 #	else
 	curTime = time(NULL);
-	globalSeed  = (SafeLong)curTime;
+	globalSeed  = (BitsLong)curTime;
 	if (globalSeed < 0)
 		globalSeed = -globalSeed;
 		
 	/* Note: swapSeed will often be the same as globalSeed */
 	curTime = time(NULL);
-	swapSeed  = (SafeLong)curTime;
+	swapSeed  = (BitsLong)curTime;
 	if (swapSeed < 0)
 		swapSeed = -swapSeed;
 
 	/* Note: runIDSeed will often be the same as globalSeed */
 	curTime = time(NULL);
-	runIDSeed  = (SafeLong)curTime;
+	runIDSeed  = (BitsLong)curTime;
 	if (runIDSeed < 0)
 		runIDSeed = -runIDSeed;
 		
@@ -490,7 +490,7 @@ int InitializeMrBayes (void)
 	
 	int		i, j, growthFxn[6];
 
-    nBitsInALong         = sizeof(SafeLong) * 8;     /* global variable: number of bits in a SafeLong */
+    nBitsInALong         = sizeof(BitsLong) * 8;     /* global variable: number of bits in a BitsLong */
 	userLevel            = STANDARD_USER;            /* default user level                            */
 
 	readWord			 = NO;                       /* should we read a word next ?                  */

@@ -225,7 +225,7 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 	nLongsNeeded = (numTaxa -1) / nBitsInALong + 1;
 
     /* allocate space */
-    pt->bitsets = (SafeLong *) SafeRealloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(SafeLong));
+    pt->bitsets = (BitsLong *) SafeRealloc ((void *)pt->bitsets, pt->memNodes*nLongsNeeded*sizeof(BitsLong));
 	if (pt->bitsets == NULL)
 		return (ERROR);
     for (i=0; i<pt->memNodes*nLongsNeeded; i++)
@@ -392,7 +392,7 @@ int AllocateTreePartitions (Tree *t)
 	nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
 	/* reallocate space */
-    t->bitsets = (SafeLong *) SafeRealloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(SafeLong)));
+    t->bitsets = (BitsLong *) SafeRealloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(BitsLong)));
     if (!t->bitsets)
 		return (ERROR);
 	
@@ -421,7 +421,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa;
-	SafeLong	*mask;
+	BitsLong	*mask;
 	TreeNode	*p, *q;
 
     if (t1->nNodes != t2->nNodes)
@@ -436,7 +436,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 	
     /* allocate space for mask */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    mask = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof(SafeLong));
+    mask = (BitsLong *) SafeCalloc (nLongsNeeded, sizeof(BitsLong));
 	
     /* set mask */
     for (i=0; i<nTaxa; i++)
@@ -486,7 +486,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 
 {
 	int			i, j, k, nLongsNeeded, nTaxa;
-	SafeLong	*mask;
+	BitsLong	*mask;
 	TreeNode	*p, *q;
 
 	extern void ShowNodes(TreeNode*, int, int);
@@ -503,7 +503,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 	
 	/* allocate space for mask */
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1;
-    mask = (SafeLong *) SafeCalloc (nLongsNeeded, sizeof(SafeLong));
+    mask = (BitsLong *) SafeCalloc (nLongsNeeded, sizeof(BitsLong));
 	
     /* set mask */
     for (i=0; i<nTaxa; i++)
@@ -570,13 +570,13 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 {
 
 	int				i, j, k, constraintId, nLongsNeeded, nextNode;
-	SafeLong		*constraintPartition, *mask;
+	BitsLong		*constraintPartition, *mask;
 	PolyNode		*pp, *qq, *rr, *ss, *tt;
 	
 	pt->isRooted = t->isRooted;
 
     nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
-	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (BitsLong *) SafeCalloc (2*nLongsNeeded, sizeof(BitsLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in BuildConstraintTree", spacer);
@@ -794,7 +794,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 |      of tips.
 |
 ----------------------------------------------*/
-int BuildRandomRTopology (Tree *t, SafeLong *seed)
+int BuildRandomRTopology (Tree *t, RandLong *seed)
 {
 	int			i, j, nTips;
 	TreeNode	*p, *q, *r;
@@ -867,7 +867,7 @@ int BuildRandomRTopology (Tree *t, SafeLong *seed)
 |      this routine to get the right root.
 |
 ----------------------------------------------*/
-int BuildRandomUTopology (Tree *t, SafeLong *seed)
+int BuildRandomUTopology (Tree *t, RandLong *seed)
 {
 	int			i, j, nTips;
 	TreeNode	*p, *q, *r;
@@ -938,7 +938,7 @@ int CheckConstraints (Tree *t)
 {
 
 	int				a, i, j, k, nLongsNeeded;
-	SafeLong		*constraintPartition, *mask;
+	BitsLong		*constraintPartition, *mask;
 	TreeNode		*p=NULL;
 	   	
 	if (t->checkConstraints == NO)
@@ -946,7 +946,7 @@ int CheckConstraints (Tree *t)
 
 	/* allocate space */
 	nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
-	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (BitsLong *) SafeCalloc (2*nLongsNeeded, sizeof(BitsLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition in CheckConstraints", spacer);
@@ -1032,15 +1032,14 @@ int CheckSetConstraints (Tree *t)
 
 {
 
-	int				a, i, j, k, nLongsNeeded, foundIt;
-	SafeLong		*constraintPartition, *mask;
+	int				a, i, j, k, nLongsNeeded, foundIt, numLocks;
+	BitsLong		*constraintPartition, *mask;
 	TreeNode		*p;
 	   	
     if (t->checkConstraints == NO)
 	    return (NO_ERROR);
 
     /* reset all existing locks, if any */
-    t->nLocks=0;
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
@@ -1062,7 +1061,7 @@ int CheckSetConstraints (Tree *t)
 		}
 
 	nLongsNeeded = ((numLocalTaxa - 1) / nBitsInALong) + 1;
-	constraintPartition = (SafeLong *) SafeCalloc (2*nLongsNeeded, sizeof(SafeLong));
+	constraintPartition = (BitsLong *) SafeCalloc (2*nLongsNeeded, sizeof(BitsLong));
 	if (!constraintPartition)
 		{
 		MrBayesPrint ("%s   Problems allocating constraintPartition", spacer);
@@ -1091,14 +1090,15 @@ int CheckSetConstraints (Tree *t)
             j++;
             }
 
-        k = NumBits(constraintPartition, nLongsNeeded);
-        if (k == 0 || k == 1)
-            continue;
-
 		/* make sure outgroup is outside constrained partition (marked 0) */
 		if (t->isRooted == NO && IsBitSet(localOutGroup, constraintPartition) == YES)
 			FlipBits(constraintPartition, nLongsNeeded, mask);
 
+        /* skip partition if uninformative */
+        k = NumBits(constraintPartition, nLongsNeeded);
+        if (k == 0 || k == 1)
+            continue;
+            
 		/* find the node that should be locked */
 		foundIt = NO;
 		for (i=0; i<t->nIntNodes; i++)
@@ -1120,7 +1120,7 @@ int CheckSetConstraints (Tree *t)
 					p->isDated = YES;
 					p->calibration = &nodeCalibration[a];
 					}
-                t->nLocks++;
+                numLocks++;
 				break;
 				}
 			}
@@ -1133,7 +1133,15 @@ int CheckSetConstraints (Tree *t)
 			return (ERROR);
 			}
 		}
-	
+
+    if( numLocks != t->nLocks )
+        {
+        MrBayesPrint ("%s   Inconsistent lock settings. This is a bug, please report it.\n", spacer);
+        FreeTreePartitions (t);
+        free (constraintPartition);
+        return (ERROR);
+        }
+    
 	/* exit */
 	FreeTreePartitions(t);
 	free (constraintPartition);
@@ -1185,7 +1193,7 @@ void CopyPolyNodes (PolyNode *p, PolyNode *q, int nLongsNeeded)
         {
         assert(p->partition);
         assert(q->partition);
-        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(SafeLong));
+        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
         }
 	p->support                = q->support;
 	p->f                      = q->f;
@@ -1752,7 +1760,7 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
         {
         assert(p->partition);
         assert(q->partition);
-        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(SafeLong));
+        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
         }
     p->label                  = q->label;
 }
@@ -2471,7 +2479,7 @@ MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
 |       is returned.
 |
 --------------------------------------------------------------------*/
-int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, SafeLong *seed)
+int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 
 {
 
@@ -2700,7 +2708,7 @@ int InitClockBrlens (Tree *t)
 
 
 
-int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, SafeLong *seed, int *nEmbeddedTrees)
+int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmbeddedTrees)
 
 {
 	
@@ -4222,7 +4230,7 @@ int PrunePolyTree (PolyTree *pt)
 |		RandPerturb: Randomly perturb a tree by nPert NNIs
 |
 ---------------------------------------------------------------------*/
-int RandPerturb (Tree *t, int nPert, SafeLong *seed)
+int RandPerturb (Tree *t, int nPert, RandLong *seed)
 {
 	
 	int			i, whichNode;
@@ -4302,7 +4310,7 @@ int RandPerturb (Tree *t, int nPert, SafeLong *seed)
 | @param w                      Reference node as described 
 | @param nodeArray              A set of node to order as described
 | @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
-| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition.
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition.
 | @param isRooted               Do constraints apply to rootet tree YES or NO
 |
 | @return                       Number of nodes in "nodeArray" that could be paired  with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint
@@ -4311,7 +4319,7 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 {
 
     int             i, j,  k, FirstEmpty;
-    SafeLong        **constraintPartition;
+    BitsLong        **constraintPartition;
     PolyNode        *tmp;
 
     for (j=0; j<activeConstraintsSize; j++)
@@ -4392,16 +4400,16 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 |       
 | @param partiton               Partition to check 
 | @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints  
-| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition
 | @param isRooted               Do constraints apply to rootet tree YES or NO
 |
 | @return                       Index of first violated constraint in activeConstraints array, -1 if no constraint is violated.
 */
-int ViolatedConstraint(SafeLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
 {
 
     int             j, k;
-    SafeLong        **constraintPartition;
+    BitsLong        **constraintPartition;
 
 
     for (j=0; j<activeConstraintsSize; j++)
@@ -4445,7 +4453,7 @@ int ViolatedConstraint(SafeLong *partition, int *activeConstraints, int activeCo
 |         Remove from activeConstraints references to constraints that become satisfied if PolyNode "w" exist, i.e. they do not need to be checked furter thus become not active  
 |
 | @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
-| @param nLongsNeeded           Length of partition information (in SafeLong) in a node and constraint deffinition.
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition.
 | @param isRooted               Do constraints apply to rootet tree YES or NO
 |
 | @return                       Size of pruned "activeConstraints" array
@@ -4454,7 +4462,7 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 {
 
     int             j,  k;
-    SafeLong        **constraintPartition;
+    BitsLong        **constraintPartition;
     //PolyNode        *tmp;
 
     for (j=0; j<activeConstraintsSize; j++)
@@ -4506,7 +4514,7 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
             If t!=NULL then partitions of nodes of polytree should be allocated for example by AllocatePolyTreePartitions (t);
 | @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
-int RandResolve (Tree *tt, PolyTree *t, SafeLong *seed, int destinationIsRooted)
+int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
 
 {
 

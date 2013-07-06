@@ -79,7 +79,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
 {
     int                     i, j, k, c, s, *inStates, numPartAmbigTips;
     double                  *inPartials;
-    SafeLong                *charBits;
+    BitsLong                *charBits;
     BeagleInstanceDetails   details;
     long preferedFlags, requiredFlags;
 	int resource;
