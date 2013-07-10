@@ -148,12 +148,10 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_ExtSS
 #undef  DEBUG_ExtTBR
 #undef  DEBUG_MOVE_TREEAGE
-#undef  DEBUG_LNLIKELIHOODRATIO
+#undef  DEBUG_LNLIKELIHOODRATIO /* slow if defined!! */
 #undef  DEBUG_NNIClock
 #undef  DEBUG_SPLITMERGE
 #undef  SHOW_MOVE
-
-#undef  DEBUG_SLOW //defining it enable extra slow debug option 
 
 //#define TIMING_ANALIZ
 #if defined (TIMING_ANALIZ)
@@ -15260,7 +15258,7 @@ MrBFlt LogLike (int chain)
 #endif
 			m = &modelSettings[d];
 			
-			if (m->upDateCl == YES && m->correlation != NULL && m->mark != YES)
+			if ( m->upDateCl == YES && m->correlation != NULL && m->mark != YES)
 				{
 				lnL = 0.0;
 				CalcLike_Adgamma(d, m->correlation, chain, &lnL);
@@ -42801,6 +42799,30 @@ int RunChain (RandLong *seed)
 			/* all calculations will be done on this state   */
 			state[chn] ^= 1;  /* XORing with 1 switches between 0 and 1 */
 
+#if ! defined (NDEBUG) && defined (DEBUG_SLOW)
+            TouchAllTrees(chn);
+            TouchAllTreeNodes(&modelSettings[0], chn);
+            TouchAllPartitions();
+            printf("%d %d: %.15lf -- %.15lf\n", n, chn, curLnL[chn], LogLike(chn));
+            ResetFlips(chn);
+            TouchAllTrees(chn);
+            TouchAllTreeNodes(&modelSettings[0], chn);
+            TouchAllPartitions();
+            printf("%d %d:  %.15lf -- %.15lf\n", n, chn, curLnL[chn], LogLike(chn));
+            ResetFlips(chn);
+            TouchAllTrees(chn);
+            TouchAllTreeNodes(&modelSettings[0], chn);
+            TouchAllPartitions();
+			if (fabs((curLnL[chn]-(lnProposalRatio=LogLike(chn)))/curLnL[chn]) > 0.0001)
+                puts("Liklihood of current state is not correct");
+            ResetFlips(chn);
+            state[chn] ^= 1;
+            CopyTrees (chn);
+            CopyParams (chn);
+            state[chn] ^= 1;
+#endif
+
+
             /* decide which move to make */
             whichMove = PickProposal(seed, chainId[chn]);
             theMove = usedMoves[whichMove];
@@ -42829,6 +42851,10 @@ int RunChain (RandLong *seed)
 			/* as a service to the move functions. */
 			for (i=0; i<theMove->parm->nRelParts; i++)
 				modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
+
+			TouchAllPartitions();   /* for debugging copying shortcuts [SLOW!!]*/
+            TouchAllTrees(chn);
+            TouchAllTreeNodes(&modelSettings[0], chn);
 
             /* make move */
 #if ! defined (NDEBUG)

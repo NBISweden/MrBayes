@@ -4782,34 +4782,21 @@ int DoFormatParm (char *parmName, char *tkn)
 			{
             if (expecting == Expecting(EQUALSIGN))
                 {
-                MrBayesPrint ("%s   Warning: MrBayes does not support 'symbols' specifications; default symbols assumed\n", spacer);
-				expecting = Expecting(QUOTATIONMARK);
-                foundQuote = NO;
+                MrBayesPrint ("%s   WARNING: MrBayes does not support 'symbols' specification; default symbols assumed\n", spacer);
+				readWord=YES;
+                expecting = Expecting(ALPHA);
                 }
-            else if (expecting == Expecting(QUOTATIONMARK))
+            else if (expecting == Expecting(ALPHA))
                 {
-                if (foundQuote == NO)
-                    {
-                    foundQuote = YES;
-                    expecting = Expecting(ALPHA);
-                    }
-                else /* if (foundQuote == YES) */
-                    {
-                    foundQuote = NO;
-                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-                    }
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
-			else if (expecting == Expecting(ALPHA))
-				{
-				expecting = Expecting(ALPHA) | Expecting(COMMA);
-   		        }
 			else
 				return (ERROR);
 			}
 		/* on Equate return ERROR ***************************************************************/
 		else if (!strcmp(parmName, "Equate"))
 			{
-            MrBayesPrint ("%s   Error: MrBayes does not support 'Equate' macros; please remove or comment out\n", spacer);
+            MrBayesPrint ("%s   ERROR: MrBayes does not support 'Equate' macros; please remove or comment out\n", spacer);
             return (ERROR);
             }
 		else
