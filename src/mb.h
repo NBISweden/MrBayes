@@ -30,17 +30,23 @@
 
 //#define SSE_ENABLED
 
-/* Previous problems with bitfield operations may have been due to several things. One possibility
-   is that some compilers treat signed ints and longs differently from unsigned ints and longs.
-   Another possibility is that the bitshift operations have been performed on an integer constant
-   that has been interpreted as a signed int and not as a signed long or even better an unsigned
-   long.
+/* Previous problems with bitfield operations may have been caused by several things. One potential
+   problem has been that MrBayes has used signed ints or signed longs for the bit operations, and
+   not all compilers perform bitfield operations on signed ints and longs in the expected manner
+   for unsigned ints and longs. Actually, the ANSI standard does not specify how to implement
+   bit operations on signed operands.
+   
+   Another problem is that some bitshift operations in MrBayes have been performed on an integer
+   constant "1". This is probably interpreted by most compilers as a signed int and the result of
+   the bitshift operation is therefore also a signed int. When a signed int has had a different
+   number of bits than the type specified as SafeLong, this may also have resulted in errors on
+   some systems.
  
    Both of these problems are fixed now by using unsigned longs for the bitfield operations and
    by setting the "1" value needed by some bitfield functions using a variable defined as the same
    type as the bitfield containers themselves. Furthermore, I have separated out the cases where
-   a signed long is required or more appropriate than the same type used by the bitfield functions.
- 
+   a signed long is required or is more appropriate than the container type of bitfields.
+
    FR 2013-07-06
  */
 

@@ -136,9 +136,9 @@ int      DoRestore (void);
 int      DoRestoreParm (char *parmName, char *tkn);
 int      DoSet (void);
 int      DoSetParm (char *parmName, char *tkn);
+int      DoShowBeagle (void);
 int      DoShowMatrix (void);
 int      DoShowUserTrees (void);
-int      DoShowBeagle (void);
 int      DoSpeciespartition (void);
 int      DoSpeciespartitionParm (char *parmName, char *tkn);
 int      DoTaxaset (void);
@@ -5571,7 +5571,7 @@ int DoMatrixParm (char *parmName, char *tkn)
 
 {
 
-	int				i, j, charCode, index;
+	int				i, j, charCode=0, index;
 	MrBFlt			charValue;
 
 	expecting  = Expecting(ALPHA);
@@ -7227,7 +7227,53 @@ int DoSetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
         }   
-		else if (!strcmp(parmName, "Beaglethreads"))
+#if 0
+	    else if (!strcmp(parmName, "Beaglevec"))
+            {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+                {
+#if defined (BEAGLE_ENABLED)
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {                    
+                    long oldFlags = beagleFlags;
+					if (!strcmp(tempStr, "Sse"))
+                        {                      
+						beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX;
+                        }
+					else if (!strcmp(tempStr, "Avx" )
+                        {  
+                        beagleFlags |= ~BEAGLE_FLAG_VECTOR_AVX			
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
+                        }
+                    else if ( !strcmp(tempStr, "None" )
+                        {
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX:
+                        }
+                    else
+                        {
+                        MrBayesPrint("%s   Unrecognized argument for beaglevec\n", spacer );
+                        }
+                    MrBayesPrint ("%s   Setting beaglevec to %s\n", spacer, tempStr);
+                    }
+				else
+                    {
+					MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
+					return (ERROR);
+                    }
+#else
+                BeagleNotLinked();
+#endif
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+			else
+				return (ERROR);
+        }   
+#endif
+	    else if (!strcmp(parmName, "Beaglethreads"))
         {
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);

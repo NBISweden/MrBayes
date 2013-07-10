@@ -11,7 +11,7 @@ To ensure optimal performance, please check that your \$CFLAGS variable is set c
 "
 if test -n "${CFLAGS+x}"; then AC_MSG_NOTICE([$CFLAGS_DEFINED]); fi
 if test "x$enable_debug" == "xyes"; then
-: ${CFLAGS="-ggdb"}
+: ${CFLAGS="-ggdb -Wall"}
 else
 : ${CFLAGS="-O3 -ffast-math -Wall"};CFLAGS=$CFLAGS" -DNDEBUG";
 fi
@@ -95,7 +95,7 @@ then
 
    AC_DEFINE(BEAGLE_ENABLED)
    CFLAGS="${CFLAGS} ${BEAGLE_CFLAGS} "
-   LDFLAGS="${LDFLAGS}  ${BEAGLE_LIBS} "
+   LDFLAGS="${LDFLAGS} ${BEAGLE_LIBS} "
    
    # ----- Check for pthreads compatibility -------
    

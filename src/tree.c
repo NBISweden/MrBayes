@@ -1074,6 +1074,7 @@ int CheckSetConstraints (Tree *t)
 	for (i=0; i<numLocalTaxa; i++)
 		SetBit (i, mask);
 
+    numLocks = 0;
 	for (a=0; a<numDefinedConstraints; a++)
 		{
 		if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[a] != HARD )

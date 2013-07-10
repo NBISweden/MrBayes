@@ -453,14 +453,15 @@ void	TouchAllCijks (int chain);
 void    TouchAllPartitions (void);
 void    TouchAllTreeNodes (ModelInfo *m, int chain);
 void    TouchAllTrees (int chain);
+void    TouchEverything (int chain);
 MrBFlt  TreeLength (Param *param, int chain);
+int     UpDateCijk (int whichPart, int whichChain);
 #if defined (BEAGLE_ENABLED)
 int     TreeCondLikes_Beagle (Tree *t, int division, int chain);
 int     TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
 int		SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
 #endif
-int     UpDateCijk (int whichPart, int whichChain);
 
 /* globals */
 int				*bsIndex;				     /* compressed std stat freq index               */
@@ -1922,7 +1923,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	
 	/* find rate probs for this chain and state */
 	rP = rateProbs[chain] + state[chain] * rateProbRowSize;
-	
+
 	/* set bit vector indicating divisions in this HMM */
 	inHMM = (BitsLong *) SafeCalloc (((param->nRelParts/nBitsInALong) + 1), sizeof(BitsLong));
 	for (i=0; i<param->nRelParts; i++)
@@ -1934,9 +1935,6 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 			}
 		}
 	
-	/* reset logScaler */
-	logScaler = 0.0;
-
 	/* Perform the so-called forward algorithm of HMMs  */	
 	/* set up the space for f(c,i) */
 	F = fSpace[0];
@@ -1948,7 +1946,6 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 			break;
 		}
 
-			
 	/* fill in fi(0) */
 	max = 0.0;
 	m = &modelSettings[partitionId[c][partitionNum] - 1];
@@ -1964,7 +1961,8 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 	for (i=0; i<nRates; i++)
 		F[i] /= max;
 
-	logScaler += lnScaler[compCharPos[c]] +  log(max);
+    /* set logscaler to the value from the first character */
+	logScaler = lnScaler[compCharPos[c]] +  log(max);
 
 	/* now step along the sequence to the end */
     lastCharId = charInfo[c].charId;
@@ -2040,7 +2038,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
 			F[i] /= max;
 
 		logScaler += lnScaler[compCharPos[c]] +  log(max);
-		
+
 		}
 	
 	/* now pull the rate probs together at the end, F contains the vals needed */
@@ -7541,7 +7539,7 @@ void CopySiteScalers (ModelInfo *m, int chain)
 |	CopyTrees: copies touched trees for chain
 |		resets division and node update flags in the process
 |       Note: partition information of nodes are not copied if
-|       either sorce or destination tree does not have bitsets allocated
+|       either source or destination tree does not have bitsets allocated
 |
 -----------------------------------------------------------------*/
 void CopyTrees (int chain)
@@ -7560,7 +7558,7 @@ void CopyTrees (int chain)
 		{
 		from = GetTreeFromIndex (n, chain, state[chain]);		
 		to = GetTreeFromIndex (n, chain, (state[chain]^1));
-        if (from->bitsets != NULL)
+        if (from->bitsets != NULL && to->bitsets != NULL)
             {
             if (from->isRooted == NO)
                 nTaxa = from->nNodes - from->nIntNodes;
@@ -7742,7 +7740,7 @@ int DoMcmc (void)
     if ( setUpAnalysisSuccess == NO )
         {
         MrBayesPrint ("%s   The analysis could not be started because there was an error during its setup.\n", spacer);
-        MrBayesPrint ("%s   Refer to error messeges printed during modeal set up to adress the problem.\n", spacer);
+        MrBayesPrint ("%s   Refer to error messages printed during model set up to adress the problem.\n", spacer);
 		goto errorExit;
         }
 
@@ -12866,7 +12864,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 
 {
 
-	int				c, j, k, nStates, nStatesDiv2;
+	int				c, j, k, i, nStates, nStatesDiv2;
 	MrBFlt			*bs, *swr, s01, s10, probOn, probOff, covBF[40];
 	MrBFlt			like, *rP;
 	CLFlt			*clP;
@@ -12893,7 +12891,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 
 	/* find conditional likelihood pointer */
 	clP = m->condLikes[m->condLikeIndex[chain][p->index]];
-    
+
 	/* find pointer to rate probabilities */
 	rP = rateProbs[chain] + state[chain] * rateProbRowSize + m->rateProbStart;
 
@@ -12913,14 +12911,14 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 		bs = covBF;
 		}
 
-	for (c=0; c<m->numChars; c++)
+	for (c=i=0; c<m->numChars; c++)
 		{
 		for (k=0; k<m->numGammaCats; k++)
 			{
 			like =  0.0;
 			for (j=0; j<nStates; j++)
 				like += (*(clP++)) *  bs[j];
-			*(rP++) = like;
+			rP[i++] = like;
 			}
 		}
 
@@ -41682,12 +41680,12 @@ void ResetFlips (int chain)
 
 /*-------------------------------------------------------------------
 |
-|	ResetScalersPartition: reset scaler nodes of the given tree by appropriatly setting isScalerNode array.
+|	ResetScalersPartition: reset scaler nodes of the given tree by appropriately setting isScalerNode array.
 | @param isScalerNode	is an array which gets set with information about scaler node. 
 |						For each internal node isScalerNode[node->index] is set to YES if it has to be scaler node.
 |						Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for elemnts in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
 |
-| @param rescaleFreq	effectively represent gabs between rescaling, higher number means more sparse choice of rescaling nodes 
+| @param rescaleFreq	effectively represent gaps between rescaling, higher number means more sparse choice of rescaling nodes 
 |
 --------------------------------------------------------------------*/
 int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
@@ -42803,19 +42801,6 @@ int RunChain (RandLong *seed)
 			/* all calculations will be done on this state   */
 			state[chn] ^= 1;  /* XORing with 1 switches between 0 and 1 */
 
-#if ! defined (NDEBUG) && defined (DEBUG_SLOW)
-            TouchAllTrees(chn);
-            TouchAllPartitions();
-			if (fabs((curLnL[chn]-(lnProposalRatio=LogLike(chn)))/curLnL[chn]) > 0.0001)
-                puts("Liklihood of current state is not correct");
-            ResetFlips(chn);
-            state[chn] ^= 1;
-            CopyTrees (chn);
-            CopyParams (chn);
-            state[chn] ^= 1;
-#endif
-
-
             /* decide which move to make */
             whichMove = PickProposal(seed, chainId[chn]);
             theMove = usedMoves[whichMove];
@@ -42844,8 +42829,6 @@ int RunChain (RandLong *seed)
 			/* as a service to the move functions. */
 			for (i=0; i<theMove->parm->nRelParts; i++)
 				modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
-
-			/* TouchAllPartitions(); */    /* for debugging copying shortcuts [SLOW!!]*/
 
             /* make move */
 #if ! defined (NDEBUG)
@@ -42906,13 +42889,15 @@ int RunChain (RandLong *seed)
                     printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
                     return ERROR;
                     }
-                ResetFlips(chn);
-                TouchAllTrees(chn);
+#if defined (DEBUG_LNLIKELIHOODRATIO)
+                ResetFlips(chn); /* needed to return flags so they point to old state */
+                TouchEverything();
                 if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
                     {
                     printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
                     return ERROR;
                     }
+#endif
                 if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES && IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
 					{
 					MrBayesPrint ("%s   Branch lengths of the tree do not satisfy the requirements of a clock tree.\n", spacer);
@@ -43441,9 +43426,7 @@ int RunChain (RandLong *seed)
 			else
 				MrBayesPrint ("%s   Final log likelihoods and log prior probs for run %d (stored and calculated):\n", spacer, chn / chainParams.numChains + 1);
 			}
-		TouchAllPartitions();
-        TouchAllTrees (chn);
-		TouchAllCijks (chn);
+		TouchEverything (chn);
 		for (i=0; i<numCurrentDivisions; i++)
 			{
 			if (modelSettings[i].gibbsGamma == YES)
@@ -44077,7 +44060,7 @@ int SetLikeFunctions (void)
 						    m->CondLikeDown = &CondLikeDown_NUC4_SSE;
 						    m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
 						    m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
-                            /* Should be sse versions if we want to handel m->printAncStates == YES || inferSiteRates == YES.
+                            /* Should be sse versions if we want to handle m->printAncStates == YES || inferSiteRates == YES.
                             For now just set to NULL for early error detection if functions anyway got called */
                             m->CondLikeUp = NULL;
 	    					m->PrintAncStates = NULL;
@@ -44231,11 +44214,27 @@ int SetLikeFunctions (void)
 						m->Likelihood = &Likelihood_Gen_GibbsGamma;
 						}
 					else
-						{
-						m->CondLikeDown = &CondLikeDown_Gen;
-						m->CondLikeRoot = &CondLikeRoot_Gen;
-						m->CondLikeScaler = &CondLikeScaler_Gen;
-						m->Likelihood = &Likelihood_Gen;
+					    {
+	                    m->CondLikeDown = &CondLikeDown_Gen;
+					    m->CondLikeRoot = &CondLikeRoot_Gen;
+					    m->CondLikeScaler = &CondLikeScaler_Gen;
+		        	    m->Likelihood = &Likelihood_Gen;
+#if defined (SSE_ENABLED)
+                            
+				        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+					        {
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                            MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+					        }
+                        else
+                            {
+                            m->useSSE= YES;
+						    m->CondLikeDown = &CondLikeDown_Gen_SSE;
+						    m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
+						    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
+						    m->Likelihood = &Likelihood_Gen_SSE;
+                            }
+#endif
 						}
 					if (m->nCijkParts > 1)
 						m->TiProbs = &TiProbs_GenCov;
@@ -44266,10 +44265,26 @@ int SetLikeFunctions (void)
 					}
 				else
 					{
+#if defined (SSE_ENABLED)
+			        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
+				        {
+                        MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to request\n", spacer, i+1);
+                        MrBayesPrint ("%s   of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+				        }
+                    else
+                        {
+                        m->useSSE= YES;
+					    m->CondLikeDown = &CondLikeDown_Gen_SSE;
+					    m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
+					    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
+					    m->Likelihood = &Likelihood_Gen_SSE;
+                        }
+#else
 					m->CondLikeDown = &CondLikeDown_Gen;
 					m->CondLikeRoot = &CondLikeRoot_Gen;
 					m->CondLikeScaler = &CondLikeScaler_Gen;
 					m->Likelihood = &Likelihood_Gen;
+#endif
 					}
 				if (m->correlation != NULL)
 					{
@@ -44281,12 +44296,11 @@ int SetLikeFunctions (void)
 					else
 						m->Likelihood = &Likelihood_Adgamma;
 					}
-				m->TiProbs        = &TiProbs_Gen;
-				if (m->numModelStates > 20 && m->nCijkParts == 1)
-					m->TiProbs = &TiProbs_Gen;
-				else if (m->numModelStates > 20 && m->nCijkParts > 1)
+				if (m->numModelStates > 20 && m->nCijkParts > 1)
 					m->TiProbs = &TiProbs_GenCov;
-				m->CondLikeUp = &CondLikeUp_Gen;
+			    else
+                    m->TiProbs = &TiProbs_Gen;
+            	m->CondLikeUp = &CondLikeUp_Gen;
 				m->StateCode = &StateCode_AA;
 				m->PrintAncStates = &PrintAncStates_Gen;
 				m->PrintSiteRates = &PrintSiteRates_Gen;
@@ -47384,6 +47398,39 @@ void TouchAllTrees (int chain)
 
 	return;
 	
+}
+
+
+
+
+
+/* Touch all update flags so we recalculate likelihood from scratch */
+void TouchEverything (int chain)
+{
+	int         i, j;
+    Tree        *t;
+	TreeNode	*p;
+
+	for (i=0; i<numCurrentDivisions; i++)
+		{
+		if (modelSettings[i].nCijkParts >= 1)
+			modelSettings[i].upDateCijk = YES;
+		modelSettings[i].upDateCl = YES;
+        modelSettings[i].upDateAll = YES;
+        }
+
+	for (i=0; i<numTrees; i++)
+		{
+		t = GetTreeFromIndex (i, chain, state[chain]);
+		for (j=0; j<t->nNodes; j++)
+			{
+			p = t->allDownPass[j];
+			p->upDateCl = YES;
+			p->upDateTi = YES;
+			}
+		}
+
+	return;
 }
 
 

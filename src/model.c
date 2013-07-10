@@ -2064,15 +2064,14 @@ int CheckExpandedModels (void)
 						{
 						MrBayesPrint ("%s   The number of characters is not divisible by three.\n", spacer);
 						MrBayesPrint ("%s   You specified a %s model which requires triplets\n", spacer, mp->nucModel);
-						MrBayesPrint ("%s   However, you only have %d characters.\n", spacer, numCharsInPart);
+						MrBayesPrint ("%s   However, you have %d characters.\n", spacer, numCharsInPart);
 						}
 					else
 						{
 						MrBayesPrint ("%s   The number of characters in partition %d is not\n", spacer, d+1);
 						MrBayesPrint ("%s   divisible by three. You specified a %s model\n", spacer, mp->nucModel);
 						MrBayesPrint ("%s   which requires triplets. \n", spacer);
-						MrBayesPrint ("%s   However, you only have %d characters in this  \n", spacer, numCharsInPart);
-						MrBayesPrint ("%s   partition \n", spacer);
+						MrBayesPrint ("%s   However, you have %d characters in this partition\n", spacer, numCharsInPart);
 						}
 					free (tempStr);
 					return (ERROR);
@@ -2082,7 +2081,7 @@ int CheckExpandedModels (void)
 				contiguousPart = YES;
 				for (c=firstChar; c<=lastChar; c++)
 					{
-					if (partitionId[c][partitionNum] != d+1)
+					if (charInfo[c].isExcluded == NO && partitionId[c][partitionNum] != d+1)
 						contiguousPart = NO;
 					}
 				if (contiguousPart == NO)
@@ -2100,7 +2099,9 @@ int CheckExpandedModels (void)
 				whichNuc = 0;
 				for (c=firstChar; c<=lastChar; c++)
 					{
-					whichNuc++;
+					if (charInfo[c].isExcluded == NO)
+                        continue;
+                    whichNuc++;
 					if (charInfo[c].bigBreakAfter == YES && whichNuc != 3)
 						badBreak = YES;
 					if (whichNuc == 3)
@@ -2115,10 +2116,13 @@ int CheckExpandedModels (void)
 					return (ERROR);
 					}
 
-				/* make certain excluded characters are in triplets */
+				/* make certain excluded characters are in triplets but allow frameshift exclusions first in sequence */
 				badExclusion = NO;
 				whichNuc = nGone = 0;
-				for (c=firstChar; c<=lastChar; c++)
+                for (c=firstChar; c<=lastChar; c++)
+                    if (charInfo[c].isExcluded == NO)
+                        break;
+				for ( ; c<=lastChar; c++)
 					{
 					whichNuc++;
 					if (charInfo[c].isExcluded == YES)
@@ -2141,7 +2145,11 @@ int CheckExpandedModels (void)
 				
 				/* check that there are no stop codons */
 				foundStopCodon = NO;
-				for (c=firstChar; c<=lastChar; c+=3)
+                /* allow frameshifting exclusions in the beginning */
+                for (c=firstChar; c<=lastChar; c++)
+                    if (charInfo[c].isExcluded == NO)
+                        break;
+				for ( ; c<=lastChar; c+=3)
 					{
 					if (charInfo[c].isExcluded == NO)
 						{
@@ -12306,15 +12314,17 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 	isSame = YES;
 	*isApplic1 = YES;
 	*isApplic2 = YES;
+
+    /* We cannot rely on SetModelInfo being called first so we need to be smart in figuring out model data type by looking at several model params */
 	isFirstNucleotide = isSecondNucleotide = NO;
-	if (modelSettings[part1].dataType == DNA || modelSettings[part1].dataType == RNA)
+	if ((modelParams[part1].dataType == DNA || modelParams[part1].dataType == RNA) && strcmp(modelParams[part1].nucModel,"Protein") != 0)
 		isFirstNucleotide = YES;
-	if (modelSettings[part2].dataType == DNA || modelSettings[part2].dataType == RNA)
+	if ((modelParams[part2].dataType == DNA || modelParams[part2].dataType == RNA) && strcmp(modelParams[part2].nucModel,"Protein") != 0)
 		isSecondNucleotide = YES;		
 	isFirstProtein = isSecondProtein = NO;
-	if (modelSettings[part1].dataType == PROTEIN)
+	if (modelParams[part1].dataType == PROTEIN || ((modelParams[part1].dataType == DNA || modelParams[part1].dataType == RNA) && !strcmp(modelParams[part1].nucModel,"Protein")))
 		isFirstProtein = YES;
-	if (modelSettings[part2].dataType == PROTEIN)
+	if (modelParams[part2].dataType == PROTEIN || ((modelParams[part2].dataType == DNA || modelParams[part2].dataType == RNA) && !strcmp(modelParams[part2].nucModel,"Protein")))
 		isSecondProtein = YES;		
 	
 	if (whichParam == P_TRATIO)
@@ -16828,7 +16838,7 @@ int SetModelInfo (void)
 		/* number of model states including hidden ones */
 		if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp (mp->covarionModel, "Yes") && !strcmp(mp->nucModel, "4by4"))
 			m->numModelStates = mp->nStates * 2;
-		else if (mp->dataType == PROTEIN && !strcmp (mp->covarionModel, "Yes"))
+		else if (m->dataType == PROTEIN && !strcmp (mp->covarionModel, "Yes"))
 			m->numModelStates = mp->nStates * 2;
 		else if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp(mp->nucModel,"Protein") && !strcmp (mp->covarionModel, "Yes"))
 			m->numModelStates = 20 * 2;
@@ -16893,7 +16903,7 @@ int SetModelInfo (void)
 				}
 			else
 				{
-				MrBayesPrint ("%s   ERROR: Something is wrong if you are here.\n");
+				MrBayesPrint ("%s   BUG: Inconsistent model. Please report this as a bug.\n");
 				return ERROR;
 				}
 			}
