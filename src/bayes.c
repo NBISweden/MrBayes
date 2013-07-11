@@ -674,7 +674,7 @@ int InitializeMrBayes (void)
 	defaultModel.shapeFix = 0.5;
 	defaultModel.shapeUni[0] = MIN_SHAPE_PARAM;
 	defaultModel.shapeUni[1] = MAX_SHAPE_PARAM;
-	defaultModel.shapeExp = 1.0;
+	defaultModel.shapeExp = 2.0;
 	strcpy(defaultModel.pInvarPr, "Uniform");           /* prior for proportion of invariable sites     */
 	defaultModel.pInvarFix = 0.1;
 	defaultModel.pInvarUni[0] = 0.0;
