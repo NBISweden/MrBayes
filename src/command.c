@@ -3387,7 +3387,8 @@ int DoDelete (void)
 		}
 
     SetLocalTaxa ();
-    SetUpAnalysis(&globalSeed);
+    if (SetUpAnalysis(&globalSeed) == ERROR)
+        return ERROR;
 
 	/* show tempSet (for debugging) */
 #	if 0
@@ -4120,7 +4121,8 @@ int DoExclude (void)
 	foundFirst = NO;
 
     /* reset analysis to recompress data */
-    SetUpAnalysis(&globalSeed);
+    if (SetUpAnalysis(&globalSeed) == ERROR)
+        return ERROR;
 
 	return (NO_ERROR);
 	
@@ -4318,7 +4320,6 @@ int DoFormatParm (char *parmName, char *tkn)
 
 	int			i, tempInt;
 	char		tempStr[100];
-    static int  foundQuote;
 	
 	if (inDataBlock == NO && inCharactersBlock == NO)
 		{
@@ -4977,6 +4978,10 @@ int DoInclude (void)
 			charInfo[i].isExcluded = NO;
 			}
 		}
+
+    /* reset analysis to recompress data */
+    if (SetUpAnalysis(&globalSeed) == ERROR)
+        return ERROR;
 
 	return (NO_ERROR);
 	
@@ -6393,6 +6398,8 @@ int DoRestore (void)
 		}
 
     SetLocalTaxa();
+    if (SetUpAnalysis(&globalSeed) == ERROR)
+        return ERROR;
 
 	/* show tempSet (for debugging) */
 #	if 0
@@ -7019,6 +7026,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7064,6 +7073,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7106,6 +7117,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7146,6 +7159,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7169,6 +7184,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
 				BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -7209,6 +7226,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7254,6 +7273,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 			else
@@ -7291,6 +7312,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleThreadsNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
 		}
@@ -7325,6 +7348,8 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleThreadsNotLinked();
 #endif
+                if (SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }			
 			else

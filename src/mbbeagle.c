@@ -660,7 +660,7 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
             operations.child2Partials         = m->condLikeIndex[chain][p->right->index];
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
             
-			/* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+			/* All partials for tips are the same across omega categories, thus we are doing the following two if statments.*/
 			if(p->left->left== NULL )
 				chil1Step=0;
 			else

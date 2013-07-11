@@ -11373,6 +11373,7 @@ int InitChainCondLikes (void)
 
 		MrBayesPrint ("%s   Division %d has %d unique site patterns\n", spacer, d+1, m->numChars);
 
+        /* initialize model settings for chain cond likes */
 		m->condLikeLength = 0;
         m->numCondLikes = 0;
 
