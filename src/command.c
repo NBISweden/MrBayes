@@ -7026,7 +7026,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7073,7 +7073,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7117,7 +7117,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7159,7 +7159,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7184,7 +7184,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
 				BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
@@ -7226,7 +7226,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7273,7 +7273,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7312,7 +7312,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleThreadsNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -7348,7 +7348,7 @@ int DoSetParm (char *parmName, char *tkn)
 #else
                 BeagleThreadsNotLinked();
 #endif
-                if (SetUpAnalysis(&globalSeed) == ERROR)
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }			

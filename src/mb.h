@@ -1275,8 +1275,8 @@ typedef struct modelinfo
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int			rescaleBeagleAll;			/* set to rescale all nodes                     */
 	int*		rescaleFreq;				/* rescale frequency for each chain's tree		*/
-	int			rescaleFreqOld;				 /* holds rescale frequency of current state	 */
-	int			recalculateScalers;			 /* shoud we recalculate scalers for current state YES/NO */
+	int			rescaleFreqOld;             /* holds rescale frequency of current state	 */
+	int			recalculateScalers;			/* shoud we recalculate scalers for current state YES/NO */
 	int*		succesCount;				/* count number of succesful computation since last reset of scalers */
 	int**		isScalerNode;				/* for each node and chain set to YES if scaled node */
 	int*		isScalerNodeScratch;		/* scratch space to hold isScalerNode of proposed state*/
