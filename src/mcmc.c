@@ -23777,19 +23777,17 @@ int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
 
 
-int Move_Growth (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 
-	int			    isGPriorExp, isGPriorNorm, isValidG;
-	MrBFlt	        oldG, newG, window, minG=0.0, maxG=0.0, growthExp=0.0, ran, oldLnPrior, 
-                    newLnPrior, curTheta, growthMu=0.0, growthVar=0.0, x, y, clockRate;
-	ModelParams 	        *mp;
+    MrBFlt	        oldG, newG, lambda, minG, maxG, ran, oldLnPrior, newLnPrior, curTheta, clockRate;
+	ModelParams 	*mp;
 	ModelInfo		*m;
 	Tree			*t;
 
-	/* get size of window, centered on current growth value */
-	window = mvp[0];
+	/* get tuning parameter */
+	lambda = mvp[0];
 
 	/* get model params */
 	m = &modelSettings[param->relParts[0]];
@@ -23804,55 +23802,29 @@ int Move_Growth (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         curTheta *= 2.0;
 	
 	/* get minimum and maximum values for growth */
-	isGPriorExp = isGPriorNorm = NO;
-	if (param->paramId == GROWTH_UNI)
-		{
-		minG = mp->growthUni[0];
-		maxG = mp->growthUni[1];
-		}
-	else if (param->paramId == GROWTH_EXP)
-		{
-		minG = 0.0;
-		maxG = GROWTH_MAX;
-		growthExp = mp->growthExp;
-		isGPriorExp = YES;
-		}
-	else if (param->paramId == GROWTH_NORMAL)
-		{
-		minG = GROWTH_MIN;
-		maxG = GROWTH_MAX;
-		growthMu  = mp->growthNorm[0];
-		growthVar = mp->growthNorm[1];
-		isGPriorNorm = YES;
-		}
-
+    minG = param->min;
+    maxG = param->max;
+    
 	/* get old value of theta */
 	newG = oldG = *GetParamVals(param, chain, state[chain]);
 	if (newG < minG)
 		newG = oldG = minG;
 
-	/* change value for theta */
+	/* change value of growth */
 	ran = RandomNumber(seed);
-	if( maxG-minG >window )
-		{
-		window = maxG-minG;
-		}
-	newG = oldG + window * (ran - 0.5);
+	newG = oldG * exp( lambda * (ran - 0.5) );
 	
 	/* check that new value is valid */
-	isValidG = NO;
-	do
-		{
+    while (newG < minG || newG > maxG)
+        {
 		if (newG < minG)
-			newG = 2* minG - newG;
+			newG = minG * minG / newG;
 		else if (newG > maxG)
-			newG = 2 * maxG - newG;
-		else
-			isValidG = YES;
-		} while (isValidG == NO);
-
+			newG = maxG * maxG / newG;
+		}
+    
 	/* get proposal ratio */
-	*lnProposalRatio = 0.0;
+	*lnProposalRatio = log( newG / oldG );
 	
 	/* get prior ratio */
 	t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
@@ -23867,18 +23839,9 @@ int Move_Growth (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 		MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
 		return (ERROR);
 		}
-	if (isGPriorExp == NO && isGPriorNorm == NO)
-		*lnPriorRatio = newLnPrior - oldLnPrior;
-	else if (isGPriorExp == YES)
-		*lnPriorRatio = -growthExp * (newG - oldG) + (newLnPrior - oldLnPrior);
-	else if (isGPriorNorm == YES)
-		{
-		x = log(1.0) - log(growthVar) - 0.5 * log(2.0 * 3.14) - 0.5 * ((newG - growthMu) / growthVar) * ((newG - growthMu) / growthVar);
-		y = log(1.0) - log(growthVar) - 0.5 * log(2.0 * 3.14) - 0.5 * ((oldG - growthMu) / growthVar) * ((oldG - growthMu) / growthVar);
-		*lnPriorRatio = x - y;
-		}
-				
-	/* copy new theta value back */
+    (*lnPriorRatio) = newLnPrior - oldLnPrior + param->LnPriorRatio(newG, oldG, param->priorParams);
+
+	/* copy new growth value back */
 	*GetParamVals(param, chain, state[chain]) = newG;
 
 	return (NO_ERROR);

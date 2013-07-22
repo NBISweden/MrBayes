@@ -10535,6 +10535,14 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 				else
 					value[0] =  0.5;
 				}
+			else if (p->paramType == P_GROWTH)
+                {
+				/* Fill in growth rate ****************************************************************************************/
+				if (p->paramId == GROWTH_FIX)
+                    value[0] = mp->growthFix;
+                else
+                    value[0] = 1.0;
+                }
 			else if (p->paramType == P_POPSIZE)
 				{
 				/* Fill in population size ****************************************************************************************/
@@ -18142,7 +18150,7 @@ int SetModelParams (void)
 					modelSettings[i].speciationRates = p;
 
             p->paramTypeName = "Speciation rate";
-			SafeStrcat(&p->name, "Lambda-mu(-psi)");
+			SafeStrcat(&p->name, "Speciation");
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
@@ -18155,7 +18163,7 @@ int SetModelParams (void)
 
 			if (p->paramId != SPECRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "lambda-mu(-psi)");
+			SafeStrcat (&p->paramHeader, "net_speciation");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_EXTRATE)
@@ -18171,7 +18179,7 @@ int SetModelParams (void)
 					modelSettings[i].extinctionRates = p;
 
             p->paramTypeName = "Extinction rate";
-			SafeStrcat(&p->name, "Mu(+psi)/lambda");
+			SafeStrcat(&p->name, "Relative_extinction");
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
@@ -18182,7 +18190,7 @@ int SetModelParams (void)
 
 			if (p->paramId != EXTRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "mu(+psi)/lambda");
+			SafeStrcat (&p->paramHeader, "relative_extinction");
 			SafeStrcat (&p->paramHeader, partString);
 			}
         else if (j == P_FOSLRATE)
@@ -18198,7 +18206,7 @@ int SetModelParams (void)
 					modelSettings[i].fossilizationRates = p;
             
             p->paramTypeName = "Fossilization rate";
-			SafeStrcat(&p->name, "Psi/(mu+psi)");
+			SafeStrcat(&p->name, "Relative_fossilization");
 			SafeStrcat(&p->name, partString);
             
 			/* find the parameter x prior type */
@@ -18209,7 +18217,7 @@ int SetModelParams (void)
             
 			if (p->paramId != FOSLRATE_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "psi/(mu+psi)");
+			SafeStrcat (&p->paramHeader, "relative_fossilization");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_POPSIZE)
@@ -18291,13 +18299,41 @@ int SetModelParams (void)
 
 			/* find the parameter x prior type */
 			if (!strcmp(mp->growthPr,"Uniform"))
+                {
 				p->paramId = GROWTH_UNI;
+                p->priorParams = mp->growthUni;
+                p->min = mp->growthUni[0];
+                p->max = mp->growthUni[1];
+                p->LnPriorRatio = &LnProbRatioUniform;
+                p->LnPriorProb = &LnPriorProbUniform;
+                }
 			else if (!strcmp(mp->growthPr,"Exponential"))
-				p->paramId = GROWTH_EXP;
+                {
+                p->paramId = GROWTH_EXP;
+                p->priorParams = &mp->growthExp;
+                p->min = GROWTH_MIN;
+                p->max = GROWTH_MAX;
+                p->LnPriorRatio = &LnProbRatioExponential;
+                p->LnPriorProb = &LnPriorProbExponential;
+                }
 			else if (!strcmp(mp->growthPr,"Normal"))
-				p->paramId = GROWTH_NORMAL;
+                {
+                p->paramId = GROWTH_NORMAL;
+                p->priorParams = mp->growthNorm;
+                p->min = GROWTH_MIN;
+                p->max = GROWTH_MAX;
+                p->LnPriorRatio = &LnProbRatioTruncatedNormal;
+                p->LnPriorProb = &LnPriorProbTruncatedNormal;
+                }
 			else
 				p->paramId = GROWTH_FIX;
+                {
+                p->paramId = GROWTH_FIX;
+                p->priorParams = &mp->growthFix;
+                p->min = p->max = mp->growthFix;
+                p->LnPriorRatio = &LnProbRatioFix;
+                p->LnPriorProb = &LnPriorProbFix;
+                }
 
 			if (p->paramId != GROWTH_FIX)
 				p->printParam = YES;
@@ -19690,26 +19726,25 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = YES;
 	mt->level = STANDARD_USER;
 
-
-	/* Move_Growth */
+	/* Move_Growth_M */
 	mt = &moveTypes[i++];
-	mt->name = "Sliding window";
-	mt->shortName = "Slider";
-	mt->tuningName[0] = "Sliding window size";
-	mt->shortTuningName[0] = "delta";
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
 	mt->applicableTo[0] = GROWTH_UNI;
 	mt->applicableTo[1] = GROWTH_EXP;
 	mt->applicableTo[2] = GROWTH_NORMAL;
 	mt->nApplicable = 3;
-	mt->moveFxn = &Move_Growth;
+	mt->moveFxn = &Move_Growth_M;
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 5.0;  /* window size */
-	mt->minimum[0] = -10000.0;
-	mt->maximum[0] = 10000.0;
+	mt->tuningParam[0] = 2.0 * log(1.5);  /* lambda */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 1000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneSlider;
+    mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
 	/* Move_Local */
