@@ -425,6 +425,7 @@ int     SetAARates (void);
 void    SetChainIds (void);
 void    SetFileNames (void);
 int		SetLikeFunctions (void);
+int     SetLocalChainsAndDataSplits (void);
 int		SetModelInfo (void);
 int		SetMoves (void);
 int     SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS);
@@ -7721,10 +7722,6 @@ int DoMcmc (void)
     sighandler_t sigint_oldhandler, sigterm_oldhandler;
 #endif
 
-#	if defined (MPI_ENABLED)
-	int			testNumChains;
-#	endif
-
     numPreviousGen = 0;     /* Make sure this is reset */
 
 	/* Check to see that we have a data matrix. Otherwise, the MCMC is rather
@@ -7743,8 +7740,8 @@ int DoMcmc (void)
         }
 
     /* set file names */
-	sumtParams.numRuns = chainParams.numRuns;
-	sumpParams.numRuns = chainParams.numRuns;
+	sumtParams.numRuns  = chainParams.numRuns;
+	sumpParams.numRuns  = chainParams.numRuns;
     sumssParams.numRuns = chainParams.numRuns;
 	
 	if (fileNameChanged == YES)
@@ -7793,81 +7790,10 @@ int DoMcmc (void)
     if (CheckModel() == ERROR)
         goto errorExit;
 				
-	/* Determine the number of local chains */
-#	if defined (MPI_ENABLED)
-	/* tell user how many chains each processor has been assigned */
-	if (num_procs > numGlobalChains)
-		{
-		MrBayesPrint ("%s   The number of chains must be at least as great\n", spacer);
-		MrBayesPrint ("%s   as the number of processors (%d)\n", spacer, num_procs);
-		goto errorExit;
-		}
-	if (proc_id == 0)
-		{
-		for (i=0; i<num_procs; i++)
-			{
-			testNumChains = (int)(numGlobalChains / num_procs);
-			if (i < (numGlobalChains % num_procs))
-				testNumChains++;
-			MrBayesPrint ("%s   Number of chains on processor %d = %d\n", spacer, i+1, testNumChains);
-			}
-		}
-		
-	/* Try to evenly distribute the chains on all processors. */
-	numLocalChains = (int)(numGlobalChains / num_procs);
+	/* Determine the number of local chains and data splits */
+    if (SetLocalChainsAndDataSplits() == ERROR )
+        goto errorExit;
 
-	/* If there are any chains remaining, distribute them
-	   in order starting with proc 0. (This may cause a load imbalance.) */
-	if (proc_id < (numGlobalChains % num_procs))
-		numLocalChains++;
-#	else
-	numLocalChains = numGlobalChains;
-#	endif
-	if (numLocalChains < 1)
-		return (NO_ERROR);
-		
-	/* How many taxa and characters ? */
-	MrBayesPrint ("%s   Number of taxa = %d\n", spacer, numLocalTaxa);
-	MrBayesPrint ("%s   Number of characters = %d\n", spacer, numLocalChar);
-
-#if defined (BEST_MPI_ENABLED)
-
-    // TODO: BEST MPI Set up BEST MPI run
-    /* Set up the load balancing scheme. Here we give each processor an equal number of trees.
-       If trees are not evenly divisibly by the number of processors, we give the odd n trees to
-       the first n processors. */
-
-    /* Throw an error if we have too many processors */
-    if (numTopologies < num_procs)
-        {
-        MrBayesPrint("%s   There are too many processors (%d processors and only %d gene trees)\n", spacer, num_procs, numTopologies);
-        return (ERROR);
-        }
-
-    /* First deal with the basic case */
-    from = proc_id * (numTopologies / num_procs);
-    to   = (proc_id + 1) * (numTopologies / num_procs);
-
-    /* Now adjust to deal with the odd trees */
-    if (proc_id < numTopologies % num_procs)
-        {
-        from += proc_id;
-        to += proc_id + 1;
-        }
-    else
-        {
-        from += numTopologies % num_procs;
-        to += numTopologies % num_procs;
-        }
-
-    /* Now set the active divisions. Note that if one tree has several model partitions, we set all divisions
-       relevant to the tree as being active by checking the relevant partitions for the tree (tree->relParts). */
-    for (i=from; i<to; i++)
-        {
-        for (j=0; j<topologyParam[i]->nRelParts; j++)
-            isDivisionActive[topologyParam[i]->relParts[j]] = YES;
-        }
-#endif
 
     /* Set up the moves to be used */
 	if (SetUsedMoves () == ERROR)
@@ -44407,6 +44333,66 @@ int SetLikeFunctions (void)
 
 	return NO_ERROR;
 
+}
+
+
+
+
+
+/* Determine number of chains and data splits to be handled by MPI processors or threads */
+int SetLocalChainsAndDataSplits(void)
+{
+
+# if defined (MPI_ENABLED)
+    
+    /* tell user how many chains each processor has been assigned */
+	if (num_procs <= numGlobalChains)
+        {
+        if (numGlobalChains % num_procs != 0)
+            {
+		    MrBayesPrint ("%s   The total number of chains (%d) must be evenly divisible by\n", spacer, numGlobalChains);
+		    MrBayesPrint ("%s   the number of MPI processors (%d), or the number of MPI\n", spacer, num_procs);
+		    MrBayesPrint ("%s   processors should be a multiple of the number of chains.\n", spacer, num_procs);
+		    MrBayesPrint ("%s   Please change your MPI settings.\n", spacer, num_procs);
+		    return ERROR;
+		    }
+        numLocalChains = numGlobalChains / num_procs;
+        MrBayesPrint ("%s   Number of chains per MPI processor = %d\n", spacer, numLocalChains);
+        }
+    else
+        {
+        if (num_procs % numGlobalChains != 0)
+            {
+		    MrBayesPrint ("%s   The number of MPI processors (%d) must be a multiple of the\n", spacer, num_procs);
+		    MrBayesPrint ("%s   total number of chains (%d), or the total number of chains\n", spacer, numGlobalChains);
+		    MrBayesPrint ("%s   should be evenly divisible by the number of MPI processsors.\n", spacer);
+		    MrBayesPrint ("%s   Please change your MPI settings.\n", spacer);
+		    return ERROR;
+            }
+        numLocalChains = 1;
+        // numMPIDataSplits = num_procs / numGlobalChains;
+        // MrBayesPrint ("%s   Number of MPI data splits per chain = %d\n", spacer, numMPIDataSplits);
+        }
+
+# else
+
+	numLocalChains = numGlobalChains;
+
+# endif
+
+# if defined (PTHREADS_ENABLED)
+
+    if (numLocalChains > 1)
+        {
+        /* Use pthreads to divide chains and possibly do data splits */
+        }
+    else
+        {
+        /* Use pthreads for data splits */
+        }
+# endif
+
+    return (NO_ERROR);
 }
 
 
