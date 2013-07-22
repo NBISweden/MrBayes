@@ -6209,7 +6209,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 					{
 					if (IsArgValid(tkn, tempStr) == NO_ERROR)
 						{
-                        /* erase previous constraints */
+                        /* set topology prior */
 					    nApplied = NumActiveParts ();
 					    for (i=0; i<numCurrentDivisions; i++)
 						    {
@@ -6223,6 +6223,15 @@ int DoPrsetParm (char *parmName, char *tkn)
 								    MrBayesPrint ("%s   Setting Topologypr to %s\n", spacer, modelParams[i].topologyPr);
 							    else
 								    MrBayesPrint ("%s   Setting Topologypr to %s for partition %d\n", spacer, modelParams[i].topologyPr, i+1);
+                                /* adjust branch length prior if necessary */
+                                if (strcmp(modelParams[i].topologyPr,"Fixed") != 0 && strcmp(modelParams[i].brlensPr,"Fixed") == 0 )
+                                    {
+								    MrBayesPrint ("%s   Resetting Brlenspr to default\n", spacer);
+                                    if (strcmp(modelParams[i].clockPr,"Clock") == 0)
+                                        strcpy(modelParams[i].brlensPr, "Uniform");
+                                    else
+                                        strcpy(modelParams[i].brlensPr, defaultModel.brlensPr);
+                                    }
 							    }
 						    }
 					    }
@@ -11206,7 +11215,6 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
 			p = &params[k];
 			if (p->paramType == P_TOPOLOGY)
 				{
-                // assert (p->nSubParams == 1); // this assert seems to be wrong -- FR 2010-12-25
 				q = p->subParams[0];
 				tree = GetTree (q, chn, 0);
 				if (tree->isRooted == YES)
