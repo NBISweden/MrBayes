@@ -2087,7 +2087,7 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 	sumsq = 0.0;
 	for (i=0; i<n; i++)
 		{
-		f = p->count[i] / stat->numSamples;
+		f = (MrBFlt) (p->count[i]) / (MrBFlt) (stat->numSamples);
 		sum += f;
 		sumsq += f * f;
 		}
@@ -2116,19 +2116,19 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 				sum = 0.0;
 				sumsq = 0.0;
 
-				f = p->count[i] / stat->numSamples;
+				f = (MrBFlt) (p->count[i]) / (MrBFlt) (stat->numSamples);
 				sum += f;
 				sumsq += f * f;
 				
-				f = p->count[j] / stat->numSamples;
+				f = (MrBFlt) (p->count[j]) / (MrBFlt) (stat->numSamples);
 				sum += f;
 				sumsq += f * f;
 
-				f = (2.0 * sumsq - sum * sum);
+				f = (sumsq - sum * sum / 2.0);
 				if (f < 0.0)
 					stdev = 0.0;
 				else
-					stdev = sqrt (f / (MrBFlt) 2.0);
+					stdev = sqrt (f);
 				
 				if (chainParams.diagnStat == AVGSTDDEV)
 					stat->pair[i][j] += stdev;
@@ -39104,7 +39104,7 @@ int PrintStatesToFiles (int curGen)
                 	if (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES)
                         {
                         ResetTopology (chainParams.dtree, s);
-					    AddTreeToPartitionCounters (chainParams.dtree, j, runId);
+                        AddTreeToPartitionCounters (chainParams.dtree, j, runId);
 					    if (chainParams.relativeBurnin == YES && chainParams.saveTrees == YES && (noWarn == NO || curGen <= chainParams.stopTreeGen))
 							{
 							if (AddToTreeList (&chainParams.treeList[runId*numTopologies+j], chainParams.dtree) == ERROR)
@@ -39435,7 +39435,7 @@ int PrintTopConvInfo (void)
 
 	for (n=0; n<numTopologies; n++)
 		{
-		stat = &chainParams.stat[n];
+		stat = &(chainParams.stat[n]);
 		maxNumPartitions = 0.0;
 		for (i=0; i<chainParams.numRuns; i++)
 			for (j=0; j<chainParams.numRuns; j++)
@@ -39449,18 +39449,18 @@ int PrintTopConvInfo (void)
 		if (numTopologies == 1)
 			{
 			if (chainParams.diagnStat == AVGSTDDEV)
-				MrBayesPrint ("%s   Pairwise average standard deviation of split frequencies (upper diagonal)\n", spacer);
+				MrBayesPrint ("%s   Pairwise average standard deviation of split frequencies (upper triangle)\n", spacer);
 			else
-				MrBayesPrint ("%s   Pairwise maximum standard deviation of split frequencies (upper diagonal)\n", spacer);
-			MrBayesPrint ("%s      and number of qualifying splits for each comparison (lower diagonal):\n\n", spacer);
+				MrBayesPrint ("%s   Pairwise maximum standard deviation of split frequencies (upper triangle)\n", spacer);
+			MrBayesPrint ("%s      and number of qualifying splits for each comparison (lower triangle):\n\n", spacer);
 			}
 		else
 			{
 			if (chainParams.diagnStat == AVGSTDDEV)
-				MrBayesPrint ("%s   Pairwise average standard deviation of split frequencies in topology %d (upper diagonal)\n", spacer, n);
+				MrBayesPrint ("%s   Pairwise average standard deviation of split frequencies in topology %d (upper triangle)\n", spacer, n);
 			else
-				MrBayesPrint ("%s   Pairwise maximum standard deviation of split frequencies in topology %d (upper diagonal)\n", spacer, n);
-			MrBayesPrint ("%s      and number of qualifying splits for each comparison (lower diagonal):\n\n", spacer);
+				MrBayesPrint ("%s   Pairwise maximum standard deviation of split frequencies in topology %d (upper triangle)\n", spacer, n);
+			MrBayesPrint ("%s      and number of qualifying splits for each comparison (lower triangle):\n\n", spacer);
 			}
 
 		MrBayesPrint ("%s          ", spacer);
@@ -39489,11 +39489,11 @@ int PrintTopConvInfo (void)
 				if (i < j)
 					{
                     if (chainParams.diagnStat == AVGSTDDEV)
-					    SafeSprintf(&tempStr, &tempStrSize, "%1.3lf", stat->pair[i][j]/stat->pair[j][i]);
+					    SafeSprintf(&tempStr, &tempStrSize, "%1.3lf", (MrBFlt) (stat->pair[i][j]) / (MrBFlt) (stat->pair[j][i]));
                     else /* if (chainParams.diagnStat == MAXSTDDEV) */
 					    SafeSprintf(&tempStr, &tempStrSize, "%1.3lf", stat->pair[i][j]);
 			        len = (int) strlen(tempStr);
-			        MrBayesPrint ("%*c%1.3lf ", maxLen-len+1, ' ', tempStr);
+			        MrBayesPrint ("%*c%s ", maxLen-len+1, ' ', tempStr);
 					}
 				else if (i == j)
 					{
@@ -39503,7 +39503,7 @@ int PrintTopConvInfo (void)
 					{
 					SafeSprintf(&tempStr, &tempStrSize, "%d", (int) stat->pair[i][j]);
 					len = (int) strlen(tempStr);
-					MrBayesPrint ("%*c%d ", maxLen-len+1, ' ', (int) stat->pair[i][j]);
+					MrBayesPrint ("%*c%s ", maxLen-len+1, ' ', tempStr);
 					}
 				}
 			MrBayesPrint ("\n");
@@ -42924,7 +42924,7 @@ int RunChain (RandLong *seed)
             {
 			PrintToScreen(n, numPreviousGen, time(0), startingT);
 #if defined (TIMING_ANALIZ)
-            MrBayesPrint ("%s   Time elapsed:%f CondlikeDownTime:%f CondLikeRoot:%f Lilklihood:%f ScalersTime:%f ScalersRemove:%f\n", spacer, CPUTime,CPUCondLikeDown/(MrBFlt) CLOCKS_PER_SEC,CPUCondLikeRoot/(MrBFlt) CLOCKS_PER_SEC,CPULilklihood/(MrBFlt) CLOCKS_PER_SEC, CPUScalers/(MrBFlt) CLOCKS_PER_SEC, CPUScalersRemove/(MrBFlt) CLOCKS_PER_SEC);
+            MrBayesPrint ("%s   Time elapsed:%f CondlikeDownTime:%f CondLikeRoot:%f Likelihood:%f ScalersTime:%f ScalersRemove:%f\n", spacer, CPUTime,CPUCondLikeDown/(MrBFlt) CLOCKS_PER_SEC,CPUCondLikeRoot/(MrBFlt) CLOCKS_PER_SEC,CPULilklihood/(MrBFlt) CLOCKS_PER_SEC, CPUScalers/(MrBFlt) CLOCKS_PER_SEC, CPUScalersRemove/(MrBFlt) CLOCKS_PER_SEC);
 #endif
             }
 
@@ -42960,7 +42960,7 @@ int RunChain (RandLong *seed)
 			}
 
 
-        /* print mcmc diagnostics. Blocking for MPI*/
+        /* print mcmc diagnostics. Blocking for MPI */
 		if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
                                              || ( chainParams.isSS == YES && ( n-lastStepEndSS ) % numGenInStepSS == 0 ) ) )
 			{
@@ -44314,8 +44314,12 @@ int SetLocalChainsAndDataSplits(void)
         if (numGlobalChains % num_procs != 0)
             {
 		    MrBayesPrint ("%s   The total number of chains (%d) must be evenly divisible by\n", spacer, numGlobalChains);
+		    MrBayesPrint ("%s   the number of MPI processors (%d).\n", spacer, num_procs);
+            /* 
+		    MrBayesPrint ("%s   The total number of chains (%d) must be evenly divisible by\n", spacer, numGlobalChains);
 		    MrBayesPrint ("%s   the number of MPI processors (%d), or the number of MPI\n", spacer, num_procs);
-		    MrBayesPrint ("%s   processors should be a multiple of the number of chains.\n", spacer, num_procs);
+            MrBayesPrint ("%s   processors should be a multiple of the number of chains.\n", spacer, num_procs);
+		    */
 		    MrBayesPrint ("%s   Please change your MPI settings.\n", spacer, num_procs);
 		    return ERROR;
 		    }
@@ -44323,6 +44327,11 @@ int SetLocalChainsAndDataSplits(void)
         MrBayesPrint ("%s   Number of chains per MPI processor = %d\n", spacer, numLocalChains);
         }
     else
+        {
+        MrBayesPrint ("%s   There must be at least as many chains as MPI processors\n", spacer);
+        return (ERROR);
+        }
+        /* 
         {
         if (num_procs % numGlobalChains != 0)
             {
@@ -44336,7 +44345,7 @@ int SetLocalChainsAndDataSplits(void)
         // numMPIDataSplits = num_procs / numGlobalChains;
         // MrBayesPrint ("%s   Number of MPI data splits per chain = %d\n", spacer, numMPIDataSplits);
         }
-
+        */
 # else
 
 	numLocalChains = numGlobalChains;
