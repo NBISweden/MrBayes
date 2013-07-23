@@ -414,7 +414,7 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
     // Allocate space for species partitions
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
     speciesSets    = (BitsLong **) SafeCalloc (2*numLocalTaxa-1, sizeof(BitsLong *));
-    speciesSets[0] = (BitsLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(int));
+    speciesSets[0] = (BitsLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(BitsLong));
     for (i=1; i<2*numLocalTaxa-1; i++)
         speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
 
