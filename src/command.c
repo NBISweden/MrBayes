@@ -11910,7 +11910,7 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
-			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
+			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster     %s\n", mp->sampleStrat);
 /*          MrBayesPrint ("                    FossilTip                      \n");                      will bring back after release */
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			

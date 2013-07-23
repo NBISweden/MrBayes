@@ -3196,9 +3196,9 @@ int IsTreeConsistent (Param *param, int chain, int state)
             return NO;
         }
         if (p->left == NULL && p->isDated == NO && p->nodeDepth != 0.0) {
-                printf ("Node %d is a nondated tip but has node depth %f\n",
+                printf ("Node %d is a nondated tip but has node depth %lf\n",
                     p->index, p->nodeDepth);
-                //return NO;
+                return NO;
         }
     }
 
