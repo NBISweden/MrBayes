@@ -16744,8 +16744,6 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
         }
 
 
-    assert (lnProb == (nTips - 1.0)*log(2.0) - LnFactorial(nTips) - log(nTips-1.0) - (nTips - 2.0)*log(treeAge));
-
     free (nodeDepths);
     free (nLineages);
 

@@ -14195,29 +14195,32 @@ int LargestMovableSubtree(Param *treeParam)
     for(i=0; i<numPartitions; i++)
         {
         CopyBits (subtreePartition, constraintPartition[i], nLongsNeeded);
+        k = 0;
         for (j=0; j<numPartitions; j++)
             {
             if (j==i)
                 continue;
             if (IsPartNested(constraintPartition[j], constraintPartition[i], nLongsNeeded))
                 {
+                k++;    /* add one for clade we are removing from subtreePartition */
                 CopyBits (testPartition, constraintPartition[j], nLongsNeeded);
                 FlipBits (testPartition, nLongsNeeded, mask);
                 for (k=0; k<nLongsNeeded; k++)
                     subtreePartition[k] = subtreePartition[k] & testPartition[k];
                 }
             }
-        k = NumBits (subtreePartition, nLongsNeeded);
+        k += NumBits (subtreePartition, nLongsNeeded);  /* add remaming free tips in subtreePartition */
+        /* add calculation root if an unrooted tree and we are dealing with the root partition */
         if (strcmp(mp->brlensPr,"Clock") != 0 && NumBits (constraintPartition[i], nLongsNeeded) == numLocalTaxa - 1)
             k++;
-        if (k>largestSubtree)
+        if (k > largestSubtree)
             largestSubtree = k;
         }
 
     free(subtreePartition);
     free(constraintPartition[0]);
     free(constraintPartition);
-    
+   
     return largestSubtree;
     
 }
