@@ -22332,13 +22332,13 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 		else if (j == P_GENETREERATE)
 			{
 		    MrBayesPrint ("%s            Prior      = Dirichlet(", spacer);
-		    printedCol = strlen(spacer) + 25 + 10;
+		    printedCol = (int)(strlen(spacer)) + 25 + 10;
             for (n=0; n<numTrees-1; n++)
 			    {
                 if (printedCol + 5 > screenWidth)
                     {
                     MrBayesPrint("\n%s                                   ", spacer);
-                    printedCol = strlen(spacer) + 25 + 10;
+                    printedCol = (int)(strlen(spacer)) + 25 + 10;
                     }
                 if (n == numTrees-2)
     			    MrBayesPrint ("1.00)\n");
@@ -22653,7 +22653,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     if (k == 0)
                         {
 						MrBayesPrint ("%s            Subparams  = %s", spacer, p->subParams[k]->name);
-                        printedCol = strlen(spacer) + 25 + strlen(p->subParams[k]->name);
+                        printedCol = (int)(strlen(spacer)) + 25 + (int)(strlen(p->subParams[k]->name));
                         }
                     else if (k == p->nSubParams - 1)
                         {
@@ -22670,7 +22670,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                         if (printedCol + (int)(strlen(p->subParams[k]->name)) + 2 > screenWidth)
                             {
                             MrBayesPrint (", \n%s                         ", spacer);
-                            printedCol = strlen(spacer) + 25;
+                            printedCol = (int)(strlen(spacer)) + 25;
                             }
                         else
                             {
@@ -22737,7 +22737,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					else
 						MrBayesPrint ("%s                         ", spacer);
 					numPrinted = 0;
-    				printedCol = strlen(spacer) + 25;
+    				printedCol = (int)(strlen(spacer)) + 25;
 					for (k=0; k<numApplicableMoves; k++)
 						{
 						mv = moves[k];
@@ -22756,7 +22756,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             if (printedCol + 11 + (int)(strlen(mv->name)) + (int)(log10(mv->relProposalProb[chainIndex])) + 3 > screenWidth)
                                 {
                                 MrBayesPrint(", \n%s                         ", spacer);
-                                printedCol = 25 + strlen(spacer);
+                                printedCol = 25 + (int)(strlen(spacer));
                                 }
                             else
                                 {
@@ -22817,12 +22817,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 					if (numPrinted == 0)
                         {
 						MrBayesPrint ("%s            Not used   = ", spacer);
-                        printedCol = strlen(spacer) + 25;
+                        printedCol = (int)(strlen(spacer)) + 25;
                         }
 					else if (printedCol + 2 + (int)(strlen(mv->moveType->shortName)) > screenWidth)
                         {
 					    MrBayesPrint (", \n%s                         ", spacer);
-                        printedCol = strlen(spacer) + 25;
+                        printedCol = (int)(strlen(spacer)) + 25;
                         }
                     else
                         {
