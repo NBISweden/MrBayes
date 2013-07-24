@@ -506,7 +506,7 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 |
 |   @param      speciesTree     The species tree to be filled  (out)
 |   @param      depthMatrix     The min depth matrix, upper triangular array (in)
-|   @returns    Returns NO_ERROR
+|   @returns    Returns NO_ERROR if success, ERROR if negative brlens occur
 ----------------------------------------------------------------------*/
 int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 
@@ -612,6 +612,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             else
                 u->sib = q->sib;
             u->depth = minDepth[i].depth;   // because minDepth structs are sorted, we know this is the min depth
+            assert (u->depth > 0.0);
 
             // Create new taxon set with bitfield operations
             for (j=0; j<nLongsNeeded; j++)
@@ -627,6 +628,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 
             // This is the first time we hit the root of the tree && it is resolved
             p->depth = minDepth[i].depth;
+            assert (p->depth > 0.0);
 
         }
         // other cases should not be added to tree
@@ -638,20 +640,21 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
     // Set traversal sequences
     GetPolyDownPass(polyTree);
 
-    // If we have ties, we might have zero-length branches; we ensure a minimum positive length here
-    for (i=polyTree->nNodes-2; i>=0; i--) {
-        p = polyTree->allDownPass[i];
-        if (p->anc->depth - p->depth < BRLENS_MIN)
-            p->depth = p->anc->depth - BRLENS_MIN;
-    }
-
     // Set branch lengths from node depths (not done automatically for us)
+    // Make sure all branch lengths are nonnegative (we can have 0.0 brlens, they
+    // should not be problematic in a species tree; they occur when there are
+    // ties in the min depth matrix that have not been modified by the move)
     for (i=0; i<polyTree->nNodes; i++) {
         p = polyTree->allDownPass[i];
         if (p->anc == NULL)
             p->length = 0.0;
         else
             p->length = p->anc->depth - p->depth;
+        if (p->length < 0.0 ) {
+            FreePolyTree(polyTree);
+            free (minDepth);
+            return (ERROR); 
+        }           
     }
 
     // Copy to species tree from polytomous tree
@@ -966,7 +969,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
                 timeInterval = p->anc->nodeDepth - q->nodeDepth;
 
             assert (p->anc->anc != NULL);
-            assert(timeInterval > 0.0);
+            assert(timeInterval >= 0.0);
 
             k = p->x - p->y;
             lnProb -= (k * (k - 1) * timeInterval) / theta;
@@ -1231,7 +1234,12 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     ModifyDepthMatrix (forwardLambda, modMinDepths, seed);
 
     // Get a new species tree
-    GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths);
+    if (GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths) == ERROR) {
+        abortMove = YES;
+        free (geneTrees);
+        free (oldMinDepths);
+        return (NO_ERROR);
+    }
     
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
@@ -1332,7 +1340,12 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     ModifyDepthMatrix (forwardLambda, modMinDepths, seed);
 
     // Get a new species tree
-    GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths);
+    if (GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths) == ERROR) {
+        abortMove = YES;
+        free (geneTrees);
+        free (oldMinDepths);
+        return (NO_ERROR);
+    }
     
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
@@ -1433,8 +1446,13 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     ModifyDepthMatrix (forwardLambda, modMinDepths, seed);
 
     // Get a new species tree
-    GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths);
-    
+    if (GetSpeciesTreeFromMinDepths (newSpeciesTree, modMinDepths) == ERROR) {
+        abortMove = YES;
+        free (geneTrees);
+        free (oldMinDepths);
+        return (NO_ERROR);
+    }
+   
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
 
@@ -1789,7 +1807,12 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     ModifyDepthMatrix (forwardLambda, modMinDepths, seed);
 
     /* construct a new species tree from the modified constraints */
-    GetSpeciesTreeFromMinDepths(newSpeciesTree, modMinDepths);
+    if (GetSpeciesTreeFromMinDepths(newSpeciesTree, modMinDepths) == ERROR) {
+        abortMove = YES;
+        free (modMinDepths);
+        free (geneTrees);
+        return (NO_ERROR);
+    }
 
     /* get lambda for back move */
     GetMeanDist(newSpeciesTree, depthMatrix, &mean);

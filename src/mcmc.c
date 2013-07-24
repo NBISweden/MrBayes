@@ -43016,7 +43016,7 @@ int RunChain (RandLong *seed)
     					    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
                                 {
                                 if (i == numTopologies-1)
-                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree: NA (no splits above min. frequency)\n", spacer);
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree (tree %d): NA (no splits above min. frequency)\n", spacer, i+1);
                                 else
                                     MrBayesPrint ("%s   Average standard deviation of split frequencies for gene tree %d: NA (no splits above min. frequency)\n", spacer, i+1);
                                 }
@@ -43029,7 +43029,7 @@ int RunChain (RandLong *seed)
     					    if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
                                 {
                                 if (i == numTopologies-1)
-                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree: %.6f\n", spacer, f);
+                                    MrBayesPrint ("%s   Average standard deviation of split frequencies for species tree (tree %d): %.6f\n", spacer, i+1, f);
                                 else
                                     MrBayesPrint ("%s   Average standard deviation of split frequencies for gene tree %d: %.6f\n", spacer, i+1, f);
                                 }

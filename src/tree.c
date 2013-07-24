@@ -3183,11 +3183,8 @@ int IsTreeConsistent (Param *param, int chain, int state)
     /* Check that lengths and depths are consistent */
     for (i=0; i<tree->nNodes-2; i++) {
         p = tree->allDownPass[i];
-        if (p->length <= 0.0) {
-             if(p->length == 0.0)
-                printf ("Node %d has zero branch length %f\n", p->index, p->length);
-             else
-                printf ("Node %d has negative branch length %f\n", p->index, p->length);
+        if (p->length < 0.0) {
+            printf ("Node %d has negative branch length %f\n", p->index, p->length);
             return NO;
         }
         if (fabs(p->anc->nodeDepth - p->nodeDepth - p->length) > 0.000001) {
@@ -3196,7 +3193,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
             return NO;
         }
         if (p->left == NULL && p->isDated == NO && p->nodeDepth != 0.0) {
-                printf ("Node %d is a nondated tip but has node depth %lf\n",
+                printf ("Node %d is an autodated tip (0.0) but has node depth %lf\n",
                     p->index, p->nodeDepth);
                 return NO;
         }
