@@ -794,6 +794,8 @@ int InitializeMrBayes (void)
 	defaultModel.igrvarUni[1] = 0.5;
 	strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition              */
 	defaultModel.ratePrDir = 1.0;
+	strcpy(defaultModel.generatePr, "Fixed");       /* prior on rate for a gene (multispecies coalescent) */
+	defaultModel.generatePrDir = 1.0;
 
 	defaultModel.nStates = 4;			            /* number of states for partition             */
 

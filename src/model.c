@@ -5750,6 +5750,135 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+            /* set Generatepr (generatePr) *****************************************************************/
+		else if (!strcmp(parmName, "Ratepr"))
+            {
+			if (expecting == Expecting(EQUALSIGN))
+				expecting = Expecting(ALPHA);
+			else if (expecting == Expecting(ALPHA))
+                {
+				if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+					nApplied = NumActiveParts ();
+					for (i=0; i<numCurrentDivisions; i++)
+                        {
+						if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                            {
+							if (!strcmp(tempStr,"Variable"))
+								strcpy(modelParams[i].generatePr, "Dirichlet");
+							else
+								strcpy(modelParams[i].generatePr, tempStr);
+							modelParams[i].generatePrDir = 1.0;
+							if (!strcmp(tempStr,"Variable") || !strcmp(tempStr,"Fixed"))
+                                {
+								if (tempStr[0]=='V')
+									strcat (tempStr," [Dirichlet(..,1,..)]");
+								if (nApplied == 0 && numCurrentDivisions == 1)
+									MrBayesPrint ("%s   Setting Ratepr to %s\n", spacer, tempStr);
+								else
+									MrBayesPrint ("%s   Setting Ratepr to %s for partition %d\n", spacer, tempStr, i+1);
+								if (tempStr[0]=='V')
+									strcpy (tempStr,"Variable");
+                                }
+                            }
+                        }
+                    }
+				else
+                    {
+					MrBayesPrint ("%s   Invalid Generatepr argument\n", spacer);
+					return (ERROR);
+                    }
+				if (!strcmp(tempStr,"Fixed") || !strcmp(tempStr,"Variable"))
+					expecting  = Expecting(PARAMETER) | Expecting(SEMICOLON);
+				else
+					expecting = Expecting(LEFTPAR);
+				for (i=0; i<numCurrentDivisions; i++)
+					numVars[i] = 0;
+                }
+			else if (expecting == Expecting(LEFTPAR))
+                {
+				expecting = Expecting (NUMBER);
+                }
+			else if (expecting == Expecting(NUMBER))
+                {
+				/* find next partition to fill in */
+				nApplied = NumActiveParts ();
+				for (i=0; i<numCurrentDivisions; i++)
+					if ((activeParts[i] == YES || nApplied == 0) && numVars[i] == 0)
+						break;
+				if (i == numCurrentDivisions)
+                    {
+					MrBayesPrint ("%s   Could not find first generate multiplier partition\n", spacer);
+					return (ERROR);
+                    }
+				numVars[i] = 1;
+				/* read in the parameter */
+				sscanf (tkn, "%lf", &tempD);
+				if (tempD < ALPHA_MIN || tempD > ALPHA_MAX)
+                    {
+					MrBayesPrint ("%s   Generate multiplier Dirichlet parameter %lf out of range\n", spacer, tempD);
+					return (ERROR);
+                    }
+				/* set the parameter */
+				modelParams[i].generatePrDir = tempD;
+				/* check if all partitions have been filled in */
+				for (i=0; i<numCurrentDivisions; i++)
+                    {
+					if ((activeParts[i] == YES || nApplied == 0) && numVars[i] == 0)
+						break;
+                    }
+				/* set expecting accordingly so that we know what should be coming next */
+				if (i == numCurrentDivisions)
+					expecting = Expecting (RIGHTPAR);
+				else
+					expecting = Expecting (COMMA);
+                }
+			else if (expecting == Expecting (COMMA))
+				expecting = Expecting (NUMBER);
+			else if (expecting == Expecting (RIGHTPAR))
+                {
+				/* print message */
+				for (i=j=0; i<numCurrentDivisions; i++)
+                    {
+					if (numVars[i] == 1)
+                        {
+						j++;
+						if (j == 1)
+                            {
+							MrBayesPrint ("%s   Setting Generatepr to Dirichlet(%1.2f",
+                                          spacer, modelParams[i].generatePrDir);
+                            }
+						else
+							MrBayesPrint(",%1.2f", modelParams[i].generatePrDir);
+                        }
+                    }
+				if (numCurrentDivisions == 1)
+					MrBayesPrint (")\n");
+				else
+                    {
+					MrBayesPrint (") for partition");
+					if (j > 1)
+						MrBayesPrint ("s");
+					for (i=k=0; i<numCurrentDivisions; i++)
+                        {
+						if (numVars[i] == 1)
+                            {
+							k++;
+							if (k == j && j > 1)
+								MrBayesPrint (", and %d", i+1);
+							else if (k == 1)
+								MrBayesPrint (" %d", i+1);
+							else
+								MrBayesPrint (", %d", i+1);
+                            }
+                        }
+					MrBayesPrint ("\n");
+                    }
+				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+			else
+				return (ERROR);
+            }
 		/* set Covswitchpr (covSwitchPr) ******************************************************/
 		else if (!strcmp(parmName, "Covswitchpr"))
 			{
@@ -10498,7 +10627,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 					{
 					value[j] = 1.0;
 
-				    /* Dirichlet parameters fixed to 1.0 for now */
+				    /* Dirichlet parameters fixed to 1.0 for now; ignored if the rate is fixed */
 				    subValue[p->nValues + j] = 1.0;
 
                     /* Get number of uncompressed chars from tree */
@@ -17889,24 +18018,31 @@ int SetModelParams (void)
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
-			p->paramId = GENETREERATEMULT_DIR;
+            if (strcmp(mp->generatePr,"Fixed") == 0)
+                p->paramId = GENETREERATEMULT_FIX;
+            else
+                p->paramId = GENETREERATEMULT_DIR;
 
-			p->printParam = YES;
-			for (i=0; i<numCurrentDivisions; i++)
-				{
-				if (isPartTouched[i] == YES)
-					{
-					sprintf (tempMult, "g_m{%d}", i+1);
-					if (i == 0)
-						SafeStrcat (&p->paramHeader, tempMult);
-					else
-						{
-						SafeStrcat (&p->paramHeader, "\t");
-						SafeStrcat (&p->paramHeader, tempMult);
-						}
-					}
-				}
-			}
+			if (p->paramId == GENETREERATEMULT_FIX)
+                p->printParam = NO;
+            else
+                p->printParam = YES;
+
+            for (i=0; i<numCurrentDivisions; i++)
+                {
+                if (isPartTouched[i] == YES)
+                    {
+                    sprintf (tempMult, "g_m{%d}", i+1);
+                    if (i == 0)
+                        SafeStrcat (&p->paramHeader, tempMult);
+                    else
+                        {
+                        SafeStrcat (&p->paramHeader, "\t");
+                        SafeStrcat (&p->paramHeader, tempMult);
+                        }
+                    }
+                }
+            }
 		else if (j == P_TOPOLOGY)
 			{
 			/* Set up topology **************************************************************************************/

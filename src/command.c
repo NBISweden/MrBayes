@@ -65,7 +65,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program          */
-#define	NUMPARAMS						270
+#define	NUMPARAMS						271
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -347,8 +347,8 @@ CmdType			commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 42,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
-                                                                                                        168,172,173,174,183,184,185,218,241,246,247,251,254, 269},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
+            { 33,           "Prset",  NO,           DoPrset, 43,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+                                                                                                    168,172,173,174,183,184,185,218,241,246,247,251,254, 269,270},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
@@ -11659,7 +11659,10 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    tion 4. The Dirichlet distribution is applied to the weighted\n");
 		MrBayesPrint ("                    rates; that is, it weights the partition rates according to  \n");
 		MrBayesPrint ("                    the number of included characters in each partition.         \n");
-		MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   Generatepr    -- This parameter is similar to 'Ratepr' but applies to gene    \n");
+        MrBayesPrint ("                    trees in the multispecies coalescent, whereas 'Ratepr' app-  \n");
+        MrBayesPrint ("                    lies to partitions within genes.                             \n");
+        MrBayesPrint ("                                                                                 \n");
 	    if (numCurrentDivisions == 0)
 	    	tempInt = 1;
 	    else
@@ -11678,7 +11681,7 @@ int GetUserHelp (char *helpTkn)
 				}
 	    	MrBayesPrint ("                                                                                 \n");
 			MrBayesPrint ("   Parameter        Options                      Current Setting                 \n");
-			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
+			MrBayesPrint ("   ------------------------------------------------------------------            \n");
 
 			MrBayesPrint ("   Tratiopr         Beta/Fixed                   %s", mp->tRatioPr);
 			if (!strcmp(mp->tRatioPr, "Beta"))
@@ -12000,7 +12003,13 @@ int GetUserHelp (char *helpTkn)
 			else
 				MrBayesPrint ("\n");
 
-			MrBayesPrint ("   ------------------------------------------------------------------            \n");		
+            MrBayesPrint ("   Generatepr       Fixed/Variable=Dirichlet     %s", mp->generatePr);
+            if (!strcmp(mp->generatePr, "Dirichlet"))
+                MrBayesPrint ("(...,%1.1lf,...)\n", mp->generatePrDir);
+            else
+                MrBayesPrint ("\n");
+
+			MrBayesPrint ("   ------------------------------------------------------------------            \n");
 	    	MrBayesPrint ("                                                                                 \n");
 			}
 		}
@@ -15055,10 +15064,11 @@ void SetUpParms (void)
 	PARAM   (266, "Smoothing",		DoSumSsParm,        "\0");
 	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
     PARAM   (268, "Precision",      DoSetParm,          "\0");
-	PARAM   (269, "Fossilizationpr", DoPrsetParm,       "Beta|Fixed|\0");
+	PARAM   (269, "Fossilizationpr",DoPrsetParm,       "Beta|Fixed|\0");
+	PARAM   (270, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 269) in paramTable[] at the top of this file. */
+	         change the number of elements (now 271; needs to be one more than last index) in paramTable[] at the top of this file. */
     /* CmdType commands[] */
 }
 
