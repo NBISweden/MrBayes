@@ -11453,7 +11453,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    nent of the coalescent parameter. The options are:           \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset popsizepr = uniform(<number>,<number>)              \n");
-		MrBayesPrint ("                       prset popsizepr = exponential(<number>)                   \n");
+        MrBayesPrint ("                       prset popsizepr = lognormal(<number>,<number>)            \n");
+		MrBayesPrint ("                       prset popsizepr = normal(<number>,<number>)               \n");
+        MrBayesPrint ("                       prset popsizepr = gamma(<number>,<number>)                \n");
 		MrBayesPrint ("                       prset popsizepr = fixed(<number>)                         \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    This parameter is only relevant if the coalescence process is\n");

@@ -10992,7 +10992,7 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
 		else
-			returnVal = InitBrlens (tree, 0.1);
+			returnVal = InitBrlens (tree, 0.01);
 
 		if( returnVal == ERROR )
 			return (ERROR);
@@ -18289,7 +18289,7 @@ int SetModelParams (void)
 					modelSettings[i].speciationRates = p;
 
             p->paramTypeName = "Speciation rate";
-			SafeStrcat(&p->name, "Speciation");
+			SafeStrcat(&p->name, "Net_speciation");
 			SafeStrcat(&p->name, partString);
 
 			/* find the parameter x prior type */
@@ -19495,7 +19495,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_Extinction;
 	mt->relProposalProb = 1.1;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;  /* window size */
+	mt->tuningParam[0] = 0.2;  /* window size */
 	mt->minimum[0] = 0.0001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
@@ -19514,7 +19514,7 @@ void SetUpMoveTypes (void)
 	mt->moveFxn = &Move_Fossilization;
 	mt->relProposalProb = 1.1;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 1.0;  /* window size */
+	mt->tuningParam[0] = 0.2;  /* window size */
 	mt->minimum[0] = 0.0001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;

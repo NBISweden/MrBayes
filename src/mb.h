@@ -113,7 +113,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #include "libhmsbeagle/beagle.h"
 #endif
 
-/*#define RELEASE*/
+/* #define RELEASE */
 #ifdef RELEASE
 #define	VERSION_NUMBER			"3.2.3"
 #else

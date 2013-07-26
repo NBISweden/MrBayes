@@ -15389,7 +15389,7 @@ MrBFlt LogPrior (int chain)
                 p->paramId == OMEGA_BFD || p->paramId == OMEGA_BFF)
 				{
                 alphaDir = mp->ny98omega1Beta;
-				newProp[0] = st[0];
+				newProp[0] = st[0] / (st[0] + 1.0);
 				newProp[1] = 1.0 - newProp[0];
 				x = 0.0;
 				for (i=0; i<2; i++)
