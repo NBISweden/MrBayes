@@ -135,7 +135,7 @@ To install the most recent version of openmpi, type:
 
 For your environment to work as expected, a little afterwork is required.
 Just installing the newest versions from macports does not make simple
-commands liken 'gcc', 'mpicc' and 'mpirun' point to those versions. One
+commands like 'gcc', 'mpicc' and 'mpirun' point to those versions. One
 solution is to always substitute those commands with the full path to the
 macports versions, which are
 
