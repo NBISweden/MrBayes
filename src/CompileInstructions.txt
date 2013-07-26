@@ -107,7 +107,7 @@ command, it will not stop the MrBayes run).
 
 
 Compiling on a Mac
-=================
+==================
 
 The standard modified gcc version shipping with Xcode is too old to compile
 MrBayes (see gcc version requirement above). Also, Xcode no longer ships
@@ -136,19 +136,18 @@ To install the most recent version of openmpi, type:
 For your environment to work as expected, a little afterwork is required.
 Just installing the newest versions from macports does not make simple
 commands like 'gcc', 'mpicc' and 'mpirun' point to those versions. One
-solution is to always substitute those commands with the full path to the
-macports versions, which are
+solution is to substitute those commands with the macports equivalents,
+which are
 
-> /opt/local/bin/gcc-mp-4.7     for 'gcc'
-> /opt/local/bin/openmpicc      for 'mpicc'
-> /opt/local/bin/openmpirun     for 'mpirun'
+> gcc-mp-4.7     for 'gcc' (version number depends on what you installed)
+> openmpicc      for 'mpicc'
+> openmpirun     for 'mpirun'
 
 This will necessitate that you edit the Makefile produced by the configure
-script of MrBayes. For the serial version, replace 'gcc' with the full
-path to the macports version of gcc. For the MPI version, replace 'mpicc'
-with the full path to the macports version. Note that this requires you
-to launch the MPI version of mrbayes by using the command 'openmpirun'
-instead of the usual 'mpirun'.
+script of MrBayes before compiling the program with 'make'. For the serial
+replace 'gcc' in the Makefile with 'gcc-mp-4.7'. For the MPI version,
+you replace 'mpicc' with 'openmpicc' and launch the executable with
+'openmpirun'.
 
 Alternatively, you can create symbolic links from the default locations of
 'gcc', 'mpicc' and 'mpirun'. Note that this will replace symbolic links to
@@ -160,9 +159,11 @@ following commands:
 > sudo ln -s /opt/local/bin/openmpirun /usr/local/bin/mpirun
 > sudo ln -s /opt/local/bin/gcc-mp-4.7 /usr/local/bin/gcc
 
-After you have created those links, you can use the simple commands 'gcc',
-'mpicc' and 'mpirun' from anywhere on your system, and they will call the
-macports versions you just installed.
+(you will have to remove existing symbolic links first). After you have
+created those links, you can use the simple commands 'gcc', 'mpicc' and
+'mpirun' from anywhere on your system, and they will call the macports
+versions you just installed. No editing of the Makefile is used in that
+case.
 
 Once you have installed autoconf, a recent version of gcc and openmpi you
 can install the different versions of MrBayes as in a standard Unix

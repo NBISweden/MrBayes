@@ -9924,7 +9924,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 			{
 			param = &params[i];
 			SafeStrcpy (&temp, param->name);
-			for (k=0; k<(int)strlen(temp); k++)
+			for (k=0; k<(int)(strlen(temp)); k++)
 				temp[k] = tolower(temp[k]);
 			if (strcmp(tempName,temp) == 0)
 				{

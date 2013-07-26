@@ -12702,7 +12702,8 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("   \"Homo_sapiens\" in the matrix). Only a single taxon can be assigned to       \n");
 		MrBayesPrint ("   be the outgroup.                                                              \n");
 	    MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Current outgroup: %s (taxon no. %d)\n", taxaNames[outGroupNum], outGroupNum+1);
+        if ( defTaxa == YES )
+		    MrBayesPrint ("   Current outgroup: %s (taxon no. %d)\n", taxaNames[outGroupNum], outGroupNum+1);
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 		}
 	else if (!strcmp(helpTkn, "Showusertrees"))
