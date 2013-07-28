@@ -13063,7 +13063,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
 		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
 		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
-		MrBayesPrint ("      Igrbrlens       -- Branch lengths of IGR relaxed clock model               \n"); 
+		MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n"); 
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
