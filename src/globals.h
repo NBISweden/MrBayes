@@ -32,7 +32,7 @@ extern BitsLong         expecting;								/* variable denoting expected token ty
 extern int				fileNameChanged;					    /* has file name been changed?                   */
 extern int				foundNewLine;                           /* whether a new line has been found             */
 extern char				gapId;                                  /* gap character Id                              */
-extern long             globalSeed;                             /* seed that is initialized at start up          */
+extern RandLong         globalSeed;                             /* seed that is initialized at start up          */
 extern char				**headerNames;                          /* string to hold headers in sump and plot       */
 extern int 				inComment;                              /* flag for whether input stream is commented    */
 extern int				inferAncStates;					   	    /* should ancestral states be inferred (y/n)     */
@@ -119,7 +119,7 @@ extern int				readComment;							/* should we read comment (looking for &)?     
 extern int				readWord;							    /* should we read a word next?                   */
 extern ReassembleInfo	reassembleParams;		                /* holds parameters for reassemble command       */
 extern int				replaceLogFile;                         /* should logfile be replace/appended to         */
-extern long             runIDSeed;                              /* seed used only for generating run ID [stamp]  */
+extern RandLong         runIDSeed;                              /* seed used only for generating run ID [stamp]  */
 extern BitsLong			bitsLongWithAllBitsSet;                 /* a BitsLong with all bits set, for bit ops     */
 extern int 				setUpAnalysisSuccess;                   /* Set to YES if analysis is set without error   */
 extern int 				scientific;                             /* use scientific format for samples ?           */
@@ -130,7 +130,7 @@ extern int              **speciespartitionId;                   /* holds info ab
 extern char				**speciespartitionNames;                /* hold names of speciespartitions (first is "default") */
 extern int				speciespartitionNum;                    /* index of current species partition            */
 extern char			    stamp[11];                              /* holds a unique identifier for each analysis   */
-extern long             swapSeed;                               /* seed used only for determining which to swap  */
+extern RandLong         swapSeed;                               /* seed used only for determining which to swap  */
 extern int				state[MAX_CHAINS];						/* state of chain								 */
 extern MrBFlt			*stdStateFreqs;				            /* std char state frequencies					 */
 extern int				*stdType;				                /* compressed std char type: ord, unord, irrev  */

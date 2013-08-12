@@ -20852,9 +20852,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-	/***************************			Begin Code added by Jeremy Brown 		*************************/
-
-	/* Move_TreeLen */
+	/* Move_TreeLen, by Jeremy Brown */
 	mt = &moveTypes[i++];
 	mt->name = "Whole treelength hit with multiplier";
 	mt->shortName = "TLMultiplier";
@@ -20876,8 +20874,6 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
-
-	/***************************			End Code added by Jeremy Brown 		*************************/
 
 	/* Move_UnrootedSlider */
 	/* Non-clock version of the SPRclock; this move is not correctly balanced yet */

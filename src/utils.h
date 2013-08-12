@@ -22,6 +22,7 @@ int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
 void     AlignedSafeFree(void **ptr);
 #endif
+int	     Bit (int n, BitsLong *p);
 void     ClearBit (int i, BitsLong *bits);
 void     ClearBits (BitsLong *bits, int nLongs);
 void     CopyBits (BitsLong *dest, BitsLong *source, int nLongs);

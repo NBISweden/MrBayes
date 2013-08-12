@@ -207,7 +207,6 @@ int     AddTreeSamples (int from, int to, int saveToList);
 PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId);
 int     AddTreeToPartitionCounters (Tree *tree, int treeId, int runId);
 int     AttemptSwap (int swapA, int swapB, RandLong *seed);
-int	    Bit (int n, BitsLong *p);
 void    BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo);
 int     BuildStepwiseTree (Tree *t, int chain, RandLong *seed);
 int     CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL);
@@ -18169,6 +18168,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 	return (NO_ERROR);
 
 }
+
 
 
 
