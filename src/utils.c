@@ -88,6 +88,34 @@ void AlignedSafeFree (void **ptr)
 
 
 
+/*----------------------------------------------------------------
+|
+|	Bit: return 1 if bit n is set in BitsLong *p
+|		else return 0
+|
+-----------------------------------------------------------------*/
+int Bit (int n, BitsLong *p)
+
+{
+
+	BitsLong		x, bitsLongOne;
+
+    bitsLongOne = 1;
+
+	p += n / nBitsInALong;
+	x = bitsLongOne << (n % nBitsInALong);
+
+	if ((x & (*p)) == 0)
+		return 0;
+	else
+		return 1;
+
+}
+
+
+
+
+
 /* ClearBit: Clear one bit in a bitfield */
 void ClearBit (int i, BitsLong *bits)
 {

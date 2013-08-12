@@ -495,7 +495,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
 	int			i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
-	BitsLong	x, *partition = NULL;
+	BitsLong	x, *partition = NULL, bitsLongOne;
 	MrBFlt		freq, freqInterapted=0;
     PolyTree    *t, *t2=NULL;
 	PolyNode	*p, *q, *r, *ql, *pl;
@@ -503,7 +503,10 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
     Stat        theStats;
 	int 		isFirstLoop=1, isInterapted=0;
 	
-	/* check that we have at least three species */
+    /* we use a BitsLong variable set to one to escape dependence on interpretation of constant (signed?) int/long '1L' */
+    bitsLongOne = 1;
+	
+    /* check that we have at least three species */
     if (sumtParams.numTaxa < 3)
 		{
 		MrBayesPrint ("%s   Too few taxa included to show consensus trees\n", spacer);
@@ -722,7 +725,7 @@ treeConstruction:
 			for (r=p->left; r!=NULL; r=r ->sib)
 				{
 				/* test if r is in the new partition or not */
-				if ((r->x > 1 && IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (1 << (r->index % nBitsInALong))) != 0))
+				if ((r->x > 1 && IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded)) || (r->x == 1 && (partition[r->index / nBitsInALong] & (bitsLongOne << (r->index % nBitsInALong))) != 0))
 					{
 					/* r is in the partition */
 					if (ql == NULL)
@@ -5315,12 +5318,14 @@ void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
 {
 
     int         i;
-	BitsLong    x, y;
+	BitsLong    x, y, bitsLongOne;
+
+    bitsLongOne = 1;
 	
 	for (i=0; i<nTaxaToShow; i++)
 		{
 		y = p[i / nBitsInALong];
-		x = 1 << (i % nBitsInALong);
+		x = bitsLongOne << (i % nBitsInALong);
 		if ((x & y) == 0)
 			MrBayesPrintf (fp, ".");
 		else
@@ -5338,12 +5343,14 @@ void ShowSomeParts (FILE *fp, BitsLong *p, int offset, int nTaxaToShow)
 {
 
 	int         i;
-	BitsLong    x, y;
+	BitsLong    x, y, bitsLongOne;
+
+    bitsLongOne = 1;
 	
 	for (i=offset; i<offset+nTaxaToShow; i++)
 		{
 		y = p[i / nBitsInALong];
-		x = 1 << (i % nBitsInALong);
+		x = bitsLongOne << (i % nBitsInALong);
 		if ((x & y) == 0)
 			MrBayesPrintf (fp, ".");
 		else

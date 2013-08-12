@@ -1626,32 +1626,6 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
 
 
 
-/*----------------------------------------------------------------
-|
-|	Bit: return 1 if bit n is set in BitsLong *p
-|		else return 0
-|
------------------------------------------------------------------*/
-int Bit (int n, BitsLong *p)
-
-{
-
-	BitsLong		x;
-
-	p += n / nBitsInALong;
-	x = 1 << (n % nBitsInALong);
-
-	if ((x & (*p)) == 0)
-		return 0;
-	else
-		return 1;
-
-}
-
-
-
-
-
 void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo)
 {
 	int			i;
@@ -6363,7 +6337,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 				{
 				for (a=j=0; a<nStates; a++)
 					{
-					sum = 0.0; // Also was here??? condLikeUp[A] = 0.0
+					sum = 0.0;
 					for (i=0; i<nStates; i++)
 						sum += tiP[j++]*clDP[i];
                     if (sum != 0.0) condLikeUp[a] = clFA[a] / sum;
@@ -12321,9 +12295,11 @@ int InitParsSets (void)
 
 	int				c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode, allAmbig;
-	BitsLong        x, x1, x2, x3, *longPtr;
+	BitsLong        x, x1, x2, x3, *longPtr, bitsLongOne;
 	ModelInfo		*m;
 	ModelParams		*mp;
+
+    bitsLongOne = 1;
 
     /* this variable determines how many parsimony states are used           */
 	/* to represent continuous characters (determines weight of these chars) */
@@ -12415,7 +12391,7 @@ int InitParsSets (void)
 			}
 		else if (m->nCharsPerSite == 1 && m->nParsIntsPerSite == 1)
 			{
-			allAmbig = (1<<mp->nStates) - 1;
+			allAmbig = (bitsLongOne<<mp->nStates) - 1;
 			for (i=0; i<numLocalTaxa; i++)
 				{
 				for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
@@ -12450,7 +12426,7 @@ int InitParsSets (void)
 						for (nuc2=0; nuc2<4; nuc2++)
 							{
 							if (IsBitSet(nuc1,&x1) == YES && IsBitSet(nuc2, &x2) == YES)
-								x |= (1<<(nuc1*4 + nuc2));
+								x |= (bitsLongOne<<(nuc1*4 + nuc2));
 							}
 						}
 					
@@ -37715,9 +37691,11 @@ int PrintParsMatrix (void)
 {
 
 	int				i, j=0, k, c, d, printWidth, nextColumn, nChars, inputChar;
-	BitsLong		x, y;
+	BitsLong		x, y, bitsLongOne;
 	char			ch;
 	ModelInfo		*m;
+
+    bitsLongOne = 1;
 
 	printWidth = 79;
 
@@ -37727,7 +37705,7 @@ int PrintParsMatrix (void)
 
 		m = &modelSettings[d];
 
-		nChars = 1 + (int) (log((1 << m->numStates) - 1) / log(16));
+		nChars = 1 + (int) (log((bitsLongOne << m->numStates) - 1) / log(16));
 	
         for (c=0; c<m->numChars; c++)
 			{

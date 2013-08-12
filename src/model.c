@@ -190,7 +190,7 @@ int AddDummyChars (void)
 	int			i, j, k, d, numIncompatible, numDeleted, numStdChars, oldRowSize,
 				newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
 				isCompat, *tempChar, numIncompatibleChars;
-	BitsLong	*tempMatrix;
+	BitsLong	*tempMatrix, bitsLongOne = 1;
 	CLFlt		*tempSitesOfPat;
 	ModelInfo	*m;
 	ModelParams	*mp;
@@ -288,7 +288,7 @@ int AddDummyChars (void)
 				for (k=0; k<2; k++)
 					{
 					for (i=0; i<numLocalTaxa; i++)
-						tempMatrix[pos(i,newColumn,newRowSize)] = (1<<k);
+						tempMatrix[pos(i,newColumn,newRowSize)] = (bitsLongOne<<k);
 					tempSitesOfPat[newChar] = 0;
 					tempChar[newColumn] = -1;
 					newChar++;
@@ -305,9 +305,9 @@ int AddDummyChars (void)
 						for (j=0; j<numLocalTaxa; j++)
 							{
 							if(j == i)
-								tempMatrix[pos(j,newColumn,newRowSize)] = (1 << k) ^ 3;
+								tempMatrix[pos(j,newColumn,newRowSize)] = (bitsLongOne << k) ^ 3;
 							else
-								tempMatrix[pos(j,newColumn,newRowSize)] = 1 << k;
+								tempMatrix[pos(j,newColumn,newRowSize)] = bitsLongOne << k;
 							}
 						tempSitesOfPat[newChar] = 0;
 						tempChar[newColumn] = -1;
