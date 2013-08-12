@@ -11566,7 +11566,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    on average, two rate-modifying events.                       \n");
 		MrBayesPrint ("                    If you put an exponential(0.1) on the rate, you will be      \n");
 		MrBayesPrint ("                    estimating the rate against a prior probability distribution \n");
-		MrBayesPrint ("                    where the expected rate is 10 (= 1/0.1).						\n");
+		MrBayesPrint ("                    where the expected rate is 10 (= 1/0.1).                     \n");
 		MrBayesPrint ("   Cppmultdevpr  -- This parameter allows you to specify the standard deviation  \n");
 		MrBayesPrint ("                    of the log-normal distribution from which the rate multi-    \n");
 		MrBayesPrint ("                    pliers of the CPP relaxed clock model are drawn. The standard\n");
@@ -12147,7 +12147,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Translate                                                                     \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   This command is used by MrBayes to specify the mapping between taxon names    \n");
-	    MrBayesPrint ("   and taxon numbers in a Nexus tree file. For instance,						    \n");
+	    MrBayesPrint ("   and taxon numbers in a Nexus tree file. For instance,                         \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      translate                                                                  \n");
 	    MrBayesPrint ("         1 Homo,                                                                 \n");
@@ -13554,7 +13554,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("   Tree                                                                          \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   This command is used by MrBayes to write trees to a nexus tree file. Trees    \n");
-	    MrBayesPrint ("   are written in the Newick format. For instance,							    \n");
+	    MrBayesPrint ("   are written in the Newick format. For instance,                               \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      tree ((1,2),3,4);                                                          \n");
 	    MrBayesPrint ("                                                                                 \n");
