@@ -1682,9 +1682,10 @@ int ChangeNumRuns (int from, int to)
 void CheckCharCodingType (Matrix *m, CharInfo *ci)
 
 {
-	int		i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
-			numConsidered, numInformative, lastInformative=0, uniqueBits,
-			newPoss, oldPoss, combinations[2048], *newComb, *oldComb, *tempComb;
+	int		    i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
+			    numConsidered, numInformative, lastInformative=0, uniqueBits,
+			    newPoss, oldPoss, combinations[2048], *newComb, *oldComb, *tempComb;
+    BitsLong    bitsLongOne=1;
 
 	extern int NBits (int x);
 
@@ -1718,7 +1719,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 				numPartAmbig++;
 			for (j=0; j<10; j++)
 				{
-				if (((1<<j) & x) != 0)
+				if (((bitsLongOne<<j) & x) != 0)
 					{	
 					n1[j]++;
 					if (NBits(x) == 1)
@@ -1794,7 +1795,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 	for (i=0; i<10; i++)
 		{
 		if (n2[i] > 0 && i != lastInformative)
-			x |= (1<<i);
+			x |= (bitsLongOne<<i);
 		}
 	oldPoss = 1;
 	oldComb[0] = x;
@@ -1808,7 +1809,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 		if (NBits(x) > 1 && NBits(x) < ci->nStates)
 			{
 			/* remove lastInformative */
-			x &= !(1<<lastInformative);
+			x &= !(bitsLongOne<<lastInformative);
 			/* reset newPoss */
 			newPoss = 0;
 			/* see if we can add it, store all possible combinations */
@@ -1817,8 +1818,8 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 				uniqueBits = x & (!oldComb[j]);
 				for (k=0; k<10; k++)
 					{
-					if (((1<<k) & uniqueBits) != 0)
-						newComb[newPoss++] = oldComb[j] | (1<<k);
+					if (((bitsLongOne<<k) & uniqueBits) != 0)
+						newComb[newPoss++] = oldComb[j] | (bitsLongOne<<k);
 					}
 				}
 			/* break out if we could not add it */
@@ -11152,7 +11153,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
 
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
-    int         CheckFirst, CheckSecond; /*Flag indicating wheather coresonding set(first/second) of partial constraint has to be checked*/
+    int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
 #if ! defined (NDEBUG)
     int         locks_count=0;
 #endif
@@ -11259,11 +11260,11 @@ int DoesTreeSatisfyConstraints(Tree *t){
             if( t->isRooted == YES )
                 {
                 CheckFirst = YES;
-                CheckSecond = NO; /*In rooted case even if we have a node with partition fully containing second set and not containing the first set it would not sutisfy the constraint*/
+                CheckSecond = NO; /* In rooted case even if we have a node with partition fully containing second set and not containing the first set it would not satisfy the constraint */
                 }
             else
                 {
-                if ( NumBits(definedConstraintTwoPruned[k], nLongsNeeded) == 1)
+                if ( NumBits(definedConstraintPruned[k], nLongsNeeded) == 1 || NumBits(definedConstraintTwoPruned[k], nLongsNeeded) == 1)
                     continue;
                 /*one or two of the next two statments will be YES*/
                 CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
@@ -11275,9 +11276,9 @@ int DoesTreeSatisfyConstraints(Tree *t){
                 p = t->intDownPass[i];
                 if (p->anc != NULL)
 		            { 
-                    if( CheckFirst==YES && IsPartNested( definedConstraintPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                    if( CheckFirst== YES && IsPartNested(definedConstraintPruned   [k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
                         break;
-                    if( CheckSecond==YES && IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                    if( CheckSecond==YES && IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned   [k], p->partition, nLongsNeeded) )
                         break;
 		            }
 	            }
@@ -11305,19 +11306,20 @@ int DoesTreeSatisfyConstraints(Tree *t){
                 p = t->intDownPass[i];
                 if (p->anc != NULL)
 		            {
-                    if(CheckFirst==YES &&  !IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
+                    if(CheckFirst==YES && AreBitfieldsEqual(definedConstraintPruned[k], p->partition, nLongsNeeded))
                         break;
-                    if(CheckSecond==YES &&  !IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && !IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                    if(CheckSecond==YES && AreBitfieldsEqual(definedConstraintTwoPruned[k], p->partition, nLongsNeeded))
                         break;
                     }
 	            }
-            if( i==t->nIntNodes )
+            if( i!=t->nIntNodes )
                 return NO;
             }
         }
     return YES;
 
 }
+
 
 
 
@@ -12293,13 +12295,10 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
             }
 			if (p->checkConstraints == YES)
             {
+                tree->checkConstraints = YES;
                 tree->nLocks = NumInformativeHardConstraints(mp);
-                if (tree->nLocks > 0)
-                {
-                    tree->checkConstraints = YES;
-                    tree->nConstraints = mp->numActiveConstraints;  /* nConstraints is number of constraints to check */
-                    tree->constraints = mp->activeConstraints;
-                }
+                tree->nConstraints = mp->numActiveConstraints;  /* nConstraints is number of constraints to check */
+                tree->constraints = mp->activeConstraints;
             }
 			else
             {

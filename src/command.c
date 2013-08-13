@@ -10568,7 +10568,13 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   Defines a partial constraint that keeps Mus outside of the clade defined by   \n");
 	    MrBayesPrint ("   the most recent common ancestor of Homo and Gorilla. Other taxa are allowed to\n");
-	    MrBayesPrint ("   sit anywhere in the tree.                                                     \n");
+	    MrBayesPrint ("   sit anywhere in the tree. Note that this particular constraint is meaningless \n");
+        MrBayesPrint ("   in unrooted trees. MrBayes does not assume anything about the position of the \n");
+        MrBayesPrint ("   outgroup unless it is explicitly included in the partial constraint. Therefore, a par- \n");
+        MrBayesPrint ("   tial constraint must have at least two taxa on each side of the ':' to be     \n");
+        MrBayesPrint ("   useful in analyses of unrooted trees. The case is different for rooted trees, \n");
+        MrBayesPrint ("   where it is sufficient for a partial constraint to have more than one taxon   \n");
+        MrBayesPrint ("   before the ':', as in the example given above, to constrain tree space.       \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   To define a more complex constraint tree, simply combine constraints into a   \n");
 	    MrBayesPrint ("   list when issuing the 'prset topologypr' command.                             \n");

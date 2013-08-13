@@ -88,6 +88,23 @@ void AlignedSafeFree (void **ptr)
 
 
 
+int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
+{
+    int i;
+    
+    for (i=0; i<length; i++)
+        {
+        if (p[i] != q[i])
+            return NO;
+        }
+    
+    return YES;
+}
+
+
+
+
+
 /*----------------------------------------------------------------
 |
 |	Bit: return 1 if bit n is set in BitsLong *p
