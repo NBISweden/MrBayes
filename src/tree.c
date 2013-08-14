@@ -3358,6 +3358,45 @@ void Mark (TreeNode *p)
 
 /*-------------------------------------------------------------------------------------------
  |
+ |   MarkDistance: This recursive function will mark distance from an interior branch. The
+ |      distance will be positive in the crown part and negative in the root part.
+ |
+ ---------------------------------------------------------------------------------------------*/
+void MarkDistance (Tree *t, TreeNode *p)
+{
+    int         i, dist;
+    TreeNode    *q;
+    
+    assert (t->isRooted == NO);
+    
+    for (i=0; i<t->nNodes; i++)
+    {
+        q = t->allDownPass[i];
+        q->marked = NO;
+        q->x = 0;
+    }
+    
+    q = p;
+    q->marked = YES;
+    q->x = 0;
+    
+    /* Take care of the path to the root */
+    dist = 0;
+    q = p->anc;
+    while (q->anc != NULL)
+    {
+        q->marked = YES;
+        q->x = dist--;
+        q = q->anc;
+    }
+}
+
+
+
+
+
+/*-------------------------------------------------------------------------------------------
+ |
  |   MarkUnconstrained: This routine will mark up an unconstrained subtree rooted at p
  |
  ---------------------------------------------------------------------------------------------*/

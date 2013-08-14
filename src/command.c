@@ -6759,11 +6759,8 @@ int DoSetParm (char *parmName, char *tkn)
 					return (ERROR);
 					}
 				MrBayesPrint ("%s   Setting userlevel to %s\n", spacer, tempStr);
-				if (SetMoves() == ERROR)
-					{
-					MrBayesPrint ("%s   Problem seting up the moves for this user level\n", spacer);
-					return (ERROR);
-					}
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -12604,7 +12601,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("                   overwrite output files that already exists. This may cause    \n");
 		MrBayesPrint ("                   irrecoverable loss of previous results if you have not removed\n");
 		MrBayesPrint ("                   or renamed the files from previous runs. To override this be- \n");
-		MrBayesPrint ("                   havior, set autooverwrite to no, in which case new output will\n");
+		MrBayesPrint ("                   havior, set autoreplace to no, in which case new output will s\n");
 		MrBayesPrint ("                   be appended to existing files instead.                        \n");
 		MrBayesPrint ("   Quitonerror  -- If quitonerror is set to yes, then the program will quit when \n");
 		MrBayesPrint ("                   an error is encountered, after printing an error message. If  \n");
