@@ -29033,7 +29033,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
 
 
-
+#if 0
 /* Move_ParsSPR2 */
 int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
@@ -29904,7 +29904,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     return (NO_ERROR);
     
 }
-
+#endif
 
 
 
@@ -30477,7 +30477,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
 
 
-
+#if 0
 /* Move_ParsTBR //chi */
 int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
@@ -30708,7 +30708,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     return (NO_ERROR);
     
 }
-
+#endif
 
 
 
