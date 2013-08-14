@@ -12449,6 +12449,21 @@ int IsApplicableTreeAgeMove (Param *param)
 
 
 
+
+int IsApplicable_FossilEdgeMove (Param *param)
+{
+    ModelParams *mp = &modelParams[param->relParts[0]];
+
+    if (!strcmp(mp->sampleStrat, "FossilTip"))
+        return NO;
+    else  /* fossils may be ancestors of other fossils or extant species */
+        return YES;
+}
+
+
+
+
+
 int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2)
 
 {
@@ -19397,6 +19412,20 @@ void SetUpMoveTypes (void)
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
 
+    /* Move_AddEdge, add-edge move for fossilization prior */
+    mt = &moveTypes[i++];
+    mt->name = "Add edge for FossilizedBD";
+    mt->shortName = "AddEdge";
+    mt->subParams = YES;
+    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_AddEdge;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 0;
+    mt->parsimonyBased = NO;
+    mt->level =STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FossilEdgeMove;
+    
 	/* Move_Adgamma */
 	mt = &moveTypes[i++];
 	mt->name = "Sliding window";
@@ -19482,6 +19511,20 @@ void SetUpMoveTypes (void)
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
+
+    /* Move_DelEdge, delete-edge move for fossilization prior */
+    mt = &moveTypes[i++];
+    mt->name = "Delete edge for FossilizedBD";
+    mt->shortName = "DelEdge";
+    mt->subParams = YES;
+    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_DelEdge;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 0;
+    mt->parsimonyBased = NO;
+    mt->level =STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FossilEdgeMove;
 
 	/* Move_Extinction */
 	mt = &moveTypes[i++];

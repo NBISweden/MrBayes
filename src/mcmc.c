@@ -16192,8 +16192,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
 int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS)
 {
 	if (!strcmp(sS, "Random"))
-    /* todo: change LnFossilizedBDPriorTip to LnFossilizedBDPriorAll here after they are all programmed */
-		return LnFossilizedBDPriorTip (t, clockRate, prob, sR, eR, sF, fR);
+		return LnFossilizedBDPriorAll (t, clockRate, prob, sR, eR, sF, fR);
 	else if (!strcmp(sS, "FossilTip"))
 		return LnFossilizedBDPriorTip (t, clockRate, prob, sR, eR, sF, fR);
 	else
@@ -18047,6 +18046,339 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
 
 	return (NO_ERROR);
 	
+}
+
+
+
+
+
+int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* Move an ancestral fossil (brl = 0) to fossil tip (brl > 0)
+
+       __|__              __|__
+      |     |            |     |
+            |       -->       q|___
+            |       -->        |   |
+           q|___p              |   |p
+           r|                 r|
+     
+       1. Pich a fossil among those with brl = 0 (prob = 1/k)
+       2. Propose brl from a uniform(0, ?) distribution
+    //chi */
+    
+    int i, j, k, mFossil, kFossil;
+    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth, newLength;
+    MrBFlt clockRate, sR, eR, sF, fR;
+    char   *sS;
+    TreeNode *p, *q, *r;
+    Tree     *t;
+    ModelParams *mp;
+    ModelInfo   *m;
+    Calibration *calibrationPtr = NULL;
+
+    /* get tree */
+	t = GetTree (param, chain, state[chain]);
+    
+    /* get number of ancestral and tip fossils */
+    kFossil = mFossil = 0;
+    for (i = 0; i < t->nNodes; i++)
+    {
+        p = t->allDownPass[i];
+        p->marked = NO;  // reset marked node
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
+        {
+            if (p->length > 0.0) {
+                mFossil++;        // count tip fossil
+            }
+            else {
+                p->marked = YES;  // mark  anc fossil
+                kFossil++;        // count anc fossil
+            }
+        }
+    }
+    if (kFossil == 0)  // no ancestral fossil, nothing to do
+    {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
+
+    /* get model params and model info */
+	mp = &modelParams[param->relParts[0]];
+	m = &modelSettings[param->relParts[0]];
+    
+    /* get fossilization prior parameters */
+    sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
+    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+	sF = mp->sampleProb;
+    fR = *(GetParamVals (m->fossilizationRates, chain, state[chain]));
+    sS = mp->sampleStrat;
+    
+    /* get clock rate */
+    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
+	
+    /* calculate prior ratio, step 1 */
+    if (LnFossilizedBDPriorAll (t, clockRate, &oldLnPrior, sR, eR, sF, fR) == ERROR)
+    {
+        MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+        return (ERROR);
+    }
+
+    /* pick an ancestral fossil randomly */
+    j = (int) (RandomNumber(seed) * kFossil);
+    for (i = k = 0; i < t->nNodes; i++)
+    {
+        p = t->allDownPass[i];
+        if (p->marked == YES)
+            k++;
+        if (k > j)
+            break;
+    }
+    /* now p is pointing to the ancestral fossil
+       whose brl needs to be changed to >0. let's do it! */
+    q = p->anc;
+    if (q->left == p)
+        r = q->right;
+    else
+        r = q->left;
+
+    /* determine lower and upper bound of backward move, abort if impossible */
+    minDepth = p->nodeDepth + BRLENS_MIN;
+    if (q->anc->anc == NULL)  // q is root
+    {
+        calibrationPtr = &mp->treeAgePr;
+        if ((mp->treeAgePr.prior == fixed) || (calibrationPtr->min * clockRate > minDepth))
+        {  // root cannot be moved
+            abortMove = YES;
+            return (NO_ERROR);
+        }
+        maxDepth = TREEHEIGHT_MAX;
+        if (calibrationPtr->max * clockRate < maxDepth)
+			maxDepth = calibrationPtr->max * clockRate;
+    }
+    else
+        maxDepth = q->anc->nodeDepth - BRLENS_MIN;
+    
+	if (minDepth >= maxDepth)
+    {
+		abortMove = YES;
+		return (NO_ERROR);
+    }
+    
+	/* propose the depth for node leading to the fossil */
+	newLength = (RandomNumber (seed)) * (maxDepth - minDepth);
+    
+    /* adjust brls and depths */
+    q->nodeDepth += newLength;
+    q->length    -= newLength;
+    r->length    += newLength;
+    p->length     = newLength;
+ 
+    /* calculate prior ratio, step 2 */
+    if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
+    {
+        MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+        return (ERROR);
+    }
+    (*lnPriorRatio) = newLnPrior - oldLnPrior;
+    
+    /* calculate proposal ratio, need to double check !! */
+    (*lnProposalRatio) = log(kFossil) - log(mFossil +1);
+    if (mFossil == 0)       // current tree has no fossil tips
+        (*lnProposalRatio) += log(0.5);
+    else if (kFossil == 1)  // proposed tree has no ancestral fossils
+        (*lnProposalRatio) += log(2.0);
+    
+    /* add the Jacobian term */
+    (*lnProposalRatio) += log(maxDepth - minDepth);
+    
+    /* set flags for update of transition probabilities */
+    p->upDateTi = YES;
+    q->upDateTi = YES;
+    r->upDateTi = YES;
+    
+    /* set flags for update of cond likes from p/r to root */
+    r->upDateCl = YES;
+    q = p;
+	while (q->anc != NULL)
+    {
+		q->upDateCl = YES;
+		q = q->anc;
+    }
+    q = p->anc;
+        
+    /* adjust proposal and prior ratio for relaxed clock models */
+    
+    
+    
+    
+    
+    return (NO_ERROR);
+}
+
+
+
+
+
+int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* Move a fossil tip (brl > 0) to be ancestral (brl =0)
+
+       __|__              __|__
+      |     |            |     |
+           q|___     -->       |
+            |   |    -->       |
+            |   |p            q|___p
+           r|                 r|
+         
+       1. Pich a fossil among those with brl > 0 (prob = 1/m)
+       2. Set brl = 0
+    //chi */
+    
+    int i, j, k, mFossil, kFossil;
+    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth;
+    MrBFlt clockRate, sR, eR, sF, fR;
+    char   *sS;
+    TreeNode *p, *q, *r;
+    Tree     *t;
+    ModelParams *mp;
+    ModelInfo   *m;
+    Calibration *calibrationPtr = NULL;
+
+    /* get tree */
+	t = GetTree (param, chain, state[chain]);
+    
+    /* get number of ancestral and tip fossils */
+    kFossil = mFossil = 0;
+    for (i = 0; i < t->nNodes; i++)
+    {
+        p = t->allDownPass[i];
+        p->marked = NO;  // reset marked node
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
+        {
+            if (p->length > 0.0) {
+                p->marked = YES;  // mark  tip fossil
+                mFossil++;        // count tip fossil
+            }
+            else {
+                kFossil++;        // count anc fossil
+            }
+        }
+    }
+    if (mFossil == 0)  // no tip fossil, nothing to do
+    {
+        abortMove = YES;
+        return (NO_ERROR);
+    }
+    
+    /* get model params and model info */
+	mp = &modelParams[param->relParts[0]];
+	m = &modelSettings[param->relParts[0]];
+    
+    /* get fossilization prior parameters */
+    sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
+    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+	sF = mp->sampleProb;
+    fR = *(GetParamVals (m->fossilizationRates, chain, state[chain]));
+    sS = mp->sampleStrat;
+    
+    /* get clock rate */
+    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
+	
+    /* calculate prior ratio, step 1 */
+    if (LnFossilizedBDPriorAll (t, clockRate, &oldLnPrior, sR, eR, sF, fR) == ERROR)
+    {
+        MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+        return (ERROR);
+    }
+    
+    /* pick a tip fossil randomly */
+    j = (int) (RandomNumber(seed) * mFossil);
+    for (i = k = 0; i < t->nNodes; i++)
+    {
+        p = t->allDownPass[i];
+        if (p->marked == YES)
+            k++;
+        if (k > j)
+            break;
+    }
+    /* now p is pointing to the fossil tip
+       whose brl needs to be changed to 0. let's do it */
+    q = p->anc;
+    if (q->left == p)
+        r = q->right;
+    else
+        r = q->left;
+
+    /* determine lower and upper bound of backward move, abort if impossible */
+    minDepth = p->nodeDepth + BRLENS_MIN;
+    if (q->anc->anc == NULL)  // q is root
+    {
+        calibrationPtr = &mp->treeAgePr;
+        if ((mp->treeAgePr.prior == fixed) || (calibrationPtr->min * clockRate > minDepth))
+        {  // root cannot be moved
+            abortMove = YES;
+            return (NO_ERROR);
+        }
+        maxDepth = TREEHEIGHT_MAX;
+        if (calibrationPtr->max * clockRate < maxDepth)
+			maxDepth = calibrationPtr->max * clockRate;
+    }
+    else
+        maxDepth = q->anc->nodeDepth - BRLENS_MIN;
+
+	if (r->nodeDepth > p->nodeDepth -BRLENS_MIN || minDepth >= maxDepth)
+    {  /* the sister node (another fossil) is older than the current fossil */
+		abortMove = YES;
+		return (NO_ERROR);
+    }
+
+	/* set the brl to 0 for the fossil tip, it becomes an ancestral fossil */
+    q->nodeDepth = p->nodeDepth;
+    q->length += p->length;
+    r->length -= p->length;
+    p->length = 0.0;
+    
+    /* calculate prior ratio, step 2 */
+    if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
+    {
+        MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+        return (ERROR);
+    }
+    (*lnPriorRatio) = newLnPrior - oldLnPrior;
+    
+    /* calculate proposal ratio, need to double check !! */
+    (*lnProposalRatio) = log(mFossil) - log(kFossil +1);
+    if (kFossil == 0)       // current tree has no ancestral fossils
+        (*lnProposalRatio) += log(2.0);
+    else if (mFossil == 1)  // proposed tree has no fossil tips
+        (*lnProposalRatio) += log(0.5);
+
+    /* add the Jacobian term */
+    (*lnProposalRatio) -= log(maxDepth - minDepth);
+
+    /* set flags for update of transition probabilities */
+    p->upDateTi = YES;
+    q->upDateTi = YES;
+    r->upDateTi = YES;
+
+    /* set flags for update of cond likes from p/r to root */
+    r->upDateCl = YES;
+    q = p;
+	while (q->anc != NULL)
+    {
+		q->upDateCl = YES;
+		q = q->anc;
+    }
+    q = p->anc;
+
+    /* adjust proposal and prior ratio for relaxed clock models */
+    
+    
+    
+    
+    
+    return (NO_ERROR);
 }
 
 
