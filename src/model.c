@@ -11276,9 +11276,9 @@ int DoesTreeSatisfyConstraints(Tree *t){
                 p = t->intDownPass[i];
                 if (p->anc != NULL)
 		            { 
-                    if( CheckFirst== YES && IsPartNested(definedConstraintPruned   [k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
+                    if( CheckFirst== YES && IsPartNested(definedConstraintPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) )
                         break;
-                    if( CheckSecond==YES && IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned   [k], p->partition, nLongsNeeded) )
+                    if( CheckSecond==YES && IsPartNested(definedConstraintTwoPruned[k], p->partition, nLongsNeeded) && IsSectionEmpty(definedConstraintPruned[k], p->partition, nLongsNeeded) )
                         break;
 		            }
 	            }

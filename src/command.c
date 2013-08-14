@@ -10567,8 +10567,8 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   the most recent common ancestor of Homo and Gorilla. Other taxa are allowed to\n");
 	    MrBayesPrint ("   sit anywhere in the tree. Note that this particular constraint is meaningless \n");
         MrBayesPrint ("   in unrooted trees. MrBayes does not assume anything about the position of the \n");
-        MrBayesPrint ("   outgroup unless it is explicitly included in the partial constraint. Therefore, a par- \n");
-        MrBayesPrint ("   tial constraint must have at least two taxa on each side of the ':' to be     \n");
+        MrBayesPrint ("   outgroup unless it is explicitly included in the partial constraint. Therefore\n");
+        MrBayesPrint ("   a partial constraint must have at least two taxa on each side of the ':' to be\n");
         MrBayesPrint ("   useful in analyses of unrooted trees. The case is different for rooted trees, \n");
         MrBayesPrint ("   where it is sufficient for a partial constraint to have more than one taxon   \n");
         MrBayesPrint ("   before the ':', as in the example given above, to constrain tree space.       \n");
@@ -12601,7 +12601,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("                   overwrite output files that already exists. This may cause    \n");
 		MrBayesPrint ("                   irrecoverable loss of previous results if you have not removed\n");
 		MrBayesPrint ("                   or renamed the files from previous runs. To override this be- \n");
-		MrBayesPrint ("                   havior, set autoreplace to no, in which case new output will s\n");
+		MrBayesPrint ("                   havior, set autoreplace to no, in which case new output will  \n");
 		MrBayesPrint ("                   be appended to existing files instead.                        \n");
 		MrBayesPrint ("   Quitonerror  -- If quitonerror is set to yes, then the program will quit when \n");
 		MrBayesPrint ("                   an error is encountered, after printing an error message. If  \n");
