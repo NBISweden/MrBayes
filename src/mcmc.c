@@ -36024,9 +36024,9 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        if ((p->isDated == NO && p->left != NULL && 
-             !(p->anc->anc == NULL && (param->paramId == BRLENS_CLOCK_UNI || param->paramId == BRLENS_CLOCK_FOSSIL) && mp->treeAgePr.prior == fixed))
-         || (p->isDated == YES && p->calibration->prior != fixed))
+        if ( (p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && (param->paramId == BRLENS_CLOCK_UNI || param->paramId == BRLENS_CLOCK_FOSSIL) && mp->treeAgePr.prior == fixed))
+          || (p->isDated == YES && p->calibration->prior != fixed)
+          || !(param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length == 0.0 || p->right->length == 0.0)) )
             {
             if (p->isDated == YES)
                 calibrationPtr = p->calibration;
@@ -36060,7 +36060,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p->length < minV || p->length > maxV)
+        if (p->length < 0.0 || p->length > maxV)
             {
             abortMove = YES;
             return NO_ERROR;
