@@ -26566,17 +26566,17 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
     /* check whether or not we can change root */
     if ((!strcmp(mp->clockPr, "Uniform") ||!strcmp(mp->clockPr, "Fossilization")) &&
-        ((mp->treeAgePr.prior == fixed && t->root->left->isDated == NO) ||
-         (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed)))
+        ((t->root->left->isDated == NO && mp->treeAgePr.prior == fixed) || (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed)))
         i = t->nNodes - 2;
     else
         i = t->nNodes - 1;
 
     /* pick a node that can be changed in position */
-	do
-		{
+	do  {
 		p = t->allDownPass[(int)(RandomNumber(seed)*i)];
-		} while ((p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed));
+		}
+    while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed)
+         || (param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length == 0.0 || p->right->length == 0.0)) );
     assert (p->anc != NULL);
 
 #if defined (DEBUG_CSLIDER)
@@ -36060,7 +36060,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p->length < 0.0 || p->length > maxV)
+        if (p->length < 0.0 || p->length > maxV)  // consider ancestral fossil (brl=0) in fossilized bd tree
             {
             abortMove = YES;
             return NO_ERROR;
