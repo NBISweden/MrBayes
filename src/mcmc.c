@@ -18142,38 +18142,64 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         r = q->left;
 
-    /* determine lower and upper bound of backward move, abort if impossible */
+    /* determine lower and upper bound of forward move, abort if impossible */
     minDepth = p->nodeDepth + BRLENS_MIN;
-    if (q->anc->anc == NULL)  // q is root
-    {
-        calibrationPtr = &mp->treeAgePr;
-        if ((mp->treeAgePr.prior == fixed) || (calibrationPtr->min * clockRate > minDepth))
-        {  // root cannot be moved
-            abortMove = YES;
-            return (NO_ERROR);
-        }
+    if (q->anc->anc == NULL)
         maxDepth = TREEHEIGHT_MAX;
-        if (calibrationPtr->max * clockRate < maxDepth)
-			maxDepth = calibrationPtr->max * clockRate;
-    }
     else
         maxDepth = q->anc->nodeDepth - BRLENS_MIN;
     
+    if (q->isDated == YES)
+        calibrationPtr = q->calibration;
+    else if (q->anc->anc == NULL)  // q is root but not dated
+        calibrationPtr = &mp->treeAgePr;
+    
+    if (calibrationPtr != NULL)
+    {
+        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
+        {
+            abortMove = YES;
+            return (NO_ERROR);
+        }
+        if (calibrationPtr->max * clockRate < maxDepth)
+			maxDepth = calibrationPtr->max * clockRate;
+    }
 	if (minDepth >= maxDepth)
     {
 		abortMove = YES;
 		return (NO_ERROR);
     }
     
-	/* propose the depth for node leading to the fossil */
+	/* propose the branch length leading to the fossil */
 	newLength = (RandomNumber (seed)) * (maxDepth - minDepth);
     
-    /* adjust brls and depths */
+    /* adjust brls and depths, set flags for update of trans probs */
+    p->length   = newLength;
+    p->upDateTi = YES;
     q->nodeDepth += newLength;
-    q->length    -= newLength;
-    r->length    += newLength;
-    p->length     = newLength;
- 
+    if (q->anc->anc != NULL) {
+        q->length  -= newLength;
+        q->upDateTi = YES;
+    }
+    r->length  += newLength;
+    r->upDateTi = YES;
+
+    /* adjust age of q if dated */
+    if (calibrationPtr != NULL)
+    {
+        q->age = q->nodeDepth / clockRate;
+    }
+    
+    /* set flags for update of cond likes from p/r to root */
+    r->upDateCl = YES;
+    q = p;
+	while (q->anc != NULL)
+    {
+		q->upDateCl = YES;
+		q = q->anc;
+    }
+    q = p->anc;
+
     /* calculate prior ratio, step 2 */
     if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
     {
@@ -18191,22 +18217,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* add the Jacobian term */
     (*lnProposalRatio) += log(maxDepth - minDepth);
-    
-    /* set flags for update of transition probabilities */
-    p->upDateTi = YES;
-    q->upDateTi = YES;
-    r->upDateTi = YES;
-    
-    /* set flags for update of cond likes from p/r to root */
-    r->upDateCl = YES;
-    q = p;
-	while (q->anc != NULL)
-    {
-		q->upDateCl = YES;
-		q = q->anc;
-    }
-    q = p->anc;
-        
+            
     /* adjust proposal and prior ratio for relaxed clock models */
     
     
@@ -18312,21 +18323,26 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* determine lower and upper bound of backward move, abort if impossible */
     minDepth = p->nodeDepth + BRLENS_MIN;
-    if (q->anc->anc == NULL)  // q is root
-    {
+    if (q->anc->anc == NULL)
+        maxDepth = TREEHEIGHT_MAX;
+    else
+        maxDepth = q->anc->nodeDepth - BRLENS_MIN;
+    
+    if (q->isDated == YES)
+        calibrationPtr = q->calibration;
+    else if (q->anc->anc == NULL)  // q is root but not dated
         calibrationPtr = &mp->treeAgePr;
-        if ((mp->treeAgePr.prior == fixed) || (calibrationPtr->min * clockRate > minDepth))
-        {  // root cannot be moved
+    
+    if (calibrationPtr != NULL)
+    {
+        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
+        {
             abortMove = YES;
             return (NO_ERROR);
         }
-        maxDepth = TREEHEIGHT_MAX;
         if (calibrationPtr->max * clockRate < maxDepth)
 			maxDepth = calibrationPtr->max * clockRate;
     }
-    else
-        maxDepth = q->anc->nodeDepth - BRLENS_MIN;
-
 	if (r->nodeDepth > p->nodeDepth -BRLENS_MIN || minDepth >= maxDepth)
     {  /* the sister node (another fossil) is older than the current fossil */
 		abortMove = YES;
@@ -18334,10 +18350,32 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     }
 
 	/* set the brl to 0 for the fossil tip, it becomes an ancestral fossil */
+    /* set flags for update of transition probabilities too */
     q->nodeDepth = p->nodeDepth;
-    q->length += p->length;
-    r->length -= p->length;
-    p->length = 0.0;
+    if (q->anc->anc != NULL) {
+        q->length += p->length;
+        q->upDateTi = YES;
+    }
+    r->length  -= p->length;
+    r->upDateTi = YES;
+    p->length   = 0.0;
+    p->upDateTi = YES;
+    
+    /* adjust age of q if dated */
+    if (calibrationPtr != NULL)
+    {
+        q->age = q->nodeDepth / clockRate;
+    }
+    
+    /* set flags for update of cond likes from p/r to root */
+    r->upDateCl = YES;
+    q = p;
+	while (q->anc != NULL)
+    {
+		q->upDateCl = YES;
+		q = q->anc;
+    }
+    q = p->anc;
     
     /* calculate prior ratio, step 2 */
     if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
@@ -18356,21 +18394,6 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* add the Jacobian term */
     (*lnProposalRatio) -= log(maxDepth - minDepth);
-
-    /* set flags for update of transition probabilities */
-    p->upDateTi = YES;
-    q->upDateTi = YES;
-    r->upDateTi = YES;
-
-    /* set flags for update of cond likes from p/r to root */
-    r->upDateCl = YES;
-    q = p;
-	while (q->anc != NULL)
-    {
-		q->upDateCl = YES;
-		q = q->anc;
-    }
-    q = p->anc;
 
     /* adjust proposal and prior ratio for relaxed clock models */
     
