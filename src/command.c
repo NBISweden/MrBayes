@@ -9624,7 +9624,7 @@ int FreeTaxa (void)
 		{
 		if (taxaNames)
             {
-            for (i=0; i<numTaxa; i++)
+            for (i=0; i<taxonCount; i++)
                 free (taxaNames[i]);
             }
         free (taxaNames);
