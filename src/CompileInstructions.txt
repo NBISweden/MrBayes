@@ -112,62 +112,36 @@ Compiling on a Mac
 The standard modified gcc version shipping with Xcode is too old to compile
 MrBayes (see gcc version requirement above). Also, Xcode no longer ships
 with autotools, including autoconf that is used by MrBayes and most other
-open source Unix software packages. We have had good experience using MacPorts
-(http://www.macports.org) to install autoconf gcc, openmpi and other open-source
-tools. Other options are Homebrew (http://mxcl.github.io/homebrew/) or GNU
-(http://www.gnu.org).
+open-source Unix software packages.
 
-To install the version 4.7 of gcc from MacPorts, use the following command
-after having installed MacPorts:
+To install these tools, we recommend using HomeBrew (http://brew.sh). Other
+options include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
+and Open MPI (http://open-mpi.org).
 
-> sudo port install gcc47
+To install version 4.8 of gcc using HomeBrew, use the following commands
+after having installed HomeBrew:
 
-Check the web for the latest version of gcc. MacPorts does not allow you to
-just say gcc, you need to specify the version number you want.
+> brew tap homebrew/versions
+> brew install gcc48
+
+Check the web for the latest version of gcc. HomeBrew does not allow you to
+just say gcc, you need to specify the version number you want. After
+installation, you need to redirect the symbolic gcc link in /usr/bin/ to
+the new version of gcc. For instance, you can use the following commands:
+
+> sudo rm /usr/bin/gcc
+> sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
 To install autoconf, use:
 
-> sudo port install autoconf
+> brew install autoconf
 
-To install the most recent version of openmpi, type:
+To install the most recent version of openmpi, use:
 
-> sudo port install openmpi
+> brew install openmpi
 
-For your environment to work as expected, a little afterwork is required.
-Just installing the newest versions from macports does not make simple
-commands like 'gcc', 'mpicc' and 'mpirun' point to those versions. One
-solution is to substitute those commands with the macports equivalents,
-which are
-
-> gcc-mp-4.7     for 'gcc' (version number depends on what you installed)
-> openmpicc      for 'mpicc'
-> openmpirun     for 'mpirun'
-
-This will necessitate that you edit the Makefile produced by the configure
-script of MrBayes before compiling the program with 'make'. For the serial
-replace 'gcc' in the Makefile with 'gcc-mp-4.7'. For the MPI version,
-you replace 'mpicc' with 'openmpicc' and launch the executable with
-'openmpirun'.
-
-Alternatively, you can create symbolic links from the default locations of
-'gcc', 'mpicc' and 'mpirun'. Note that this will replace symbolic links to
-Apple's versions of those tools, which might possibly cause problems with
-Xcode. Anyway, if you wish to go ahead and create those links, use the
-following commands:
-
-> sudo ln -s /opt/local/bin/openmpicc  /usr/local/bin/mpicc
-> sudo ln -s /opt/local/bin/openmpirun /usr/local/bin/mpirun
-> sudo ln -s /opt/local/bin/gcc-mp-4.7 /usr/local/bin/gcc
-
-(you will have to remove existing symbolic links first). After you have
-created those links, you can use the simple commands 'gcc', 'mpicc' and
-'mpirun' from anywhere on your system, and they will call the macports
-versions you just installed. No editing of the Makefile is used in that
-case.
-
-Once you have installed autoconf, a recent version of gcc and openmpi you
-can install the different versions of MrBayes as in a standard Unix
-environment (see above).
+Now you can install the different versions of MrBayes and run the MPI version
+of the program as in a standard Unix environment (see above).
 
 
 Troubleshooting compilation problems
