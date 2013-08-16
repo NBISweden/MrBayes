@@ -22716,7 +22716,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             printedCol += 2;
                             }
 						MrBayesPrint ("%s", p->subParams[k]->name);
-                        printedCol += strlen(p->subParams[k]->name);
+                        printedCol += (int)strlen(p->subParams[k]->name);
                         }
 					}
 				}
@@ -22787,7 +22787,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 						if (numPrinted == 0)
                             {
 							MrBayesPrint ("%s <prob %.1f>", mv->name, mv->relProposalProb[chainIndex]);
-                            printedCol += 9 + strlen(mv->name) + (int)(log10(mv->relProposalProb[chainIndex])) + 3;
+                            printedCol += 9 + (int)strlen(mv->name) + (int)(log10(mv->relProposalProb[chainIndex])) + 3;
                             }
 						else
                             {
@@ -22868,7 +22868,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                         printedCol += 2;
                         }
                     MrBayesPrint("%s", mv->moveType->shortName);
-                    printedCol += strlen(mv->moveType->shortName);
+                    printedCol += (int)strlen(mv->moveType->shortName);
 					numPrinted++;
 					}
 				}

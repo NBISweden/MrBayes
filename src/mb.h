@@ -380,8 +380,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	P_GROWTH				17
 #define P_CPPMULTDEV            18
 #define P_CPPRATE               19
-#define P_TK02VAR               20
-#define P_CPPEVENTS				21
+#define P_CPPEVENTS				20
+#define P_TK02VAR               21
 #define P_TK02BRANCHRATES	    22
 #define P_IGRVAR                23
 #define P_IGRBRANCHLENS         24

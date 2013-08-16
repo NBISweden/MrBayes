@@ -65,7 +65,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program          */
-#define	NUMPARAMS						271
+#define	NUMPARAMS						272
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -325,22 +325,22 @@ CmdType			commands[] =
             { 10,           "Ctype",  NO,           DoCtype,  1,                                                                                             {65},        4,                        "Assigns ordering for the characters",  IN_CMD, SHOW },
             { 11,      "Databreaks", YES,          DoBreaks,  1,                                                                                             {93},    32768,           "Defines data breaks for autodiscrete gamma model",  IN_CMD, SHOW },
             { 12,          "Delete", YES,          DoDelete,  1,                                                                                             {47},    49152,                             "Deletes taxa from the analysis",  IN_CMD, SHOW },
-            { 13,      "Dimensions",  NO,      DoDimensions,  2,                                                                                            {4,5},        4,                            "Defines size of character matrix", IN_FILE, SHOW },
+            { 13,      "Dimensions",  NO,      DoDimensions,  2,                                                                                            {4,5},        4,                           "Defines size of character matrix", IN_FILE, SHOW },
             { 14,      "Disclaimer",  NO,      DoDisclaimer,  0,                                                                                             {-1},       32,                               "Describes program disclaimer",  IN_CMD, SHOW },
-            { 15,             "End",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                              "Denotes end of a block in file", IN_FILE, SHOW },
-            { 16,        "Endblock",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                  "Alternative way of denoting end of a block", IN_FILE, SHOW },
+            { 15,             "End",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                             "Denotes end of a block in file", IN_FILE, SHOW },
+            { 16,        "Endblock",  NO,        DoEndBlock,  0,                                                                                             {-1},       32,                 "Alternative way of denoting end of a block", IN_FILE, SHOW },
             { 17,         "Exclude", YES,         DoExclude,  1,                                                                                             {45},    49152,                           "Excludes sites from the analysis",  IN_CMD, SHOW },
             { 18,         "Execute", YES,         DoExecute,  1,                                                                                             {12},    16384,                                            "Executes a file",  IN_CMD, SHOW },
-            { 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                      "Defines character format in data block", IN_FILE, SHOW },
+            { 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                     "Defines character format in data block", IN_FILE, SHOW },
             { 20,            "Help", YES,            DoHelp,  1,                                                                                             {50},    16416,                  "Provides detailed description of commands",  IN_CMD, SHOW },
             { 21,         "Include", YES,         DoInclude,  1,                                                                                             {46},    49152,                                             "Includes sites",  IN_CMD, SHOW },
-            { 22,            "Link",  NO,            DoLink, 27,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
+            { 22,            "Link",  NO,            DoLink, 28,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,270},    4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
             { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,	       "Manual",  NO,          DoManual,  1,								    														{126},       36,				  "Prints a command reference to a text file",  IN_CMD, SHOW },
-            { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},112381728,                  "Defines matrix of characters in data block", IN_FILE, SHOW },
+            { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},112381728,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
             { 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},      36,                    "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
+            																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},       36,                   "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
             { 28,           "Mcmcp",  NO,           DoMcmcp, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
             																         153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},        4,     "Sets parameters of a chain (without starting analysis)",  IN_CMD, SHOW },
             { 29,        "Outgroup", YES,        DoOutgroup,  1,                                                                                             {78},    49152,                                     "Changes outgroup taxon",  IN_CMD, SHOW },
@@ -365,7 +365,7 @@ CmdType			commands[] =
             { 47,              "Ss",  NO,              DoSs, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
             														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,                             "Starts stepping-stone sampling",  IN_CMD, SHOW },
             { 48,             "Ssp",  NO,             DoSsp, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
-            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,"Sets parameters of stepping-stone analysis (without starting)",  IN_CMD, SHOW },
+            														 153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,"Sets parameters of stepping-stone analysis (without starting)",IN_CMD, SHOW },
             { 49,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
             { 50,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 51,           "Sumss",  NO,           DoSumSs, 10,                                                        {258,259,260,261,262,263,264,265,266,267},       36,         "Summarizes parameters from stepping-stone analysis",  IN_CMD, SHOW },
@@ -375,7 +375,7 @@ CmdType			commands[] =
             { 55,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels", IN_FILE, SHOW },
             { 56,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
             { 57,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-            { 58,          "Unlink",  NO,          DoUnlink, 23,                  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+            { 58,          "Unlink",  NO,          DoUnlink, 28,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,270},    4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
             { 59,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
             { 60,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
@@ -6975,7 +6975,7 @@ int DoSetParm (char *parmName, char *tkn)
                 /* Reformat to Windows with trailing '\' */
                 for (index=0; index<(int)strlen(workingDir); index++)
                     {
-                    if (workingDir[index] == ':' || workingDir[index] == '/')
+                    if (workingDir[index] == '/')
                         workingDir[index] = '\\';
                     }
                 if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '\\')
@@ -6984,7 +6984,7 @@ int DoSetParm (char *parmName, char *tkn)
                 /* Reformat to Unix with trailing '/' */
                 for (index=0; index<(int)strlen(workingDir); index++)
                     {
-                    if (workingDir[index] == ':' || workingDir[index] == '\\')
+                    if (workingDir[index] == '\\')
                         workingDir[index] = '/';
                     }
                 if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '/')
@@ -11299,7 +11299,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                       clock:uniform                                             \n");
 		MrBayesPrint ("                       clock:birthdeath                                          \n");
 		MrBayesPrint ("                       clock:coalescence                                         \n");
-/*		MrBayesPrint ("                       clock:fossilization                                       \n");  will bring back after release */
+		MrBayesPrint ("                       clock:fossilization                                       \n");
 		MrBayesPrint ("                       clock:speciestreecoalescence                              \n");
 		MrBayesPrint ("                       fixed(<treename>)                                         \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11407,51 +11407,53 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    in the tree is calibrated, the root calibration replaces the \n");
 		MrBayesPrint ("                    tree age prior.                                              \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
-		MrBayesPrint ("                    that is, lambda - mu in the birth-death model;               \n");
-		MrBayesPrint ("                    or, lambda - mu - psi in the fossilized birth-death model.   \n");
+		MrBayesPrint ("                    that is, lambda - mu in the birth-death model; or,           \n");
+		MrBayesPrint ("                    lambda - mu - psi in the fossilized birth-death model.       \n");
+        MrBayesPrint ("                    Values of this parameter are > 0. Prior options are:         \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset speciationpr = uniform(<number>,<number>)           \n");
 		MrBayesPrint ("                       prset speciationpr = exponential(<number>)                \n");
 		MrBayesPrint ("                       prset speciationpr = fixed(<number>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
+		MrBayesPrint ("                    This parameter is only relevant if the (fossil) birth-death  \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
 		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the relative extinction     \n");
 		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; or,     \n");
-		MrBayesPrint ("                    (mu + psi) / lambda in the fossilization model. Values       \n");
-		MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
+		MrBayesPrint ("                    (mu + psi) / lambda in the fossilized b-d model. Values of   \n");
+		MrBayesPrint ("                    this parameter are in the range (0,1). Prior options are:    \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset extinctionpr = beta(<number>,<number>)              \n");
 		MrBayesPrint ("                       prset extinctionpr = fixed(<number>)                      \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                    This parameter is only relevant if the birth-death           \n");
+		MrBayesPrint ("                    This parameter is only relevant if the (fossil) birth-death  \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
-		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
-		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
-		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
-/*      MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
-        MrBayesPrint ("                    fossilized birth-death prior (see Stadler, 2010).            \n");  */
-        MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                       prset samplestrat = random                                \n");
-        MrBayesPrint ("                       prset samplestrat = diversity                             \n");
-        MrBayesPrint ("                       prset samplestrat = cluster                               \n");
-/*      MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");  */
-        MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
-		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
-		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997),                 \n");
-/*      MrBayesPrint ("                    and the fossilization prior (rho, see Stadler, 2010).        \n");  */
-        MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                       prset sampleprob = <number>                               \n");
-        MrBayesPrint ("                                                                                 \n");
-/*      MrBayesPrint (" Fossilizationpr -- This parameter sets the fossilization rate (sampling frac.)  \n");
-        MrBayesPrint ("                    sampled in the analysis (psi/(mu+psi), see Stadler, 2010).   \n");
+        MrBayesPrint (" Fossilizationpr -- This parameter sets the prior on the relative fossilization  \n");
+        MrBayesPrint ("                    rate, psi/(mu+psi), in the fossilized b-d model. Values of   \n");
+        MrBayesPrint ("                    this parameter are in the range (0,1). Prior options are:    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset fossilizationpr = beta(<number>,<number>)           \n");
         MrBayesPrint ("                       prset fossilizationpr = fixed(<number>)                   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    This parameter is only relevant if the fossilized birth-death\n");
-        MrBayesPrint ("                    is selected as the prior (fossilizationpr) on branch lengths.\n");  */
+        MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
+		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
+		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
+		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
+        MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
+        MrBayesPrint ("                    fossilized birth-death prior (see Stadler 2010 and Zhang ?). \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset samplestrat = random                                \n");
+        MrBayesPrint ("                       prset samplestrat = diversity                             \n");
+        MrBayesPrint ("                       prset samplestrat = cluster                               \n");
+        MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");
+        MrBayesPrint ("                                                                                 \n");
+		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
+		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
+		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997),                 \n");
+        MrBayesPrint ("                    and the fossilized b-d prior (rho, see Stadler, 2010).       \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset sampleprob = <number>                               \n");
+        MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Popsizepr     -- This parameter sets the prior on the population size compo-  \n");
 		MrBayesPrint ("                    nent of the coalescent parameter. The options are:           \n");
 		MrBayesPrint ("                                                                                 \n");
@@ -11918,8 +11920,8 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
-			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster     %s\n", mp->sampleStrat);
-/*          MrBayesPrint ("                    FossilTip                      \n");                      will bring back after release */
+			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
+            MrBayesPrint ("                    FossilTip                      \n");            
 			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
@@ -12118,7 +12120,7 @@ int GetUserHelp (char *helpTkn)
 	    MrBayesPrint ("   wreck any hope of achieving convergence by inappropriately setting the        \n");
 	    MrBayesPrint ("   tuning parameters. In general, you want to set move tuning parameters such    \n");
 	    MrBayesPrint ("   that the acceptance rate of the move is intermediate (we suggest targeting    \n");
-	    MrBayesPrint ("   the range 10%% to 70%% acceptance, if possible). If the acceptance rate is      \n");
+	    MrBayesPrint ("   the range 10%% to 70%% acceptance, if possible). If the acceptance rate is    \n");
 	    MrBayesPrint ("   outside of this range, the MCMC chain will probably not sample that parameter \n");
 	    MrBayesPrint ("   very efficiently. The acceptance rates for all moves in the cold chain(s) are \n");
 	    MrBayesPrint ("   summarized at the end of each run in the screen output. The acceptance rates  \n");
@@ -12641,8 +12643,8 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Parameter          Options               Current Setting                      \n");
 		MrBayesPrint ("   --------------------------------------------------------                      \n");
-        MrBayesPrint ("   Seed               <number>              %ld                                     \n", globalSeed);
-		MrBayesPrint ("   Swapseed           <number>              %ld                                     \n", swapSeed);
+        MrBayesPrint ("   Seed               <number>              %ld                                  \n", globalSeed);
+		MrBayesPrint ("   Swapseed           <number>              %ld                                  \n", swapSeed);
         MrBayesPrint ("   Dir                <name>                \"%s\"\n", workingDir);
         if (defMatrix == YES)
             MrBayesPrint ("   Partition          <name>                %s\n", partitionNames[partitionNum]);
@@ -12970,7 +12972,7 @@ else if (!strcmp(helpTkn, "Set"))
 	else if (!strcmp(helpTkn, "Unlink"))
 		{
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
-		MrBayesPrint ("   Unlink                                                                         \n");
+		MrBayesPrint ("   Unlink                                                                        \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   This command unlinks model parameters across partitions of the data. The      \n");
 	    MrBayesPrint ("   correct usage is:                                                             \n");
@@ -13007,13 +13009,13 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("      Shape           -- Gamma shape parameter                                   \n");
 	    MrBayesPrint ("      Pinvar          -- Proportion of invariable sites                          \n");
 	    MrBayesPrint ("      Correlation     -- Correlation parameter of autodiscrete gamma             \n");
-	    MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
-	    MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-	    MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
-	    MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
         MrBayesPrint ("      Ratemultiplier  -- Rate multiplier for partitions                          \n");
-	    MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
-	    MrBayesPrint ("      Theta           -- Parameter for coalescence process                       \n");
+	    MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
+        MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
+	    MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
+	    MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
+        MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
+	    MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
 		MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n"); 
 		MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n"); 
 		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
@@ -13023,6 +13025,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
 		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
 		MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n"); 
+        MrBayesPrint ("   Fossilizationrates -- Fossilization rates for fossilized birth-death process  \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -13045,29 +13048,31 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   The list of parameters that can be linked includes:                           \n");
 	    MrBayesPrint ("                                                                                 \n");
-	    MrBayesPrint ("      Tratio          -- Transition/transversion rate ratio                      \n");
-	    MrBayesPrint ("      Revmat          -- Substitution rates of GTR model                         \n");
-	    MrBayesPrint ("      Omega           -- Nonsynonymous/synonymous rate ratio                     \n");
-	    MrBayesPrint ("      Statefreq       -- Character state frequencies                             \n");
-	    MrBayesPrint ("      Shape           -- Gamma shape parameter                                   \n");
-	    MrBayesPrint ("      Pinvar          -- Proportion of invariable sites                          \n");
-	    MrBayesPrint ("      Correlation     -- Correlation parameter of autodiscrete gamma             \n");
-	    MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
-	    MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-	    MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
-	    MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
-	    MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
-	    MrBayesPrint ("      Theta           -- Parameter for coalescence process                       \n");
-	    MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n");
-		MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n"); 
-		MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n"); 
-		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
-		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
-		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
-		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
-		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
-		MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n"); 
-	    MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("      Tratio          -- Transition/transversion rate ratio                      \n");
+        MrBayesPrint ("      Revmat          -- Substitution rates of GTR model                         \n");
+        MrBayesPrint ("      Omega           -- Nonsynonymous/synonymous rate ratio                     \n");
+        MrBayesPrint ("      Statefreq       -- Character state frequencies                             \n");
+        MrBayesPrint ("      Shape           -- Gamma shape parameter                                   \n");
+        MrBayesPrint ("      Pinvar          -- Proportion of invariable sites                          \n");
+        MrBayesPrint ("      Correlation     -- Correlation parameter of autodiscrete gamma             \n");
+        MrBayesPrint ("      Ratemultiplier  -- Rate multiplier for partitions                          \n");
+        MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
+        MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
+        MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
+        MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
+        MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
+        MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
+        MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n");
+        MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n");
+        MrBayesPrint ("      Cpprate         -- Rate of Compound Poisson Process (CPP)                  \n");
+        MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n");
+        MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
+        MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
+        MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n");
+        MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
+        MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n");
+        MrBayesPrint ("   Fossilizationrates -- Fossilization rates for fossilized birth-death process  \n");
+        MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("      link shape=(all)                                                           \n");
@@ -13417,7 +13422,7 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("   to file. The result is a list of the taxon bipartitions found, the frequency  \n");
 	    MrBayesPrint ("   with which they were found, the posterior probability of the bipartition      \n");
 	    MrBayesPrint ("   and, the mean and variance of the branch lengths or node depths, and various  \n");
-	    MrBayesPrint ("   other statistics.                                                              \n");
+	    MrBayesPrint ("   other statistics.                                                             \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   The key to the partitions is output to a file with the suffix '.parts'. The   \n");
 	    MrBayesPrint ("   summary statistics pertaining to bipartition probabilities are output to a    \n");
@@ -13543,10 +13548,10 @@ else if (!strcmp(helpTkn, "Set"))
 			MrBayesPrint ("   Filename        <name>                   %s<.tree<i>.run<i>.t>\n", sumtParams.sumtFileName);
         MrBayesPrint ("   Minpartfreq     <number>                 %1.2lf                               \n", sumtParams.minPartFreq);
 		MrBayesPrint ("   Contype         Halfcompat/Allcompat     %s\n", sumtParams.sumtConType);
-        MrBayesPrint ("   Conformat       Figtree/Simple           %s                                  \n", sumtParams.consensusFormat == SIMPLE ? "Simple" : "Figtree");
+        MrBayesPrint ("   Conformat       Figtree/Simple           %s                                   \n", sumtParams.consensusFormat == SIMPLE ? "Simple" : "Figtree");
 		MrBayesPrint ("   Outputname      <name>                   %s<.parts etc>\n", sumtParams.sumtOutfile);
-		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                  \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
-		MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                  \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
+		MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                   \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
+		MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                   \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
         MrBayesPrint ("   Hpd             Yes/No                   %s                                   \n", sumtParams.HPD == YES ? "Yes" : "No");
 	    MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -14667,7 +14672,7 @@ void ResetTaxaFlags (void)
     definedConstraintTwoPruned    = NULL;
     constraintNames         = NULL;
     nodeCalibration         = NULL;
-	tempActiveConstraints   = NULL;          			 /* holds temp info on active constraints        */
+	tempActiveConstraints   = NULL;          			 /* holds temp info on active constraints         */
 	outGroupNum			    = 0;            			 /* default outgroup                              */
 	numTaxaSets             = 0;          			     /* holds number of taxa sets                     */
 }
@@ -14877,7 +14882,7 @@ void SetUpParms (void)
 	PARAM   ( 73, "Brlens",         DoLinkParm,        "\0");
 	PARAM   ( 74, "Speciationrate", DoLinkParm,        "\0");
 	PARAM   ( 75, "Extinctionrate", DoLinkParm,        "\0");
-	PARAM   ( 76, "Theta",          DoLinkParm,        "\0");
+	PARAM   ( 76, "Popsize",        DoLinkParm,        "\0");
 	PARAM   ( 77, "Ratepr",         DoPrsetParm,       "Variable|Dirichlet|Fixed|\0");
 	PARAM   ( 78, "Xxxxxxxxxx",     DoOutgroupParm,    "\0");
 	PARAM   ( 79, "Xxxxxxxxxx",     DoTreeParm,        "\0");
@@ -15071,10 +15076,11 @@ void SetUpParms (void)
 	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
     PARAM   (268, "Precision",      DoSetParm,          "\0");
 	PARAM   (269, "Fossilizationpr",DoPrsetParm,       "Beta|Fixed|\0");
-	PARAM   (270, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
+    PARAM   (270, "Fossilizationrate", DoLinkParm,      "\0");
+	PARAM   (271, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 271; needs to be one more than last index) in paramTable[] at the top of this file. */
+	         change the number of elements (now 272; needs to be one more than last index) in paramTable[] at the top of this file. */
     /* CmdType commands[] */
 }
 

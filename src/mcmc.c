@@ -16186,7 +16186,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
  |   To translate this to a density on labeled tree, the density needs to be multiplied by
  |   (2^(n+m-1) / n!m!).
  |
- |   f(tmrca) ~ uniform, gamma or fixed.
+ |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS)
