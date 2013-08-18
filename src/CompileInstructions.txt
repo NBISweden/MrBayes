@@ -109,27 +109,27 @@ command, it will not stop the MrBayes run).
 Compiling on a Mac
 ==================
 
-The standard modified gcc version shipping with Xcode is too old to compile
-MrBayes (see gcc version requirement above). Also, Xcode no longer ships
-with autotools, including autoconf that is used by MrBayes and most other
+The standard modified gcc version (LLVM-GCC 4.2) shipping with the latest Xcode is
+too old to compile MrBayes (see gcc version requirement above). Also, Xcode no longer
+ships with autotools, including autoconf that is used by MrBayes and most other
 open-source Unix software packages.
 
-To install these tools, we recommend using HomeBrew (http://brew.sh). Other
-options include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
+To install these tools, we recommend using HomeBrew (http://brew.sh). Other options
+include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
 and Open MPI (http://open-mpi.org).
 
-To install version 4.8 of gcc using HomeBrew, use the following commands
-after having installed HomeBrew:
+To install version 4.8 of gcc using HomeBrew, use the following commands after 
+having installed HomeBrew:
 
 > brew tap homebrew/versions
 > brew install gcc48
 
-Check the web for the latest version of gcc. HomeBrew does not allow you to
-just say gcc, you need to specify the version number you want. After
-installation, you need to redirect the symbolic gcc link in /usr/bin/ to
-the new version of gcc. For instance, you can use the following commands:
+Check the web for the latest version of gcc. HomeBrew does not allow you to just say
+gcc, you need to specify the version number you want. After installation, you need
+to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
+For instance, you can use the following commands:
 
-> sudo rm /usr/bin/gcc
+> sudo mv -i /usr/bin/gcc /usr/bin/gcc-4.2
 > sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
 To install autoconf, use:
@@ -152,7 +152,7 @@ when using the compiler that currently ships with Xcode (in the command line
 tools).
 
 Solution: Install a newer compiler. For instructions on how to install a newer
-gcc version for Mac from MacPorts, see above.
+gcc version for Mac from HomeBrew, see above.
 
 
 Further references
