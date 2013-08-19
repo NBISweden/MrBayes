@@ -143,6 +143,11 @@ To install the most recent version of openmpi, use:
 Now you can install the different versions of MrBayes and run the MPI version
 of the program as in a standard Unix environment (see above).
 
+Simply, you can even install MrBayes using HomeBrew:
+
+> brew tap homebrew/science
+> brew install mrbayes
+
 
 Troubleshooting compilation problems
 ====================================
