@@ -138,7 +138,11 @@ To install autoconf, use:
 
 To install the most recent version of openmpi, use:
 
-> brew install openmpi
+> brew install openmpi --devel
+
+# Use "--devel" flag to install openmpi 1.7, as 1.6 attempts to run llvm-gcc
+# instead of clang, but MrBayes 4.2 hangs with llvm-gcc!
+# Remove "--devel" when openmpi 1.7 becomes default in the formula
 
 Now you can install the different versions of MrBayes and run the MPI version
 of the program as in a standard Unix environment (see above).
