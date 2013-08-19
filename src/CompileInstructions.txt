@@ -109,8 +109,8 @@ command, it will not stop the MrBayes run).
 Compiling on a Mac
 ==================
 
-The standard modified gcc version (LLVM-GCC 4.2) shipping with the latest Xcode is
-too old to compile MrBayes (see gcc version requirement above). Also, Xcode no longer
+The standard modified gcc version (llvm-gcc 4.2) shipping with the latest Xcode is
+problematic to compile MrBayes (hangs on model.c). Also, Xcode no longer
 ships with autotools, including autoconf that is used by MrBayes and most other
 open-source Unix software packages.
 
