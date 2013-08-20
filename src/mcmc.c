@@ -17614,8 +17614,8 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             p = t->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root)*/
-            if (p->anc->anc != NULL && (p->length < minV || p->length > maxV))
-                {
+            if (p->anc->anc != NULL && (p->length < 0.0 || p->length > maxV))
+                {                   /* consider ancestral fossil (brl=0) in fossilized bd tree */
                 abortMove = YES;
                 return (NO_ERROR);
                 }
@@ -24732,6 +24732,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 	/* check branch lengths and node depths */
 	for (i=0; i<t->nNodes-2; i++) {
 		p = t->allDownPass[i];
+        /* the two checkings don't consider ancestral fossil (brl=0) in fossilized bd tree */
 		if (p->length < minV) {
 			printf ("%s   ERROR when entering LocalClock: node %d has length %lf", spacer, p->index, p->length);
 			return ERROR;
@@ -26577,6 +26578,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 		}
     while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed)
          || (param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length == 0.0 || p->right->length == 0.0)) );
+    /* consider ancestral fossil (brl=0) in fossilized bd tree */
     assert (p->anc != NULL);
 
 #if defined (DEBUG_CSLIDER)
@@ -36060,7 +36062,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p->length < 0.0 || p->length > maxV)  // consider ancestral fossil (brl=0) in fossilized bd tree
+        if (p->length < 0.0 || p->length > maxV)  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             {
             abortMove = YES;
             return NO_ERROR;
