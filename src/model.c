@@ -10561,7 +10561,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 						value[0] = mp->shapeUni[0] + (mp->shapeUni[1] - mp->shapeUni[0]) *  0.5;
 					}
 				else if (p->paramId == SHAPE_EXP)
-					value[0] = 100.0;
+					value[0] = 10.0;  // was 100.0
 				else if (p->paramId == SHAPE_FIX)
 					value[0] = mp->shapeFix;
 				/* now fill in rates */
@@ -10993,7 +10993,7 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
 		else
-			returnVal = InitBrlens (tree, 0.01);
+			returnVal = InitBrlens (tree, 0.1);  // consider init with 0.01
 
 		if( returnVal == ERROR )
 			return (ERROR);
