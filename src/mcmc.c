@@ -16362,6 +16362,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
             x[j++] = p->nodeDepth / clockRate;
         else
             kFossil++;
+        assert(p->left->length > BRLENS_EPSILON || p->right->length > BRLENS_EPSILON);
         }    
     /* get the fossil tip times (y_i), also calculate m, n */
     for (i = j = 0; i < t->nNodes; i++)
