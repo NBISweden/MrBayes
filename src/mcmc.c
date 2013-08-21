@@ -16282,7 +16282,7 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL)
             {
-            if (p->nodeDepth > 0.0)
+            if (p->nodeDepth > BRLENS_EPSILON)
                 {
                 y[j++] = p->nodeDepth / clockRate;
                 nFossil++;
@@ -16358,7 +16358,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     for (i = j = 0; i < t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
-        if (p->left->length > 0.0 && p->right->length > 0.0)
+        if (p->left->length > BRLENS_EPSILON && p->right->length > BRLENS_EPSILON)
             x[j++] = p->nodeDepth / clockRate;
         else
             kFossil++;
@@ -16367,9 +16367,9 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     for (i = j = 0; i < t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL && p->length > 0.0)
+        if (p->left == NULL && p->right == NULL && p->length > BRLENS_EPSILON)
             {
-            if (p->nodeDepth > 0.0)
+            if (p->nodeDepth > BRLENS_EPSILON)
                 {
                 y[j++] = p->nodeDepth / clockRate;
                 mFossil++;
@@ -18084,9 +18084,9 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
-        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > BRLENS_EPSILON)
         {
-            if (p->length > 0.0) {
+            if (p->length > BRLENS_EPSILON) {
                 mFossil++;        // count tip fossil
             }
             else {
@@ -18262,9 +18262,9 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
-        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > BRLENS_EPSILON)
         {
-            if (p->length > 0.0) {
+            if (p->length > BRLENS_EPSILON) {
                 p->marked = YES;  // mark  tip fossil
                 mFossil++;        // count tip fossil
             }
@@ -26574,7 +26574,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 		p = t->allDownPass[(int)(RandomNumber(seed)*i)];
 		}
     while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed)
-         || (param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length == 0.0 || p->right->length == 0.0)) );
+         || (param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) );
     /* consider ancestral fossil (brl=0) in fossilized bd tree */
     assert (p->anc != NULL);
 
@@ -36025,7 +36025,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         p = t->allDownPass[i];
         if ( (p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && (param->paramId == BRLENS_CLOCK_UNI || param->paramId == BRLENS_CLOCK_FOSSIL) && mp->treeAgePr.prior == fixed))
           || (p->isDated == YES && p->calibration->prior != fixed)
-          || !(param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length == 0.0 || p->right->length == 0.0)) )
+          || !(param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) )
             {
             if (p->isDated == YES)
                 calibrationPtr = p->calibration;
