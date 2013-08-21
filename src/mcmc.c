@@ -18070,7 +18070,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     int i, j, k, mFossil, kFossil;
     MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth, newLength;
     MrBFlt clockRate, sR, eR, sF, fR;
-    char   *sS;
     TreeNode *p, *q, *r;
     Tree     *t;
     ModelParams *mp;
@@ -18112,7 +18111,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 	sF = mp->sampleProb;
     fR = *(GetParamVals (m->fossilizationRates, chain, state[chain]));
-    sS = mp->sampleStrat;
+    // sS = mp->sampleStrat;
     
     /* get clock rate */
     clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
@@ -18249,7 +18248,6 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     int i, j, k, mFossil, kFossil;
     MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth;
     MrBFlt clockRate, sR, eR, sF, fR;
-    char   *sS;
     TreeNode *p, *q, *r;
     Tree     *t;
     ModelParams *mp;
@@ -18291,7 +18289,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
 	sF = mp->sampleProb;
     fR = *(GetParamVals (m->fossilizationRates, chain, state[chain]));
-    sS = mp->sampleStrat;
+    // sS = mp->sampleStrat;
     
     /* get clock rate */
     clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
