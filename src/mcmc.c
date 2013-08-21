@@ -109,7 +109,6 @@ typedef void (*sighandler_t)(int);
 #define	TG							14
 #define	TT							15
 #define LIKE_EPSILON				1.0e-300
-#define BRLEN_EPSILON				1.0e-8
 #define BEAGLE_RESCALE_FREQ			160
 #define BEAGLE_RESCALE_FREQ_DOUBLE	10			/* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
 #define RESCALE_FREQ				1			/* node cond like rescaling frequency */

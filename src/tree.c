@@ -3224,13 +3224,13 @@ int IsTreeConsistent (Param *param, int chain, int state)
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
-                else if (p->age < p->calibration->min)
+                else if (p->age - p->calibration->min < -BRLENS_EPSILON)
                     {
                     printf ("Node %d has age %f but should be at least of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
-                else if (p->age > p->calibration->max)
+                else if (p->age - p->calibration->max > BRLENS_EPSILON)
                     {
                     printf ("Node %d has age %f but should be no older than %f\n",
                         p->index, p->age, p->calibration->max);
@@ -5890,15 +5890,15 @@ int SetTreeNodeAges (Param *param, int chain, int state)
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
-                else if (p->age < p->calibration->min)
+                else if (p->age - p->calibration->min < -BRLENS_EPSILON)
                     {
                     printf ("Node %d has age %f but should be minimally of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
-                else if (p->age > p->calibration->max)
+                else if (p->age - p->calibration->max > BRLENS_EPSILON)
                     {
-                    printf ("Node %d has age %f but should be minimally of age %f\n",
+                    printf ("Node %d has age %f but should be maximally of age %f\n",
                         p->index, p->age, p->calibration->max);
                     return NO;
                     }
