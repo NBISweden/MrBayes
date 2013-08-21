@@ -17614,8 +17614,9 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             p = t->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root)*/
-            if (p->anc->anc != NULL && (p->length < 0.0 || p->length > maxV))
-                {                   /* consider ancestral fossil (brl=0) in fossilized bd tree */
+            if ( p->anc->anc != NULL &&
+                (p->length < 0.0 || p->length > maxV || (p->length /factor > BRLENS_EPSILON && p->length < BRLENS_EPSILON)) )
+                {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
                 abortMove = YES;
                 return (NO_ERROR);
                 }
@@ -36060,8 +36061,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        if (p->length < 0.0 || p->length > maxV)  /* consider ancestral fossil (brl=0) in fossilized bd tree */
-            {
+        if (p->length < 0.0 || p->length > maxV || (p->length /factor > BRLENS_EPSILON && p->length < BRLENS_EPSILON))
+            {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             abortMove = YES;
             return NO_ERROR;
             }
