@@ -254,6 +254,8 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	BRLENS_MIN				0.00000001f
 #define	BRLENS_MAX				100.0f
 #define BRLENS_EPSILON			1.0E-10f
+#define TIME_MIN                1.0E-12f
+#define TIME_MAX                100.0f
 #define	RELBRLENS_MIN			0.00000001f
 #define	RELBRLENS_MAX			100.0f
 #define KAPPA_MIN				0.01f
@@ -1288,7 +1290,6 @@ typedef struct modelinfo
 
     } ModelInfo;
 
-/* TODO: Delete these old pointers to cond likes, ti probs and scalers */
 
 typedef struct sumt
 	{

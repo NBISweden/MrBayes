@@ -1684,8 +1684,8 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 {
 	int		    i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
 			    numConsidered, numInformative, lastInformative=0, uniqueBits,
-			    newPoss, oldPoss, combinations[2048], *newComb, *oldComb, *tempComb;
-    BitsLong    bitsLongOne=1;
+			    newPoss, oldPoss;
+    BitsLong    combinations[2048], *tempComb, *newComb, *oldComb, bitsLongOne=1;
 
 	extern int NBits (int x);
 

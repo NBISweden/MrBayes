@@ -12292,8 +12292,8 @@ int InitParsSets (void)
 {
 
 	int				c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
-                    nuc1, nuc2, nuc3, codingNucCode, allNucCode, allAmbig;
-	BitsLong        x, x1, x2, x3, *longPtr, bitsLongOne;
+                    nuc1, nuc2, nuc3, codingNucCode, allNucCode;
+	BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne;
 	ModelInfo		*m;
 	ModelParams		*mp;
 
@@ -12379,7 +12379,7 @@ int InitParsSets (void)
 
 					for (k=0; k<m->nParsIntsPerSite; k++)
 						{
-						if (x > (k + 1) * 1000 / (m->nParsIntsPerSite + 1))
+						if (x > (unsigned int)(k + 1) * 1000 / (m->nParsIntsPerSite + 1))
 							m->parsSets[i][c*m->nParsIntsPerSite + k] = 1;
 						else
 							m->parsSets[i][c*m->nParsIntsPerSite + k] = 2;
@@ -12389,7 +12389,7 @@ int InitParsSets (void)
 			}
 		else if (m->nCharsPerSite == 1 && m->nParsIntsPerSite == 1)
 			{
-			allAmbig = (bitsLongOne<<mp->nStates) - 1;
+			allAmbig = (bitsLongOne<<mp->nStates) - 1UL;
 			for (i=0; i<numLocalTaxa; i++)
 				{
 				for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
@@ -12930,8 +12930,11 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
+                abortMove = YES;
 				return ERROR;
 				}
 			else	
@@ -12977,9 +12980,12 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #ifdef DEBUG_OUTPUT
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13154,9 +13160,12 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13208,9 +13217,12 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #ifdef DEBUG_OUTPUT
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13305,9 +13317,12 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13340,9 +13355,12 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 #ifdef DEBUG_OUTPUT
 				printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13435,9 +13453,12 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13487,9 +13508,12 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13571,9 +13595,12 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13605,9 +13632,12 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -13897,9 +13927,12 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             /* check against LIKE_EPSILON (values close to zero are problematic) */
 		    if (like < LIKE_EPSILON)
 			    {
-			    MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-			    return ERROR;
+                abortMove = YES;
+                return ERROR;
 			    }
 		    else	
 			    {
@@ -13941,9 +13974,12 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -14029,11 +14065,14 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
-			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
             (*lnL)=MRBFLT_NEG_MAX;
-			return ERROR;
+            abortMove = YES;
+            return ERROR;
 			}
-		else	
+		else
 			{
 			(*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
 			}
@@ -14118,9 +14157,12 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
-			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
             (*lnL)=MRBFLT_NEG_MAX;
-			return ERROR;
+            abortMove = YES;
+            return ERROR;
 			}
 		else	
 			{
@@ -14192,9 +14234,12 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 	pObserved =  1.0 - pUnobserved;
 	if (pObserved < LIKE_EPSILON)
 		{
-		MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division, pObserved);
+#ifndef NDEBUG
+        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division+1, pObserved);
+#endif
         (*lnL)=MRBFLT_NEG_MAX;
-		return ERROR;
+        abortMove = YES;
+        return ERROR;
 		}
 
 	for (c=m->numDummyChars; c<m->numChars; c++)
@@ -14305,9 +14350,12 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 	pObserved =  1.0 - pUnobserved;
 	if (pObserved < LIKE_EPSILON)
 		{
-		MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division, pObserved);
+#ifndef NDEBUG
+        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division+1, pObserved);
+#endif
         (*lnL)=MRBFLT_NEG_MAX;
-		return ERROR;
+        abortMove = YES;
+        return ERROR;
 		}
 
 	for (c=m->numDummyChars; c<m->numChars; c++)
@@ -14316,9 +14364,12 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
-			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#endif
             (*lnL)=MRBFLT_NEG_MAX;
-			return ERROR;
+            abortMove = YES;
+            return ERROR;
 			}
 		else	
 			{
@@ -14430,9 +14481,12 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -14507,9 +14561,12 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			/* check against LIKE_EPSILON (values close to zero are problematic) */
 			if (like < LIKE_EPSILON)
 				{
-				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#ifndef NDEBUG
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+#endif
                 (*lnL)=MRBFLT_NEG_MAX;
-				return ERROR;
+                abortMove = YES;
+                return ERROR;
 				}
 			else	
 				{
@@ -15134,6 +15191,8 @@ MrBFlt LogLike (int chain)
 			/* a thread around it                                               */				
 			LaunchLogLikeForDivision(chain, d, &(m->lnLike[2 * chain + state[chain]]));
 			}
+        if (abortMove == YES)
+            return MRBFLT_NEG_MAX;
 		chainLnLike += m->lnLike[2*chain + state[chain]];	
 		}
 		
@@ -16282,7 +16341,7 @@ int LnFossilizedBDPriorTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL)
             {
-            if (p->nodeDepth > BRLENS_EPSILON)
+            if (p->nodeDepth > 0.0)
                 {
                 y[j++] = p->nodeDepth / clockRate;
                 nFossil++;
@@ -16370,7 +16429,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL && p->length > BRLENS_EPSILON)
             {
-            if (p->nodeDepth > BRLENS_EPSILON)
+            if (p->nodeDepth > 0.0)
                 {
                 y[j++] = p->nodeDepth / clockRate;
                 mFossil++;
@@ -37098,7 +37157,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
 							else
 								{
 								/* treat likeI as if 0.0, that is, ignore it completely */
-								like = like + 0.0;
+								like = like + (CLFlt)(0.0);
 								}
 							}
 						else	/* take both likeI and like into account */
@@ -44200,8 +44259,11 @@ int RunChain (RandLong *seed)
 
             /* calculate likelihood ratio */
             if (abortMove == NO)
-				{
                 lnLike = LogLike(chn);
+            
+            /* Any error in the calculation of the likelihood causes the abort flag to be set */
+            if (abortMove == NO)
+                {
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
 
@@ -47645,7 +47707,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 		{
 		t =  length * baseRate * catRate[k];
 
-        if (t < BRLENS_MIN)
+        if (t < TIME_MIN)
             {
             /* Fill in identity matrix */
             for (i=0; i<4; i++)
@@ -47659,7 +47721,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
                     }
                 }
             }
-        else if (t > BRLENS_MAX)
+        else if (t > TIME_MAX)
             {
             /* Fill in stationary matrix */
             for (i=0; i<4; i++)
@@ -47775,7 +47837,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         {
         t =  length * baseRate * catRate[k] * correctionFactor;
 
-        if (t < BRLENS_MIN)
+        if (t < TIME_MIN)
             {
             /* Fill in identity matrix */
             for (i=0; i<n; i++)
@@ -47789,7 +47851,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
                     }
                 }
             }
-        else if (t > BRLENS_MAX)
+        else if (t > TIME_MAX)
             {
             /* Get base freq */
             bs = GetParamSubVals(m->stateFreq, chain, state[chain]);
@@ -47904,7 +47966,7 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 		{
 		t =  length * correctionFactor;
             
-        if (t < BRLENS_MIN)
+        if (t < TIME_MIN)
             {
             /* Fill in identity matrix */
             for (i=0; i<n; i++)
@@ -47918,7 +47980,7 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
                     }
                 }
             }
-        else if (t > BRLENS_MAX)
+        else if (t > TIME_MAX)
             {
             /* Get base freq */
             bs = GetParamSubVals(m->stateFreq, chain, state[chain]);
@@ -48044,7 +48106,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 		{
 		t =  length * baseRate * catRate[k];
 
-        if (t < BRLENS_MIN)
+        if (t < TIME_MIN)
             {
             /* Fill in identity matrix */
             for (i=0; i<4; i++)
@@ -48058,7 +48120,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
                     }
                 }
             }
-        else if (t > BRLENS_MAX)
+        else if (t > TIME_MAX)
             {
             /* Fill in stationary matrix */
             for (i=0; i<4; i++)
@@ -48152,7 +48214,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 		{
         t = length*catRate[k];
             
-        if (t < BRLENS_MIN)
+        if (t < TIME_MIN)
             {
             /* Fill in identity matrix */
             for (i=0; i<4; i++)
@@ -48166,7 +48228,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
                     }
                 }
             }
-        else if (t > BRLENS_MAX)
+        else if (t > TIME_MAX)
             {
             /* Fill in stationary matrix */
             for (i=0; i<4; i++)
@@ -48258,7 +48320,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 		{		
 		v =  length * baseRate * catRate[k];
             
-        if (v < BRLENS_MIN)
+        if (v < TIME_MIN)
             {
             /* Fill in identity matrix */
             tiP[index++] = (CLFlt) (bs[0] + bs[1]);
@@ -48266,7 +48328,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
             tiP[index++] = (CLFlt) (bs[0] - bs[0]);
             tiP[index++] = (CLFlt) (bs[1] + bs[0]);
             }
-        else if (v > BRLENS_MAX)
+        else if (v > TIME_MAX)
             {
             /* Fill in stationary matrix */
             tiP[index++] = (CLFlt) bs[0];
