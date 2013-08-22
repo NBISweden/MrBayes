@@ -11407,8 +11407,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    in the tree is calibrated, the root calibration replaces the \n");
 		MrBayesPrint ("                    tree age prior.                                              \n");
 		MrBayesPrint ("   Speciationpr  -- This parameter sets the prior on the net speciation rate,    \n");
-		MrBayesPrint ("                    that is, lambda - mu in the birth-death model; or,           \n");
-		MrBayesPrint ("                    lambda - mu - psi in the fossilized birth-death model.       \n");
+		MrBayesPrint ("                    that is, lambda - mu in the birth-death model.               \n");
+		MrBayesPrint ("                    Or, lambda - mu - psi in the fossilized birth-death model.   \n");
         MrBayesPrint ("                    Values of this parameter are > 0. Prior options are:         \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset speciationpr = uniform(<number>,<number>)           \n");
@@ -11418,9 +11418,9 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("                    This parameter is only relevant if the (fossil) birth-death  \n");
 		MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
 		MrBayesPrint ("   Extinctionpr  -- This parameter sets the prior on the relative extinction     \n");
-		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model; or,     \n");
-		MrBayesPrint ("                    (mu + psi) / lambda in the fossilized b-d model. Values of   \n");
-		MrBayesPrint ("                    this parameter are in the range (0,1). Prior options are:    \n");
+		MrBayesPrint ("                    rate, that is, mu / lambda in the birth-death model.         \n");
+		MrBayesPrint ("                    Or, (mu + psi) / lambda in the fossilized b-d model. Values  \n");
+		MrBayesPrint ("                    of this parameter are in the range (0,1). Prior options are: \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                       prset extinctionpr = beta(<number>,<number>)              \n");
 		MrBayesPrint ("                       prset extinctionpr = fixed(<number>)                      \n");
