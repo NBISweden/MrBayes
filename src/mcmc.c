@@ -12931,7 +12931,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 #ifndef NDEBUG
-                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+				MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
                 abortMove = YES;
@@ -14235,7 +14235,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 	if (pObserved < LIKE_EPSILON)
 		{
 #ifndef NDEBUG
-        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division+1, pObserved);
+        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #endif
         (*lnL)=MRBFLT_NEG_MAX;
         abortMove = YES;
@@ -14253,9 +14253,12 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 		/* check against LIKE_EPSILON (values close to zero are problematic) */
 		if (like < LIKE_EPSILON)
 			{
-			MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+#ifndef NDEBUG
+            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
+#endif
             (*lnL)=MRBFLT_NEG_MAX;
-			return ERROR;
+            abortMove = YES;
+            return ERROR;
 			}
 		else	
 			{
@@ -14351,7 +14354,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 	if (pObserved < LIKE_EPSILON)
 		{
 #ifndef NDEBUG
-        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30lf\n", spacer, division+1, pObserved);
+        MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #endif
         (*lnL)=MRBFLT_NEG_MAX;
         abortMove = YES;
@@ -14365,7 +14368,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 		if (like < LIKE_EPSILON)
 			{
 #ifndef NDEBUG
-            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+            MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
             (*lnL)=MRBFLT_NEG_MAX;
             abortMove = YES;
@@ -14482,7 +14485,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 #ifndef NDEBUG
-                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
                 abortMove = YES;
@@ -14562,7 +14565,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			if (like < LIKE_EPSILON)
 				{
 #ifndef NDEBUG
-                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division+1, c+1, like);
+                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
                 abortMove = YES;
@@ -44257,13 +44260,13 @@ int RunChain (RandLong *seed)
                 abortMove = YES;
                 }
 
-            /* calculate likelihood ratio */
+            /* calculate likelihood ratio -- abortMove is set to YES if the calculation fails because the likelihood is too small */
             if (abortMove == NO)
                 lnLike = LogLike(chn);
-            
-            /* Any error in the calculation of the likelihood causes the abort flag to be set */
+
+            /* determine whether we want to accept the move */
             if (abortMove == NO)
-                {
+				{
                 lnLikelihoodRatio = lnLike - curLnL[chn];
 				lnPrior = curLnPr[chn] + lnPriorRatio;
 
