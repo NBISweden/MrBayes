@@ -39071,17 +39071,17 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 int PrintMPISlaves (FILE *fp)
 {
     char        *s=NULL;
-	int	        i, len, lenS=0, ierror, nErrors, sumErrors, tag;
+	int	        i, len, ierror, nErrors, sumErrors, tag;
 	MPI_Status	status;
 
 	nErrors = sumErrors = tag = 0;
     if (proc_id==0)
         {
         s = (char *) SafeCalloc (100, sizeof(char));
-        if (s!=NULL)
-            lenS = 100;
-        else
-            lenS = 0;
+        // if (s!=NULL)
+        //    lenS = 100;
+        // else
+        //    lenS = 0;
         }
 
 	for (i=1; i<num_procs; i++)
