@@ -16286,7 +16286,7 @@ MrBFlt lnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
     
     // c1 = sqrt(pow(lambda-mu-psi, 2) + 4*lambda*psi);
     // c2 = (-lambda + mu + 2*lambda*rho + psi) / c1;
-    other = 2 * (1- c2*c2) * exp(-c1 *t) + pow(1-c2, 2) * exp(-2 *c1 *t) + pow(1+c2, 2);
+    other = 2.0 * (1- c2*c2) * exp(-c1 *t) + pow(1-c2, 2) * exp(-2 *c1 *t) + pow(1+c2, 2);
 
     return log(4.0) + log(rho) - c1 *t - log(other);
 }
@@ -16399,11 +16399,11 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
 	TreeNode		*p;
     Model           *mp;
     
-    /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
+    /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
     lambda = sR / (1.0 - eR);
-    mu     = lambda * eR * (1.0 - fR);
+    mu     = lambda * eR;
     rho    = sF;
-    psi    = lambda * eR * fR;
+    psi    = mu * fR / (1.0 - fR);
     
     /* allocate space for the speciation and extinction times */
 	x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
@@ -16445,8 +16445,8 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     /* calculate probability of tree using standard variables */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    c1 = sqrt(sR*sR + 4 *lambda *psi);
-    c2 = (2 *lambda *rho - sR) / c1;
+    c1 = sqrt(pow(lambda-mu-psi, 2) + 4*lambda*psi);
+    c2 = (2 *lambda *rho -lambda +mu +psi) / c1;
     
     (*prob) = (nExtant +mFossil -2) *log(lambda) + (kFossil +mFossil) *log(psi)
             + lnP1_fossil(tmrca, rho, c1, c2) - 2 *log(1 - hatP0(tmrca, lambda, mu, rho));
