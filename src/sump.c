@@ -803,7 +803,7 @@ sumssTable:
         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
         MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
         MrBayesPrint (" Enter new step number 'Steptoplot':");
-        scanf("%d",&j);
+        k = scanf("%d",&j);
         if(j < 0 )
             break;
         if(j > chainParams.numStepsSS)
@@ -811,7 +811,7 @@ sumssTable:
             do
                 {
                 MrBayesPrint (" Enter new value for 'Discardfrac', should be in range 0.0 to 1.0:");
-                scanf("%f",&tmpf);
+                k = scanf("%f",&tmpf);
                 sumssParams.discardFraction =  (MrBFlt)tmpf;
                 }
             while(sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
@@ -868,16 +868,16 @@ sumssTable:
                     max=plotArrayY[i][j];
                     */
                 }
-        /*    for(j=stepBurnin;j<numSamplesInStepSS;j++)
+        /*  for(j=stepBurnin;j<numSamplesInStepSS;j++)
                 {
                 plotArrayY[i][j] /= max;
                 }*/
             }
 
-       beginPrint=stepBurnin;
-       countPrint=numSamplesInStepSS-stepBurnin;
+        beginPrint=stepBurnin;
+        countPrint=numSamplesInStepSS-stepBurnin;
 
-           if (sumssParams.numRuns > 1)
+        if (sumssParams.numRuns > 1)
 		    {
 		    if (sumpParams.allRuns == YES)
 			    {
@@ -909,13 +909,13 @@ sumssTable:
         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
         MrBayesPrint (" to change 'Smoothing'.\n");
         MrBayesPrint (" Enter new step burn-in:");
-        scanf("%d",&j);
+        k = scanf("%d",&j);
         if(j < 0 )
             break;
         if(j >= numSamplesInStepSS)
             {
             MrBayesPrint (" Enter new value for 'Smoothing':");
-            scanf("%d",&j);
+            k = scanf("%d",&j);
             sumssParams.smoothing = abs(j);
             }
         else
@@ -936,7 +936,7 @@ sumssExitOptions:
         MrBayesPrint (" Enter a number that corresponds to one of the options:");
         do
             {
-            scanf("%d",&j);
+            k = scanf("%d",&j);
             }while(j<1 || j>4);
 
         if(j == 1)
@@ -946,7 +946,7 @@ sumssExitOptions:
             MrBayesPrint (" Enter new step burn-in:");
             do
                 {
-                scanf("%d",&stepBurnin);
+                k = scanf("%d",&stepBurnin);
                 }
             while(stepBurnin < 0 || stepBurnin > numSamplesInStepSS-1);
             MrBayesPrint ("\n"); 
