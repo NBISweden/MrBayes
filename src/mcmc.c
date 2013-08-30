@@ -18148,7 +18148,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
-        if (p->left == NULL && p->right == NULL && p->nodeDepth > BRLENS_EPSILON)
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
         {
             if (p->length > BRLENS_EPSILON) {
                 mFossil++;        // count tip fossil
@@ -18326,7 +18326,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
-        if (p->left == NULL && p->right == NULL && p->nodeDepth > BRLENS_EPSILON)
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
         {
             if (p->length > BRLENS_EPSILON) {
                 p->marked = YES;  // mark  tip fossil
