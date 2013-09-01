@@ -398,7 +398,7 @@ int AllocateTreePartitions (Tree *t)
 	
     /* clear bit fields */
     for (i=0; i<t->nNodes*nLongsNeeded; i++)
-		t->bitsets[0] = 0;
+		t->bitsets[i] = 0;
         
     /* set node pointers to bit fields */
     for (i=0; i<t->nNodes; i++)
@@ -643,6 +643,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 	   approximately this is to use sequential addition, with probabilities in each step determined
 	   by the parsimony or compatibility score of the different possibilities. */ 
 	nextNode = numLocalTaxa + 1;
+	t->nLocks=0;
 	for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
 		{
 		if (t->constraints[constraintId] == NO || definedConstraintsType[constraintId] != HARD )
@@ -671,7 +672,6 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers only to deleted taxa\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            and will be disregarded\n", spacer);
 			t->constraints[constraintId] = NO;
-            t->nLocks--;
 			continue;
             }
         if (k == 1)
@@ -679,23 +679,36 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			MrBayesPrint ("%s   WARNING: Constraint '%s' refers to a single tip and\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            will be disregarded\n", spacer);
 			t->constraints[constraintId] = NO;
-            t->nLocks--;
 			continue;
             }
 
 		/* check if root in rooted tree (we allow this to enable inference of ancestral states) */
         if (k == numLocalTaxa && t->isRooted == YES)
             {
+			if(pt->root->isLocked == YES){
+				MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
+				MrBayesPrint ("%s            and will be ignored\n", spacer);
+				t->constraints[constraintId] = NO;
+				continue;
+				}
             pt->root->isLocked = YES;
             pt->root->lockID = constraintId;
+			t->nLocks++;
             continue;
             }
 
 		/* check if interior root in unrooted tree (we allow this to enable inference of ancestral states) */
         if ((k == numLocalTaxa - 1 || k == numLocalTaxa) && t->isRooted == NO)
             {
+			if(pt->root->isLocked == YES){
+				MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
+				MrBayesPrint ("%s            and will be ignored\n", spacer);
+				t->constraints[constraintId] = NO;
+				continue;
+				}
             pt->root->isLocked = YES;
             pt->root->lockID = constraintId;
+			t->nLocks++;
             continue;
             }
 
@@ -721,8 +734,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 			{
 			MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
 			MrBayesPrint ("%s            and will be ignored\n", spacer);
-            t->nLocks--;
-			t->constraints[i] = NO;
+			t->constraints[constraintId] = NO;
 			continue;
 			}
 
@@ -731,6 +743,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 		tt->anc = pp;
 		tt->isLocked = YES;
 		tt->lockID = constraintId;
+		t->nLocks++;
 		for (i=0; i<nLongsNeeded; i++)
 			tt->partition[i] = constraintPartition[i];
 		pt->nIntNodes++;

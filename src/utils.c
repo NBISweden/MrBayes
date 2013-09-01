@@ -46,7 +46,7 @@
 
 const char* const svnRevisionUtilsC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 
-/* AddBitfield: Add bitfield to list of bitfields */
+/* AddBitfield: Add bitfield to list of bitfields. The function uses global variable nLongsNeeded. */
 int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 {
     int     i, nLongsNeeded;

@@ -7996,8 +7996,10 @@ int DoMcmc (void)
         }
 
     for (i=0; i<numParams; i++)
+		{
         for (j=0; j<numGlobalChains; j++)
             assert (IsTreeConsistent(&params[i], j, 0) == YES);
+		}
 
     /* Initialize vectors of print parameters */
 	if (InitPrintParams () == ERROR)

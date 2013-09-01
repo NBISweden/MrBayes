@@ -11066,7 +11066,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 
 
-/*Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions may theoreticly have different clock models, whil constraints apply to all partitions/trees */
+/*Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions may theoreticly have different clock models, while constraints apply to all partitions/trees */
 int PruneConstraintPartitions()
 {
 
