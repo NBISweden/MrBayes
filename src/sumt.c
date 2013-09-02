@@ -4272,7 +4272,7 @@ int OpenSumtFiles (int treeNo)
 {
 
 	int			i, len,  oldNoWarn, oldAutoOverwrite, previousFiles;
-	char		pFilename[100], sFilename[100], vFilename[100], cFilename[100], tFilename[100];
+	char		pFilename[110], sFilename[110], vFilename[110], cFilename[110], tFilename[110];
     FILE        *fpTemp;
 
     oldNoWarn = noWarn;
