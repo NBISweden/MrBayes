@@ -16443,6 +16443,7 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
                 nExtant++;
             }
         }
+    // printf("\tn=%d, m=%d, k=%d\n", nExtant, mFossil, kFossil);
     
     /* calculate probability of tree using standard variables */
     tmrca = t->root->left->nodeDepth / clockRate;
@@ -19303,11 +19304,13 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 #	endif
 	
 	/* pick a branch */
-	do
-		{
+	do  {
 		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
-		} while (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL);
-		
+		}
+	while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
+            (p->length < BRLENS_EPSILON || p->anc->left->length < BRLENS_EPSILON || p->anc->right->length < BRLENS_EPSILON) );
+            /* consider ancestral fossil (brl=0) in fossilized bd tree */
+	
 	/* set up pointers for nodes around the picked branch */
 	v = p;
 	u = p->anc;
@@ -26218,14 +26221,15 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 		} while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + minV);
 		
     /* set up pointers for nodes around the picked branch */
-	if (RandomNumber(seed) < 0.5)
-        {
-        a = p->left;
-        }
-    else
-        {
+    /* consider ancestral fossil (brl=0) in fossilized bd tree */
+    if (p->left->length < BRLENS_EPSILON)
         a = p->right;
-        }
+    else if (p->right->length < BRLENS_EPSILON)
+        a = p->left;
+	else if (RandomNumber(seed) < 0.5)
+        a = p->left;
+    else
+        a = p->right;
     v = p;
 	u = p->anc;
 	if (u->left == v)
@@ -26629,8 +26633,8 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
     /* check whether or not we can change root */
-    if ((!strcmp(mp->clockPr, "Uniform") ||!strcmp(mp->clockPr, "Fossilization")) &&
-        ((t->root->left->isDated == NO && mp->treeAgePr.prior == fixed) || (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed)))
+    if ( ((!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization")) && mp->treeAgePr.prior == fixed)
+         || (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed) )
         i = t->nNodes - 2;
     else
         i = t->nNodes - 1;
@@ -26639,9 +26643,9 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 	do  {
 		p = t->allDownPass[(int)(RandomNumber(seed)*i)];
 		}
-    while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed)
-         || (param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) );
-    /* consider ancestral fossil (brl=0) in fossilized bd tree */
+    while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed) ||
+            (p->left == NULL && p->length < BRLENS_EPSILON) || (p->left != NULL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) );
+            /* consider ancestral fossil (brl=0) in fossilized bd tree */
     assert (p->anc != NULL);
 
 #if defined (DEBUG_CSLIDER)
@@ -26683,7 +26687,6 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         calibrationPtr = &mp->treeAgePr;
     else
         calibrationPtr = NULL;
-
     if (calibrationPtr != NULL)
 		{
 	    if (calibrationPtr->max * clockRate < maxDepth)
@@ -30379,10 +30382,12 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 #	endif
 	
 	/* pick a branch */
-	do
-		{
+	do  {
 		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
-		} while (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL);
+    }
+	while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
+            (p->length < BRLENS_EPSILON || p->anc->left->length < BRLENS_EPSILON || p->anc->right->length < BRLENS_EPSILON) );
+            /* consider ancestral fossil (brl=0) in fossilized bd tree */
 		
     /* set up pointers for nodes around the picked branch */
 	v = p;
@@ -36089,36 +36094,41 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        if ( (p->isDated == NO && p->left != NULL && !(p->anc->anc == NULL && (param->paramId == BRLENS_CLOCK_UNI || param->paramId == BRLENS_CLOCK_FOSSIL) && mp->treeAgePr.prior == fixed))
-          || (p->isDated == YES && p->calibration->prior != fixed)
-          || !(param->paramId == BRLENS_CLOCK_FOSSIL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) )
+            
+        /* skip extant tip, ancestral fossil and fixed calibration */
+        if (p->left == NULL && p->isDated == NO)
+            continue;
+        if ((p->left == NULL && p->length < BRLENS_EPSILON) || (p->left != NULL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)))
+            continue;
+        if (p->isDated == YES)
+            calibrationPtr = p->calibration;
+        else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")))
+            calibrationPtr = &mp->treeAgePr;
+        else
+            calibrationPtr = NULL;
+        if (calibrationPtr != NULL && calibrationPtr->prior == fixed)
+            continue;
+        
+        /* now stretch the node */
+        if (calibrationPtr != NULL)
             {
-            if (p->isDated == YES)
-                calibrationPtr = p->calibration;
-            else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")))
-                calibrationPtr = &mp->treeAgePr;
-            else
-                calibrationPtr = NULL;
-            if (calibrationPtr != NULL)
+            p->age *= factor;
+            if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
                 {
-                p->age *= factor;
-                if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
+                abortMove = YES;
+                return (NO_ERROR);
                 }
-            p->nodeDepth *= factor;
-            numChangedNodes++;
-            if (p->left != NULL)
-                {
-                p->left ->length = p->nodeDepth - p->left ->nodeDepth;
-                p->right->length = p->nodeDepth - p->right->nodeDepth;
-                }
-            /* we change our own node length here, in case the ancestor cannot be moved */
-            if (p->anc->anc != NULL)
-                p->length = p->anc->nodeDepth - p->nodeDepth;
             }
+        p->nodeDepth *= factor;
+        numChangedNodes++;
+        if (p->left != NULL)
+            {
+            p->left ->length = p->nodeDepth - p->left ->nodeDepth;
+            p->right->length = p->nodeDepth - p->right->nodeDepth;
+            }
+        /* we change our own node length here, in case the ancestor cannot be moved */
+        if (p->anc->anc != NULL)
+            p->length = p->anc->nodeDepth - p->nodeDepth;
         }
 
     /* check that all branch lengths are proper, which need not be the case */
