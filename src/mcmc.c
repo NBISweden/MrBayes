@@ -18133,13 +18133,16 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
        2. Propose brl from a uniform(0, ?) distribution
     //chi */
     
-    int i, j, k, mFossil, kFossil;
-    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth, newLength;
-    MrBFlt clockRate, sR, eR, sF, fR;
+    int i, j, k, mFossil, kFossil,  *nEvents;
+    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth, newLength,
+           clockRate, sR, eR, sF, fR,
+           oldPLength, oldQLength, oldRLength, oldDepth, newDepth,
+           lambda=0.0, nu=0.0, *brlens=NULL, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
     TreeNode *p, *q, *r;
     Tree     *t;
     ModelParams *mp;
     ModelInfo   *m;
+    Param		*subParm;
     Calibration *calibrationPtr = NULL;
 
     /* get tree */
@@ -18235,6 +18238,12 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 		return (NO_ERROR);
     }
     
+    /* record old lengths and depths */
+    oldPLength = 0.0;
+    oldQLength = q->length;
+    oldRLength = r->length;
+    oldDepth   = q->nodeDepth;
+    
 	/* propose the branch length leading to the fossil */
 	newLength = (RandomNumber (seed)) * (maxDepth - minDepth);
     
@@ -18248,6 +18257,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     }
     r->length  += newLength;
     r->upDateTi = YES;
+    newDepth   = q->nodeDepth;
 
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
@@ -18284,10 +18294,105 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     (*lnProposalRatio) += log(maxDepth - minDepth);
             
     /* adjust proposal and prior ratio for relaxed clock models */
-    
-    
-    
-    
+    for (i=0; i<param->nSubParams; i++)
+    {
+		subParm = param->subParams[i];
+		if (subParm->paramType == P_CPPEVENTS)
+        {
+			nEvents = subParm->nEvents[2*chain+state[chain]];
+			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+
+			/* proposal ratio */
+         // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
+            (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
+            
+			if (q->anc->anc != NULL)
+                (*lnProposalRatio) += nEvents[q->index] * log (q->length / oldQLength);
+            
+            /* prior ratio */
+			if (q->anc->anc == NULL) // two branches changed in same direction
+                (*lnPriorRatio) += lambda * (2.0 * (oldDepth - newDepth));
+            else  // two branches changed in one direction, one branch in the other direction
+                (*lnPriorRatio) += lambda * (oldDepth - newDepth);
+            
+            /* update effective evolutionary lengths */
+			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
+            {
+                abortMove = YES;
+                return (NO_ERROR);
+            }
+        }
+		else if (subParm->paramType == P_TK02BRANCHRATES)
+        {
+			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+			tk02Rate = GetParamVals (subParm, chain, state[chain]);
+			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            /* no proposal ratio effect */
+            
+            /* prior ratio */
+         // (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldPLength, tk02Rate[p->index]);
+            (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
+            (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
+            (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
+            if (q->anc->anc != NULL)
+            {
+			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*oldQLength, tk02Rate[q->index]);
+			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->anc->index], nu* q->length, tk02Rate[q->index]);
+            }
+            
+            /* update effective evolutionary lengths */
+            brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
+            brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
+            brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
+        }
+		else if (subParm->paramType == P_IGRBRANCHLENS)
+        {
+			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+			igrRate = GetParamVals (subParm, chain, state[chain]);
+			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+         // (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) -= LnProbTruncGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            if (q->anc->anc != NULL)
+    			(*lnPriorRatio) -= LnProbTruncGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            brlens[p->index] = igrRate[p->index] * p->length;
+            brlens[r->index] = igrRate[r->index] * r->length;
+            if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
+                brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+         // (*lnProposalRatio) += log(p->length / oldPLength);
+            (*lnProposalRatio) += log(r->length / oldRLength);
+
+            if (q->anc->anc != NULL)
+            {
+                brlens[q->index] = igrRate[q->index] * q->length;
+                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
+                {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                }
+                (*lnProposalRatio) += log(q->length / oldQLength);
+            }
+                        
+            (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            if (q->anc->anc != NULL)
+    			(*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
+            if (*lnPriorRatio != *lnPriorRatio)
+            {
+                abortMove = YES;
+                return (NO_ERROR);
+            }
+        }
+    }
     
     return (NO_ERROR);
 }
@@ -18311,13 +18416,16 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
        2. Set brl = 0
     //chi */
     
-    int i, j, k, mFossil, kFossil;
-    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth;
-    MrBFlt clockRate, sR, eR, sF, fR;
+    int i, j, k, mFossil, kFossil,  *nEvents;
+    MrBFlt oldLnPrior, newLnPrior, minDepth, maxDepth,
+           clockRate, sR, eR, sF, fR,
+           oldPLength, oldQLength, oldRLength, oldDepth, newDepth,
+           lambda=0.0, nu=0.0, *brlens=NULL, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
     TreeNode *p, *q, *r;
     Tree     *t;
     ModelParams *mp;
     ModelInfo   *m;
+    Param		*subParm;
     Calibration *calibrationPtr = NULL;
 
     /* get tree */
@@ -18413,6 +18521,12 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 		return (NO_ERROR);
     }
 
+    /* record old lengths and depths */
+    oldPLength = p->length;
+    oldQLength = q->length;
+    oldRLength = r->length;
+    oldDepth   = q->nodeDepth;
+
 	/* set the brl to 0 for the fossil tip, it becomes an ancestral fossil */
     /* set flags for update of transition probabilities too */
     q->nodeDepth = p->nodeDepth;
@@ -18424,6 +18538,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     r->upDateTi = YES;
     p->length   = 0.0;
     p->upDateTi = YES;
+    newDepth   = q->nodeDepth;
     
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
@@ -18460,11 +18575,106 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     (*lnProposalRatio) -= log(maxDepth - minDepth);
 
     /* adjust proposal and prior ratio for relaxed clock models */
-    
-    
-    
-    
-    
+    for (i=0; i<param->nSubParams; i++)
+    {
+		subParm = param->subParams[i];
+		if (subParm->paramType == P_CPPEVENTS)
+        {
+			nEvents = subParm->nEvents[2*chain+state[chain]];
+			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+            
+			/* proposal ratio */
+         // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
+            (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
+            
+			if (q->anc->anc != NULL)
+                (*lnProposalRatio) += nEvents[q->index] * log (q->length / oldQLength);
+            
+            /* prior ratio */
+			if (q->anc->anc == NULL) // two branches changed in same direction
+                (*lnPriorRatio) += lambda * (2.0 * (oldDepth - newDepth));
+            else  // two branches changed in one direction, one branch in the other direction
+                (*lnPriorRatio) += lambda * (oldDepth - newDepth);
+            
+            /* update effective evolutionary lengths */
+			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
+            {
+                abortMove = YES;
+                return (NO_ERROR);
+            }
+        }
+		else if (subParm->paramType == P_TK02BRANCHRATES)
+        {
+			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+			tk02Rate = GetParamVals (subParm, chain, state[chain]);
+			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            /* no proposal ratio effect */
+            
+            /* prior ratio */
+            (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldPLength, tk02Rate[p->index]);
+            (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
+         // (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
+            (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
+            if (q->anc->anc != NULL)
+            {
+			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*oldQLength, tk02Rate[q->index]);
+			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->anc->index], nu* q->length, tk02Rate[q->index]);
+            }
+            
+            /* update effective evolutionary lengths */
+            brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
+            brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
+            brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
+        }
+		else if (subParm->paramType == P_IGRBRANCHLENS)
+        {
+			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+			igrRate = GetParamVals (subParm, chain, state[chain]);
+			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) -= LnProbTruncGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            if (q->anc->anc != NULL)
+    			(*lnPriorRatio) -= LnProbTruncGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            brlens[p->index] = igrRate[p->index] * p->length;
+            brlens[r->index] = igrRate[r->index] * r->length;
+            if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
+                brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
+            {
+                abortMove = YES;
+                return (NO_ERROR);
+            }
+            // (*lnProposalRatio) += log(p->length / oldPLength);
+            (*lnProposalRatio) += log(r->length / oldRLength);
+            
+            if (q->anc->anc != NULL)
+            {
+                brlens[q->index] = igrRate[q->index] * q->length;
+                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
+                {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                }
+                (*lnProposalRatio) += log(q->length / oldQLength);
+            }
+            
+         // (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            if (q->anc->anc != NULL)
+    			(*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            
+            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
+            if (*lnPriorRatio != *lnPriorRatio)
+            {
+                abortMove = YES;
+                return (NO_ERROR);
+            }
+        }
+    }
+
     return (NO_ERROR);
 }
 
