@@ -15871,7 +15871,8 @@ MrBFlt LogPrior (int chain)
 			for (i=0; i<t->nNodes-2; i++)
 				{
 				branch = t->allDownPass[i];
-				lnPrior += LnProbTK02LogNormal (st[branch->anc->index], nu*branch->length, st[branch->index]);
+                if (branch->length > TIME_MIN)  // not ancestral fossil
+                    lnPrior += LnProbTK02LogNormal (st[branch->anc->index], nu*branch->length, st[branch->index]);
 				}
 			}
         else if (p->paramType == P_IGRVAR)
@@ -15894,7 +15895,8 @@ MrBFlt LogPrior (int chain)
 			for (i=0; i<t->nNodes-2; i++)
 				{
 				branch = t->allDownPass[i];
-				lnPrior += LnProbTruncGamma (branch->length/igrvar, 1.0/igrvar, sst[branch->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                if (branch->length > TIME_MIN)  // not ancestral fossil
+                    lnPrior += LnProbTruncGamma (branch->length/igrvar, 1.0/igrvar, sst[branch->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 assert (fabs(sst[branch->index] - branch->length * st[branch->index]) < 0.000001);
                 assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < 0.000001);
 				}
@@ -17444,8 +17446,11 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
 	maxR = RATE_MAX;
 	
 	/* randomly pick a rate */
-	i = (int) (RandomNumber(seed) * (t->nNodes - 2));
-	p = t->allDownPass[i];
+	do {
+        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        p = t->allDownPass[i];
+    }
+    while (p->length < TIME_MIN);  // not ancestral fossil
 
 	/* find new rateMultiplier */
 	oldRate = tk02Rate[p->index];
@@ -17724,9 +17729,12 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                     {
                     p = t->allDownPass[j];
                     q = oldT->allDownPass[j];
-                    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*q->length, tk02Rate[q->index]);
-			        (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
-                    brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
+                    if (p->length > TIME_MIN)  // not ancestral fossil
+                        {
+                        (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*q->length, tk02Rate[q->index]);
+                        (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
+                        brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
+                        }
                     }
 		        }
 		    else if (subParm->paramType == P_IGRBRANCHLENS)
@@ -17740,9 +17748,12 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                     {
                     p = t->allDownPass[j];
                     q = oldT->allDownPass[j];
-                    (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
-                    (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
-                    igrRate[p->index] = brlens[p->index] / p->length;
+                    if (p->length > TIME_MIN)  // not ancestral fossil
+                        {
+                        (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
+                        (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
+                        igrRate[p->index] = brlens[p->index] / p->length;
+                        }
                     }
                 }
                 /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
@@ -20406,7 +20417,8 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
        the clock assumption. When the extension process stops, the subtrees supported by
        the two chosen branches are swapped. Since 2010-11-01, the move is Metropolized for
        increased efficiency. */
-	
+	/* Note: this move is not compatible with fossilized birth-death model with ancestral fossils */
+    
 	int		    i, *nEvents, numFreeOld, numFreeNew;
 	MrBFlt		x, oldALength, oldCLength, extensionProb, igrvar, *igrRate,
 			    *tk02Rate, *brlens, nu, ran, cumulativeProb, forwardProb,
@@ -24476,9 +24488,12 @@ int Move_IgrBranchLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 	maxB = RELBRLENS_MAX;
 	
 	/* randomly pick a length */
-	i = (int) (RandomNumber(seed) * (t->nNodes - 2));
-	p = t->allDownPass[i];
-
+    do {
+        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        p = t->allDownPass[i];
+        }
+    while (p->length < TIME_MIN);  // not ancestral fossil
+    
 	/* find new effective branch length */
 	oldBrlen = brlens[p->index];
 	newBrlen = oldBrlen * (exp ((0.5 - RandomNumber (seed)) * tuning));
@@ -24584,9 +24599,12 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 		for (j=0; j<t->nNodes-2; j++)
 			{
 			p = t->allDownPass[j];
-			(*lnPriorRatio) -= LnProbTruncGamma  (p->length/oldIgrvar, 1.0/oldIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-			(*lnPriorRatio) += LnProbTruncGamma (p->length/newIgrvar, 1.0/newIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-			}
+            if (p->length > TIME_MIN)  // not ancestral fossil
+                {
+			    (*lnPriorRatio) -= LnProbTruncGamma  (p->length/oldIgrvar, 1.0/oldIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+			    (*lnPriorRatio) += LnProbTruncGamma (p->length/newIgrvar, 1.0/newIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                }
+            }
 		}
 
 	/* take prior on Igrvar into account */
@@ -27147,9 +27165,12 @@ int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBF
 		for (j=0; j<t->nNodes-2; j++)
 			{
 			p = t->allDownPass[j];
-			(*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], oldNu*p->length, tk02Rate[p->index]);
-			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], newNu*p->length, tk02Rate[p->index]);
-			}
+            if (p->length > TIME_MIN)  // not ancestral fossil
+                {
+                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], oldNu*p->length, tk02Rate[p->index]);
+                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], newNu*p->length, tk02Rate[p->index]);
+                }
+            }
 		}
 
 	/* take prior on nu into account */
@@ -36385,9 +36406,12 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 {
                 p = t->allDownPass[j];
                 q = oldT->allDownPass[j];
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*q->length, tk02Rate[q->index]);
-    			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
-                brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
+                if (p->length > TIME_MIN)  // not ancestral fossil
+                    {
+                    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*q->length, tk02Rate[q->index]);
+                    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
+                    brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
+                    }
                 }
 			}
 		else if (subParm->paramType == P_IGRBRANCHLENS)
@@ -36401,16 +36425,19 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 {
                 p = t->allDownPass[j];
                 q = oldT->allDownPass[j];
-                (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
-                brlens[p->index] *= p->length / q->length;
-    			if (brlens[p->index] < minB || brlens[p->index] > maxB)
+                if (p->length > TIME_MIN)  // not ancestral fossil
                     {
-                    abortMove = YES;
-                    return (NO_ERROR);
+                    (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
+                    brlens[p->index] *= p->length / q->length;
+                    if (brlens[p->index] < minB || brlens[p->index] > maxB)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
+                    (*lnProposalRatio) += log(p->length / q->length);
+                    igrRate[p->index] = brlens[p->index] / p->length;
                     }
-                (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
-                (*lnProposalRatio) += log(p->length / q->length);
-                igrRate[p->index] = brlens[p->index] / p->length;
                 }
 
             /* The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
