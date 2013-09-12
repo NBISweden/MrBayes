@@ -18302,7 +18302,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
 
-			/* proposal ratio */
+			/* proposal ratio ?? */
          // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
             (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
             
@@ -18328,10 +18328,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            /* no proposal ratio effect */
-            
             /* prior ratio */
-         // (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldPLength, tk02Rate[p->index]);
             (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
@@ -18344,7 +18341,8 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             /* update effective evolutionary lengths */
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
-            brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
+            if (q->anc->anc != NULL)
+                brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
         }
 		else if (subParm->paramType == P_IGRBRANCHLENS)
         {
@@ -18352,7 +18350,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 			igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-         // (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
             (*lnPriorRatio) -= LnProbTruncGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
             if (q->anc->anc != NULL)
     			(*lnPriorRatio) -= LnProbTruncGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
@@ -18365,8 +18362,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 abortMove = YES;
                 return (NO_ERROR);
                 }
-         // (*lnProposalRatio) += log(p->length / oldPLength);
-            (*lnProposalRatio) += log(r->length / oldRLength);
 
             if (q->anc->anc != NULL)
             {
@@ -18376,7 +18371,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                     abortMove = YES;
                     return (NO_ERROR);
                 }
-                (*lnProposalRatio) += log(q->length / oldQLength);
             }
                         
             (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
@@ -18583,7 +18577,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
             
-			/* proposal ratio */
+			/* proposal ratio ?? */
          // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
             (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
             
@@ -18609,12 +18603,9 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            /* no proposal ratio effect */
-            
             /* prior ratio */
             (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldPLength, tk02Rate[p->index]);
             (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
-         // (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
             if (q->anc->anc != NULL)
             {
@@ -18625,7 +18616,8 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             /* update effective evolutionary lengths */
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
-            brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
+            if (q->anc->anc != NULL)
+                brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
         }
 		else if (subParm->paramType == P_IGRBRANCHLENS)
         {
@@ -18640,14 +18632,12 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             
             brlens[p->index] = igrRate[p->index] * p->length;
             brlens[r->index] = igrRate[r->index] * r->length;
-            if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
+            if ( /* brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX || */
                 brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
             {
                 abortMove = YES;
                 return (NO_ERROR);
             }
-            // (*lnProposalRatio) += log(p->length / oldPLength);
-            (*lnProposalRatio) += log(r->length / oldRLength);
             
             if (q->anc->anc != NULL)
             {
@@ -18657,10 +18647,8 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                     abortMove = YES;
                     return (NO_ERROR);
                 }
-                (*lnProposalRatio) += log(q->length / oldQLength);
             }
             
-         // (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
             (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
             
             if (q->anc->anc != NULL)
