@@ -16422,17 +16422,17 @@ int LnFossilizedBDPriorAll (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     for (i = j = 0; i < t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
-        if (p->left->length > BRLENS_EPSILON && p->right->length > BRLENS_EPSILON)
+        if (p->left->length > TIME_MIN && p->right->length > TIME_MIN)
             x[j++] = p->nodeDepth / clockRate;
         else
             kFossil++;
-        assert(p->left->length > BRLENS_EPSILON || p->right->length > BRLENS_EPSILON);
+        assert(p->left->length > TIME_MIN || p->right->length > TIME_MIN);
         }    
     /* get the fossil tip times (y_i), also calculate m, n */
     for (i = j = 0; i < t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL && p->length > BRLENS_EPSILON)
+        if (p->left == NULL && p->right == NULL && p->length > TIME_MIN)
             {
             if (p->nodeDepth > 0.0)
                 {
@@ -18156,7 +18156,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p->marked = NO;  // reset marked node
         if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
         {
-            if (p->length > BRLENS_EPSILON) {
+            if (p->length > TIME_MIN) {
                 mFossil++;        // count tip fossil
             }
             else {
@@ -18433,7 +18433,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p->marked = NO;  // reset marked node
         if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
         {
-            if (p->length > BRLENS_EPSILON) {
+            if (p->length > TIME_MIN) {
                 p->marked = YES;  // mark  tip fossil
                 mFossil++;        // count tip fossil
             }
@@ -19506,7 +19506,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
 		}
 	while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-            (p->length < BRLENS_EPSILON || p->anc->left->length < BRLENS_EPSILON || p->anc->right->length < BRLENS_EPSILON) );
+            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN) );
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
 	
 	/* set up pointers for nodes around the picked branch */
@@ -26420,9 +26420,9 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 		
     /* set up pointers for nodes around the picked branch */
     /* consider ancestral fossil (brl=0) in fossilized bd tree */
-    if (p->left->length < BRLENS_EPSILON)
+    if (p->left->length < TIME_MIN)
         a = p->right;
-    else if (p->right->length < BRLENS_EPSILON)
+    else if (p->right->length < TIME_MIN)
         a = p->left;
 	else if (RandomNumber(seed) < 0.5)
         a = p->left;
@@ -26842,7 +26842,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 		p = t->allDownPass[(int)(RandomNumber(seed)*i)];
 		}
     while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed) ||
-            (p->left == NULL && p->length < BRLENS_EPSILON) || (p->left != NULL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)) );
+            (p->left == NULL && p->length < TIME_MIN) || (p->left != NULL && (p->left->length < TIME_MIN || p->right->length < TIME_MIN)) );
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
     assert (p->anc != NULL);
 
@@ -30584,7 +30584,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 		p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
     }
 	while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-            (p->length < BRLENS_EPSILON || p->anc->left->length < BRLENS_EPSILON || p->anc->right->length < BRLENS_EPSILON) );
+            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN) );
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
 		
     /* set up pointers for nodes around the picked branch */
@@ -36296,7 +36296,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         /* skip extant tip, ancestral fossil and fixed calibration */
         if (p->left == NULL && p->isDated == NO)
             continue;
-        if ((p->left == NULL && p->length < BRLENS_EPSILON) || (p->left != NULL && (p->left->length < BRLENS_EPSILON || p->right->length < BRLENS_EPSILON)))
+        if ((p->left == NULL && p->length < TIME_MIN) || (p->left != NULL && (p->left->length < TIME_MIN || p->right->length < TIME_MIN)))
             continue;
         if (p->isDated == YES)
             calibrationPtr = p->calibration;
