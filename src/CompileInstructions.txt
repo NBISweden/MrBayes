@@ -1,8 +1,10 @@
+
 Content
 =======
+
 1) How to compile MrBayes from source
 2) Configuration options
-3) Troubleshooting compilation problems
+3) Troubleshooting for Mac
 4) Further references
 
 
@@ -10,17 +12,14 @@ How to compile MrBayes from source
 ==================================
 
 Pre-requirements:
-
-You will need the following software to build MrBayes:
-* gcc (or other C++ compiler) (version 4.6 or later)
+* gcc (or other C++ compiler) (version 4.6 or later recommended)
 * autotools (autoconf, automake, etc)
-* Optional: MPI compiler and library
-* Optional: Beagle library
+* optional: MPI compiler and library
+* optional: Beagle library
 
 Compilation: 
-For instructions on how to compile MrBayes on a Mac, see below. To compile MrBayes
-in other UNIX-like environments, first navigate to the folder containing the source
-code. Then execute the following commands in your terminal:
+To compile MrBayes in UNIX-like environments, first navigate to the folder containing
+the source code, then execute the following commands in your terminal (without '>'):
 
 > autoconf
 > ./configure 
@@ -48,7 +47,6 @@ Configuration options
 =====================
 
 1) BEAGLE
-
 MrBayes 3.2 uses the BEAGLE library by default. You should either install the
 BEAGLE library from http://code.google.com/p/beagle-lib/ or disable use of the
 library by invoking the configure script with option "--with-beagle=no". i.e. 
@@ -57,9 +55,7 @@ library by invoking the configure script with option "--with-beagle=no". i.e.
 
 Note: without beagle library MrBayes may run slower.
 
-
 2) SSE code
-
 All main-stream modern processors have support for SSE instructions 
 which are utilized by default by MrBayes 3.2 in order to substantially speed up
 execution. If you experience problems with the SSE code, you can disable the use of
@@ -72,9 +68,7 @@ if you are getting errors about undefined references to "posix_memalign", you sh
 update your compiler. You should have libc library of at least version 2.1.91 for
 the SSE code to compile.
 
-
 3) MPI version
-
 To make use of MPI code to parallelize MrBayes computations across several processors
 or CPU cores, you should invoke the configure script with the option
 "--enable-mpi=yes". The MPI code can be used both together with the Beagle library
@@ -106,46 +100,49 @@ To stop the output, simply press ctrl-C (this will stop the output from the tail
 command, it will not stop the MrBayes run).
 
 
-Compiling on a Mac
-==================
+Troubleshooting for Mac
+====================================
 
-The standard modified gcc version (llvm-gcc 4.2) shipping with the latest Xcode is
-problematic to compile MrBayes (hangs on model.c). Also, Xcode no longer
-ships with autotools, including autoconf that is used by MrBayes and most other
-open-source Unix software packages.
+Problem: > autoconf: command not found
 
-To install these tools, we recommend using HomeBrew (http://brew.sh). Other options
-include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
+Solution: Xcode 4.5 or later no longer ships with autotools, including autoconf
+that is used by MrBayes and most other open-source Unix software packages.
+To install these tools, we recommend using HomeBrew, see below.
+
+Problem: The compilation process hangs on model.c. For instance, this happens
+when using the compiler that ships with Xcode 4.6 (in the command line tools).
+
+Solution: Install newer command line tools (e.g., in Xcode 5), or install a different
+gcc version for Mac using HomeBrew, see below.
+
+------------------------------------
+To install missed Unix tools, we recommend using HomeBrew (http://brew.sh). 
+Other options include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
 and Open MPI (http://open-mpi.org).
 
-To install version 4.8 of gcc using HomeBrew, use the following commands after 
-having installed HomeBrew:
-
-> brew tap homebrew/versions
-> brew install gcc48
-
-Check the web for the latest version of gcc. HomeBrew does not allow you to just say
-gcc, you need to specify the version number you want. After installation, you need
-to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
-For instance, you can use the following commands:
-
-> sudo mv -i /usr/bin/gcc /usr/bin/gcc-4.2
-> sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
-
-To install autoconf, use:
+To install autoconf and automake after having installed HomeBrew, use:
 
 > brew install autoconf
+> brew install automake
 
 To install the most recent version of openmpi, use:
 
 > brew install openmpi --devel
 
-# Use "--devel" flag to install openmpi 1.7, as 1.6 attempts to run llvm-gcc
-# instead of clang, but MrBayes 4.2 hangs with llvm-gcc!
-# Remove "--devel" when openmpi 1.7 becomes default in the formula
+The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic
+to compile MrBayes (hangs on model.c).
+To install gcc version 4.8 using HomeBrew, use the following commands:
 
-Now you can install the different versions of MrBayes and run the MPI version
-of the program as in a standard Unix environment (see above).
+> brew tap homebrew/versions
+> brew install gcc48
+
+Check the web for the latest version of gcc. HomeBrew does not allow you to just say
+gcc, you need to specify the version number you want. After installation, you might need
+to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
+For instance, you can use the following commands:
+
+> sudo mv -i /usr/bin/gcc /usr/bin/gcc-4.2
+> sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
 Simply, you can even install MrBayes using HomeBrew:
 
@@ -153,17 +150,7 @@ Simply, you can even install MrBayes using HomeBrew:
 > brew install mrbayes
 
 
-Troubleshooting compilation problems
-====================================
-
-Problem: The compilation process hangs on model.c. For instance, this happens
-when using the compiler that currently ships with Xcode (in the command line
-tools).
-
-Solution: Install a newer compiler. For instructions on how to install a newer
-gcc version for Mac from HomeBrew, see above.
-
-
 Further references
 ==================
+
 See the manual for more compilation/installation instructions.
