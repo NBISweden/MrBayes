@@ -101,7 +101,7 @@ command, it will not stop the MrBayes run).
 
 
 Troubleshooting for Mac
-====================================
+=======================
 
 Problem: > autoconf: command not found
 
@@ -115,8 +115,9 @@ when using the compiler that ships with Xcode 4.6 (in the command line tools).
 Solution: Install newer command line tools (e.g., in Xcode 5), or install a different
 gcc version for Mac using HomeBrew, see below.
 
-------------------------------------
-To install missed Unix tools, we recommend using HomeBrew (http://brew.sh). 
+-----------------------
+To install missed Unix tools, we recommend using HomeBrew (http://brew.sh). Follow the
+instructions on HomeBrew's homepage to install it on Mac.
 Other options include MacPorts (http://www.macports.org), GNU (http://www.gnu.org),
 and Open MPI (http://open-mpi.org).
 
@@ -130,8 +131,9 @@ To install the most recent version of openmpi, use:
 > brew install openmpi --devel
 
 The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic
-to compile MrBayes (hangs on model.c).
-To install gcc version 4.8 using HomeBrew, use the following commands:
+to compile MrBayes (hangs on model.c). Please update to Xcode 5 or install newer
+command line tools. 
+To install an alternative gcc using HomeBrew, use the following commands:
 
 > brew tap homebrew/versions
 > brew install gcc48
@@ -141,7 +143,7 @@ gcc, you need to specify the version number you want. After installation, you mi
 to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
 For instance, you can use the following commands:
 
-> sudo mv -i /usr/bin/gcc /usr/bin/gcc-4.2
+> sudo mv -i /usr/bin/gcc /usr/bin/gcc-alt
 > sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
 Simply, you can even install MrBayes using HomeBrew:
