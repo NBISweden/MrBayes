@@ -11095,8 +11095,8 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Aarevmatpr    -- This parameter sets the prior for the substitution rates     \n");
 		MrBayesPrint ("                    of the GTR model for amino acid data. The options are:       \n");
 		MrBayesPrint ("                                                                                 \n");
-		MrBayesPrint ("                       prset revmatpr = dirichlet(<number>,<number>,...,<number>)\n");
-		MrBayesPrint ("                       prset revmatpr = fixed(<number>,<number>,...,<number>)    \n");
+		MrBayesPrint ("                       prset aarevmatpr = dirichlet(<number>,<number>,...,<number>)\n");
+		MrBayesPrint ("                       prset aarevmatpr = fixed(<number>,<number>,...,<number>)  \n");
 		MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("                    The options are the same as those for 'Revmatpr' except that \n");
 		MrBayesPrint ("                    they are defined over the 190 rates of the time-reversible   \n");
@@ -11731,13 +11731,13 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("\n");
 
 			MrBayesPrint ("   Aarevmatpr       Dirichlet/Fixed              %s", mp->aaRevMatPr);
-			if (!strcmp(mp->revMatPr, "Dirichlet"))
+			if (!strcmp(mp->aaRevMatPr, "Dirichlet"))
 				{
 				for (j=1; j<190; j++)
 					if (AreDoublesEqual (mp->aaRevMatDir[0], mp->aaRevMatDir[j], 0.00001) == NO)
 						break;
 				if (j==190)
-					MrBayesPrint ("(%1.1lf,%1.1lf,...)\n", mp->revMatDir[0], mp->revMatDir[0]);
+					MrBayesPrint ("(%1.1lf,%1.1lf,...)\n", mp->aaRevMatDir[0], mp->aaRevMatDir[0]);
 				else
 					MrBayesPrint (" (use 'Showmodel' to see values set by user)\n");
 				}
@@ -11747,7 +11747,7 @@ int GetUserHelp (char *helpTkn)
 					if (AreDoublesEqual (mp->aaRevMatFix[0], mp->aaRevMatFix[j], 0.00001) == NO)
 						break;
 				if (j==190)
-					MrBayesPrint ("(%1.1lf,%1.1lf,...)\n", mp->revMatFix[0], mp->revMatFix[0]);
+					MrBayesPrint ("(%1.1lf,%1.1lf,...)\n", mp->aaRevMatFix[0], mp->aaRevMatFix[0]);
 				else
 					MrBayesPrint (" (use 'Showmodel' to see values set by user)\n");
 				}

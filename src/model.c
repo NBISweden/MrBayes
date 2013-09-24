@@ -17383,20 +17383,15 @@ int SetModelParams (void)
 			SafeStrcat(&p->name, partString);			
 
 			/* find the parameter x prior type */
-			if (!strcmp(mp->nst, "Mixed"))
-                {
-                p->paramId = REVMAT_MIX;
-                p->max = 1E6;   /* some large value */
-                }
-            else if (!strcmp(mp->revMatPr,"Dirichlet"))
-				p->paramId = REVMAT_DIR;
-			else
-				p->paramId = REVMAT_FIX;
-
-			if (p->paramId != REVMAT_FIX)
-				p->printParam = YES;
 			if (m->dataType == PROTEIN)
 				{
+                if (!strcmp(mp->aaRevMatPr,"Dirichlet"))
+                    p->paramId = REVMAT_DIR;
+                else
+                    p->paramId = REVMAT_FIX;
+                if (p->paramId != REVMAT_FIX)
+                    p->printParam = YES;
+
 				for (n1=0; n1<20; n1++)
 					{
 					for (n2=n1+1; n2<20; n2++)
@@ -17418,6 +17413,18 @@ int SetModelParams (void)
 				}
 			else
                 {
+                if (!strcmp(mp->nst, "Mixed"))
+                    {
+                    p->paramId = REVMAT_MIX;
+                    p->max = 1E6;   /* some large value */
+                    }
+                else if (!strcmp(mp->revMatPr,"Dirichlet"))
+                    p->paramId = REVMAT_DIR;
+                else
+                    p->paramId = REVMAT_FIX;
+                if (p->paramId != REVMAT_FIX)
+                    p->printParam = YES;
+
 				for (n1=0; n1<4; n1++)
 					{
 					for (n2=n1+1; n2<4; n2++)
@@ -21200,7 +21207,9 @@ int ShowModel (void)
 						else
 							{
 							MrBayesPrint ("%s                     Substitution rates are fixed to be \n", spacer);
-							MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf).\n", spacer, modelParams[i].revMatFix[0], modelParams[i].revMatFix[1], modelParams[i].revMatFix[2], modelParams[i].revMatFix[3], modelParams[i].revMatFix[4], modelParams[i].revMatFix[5]);
+							MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf).\n", spacer,
+                                modelParams[i].revMatFix[0], modelParams[i].revMatFix[1], modelParams[i].revMatFix[2],
+                                modelParams[i].revMatFix[3], modelParams[i].revMatFix[4], modelParams[i].revMatFix[5]);
 							}
 						}
 					else if (!strcmp(modelParams[i].nst, "Mixed"))
@@ -21216,7 +21225,9 @@ int ShowModel (void)
 						else
 							{
 							MrBayesPrint ("%s                     Substitution rates are fixed to be \n", spacer);
-							MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf).\n", spacer, modelParams[i].revMatFix[0], modelParams[i].revMatFix[1], modelParams[i].revMatFix[2], modelParams[i].revMatFix[3], modelParams[i].revMatFix[4], modelParams[i].revMatFix[5]);
+							MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf).\n", spacer,
+                                modelParams[i].revMatFix[0], modelParams[i].revMatFix[1], modelParams[i].revMatFix[2],
+                                modelParams[i].revMatFix[3], modelParams[i].revMatFix[4], modelParams[i].revMatFix[5]);
 							}
 						}
 					
@@ -22165,7 +22176,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 }
             else if (ms->numModelStates == 20)
                 {
-    			if (!strcmp(mp->revMatPr,"Dirichlet"))
+    			if (!strcmp(mp->aaRevMatPr,"Dirichlet"))
                     MrBayesPrint ("%s            Prior      = Dirichlet\n", spacer);
 			    else
                     MrBayesPrint ("%s            Prior      = Fixed(user-specified)\n", spacer);
