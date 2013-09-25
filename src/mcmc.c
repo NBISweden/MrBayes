@@ -18162,25 +18162,27 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* get number of ancestral and tip fossils */
     kFossil = mFossil = 0;
     for (i = 0; i < t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
         if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
-        {
-            if (p->length > TIME_MIN) {
+            {
+            if (p->length > TIME_MIN)
+                {
                 mFossil++;        // count tip fossil
-            }
-            else {
+                }
+            else
+                {
                 p->marked = YES;  // mark  anc fossil
                 kFossil++;        // count anc fossil
+                }
             }
         }
-    }
     if (kFossil == 0)  // no ancestral fossil, nothing to do
-    {
+        {
         abortMove = YES;
         return (NO_ERROR);
-    }
+        }
 
     /* get model params and model info */
 	mp = &modelParams[param->relParts[0]];
@@ -18198,21 +18200,21 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 	
     /* calculate prior ratio, step 1 */
     if (LnFossilizedBDPriorAll (t, clockRate, &oldLnPrior, sR, eR, sF, fR) == ERROR)
-    {
+        {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
-    }
+        }
 
     /* pick an ancestral fossil randomly */
     j = (int) (RandomNumber(seed) * kFossil);
     for (i = k = 0; i < t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
         if (p->marked == YES)
             k++;
         if (k > j)
             break;
-    }
+        }
     /* now p is pointing to the ancestral fossil
        whose brl needs to be changed to >0. let's do it! */
     q = p->anc;
@@ -18234,20 +18236,20 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         calibrationPtr = &mp->treeAgePr;
     
     if (calibrationPtr != NULL)
-    {
-        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
         {
+        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
+            {
             abortMove = YES;
             return (NO_ERROR);
-        }
+            }
         if (calibrationPtr->max * clockRate < maxDepth)
 			maxDepth = calibrationPtr->max * clockRate;
-    }
+        }
 	if (minDepth >= maxDepth)
-    {
+        {
 		abortMove = YES;
 		return (NO_ERROR);
-    }
+        }
     
     /* record old lengths and depths */
     oldPLength = 0.0;
@@ -18262,36 +18264,37 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     p->length   = newLength;
     p->upDateTi = YES;
     q->nodeDepth += newLength;
-    if (q->anc->anc != NULL) {
+    if (q->anc->anc != NULL)
+        {
         q->length  -= newLength;
         q->upDateTi = YES;
-    }
+        }
     r->length  += newLength;
     r->upDateTi = YES;
     newDepth   = q->nodeDepth;
 
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
-    {
+        {
         q->age = q->nodeDepth / clockRate;
-    }
+        }
     
     /* set flags for update of cond likes from p/r to root */
     r->upDateCl = YES;
     q = p;
 	while (q->anc != NULL)
-    {
+        {
 		q->upDateCl = YES;
 		q = q->anc;
-    }
+        }
     q = p->anc;
 
     /* calculate prior ratio, step 2 */
     if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
-    {
+        {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
-    }
+        }
     (*lnPriorRatio) = newLnPrior - oldLnPrior;
     
     /* calculate proposal ratio, need to double check !! */
@@ -18306,19 +18309,14 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)
-    {
+        {
 		subParm = param->subParams[i];
 		if (subParm->paramType == P_CPPEVENTS)
-        {
+            {
+            /* the CPP model is not compatible with FBD prior
+             until we have a better way to implement it !! */
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-
-			/* proposal ratio ?? */
-         // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
-            (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
-            
-			if (q->anc->anc != NULL)
-                (*lnProposalRatio) += nEvents[q->index] * log (q->length / oldQLength);
             
             /* prior ratio */
 			if (q->anc->anc == NULL) // two branches changed in same direction
@@ -18328,13 +18326,13 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             
             /* update effective evolutionary lengths */
 			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
-            {
+                {
                 abortMove = YES;
                 return (NO_ERROR);
+                }
             }
-        }
 		else if (subParm->paramType == P_TK02BRANCHRATES)
-        {
+            {
 			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
 			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -18344,19 +18342,19 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
             if (q->anc->anc != NULL)
-            {
+                {
 			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*oldQLength, tk02Rate[q->index]);
 			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->anc->index], nu* q->length, tk02Rate[q->index]);
-            }
+                }
             
             /* update effective evolutionary lengths */
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
             if (q->anc->anc != NULL)
                 brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
-        }
+            }
 		else if (subParm->paramType == P_IGRBRANCHLENS)
-        {
+            {
 			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
 			igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -18373,31 +18371,29 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 abortMove = YES;
                 return (NO_ERROR);
                 }
-
             if (q->anc->anc != NULL)
-            {
+                {
                 brlens[q->index] = igrRate[q->index] * q->length;
                 if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                {
+                    {
                     abortMove = YES;
                     return (NO_ERROR);
+                    }
                 }
-            }
                         
             (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
             (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            
             if (q->anc->anc != NULL)
     			(*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
             
             /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
             if (*lnPriorRatio != *lnPriorRatio)
-            {
+                {
                 abortMove = YES;
                 return (NO_ERROR);
+                }
             }
         }
-    }
     
     return (NO_ERROR);
 }
@@ -18439,25 +18435,27 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* get number of ancestral and tip fossils */
     kFossil = mFossil = 0;
     for (i = 0; i < t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
         p->marked = NO;  // reset marked node
         if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
-        {
-            if (p->length > TIME_MIN) {
+            {
+            if (p->length > TIME_MIN)
+                {
                 p->marked = YES;  // mark  tip fossil
                 mFossil++;        // count tip fossil
-            }
-            else {
+                }
+            else
+                {
                 kFossil++;        // count anc fossil
+                }
             }
         }
-    }
     if (mFossil == 0)  // no tip fossil, nothing to do
-    {
+        {
         abortMove = YES;
         return (NO_ERROR);
-    }
+        }
     
     /* get model params and model info */
 	mp = &modelParams[param->relParts[0]];
@@ -18475,21 +18473,21 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 	
     /* calculate prior ratio, step 1 */
     if (LnFossilizedBDPriorAll (t, clockRate, &oldLnPrior, sR, eR, sF, fR) == ERROR)
-    {
+        {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
-    }
+        }
     
     /* pick a tip fossil randomly */
     j = (int) (RandomNumber(seed) * mFossil);
     for (i = k = 0; i < t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
         if (p->marked == YES)
             k++;
         if (k > j)
             break;
-    }
+        }
     /* now p is pointing to the fossil tip
        whose brl needs to be changed to 0. let's do it */
     q = p->anc;
@@ -18511,20 +18509,20 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         calibrationPtr = &mp->treeAgePr;
     
     if (calibrationPtr != NULL)
-    {
-        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
         {
+        if (calibrationPtr->prior == fixed || calibrationPtr->min * clockRate > minDepth)
+            {
             abortMove = YES;
             return (NO_ERROR);
-        }
+            }
         if (calibrationPtr->max * clockRate < maxDepth)
 			maxDepth = calibrationPtr->max * clockRate;
-    }
+        }
 	if (r->nodeDepth > p->nodeDepth -BRLENS_MIN || minDepth >= maxDepth)
-    {  /* the sister node (another fossil) is older than the current fossil */
+        {  /* the sister node (another fossil) is older than the current fossil */
 		abortMove = YES;
 		return (NO_ERROR);
-    }
+        }
 
     /* record old lengths and depths */
     oldPLength = p->length;
@@ -18535,10 +18533,11 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 	/* set the brl to 0 for the fossil tip, it becomes an ancestral fossil */
     /* set flags for update of transition probabilities too */
     q->nodeDepth = p->nodeDepth;
-    if (q->anc->anc != NULL) {
+    if (q->anc->anc != NULL)
+        {
         q->length += p->length;
         q->upDateTi = YES;
-    }
+        }
     r->length  -= p->length;
     r->upDateTi = YES;
     p->length   = 0.0;
@@ -18547,26 +18546,26 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
-    {
+        {
         q->age = q->nodeDepth / clockRate;
-    }
+        }
     
     /* set flags for update of cond likes from p/r to root */
     r->upDateCl = YES;
     q = p;
 	while (q->anc != NULL)
-    {
+        {
 		q->upDateCl = YES;
 		q = q->anc;
-    }
+        }
     q = p->anc;
     
     /* calculate prior ratio, step 2 */
     if (LnFossilizedBDPriorAll (t, clockRate, &newLnPrior, sR, eR, sF, fR) == ERROR)
-    {
+        {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
-    }
+        }
     (*lnPriorRatio) = newLnPrior - oldLnPrior;
     
     /* calculate proposal ratio, need to double check !! */
@@ -18581,19 +18580,14 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)
-    {
+        {
 		subParm = param->subParams[i];
 		if (subParm->paramType == P_CPPEVENTS)
-        {
+            {
+            /* the CPP model is not compatible with FBD prior
+                until we have a better way to implement it !! */
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-            
-			/* proposal ratio ?? */
-         // (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
-            (*lnProposalRatio) += nEvents[r->index] * log (r->length / oldRLength);
-            
-			if (q->anc->anc != NULL)
-                (*lnProposalRatio) += nEvents[q->index] * log (q->length / oldQLength);
             
             /* prior ratio */
 			if (q->anc->anc == NULL) // two branches changed in same direction
@@ -18603,13 +18597,13 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             
             /* update effective evolutionary lengths */
 			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
-            {
+                {
                 abortMove = YES;
                 return (NO_ERROR);
+                }
             }
-        }
 		else if (subParm->paramType == P_TK02BRANCHRATES)
-        {
+            {
 			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
 			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -18619,19 +18613,19 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
             if (q->anc->anc != NULL)
-            {
+                {
 			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*oldQLength, tk02Rate[q->index]);
 			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->anc->index], nu* q->length, tk02Rate[q->index]);
-            }
+                }
             
             /* update effective evolutionary lengths */
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
             if (q->anc->anc != NULL)
                 brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
-        }
+            }
 		else if (subParm->paramType == P_IGRBRANCHLENS)
-        {
+            {
 			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
 			igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -18645,34 +18639,32 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             brlens[r->index] = igrRate[r->index] * r->length;
             if ( /* brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX || */
                 brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
-            {
+                {
                 abortMove = YES;
                 return (NO_ERROR);
-            }
-            
+                }
             if (q->anc->anc != NULL)
-            {
+                {
                 brlens[q->index] = igrRate[q->index] * q->length;
                 if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                {
+                    {
                     abortMove = YES;
                     return (NO_ERROR);
+                    }
                 }
-            }
             
             (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            
             if (q->anc->anc != NULL)
     			(*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
             
             /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
             if (*lnPriorRatio != *lnPriorRatio)
-            {
+                {
                 abortMove = YES;
                 return (NO_ERROR);
+                }
             }
         }
-    }
 
     return (NO_ERROR);
 }
