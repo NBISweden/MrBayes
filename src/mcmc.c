@@ -18313,7 +18313,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 		subParm = param->subParams[i];
 		if (subParm->paramType == P_CPPEVENTS)
             {
-            /* the CPP model is not compatible with FBD prior
+            /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
              until we have a better way to implement it !! */
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
@@ -18584,7 +18584,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 		subParm = param->subParams[i];
 		if (subParm->paramType == P_CPPEVENTS)
             {
-            /* the CPP model is not compatible with FBD prior
+            /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
                 until we have a better way to implement it !! */
 			nEvents = subParm->nEvents[2*chain+state[chain]];
 			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
