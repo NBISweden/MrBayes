@@ -251,7 +251,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	MAX_SITE_RATE			10.0f
 #define	MAX_GAMMA_CATS			20
 #define	MAX_GAMMA_CATS_SQUARED	400
-#define	BRLENS_MIN				0.00000001f
+#define	BRLENS_MIN				1.0E-8f
 #define	BRLENS_MAX				100.0f
 /* BRLENS_MIN must be bigger than TIME_MIN */
 #define TIME_MIN                1.0E-12f

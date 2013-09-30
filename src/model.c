@@ -9539,19 +9539,19 @@ int DoStartvalsParm (char *parmName, char *tkn)
 						}
 					else if (param->paramType == P_BRLENS)
 						{
-                        if (usrTree->allDownPass[0]->length == 0.0)
+                        if (usrTree->allDownPass[0]->length == 0.0 && param->paramId != BRLENS_CLOCK_FOSSIL)
 							{
 							MrBayesPrint ("%s   User tree '%s' does not have branch lengths so it cannot be used in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);
 							}
-                     /*   if (theTree->isClock == YES && IsClockSatisfied (usrTree,0.001) == NO)
+                     /* if (theTree->isClock == YES && IsClockSatisfied (usrTree,0.001) == NO)
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							ShowNodes(usrTree->root,0,YES);
 							return (ERROR);
 							}
                      */
-                      /*  if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO) //no calibration is set up in usertree so do not do this check
+                     /* if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO) //no calibration is set up in usertree so do not do this check
 							{
 							MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
 							return (ERROR);

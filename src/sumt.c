@@ -769,18 +769,22 @@ treeConstruction:
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->depth = theStats.median;
-				if(q->anc->depth <= q->depth )
+				if(q->anc->depth < q->depth)
 					{
-					assert(0);/*  We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+                    /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+                    /* We should be careful with the trees generated under the fossilized birth-death prior! // chi note */
+					assert(0);
 					}
                 }
             if (sumtParams.isCalibrated == YES)
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->age = theStats.median;
-				if(q->anc->age <= q->age )
+				if(q->anc->age < q->age)
 					{
-					assert(0);/*  We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+                    /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
+                    /* We should be careful with the trees generated under the fossilized birth-death prior! // chi note */
+					assert(0);
 					}
                 }
 			}
