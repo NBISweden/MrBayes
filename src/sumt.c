@@ -772,7 +772,7 @@ treeConstruction:
 				if(q->anc->depth < q->depth)
 					{
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
-                    /* We should be careful with the trees generated under the fossilized birth-death prior! // chi note */
+                    /* We should be careful with the trees generated under the fossilized birth-death prior! //chi note */
 					assert(0);
 					}
                 }
@@ -783,7 +783,7 @@ treeConstruction:
 				if(q->anc->age < q->age)
 					{
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
-                    /* We should be careful with the trees generated under the fossilized birth-death prior! // chi note */
+                    /* We should be careful with the trees generated under the fossilized birth-death prior! //chi note */
 					assert(0);
 					}
                 }

@@ -999,7 +999,7 @@ typedef struct model
 	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
-	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, bm(rateautocorr))   */
+	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, tk02, igr, ...)   */
 	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
 	char		speciationPr[100];    /* prior on speciation rate                     */
 	MrBFlt		speciationFix;
