@@ -45688,7 +45688,7 @@ int SetLikeFunctions (void)
 						    m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
 						    m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
                             /* Should be sse versions if we want to handle m->printAncStates == YES || inferSiteRates == YES.
-                            For now just set to NULL for early error detection if functions anyway got called */
+                            For now just set to NULL for early error detection if functions anyway got called by mistake*/
                             m->CondLikeUp = NULL;
 	    					m->PrintAncStates = NULL;
 		    				m->PrintSiteRates = NULL;
@@ -45892,6 +45892,10 @@ int SetLikeFunctions (void)
 					}
 				else
 					{
+						m->CondLikeDown = &CondLikeDown_Gen;
+						m->CondLikeRoot = &CondLikeRoot_Gen;
+						m->CondLikeScaler = &CondLikeScaler_Gen;
+						m->Likelihood = &Likelihood_Gen;
 #if defined (SSE_ENABLED)
 			        if ( m->printAncStates == YES || m->printSiteRates == YES ||m->printPosSel ==YES ||m->printSiteOmegas==YES )
 				        {
@@ -45906,11 +45910,6 @@ int SetLikeFunctions (void)
 					    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
 					    m->Likelihood = &Likelihood_Gen_SSE;
                         }
-#else
-					m->CondLikeDown = &CondLikeDown_Gen;
-					m->CondLikeRoot = &CondLikeRoot_Gen;
-					m->CondLikeScaler = &CondLikeScaler_Gen;
-					m->Likelihood = &Likelihood_Gen;
 #endif
 					}
 				if (m->correlation != NULL)
