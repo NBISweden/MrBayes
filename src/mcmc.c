@@ -8111,7 +8111,7 @@ int DoSsParm (char *parmName, char *tkn)
 	int			tempI;
 	MrBFlt		tempD;
     char        tempStr[5];
-	
+	static int  negBurninss;
 
 	if (defMatrix == NO)
 		{
@@ -8122,18 +8122,27 @@ int DoSsParm (char *parmName, char *tkn)
 	if (expecting == Expecting(PARAMETER))
 		{
 		expecting = Expecting(EQUALSIGN);
+        negBurninss = NO;
 		}
 	else
 		{
 		if (!strcmp(parmName, "Burninss"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
-				expecting = Expecting(NUMBER);
+				expecting = Expecting(NUMBER) | Expecting(DASH);
+            else if (expecting == Expecting(DASH))
+                {
+                negBurninss = YES;
+                expecting = Expecting(NUMBER);
+                }
 			else if (expecting == Expecting(NUMBER))
 				{
 				sscanf (tkn, "%d", &tempI);
-			    chainParams.burninSS = tempI;
-				MrBayesPrint ("%s   Setting burnin for stepping-stone sampling to %ld\n", spacer, chainParams.burninSS);
+                if (negBurninss == NO)
+                    chainParams.burninSS = tempI;
+                else
+                    chainParams.burninSS = -tempI;
+				MrBayesPrint ("%s   Setting burnin for stepping-stone sampling to %d\n", spacer, chainParams.burninSS);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -8149,7 +8158,7 @@ int DoSsParm (char *parmName, char *tkn)
 				{
 				sscanf (tkn, "%d", &tempI);
 			    chainParams.numStepsSS = tempI;
-				MrBayesPrint ("%s   Setting number of steps in stepping-stone sampling to %ld\n", spacer, chainParams.numStepsSS);
+				MrBayesPrint ("%s   Setting number of steps in stepping-stone sampling to %d\n", spacer, chainParams.numStepsSS);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 
@@ -8157,7 +8166,7 @@ int DoSsParm (char *parmName, char *tkn)
 				return (ERROR);
 				}                
 			}
-         else if (!strcmp(parmName, "FromPrior"))
+        else if (!strcmp(parmName, "FromPrior"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
 				expecting = Expecting(ALPHA);
@@ -9469,7 +9478,6 @@ int DoSs (void)
 
     oldBurnin = chainParams.burninSS;;
     stepRelativeBurninSS = chainParams.relativeBurnin;
-
 
     chainParams.relativeBurnin = YES;
  
@@ -31114,7 +31122,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
 
 #if 0
-/* Move_ParsTBR //chi */
+/* Move_ParsTBR */
 int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {

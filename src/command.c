@@ -6775,7 +6775,7 @@ int DoSetParm (char *parmName, char *tkn)
 				{
 				sscanf (tkn, "%d", &tempI);
 				nPThreads = tempI;
-				MrBayesPrint ("%s   Setting Npthreads to %ld\n", spacer, nPThreads);
+				MrBayesPrint ("%s   Setting Npthreads to %d\n", spacer, nPThreads);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else 

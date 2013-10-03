@@ -772,7 +772,7 @@ treeConstruction:
 				if(q->anc->depth < q->depth)
 					{
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
-                    /* We should be careful with the trees generated under the fossilized birth-death prior! //chi note */
+                    /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
 					assert(0);
 					}
                 }
@@ -783,7 +783,7 @@ treeConstruction:
 				if(q->anc->age < q->age)
 					{
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
-                    /* We should be careful with the trees generated under the fossilized birth-death prior! //chi note */
+                    /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
 					assert(0);
 					}
                 }
@@ -1824,7 +1824,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 				{
 				sscanf (tkn, "%d", &tempI);
 				chainParams.chainBurnIn = tempI;
-				MrBayesPrint ("%s   Setting burnin to %ld\n", spacer, chainParams.chainBurnIn);
+				MrBayesPrint ("%s   Setting burnin to %d\n", spacer, chainParams.chainBurnIn);
 				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 				}
 			else
@@ -3130,7 +3130,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				else
 					{
 					sumtParams.numRuns = tempI;
-					MrBayesPrint ("%s   Setting sumt nruns to %ld\n", spacer, sumtParams.numRuns);
+					MrBayesPrint ("%s   Setting sumt nruns to %d\n", spacer, sumtParams.numRuns);
 					expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 					}
 				}
@@ -3153,7 +3153,7 @@ int DoSumtParm (char *parmName, char *tkn)
 				else
 					{
 					sumtParams.numTrees = tempI;
-					MrBayesPrint ("%s   Setting sumt ntrees to %ld\n", spacer, sumtParams.numTrees);
+					MrBayesPrint ("%s   Setting sumt ntrees to %d\n", spacer, sumtParams.numTrees);
 					expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
 					}
 				}
