@@ -8122,14 +8122,16 @@ int DoSsParm (char *parmName, char *tkn)
 	if (expecting == Expecting(PARAMETER))
 		{
 		expecting = Expecting(EQUALSIGN);
-        negBurninss = NO;
 		}
 	else
 		{
 		if (!strcmp(parmName, "Burninss"))
 			{
 			if (expecting == Expecting(EQUALSIGN))
+                {
+                negBurninss = NO;
 				expecting = Expecting(NUMBER) | Expecting(DASH);
+                }
             else if (expecting == Expecting(DASH))
                 {
                 negBurninss = YES;
