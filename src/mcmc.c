@@ -12931,12 +12931,12 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 			like = 0.0;
 			for (k=0; k<m->numGammaCats; k++)
 				for (j=0; j<nStates; j++)
-				  {
+                    {
 					like += (*(clP[k]++)) * bs[j];
 #ifdef DEBUG_OUTPUT
 					printf("char=%d cat=%d j=%d like %E\n",c, k,j,like);
 #endif
-				  }
+                    }
 			like *= freq;
 
 			/* check against LIKE_EPSILON (values close to zero are problematic) */

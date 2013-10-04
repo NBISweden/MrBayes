@@ -1514,7 +1514,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
                 if (tempD <= priorParams[0])
                     {
                     MrBayesPrint ("%s   Mean age must be larger than offset age.\n", spacer);
-                    MrBayesPrint ("%s   Note that fromm version 3.2.2, MrBayes uses offset and mean rather than\n", spacer);
+                    MrBayesPrint ("%s   Note that from version 3.2.2, MrBayes uses offset and mean rather than\n", spacer);
                     MrBayesPrint ("%s   offset and rate as the parameters for the offset exponential distribution.\n", spacer);
                     return (ERROR);
                     }
