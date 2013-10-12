@@ -10776,7 +10776,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 				/* Fill in lambda (cpp rate) ********************************************************************************************/
 				if (p->paramId == CPPRATE_EXP)
 					value[0] = (-(1.0/mp->cppRateExp) * log(1.0 - RandomNumber(seed)));
-				
 				else if (p->paramId == CPPRATE_FIX)
 					value[0] = mp->cppRateFix;
 				}
@@ -10795,10 +10794,8 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 				/* Fill in variance of relaxed clock lognormal **************************************************************************/
 				if (p->paramId == TK02VAR_UNI)
 					value[0] = RandomNumber(seed) * (mp->tk02varUni[1] - mp->tk02varUni[0]) + mp->tk02varUni[0];
-				
 				else if (p->paramId == TK02VAR_EXP)
 					value[0] =   (-(1.0/mp->tk02varExp) * log(1.0 - RandomNumber(seed)));
-				
 				else if (p->paramId == TK02VAR_FIX)
 					value[0] = mp->tk02varFix;
 				}
@@ -10811,10 +10808,8 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 				/* Fill in variance of relaxed clock lognormal **************************************************************************/
 				if (p->paramId == IGRVAR_UNI)
 					value[0] = RandomNumber(seed) * (mp->igrvarUni[1] - mp->igrvarUni[0]) + mp->igrvarUni[0];
-				
 				else if (p->paramId == IGRVAR_EXP)
 					value[0] =   (-(1.0/mp->igrvarExp) * log(1.0 - RandomNumber(seed)));
-				
 				else if (p->paramId == IGRVAR_FIX)
 					value[0] = mp->igrvarFix;
 				}
@@ -10993,7 +10988,7 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
 		else if (tree->isClock == YES)
 			returnVal = InitClockBrlens (tree);
 		else
-			returnVal = InitBrlens (tree, 0.1);  // consider init with 0.01
+			returnVal = InitBrlens (tree, 0.02);
 
 		if( returnVal == ERROR )
 			return (ERROR);
@@ -14171,7 +14166,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		else
 			isSame = NO;
 		
-		/* Check to see if tk02 variance is inapplicable for either partition. */
+		/* Check to see if igr variance is inapplicable for either partition. */
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 	
 		}
@@ -14180,7 +14175,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		/* Check IGR relaxed clock branch rates for partitions 1 and 2. */
 	
 		/* Check if the model is parsimony for either partition. If so, then branch lengths do not apply (as parsimony is very
-		silly and doesn't take this information into account) and tk02 relaxed clock branch rates are inapplicable. */
+		silly and doesn't take this information into account) and igr relaxed clock branch rates are inapplicable. */
 		if (!strcmp(modelParams[part1].parsModel, "Yes"))
 			*isApplic1 = NO; 
 		if (!strcmp(modelParams[part2].parsModel, "Yes"))
@@ -17155,7 +17150,7 @@ int SetModelParams (void)
 	int			    c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
 	char		    tempCodon[15], tempMult[15], *tempStr,temp[30];
-    char static     *partString=NULL;/*mad static to avoid posible memory leak on return ERROR if it would be introduced later */ 
+    char static     *partString=NULL; /* mad static to avoid posible memory leak on return ERROR if it would be introduced later */ 
 	Param		    *p;
 	ModelParams     *mp;
     ModelInfo       *m;

@@ -780,14 +780,14 @@ int InitializeMrBayes (void)
 	strcpy(defaultModel.cppRatePr, "Exponential") ;	    /* prior on rate of CPP for relaxed clock   */
 	defaultModel.cppRateExp = 0.1;
 	defaultModel.cppRateFix = 1.0;
-	strcpy(defaultModel.cppMultDevPr, "Fixed") ;	/* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
+	strcpy(defaultModel.cppMultDevPr, "Fixed");	    /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
 	defaultModel.cppMultDevFix = 0.4;
-	strcpy(defaultModel.tk02varPr, "Exponential") ;	/* prior on nu parameter for BM rel clock */
+	strcpy(defaultModel.tk02varPr, "Exponential");	/* prior on nu parameter for BM rel clock */
 	defaultModel.tk02varExp = 10.0;
 	defaultModel.tk02varFix = 0.1;
 	defaultModel.tk02varUni[0] = 0.0;
 	defaultModel.tk02varUni[1] = 0.5;
-	strcpy(defaultModel.igrvarPr, "Exponential") ;	/* prior on variance increase parameter for IGR rel clock */
+	strcpy(defaultModel.igrvarPr, "Exponential");	/* prior on variance increase parameter for IGR rel clock */
 	defaultModel.igrvarExp = 10.0;
 	defaultModel.igrvarFix = 0.1;
 	defaultModel.igrvarUni[0] = 0.0;
@@ -977,7 +977,7 @@ int ReinitializeMrBayes (void)
 	/* chain parameters */
 	chainParams.numGen = 1000000;                    /* number of MCMC cycles                         */
 	chainParams.sampleFreq = 500;                    /* frequency to sample chain                     */
-	chainParams.printFreq = 500;                     /* frequency to print chain                      */
+	chainParams.printFreq = 1000;                    /* frequency to print chain                      */
 	chainParams.swapFreq = 1;                        /* frequency of attempting swap of states        */
 	chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
     chainParams.isSS = NO;
@@ -1026,7 +1026,7 @@ int ReinitializeMrBayes (void)
 	chainParams.orderTaxa = NO;                      /* should taxa be ordered in output trees?       */
 	chainParams.append = NO;                         /* append to previous analysis?                  */
 	chainParams.autotune = YES;                      /* autotune?                                     */
-	chainParams.tuneFreq = 100;                      /* autotuning frequency                          */
+	chainParams.tuneFreq = 1000;                     /* autotuning frequency                          */
 	chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
 	chainParams.checkFreq = 100000;			         /* check-pointing frequency                      */
 	chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */

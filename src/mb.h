@@ -251,14 +251,14 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define	MAX_SITE_RATE			10.0f
 #define	MAX_GAMMA_CATS			20
 #define	MAX_GAMMA_CATS_SQUARED	400
-#define	BRLENS_MIN				1.0E-8f
+#define	BRLENS_MIN				0.00000001f  // 1E-8f
 #define	BRLENS_MAX				100.0f
 /* BRLENS_MIN must be bigger than TIME_MIN */
 #define TIME_MIN                1.0E-12f
 #define TIME_MAX                100.0f
-#define	RELBRLENS_MIN			0.00000001f
+#define	RELBRLENS_MIN			0.00000001f  // 1E-8f
 #define	RELBRLENS_MAX			100.0f
-#define KAPPA_MIN				0.01f
+#define KAPPA_MIN				0.001f
 #define	KAPPA_MAX				10000.0f
 #define	GROWTH_MIN				0.000001f
 #define	GROWTH_MAX				1000000.0f
@@ -341,7 +341,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_SYMPIINDEX		 65
 #define	ALLOC_POSSELPROBS		 66
 #define	ALLOC_PBF				 68
-#define ALLOC_LOCALTAXONCALIBRATION		 69
+#define ALLOC_LOCALTAXONCALIBRATION	 69
 #define	ALLOC_SPR_PARSSETS		 72
 #define ALLOC_PFCOUNTERS         74
 #define ALLOC_FILEPOINTERS       75
@@ -584,46 +584,46 @@ typedef struct
 /* struct for holding model parameter info for the mcmc run */
 typedef struct param
 	{
-	int				index;			    /* index to the parameter (0, 1, 2, ...)        */
-	int				paramType;		    /* the type of the parameter					*/
-	int				paramId;		    /* unique ID for parameter x prior combination	*/
-	MrBFlt			*values;		    /* main values of parameter						*/
-	MrBFlt			*subValues;		    /* subvalues of parameter						*/
-	int			    *intValues;		    /* integer values (model index/growth fxn)      */
-	int				nValues;		    /* number of values								*/
-	int				nSubValues;		    /* number of subvalues							*/
-	int				nIntValues;		    /* number of intvalues						    */
-    MrBFlt          min;                /* minimum value of parameter                   */
-    MrBFlt          max;                /* maximum value of parameter                   */
-	int				*relParts;		    /* pointer to relevant divisions				*/
-	int				nRelParts;		    /* number of relevant divisions					*/
-	int				upDate;			    /* update flag (for copying)					*/
-	struct param	**subParams;	    /* pointers to subparams (for topology)			*/
-	int				nSubParams;		    /* number of subparams							*/
-	Tree			**tree;			    /* pointer to tree ptrs (for brlens & topology) */
-	int				treeIndex;		    /* index to first tree in mcmcTree				*/
-    int             hasBinaryStd;       /* has binary standard chars                    */
-	int				*sympiBsIndex;	    /* pointer to sympi bsIndex (std chars)			*/
-	int				*sympinStates;	    /* pointer to sympi nStates (std chars)			*/
-	int				*sympiCType;	    /* pointer to sympi cType (std chars)			*/
-	int				nSympi;			    /* number of sympis								*/
-	int				printParam;         /* whether parameter should be printed          */
-	int				nPrintSubParams;    /* number of subparams that should be printed   */
-	char			*paramHeader;       /* a string holding header for param values		*/
-	char			*name;              /* string holding name of parameter				*/
-	char			*paramTypeName;	    /* pointer to description of parameter type     */
-	int				checkConstraints;   /* is tree parameter constrained?             */
-	int				fill;			    /* flags whether the parameter should be filled */
-	int				nStdStateFreqs;     /* number of std state frequencies				*/
-	MrBFlt			*stdStateFreqs;     /* pointer to std state frequencies				*/
-	int				**nEvents;		    /* number of branch events for Cpp model        */
-                                        /* nEvents[0..2*numCains][0..numNodes=2*numTaxa]*/
-	MrBFlt			***position;	    /* event positions for Cpp relaxed clock model  */
-	MrBFlt			***rateMult;	    /* rate multipliers for Cpp relaxed clock model */
-    int             affectsLikelihood;  /* does parameter directly influence likelihood? */
-    MrBFlt*         priorParams;        /* pointer to the prior parameters              */
-    LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                       */
-    LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function         */
+	int				index;			    /* index to the parameter (0, 1, 2, ...)          */
+	int				paramType;		    /* the type of the parameter					  */
+	int				paramId;		    /* unique ID for parameter x prior combination	  */
+	MrBFlt			*values;		    /* main values of parameter						  */
+	MrBFlt			*subValues;		    /* subvalues of parameter                         */
+	int			    *intValues;		    /* integer values (model index/growth fxn)        */
+	int				nValues;		    /* number of values								  */
+	int				nSubValues;		    /* number of subvalues							  */
+	int				nIntValues;		    /* number of intvalues						      */
+    MrBFlt          min;                /* minimum value of parameter                     */
+    MrBFlt          max;                /* maximum value of parameter                     */
+	int				*relParts;		    /* pointer to relevant divisions				  */
+	int				nRelParts;		    /* number of relevant divisions					  */
+	int				upDate;			    /* update flag (for copying)					  */
+	struct param	**subParams;	    /* pointers to subparams (for topology)			  */
+	int				nSubParams;		    /* number of subparams							  */
+	Tree			**tree;			    /* pointer to tree ptrs (for brlens & topology)   */
+	int				treeIndex;		    /* index to first tree in mcmcTree				  */
+    int             hasBinaryStd;       /* has binary standard chars                      */
+	int				*sympiBsIndex;	    /* pointer to sympi bsIndex (std chars)			  */
+	int				*sympinStates;	    /* pointer to sympi nStates (std chars)			  */
+	int				*sympiCType;	    /* pointer to sympi cType (std chars)			  */
+	int				nSympi;			    /* number of sympis								  */
+	int				printParam;         /* whether parameter should be printed            */
+	int				nPrintSubParams;    /* number of subparams that should be printed     */
+	char			*paramHeader;       /* a string holding header for param values		  */
+	char			*name;              /* string holding name of parameter				  */
+	char			*paramTypeName;	    /* pointer to description of parameter type       */
+	int				checkConstraints;   /* is tree parameter constrained?                 */
+	int				fill;			    /* flags whether the parameter should be filled   */
+	int				nStdStateFreqs;     /* number of std state frequencies				  */
+	MrBFlt			*stdStateFreqs;     /* pointer to std state frequencies				  */
+	int				**nEvents;		    /* number of branch events for Cpp model          */
+                                        /* nEvents[0..2*numCains][0..numNodes=2*numTaxa]  */
+	MrBFlt			***position;	    /* event positions for Cpp relaxed clock model    */
+	MrBFlt			***rateMult;	    /* rate multipliers for Cpp relaxed clock model   */
+    int             affectsLikelihood;  /* does parameter directly influence likelihood?  */
+    MrBFlt*         priorParams;        /* pointer to the prior parameters                */
+    LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                         */
+    LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function                   */
 	} Param;
 
 

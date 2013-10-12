@@ -1684,9 +1684,22 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 {
                 brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
 			    brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
+                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
+                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
+                    {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                    }
                 }
             if (p->anc->anc != NULL)
+                {
                 brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[p->anc->index])/2.0;
+                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
+                    {
+                    abortMove = YES;
+                    return (NO_ERROR);
+                    }
+                }
 			}
 		else if (subParm->paramType == P_IGRBRANCHLENS)
 			{
@@ -1696,8 +1709,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
 			
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength   /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-			    (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength  /igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
+			    (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
 			if (p->anc->anc != NULL)
                 (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
@@ -1741,8 +1754,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
             }
-		}
-
+        }
+    
 #if defined (DEBUG_CSLIDER)
 	printf ("After node slider (gene tree):\n");
 	printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
@@ -1871,8 +1884,4 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
     }
     printf("\n");
 }
-
-
-
-
 

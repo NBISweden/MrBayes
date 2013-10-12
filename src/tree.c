@@ -7472,3 +7472,4 @@ void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
 			}
 		}
 }
+

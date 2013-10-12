@@ -1939,5 +1939,3 @@ int WantTo (const char *msg)
     return NO;
 }
 
-
-

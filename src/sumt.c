@@ -903,27 +903,27 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
 
     /* note that event positions are from top of branch (more recent, descendant tip) */
     ancRate = 1.0;
-//    if (t->eType[eSet] == CPPm)
-//        {
-        for (q=p; q->anc != NULL; q=q->anc)
+//  if (t->eType[eSet] == CPPm)
+//      {
+    for (q=p; q->anc != NULL; q=q->anc)
+        {
+        for (i=0; i<t->nEvents[eSet][p->index]; i++)
+            ancRate *= t->rateMult[eSet][p->index][i];
+        }
+    if (nEvents > 0)
+        {
+        branchRate = rate[0] * pos[0];
+        for (i=1; i<nEvents; i++)
             {
-            for (i=0; i<t->nEvents[eSet][p->index]; i++)
-                ancRate *= t->rateMult[eSet][p->index][i];
+            branchRate += (pos[i] - pos[i-1]);
+            branchRate *= rate[i];
             }
-        if (nEvents > 0)
-            {
-            branchRate = rate[0] * pos[0];
-	        for (i=1; i<nEvents; i++)
-                {
-                branchRate += (pos[i] - pos[i-1]);
-                branchRate *= rate[i];
-                }
-            branchRate += 1.0 - pos[nEvents-1];
-            branchRate *= ancRate;
-            }
-        else
-            branchRate = ancRate;
-//        }
+        branchRate += 1.0 - pos[nEvents-1];
+        branchRate *= ancRate;
+        }
+    else
+        branchRate = ancRate;
+//      }
 /*
     else if (t->eType[eSet] == CPPi)
         {

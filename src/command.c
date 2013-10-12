@@ -353,7 +353,7 @@ CmdType			commands[] =
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
             { 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-            { 38,             "Set",  NO,             DoSet, 22,               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+            { 38,             "Set",  NO,             DoSet, 21,               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
             { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
             { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
             { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
@@ -11368,14 +11368,15 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    strained branch lengths is 'exp(10)'.                        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For clock trees with calibrated external nodes, MrBayes also \n");
-        MrBayesPrint ("                    offers the fossilized birth-death prior:'clock:fossilization'\n");
+        MrBayesPrint ("                    offers the fossilized birth-death prior: 'fossilization'.    \n");
         MrBayesPrint ("                    If 'SampleStrat' is set to 'fossiltip', it assumes that upon \n");
         MrBayesPrint ("                    sampling the lineage is dead and won't produce descendants,  \n");
         MrBayesPrint ("                    meaning each fossil sample is a tip. If 'SampleStrat' is set \n");
         MrBayesPrint ("                    to 'random' (default), fossils are sampled randomaly along   \n");
-        MrBayesPrint ("                    the birth-death tree with a constant rate (Stadler, 2010).   \n");
-        MrBayesPrint ("                    Fossils can be tips, or ancestors of other fossils and/or    \n");
-        MrBayesPrint ("                    extant taxa.                                                 \n");
+        MrBayesPrint ("                    the birth-death tree with a constant rate (Stadler 2010),    \n");
+        MrBayesPrint ("                    meaning fossils can be tips or ancestors.                    \n");
+        MrBayesPrint ("                    See also 'Speciationpr', 'Extinctionpr', 'Fossilizationpr',  \n");
+        MrBayesPrint ("                    'SampleStrat' for more information.                          \n");
         MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior probability distribution  \n");
 		MrBayesPrint ("                    on the tree age when a uniform prior is used on the branch   \n");
@@ -11448,17 +11449,21 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    This parameter is only relevant if the fossilized birth-death\n");
         MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
-		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species         \n");
-		MrBayesPrint ("                    where sampled in the analysis. This is used with the         \n");
-		MrBayesPrint ("                    birth-death prior on trees (see Höhna et al, 2011).          \n");
-        MrBayesPrint ("                    It also sets the sampling strategy of fossils for the        \n");
-        MrBayesPrint ("                    fossilized birth-death prior (see Stadler 2010 and Zhang ?). \n");
-        MrBayesPrint ("                    If it is set to 'fossiltip', it assumes that upon sampling   \n");
-        MrBayesPrint ("                    the lineage is dead and won't produce descendants, meaning   \n");
-        MrBayesPrint ("                    each fossil sample is a tip. If it is set to 'random'        \n");
-        MrBayesPrint ("                    (default), fossils are sampled randomaly along the birth     \n");
-        MrBayesPrint ("                    death tree with a constant rate (Stadler, 2010). Fossils can \n");
-        MrBayesPrint ("                    be tips, or ancestors of other fossils and/or extant taxa.   \n");
+		MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species were    \n");
+		MrBayesPrint ("                    sampled in the analysis. For the birth-death prior, 'birth-  \n");
+		MrBayesPrint ("                    death' (Höhna et al. 2011), three strategies: 'random',      \n");
+        MrBayesPrint ("                    'diversity' and 'cluster' sampling can be used for extant    \n");
+        MrBayesPrint ("                    taxa. No extinct sample (fossil) is allowed in this prior.   \n");
+        MrBayesPrint ("                    For data with extant and extinct samples, use 'fossilization'\n");
+        MrBayesPrint ("                    fossilized birth-death prior (Stadler 2010; Zhang et al.).   \n");
+        MrBayesPrint ("                    For the fossilized birth-death prior, 'fossiltip' assumes    \n");
+        MrBayesPrint ("                    extant taxa are sampled randomly, while extinct taxa (fossil)\n");
+        MrBayesPrint ("                    are sampled as tips, meaning upon sampling the lineage is    \n");
+        MrBayesPrint ("                    dead and won't produce any descendant. So fossils are all at \n");
+        MrBayesPrint ("                    tips. 'random' (default) assumes extant taxa are sampled     \n");
+        MrBayesPrint ("                    randomly with rate rho, while fossils are sampled on the     \n");
+        MrBayesPrint ("                    birth-death tree with a constant rate, psi (Stadler 2010).   \n");
+        MrBayesPrint ("                    So fossils can be tips, or ancestors of other samples.       \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset samplestrat = random                                \n");
         MrBayesPrint ("                       prset samplestrat = diversity                             \n");
@@ -11467,8 +11472,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
 		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
-		MrBayesPrint ("                    prior on trees (see Yang and Rannala, 1997),                 \n");
-        MrBayesPrint ("                    and the fossilized b-d prior (rho, see Stadler, 2010).       \n");
+		MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009), and the\n");
+        MrBayesPrint ("                    fossilized birth-death prior (rho, see Stadler 2010).        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset sampleprob = <number>                               \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11557,20 +11562,21 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Clockvarpr    -- This parameter allows you to specify the type of clock you   \n");
 		MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
 		MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
-		MrBayesPrint ("                    constant throughout the tree. You can also use 'cpp', which  \n");
-		MrBayesPrint ("                    invokes a relaxed clock model where the rate evolves         \n");
-		MrBayesPrint ("                    according to a Compound Poisson Process (CPP) model (see     \n");
-		MrBayesPrint ("                    Huelsenbeck et al., 2000) or 'tk02', which invokes the       \n");
-		MrBayesPrint ("                    Brownian Motion (TK02) model described by Thorne and Kishino \n");
-		MrBayesPrint ("                    (2002). Finally, you can use a model where each branch has an\n");
-        MrBayesPrint ("                    independent rate drawn from a scaled gamma distribution, such\n");
-        MrBayesPrint ("                    that there is a specified variance in the effective height of\n");
-        MrBayesPrint ("                    the tree in the prior, the Independent Gamma Rate (IGR)      \n");
-        MrBayesPrint ("                    model (LePage et al., 2007). Each of the relaxed clock models\n");
-		MrBayesPrint ("                    has additional parameters with priors. For the CPP model, it \n");
-		MrBayesPrint ("                    is 'cppratepr' and 'cppmultdevpr'; for the TK02 model, it is \n");
-        MrBayesPrint ("                    'tk02varpr'; for the IGR  model, it is 'igrvarpr'. The       \n");
-		MrBayesPrint ("                    'clockvarpr' parameter is only relevant for clock trees.     \n");
+		MrBayesPrint ("                    constant throughout the tree. For relaxed clock models, you  \n");
+        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr'; or 'mixed' (of tk02 and igr).  \n");
+        MrBayesPrint ("                    'cpp' invokes a relaxed clock model where the rate evolves   \n");
+		MrBayesPrint ("                    according to a Compound Poisson Process (CPP) (Huelsenbeck   \n");
+		MrBayesPrint ("                    et al., 2000).                                               \n");
+		MrBayesPrint ("                    'tk02' invokes the Brownian Motion model described by Thorne \n");
+		MrBayesPrint ("                    and Kishino (2002). [autocorrelated lognormal distributions] \n");
+		MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate (IGR) model where   \n");
+        MrBayesPrint ("                    each branch has an independent rate drawn from a scaled gamma\n");
+        MrBayesPrint ("                    distribution (LePage et al., 2007).                          \n");
+        MrBayesPrint ("                    Each of the relaxed clock models has additional parameters   \n");
+		MrBayesPrint ("                    with priors. For the CPP model, it is 'cppratepr' and        \n");
+		MrBayesPrint ("                    'cppmultdevpr'; for the TK02 model, it is 'tk02varpr'; for   \n");
+        MrBayesPrint ("                    the IGR  model, it is 'igrvarpr'.                            \n");
+		MrBayesPrint ("                    The 'clockvarpr' parameter is only relevant for clock trees. \n");
 		MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For backward compatibility, 'bm' is allowed as a synonym of  \n");
         MrBayesPrint ("                    'tk02', and 'ibr' as a synonym of 'igr'.                     \n");
@@ -13031,8 +13037,9 @@ else if (!strcmp(helpTkn, "Set"))
 	    MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
         MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
 	    MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-	    MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
-        MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
+	    MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
+        MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
+        MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
 	    MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
 		MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n"); 
 		MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n"); 
@@ -13040,10 +13047,11 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
 		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
-		MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n"); 
-		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n"); 
-		MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n"); 
-        MrBayesPrint ("   Fossilizationrates -- Fossilization rates for fossilized birth-death process  \n");
+		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
+    //  MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+    //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
+    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
 	    MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -13077,8 +13085,9 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
         MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
         MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-        MrBayesPrint ("      Speciationrates -- Speciation rates for birth-death process                \n");
-        MrBayesPrint ("      Extinctionrates -- Extinction rates for birth-death process                \n");
+        MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
+        MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
+        MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
         MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
         MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n");
         MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n");
@@ -13086,10 +13095,11 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n");
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
-        MrBayesPrint ("      TK02branchrates -- Branch rates of TK02 relaxed clock model                \n");
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Igrbranchlens   -- Branch lengths of IGR relaxed clock model               \n");
-        MrBayesPrint ("   Fossilizationrates -- Fossilization rates for fossilized birth-death process  \n");
+    //  MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+    //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
+    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
 	    MrBayesPrint ("   For example,                                                                  \n");
 	    MrBayesPrint ("                                                                                 \n");
@@ -15082,23 +15092,23 @@ void SetUpParms (void)
 	PARAM   (255, "Ibrvar",         DoLinkParm,        "\0");
 	PARAM   (256, "Ibrbranchlens",  DoLinkParm,        "\0");
     PARAM   (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
-	PARAM   (258, "Filename",       DoSumSsParm,        "\0");
-	PARAM   (259, "Burnin",         DoSumSsParm,        "\0");
-	PARAM   (260, "Nruns",	        DoSumSsParm,        "\0");
-	PARAM   (261, "Allruns",	    DoSumSsParm,        "Yes|No|\0");
-	PARAM   (262, "Askmore",   		DoSumSsParm,        "Yes|No|\0");
-	PARAM   (263, "Relburnin",	    DoSumSsParm,        "Yes|No|\0");
-	PARAM   (264, "Burninfrac",	    DoSumSsParm,        "\0");
-	PARAM   (265, "Discardfrac",	DoSumSsParm,        "\0");
-	PARAM   (266, "Smoothing",		DoSumSsParm,        "\0");
-	PARAM   (267, "Steptoplot",		DoSumSsParm,        "\0");	
-    PARAM   (268, "Precision",      DoSetParm,          "\0");
-	PARAM   (269, "Fossilizationpr",DoPrsetParm,       "Beta|Fixed|\0");
-    PARAM   (270, "Fossilizationrate", DoLinkParm,      "\0");
+	PARAM   (258, "Filename",       DoSumSsParm,       "\0");
+	PARAM   (259, "Burnin",         DoSumSsParm,       "\0");
+	PARAM   (260, "Nruns",	        DoSumSsParm,       "\0");
+	PARAM   (261, "Allruns",	    DoSumSsParm,       "Yes|No|\0");
+	PARAM   (262, "Askmore",   		DoSumSsParm,       "Yes|No|\0");
+	PARAM   (263, "Relburnin",	    DoSumSsParm,       "Yes|No|\0");
+	PARAM   (264, "Burninfrac",	    DoSumSsParm,       "\0");
+	PARAM   (265, "Discardfrac",	DoSumSsParm,       "\0");
+	PARAM   (266, "Smoothing",		DoSumSsParm,       "\0");
+	PARAM   (267, "Steptoplot",		DoSumSsParm,       "\0");
+    PARAM   (268, "Precision",      DoSetParm,         "\0");
+	PARAM   (269, "Fossilizationpr",   DoPrsetParm,    "Beta|Fixed|\0");
+    PARAM   (270, "Fossilizationrate", DoLinkParm,     "\0");
 	PARAM   (271, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
 
-	/* NOTE: If a change is made to the parameter table, make certain you
-	         change the number of elements (now 272; needs to be one more than last index) in paramTable[] at the top of this file. */
+	/* NOTE: If a change is made to the parameter table, make certain you change
+            NUMPARAMS (now 272; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 
@@ -15695,5 +15705,4 @@ char WhichStand (int x)
 		return (' ');
 		
 }
-
 
