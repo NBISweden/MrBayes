@@ -45,4 +45,3 @@
 /* Define to enable threads in BEAGLE library */
 #undef THREADS_ENABLED
 
-/* PAUL: "#if defined READLINE_LIBRARY" (sax?) */
