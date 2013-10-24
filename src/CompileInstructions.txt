@@ -5,8 +5,8 @@ Content
 1) How to compile MrBayes from source
 2) Configuration options
 3) Troubleshooting for Mac
-4) Further references
-
+4) Tips for Windows
+5) Further references
 
 How to compile MrBayes from source
 ==================================
@@ -25,14 +25,13 @@ the source code, then execute the following commands in your terminal (without '
 > ./configure 
 > make
 
-The compilation will produce an executable in the source directory with the name
-"mb". To start the program, simply type
+The compilation will produce an executable in the source directory with the name "mb". 
+To start the program, simply type
 
 > ./mb
 
-For more convenient access to the program, you may want to install it in your
-path, in which case you can invoke the program from any directory on your
-computer by simply typing
+For more convenient access to the program, you may want to install it in your path, in
+which case you can invoke the program from any directory by simply typing
 
 > mb
 
@@ -47,51 +46,51 @@ Configuration options
 =====================
 
 1) BEAGLE
-MrBayes 3.2 uses the BEAGLE library by default. You should either install the
-BEAGLE library from http://code.google.com/p/beagle-lib/ or disable use of the
-library by invoking the configure script with option "--with-beagle=no". i.e. 
+MrBayes 3.2 uses the BEAGLE library by default. You should either install the BEAGLE 
+library from "http://code.google.com/p/beagle-lib/" or disable use of the library by 
+invoking the configure script with option "--with-beagle=no". i.e. 
 
 > ./configure --with-beagle=no
 
 Note: without beagle library MrBayes may run slower.
 
 2) SSE code
-All main-stream modern processors have support for SSE instructions 
-which are utilized by default by MrBayes 3.2 in order to substantially speed up
-execution. If you experience problems with the SSE code, you can disable the use of
-SSE code by invoking the configure script with the option "--enable-sse=no", i.e.
+All main-stream modern processors have support for SSE instructions which are utilized 
+by default by MrBayes 3.2 in order to substantially speed up execution. If you 
+experience problems with the SSE code, you can disable the use of SSE code by invoking
+the configure script with the option "--enable-sse=no", i.e.
 
 > ./configure --enable-sse=no
 
 If you use SSE code, you may encounter problems with older compilers. Specifically,
 if you are getting errors about undefined references to "posix_memalign", you should
-update your compiler. You should have libc library of at least version 2.1.91 for
-the SSE code to compile.
+update your compiler. You should have libc library of at least version 2.1.91 for the 
+SSE code to compile.
 
 3) MPI version
 To make use of MPI code to parallelize MrBayes computations across several processors
-or CPU cores, you should invoke the configure script with the option
-"--enable-mpi=yes". The MPI code can be used both together with the Beagle library
-and the SSE code. Your computer also needs to have an MPI implementation installed,
-for instance OpenMPI or MPICH, and the environment needs to be set up to run MPI
-programs. To install an MPI version of MrBayes using BEAGLE and SSE, use:
+or CPU cores, you should invoke the configure script with the option "--enable-mpi=yes".
+The MPI code can be used both together with the Beagle library and the SSE code. Your 
+computer also needs to have an MPI implementation installed, for instance OpenMPI or 
+MPICH, and the environment needs to be set up to run MPI programs. To install an MPI 
+version of MrBayes using BEAGLE and SSE, use:
 
 > autoconf
 > ./configure --enable-mpi=yes
 > make
 
-The resulting program will be called mb. A typical run might be started with a
-command like:
+The resulting program will be called mb. A typical run might be started with a command
+like:
 
 > mpirun -np 8 mb data.nex > output.txt &
 
 This will run MrBayes on eight processors or cores (-np 8), using the data file
 "data.nex" as input. The output will not be printed to screen but to the file
-"output.txt" (> output.txt). The ampersand (&) causes the control to return
-immediately to the console, while the job will continue running in the background.
+"output.txt" (> output.txt). The ampersand (&) causes the control to return immediately
+to the console, while the job will continue running in the background.
 
-To examine the most recent output from the run, you might e.g. use the tail command
-of UNIX like this:
+To examine the most recent output from the run, you might e.g. use the tail command of
+UNIX like this:
 
 > tail -f output.txt
 
@@ -105,12 +104,12 @@ Troubleshooting for Mac
 
 Problem: > autoconf: command not found
 
-Solution: Xcode 4.5 or later no longer ships with autotools, including autoconf
-that is used by MrBayes and most other open-source Unix software packages.
+Solution: Xcode 4.5 or later no longer ships with autotools, including autoconf that 
+is used by MrBayes and most other open-source Unix software packages.
 To install these tools, we recommend using HomeBrew, see below.
 
-Problem: The compilation process hangs on model.c. For instance, this happens
-when using the compiler that ships with Xcode 4.6 (in the command line tools).
+Problem: The compilation process hangs on model.c. For instance, this happens when 
+using the compiler that ships with Xcode 4.6 (in the command line tools).
 
 Solution: Install newer command line tools (e.g., in Xcode 5), or install a different
 gcc version for Mac using HomeBrew, see below.
@@ -130,17 +129,16 @@ To install the most recent version of openmpi, use:
 
 > brew install openmpi --devel
 
-The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic
-to compile MrBayes (hangs on model.c). Please update to Xcode 5 or install newer
-command line tools. 
-To install an alternative gcc using HomeBrew, use the following commands:
+The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic to 
+compile MrBayes (hangs on model.c). Please update to Xcode 5 or install newer command 
+line tools. To install an alternative gcc using HomeBrew, use the following commands:
 
 > brew tap homebrew/versions
 > brew install gcc48
 
 Check the web for the latest version of gcc. HomeBrew does not allow you to just say
-gcc, you need to specify the version number you want. After installation, you might need
-to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
+gcc, you need to specify the version number you want. After installation, you might 
+need to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
 For instance, you can use the following commands:
 
 > sudo mv -i /usr/bin/gcc /usr/bin/gcc-alt
@@ -150,6 +148,36 @@ Simply, you can even install MrBayes using HomeBrew:
 
 > brew tap homebrew/science
 > brew install mrbayes
+
+
+Tips for Windows
+================
+To compile MrBayes in Windows is relatively not straightforward. You can use Microsoft 
+Visual Studio to open and build one of the projects in the "projects" folder, after
+downloading all the files from SourceForge (e.g., Download Snapshot).
+http://sourceforge.net/p/mrbayes/code/HEAD/tree/
+
+Here we introduce another way to compile using MinGW (http://www.mingw.org/). You need
+to download the installer from "https://sourceforge.net/projects/mingw/files/Installer/"
+and install it in Windows. Then double click the shortcut on your desktop (or from 
+start menu) to open "MinGW Installation Manager". 
+Click the square before "mingw32-base" under "Basic Setup" and choose "Mark for 
+Installation", then choose "Apply Changes" from the "Installation" menu. 
+
+Additionally, add "C:\MinGW\bin" (the default folder) to your system path in setting
+"Environment Variables" (please Google :))
+
+Open Command Prompt (cmd.exe), "cd" to the src folder you just downloaded. E.g., 
+
+> cd Desktop\MrBayes\trunk\src
+
+and use the following command to compile:
+
+> gcc -O3 -ffast-math -o mb bayes.c best.c command.c mb.c mbbeagle.c mbmath.c mcmc.c 
+                         model.c plot.c sump.c sumt.c tree.c utils.c -lm
+
+An executable named "mb.exe" will be generated in the same folder, if everything
+goes smoothly.
 
 
 Further references
