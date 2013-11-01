@@ -100,6 +100,6 @@ void      Unmark (TreeNode *p);
 void      UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate);
 void      WriteEventTree (TreeNode *p, int chain, Param *param);
 void      WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int printAll);
+void      WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int showBrlens, int isRooted);
 void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
-void      WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlens, int isRooted);

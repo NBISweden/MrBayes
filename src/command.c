@@ -65,7 +65,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define	NUMCOMMANDS					    61  /* Note: NUMCOMMANDS gives the total number  */
 											/*       of commands in the program          */
-#define	NUMPARAMS						272
+#define	NUMPARAMS						275
 #define PARAM(i, s, f, l)				p->string = s;    \
 										p->fp = f;        \
 										p->valueList = l; \
@@ -334,7 +334,8 @@ CmdType			commands[] =
             { 19,          "Format",  NO,          DoFormat,  7,                                                                             {6,7,8,9,10,219,220},        4,                     "Defines character format in data block", IN_FILE, SHOW },
             { 20,            "Help", YES,            DoHelp,  1,                                                                                             {50},    16416,                  "Provides detailed description of commands",  IN_CMD, SHOW },
             { 21,         "Include", YES,         DoInclude,  1,                                                                                             {46},    49152,                                             "Includes sites",  IN_CMD, SHOW },
-            { 22,            "Link",  NO,            DoLink, 28,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,270},    4,               "Links parameters across character partitions",  IN_CMD, SHOW },
+            { 22,            "Link",  NO,            DoLink, 30,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,
+                                                                                                                                                     270,273,274},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
             { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,	       "Manual",  NO,          DoManual,  1,								    														{126},       36,				  "Prints a command reference to a text file",  IN_CMD, SHOW },
@@ -348,7 +349,7 @@ CmdType			commands[] =
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
             { 33,           "Prset",  NO,           DoPrset, 43,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
-                                                                                                    168,172,173,174,183,184,185,218,241,246,247,251,254, 269,271},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
+                                                                                                 168,172,173,174,183,184,185,218,241,246,247,251,254,269,271,272},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,															{122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
@@ -375,7 +376,8 @@ CmdType			commands[] =
             { 55,       "Taxlabels", YES,       DoTaxlabels,  1,                                                                                            {228},    49152,                                       "Defines taxon labels", IN_FILE, SHOW },
             { 56,       "Translate", YES,       DoTranslate,  1,                                                                                             {83},    49152,                         "Defines alternative names for taxa", IN_FILE, SHOW },
             { 57,            "Tree",  NO,            DoTree,  1,                                                                                             {79},        4,                                             "Defines a tree", IN_FILE, SHOW },
-            { 58,          "Unlink",  NO,          DoUnlink, 28,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,270},    4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
+            { 58,          "Unlink",  NO,          DoUnlink, 30,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,
+                                                                                                                                                     270,273,274},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
             { 59,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
             { 60,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
 		/* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
@@ -8537,9 +8539,11 @@ int DoTreeParm (char *parmName, char *tkn)
     
           tree <name> = [&R] <newick-description>;
           tree <name> = [&U] <newick-description>;
-          tree <name> [&E CppEvents{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents{1,2,5} 2:(0.10 1.11,0.83 3.17)],2:0.021):0.038,3:0.059);
-          tree <name> [&B TK02BranchRates{1,2,5}] = [&R] [&clockrate = 1.23] ((1:0.021[&B TK02BranchRates{1,2,5} 1.12],2:0.021[&B TK02BranchRates{1,2,5}...
-       
+          tree <name> [&E CppEvents] = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents 2: (0.10 1.11,0.83 3.17)],...
+          tree <name> [&B TK02Brlens] = [&R] [&clockrate = 1.23] ((1:0.021[&B TK02Brlens 0.019],...
+          tree <name> [&B IgrBrlens] = [&R] [&clockrate = 1.23] ((1:0.021[&B IgrBrlens 0.019],...
+          tree <name> [&B MixedBrlens 0] = [&R] [&clockrate = 1.23] ((1:0.021[&B MixedBrlens 0.019],...
+     
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
     */
@@ -11457,23 +11461,31 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    For data with extant and extinct samples, use 'fossilization'\n");
         MrBayesPrint ("                    fossilized birth-death prior (Stadler 2010; Zhang et al.).   \n");
         MrBayesPrint ("                    For the fossilized birth-death prior, 'fossiltip' assumes    \n");
-        MrBayesPrint ("                    extant taxa are sampled randomly, while extinct taxa (fossil)\n");
-        MrBayesPrint ("                    are sampled as tips, meaning upon sampling the lineage is    \n");
-        MrBayesPrint ("                    dead and won't produce any descendant. So fossils are all at \n");
-        MrBayesPrint ("                    tips. 'random' (default) assumes extant taxa are sampled     \n");
-        MrBayesPrint ("                    randomly with rate rho, while fossils are sampled on the     \n");
-        MrBayesPrint ("                    birth-death tree with a constant rate, psi (Stadler 2010).   \n");
-        MrBayesPrint ("                    So fossils can be tips, or ancestors of other samples.       \n");
+        MrBayesPrint ("                    extant taxa are sampled randomly, and extinct taxa (fossils) \n");
+        MrBayesPrint ("                    are sampled with constant rate and upon sampling the lineage \n");
+        MrBayesPrint ("                    is dead and won't produce any descendant. So fossils are all \n");
+        MrBayesPrint ("                    at tips. Except 'fossiltip', the following strategies allow  \n");
+        MrBayesPrint ("                    fossils also being ancestors of other samples.               \n");
+        MrBayesPrint ("                    'random' (default) assumes extant taxa are sampled randomly  \n");
+        MrBayesPrint ("                    with rate rho, while fossils are sampled on the birth-death  \n");
+        MrBayesPrint ("                    tree with a constant rate, psi (Stadler 2010).               \n");
+        MrBayesPrint ("                    'fossilslice' assumes that fossils are sampled on the tree   \n");
+        MrBayesPrint ("                    with a constant rate psi, while with <m> slice samping events\n");
+        MrBayesPrint ("                    each happens at time <t_i> with rate <rho_i>, extant taxa are\n");
+        MrBayesPrint ("                    sampled randomly with rate rho (set in sampleprob).          \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset samplestrat = random                                \n");
         MrBayesPrint ("                       prset samplestrat = diversity                             \n");
         MrBayesPrint ("                       prset samplestrat = cluster                               \n");
         MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");
+        MrBayesPrint ("                       prset samplestrat = fossilslice                           \n");
+        MrBayesPrint ("                                           <m>:<t_1> <rho_1>,...,<t_m> <rho_m>   \n");
         MrBayesPrint ("                                                                                 \n");
 		MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
 		MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
-		MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009), and the\n");
-        MrBayesPrint ("                    fossilized birth-death prior (rho, see Stadler 2010).        \n");
+		MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009; Höhna   \n");
+        MrBayesPrint ("                    et al. 2011), and the fossilized birth-death prior (Stadler  \n");
+        MrBayesPrint ("                    2010, Zhang et al. 2014).                                    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset sampleprob = <number>                               \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11944,9 +11956,17 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
-			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
-            MrBayesPrint ("                    FossilTip                      \n");            
-			MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
+			MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/      \n");
+            MrBayesPrint ("                    FossilTip/FossilSlice        %s ", mp->sampleStrat);
+            if (!strcmp(mp->sampleStrat, "FossilSlice") && (mp->sampleFSNum > 0))
+                {
+                MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSRate[0]);
+                if (mp->sampleFSNum > 1)  MrBayesPrint (",...\n");
+                else                      MrBayesPrint ("\n");
+                }
+            else
+                MrBayesPrint ("\n");
+            MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
 			
 			MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
 			if (!strcmp(mp->popSizePr, "Uniform"))
@@ -11994,7 +12014,7 @@ int GetUserHelp (char *helpTkn)
 				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->clockRateGamma[0], mp->clockRateGamma[1]);
                 }
 
-			MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr          %s\n", mp->clockVarPr);
+			MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    %s\n", mp->clockVarPr);
 
 			MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
 			if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -12026,7 +12046,17 @@ int GetUserHelp (char *helpTkn)
                 assert (!strcmp(mp->igrvarPr,"Uniform"));
 				MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
                 }
-
+            
+            MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
+            if (!strcmp(mp->mixedvarPr, "Fixed"))
+                MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);
+            else if (!strcmp(mp->mixedvarPr,"Exponential"))
+                MrBayesPrint ("(%1.2lf)\n", mp->mixedvarExp);
+            else
+                {
+                assert (!strcmp(mp->mixedvarPr,"Uniform"));
+                MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->mixedvarUni[0], mp->mixedvarUni[1]);
+                }
 
 			MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
 			if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -12682,7 +12712,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Nowarnings         Yes/No                %s                                   \n", noWarn == YES ? "Yes" : "No");
         MrBayesPrint ("   Autoreplace        Yes/No                %s                                   \n", autoOverwrite == YES ? "Yes" : "No");
         MrBayesPrint ("   Quitonerror        Yes/No                %s                                   \n", quitOnError == YES ? "Yes" : "No");
-        MrBayesPrint ("   Sientific          Yes/No                %s                                   \n", scientific == YES ? "Yes" : "No");
+        MrBayesPrint ("   Scientific         Yes/No                %s                                   \n", scientific == YES ? "Yes" : "No");
         MrBayesPrint ("   Precision          <number>              %d                                   \n", precision);
 #if defined (BEAGLE_ENABLED)
         MrBayesPrint ("   Usebeagle          Yes/No                %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
@@ -13048,7 +13078,7 @@ else if (!strcmp(helpTkn, "Set"))
 		MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
 		MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
 		MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-    //  MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
     //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
@@ -13096,7 +13126,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-    //  MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
     //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
@@ -15019,7 +15049,7 @@ void SetUpParms (void)
 	PARAM   (182, "Swapseed",		DoSetParm,         "\0");
     PARAM   (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
 	PARAM   (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-	PARAM   (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Ibr|\0");
+	PARAM   (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Ibr|Mixed|\0");
 	PARAM   (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
 	PARAM   (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
 	PARAM	(188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -15077,11 +15107,11 @@ void SetUpParms (void)
 	PARAM   (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM   (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
 	PARAM   (242, "Igrvar",         DoLinkParm,        "\0");
-	PARAM   (243, "Igrbranchlens",  DoLinkParm,        "\0");
+	PARAM   (243, "Igrbranchrates", DoLinkParm,        "\0");
 	PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
-	PARAM   (245, "Speciespartition",DoSetParm,        "\0");
+	PARAM   (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-	PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|\0");
+	PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|FossilSlice|\0");
     PARAM   (248, "Burninss",       DoSsParm,          "\0");
     PARAM   (249, "Nsteps",         DoSsParm,          "\0");
     PARAM   (250, "Alpha",          DoSsParm,          "\0");
@@ -15106,9 +15136,12 @@ void SetUpParms (void)
 	PARAM   (269, "Fossilizationpr",   DoPrsetParm,    "Beta|Fixed|\0");
     PARAM   (270, "Fossilizationrate", DoLinkParm,     "\0");
 	PARAM   (271, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
+	PARAM   (272, "Mixedvarpr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+	PARAM   (273, "Mixedvar",       DoLinkParm,        "\0");
+	PARAM   (274, "Mixedbrchrates", DoLinkParm,        "\0");
 
 	/* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 272; one more than last index) at the top of this file. */
+            NUMPARAMS (now 275; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 

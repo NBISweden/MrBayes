@@ -1657,9 +1657,13 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
 			}
-		else if (subParm->paramType == P_TK02BRANCHRATES)
+		else if ( subParm->paramType == P_TK02BRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02) )
 			{
-			nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+			if (subParm->paramType == P_TK02BRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
 			tk02Rate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 
@@ -1700,10 +1704,14 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     return (NO_ERROR);
                     }
                 }
-			}
-		else if (subParm->paramType == P_IGRBRANCHLENS)
+            }
+		else if ( subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR) )
 			{
-			igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+			if (subParm->paramType == P_IGRBRANCHRATES)
+                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+            else
+                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
 			igrRate = GetParamVals (subParm, chain, state[chain]);
 			brlens = GetParamSubVals (subParm, chain, state[chain]);
 			

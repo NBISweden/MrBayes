@@ -281,9 +281,11 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define CPPLAMBDA_MIN           0.00001f
 #define CPPLAMBDA_MAX           100.0f
 #define TK02VAR_MIN	          	0.00001f
-#define TK02VAR_MAX             100000.0f
+#define TK02VAR_MAX             10000.0f
 #define IGRVAR_MIN	         	0.00001f
-#define IGRVAR_MAX              100000.0f
+#define IGRVAR_MAX              10000.0f
+#define MIXEDVAR_MIN	        0.00001f
+#define MIXEDVAR_MAX            10000.0f
 #define OMEGA_MAX               1000000.0f
 
 #define POS_MIN                 1E-25f
@@ -297,7 +299,7 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 
 #define	pos(i,j,n)				((i)*(n)+(j))
 
-#define	NUM_ALLOCS				 92
+#define	NUM_ALLOCS				 100
 
 #define	ALLOC_MATRIX			 0
 #define	ALLOC_CHARINFO			 2
@@ -356,13 +358,13 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define ALLOC_BEST               88
 #define	ALLOC_SPECIESPARTITIONS	 89
 #define	ALLOC_SS            	 90
-
+#define ALLOC_SAMPLEFOSSILSLICE  91
 
 #define	LINKED					0
 #define	UNLINKED				1
 
 /*paramType*/
-#define	NUM_LINKED				29
+#define	NUM_LINKED				31
 #define	P_TRATIO				0
 #define	P_REVMAT				1
 #define	P_OMEGA					2
@@ -387,16 +389,19 @@ typedef float CLFlt;		/* single-precision float used for cond likes (CLFlt) to i
 #define P_TK02VAR               21
 #define P_TK02BRANCHRATES	    22
 #define P_IGRVAR                23
-#define P_IGRBRANCHLENS         24
+#define P_IGRBRANCHRATES        24
 #define P_CLOCKRATE             25
 #define P_SPECIESTREE           26
 #define P_GENETREERATE          27
 #define P_FOSLRATE              28
-
+#define P_MIXEDVAR              29
+#define P_MIXEDBRCHRATES        30
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
-#define CPPm                    0       /* CPP rate multipliers */
-#define CPPi                    1       /* CPP independent rates */
+// #define CPPm                 0       /* CPP rate multipliers */
+// #define CPPi                 1       /* CPP independent rates */
+#define RCL_TK02                0
+#define RCL_IGR                 1       /* type of mixed relaxed clock model */
 
 #define MAX_NUM_USERTREES		200     /* maximum number of user trees MrBayes will read */
 #define	MAX_CHAINS				256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
@@ -772,7 +777,7 @@ typedef struct s_launch_struct
 #define IGRVAR_FIX                      130
 #define IGRVAR_EXP                      131
 #define IGRVAR_UNI                      132
-#define IGRBRANCHLENS					133
+#define IGRBRANCHRATES					133
 #define CLOCKRATE_FIX                   134
 #define CLOCKRATE_NORMAL                135
 #define CLOCKRATE_LOGNORMAL             136
@@ -782,7 +787,10 @@ typedef struct s_launch_struct
 #define GENETREERATEMULT_DIR            140
 #define GENETREERATEMULT_FIX            141
 #define REVMAT_MIX						142
-
+#define MIXEDVAR_FIX				    143
+#define MIXEDVAR_EXP				    144
+#define MIXEDVAR_UNI				    145
+#define MIXEDBRCHRATES					146
 
 #if defined (BEAGLE_ENABLED)
 #define	MB_BEAGLE_SCALE_ALWAYS			0
@@ -999,22 +1007,25 @@ typedef struct model
 	char		speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
 	char		unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
 	char		clockPr[100];         /* prior on branch if clock enforced                 */
-	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, tk02, igr, ...)   */
+	char		clockVarPr[100];      /* prior on clock rate variation (strict, cpp, tk02, igr, ...) */
 	char		nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
-	char		speciationPr[100];    /* prior on speciation rate                     */
+	char		speciationPr[100];    /* prior on speciation rate (net diversification)    */
 	MrBFlt		speciationFix;
 	MrBFlt		speciationUni[2];
 	MrBFlt		speciationExp;
-	char		extinctionPr[100];    /* prior on extinction rate                     */
+	char		extinctionPr[100];    /* prior on relative extinction rate (turnover)      */
 	MrBFlt		extinctionFix;
 	MrBFlt		extinctionBeta[2];
 //	MrBFlt		extinctionExp;
-    char		fossilizationPr[100]; /* prior on fossilization rate                  */
+    char		fossilizationPr[100]; /* prior on fossilization rate (sampling proportion) */
     MrBFlt		fossilizationFix;
     MrBFlt		fossilizationBeta[2];
-	char		sampleStrat[30];      /* taxon sampling strategy (for b-d process)    */
-	MrBFlt		sampleProb;           /* taxon sampling fraction (for b-d process)    */
-	Calibration treeAgePr;            /* prior on tree age for uniform clock trees    */
+	char		sampleStrat[100];     /* taxon sampling strategy (for b-d process)         */
+    int         sampleFSNum;          /* number of fossil slice sampling events (m) [is (m-1) in Stadler et al. 2013] */
+    MrBFlt     *sampleFSTime;         /* fossil slice sampling times (t_i, i=1,..,m)       */
+    MrBFlt     *sampleFSRate;         /* fossil slice sampling rates (rho_i, i=1,..,m)     */
+	MrBFlt		sampleProb;           /* extant taxon sampling fraction (rho)              */
+	Calibration treeAgePr;            /* prior on tree age for uniform clock trees      */
 	char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
 	MrBFlt		clockRateNormal[2];
 	MrBFlt		clockRateLognormal[2];
@@ -1046,6 +1057,10 @@ typedef struct model
 	MrBFlt		igrvarFix;
 	MrBFlt		igrvarUni[2];
 	MrBFlt		igrvarExp;
+    char		mixedvarPr[100];    /* prior on mixed relaxed clock rate variance      */
+    MrBFlt		mixedvarFix;
+    MrBFlt		mixedvarUni[2];
+    MrBFlt		mixedvarExp;
 
 	char		tratioFormat[30];      /* format used to report tratio				   */
 	char		revmatFormat[30];      /* format used to report revmat				   */
@@ -1160,6 +1175,8 @@ typedef struct modelinfo
 	Param		*tk02BranchRates;           /* ptr to branch rates for TK02 relaxed clock */
 	Param		*igrvar;				    /* ptr to gamma var for IGR relaxed clock   */
 	Param		*igrBranchRates;			/* ptr to branch rates for IGR relaxed clock*/
+    Param		*mixedvar;				    /* ptr to var for mixed relaxed clock       */
+    Param		*mixedBrchRates;			/* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
 
     /* Information about characters and transformations */

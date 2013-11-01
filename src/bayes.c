@@ -720,7 +720,7 @@ int InitializeMrBayes (void)
     defaultModel.brlensDir[1] = 0.1;                    /* 2nd param of GammaDir prior   */
 //  defaultModel.brlensDir[1] = 20.0;                   /* 2nd param of invGamDir prior  */
 	defaultModel.brlensDir[2] = 0.7;                    /* 3rd param of Dirichlet priors */
-	defaultModel.brlensDir[3] = 0.7;                    /* 4th param of Dirichlet priors */
+	defaultModel.brlensDir[3] = 1.0;                    /* 4th param of Dirichlet priors */
 	
 	strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
 	strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
@@ -751,12 +751,14 @@ int InitializeMrBayes (void)
 	defaultModel.extinctionFix = 0.5;
 	defaultModel.extinctionBeta[0] = 1;
 	defaultModel.extinctionBeta[1] = 1;
-	strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                       */
-	defaultModel.sampleProb = 1.0;                      /* taxon sampling fraction                       */
     strcpy(defaultModel.fossilizationPr, "Beta");       /* prior on fossilization rate (sampling proportion) */
 	defaultModel.fossilizationFix = 0.5;
     defaultModel.fossilizationBeta[0] = 1;
 	defaultModel.fossilizationBeta[1] = 1;
+	strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                       */
+	defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction                */
+    defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events        */
+
 	strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
 	defaultModel.popSizeFix = 10.0;
 	defaultModel.popSizeUni[0] = 1.0;
@@ -792,6 +794,11 @@ int InitializeMrBayes (void)
 	defaultModel.igrvarFix = 0.1;
 	defaultModel.igrvarUni[0] = 0.0;
 	defaultModel.igrvarUni[1] = 0.5;
+	strcpy(defaultModel.mixedvarPr, "Exponential"); /* prior on var parameter for mixed rel clock */
+	defaultModel.mixedvarExp = 10.0;
+	defaultModel.mixedvarFix = 0.1;
+	defaultModel.mixedvarUni[0] = 0.0;
+	defaultModel.mixedvarUni[1] = 0.5;
 	strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition              */
 	defaultModel.ratePrDir = 1.0;
 	strcpy(defaultModel.generatePr, "Fixed");       /* prior on rate for a gene (multispecies coalescent) */

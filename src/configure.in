@@ -13,7 +13,8 @@ if test -n "${CFLAGS+x}"; then AC_MSG_NOTICE([$CFLAGS_DEFINED]); fi
 if test "x$enable_debug" == "xyes"; then
 : ${CFLAGS="-ggdb -Wall"}
 else
-: ${CFLAGS="-O3 -ffast-math -Wall"};CFLAGS=$CFLAGS" -DNDEBUG";
+: ${CFLAGS="-O3 -ffast-math -Wall"} 
+# "-DNDEBUG" is removed as no longer used in the code
 fi
 AC_PROG_CC
 

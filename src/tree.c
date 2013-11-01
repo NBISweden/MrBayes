@@ -1434,7 +1434,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 	int			i;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
-#if !defined (NDEBUG)
+#if defined (DEBUG_TREE)
     int         j;
 #endif
 
@@ -1447,7 +1447,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
     assert (to->nNodes == from->nNodes + 1);
 
     /* make sure indices are set correctly for from nodes */
-#if !defined (NDEBUG)
+#if defined (DEBUG_TREE)
     for (i=0; i<from->nNodes; i++)
         {
         for (j=0; j<from->nNodes; j++)
@@ -3147,6 +3147,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
     TreeNode    *p;
     int         i, j;
     MrBFlt      b, r, rAnc, clockRate;
+    Param		*subParm;
 
     if (param->paramType != P_TOPOLOGY && param->paramType != P_BRLENS && param->paramType != P_SPECIESTREE)
         return YES;
@@ -3256,9 +3257,10 @@ int IsTreeConsistent (Param *param, int chain, int state)
 
     for (i=0; i<param->nSubParams; i++)
         {
-        if (param->subParams[i]->paramId == TK02BRANCHRATES)
+        subParm = param->subParams[i];
+        if (subParm->paramId == TK02BRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_TK02))
             {
-            rAnc = GetParamVals(param->subParams[i], chain, state)[tree->root->left->index];
+            rAnc = GetParamVals(subParm, chain, state)[tree->root->left->index];
             if (fabs(rAnc - 1.0) > 1E-6)
                 {
                 MrBayesPrint("%s   TK02 relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
@@ -3267,9 +3269,9 @@ int IsTreeConsistent (Param *param, int chain, int state)
             for (j=0; j<tree->nNodes-2; j++)
                 {
                 p = tree->allDownPass[j];
-                b = GetParamSubVals(param->subParams[i], chain, state)[p->index];
-                r = GetParamVals(param->subParams[i], chain, state)[p->index];
-                rAnc = GetParamVals(param->subParams[i], chain, state)[p->anc->index];
+                b = GetParamSubVals(subParm, chain, state)[p->index];
+                r = GetParamVals(subParm, chain, state)[p->index];
+                rAnc = GetParamVals(subParm, chain, state)[p->anc->index];
                 if (fabs(p->length * (r + rAnc) / 2.0 - b) > 0.000001)
                     {
                     MrBayesPrint("%s   TK02 relaxed clock mismatch in branch %d\n", spacer, p->index);
@@ -3277,13 +3279,13 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (param->subParams[i]->paramId == IGRBRANCHLENS)
+        else if (subParm->paramId == IGRBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_IGR))
             {
             for (j=0; j<tree->nNodes-2; j++)
                 {
                 p = tree->allDownPass[j];
-                b = GetParamSubVals(param->subParams[i], chain, state)[p->index];
-                r = GetParamVals(param->subParams[i], chain, state)[p->index];
+                b = GetParamSubVals(subParm, chain, state)[p->index];
+                r = GetParamVals(subParm, chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
                     MrBayesPrint("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
@@ -7125,7 +7127,8 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                 else
                     printf ("[&E %s 0]", param->name);
 				}
-	        brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
+            brlen = GetParamSubVals (param, chain, state[chain])[p->index];
+            // brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
 	        printf ("[&B %s %s]", param->name, MbPrintNum(brlen));
 			}
 		else
@@ -7160,7 +7163,8 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                         else
                             printf ("[&E %s 0]", param->name);
 				        }
-			        brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
+                    brlen = GetParamSubVals (param, chain, state[chain])[p->index];
+			        // brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
 			        printf ("[&B %s %s]", param->name, MbPrintNum(brlen));
 					}
 				else
@@ -7338,7 +7342,7 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
 
 
 
-void WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlens, int isRooted)
+void WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int showBrlens, int isRooted)
 
 {
 	char			*tempStr;
@@ -7371,8 +7375,8 @@ void WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlen
 				        AddToPrintString (tempStr);
                         }
                     brlen = GetParamSubVals (param->subParams[i], chain, state[chain])[p->index];
-				    SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(brlen));
-				    AddToPrintString (tempStr);
+                    SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(brlen));
+                    AddToPrintString (tempStr);
 				    }
                 }
             else if (param->paramType == P_SPECIESTREE && modelSettings[param->relParts[0]].popSize->nValues > 1)
@@ -7386,10 +7390,10 @@ void WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlen
 			{
 			if (p->anc != NULL)
 				AddToPrintString ("(");
-			WriteTreeToPrintString (param, chain, p->left,  showBrlens, isRooted);
+			WriteNoEvtTreeToPrintString (p->left,  chain, param, showBrlens, isRooted);
 			if (p->anc != NULL)
 				AddToPrintString (",");
-			WriteTreeToPrintString (param, chain, p->right, showBrlens, isRooted);	
+			WriteNoEvtTreeToPrintString (p->right, chain, param, showBrlens, isRooted);
 			if (p->anc != NULL)
 				{
 				if (p->anc->anc == NULL && isRooted == NO)
@@ -7418,8 +7422,8 @@ void WriteTreeToPrintString (Param *param, int chain, TreeNode *p, int showBrlen
 				                AddToPrintString (tempStr);
                                 }
                             brlen = GetParamSubVals (param->subParams[i], chain, state[chain])[p->index];
-				            SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(brlen));
-				            AddToPrintString (tempStr);
+                            SafeSprintf (&tempStr, &tempStrSize, "[&B %s %s]", param->subParams[i]->name, MbPrintNum(brlen));
+                            AddToPrintString (tempStr);
 				            }
                         }
                     else if (param->paramType == P_SPECIESTREE && modelSettings[param->relParts[0]].popSize->nValues > 1)

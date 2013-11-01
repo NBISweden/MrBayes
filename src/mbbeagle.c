@@ -1209,6 +1209,10 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
                 {
                 length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
                 }
+            else if (m->mixedBrchRates != NULL)
+                {
+                length = GetParamSubVals (m->mixedBrchRates, chain, state[chain])[p->index];
+                }
             else
                 length = p->length;
 

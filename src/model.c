@@ -58,13 +58,14 @@ const char* const svnRevisionModelC="$Rev$";   /* Revision keyword which is expe
 #include "SIOUX.h"
 #endif
 
-#ifndef NDEBUG
+#ifdef DEBUG_MRBAYES
 #include <assert.h>
 #endif
 
 #undef	DEBUG_ADDDUMMYCHARS
 #undef  DEBUG_CONSTRAINTS
 #undef	DEBUG_COMPRESSDATA
+#undef	DEBUG_CPP
 
 /* local prototypes */
 int       AddDummyChars (void);
@@ -162,7 +163,7 @@ MrBFlt			blosPi[20];                  /* stationary frequencies for Blosum62 mod
 /* parser flags and variables */
 int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
             foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar,
-            tempNumStates, isNegative;
+            foundFSNum, foundFSTime, tempNumStates, isNegative;
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char		colonPr[100], clockPr[30];
 
@@ -763,7 +764,9 @@ int AllocateTreeParams (void)
 			numSubParamPtrs += 3;
 		else if (params[k].paramType == P_TK02BRANCHRATES)
 			numSubParamPtrs += 2;
-		else if (params[k].paramType == P_IGRBRANCHLENS)
+		else if (params[k].paramType == P_IGRBRANCHRATES)
+			numSubParamPtrs += 2;
+		else if (params[k].paramType == P_MIXEDBRCHRATES)
 			numSubParamPtrs += 2;
 		}
 		
@@ -842,13 +845,20 @@ int AllocateTreeParams (void)
 			q = modelSettings[p->relParts[0]].brlens;
 			q->nSubParams++;
 			}
-		else if (p->paramType == P_IGRBRANCHLENS)
+		else if (p->paramType == P_IGRBRANCHRATES)
 			{
 			q = modelSettings[p->relParts[0]].igrvar;
 			q->nSubParams++;
 			q = modelSettings[p->relParts[0]].brlens;
 			q->nSubParams++;
 			}
+		else if (p->paramType == P_MIXEDBRCHRATES)
+            {
+			q = modelSettings[p->relParts[0]].mixedvar;
+			q->nSubParams++;
+			q = modelSettings[p->relParts[0]].brlens;
+			q->nSubParams++;
+            }
 		}
 
 	/* set pointers to subparams */
@@ -1031,7 +1041,8 @@ int AllocateTreeParams (void)
 			p->paramType == P_CPPMULTDEV ||
 			p->paramType == P_BRLENS ||
             p->paramType == P_TK02VAR ||
-            p->paramType == P_IGRVAR)
+            p->paramType == P_IGRVAR ||
+            p->paramType == P_MIXEDVAR)
 			p->nSubParams = 0;
 		}
 	for (k=0; k<numParams; k++)
@@ -1061,7 +1072,7 @@ int AllocateTreeParams (void)
 			if (p->printParam == YES)
 				q->nPrintSubParams++;
 			}
-		else if (p->paramType == P_IGRBRANCHLENS)
+		else if (p->paramType == P_IGRBRANCHRATES)
 			{
 			q = modelSettings[p->relParts[0]].igrvar;
 			q->subParams[q->nSubParams++] = p;
@@ -1072,6 +1083,17 @@ int AllocateTreeParams (void)
 			if (p->printParam == YES)
 				q->nPrintSubParams++;
 			}
+		else if (p->paramType == P_MIXEDBRCHRATES)
+            {
+			q = modelSettings[p->relParts[0]].mixedvar;
+			q->subParams[q->nSubParams++] = p;
+			q = modelSettings[p->relParts[0]].brlens;
+			q->subParams[q->nSubParams++] = p;
+			p->treeIndex = q->treeIndex;
+			p->tree = q->tree;
+			if (p->printParam == YES)
+				q->nPrintSubParams++;
+            }
 		}
 
     return (NO_ERROR);
@@ -1262,7 +1284,6 @@ int ChangeNumChains (int from, int to)
 				{
 				q = p->subParams[j];
                 assert( q->paramType==P_BRLENS );
-                //assert( q->paramType != P_CPPEVENTS && q->paramType != TK02BRANCHRATES);
 				q->tree += (mcmcTree - oldMcmcTree);	/* calculate new address */
 				if (to > from)
 					for (run=0; run<nRuns; run++)
@@ -1283,7 +1304,7 @@ int ChangeNumChains (int from, int to)
 						}
 				}
 			}
-        else if (p->paramType == P_CPPEVENTS || p->paramType == P_TK02BRANCHRATES || p->paramType == P_IGRBRANCHLENS)
+        else if (p->paramType == P_CPPEVENTS || p->paramType == P_TK02BRANCHRATES || p->paramType == P_IGRBRANCHRATES || p->paramType == P_MIXEDBRCHRATES)
             p->tree += (mcmcTree - oldMcmcTree);
         else
             assert( p->paramType==P_BRLENS || p->tree==NULL );
@@ -1554,7 +1575,7 @@ int ChangeNumRuns (int from, int to)
 				InitializeChainTrees (q, from*nChains, to*nChains, GetTree (q, 0, 0)->isRooted);
 				}
 			}
-        else if (p->paramType == P_CPPEVENTS || p->paramType == P_TK02BRANCHRATES || p->paramType == P_IGRBRANCHLENS)
+        else if (p->paramType == P_CPPEVENTS || p->paramType == P_TK02BRANCHRATES || p->paramType == P_IGRBRANCHRATES || p->paramType == P_MIXEDBRCHRATES)
             p->tree += (mcmcTree - oldMcmcTree);
 		}
 
@@ -2870,11 +2891,21 @@ int DoLinkParm (char *parmName, char *tkn)
 			for (i=0; i<numCurrentDivisions; i++)
 				tempLinkUnlink[P_IGRVAR][i] = tempLinkUnlinkVec[i];
 			}
-		else if (!strcmp(parmName, "Igrbranchlens") || !strcmp(parmName, "Ibrbranchlens"))
+		else if (!strcmp(parmName, "Igrbranchrates") || !strcmp(parmName, "Ibrbranchlens"))
 			{
 			for (i=0; i<numCurrentDivisions; i++)
-				tempLinkUnlink[P_IGRBRANCHLENS][i] = tempLinkUnlinkVec[i];
+				tempLinkUnlink[P_IGRBRANCHRATES][i] = tempLinkUnlinkVec[i];
 			}
+		else if (!strcmp(parmName, "Mixedvar"))
+            {
+			for (i=0; i<numCurrentDivisions; i++)
+				tempLinkUnlink[P_MIXEDVAR][i] = tempLinkUnlinkVec[i];
+            }
+		else if (!strcmp(parmName, "Mixedbrchrates"))
+            {
+			for (i=0; i<numCurrentDivisions; i++)
+				tempLinkUnlink[P_MIXEDBRCHRATES][i] = tempLinkUnlinkVec[i];
+            }
 		else
 			{
 			MrBayesPrint ("%s   Couldn't find parameter %s to link\n", spacer, parmName);
@@ -7276,6 +7307,17 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s\n", spacer, modelParams[i].sampleStrat);
                             else
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
+                            if (!strcmp(modelParams[i].sampleStrat,"FossilSlice"))
+                                {
+                                foundFSNum = foundFSTime = NO;
+                                modelParams[i].sampleFSNum = 0;
+                                numVars[i] = 0;
+                                expecting  = Expecting(NUMBER);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         }
 					}
@@ -7284,11 +7326,84 @@ int DoPrsetParm (char *parmName, char *tkn)
 					MrBayesPrint ("%s   Invalid Samplestrat argument\n", spacer);
 					return (ERROR);
 					}
-				expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             	}
+            else if (expecting == Expecting(NUMBER))
+                {
+                nApplied = NumActiveParts ();
+                for (i=0; i<numCurrentDivisions; i++)
+                    {
+                    if (activeParts[i] == YES || nApplied == 0)
+                        {
+                        if (!strcmp(modelParams[i].sampleStrat,"FossilSlice"))
+                            {
+                            if (foundFSNum == NO)
+                                {
+                                sscanf (tkn, "%d", &tempInt);
+                                if (tempInt <= 0)
+                                    {
+                                    MrBayesPrint ("%s   Number of fossil slice sampling events must be > 0\n", spacer);
+                                    return (ERROR);
+                                    }
+                                modelParams[i].sampleFSNum = tempInt;
+                                if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
+                                    {
+                                    free(modelParams[i].sampleFSRate);
+                                    free(modelParams[i].sampleFSTime);
+                                    }
+                                modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                                modelParams[i].sampleFSRate = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                                memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
+                                foundFSNum = YES;
+                                expecting  = Expecting(COLON);
+                                }
+                            else if (foundFSTime == NO)
+                                {
+                                sscanf (tkn, "%lf", &tempD);
+                                if (tempD <= 0.0)
+                                    {
+                                    MrBayesPrint ("%s   Time of fossil slice sampling events must be > 0.\n", spacer);
+                                    return (ERROR);
+                                    }
+                                if (numVars[i] > 0 && modelParams[i].sampleFSTime[numVars[i]-1] < tempD)
+                                    {
+                                    MrBayesPrint ("%s   Time of fossil slice sampling events must be in decreasing order\n", spacer);
+                                    return (ERROR);
+                                    }
+                                modelParams[i].sampleFSTime[numVars[i]] = tempD;
+                                foundFSTime = YES;
+                                expecting  = Expecting(NUMBER);
+                                }
+                            else
+                                {
+                                sscanf (tkn, "%lf", &tempD);
+                                if (tempD < 0.0 || tempD > 0.999999999)
+                                    {
+                                    MrBayesPrint ("%s   Rate of fossil slice sampling events must be in [0,1)\n", spacer);
+                                    return (ERROR);
+                                    }
+                                modelParams[i].sampleFSRate[numVars[i]] = tempD;
+                                foundFSTime = NO;
+                                expecting  = Expecting(COMMA);
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting %d FSTime FSRate to %1.2lf %1.2lf\n", spacer, numVars[i]+1,
+                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSRate[numVars[i]]);
+                                else
+                                    MrBayesPrint ("%s   Setting %d FSTime FSRate to %1.2lf %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSRate[numVars[i]], i+1);
+                                numVars[i]++;
+                                if (numVars[i] == modelParams[i].sampleFSNum)
+                                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                                }
+                            }
+                        }
+                    }
+                }
+            else if (expecting == Expecting(COLON) || expecting == Expecting(COMMA))
+                {
+                expecting  = Expecting(NUMBER);
+                }
 			else
             	{
-                MrBayesPrint ("%s   Invalid Samplestrat argument\n", spacer);
 				return (ERROR);
             	}
        	 	}
@@ -8231,6 +8346,101 @@ int DoPrsetParm (char *parmName, char *tkn)
 			else
 				return (ERROR);
 			}
+        /* set prior for variance of mixed relaxed clock model (mixedvarPr) ***********************/
+        else if (!strcmp(parmName, "Mixedvarpr"))
+            {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+                    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                        {
+                        if (activeParts[i] == YES || nApplied == 0)
+                            strcpy(modelParams[i].mixedvarPr, tempStr);
+                        }
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s   Invalid Mixedvarpr argument\n", spacer);
+                    return (ERROR);
+                    }
+                expecting  = Expecting(LEFTPAR);
+                for (i=0; i<numCurrentDivisions; i++)
+                    numVars[i] = 0;
+                }
+            else if (expecting == Expecting(LEFTPAR))
+                {
+                expecting  = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(NUMBER))
+                {
+                nApplied = NumActiveParts ();
+                for (i=0; i<numCurrentDivisions; i++)
+                    {
+                    if (activeParts[i] == YES || nApplied == 0)
+                        {
+                        if (!strcmp(modelParams[i].mixedvarPr,"Uniform"))
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            modelParams[i].mixedvarUni[numVars[i]++] = tempD;
+                            if (numVars[i] == 1)
+                                expecting  = Expecting(COMMA);
+                            else
+                                {
+                                if (modelParams[i].mixedvarUni[0] >= modelParams[i].mixedvarUni[1])
+                                    {
+                                    MrBayesPrint ("%s   Lower value for uniform should be greater than upper value\n", spacer);
+                                    return (ERROR);
+                                    }
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Mixedvarpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].mixedvarUni[0], modelParams[i].mixedvarUni[1]);
+                                else
+                                    MrBayesPrint ("%s   Setting Mixedvarpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].mixedvarUni[0], modelParams[i].mixedvarUni[1], i+1);
+                                expecting  = Expecting(RIGHTPAR);
+                                }
+                            }
+                        else if (!strcmp(modelParams[i].mixedvarPr,"Exponential"))
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            modelParams[i].mixedvarExp = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Mixedvarpr to Exponential(%1.2lf)\n", spacer, modelParams[i].mixedvarExp);
+                            else
+                                MrBayesPrint ("%s   Setting Mixedvarpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].mixedvarExp, i+1);
+                            expecting  = Expecting(RIGHTPAR);
+                            }
+                        else if (!strcmp(modelParams[i].mixedvarPr,"Fixed"))
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD < IGRVAR_MIN || tempD > IGRVAR_MAX || tempD < TK02VAR_MIN || tempD > TK02VAR_MAX)
+                                {
+                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, IGRVAR_MIN, IGRVAR_MAX);
+                                return (ERROR);
+                                }
+                            modelParams[i].mixedvarFix = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Mixedvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].mixedvarFix);
+                            else
+                                MrBayesPrint ("%s   Setting Mixedvarpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].mixedvarFix, i+1);
+                            expecting  = Expecting(RIGHTPAR);
+                            }
+                        }
+                    }
+                }
+            else if (expecting == Expecting(COMMA))
+                {
+                expecting  = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(RIGHTPAR))
+                {
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
 		/* set Growthpr (growthPr) **************************************************************/
 		else if (!strcmp(parmName, "Growthpr"))
 			{
@@ -9608,7 +9818,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
                         //assert (IsTreeConsistent(param, chainId, 0) == YES);
 						}
-					else if (param->paramType == P_CPPEVENTS || param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHLENS)
+					else if (param->paramType == P_CPPEVENTS || param->paramType == P_TK02BRANCHRATES ||
+                             param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES )
 						{
                         if( theTree->isCalibrated == YES && theTree->fromUserTree == NO )
                             {/*if theTree is not set from user tree then we can not garanty that branch lenghts will stay the same by the time we start mcmc run because of clockrate adjustment.*/
@@ -9969,15 +10180,16 @@ int DoStartvalsParm (char *parmName, char *tkn)
 		if (param->printParam == NO && !(param->paramType == P_TOPOLOGY && strcmp(modelParams[param->relParts[0]].topologyPr,"Fixed")!=0)
                                     && !param->paramType == P_CPPEVENTS
                                     && !param->paramType == P_TK02BRANCHRATES
-                                    && !param->paramType == P_IGRBRANCHLENS
+                                    && !param->paramType == P_IGRBRANCHRATES
+                                    && !param->paramType == P_MIXEDBRCHRATES
                                     && !(param->paramType == P_POPSIZE && param->nValues > 1))
 			{
 			MrBayesPrint ("%s   The parameter '%s' is fixed so the starting value cannot be set\n", spacer, param->name);
 			return (ERROR);
 			}
 		if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS ||
-            param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHLENS || param->paramType == P_SPECIESTREE ||
-            (param->paramType == P_POPSIZE && param->nValues > 1))
+            param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES ||
+            param->paramType == P_SPECIESTREE || (param->paramType == P_POPSIZE && param->nValues > 1))
 			{
 			/* all these parameters are set from a tree */
 			expecting = Expecting (ALPHA);
@@ -10813,10 +11025,27 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 				else if (p->paramId == IGRVAR_FIX)
 					value[0] = mp->igrvarFix;
 				}
-			else if (p->paramType == P_IGRBRANCHLENS)
+			else if (p->paramType == P_IGRBRANCHRATES)
 				{
 				/* We fill in these when we fill in tree params **************************************************************************/
 				}
+			else if (p->paramType == P_MIXEDVAR)
+                {
+				/* Fill in variance of mixed relaxed clock **************************************************************************/
+				if (p->paramId == MIXEDVAR_UNI)
+					value[0] = RandomNumber(seed) * (mp->mixedvarUni[1] - mp->mixedvarUni[0]) + mp->mixedvarUni[0];
+				else if (p->paramId == MIXEDVAR_EXP)
+					value[0] =   (-(1.0/mp->mixedvarExp) * log(1.0 - RandomNumber(seed)));
+                else if (p->paramId == MIXEDVAR_FIX)
+					value[0] = mp->mixedvarFix;
+                }
+			else if (p->paramType == P_MIXEDBRCHRATES)
+                {
+                /* initialize the mixed relaxed clock model to TK02 or IGR */
+                intValue[0] = (RandomNumber(seed) <0.5) ? RCL_TK02 : RCL_IGR;
+                // intValue[0] = RCL_TK02;
+                /* We fill in the rest when we fill in tree params **************************************************************************/
+                }
 			else if (p->paramType == P_CLOCKRATE)
 				{
 				/* Fill in base rate of molecular clock **************************************************************************/
@@ -11040,7 +11269,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 				brlen[p->index] = p->length;
 				}
 			}
-		else if (q->paramType == P_TK02BRANCHRATES || q->paramType == P_IGRBRANCHLENS)
+		else if (q->paramType == P_TK02BRANCHRATES || q->paramType == P_IGRBRANCHRATES || q->paramType == P_MIXEDBRCHRATES)
 			{
 			branchRate = GetParamVals (q, chn, state);
 			brlen = GetParamSubVals (q, chn, state);
@@ -11149,7 +11378,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
-#if ! defined (NDEBUG)
+#if defined (DEBUG_TREE)
     int         locks_count=0;
 #endif
 
@@ -11167,7 +11396,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
         {
         ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
-#if ! defined (NDEBUG)
+#if defined (DEBUG_TREE)
      for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
@@ -11194,7 +11423,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
 
     for (k=0; k<numDefinedConstraints; k++)
         {
-#if ! defined (NDEBUG)
+#if defined (DEBUG_TREE)
         if( t->constraints[k] == YES && definedConstraintsType[k] == HARD )
             {
             if( t->isRooted == YES )
@@ -11536,8 +11765,16 @@ int FreeModel (void)
 	if (memAllocs[ALLOC_MODEL] == YES)
 		{
 		for (i=0; i<numCurrentDivisions; i++)
-    		free (modelParams[i].activeConstraints);
-        free (modelParams);
+            {
+            free (modelParams[i].activeConstraints);
+            if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
+                {
+                free(modelParams[i].sampleFSRate);
+                free(modelParams[i].sampleFSTime);
+                memAllocs[ALLOC_SAMPLEFOSSILSLICE] = NO;
+                }
+            }
+		free (modelParams);
 		free (modelSettings);
 		memAllocs[ALLOC_MODEL] = NO;
 		}
@@ -14170,7 +14407,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO; 	
 		}
-	else if (whichParam == P_IGRBRANCHLENS)
+	else if (whichParam == P_IGRBRANCHRATES)
 		{
 		/* Check IGR relaxed clock branch rates for partitions 1 and 2. */
 	
@@ -14209,7 +14446,94 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 		if ((*isApplic1) == NO || (*isApplic2) == NO)
 			isSame = NO;
 		}
-	else if (whichParam == P_CLOCKRATE)
+	else if (whichParam == P_MIXEDVAR)
+        {
+		/* Check prior for mixed var for partitions 1 and 2. */
+		
+		/* Check if the model is parsimony for either partition. If so, then the branch lengths cannot apply (as parsimony is very
+         silly and doesn't take this information into account) and variance is inapplicable. */
+		if (!strcmp(modelParams[part1].parsModel, "Yes"))
+			*isApplic1 = NO;
+		if (!strcmp(modelParams[part2].parsModel, "Yes"))
+			*isApplic2 = NO;
+		
+		/* Check that the branch length prior is clock for both partitions. */
+		if (strcmp(modelParams[part1].brlensPr, "Clock"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].brlensPr, "Clock"))
+			*isApplic2 = NO;
+        
+		/* Check that the clock rate prior is mixed for both partitions */
+		if (strcmp(modelParams[part1].clockVarPr, "Mixed"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].clockVarPr, "Mixed"))
+			*isApplic2 = NO;
+		
+		/* Now, check that the prior on var mixed is the same. */
+		if (!strcmp(modelParams[part1].mixedvarPr,"Uniform") && !strcmp(modelParams[part2].mixedvarPr,"Uniform"))
+            {
+			if (AreDoublesEqual (modelParams[part1].mixedvarUni[0], modelParams[part2].mixedvarUni[0], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+			if (AreDoublesEqual (modelParams[part1].mixedvarUni[1], modelParams[part2].mixedvarUni[1], (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+            }
+		else if (!strcmp(modelParams[part1].mixedvarPr,"Exponential") && !strcmp(modelParams[part2].mixedvarPr,"Exponential"))
+            {
+			if (AreDoublesEqual (modelParams[part1].mixedvarExp, modelParams[part2].mixedvarExp, (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+            }
+		else if (!strcmp(modelParams[part1].mixedvarPr,"Fixed") && !strcmp(modelParams[part2].mixedvarPr,"Fixed"))
+            {
+			if (AreDoublesEqual (modelParams[part1].mixedvarFix, modelParams[part2].mixedvarFix, (MrBFlt) 0.00001) == NO)
+				isSame = NO;
+            }
+		else
+			isSame = NO;
+		
+		/* Check to see if variance is inapplicable for either partition. */
+		if ((*isApplic1) == NO || (*isApplic2) == NO)
+			isSame = NO;
+        }
+	else if (whichParam == P_MIXEDBRCHRATES)
+        {
+		/* Check mixed relaxed clock branch rates for partitions 1 and 2. */
+        
+		/* Check if the model is parsimony for either partition. If so, then branch lengths do not apply (as parsimony is very
+         silly and doesn't take this information into account) and relaxed clock branch rates are inapplicable. */
+		if (!strcmp(modelParams[part1].parsModel, "Yes"))
+			*isApplic1 = NO;
+		if (!strcmp(modelParams[part2].parsModel, "Yes"))
+			*isApplic2 = NO;
+        
+		/* Check that the branch length prior is clock for both partitions. */
+		if (strcmp(modelParams[part1].brlensPr, "Clock"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].brlensPr, "Clock"))
+			*isApplic2 = NO;
+        
+		/* Check that the clock rate prior is mixed for both partitions */
+		if (strcmp(modelParams[part1].clockVarPr, "Mixed"))
+			*isApplic1 = NO;
+		if (strcmp(modelParams[part2].clockVarPr, "Mixed"))
+			*isApplic2 = NO;
+		
+        /* Now, check that the var parameter is the same */
+		if (IsModelSame (P_MIXEDVAR, part1, part2, &temp1, &temp2) == NO)
+			isSame = NO;
+        if (linkTable[P_MIXEDVAR][part1] != linkTable[P_MIXEDVAR][part2])
+            isSame = NO;
+        
+        /* Not same if branch lengths are not the same */
+        if (IsModelSame(P_BRLENS, part1, part2, &temp1, &temp2) == NO)
+            isSame = NO;
+        if (linkTable[P_BRLENS][part1] != linkTable[P_BRLENS][part2])
+            isSame = NO;
+        
+		/* Set isSame to NO if mixed branch rates are inapplicable for either partition. */
+		if ((*isApplic1) == NO || (*isApplic2) == NO)
+			isSame = NO;
+        }
+    else if (whichParam == P_CLOCKRATE)
 		{
 		/* Check base substitution rates of clock tree for partitions 1 and 2. */
 	
@@ -16796,6 +17120,8 @@ int SetModelInfo (void)
 		m->tk02BranchRates = NULL;
 		m->igrvar = NULL;
 		m->igrBranchRates = NULL;
+        m->mixedvar = NULL;
+        m->mixedBrchRates = NULL;
         m->clockRate = NULL;
 
 		m->CondLikeDown = NULL;
@@ -17150,7 +17476,7 @@ int SetModelParams (void)
 	int			    c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
 	char		    tempCodon[15], tempMult[15], *tempStr,temp[30];
-    char static     *partString=NULL; /* mad static to avoid posible memory leak on return ERROR if it would be introduced later */ 
+    char static     *partString=NULL; /* mad static to avoid posible memory leak on return ERROR if it would be introduced later */
 	Param		    *p;
 	ModelParams     *mp;
     ModelInfo       *m;
@@ -18587,7 +18913,7 @@ int SetModelParams (void)
 					modelSettings[i].cppEvents = p;
 
             p->paramTypeName = "Events of rate-multiplying compound Poisson process";
-			SafeStrcat(&p->name, "Cpp");
+			SafeStrcat(&p->name, "CppEvents");
 			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
@@ -18605,7 +18931,7 @@ int SetModelParams (void)
 			p->paramType = P_TK02VAR;
 			p->nValues = 1;
 			p->nSubValues = 0;
-            p->min = 0.0;
+            p->min = 1E-6;
             p->max = POS_INFINITY;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
@@ -18625,7 +18951,7 @@ int SetModelParams (void)
 			
 			if (p->paramId != TK02VAR_FIX)
 				p->printParam = YES;
-			SafeStrcat (&p->paramHeader, "tk02_var");
+			SafeStrcat (&p->paramHeader, "tk02var");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_TK02BRANCHRATES)
@@ -18640,8 +18966,8 @@ int SetModelParams (void)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].tk02BranchRates = p;
 			
-			p->paramTypeName = "Branch rates of tk02 relaxed clock";
-			SafeStrcat(&p->name, "TK02branchrates");
+			p->paramTypeName = "Branch rates of TK02 relaxed clock";
+			SafeStrcat(&p->name, "TK02Brlens");
 			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
@@ -18650,7 +18976,7 @@ int SetModelParams (void)
 			/* should we print values to .p file? */
 			p->printParam = NO;
 
-			SafeStrcat (&p->paramHeader, "tk02_branchrates");
+			SafeStrcat (&p->paramHeader, "tk02_brlens");
 			SafeStrcat (&p->paramHeader, partString);
 			}
 		else if (j == P_IGRVAR)
@@ -18682,31 +19008,86 @@ int SetModelParams (void)
 			SafeStrcat (&p->paramHeader, "igrvar");
 			SafeStrcat (&p->paramHeader, partString);
 			}
-		else if (j == P_IGRBRANCHLENS)
+		else if (j == P_IGRBRANCHRATES)
 			{
 			/* Set up igr relaxed clock rates parameter *****************************************************************************************/
-			p->paramType = P_IGRBRANCHLENS;
+			p->paramType = P_IGRBRANCHRATES;
 			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
 			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = 0.0;
-            p->max = POS_INFINITY;
+            p->min = RATE_MIN;
+            p->max = RATE_MAX;
 			for (i=0; i<numCurrentDivisions; i++)
 				if (isPartTouched[i] == YES)
 					modelSettings[i].igrBranchRates = p;
 			
-			p->paramTypeName = "Branch lengths of relaxed clock";
-			SafeStrcat(&p->name, "Igrbranchlens");
+			p->paramTypeName = "Branch rates of IGR relaxed clock";
+			SafeStrcat(&p->name, "IgrBrlens");
 			SafeStrcat(&p->name, partString);
 			
 			/* find the parameter x prior type */
-			p->paramId = IGRBRANCHLENS;
+			p->paramId = IGRBRANCHRATES;
 			
 			/* should we print values to .p file? */
 			p->printParam = NO;
 
-			SafeStrcat (&p->paramHeader, "ibr_branchlens");
+			SafeStrcat (&p->paramHeader, "igr_brlens");
 			SafeStrcat (&p->paramHeader, partString);
 			}
+		else if (j == P_MIXEDVAR)
+            {
+			/* Set up mixed relaxed clock variance parameter *****************************************************************************************/
+			p->paramType = P_MIXEDVAR;
+			p->nValues = 1;
+			p->nSubValues = 0;
+            p->min = 1E-6;
+            p->max = POS_INFINITY;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].mixedvar = p;
+            
+            p->paramTypeName = "Variance shared for mixed relaxed clock moodel";
+			SafeStrcat(&p->name, "Mixedvar");
+			SafeStrcat(&p->name, partString);
+			
+			/* find the parameter x prior type */
+			if (!strcmp(mp->mixedvarPr,"Uniform"))
+				p->paramId = MIXEDVAR_UNI;
+			else if (!strcmp(mp->mixedvarPr,"Exponential"))
+				p->paramId = MIXEDVAR_EXP;
+			else
+				p->paramId = MIXEDVAR_FIX;
+			
+			if (p->paramId != MIXEDVAR_FIX)
+				p->printParam = YES;
+			SafeStrcat (&p->paramHeader, "mixedvar");
+			SafeStrcat (&p->paramHeader, partString);
+            }
+		else if (j == P_MIXEDBRCHRATES)
+            {
+			/* Set up mixed relaxed clock rates parameter *****************************************************************************************/
+			p->paramType = P_MIXEDBRCHRATES;
+			p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
+			p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
+            p->nIntValues = 1;               /* use to hold the model indicator: TK02 or IGR */
+            p->min = RATE_MIN;
+            p->max = RATE_MAX;
+			for (i=0; i<numCurrentDivisions; i++)
+				if (isPartTouched[i] == YES)
+					modelSettings[i].mixedBrchRates = p;
+			
+			p->paramTypeName = "Branch rates of mixed relaxed clock";
+			SafeStrcat(&p->name, "MixedBrlens");
+			SafeStrcat(&p->name, partString);
+			
+			/* find the parameter x prior type */
+			p->paramId = MIXEDBRCHRATES;
+			
+			/* how to print model indicator (0 or 1) to .p file? */
+			p->printParam = NO;
+            
+			SafeStrcat (&p->paramHeader, "mixed_brlens");
+			SafeStrcat (&p->paramHeader, partString);
+            }
 		else if (j == P_CLOCKRATE)
 			{
 			/* Set up clockRate ****************************************************************************************/
@@ -18941,7 +19322,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 
 {
 	int			i, j, k, *nEvents=NULL, *nEventsP=NULL, nLongsNeeded, isEventSet;
-	MrBFlt		 *effectiveBranchLengthP=NULL, *tk02BranchRate=NULL, *igrBranchLen =NULL,
+	MrBFlt		 *effectiveBranchLengthP=NULL, *branchRate=NULL,
                 **position=NULL, **rateMult=NULL, **positionP=NULL, **rateMultP=NULL,
                 baseRate;
 	Tree		*t;
@@ -18987,7 +19368,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
         position = param->position[2*chn+state];
         rateMult = param->rateMult[2*chn+state];
 		}
-	else if (param->paramType == P_TK02BRANCHRATES)
+	else if (param->paramType == P_TK02BRANCHRATES || param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES)
 		{
 		/* find the right effective branch length set */
 		for (i=0; i<pt->nBSets; i++)
@@ -18997,19 +19378,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 			return (NO_ERROR);
 
         effectiveBranchLengthP = pt->effectiveBrLen[i];
-		tk02BranchRate         = GetParamVals (param, chn, state);
-		}
-	else if (param->paramType == P_IGRBRANCHLENS)
-		{
-		/* find the right effective branch length set */
-		for (i=0; i<pt->nBSets; i++)
-		if (!strcmp(param->name,pt->bSetName[i]))
-			break;
-		if (i == pt->nBSets)
-			return (NO_ERROR);
-
-		effectiveBranchLengthP = pt->effectiveBrLen[i];
-		igrBranchLen           = GetParamSubVals (param, chn, state);
+		branchRate = GetParamVals (param, chn, state);
 		}
 
 	t = GetTree (param, chn, state);
@@ -19076,32 +19445,41 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 				    }
                 }
 			}
-		else if (param->paramType == P_TK02BRANCHRATES)
+		else if ( param->paramType == P_TK02BRANCHRATES ||
+                 (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_TK02) )
 			{
 			if (p->anc->anc == NULL)
-                tk02BranchRate[p->index] = 1.0;
+                branchRate[p->index] = 1.0;
+            else if (p->length > 0.0)
+                branchRate[p->index] = 2.0 * effectiveBranchLengthP[pp->index] / p->length - branchRate[p->anc->index];
             else
-                tk02BranchRate[p->index] = 2.0 * effectiveBranchLengthP[pp->index] / p->length - tk02BranchRate[p->anc->index];
+                branchRate[p->index] = branchRate[p->anc->index];
 			}
-		else if (param->paramType == P_IGRBRANCHLENS)
+		else if ( param->paramType == P_IGRBRANCHRATES ||
+                 (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_IGR) )
 			{
-			igrBranchLen[p->index] = effectiveBranchLengthP[pp->index];
-			}
+            if (p->length > 0.0)
+                branchRate[p->index] = effectiveBranchLengthP[pp->index] / p->length;
+            else
+                branchRate[p->index] = branchRate[p->anc->index];
+			}  // we are now reading effective branch length for TK02 and IGR
 		}
-    
+
     if (param->paramType == P_CPPEVENTS)
         {
         if (UpdateCppEvolLengths (param, t->root->left, chn) == ERROR)
             return (ERROR);
         }
-    else if (param->paramType == P_TK02BRANCHRATES)
+    else if ( param->paramType == P_TK02BRANCHRATES ||
+             (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_TK02) )
         {
         if (UpdateTK02EvolLengths (param, t, chn) == ERROR)
             return (ERROR);
         }
-    else if (param->paramType == P_IGRBRANCHLENS)
+    else if ( param->paramType == P_IGRBRANCHRATES ||
+             (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_IGR) )
         {
-        if (UpdateIgrBranchRates (param, t, chn) == ERROR)
+        if (UpdateIgrBrachLengths (param, t, chn) == ERROR)
             return (ERROR);
         }
 
@@ -19413,20 +19791,6 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
-
-    /* Move_AddEdge, add-edge move for fossilization prior */
-    mt = &moveTypes[i++];
-    mt->name = "Add edge for FossilizedBD";
-    mt->shortName = "AddEdge";
-    mt->subParams = YES;
-    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
-    mt->nApplicable = 1;
-    mt->moveFxn = &Move_AddEdge;
-	mt->relProposalProb = 5.0;
-	mt->numTuningParams = 0;
-    mt->parsimonyBased = NO;
-    mt->level =STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FossilEdgeMove;
     
 	/* Move_Adgamma */
 	mt = &moveTypes[i++];
@@ -19462,8 +19826,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* so-called lambda */
-	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 100.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19486,7 +19850,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 100.0;  /* change it smaller to avoid overflow in the exp function, same for following "smaller" */
+    mt->maximum[0] = 20.0;  /* change it smaller to avoid overflow in the exp function, same for following "smaller" */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19508,25 +19872,11 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
-
-    /* Move_DelEdge, delete-edge move for fossilization prior */
-    mt = &moveTypes[i++];
-    mt->name = "Delete edge for FossilizedBD";
-    mt->shortName = "DelEdge";
-    mt->subParams = YES;
-    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
-    mt->nApplicable = 1;
-    mt->moveFxn = &Move_DelEdge;
-	mt->relProposalProb = 5.0;
-	mt->numTuningParams = 0;
-    mt->parsimonyBased = NO;
-    mt->level =STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FossilEdgeMove;
 
 	/* Move_Extinction */
 	mt = &moveTypes[i++];
@@ -19540,8 +19890,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.1;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.2;  /* window size */
-	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -19559,12 +19909,40 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.1;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.2;  /* window size */
-	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;
+	mt->minimum[0] = 0.00001;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
+
+    /* Move_AddEdge, add-edge move for fossilization prior */
+    mt = &moveTypes[i++];
+    mt->name = "Add edge for FossilizedBD";
+    mt->shortName = "AddEdge";
+    // mt->subParams = YES;
+    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_AddEdge;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 0;
+    mt->parsimonyBased = NO;
+    mt->level =STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FossilEdgeMove;
+
+    /* Move_DelEdge, delete-edge move for fossilization prior */
+    mt = &moveTypes[i++];
+    mt->name = "Delete edge for FossilizedBD";
+    mt->shortName = "DelEdge";
+    // mt->subParams = YES;
+    mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_DelEdge;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 0;
+    mt->parsimonyBased = NO;
+    mt->level =STANDARD_USER;
+    mt->isApplicable = &IsApplicable_FossilEdgeMove;
 
 	/* Move_ExtSPR */
 	mt = &moveTypes[i++];
@@ -19585,8 +19963,8 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
-	mt->minimum[1] = 0.00000001;
-	mt->maximum[1] = 10000000.0;
+	mt->minimum[1] = 0.00001;
+	mt->maximum[1] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -19636,8 +20014,8 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
-	mt->minimum[1] = 0.00000001;
-	mt->maximum[1] = 10000000.0;
+	mt->minimum[1] = 0.00001;
+	mt->maximum[1] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -19687,8 +20065,8 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[1] = 2.0 * log (1.05);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
-	mt->minimum[1] = 0.00000001;
-	mt->maximum[1] = 10000000.0;
+	mt->minimum[1] = 0.00001;
+	mt->maximum[1] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -19712,8 +20090,8 @@ void SetUpMoveTypes (void)
 	mt->tuningParam[1] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.00001;
 	mt->maximum[0] = 0.99999;
-	mt->minimum[1] = 0.00000001;
-	mt->maximum[1] = 10000000.0;
+	mt->minimum[1] = 0.00001;
+	mt->maximum[1] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -19832,7 +20210,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19870,7 +20248,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.5;       /* Tuning parameter value */
 	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
-	mt->maximum[0] = 10000000.0;    /* Maximum value of tuning param */
+	mt->maximum[0] = 100.0;    /* Maximum value of tuning param */
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
 
@@ -19924,7 +20302,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log(1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 1000.0;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -19945,7 +20323,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -19967,7 +20345,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
@@ -20019,7 +20397,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 0;
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -20036,7 +20414,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 15.0;
 	mt->numTuningParams = 0;
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -20058,7 +20436,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 10000000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
 
@@ -20096,8 +20474,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 20.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 0.05; /* window size */
-	mt->minimum[0] = 0.00000001;
-	mt->maximum[0] = 10000000.0;
+	mt->minimum[0] = 0.000001;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -20115,7 +20493,7 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 1.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.0; /* sliding window size */
-	mt->minimum[0] = 0.0;
+	mt->minimum[0] = 0.000001;
 	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
@@ -20135,7 +20513,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20166,7 +20544,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20233,7 +20611,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20575,7 +20953,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi per site */
 	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 1000000.0;
+	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
@@ -20730,7 +21108,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20749,7 +21127,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.2;       /* Default tuning parameter value */
 	mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
-	mt->maximum[0] = 10000.0;       /* Maximum value of tuning param */
+	mt->maximum[0] = 1000.0;        /* Maximum value of tuning param */
 	mt->parsimonyBased = NO;        /* It does not use parsimony scores */
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a mutliplier move (larger is more bold) */
@@ -20809,7 +21187,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 50.0; /* alphaPi */
 	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 1000000.0;
+	mt->maximum[0] = 10000.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
@@ -20829,7 +21207,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 1.0;  /* window size */
 	mt->minimum[0] = 0.00001;
-	mt->maximum[0] = 1000.0;
+	mt->maximum[0] = 100.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -20849,7 +21227,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20980,7 +21358,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -20999,7 +21377,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -21031,7 +21409,7 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -21049,8 +21427,8 @@ void SetUpMoveTypes (void)
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 10.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -21070,31 +21448,87 @@ void SetUpMoveTypes (void)
 	mt->numTuningParams = 1;
 	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
 	mt->minimum[0] = 0.0001;
-	mt->maximum[0] = 100.0;                /* smaller */
+	mt->maximum[0] = 20.0;                 /* smaller */
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-	/* Move_IgrBranchLen */
+	/* Move_IgrBranchRate */
 	mt = &moveTypes[i++];
 	mt->name = "Multiplier";
 	mt->shortName = "Multiplier";
 	mt->tuningName[0] = "Multiplier tuning parameter";
 	mt->shortTuningName[0] = "lambda";
-	mt->applicableTo[0] = IGRBRANCHLENS;
+	mt->applicableTo[0] = IGRBRANCHRATES;
 	mt->nApplicable = 1;
-	mt->moveFxn = &Move_IgrBranchLen;
+	mt->moveFxn = &Move_IgrBranchRate;
 	mt->relProposalProb = 5.0;
 	mt->numTuningParams = 1;
-	mt->tuningParam[0] = 2.0 * log (1.2);  /* lambda */
-	mt->minimum[0] = 0.001;
-	mt->maximum[0] = 100.0;
+	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 20.0;
 	mt->parsimonyBased = NO;
 	mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
+    /* Move_MixedVar */
+	mt = &moveTypes[i++];
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
+	mt->applicableTo[0] = MIXEDVAR_EXP;
+	mt->applicableTo[1] = MIXEDVAR_UNI;
+	mt->nApplicable = 2;
+	mt->moveFxn = &Move_MixedVar;
+	mt->relProposalProb = 1.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 20.0;                 /* smaller */
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+    
+	/* Move_MixedBranchRate */
+	mt = &moveTypes[i++];
+	mt->name = "Multiplier";
+	mt->shortName = "Multiplier";
+	mt->tuningName[0] = "Multiplier tuning parameter";
+	mt->shortTuningName[0] = "lambda";
+	mt->applicableTo[0] = MIXEDBRCHRATES;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_MixedBranchRate;
+	mt->relProposalProb = 5.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 20.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+
+	/* Move_RelaxedClockModel */
+	mt = &moveTypes[i++];
+	mt->name = "rjMCMC between Relaxed Clock Models";
+	mt->shortName = "rjMCMC_TKnIGR";
+	mt->tuningName[0] = "sigma_TK over sigma_IGR";
+	mt->shortTuningName[0] = "ratio";
+	mt->applicableTo[0] = MIXEDBRCHRATES;
+	mt->nApplicable = 1;
+	mt->moveFxn = &Move_RelaxedClockModel;
+	mt->relProposalProb = 2.0;
+	mt->numTuningParams = 1;
+	mt->tuningParam[0] = 2.0;
+	mt->minimum[0] = 0.0001;
+	mt->maximum[0] = 10000.0;
+	mt->parsimonyBased = NO;
+	mt->level = STANDARD_USER;
+    
 	numMoveTypes = i;
 	
 }
@@ -22086,10 +22520,18 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			{
 			MrBayesPrint ("%s      Igrvar         ", spacer);
 			}
-		else if (j == P_IGRBRANCHLENS)
+		else if (j == P_IGRBRANCHRATES)
 			{
-			MrBayesPrint ("%s      Igrbranchlens  ", spacer);
+			MrBayesPrint ("%s      Igrbranchrates ", spacer);
 			}
+		else if (j == P_MIXEDVAR)
+            {
+			MrBayesPrint ("%s      Mixedvar       ", spacer);
+            }
+		else if (j == P_MIXEDBRCHRATES)
+            {
+			MrBayesPrint ("%s      Mixedbranchrates", spacer);
+            }
 		else if (j == P_CLOCKRATE)
 			{
 			MrBayesPrint ("%s      Clockrate      ", spacer);
@@ -22625,11 +23067,26 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 			else
 				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->igrvarFix);
 			}
-		else if (j == P_IGRBRANCHLENS)
+		else if (j == P_IGRBRANCHRATES)
 			{
 			MrBayesPrint ("%s            Prior      = Scaledgamma (variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].igrvar->name);
 			MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
 			}
+		else if (j == P_MIXEDVAR)
+            {
+			if (!strcmp(mp->mixedvarPr,"Uniform"))
+				MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->mixedvarUni[0], mp->mixedvarUni[1]);
+			else if (!strcmp(mp->mixedvarPr,"Exponential"))
+				MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->mixedvarExp);
+			else
+				MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->mixedvarFix);
+            }
+		else if (j == P_MIXEDBRCHRATES)
+            {
+			MrBayesPrint ("%s            Prior      = Mixed TK02 and IGR (variance = %s * v)\n", spacer, modelSettings[p->relParts[0]].mixedvar->name);
+            MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
+            MrBayesPrint ("%s                         Uniform prior on relaxed clock models [Pr(TK02)=Pr(IGR)=1/2]\n", spacer);
+            }
 		else if (j == P_CLOCKRATE)
 			{
 			if (!strcmp(mp->clockRatePr,"Normal"))
@@ -22648,8 +23105,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
 				MrBayesPrint ("%s                         The clock rate varies according to a CPP model\n", spacer);
 			else if (!strcmp(mp->clockVarPr,"TK02"))
 				MrBayesPrint ("%s                         The clock rate varies according to a Brownian motion model\n", spacer);
-			else /* if (!strcmp(mp->clockVarPr,"Igr")) */
+			else if (!strcmp(mp->clockVarPr,"Igr"))
 				MrBayesPrint ("%s                         The clock rate varies according to an independent scaled gamma (white noise) model\n", spacer);
+			else /* if (!strcmp(mp->clockVarPr,"Mixed")) */
+				MrBayesPrint ("%s                         The clock rate varies according to mixed TK02 and IGR models\n", spacer);
 			}
 		else if (j == P_SPECIESTREE)
 			{
@@ -23199,64 +23658,6 @@ int Unlink (void)
 
 
 
-/* UpdateTK02EvolLengths: update branch lengths for tk02 model */
-int UpdateTK02EvolLengths(Param *param, Tree *t, int chain)
-{
-    int         i;
-    MrBFlt      *tk02Rate, *brlens;
-    TreeNode    *p;
-    
-    tk02Rate = GetParamVals (param, chain, state[chain]);
-	brlens = GetParamSubVals (param, chain, state[chain]);
-	for (i=0; i<t->nNodes-2; i++)
-		{
-		p = t->allDownPass[i];
-		brlens[p->index] = p->length * (tk02Rate[p->index] + tk02Rate[p->anc->index]) / 2.0;
-		}
-
-    return (NO_ERROR);
-}
-
-
-
-
-
-/*-------------------------------------------------
-|
-|	UpdateCppEvolLengths: Recalculate effective 
-|      evolutionary lengths and set update flags
-|      for Cpp relaxed clock model
-|
---------------------------------------------------*/
-int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
-{
-	int			i, *nEvents;
-	TreeNode	*q;
-	MrBFlt		baseRate = 1.0, **pos, **rateMult, *evolLength;
-
-	i = 2*chain + state[chain];
-	nEvents = param->nEvents[i];
-	pos = param->position[i];
-	rateMult = param->rateMult[i];
-	evolLength = GetParamSubVals (param, chain, state[chain]);
-	
-	q = p->anc;
-	while (q->anc != NULL)
-		{
-		for (i=0; i<nEvents[q->index]; i++)
-			baseRate *= rateMult[q->index][i];
-		q = q->anc;
-		}
-
-	if (UpdateCppEvolLength (nEvents, pos, rateMult, evolLength, p, baseRate)==ERROR)
-        return (ERROR);
-
-    return(NO_ERROR);
-}
-
-
-
-
 /*-------------------------------------------------
 |
 |	UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set. Error will be returned if fixed clockrate prior may not be respected.  
@@ -23408,7 +23809,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 
 	if (p != NULL)
 		{
-#ifndef NDEBUG
+#ifdef DEBUG_CPP
         if (baseRate < POS_MIN || baseRate > POS_INFINITY)
             {
             printf("baseRate out of bounds (%.15e for node %d\n", baseRate, p->index);
@@ -23444,7 +23845,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 		for (i=0; i<nEvents[p->index]; i++)
 			endRate *= rateMult[p->index][i];
 
-#ifndef NDEBUG
+#ifdef DEBUG_CPP
         if (endRate < POS_MIN || endRate > POS_INFINITY)
             {
 			printf ("endRate out of bounds (%.15e for node %d)\n", endRate, p->index);
@@ -23470,8 +23871,67 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 
 
 
-/* UpdateIgrBranchRates: update branch rates for igr model */
-int UpdateIgrBranchRates(Param *param, Tree *t, int chain)
+/*-------------------------------------------------
+ |
+ |	UpdateCppEvolLengths: Recalculate effective
+ |      evolutionary lengths and set update flags
+ |      for Cpp relaxed clock model
+ |
+ --------------------------------------------------*/
+int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
+{
+	int			i, *nEvents;
+	TreeNode	*q;
+	MrBFlt		baseRate = 1.0, **pos, **rateMult, *evolLength;
+    
+	i = 2*chain + state[chain];
+	nEvents = param->nEvents[i];
+	pos = param->position[i];
+	rateMult = param->rateMult[i];
+	evolLength = GetParamSubVals (param, chain, state[chain]);
+	
+	q = p->anc;
+	while (q->anc != NULL)
+    {
+		for (i=0; i<nEvents[q->index]; i++)
+			baseRate *= rateMult[q->index][i];
+		q = q->anc;
+    }
+    
+	if (UpdateCppEvolLength (nEvents, pos, rateMult, evolLength, p, baseRate)==ERROR)
+        return (ERROR);
+    
+    return(NO_ERROR);
+}
+
+
+
+
+
+/* UpdateTK02EvolLengths: update branch lengths for tk02 model */
+int UpdateTK02EvolLengths (Param *param, Tree *t, int chain)
+{
+    int         i;
+    MrBFlt      *tk02Rate, *brlens;
+    TreeNode    *p;
+    
+    tk02Rate = GetParamVals (param, chain, state[chain]);
+	brlens = GetParamSubVals (param, chain, state[chain]);
+	for (i=0; i<t->nNodes-2; i++)
+    {
+		p = t->allDownPass[i];
+		brlens[p->index] = p->length * (tk02Rate[p->index] + tk02Rate[p->anc->index]) / 2.0;
+    }
+    
+    return (NO_ERROR);
+}
+
+
+
+
+
+/* UpdateIgrBranchLengths: update branch lengths for igr model */
+int UpdateIgrBrachLengths (Param *param, Tree *t, int chain)
 {
     int         i;
     MrBFlt      *igrRate, *brlens;
@@ -23482,7 +23942,7 @@ int UpdateIgrBranchRates(Param *param, Tree *t, int chain)
 	for (i=0; i<t->nNodes-2; i++)
 		{
 		p = t->allDownPass[i];
-		igrRate[p->index] = brlens[p->index] / p->length;
+		brlens[p->index] = p->length * igrRate[p->index];
 		}
 
     return (NO_ERROR);
