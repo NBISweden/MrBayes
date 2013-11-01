@@ -582,9 +582,11 @@ int				highestLocalRunId;			 /* highest local run Id                         */
 /* external (tip): 1, internal: 0 */
 #define IsTip(Node) (Node->index < numTaxa || (Node->anc)->index < numTaxa)
 
-/* ln prior prob. under Dirichlet priors and twoExp prior */
 MrBFlt lnDirPrior (Tree *t, ModelParams *mp, int PV)
 {
+    /* ln prior prob. under Dirichlet priors and twoExp prior
+     //chi */
+
 	int    i, istip, nb[2] = {0,0};
 	MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
 	MrBFlt aT, bT, a, c;
@@ -9399,7 +9401,7 @@ int DoMcmcParm (char *parmName, char *tkn)
 					free(tempStr);
 					return (ERROR);
 					}
-				if (chainParams.orderTaxa == YES)
+				if (chainParams.autotune == YES)
 					MrBayesPrint ("%s   Setting Autotune to yes\n", spacer);
 				else
 					MrBayesPrint ("%s   Setting Autotune to no\n", spacer);
@@ -16391,6 +16393,9 @@ MrBFlt hatP0 (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt rho)  // p0(t|psi=0)
 
 int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS)
 {
+    /* fossilization priors 
+     //chi */
+    
 	if (!strcmp(sS, "FossilTip"))
 		return LnFossilizedBDPriorFossilTip  (t, clockRate, prob, sR, eR, sF, fR);
     else if (!strcmp(sS, "FossilSlice"))
@@ -18407,7 +18412,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
      
        1. Pich a fossil among those with brl = 0 (prob = 1/k)
        2. Propose brl from a uniform(0, ?) distribution
-    //chi */
+     */
     
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, newLength, clockRate, x,
@@ -18676,7 +18681,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
          
        1. Pich a fossil among those with brl > 0 (prob = 1/m)
        2. Set brl = 0
-    //chi */
+     */
     
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, clockRate, x,
@@ -25152,7 +25157,8 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
 int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* rjMCMC move between TK02 (correlated lognormal) and IGR (independent gamma rate) */
+    /* rjMCMC move between TK02 (correlated lognormal) and IGR (independent gamma rate)  
+     //chi */
     
 	int         i, *rclModel;
     MrBFlt      *mxvar, *mxRate, *brlens, ratio, tk02var, igrvar;
