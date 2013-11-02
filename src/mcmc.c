@@ -40664,8 +40664,8 @@ int PrintStates (int curGen, int coldId)
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 		SafeSprintf (&tempStr, &tempStrSize, "\tLnL");
 		if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-     // SafeSprintf (&tempStr, &tempStrSize, "\tLnPr");
-     // if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+        SafeSprintf (&tempStr, &tempStrSize, "\tLnPr");
+        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
 		/* print tree lengths or heights for all trees */
 		for (i=0; i<numParams; i++)
@@ -40973,8 +40973,8 @@ int PrintStates (int curGen, int coldId)
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
     SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnL[coldId]));
 	if (AddToPrintString (tempStr) == ERROR) goto errorExit;
- // SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnPr[coldId]));
- // if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnPr[coldId]));
+    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
 	/* print tree lengths or heights for all trees */
 	for (i=0; i<numParams; i++)
