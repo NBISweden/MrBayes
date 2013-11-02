@@ -14,7 +14,7 @@ if test "x$enable_debug" == "xyes"; then
 : ${CFLAGS="-ggdb -Wall"}
 else
 : ${CFLAGS="-O3 -ffast-math -Wall"} 
-# "-DNDEBUG" is removed as no longer used in the code
+# "NDEBUG" is specified in the mb.h
 fi
 AC_PROG_CC
 

@@ -58,7 +58,7 @@ const char* const svnRevisionModelC="$Rev$";   /* Revision keyword which is expe
 #include "SIOUX.h"
 #endif
 
-#ifdef DEBUG_MRBAYES
+#ifndef NDEBUG
 #include <assert.h>
 #endif
 
@@ -11378,7 +11378,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
-#if defined (DEBUG_TREE)
+#if defined (DEBUG_CONSTRAINTS)
     int         locks_count=0;
 #endif
 
@@ -11396,7 +11396,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
         {
         ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
-#if defined (DEBUG_TREE)
+#if defined (DEBUG_CONSTRAINTS)
      for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
@@ -11423,7 +11423,7 @@ int DoesTreeSatisfyConstraints(Tree *t){
 
     for (k=0; k<numDefinedConstraints; k++)
         {
-#if defined (DEBUG_TREE)
+#if defined (DEBUG_CONSTRAINTS)
         if( t->constraints[k] == YES && definedConstraintsType[k] == HARD )
             {
             if( t->isRooted == YES )

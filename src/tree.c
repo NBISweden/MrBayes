@@ -1434,7 +1434,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 	int			i;
 	PolyNode	*p;
 	TreeNode	*q, *q1;
-#if defined (DEBUG_TREE)
+#if defined (DEBUG_SPECIESTREE)
     int         j;
 #endif
 
@@ -1447,7 +1447,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
     assert (to->nNodes == from->nNodes + 1);
 
     /* make sure indices are set correctly for from nodes */
-#if defined (DEBUG_TREE)
+#if defined (DEBUG_SPECIESTREE)
     for (i=0; i<from->nNodes; i++)
         {
         for (j=0; j<from->nNodes; j++)
