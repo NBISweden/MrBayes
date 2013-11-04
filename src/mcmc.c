@@ -373,8 +373,8 @@ MrBFlt  LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, 
 MrBFlt  LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2);
 MrBFlt  hatP0_tip (MrBFlt t, MrBFlt sR, MrBFlt lambda, MrBFlt rho);
 MrBFlt  hatP0 (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt rho);
-MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr);
-MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr, MrBFlt lambda, MrBFlt mu, MrBFlt psi);
+MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_fsl, int m, MrBFlt c1, MrBFlt *c2, MrBFlt cr);
+MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_fsl, int m, MrBFlt c1, MrBFlt *c2, MrBFlt cr, MrBFlt lambda, MrBFlt mu, MrBFlt psi);
 void    MarkClsBelow (TreeNode *p);
 MrBFlt  MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt  MinimumValue (MrBFlt x, MrBFlt y);
@@ -16644,13 +16644,12 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
 /* probability density of an individual at time t giving rise to an edge
    between time t and t_i with q_i(t_i) = 1
  */
-MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr)
+MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_fsl, int m, MrBFlt c1, MrBFlt *c2, MrBFlt cr)
 {
     MrBFlt lnq;
     int i = 0;
    
-    /* t > 0, t_fsl[m] = 0, otherwise check */
-    while (t < t_fsl[i] +BRLENS_MIN *cr)
+    while (t < t_fsl[i] + BRLENS_MIN/cr && i <= m)
         i++;
     lnq = log(4.0) +c1 *(t_fsl[i] -t);
     lnq -= 2.0 * log(1 +c2[i] +(1 -c2[i]) *exp(c1 *(t_fsl[i] -t)));
@@ -16661,13 +16660,12 @@ MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr)
 /* an individual at time t has no sampled descendants when the process is stopped
    (i.e., at time t_m), with t_i-1 <= t < t+i (i = 1,..,m)
  */
-MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr, MrBFlt lambda, MrBFlt mu, MrBFlt psi)
+MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_fsl, int m, MrBFlt c1, MrBFlt *c2, MrBFlt cr, MrBFlt lambda, MrBFlt mu, MrBFlt psi)
 {
     MrBFlt other;
     int i = 0;
     
-    /* t > 0, t_fsl[m] = 0, otherwise check */
-    while (t < t_fsl[i] +BRLENS_MIN *cr)
+    while (t < t_fsl[i] +BRLENS_MIN/cr && i <= m)
         i++;
 
     other = lambda +mu +psi -c1 * (1 +c2[i] -(1 -c2[i]) *exp(c1 *(t_fsl[i] -t)))
@@ -16676,6 +16674,7 @@ MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_fsl, MrBFlt c1, MrBFlt *c2, MrBFlt cr, 
     return log(other) - log(2 *lambda);
 }
 
+#define DEBUG_FBDPR
 /*---------------------------------------------------------------------------------
  |
  |   LnFossilizedBDPriorFossilSlice
@@ -16698,7 +16697,7 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
     psi    = mu * fR / (1.0 - fR);
     
     mp = &modelParams[t->relParts[0]];
-    /* get the number of fossil slice sampling events */
+    /* get the number of fossil slice sampling events, m >= 0 */
     m = mp->sampleFSNum;
   
     /* allocate space for the speciation and extinction times */
@@ -16758,9 +16757,8 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
                 for (k = 0; k < m; k++)
                     if (AreDoublesEqual(p->nodeDepth, t_fsl[k] *clockRate, BRLENS_MIN) == YES)
                         break;
-                if (k == m)
+                if (k == m)     /* number of fossil tips, not in any silice */
                     y[n_f++] = p->nodeDepth /clockRate;
-                                /* number of fossil tips, not in any silice */
                 else
                     N_fsl[k]++; /* number of fossil tips, at silice time t_k */
                 }
@@ -16803,13 +16801,13 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
 #endif
 
     /* now calculate prior prob of fbd tree */
-    (*prob) = 2.0 * (LnQi_fossil(tmrca,t_fsl,c1,c2,clockRate) - log((1- p_t[0])));
+    (*prob) = 2.0 * (LnQi_fossil(tmrca,t_fsl,m,c1,c2,clockRate) - log((1- p_t[0])));
     for (i = 0; i < N_int -1; i++)  // x[N_int -1] = tmrca
-        (*prob) += log(lambda) + LnQi_fossil(x[i], t_fsl, c1, c2, clockRate);
+        (*prob) += log(lambda) + LnQi_fossil(x[i], t_fsl,m,c1,c2,clockRate);
     for (i = 0; i < n_f; i++)
-        (*prob) += log(psi) - LnQi_fossil(y[i], t_fsl, c1, c2, clockRate);
+        (*prob) += log(psi) - LnQi_fossil(y[i], t_fsl,m,c1,c2,clockRate);
     for (i = 0; i < m; i++)
-        (*prob) += n_d2v[i] *(log(1- rho[i]) + LnQi_fossil(t_fsl[i], t_fsl, c1, c2, clockRate));
+        (*prob) += n_d2v[i] *(log(1- rho[i]) + LnQi_fossil(t_fsl[i], t_fsl,m,c1,c2,clockRate));
     for (i = 0; i <= m; i++)
         if (rho[i] > 0.0)
             (*prob) += N_fsl[i] *log(rho[i]);
@@ -16823,7 +16821,7 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
                 y[n_f++] = p->nodeDepth /clockRate;
         }
     for (i = 0; i < n_f; i++)
-        (*prob) += LnPi_fossil(y[i], t_fsl, c1, c2, clockRate, lambda, mu, psi);
+        (*prob) += LnPi_fossil(y[i], t_fsl,m,c1,c2,clockRate,lambda,mu,psi);
     
     /* conversion to labeled tree from oriented tree */
     (*prob) += (N_fsl[m] +n_f -1) * log(2.0) - LnFactorial(N_fsl[m]) - LnFactorial(n_f +k_f);
