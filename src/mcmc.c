@@ -40060,7 +40060,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 						MrBayesPrintf (fpMcmc, "\tNA");
 					else
 						MrBayesPrintf (fpMcmc, "\t%.6f", theMove->lastAcceptanceRate[j]);
-                    if (theMove->moveType->Autotune != NULL)
+                    if (theMove->moveType->Autotune != NULL && chainParams.autotune == YES)
                         MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[j][0]);
 					}
 				}
@@ -40075,7 +40075,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 					MrBayesPrintf (fpMcmc, "\tNA");
 				else
 					MrBayesPrintf (fpMcmc, "\t%.6f", theMove->lastAcceptanceRate[j]);
-                if (theMove->moveType->Autotune != NULL)
+                if (theMove->moveType->Autotune != NULL && chainParams.autotune == YES)
                     MrBayesPrintf (fpMcmc, "\t%.6e", theMove->tuningParam[j][0]);
 				}
 			}
@@ -46444,6 +46444,7 @@ void SetFileNames (void)
     strcpy (sumtParams.sumtFileName, chainParams.chainFileName);
     strcpy (sumtParams.sumtOutfile, chainParams.chainFileName);
 	strcpy (sumpParams.sumpFileName, chainParams.chainFileName);
+	strcpy (sumpParams.sumpOutfile, chainParams.chainFileName);
 	if (chainParams.numRuns == 1)
 		sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
 	else /* if (chainParams.numRuns > 1) */

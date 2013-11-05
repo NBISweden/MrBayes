@@ -14448,7 +14448,7 @@ void PrintSettings (char *command, ModelInfo *mp)
 		MrBayesPrint ("   Printall        Yes/No                %s                                      \n", yesNoStr);
 		MrBayesPrint ("   Printmax        <number>              %d                                      \n", chainParams.printMax);
 		PrintYesNo (chainParams.mcmcDiagn, yesNoStr);
-		MrBayesPrint ("   Mcmcdiagn       Yes/No                %s                                     \n", yesNoStr);
+		MrBayesPrint ("   Mcmcdiagn       Yes/No                %s                                      \n", yesNoStr);
 		MrBayesPrint ("   Diagnfreq       <number>              %d                                      \n", chainParams.diagnFreq);
 		if (chainParams.diagnStat == AVGSTDDEV)
 			strcpy (yesNoStr, "Avgstddev");

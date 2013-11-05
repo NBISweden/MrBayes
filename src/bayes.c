@@ -1006,7 +1006,7 @@ int ReinitializeMrBayes (void)
 	chainParams.numChains = 4;                       /* number of chains                              */
 	chainParams.chainTemp = 0.1;                     /* chain temperature                             */
 	chainParams.redirect = NO;                       /* should printf be to stdout                    */
-	strcpy(chainParams.chainFileName, "temp.out");   /* chain file name for output                    */
+	strcpy(chainParams.chainFileName, "temp");       /* chain file name for output                    */
 	chainParams.chainBurnIn = 0;                     /* chain burn in length                          */
 	chainParams.numStartPerts = 0;                   /* number of perturbations to starting tree      */
 	strcpy(chainParams.startTree, "Current");        /* starting tree for chain (random/current)      */
@@ -1039,7 +1039,7 @@ int ReinitializeMrBayes (void)
 	chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */
 
 	/* sumt parameters */
-	strcpy(sumtParams.sumtFileName, "temp.t");       /* input name for sumt command                   */
+	strcpy(sumtParams.sumtFileName, "temp");         /* input name for sumt command                   */
 	strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
 	sumtParams.calcTreeprobs = YES;                  /* should individual tree probs be calculated    */
 	sumtParams.showSumtTrees = NO;                   /* should the individual tree probs be shown     */
@@ -1053,11 +1053,12 @@ int ReinitializeMrBayes (void)
     sumtParams.summary = YES;                        /* display overall diagnostics?                  */
     sumtParams.showConsensus = YES;                  /* display consensus tree(s)?                    */
     sumtParams.consensusFormat = FIGTREE;            /* format of consensus tree                      */
-	strcpy (sumtParams.sumtOutfile, "temp.t.stat");  /* output name for sumt command                  */
+	strcpy (sumtParams.sumtOutfile, "temp");         /* output name for sumt command                  */
 	sumtParams.HPD = YES;                            /* use Highest Posterior Density?                */
 
 	/* sump parameters */
-	strcpy(sumpParams.sumpFileName, "temp.p");       /* input name for sump command                   */
+	strcpy(sumpParams.sumpFileName, "temp");         /* input name for sump command                   */
+	strcpy (sumpParams.sumpOutfile, "temp");         /* output name for sump command                  */
 	sumpParams.numRuns = 2;                          /* number of analyses to summarize               */
 	sumpParams.HPD = YES;                            /* use Highest Posterior Density?                */
 	sumpParams.minProb = 0.05;                       /* min. prob. of models to include in summary    */
