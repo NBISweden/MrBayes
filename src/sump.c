@@ -1923,12 +1923,7 @@ int GetHeaders (char ***headerNames, char *headerLine, int *nHeaders)
 			}
 		(*nHeaders)++;
         }
-		
-#	if 0
-	for (i=0; i<(*nHeaders); i++)
-		printf ("%4d -> '%s'\n", i, headerNames[i]);
-#	endif
-		
+				
 	return (NO_ERROR);	
 }
 
@@ -1957,8 +1952,10 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
             continue;
 		if (!strcmp (temp, "Gen"))
 			continue;
-		if (!strcmp (temp, "lnL") == SAME)
+		if (!strcmp (temp, "LnL") == SAME)
 			continue;
+        if (!strcmp (temp, "LnPr") == SAME)
+            continue;
 		if (len > longestHeader)
 			longestHeader = len;
 		}
@@ -2019,8 +2016,10 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
                 break;
 		if (IsSame (temp, "Gen") == SAME)
 			continue;
-		if (IsSame (temp, "lnL") == SAME)
+		if (IsSame (temp, "LnL") == SAME)
 			continue;
+        if (!strcmp (temp, "LnPr") == SAME)
+            continue;
 
 		GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
 		
@@ -2468,9 +2467,11 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
             continue;
 		if (!strcmp (temp, "Gen"))
 			continue;
-		if (!strcmp (temp, "lnL") == SAME)
+		if (!strcmp (temp, "LnL") == SAME)
 			continue;
-		if (len > longestHeader)
+        if (!strcmp (temp, "LnPr") == SAME)
+            continue;
+        if (len > longestHeader)
 			longestHeader = len;
 		}
 	
@@ -2533,8 +2534,10 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
             continue;
 		if (IsSame (temp, "Gen") == SAME)
 			continue;
-		if (IsSame (temp, "lnL") == SAME)
+		if (IsSame (temp, "LnL") == SAME)
 			continue;
+        if (!strcmp (temp, "LnPr") == SAME)
+            continue;
 
 		GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
 		
