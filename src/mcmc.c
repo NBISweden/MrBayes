@@ -2279,7 +2279,7 @@ PFNODE *CompactTree (PFNODE *p)
 
 
 
-#if !defined (SSE_ENABLED)|| 1
+#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |	CondLikeDown_Bin: binary model with or without rate
@@ -3963,7 +3963,7 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)|| 1
+#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_Bin: binary model with or without rate
@@ -5633,7 +5633,7 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)|| 1
+#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |	CondLikeRoot_NY98: codon model with omega variation
@@ -7113,7 +7113,7 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
 
 
-#if !defined (SSE_ENABLED)|| 1
+#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |	CondLikeScaler_NY98: codon model with omega variation
@@ -7544,7 +7544,7 @@ void CopyTrees (int chain)
     for (n=0; n<numTrees; n++)
 		{
 		from = GetTreeFromIndex (n, chain, state[chain]);		
-		to = GetTreeFromIndex (n, chain, (state[chain]^1));
+		to = GetTreeFromIndex (n, chain, (state[chain] ^ 1));
         if (from->bitsets != NULL && to->bitsets != NULL)
             {
             if (from->isRooted == NO)
@@ -14933,7 +14933,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     m  = &modelSettings[param->relParts[0]];
     
     newTree = GetTree (m->brlens, chain, state[chain]);
-    oldTree = GetTree (m->brlens, chain, state[chain]^1);
+    oldTree = GetTree (m->brlens, chain, state[chain] ^ 1);
 
     if (m->clockRate != NULL)
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
@@ -16442,7 +16442,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     //  return LnFossilizedBDPriorDiversity  (t, clockRate, prob, sR, eR, sF, fR);
 	else
         {
-		printf ("\n   ERROR: Fossil sampling strategy for fossilized birth-death process not implemented.\n");
+		printf ("\n   ERROR: Sampling strategy for fossilized birth-death process not implemented.\n");
 		return (ERROR);
         }
 }
@@ -16683,6 +16683,26 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |
  |   Stdaler et al. 2013 Birth–death skyline plot reveals temporal changes of 
  |           epidemic spread in HIV and hepatitis C virus (HCV). PNAS 110:228-233.
+ |
+ |
+ |
+ |                                       0  _____________  t3, rho3, M3=2, n3=0
+ |     \                            /          |
+ |      \                          /           |___  y2
+ |       \                   \    /   _________|_________  t2, rho2, M2=0, K2=0, n2=2
+ |        \                   \  /             |
+ |         \                   \/       x3  ___|
+ |          \                  /               |___  y1
+ |           \         \      /                |
+ |           _\         \    /        _________|_________  t1, rho1, M1=0, K1=1, n1=3
+ |             \         \  /                  |
+ |              \         \/            x2  ___|
+ |               \        /                    |
+ |                \      /                     |
+ |                 \    /                      |
+ |                  \  /                       |
+ |                   \/                 x1  ___|
+ |
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
@@ -18437,8 +18457,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
      */
     
     int    i, j, k, mFossil, kFossil;
-    MrBFlt minDepth, maxDepth, newLength, clockRate, x,
-           oldPLength, oldQLength, oldRLength, oldDepth, newDepth,
+    MrBFlt minDepth, maxDepth, newLength, clockRate, x, oldQLength, oldRLength,
            *brlens=NULL, nu=0.0, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
     TreeNode    *p, *q, *r;
     Tree        *t;
@@ -18531,10 +18550,9 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
     
     /* record old lengths and depths */
-    oldPLength = 0.0;
     oldQLength = q->length;
     oldRLength = r->length;
-    oldDepth = q->nodeDepth;
+    // oldDepth = q->nodeDepth;
     
 	/* propose the branch length leading to the fossil */
 	newLength = (RandomNumber (seed)) * (maxDepth - minDepth);
@@ -18550,7 +18568,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
     r->length += newLength;
     r->upDateTi = YES;
-    newDepth = q->nodeDepth;
+    // newDepth = q->nodeDepth;
 
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
@@ -18706,8 +18724,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
      */
     
     int    i, j, k, mFossil, kFossil;
-    MrBFlt minDepth, maxDepth, clockRate, x,
-           oldPLength, oldQLength, oldRLength, oldDepth, newDepth,
+    MrBFlt minDepth, maxDepth, clockRate, x, oldPLength, oldQLength, oldRLength,
            *brlens=NULL, nu=0.0, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
     TreeNode    *p, *q, *r;
     Tree        *t;
@@ -18803,7 +18820,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     oldPLength = p->length;
     oldQLength = q->length;
     oldRLength = r->length;
-    oldDepth = q->nodeDepth;
+    // oldDepth = q->nodeDepth;
 
 	/* set the brl to 0 for the fossil tip, it becomes an ancestral fossil */
     /* set flags for update of transition probabilities too */
@@ -18817,7 +18834,7 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     r->upDateTi = YES;
     p->length   = 0.0;
     p->upDateTi = YES;
-    newDepth = q->nodeDepth;
+    // newDepth = q->nodeDepth;
     
     /* adjust age of q if dated */
     if (calibrationPtr != NULL)
@@ -28393,7 +28410,7 @@ int Move_OmegaM3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
 	/* get old value of omega */
 	value = GetParamVals(param, chain, state[chain]);
-    oldValue = GetParamVals(param, chain, state[chain]^1);
+    oldValue = GetParamVals(param, chain, state[chain] ^ 1);
 	whichOmega = (int) (RandomNumber(seed)*3.0);
 	
 	/* get minimum and maximum values for omega */
@@ -44040,7 +44057,7 @@ void ResetChainIds (void)
             CopyToTreeFromTree (toTree, fromTree);
             CopyToTreeFromTree (fromTree, swapTree);
             CopyToTreeFromTree (swapTree, toTree);
-            swapTree = GetTreeFromIndex(j, fromChn, state[fromChn]^1);
+            swapTree = GetTreeFromIndex(j, fromChn, state[fromChn] ^ 1);
             CopyToTreeFromTree (swapTree, fromTree);
 			}
 		/* CPP relaxed clock params */
@@ -46076,7 +46093,7 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, j+1, marginalLnLSS[j] );
             }
         MrBayesPrint ("%s       ------------------------------\n",spacer);
-        if(chainParams.numRuns>1)
+        if(chainParams.numRuns > 1)
             {
             MeanVarianceLog(marginalLnLSS,chainParams.numRuns,&meanSS,&varSS,NULL);
             MrBayesPrint ("%s       Mean:  %9.2f\n\n",spacer,meanSS);
@@ -46116,7 +46133,7 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("\n");
             MrBayesPrint ("   Points at -1.0 (y-axis) indicate that there were no splits\n");
             MrBayesPrint ("   above minimum frequency for corresponding step.");
-            if (numTopologies>1)
+            if (numTopologies > 1)
                 {
                 for(i=0; i<numTopologies; i++)
                     {

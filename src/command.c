@@ -10900,7 +10900,7 @@ int GetUserHelp (char *helpTkn)
 		MrBayesPrint ("   Omegavar  -- Allows the nonsynonymous/synonymous rate ratio (omega) to vary   \n");
 		MrBayesPrint ("                across codons. Ny98 assumes that there are three classes, with   \n");
 		MrBayesPrint ("                potentially different omega values (omega1, omega2, omega3):     \n");
-		MrBayesPrint ("                omega2 = 1; 0 < omega1 <1; and omega3 > 1. Like the Ny98 model,  \n");
+		MrBayesPrint ("                omega2 = 1; 0 < omega1 < 1; and omega3 > 1. Like the Ny98 model, \n");
 		MrBayesPrint ("                the M3 model has three omega classes. However, their values are  \n");
 		MrBayesPrint ("                less constrained, with omega1 < omega2 < omega3. The default     \n");
 		MrBayesPrint ("                (omegavar = equal) has no variation on omega across sites.       \n");
