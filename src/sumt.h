@@ -5,5 +5,5 @@ int      DoSumtParm (char *parmName, char *tkn);
 int      DoSumtTree (void);
 int      DoSumtTreeParm (char *parmName, char *tkn);
 void     ResetTranslateTable (void);
-int		 ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport);
+int      ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport);
 void     ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow);

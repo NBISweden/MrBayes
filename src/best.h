@@ -15,7 +15,7 @@
 /* struct for constraints (similar to Distance in BEST code, except
    that a bitfield is used to hold info on the taxon pair)           */
 typedef struct {
-	double      depth;
+    double      depth;
     BitsLong*   pairSet;
 } Depth;
 

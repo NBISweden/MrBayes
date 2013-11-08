@@ -6,8 +6,8 @@ LDFLAGS   = @LDFLAGS@ -lm
 INSTALL   = @INSTALL@
 BINDIR    = /usr/local/bin
 
-SRC       =  mb.c bayes.c command.c mbmath.c mcmc.c model.c plot.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
-OBJECTS   =  mb.o bayes.o command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
+SRC       =  bayes.c command.c mbmath.c mcmc.c model.c plot.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
+OBJECTS   =  bayes.o command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
 PROGS     =  mb
 
 all: $(PROGS)
@@ -26,7 +26,7 @@ distclean: clean
 
 showdep:
 	@$(CC) -MM $(SRC)
-	
+
 bayes.o: bayes.c mb.h globals.h bayes.h command.h mcmc.h model.h utils.h
 command.o: command.c mb.h globals.h command.h bayes.h model.h mcmc.h \
   plot.h sump.h sumt.h tree.h utils.h

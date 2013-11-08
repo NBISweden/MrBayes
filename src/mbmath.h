@@ -1,9 +1,9 @@
 #undef complex
 struct complex
-	{
-	MrBFlt re;
-	MrBFlt im;
-	};
+    {
+    MrBFlt re;
+    MrBFlt im;
+    };
 
 typedef struct complex complex;
 

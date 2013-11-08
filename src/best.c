@@ -17,8 +17,8 @@
 
 #include    <assert.h>
 
-#include	"best.h"
-#include	"command.h"
+#include    "best.h"
+#include    "command.h"
 #include    "globals.h"
 #include    "mb.h"
 #include    "mbmath.h"
@@ -150,15 +150,15 @@ int CompareNodesByX (const void *x, const void *y) {
 
 /**-----------------------------------------------------------------
 |
-|	FillSpeciesTreeParams: Fill in species trees (start value)
+|   FillSpeciesTreeParams: Fill in species trees (start value)
 |
 ------------------------------------------------------------------*/
 int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
 
 {
-    int			i, k, chn, numGeneTrees, freeBestChainVars;
-	Param		*p;
-	Tree		*speciesTree, **geneTrees;
+    int         i, k, chn, numGeneTrees, freeBestChainVars;
+    Param       *p;
+    Tree        *speciesTree, **geneTrees;
 
     // Allocate space for global best model variables used in this function, in case they are not allocated
     if (memAllocs[ALLOC_BEST] == NO)
@@ -179,13 +179,13 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
     geneTrees   = (Tree **) SafeCalloc (numGeneTrees, sizeof(Tree*));
 
     // Build species trees for state 0
-	for (chn=fromChain; chn<toChain; chn++)
-		{
-		for (k=0; k<numParams; k++)
-			{
-			p = &params[k];
-			if (p->paramType == P_SPECIESTREE)
-	            {
+    for (chn=fromChain; chn<toChain; chn++)
+        {
+        for (k=0; k<numParams; k++)
+            {
+            p = &params[k];
+            if (p->paramType == P_SPECIESTREE)
+                {
                 // Find species tree and gene trees
                 speciesTree = GetTree(p, chn, 0);
                 for (i=0; i<p->nSubParams; i++)
@@ -203,7 +203,7 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
                 if (LabelTree (speciesTree, speciesNameSets[speciespartitionNum].names) == ERROR)
                     {
                     FreeBestChainVariables();
-					return (ERROR);
+                    return (ERROR);
                     }
                 }
             }
@@ -225,7 +225,7 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
 
 /**-----------------------------------------------------------------
 |
-|	FreeBestChainVariables: Free best variables used during an mcmc
+|   FreeBestChainVariables: Free best variables used during an mcmc
 |   run.
 |
 ------------------------------------------------------------------*/
@@ -236,7 +236,7 @@ void FreeBestChainVariables(void)
         free (speciesPairSets[0]);
         free (speciesPairSets);
         speciesPairSets = NULL;
-    }
+        }
 
     free (depthMatrix);
     depthMatrix = NULL;
@@ -406,7 +406,7 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
 ----------------------------------------------------------------------*/
 int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) {
 
-	int         i, j, w, nLongsNeeded, numUpperTriang, index, trace=0;
+    int         i, j, w, nLongsNeeded, numUpperTriang, index, trace=0;
     double      maxDepth;
     TreeNode    *p;
     BitsLong    **speciesSets;
@@ -429,18 +429,19 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
         depthMatrix[i] = maxDepth;
 
     // Now we are ready to cycle over gene trees
-	for (w=0; w<numGeneTrees; w++) {
-		if (trace) {
+    for (w=0; w<numGeneTrees; w++)
+        {
+        if (trace) {
             printf("\nGene %d\n",w);
             ShowTree(geneTrees[w]);
-        }
+            }
 
         // Set species sets for interior nodes. O(n)
         for (i=0; i<geneTrees[w]->nIntNodes; i++) {
             p = geneTrees[w]->intDownPass[i];
             for (j=0; j<nLongsNeeded; j++)
                 speciesSets[p->index][j] = speciesSets[p->left->index][j] | speciesSets[p->right->index][j];       
-        }
+            }
 
         // Now order the interior nodes in terms of node depth. We rely on the fact that the
         // ordered sequence is a valid downpass sequence. O(log n).
@@ -465,25 +466,26 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
                 if (IsPartNested(speciesPairSets[i], speciesSets[p->index], nLongsNeeded) == YES) {
                     depthMatrix[i] = p->nodeDepth;
                     break;
+                    }
                 }
             }
-        }
-    }   // Next gene tree
+        }   // Next gene tree
 
-    if(trace) {
+    if (trace)
+        {
         index = 0;
         printf ("Mindepth matrix\n");
         for(i=0;i<numSpecies;i++) {
             for (j=0; j<i; j++)
-	            printf("         ");
-	        for(j=i+1;j<numSpecies;j++) {
-	            printf("%.6f ",depthMatrix[index]);
+                printf("         ");
+            for(j=i+1;j<numSpecies;j++) {
+                printf("%.6f ",depthMatrix[index]);
                 index++;
-            }
+                }
             printf("\n");
-        }
+            }
         printf("\n");
-    }
+        }
 
     free (speciesSets[0]);
     free (speciesSets);
@@ -519,15 +521,15 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
     numUpperTriang  = numSpecies*(numSpecies - 1) / 2;
     minDepth        = (Depth *) SafeCalloc (numUpperTriang, sizeof(Depth));
 
-	// Convert depthMatrix to an array of Depth structs
+    // Convert depthMatrix to an array of Depth structs
     index = 0;
     for(i=0; i<numSpecies; i++) {
         for(j=i+1; j<numSpecies; j++) {
             minDepth[index].depth   = depthMatrix[index];
             minDepth[index].pairSet = speciesPairSets[index];
             index++;
+            }
         }
-	}
 
     // Sort the array of distance structs (O(log n^2))
     qsort((void *)(minDepth), (size_t)(numUpperTriang), sizeof(Depth), CompareDepths);
@@ -623,16 +625,16 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             r->sib = NULL;
             q->anc = u;
             r->anc = u;
-        }
+            }
         else if (p == polyTree->root && p->depth < 0.0) {
 
             // This is the first time we hit the root of the tree && it is resolved
             p->depth = minDepth[i].depth;
             assert (p->depth > 0.0);
 
-        }
+            }
         // other cases should not be added to tree
-    }
+        }
 
     // Make sure we have a complete species tree
     assert (polyTree->nIntNodes == numSpecies - 1);
@@ -654,8 +656,8 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             FreePolyTree(polyTree);
             free (minDepth);
             return (ERROR); 
-        }           
-    }
+            }           
+        }
 
     // Copy to species tree from polytomous tree
     CopyToSpeciesTreeFromPolyTree (speciesTree, polyTree);
@@ -749,7 +751,7 @@ void LineagesIn (TreeNode *geneTreeNode, TreeNode *speciesTreeNode)
         if (speciesTreeNode->left == NULL) {
             assert (geneTreeNode->left == NULL);
             speciesTreeNode->x++;
-        }
+            }
         else {
             nLongsNeeded = (numSpecies - 1) / nBitsInALong + 1;
             speciesTreeNode->x++;
@@ -757,8 +759,8 @@ void LineagesIn (TreeNode *geneTreeNode, TreeNode *speciesTreeNode)
                 LineagesIn (geneTreeNode, speciesTreeNode->left);
             else if (IsPartNested(geneTreeNode->partition, speciesTreeNode->right->partition, nLongsNeeded) == YES)
                 LineagesIn (geneTreeNode, speciesTreeNode->right);
+            }
         }
-    }
     else {
         // climb up gene tree
         if (geneTreeNode->left != NULL)
@@ -768,12 +770,12 @@ void LineagesIn (TreeNode *geneTreeNode, TreeNode *speciesTreeNode)
         if (geneTreeNode->left == NULL) {
             speciesTreeNode->x++;
             assert (speciesTreeNode->left == NULL);
-        }
+            }
         else {
             speciesTreeNode->y++;
-        }
+            }
         geneTreeNode->x = speciesTreeNode->index;
-    }
+        }
 }
 
 
@@ -782,7 +784,7 @@ void LineagesIn (TreeNode *geneTreeNode, TreeNode *speciesTreeNode)
 
 /**-----------------------------------------------------------------
 |
-|	LnSpeciesTreeProb: Wrapper for LnJointGeneTreeSpeciesTreePr to
+|   LnSpeciesTreeProb: Wrapper for LnJointGeneTreeSpeciesTreePr to
 |       free calling functions from retrieving gene and species trees.
 |
 ------------------------------------------------------------------*/
@@ -816,7 +818,7 @@ double LnSpeciesTreeProb(int chain)
 
 /**-----------------------------------------------------------------
 |
-|	LnJointGeneTreeSpeciesTreePr: Converted from LnJointGenetreePr,
+|   LnJointGeneTreeSpeciesTreePr: Converted from LnJointGenetreePr,
 |   SPLogLike, SPLogPrior.
 |
 |   In this function we calculate the entire probability of the species
@@ -852,7 +854,7 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
     mu = clockRate;
     for (i=0; i<numGeneTrees; i++) {
         lnLike += LnPriorProbGeneTree(geneTrees[i], mu, speciesTree, popSizePtr);
-    }
+        }
 
     // Calculate probability of species tree given its priors
     if (strcmp(mp->speciesTreeBrlensPr, "Birthdeath") == 0) {
@@ -863,7 +865,7 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
         lnPrior = 0.0;
 //        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, sS, sF);
         LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, mp->sampleStrat, sF);
-    }
+        }
     else
         lnPrior = 0.0;
 
@@ -878,14 +880,14 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
 
 /**-----------------------------------------------------------------
 |
-|	LnPriorProbGeneTree: Calculate the prior probability of a gene
+|   LnPriorProbGeneTree: Calculate the prior probability of a gene
 |   tree.
 |
 ------------------------------------------------------------------*/
 double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double *popSizePtr)
 { 
-   	int         i, k, index, nEvents, trace=0;
-   	double      N, lnProb, ploidyFactor, theta, timeInterval;
+    int         i, k, index, nEvents, trace=0;
+    double      N, lnProb, ploidyFactor, theta, timeInterval;
     TreeNode    *p, *q=NULL, *r;
     ModelParams *mp;
 
@@ -908,7 +910,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
         else
             N = popSizePtr[0];
         p->d = ploidyFactor * N * mu;
-    }
+        }
     
     // Map gene tree to species tree
     MapGeneTreeToSpeciesTree(geneTree, speciesTree);
@@ -921,7 +923,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
         printf ("index -- x -- nodeDepth for gene tree\n");
         for (i=0; i<geneTree->nIntNodes; i++)
             printf ("%d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
-    }
+        }
 
     // Now calculate probability after making sure species tree nodes appear in index order
     // (the order does not have to be a correct downpass sequence)
@@ -959,7 +961,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 
             lnProb -= (k * (k - 1) * timeInterval) / theta;
             index++;
-        }
+            }
 
         if (p->x - p->y > 1) {
 
@@ -973,8 +975,8 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 
             k = p->x - p->y;
             lnProb -= (k * (k - 1) * timeInterval) / theta;
+            }
         }
-    }
 
     // Restore downpass sequences (probably not necessary for gene tree, but may be if some
     // code relies on intDownPass and allDownPass to be in same order)
@@ -1067,7 +1069,7 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
 
 /**-----------------------------------------------------------------
 |
-|	MapGeneTreeToSpeciesTree: Fold gene tree into species tree. We
+|   MapGeneTreeToSpeciesTree: Fold gene tree into species tree. We
 |      are going to use ->x of gene tree to give index of the
 |      corresponding node in the species tree. ->x in the species
 |      tree will give the number of lineages into the corresponding
@@ -1077,7 +1079,7 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
 ------------------------------------------------------------------*/
 void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
 { 
-   	int         i, j, nLongsNeeded, trace=0;
+    int         i, j, nLongsNeeded, trace=0;
     TreeNode    *p;
 
     // Initialize species partitions for both gene tree and species tree
@@ -1096,8 +1098,8 @@ void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
         else {
             for (j=0; j<nLongsNeeded; j++)
                 p->partition[j] = p->left->partition[j] | p->right->partition[j];
+            }
         }
-    }
     // Species tree partitions already set by call to AllocateTreePartitions
 
     // Reset ->x and ->y of species tree (->x of gene tree does not need to be initialized)
@@ -1115,13 +1117,13 @@ void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
         printf ("index -- x -- y   for species tree\n");
         for (i=0; i<speciesTree->nNodes-1; i++)
             printf ("%-2d -- %d -- %d\n", speciesTree->allDownPass[i]->index, speciesTree->allDownPass[i]->x, speciesTree->allDownPass[i]->y);
-    }
+        }
 
     if (trace) {
         printf ("index -- x -- nodeDepth for gene tree\n");
         for (i=0; i<geneTree->nIntNodes; i++)
             printf ("%-2d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
-    }
+        }
 
     // Free space
     FreeTreePartitions(speciesTree);
@@ -1167,7 +1169,7 @@ int ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed)
 
 /**-----------------------------------------------------------------
 |
-|	Move_GeneTree1: Propose a new gene tree using ExtSPRClock
+|   Move_GeneTree1: Propose a new gene tree using ExtSPRClock
 |
 |   @param param            The parameter (gene tree) to change
 |   @param chain            The chain number
@@ -1182,13 +1184,13 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
-    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
+    Tree            *newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-	// Get model settings
+    // Get model settings
     m = &modelSettings[param->relParts[0]];
 
     // Get species tree (this trick is possible because we always copy tree params)
@@ -1199,7 +1201,7 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
-    }
+        }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
@@ -1239,7 +1241,7 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         free (geneTrees);
         free (oldMinDepths);
         return (NO_ERROR);
-    }
+        }
     
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
@@ -1273,7 +1275,7 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
 /**-----------------------------------------------------------------
 |
-|	Move_GeneTree2: Propose a new gene tree using NNIClock
+|   Move_GeneTree2: Propose a new gene tree using NNIClock
 |
 |   @param param            The parameter to change
 |   @param chain            The chain number
@@ -1288,13 +1290,13 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
-    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
+    Tree            *newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-	// Get model settings
+    // Get model settings
     m = &modelSettings[param->relParts[0]];
 
     // Get species tree (this trick is possible because we always copy tree params)
@@ -1305,7 +1307,7 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
-    }
+        }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
@@ -1345,7 +1347,7 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         free (geneTrees);
         free (oldMinDepths);
         return (NO_ERROR);
-    }
+        }
     
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
@@ -1379,7 +1381,7 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
 /**-----------------------------------------------------------------
 |
-|	Move_GeneTree3: Propose a new gene tree using ParsSPRClock
+|   Move_GeneTree3: Propose a new gene tree using ParsSPRClock
 |
 |   @param param            The parameter to change
 |   @param chain            The chain number
@@ -1394,13 +1396,13 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
                     *oldMinDepths, *modMinDepths, forwardLambda, backwardLambda, mean;
-    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
+    Tree            *newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
 
     // Calculate number of gene trees
     numGeneTrees = numTopologies - 1;
 
-	// Get model settings
+    // Get model settings
     m = &modelSettings[param->relParts[0]];
 
     // Get species tree (this trick is possible because we always copy tree params)
@@ -1485,7 +1487,7 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
 /*-----------------------------------------------------------------------------------
 |
-|	Move_NodeSliderGeneTree: Move the position of one (root or nonroot) node in a
+|   Move_NodeSliderGeneTree: Move the position of one (root or nonroot) node in a
 |      gene tree inside a species tree.
 |
 -------------------------------------------------------------------------------------*/
@@ -1493,23 +1495,23 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
-	int			i, *nEvents;
-	MrBFlt	    window, minDepth, maxDepth, oldDepth, newDepth,
-				oldLeftLength=0.0, oldRightLength=0.0, clockRate,
-				oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
+    int         i, *nEvents;
+    MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth,
+                oldLeftLength=0.0, oldRightLength=0.0, clockRate,
+                oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
                 *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL, *popSizePtr;
-	TreeNode	*p, *q;
-	ModelInfo	*m;
-	Tree		*geneTree, *speciesTree;
-	Param		*subParm;
+    TreeNode    *p, *q;
+    ModelInfo   *m;
+    Tree        *geneTree, *speciesTree;
+    Param       *subParm;
 
-	window = mvp[0]; /* window size */
+    window = mvp[0]; /* window size */
  
-	m = &modelSettings[param->relParts[0]];
+    m = &modelSettings[param->relParts[0]];
 
-	/* get gene tree and species tree */
-	geneTree    = GetTree (param, chain, state[chain]);
-	speciesTree = GetTree (m->speciesTree, chain, state[chain]);
+    /* get gene tree and species tree */
+    geneTree    = GetTree (param, chain, state[chain]);
+    speciesTree = GetTree (m->speciesTree, chain, state[chain]);
 
     /* get population size(s) */
     popSizePtr = GetParamVals(m->popSize, chain, state[chain]);
@@ -1521,26 +1523,26 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
     /* pick a node to be changed */
-	p = geneTree->intDownPass[(int)(RandomNumber(seed)*geneTree->nIntNodes)];
+    p = geneTree->intDownPass[(int)(RandomNumber(seed)*geneTree->nIntNodes)];
 
 #if defined (DEBUG_CSLIDER)
-	printf ("Before node slider (gene tree):\n");
-	printf ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
-	if (p->anc->anc == NULL)
-		printf ("Old clock rate: %f\n", clockRate);
-	ShowNodes (t->root, 0, t->isRooted);
-	getchar();
+    printf ("Before node slider (gene tree):\n");
+    printf ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
+    if (p->anc->anc == NULL)
+        printf ("Old clock rate: %f\n", clockRate);
+    ShowNodes (t->root, 0, t->isRooted);
+    getchar();
 #endif
 
     /* get gene tree prior prob before move */
     (*lnPriorRatio) -= LnPriorProbGeneTree(geneTree, clockRate, speciesTree, popSizePtr);
 
-	/* store values needed later for prior calculation (relaxed clocks) */
-	oldPLength = p->length;
-	if (p->left != NULL)
+    /* store values needed later for prior calculation (relaxed clocks) */
+    oldPLength = p->length;
+    if (p->left != NULL)
         {
         oldLeftLength = p->left->length;
-	    oldRightLength = p->right->length;
+        oldRightLength = p->right->length;
         }
     else
         oldLeftLength = oldRightLength = 0.0;
@@ -1556,54 +1558,54 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
     assert (q != NULL && p->x == q->index);
 
-	/* determine lower and upper bound */
-	minDepth = p->left->nodeDepth + POS_MIN;
-	if (p->right->nodeDepth + POS_MIN > minDepth)
-		minDepth = p->right->nodeDepth + POS_MIN;
+    /* determine lower and upper bound */
+    minDepth = p->left->nodeDepth + POS_MIN;
+    if (p->right->nodeDepth + POS_MIN > minDepth)
+        minDepth = p->right->nodeDepth + POS_MIN;
     if (q->nodeDepth + POS_MIN > minDepth)
         minDepth = q->nodeDepth + POS_MIN;
-	if (p->anc->anc == NULL)
+    if (p->anc->anc == NULL)
         maxDepth = TREEHEIGHT_MAX;
-	else
-    	maxDepth = p->anc->nodeDepth - POS_MIN;
-	
+    else
+        maxDepth = p->anc->nodeDepth - POS_MIN;
+    
     /* abort if impossible */
-	if (minDepth >= maxDepth)
-		{
-		abortMove = YES;
-		return (NO_ERROR);
-		}
+    if (minDepth >= maxDepth)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
 
     if( maxDepth-minDepth < window )
-		{
-		window = maxDepth-minDepth;
-		}
+        {
+        window = maxDepth-minDepth;
+        }
 
-	/* pick the new node depth */
+    /* pick the new node depth */
     oldDepth = p->nodeDepth;
-	newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
+    newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
     
     /* reflect the new node depth */
-	while (newDepth < minDepth || newDepth > maxDepth)
-		{
-		if (newDepth < minDepth)
-			newDepth = 2.0 * minDepth - newDepth;
-		if (newDepth > maxDepth)
-			newDepth = 2.0 * maxDepth - newDepth;
-		}
-	p->nodeDepth = newDepth;
+    while (newDepth < minDepth || newDepth > maxDepth)
+        {
+        if (newDepth < minDepth)
+            newDepth = 2.0 * minDepth - newDepth;
+        if (newDepth > maxDepth)
+            newDepth = 2.0 * maxDepth - newDepth;
+        }
+    p->nodeDepth = newDepth;
 
-	/* determine new branch lengths around p and set update of transition probabilities */
-	if (p->left != NULL)
-		{
-		p->left->length = p->nodeDepth - p->left->nodeDepth;
+    /* determine new branch lengths around p and set update of transition probabilities */
+    if (p->left != NULL)
+        {
+        p->left->length = p->nodeDepth - p->left->nodeDepth;
         assert (p->left->length >= POS_MIN);
-		p->left->upDateTi = YES;
-		p->right->length = p->nodeDepth - p->right->nodeDepth;
+        p->left->upDateTi = YES;
+        p->right->length = p->nodeDepth - p->right->nodeDepth;
         assert (p->right->length >= POS_MIN);
-		p->right->upDateTi = YES;
-		}
-	if (p->anc->anc != NULL)
+        p->right->upDateTi = YES;
+        }
+    if (p->anc->anc != NULL)
         {
         p->length = p->anc->nodeDepth - p->nodeDepth;
         assert (p->length >= POS_MIN);
@@ -1611,39 +1613,39 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
 
     /* set flags for update of cond likes from p and down to root */
-	q = p;
-	while (q->anc != NULL)
-		{
-		q->upDateCl = YES;
-		q = q->anc;
-		}
+    q = p;
+    while (q->anc != NULL)
+        {
+        q->upDateCl = YES;
+        q = q->anc;
+        }
 
-	/* calculate proposal ratio */
+    /* calculate proposal ratio */
     (*lnProposalRatio) = 0.0;
 
     /* calculate prior ratio */
     (*lnPriorRatio) += LnPriorProbGeneTree (geneTree, clockRate, speciesTree, popSizePtr);
 
     /* adjust proposal and prior ratio for relaxed clock models */
-	for (i=0; i<param->nSubParams; i++)
-		{
-		subParm = param->subParams[i];
-		if (subParm->paramType == P_CPPEVENTS)
-			{
-			nEvents = subParm->nEvents[2*chain+state[chain]];
-			lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+    for (i=0; i<param->nSubParams; i++)
+        {
+        subParm = param->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
+            {
+            nEvents = subParm->nEvents[2*chain+state[chain]];
+            lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
 
             /* proposal ratio */
-			if (p->left != NULL)
+            if (p->left != NULL)
                 {
                 (*lnProposalRatio) += nEvents[p->left->index ] * log (p->left->length  / oldLeftLength);
-			    (*lnProposalRatio) += nEvents[p->right->index] * log (p->right->length / oldRightLength);
+                (*lnProposalRatio) += nEvents[p->right->index] * log (p->right->length / oldRightLength);
                 }
-			if (p->anc->anc != NULL)
+            if (p->anc->anc != NULL)
                 (*lnProposalRatio) += nEvents[p->index] * log (p->length / oldPLength);
 
             /* prior ratio */
-			if (p->anc->anc == NULL) // two branches changed in same direction
+            if (p->anc->anc == NULL) // two branches changed in same direction
                 (*lnPriorRatio) += lambda * (2.0 * (oldDepth - newDepth));
             else if (p->left != NULL) // two branches changed in one direction, one branch in the other direction
                 (*lnPriorRatio) += lambda * (oldDepth - newDepth);
@@ -1651,21 +1653,21 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 (*lnPriorRatio) += lambda * (newDepth - oldDepth);
 
             /* update effective evolutionary lengths */
-			if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
+            if (UpdateCppEvolLengths (subParm, p, chain) == ERROR)
                 {
                 abortMove = YES;
                 return (NO_ERROR);
                 }
-			}
-		else if ( subParm->paramType == P_TK02BRANCHRATES ||
+            }
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02) )
-			{
-			if (subParm->paramType == P_TK02BRANCHRATES)
+            {
+            if (subParm->paramType == P_TK02BRANCHRATES)
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-			tk02Rate = GetParamVals (subParm, chain, state[chain]);
-			brlens = GetParamSubVals (subParm, chain, state[chain]);
+            tk02Rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* no proposal ratio effect */
 
@@ -1673,21 +1675,21 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             if (p->left != NULL)
                 {
                 (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
-			    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
-    			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
-    			(*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
+                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
+                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
+                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
                 }
-			if (p->anc->anc != NULL)
+            if (p->anc->anc != NULL)
                 {
                 (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
-			    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
+                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
                 }
 
             /* update effective evolutionary lengths */
-			if (p->left != NULL)
+            if (p->left != NULL)
                 {
                 brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
-			    brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
+                brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
                 if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
                     brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
                     {
@@ -1705,22 +1707,22 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     }
                 }
             }
-		else if ( subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR) )
-			{
-			if (subParm->paramType == P_IGRBRANCHRATES)
+            {
+            if (subParm->paramType == P_IGRBRANCHRATES)
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-			igrRate = GetParamVals (subParm, chain, state[chain]);
-			brlens = GetParamSubVals (subParm, chain, state[chain]);
-			
+            igrRate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
             if (p->left != NULL)
                 {
                 (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-			    (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
-			if (p->anc->anc != NULL)
+            if (p->anc->anc != NULL)
                 (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 
             if (p->left != NULL)
@@ -1750,9 +1752,9 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             if (p->left != NULL)
                 {
                 (*lnPriorRatio) += LnProbTruncGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-			    (*lnPriorRatio) += LnProbTruncGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) += LnProbTruncGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
-			if (p->anc->anc != NULL)
+            if (p->anc->anc != NULL)
                 (*lnPriorRatio) += LnProbTruncGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 
             /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical inaccuracies */
@@ -1765,15 +1767,15 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
     
 #if defined (DEBUG_CSLIDER)
-	printf ("After node slider (gene tree):\n");
-	printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
-		oldDepth, newDepth, (*lnPriorRatio), (*lnProposalRatio));
-	ShowNodes (t->root, 0, t->isRooted);
-	getchar();
+    printf ("After node slider (gene tree):\n");
+    printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
+        oldDepth, newDepth, (*lnPriorRatio), (*lnProposalRatio));
+    ShowNodes (t->root, 0, t->isRooted);
+    getchar();
 #endif
 
     return (NO_ERROR);
-	
+    
 }
 
 
@@ -1782,7 +1784,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
 
 /*------------------------------------------------------------------
 |
-|	Move_SpeciesTree: Propose a new species tree
+|   Move_SpeciesTree: Propose a new species tree
 |
 ------------------------------------------------------------------*/
 int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
@@ -1790,7 +1792,7 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb, *modMinDepths,
                     forwardLambda, backwardLambda, lambdaDiv, mean;
-    Tree			*newSpeciesTree, *oldSpeciesTree, **geneTrees;
+    Tree            *newSpeciesTree, *oldSpeciesTree, **geneTrees;
     ModelInfo       *m;
 
     /* get tuning parameter (lambda divider) */
@@ -1799,7 +1801,7 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* calculate number of gene trees */
     numGeneTrees = param->nSubParams;
 
-	/* get model settings */
+    /* get model settings */
     m = &modelSettings[param->relParts[0]];
 
     /* get new and old species trees */

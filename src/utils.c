@@ -107,25 +107,25 @@ int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
 
 /*----------------------------------------------------------------
 |
-|	Bit: return 1 if bit n is set in BitsLong *p
-|		else return 0
+|   Bit: return 1 if bit n is set in BitsLong *p
+|       else return 0
 |
 -----------------------------------------------------------------*/
 int Bit (int n, BitsLong *p)
 
 {
 
-	BitsLong		x, bitsLongOne;
+    BitsLong        x, bitsLongOne;
 
     bitsLongOne = 1;
 
-	p += n / nBitsInALong;
-	x = bitsLongOne << (n % nBitsInALong);
+    p += n / nBitsInALong;
+    x = bitsLongOne << (n % nBitsInALong);
 
-	if ((x & (*p)) == 0)
-		return 0;
-	else
-		return 1;
+    if ((x & (*p)) == 0)
+        return 0;
+    else
+        return 1;
 
 }
 
@@ -136,14 +136,14 @@ int Bit (int n, BitsLong *p)
 /* ClearBit: Clear one bit in a bitfield */
 void ClearBit (int i, BitsLong *bits)
 {
-	BitsLong		x, bitsLongOne=1;
+    BitsLong        x, bitsLongOne=1;
 
-	bits += i / nBitsInALong;
+    bits += i / nBitsInALong;
 
-	x = bitsLongOne << (i % nBitsInALong);
+    x = bitsLongOne << (i % nBitsInALong);
     x ^= bitsLongWithAllBitsSet;
 
-	(*bits) &= x;
+    (*bits) &= x;
 }
 
 
@@ -153,7 +153,7 @@ void ClearBit (int i, BitsLong *bits)
 /* ClearBits: Clear all bits in a bitfield */
 void ClearBits (BitsLong *bits, int nLongs)
 {
-	int     i;
+    int     i;
     
     for (i=0; i<nLongs; i++)
         bits[i] = 0;
@@ -259,8 +259,8 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
                     }
                 marginalLnLSS[run]+=tmp;
                 }
-			for (i=0; i<numTopologies; i++)
-				{
+            for (i=0; i<numTopologies; i++)
+                {
                 tmpcp = strtok(NULL,"\t\n");
                 if(tmpcp == NULL )
                     {
@@ -269,7 +269,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
                     }
                 tmp = atof(tmpcp);
                 splitfreqSS[i*chainParams.numStepsSS + curStep-1] = tmp;                
-    			}
+                }
             }
         }
     
@@ -340,18 +340,18 @@ int FirstTaxonInPartition (BitsLong *partition, int length)
 
     taxon = 0;
     for (i=0; i<length; i++)
-		{
-		x = bitsLongOne;
-		for (j=0; j<nBits; j++)
-			{
-			if (partition[i] & x)
-				return taxon;
-			taxon++;
-			x <<= 1;
-			}
-		}
+        {
+        x = bitsLongOne;
+        for (j=0; j<nBits; j++)
+            {
+            if (partition[i] & x)
+                return taxon;
+            taxon++;
+            x <<= 1;
+            }
+        }
 
-	return taxon;
+    return taxon;
 
 }
 
@@ -362,17 +362,17 @@ int FirstTaxonInPartition (BitsLong *partition, int length)
 /* FirstTree: Return file position of first tree after current position */
 long FirstTree (FILE *fp, char *lineBuf, int longestLine)
 {
-	long    firstTree;
-	char	*word;
-	
-	do {
-		firstTree = ftell(fp);
-		if ((fgets (lineBuf, longestLine, fp)) == NULL)
-			return 0;
-		word = strtok (lineBuf, " ");
-		} while (strcmp(word,"tree")!=0);
+    long    firstTree;
+    char    *word;
+    
+    do {
+        firstTree = ftell(fp);
+        if ((fgets (lineBuf, longestLine, fp)) == NULL)
+            return 0;
+        word = strtok (lineBuf, " ");
+        } while (strcmp(word,"tree")!=0);
 
-	return (firstTree);
+    return (firstTree);
 }
 
 
@@ -383,11 +383,11 @@ int Flip01 (int x)
 
 {
 
-	if (x == 0)
-		return (1);
-	else
-		return (0);
-		
+    if (x == 0)
+        return (1);
+    else
+        return (0);
+        
 }
 
 
@@ -398,12 +398,12 @@ void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 
 {
 
-	int			i;
-	
-	for (i=0; i<length; i++)
-		{
-		partition[i] ^= mask[i];
-		}
+    int         i;
+    
+    for (i=0; i<length; i++)
+        {
+        partition[i] ^= mask[i];
+        }
 }
 
 
@@ -412,18 +412,18 @@ void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 
 /*-----------------------------------------------------------------
 |
-|	FlipOneBit: flip bit n in BitsLong *p
+|   FlipOneBit: flip bit n in BitsLong *p
 |
 ------------------------------------------------------------------*/
 void FlipOneBit (int n, BitsLong *p)
 
 {
 
-	BitsLong		x, bitsLongOne=1;
+    BitsLong        x, bitsLongOne=1;
 
-	p += n/nBitsInALong;
-	x = bitsLongOne << (n % nBitsInALong);
-	(*p) ^= x;
+    p += n/nBitsInALong;
+    x = bitsLongOne << (n % nBitsInALong);
+    (*p) ^= x;
 
 }
 
@@ -632,80 +632,80 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
 /* HarmonicArithmeticMean: Calculate harmonic and arithmetic mean from log values */
 int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *harm_mean)
 {
-	int				i, reliable;
-	MrBFlt			a, x, y, scaler, n;
+    int             i, reliable;
+    MrBFlt          a, x, y, scaler, n;
 
-	reliable = YES;
-	
-	scaler = vals[nVals-1];
-	a  = n = 0.0;
-	for (i=0; i<nVals; i++)
-		{
-		y = vals[i];
-		y -= scaler;
-		if (y > 400.0)
-			{
+    reliable = YES;
+    
+    scaler = vals[nVals-1];
+    a  = n = 0.0;
+    for (i=0; i<nVals; i++)
+        {
+        y = vals[i];
+        y -= scaler;
+        if (y > 400.0)
+            {
             if (y > 5000.0)
                 {
-			    reliable = NO;
-			    continue;
+                reliable = NO;
+                continue;
                 }
             a /= exp( y - 100.0 ); 
             scaler += y - 100.0;
             y = 100.0;
-			}
-		
-	    x = (MrBFlt) exp(y);
-			
-		if (n < 0.5)
-			a = x;
-		else
-			{
+            }
+        
+        x = (MrBFlt) exp(y);
+            
+        if (n < 0.5)
+            a = x;
+        else
+            {
             a += x;
-			}
-		n += 1.0;
-		}
+            }
+        n += 1.0;
+        }
 
-	/* arithmetic mean */
-	(*mean) = (MrBFlt) log(a/n) + scaler;
-	
-	scaler = (MrBFlt) (0.0 - vals[nVals-1]);
-	a  = n = 0.0;
-	for (i=0; i<nVals; i++)
-		{
-		y = (MrBFlt) (0.0 - vals[i]);
-		y -= scaler;
-		if (y > 400.0)
-			{
+    /* arithmetic mean */
+    (*mean) = (MrBFlt) log(a/n) + scaler;
+    
+    scaler = (MrBFlt) (0.0 - vals[nVals-1]);
+    a  = n = 0.0;
+    for (i=0; i<nVals; i++)
+        {
+        y = (MrBFlt) (0.0 - vals[i]);
+        y -= scaler;
+        if (y > 400.0)
+            {
             if (y > 5000.0)
                 {
-			    reliable = NO;
-			    continue;
+                reliable = NO;
+                continue;
                 }
             a /= exp( y - 100.0 ); 
             scaler += y - 100.0;
             y = 100.0;
-			}
-		
-	    x = (MrBFlt) exp(y);
-			
-		if (n < 0.5)
-			a = x;
-		else
-			{
+            }
+        
+        x = (MrBFlt) exp(y);
+            
+        if (n < 0.5)
+            a = x;
+        else
+            {
             a += x;
-			}
-		n += (MrBFlt) 1.0;
-		}
+            }
+        n += (MrBFlt) 1.0;
+        }
 
-	/* harmonic mean */
-	(*harm_mean) = - (MrBFlt) log(a/n) - scaler;
+    /* harmonic mean */
+    (*harm_mean) = - (MrBFlt) log(a/n) - scaler;
 
-	if (reliable == YES)
-		return (NO_ERROR);
-	else
-		return (ERROR);
-	
+    if (reliable == YES)
+        return (NO_ERROR);
+    else
+        return (ERROR);
+    
 }
 
 
@@ -717,17 +717,17 @@ int IsBitSet (int i, BitsLong *bits)
 
 {
 
-	BitsLong		x, bitsLongOne=1;
+    BitsLong        x, bitsLongOne=1;
 
-	bits += i / nBitsInALong;
+    bits += i / nBitsInALong;
 
-	x = bitsLongOne << (i % nBitsInALong);
+    x = bitsLongOne << (i % nBitsInALong);
 
-	if ((*bits) & x)
-		return (YES);
-	else
-		return (NO);
-		
+    if ((*bits) & x)
+        return (YES);
+    else
+        return (NO);
+        
 }
 
 
@@ -761,25 +761,25 @@ int IsConsistentWith (const char *token, const char *expected)
         incompatible (partially overlapping) */
 int IsPartCompatible (BitsLong *smaller, BitsLong *larger, int length)
 {
-	int i;
+    int i;
 
     /* test first if they overlap */
-	for (i=0; i<length; i++)
-		if ((smaller[i]&larger[i]) != 0)
-			break;
+    for (i=0; i<length; i++)
+        if ((smaller[i]&larger[i]) != 0)
+            break;
 
-	/* if they overlap, they must be nested */
-    if (i != length)	/* potentially incompatible */
-		{
-		for (i=0; i<length; i++)
-			if ((smaller[i]|larger[i]) != larger[i])
-				break;
-		}
-		
-	if (i == length)	/* passed either one of the tests */
-		return YES;
-	else
-		return NO;
+    /* if they overlap, they must be nested */
+    if (i != length)    /* potentially incompatible */
+        {
+        for (i=0; i<length; i++)
+            if ((smaller[i]|larger[i]) != larger[i])
+                break;
+        }
+        
+    if (i == length)    /* passed either one of the tests */
+        return YES;
+    else
+        return NO;
 }
 
 
@@ -790,16 +790,16 @@ int IsPartNested (BitsLong *smaller, BitsLong *larger, int length)
 
 {
 
-	int i;
+    int i;
 
-	for (i=0; i<length; i++)
-		if ((smaller[i] | larger[i]) != larger[i])
-			break;
-		
-	if (i == length)
-		return YES;
-	else
-		return NO;
+    for (i=0; i<length; i++)
+        if ((smaller[i] | larger[i]) != larger[i])
+            break;
+        
+    if (i == length)
+        return YES;
+    else
+        return NO;
 
 }
 
@@ -810,13 +810,13 @@ int IsPartNested (BitsLong *smaller, BitsLong *larger, int length)
 /* IsSectionEmpty: Test whether section of two bitfields is empty */
 int IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length)
 {
-	int i;
+    int i;
 
-	for (i=0; i<length; i++)
-		if ((bitField1[i] & bitField2[i]) != 0)
-			return NO;
-		
-	return YES;
+    for (i=0; i<length; i++)
+        if ((bitField1[i] & bitField2[i]) != 0)
+            return NO;
+        
+    return YES;
 }
 
 
@@ -826,13 +826,13 @@ int IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length)
 /* IsSectionEmpty: Test whether union of bitField1 and bitField2 equal to bitField3*/
 int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField3, int length)
 {
-	int i;
+    int i;
 
-	for (i=0; i<length; i++)
-		if ((bitField1[i] | bitField2[i]) != bitField3[i] )
-			return NO;
-		
-	return YES;
+    for (i=0; i<length; i++)
+        if ((bitField1[i] | bitField2[i]) != bitField3[i] )
+            return NO;
+        
+    return YES;
 }
 
 
@@ -842,20 +842,20 @@ int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField
 /* LastBlock: Return file position of last block in file */
 long LastBlock (FILE *fp, char *lineBuf, int longestLine)
 {
-	long	lastBlock;
-	char	*word;
-	
-	lastBlock = 0L;
-	rewind (fp);
+    long    lastBlock;
+    char    *word;
+    
+    lastBlock = 0L;
+    rewind (fp);
 
-	while ((fgets (lineBuf, longestLine, fp)) != NULL)
-		{
-		word = strtok (lineBuf, " ");
-		if (strcmp (word, "begin") == 0)
-			lastBlock = ftell (fp);
-		}
+    while ((fgets (lineBuf, longestLine, fp)) != NULL)
+        {
+        word = strtok (lineBuf, " ");
+        if (strcmp (word, "begin") == 0)
+            lastBlock = ftell (fp);
+        }
 
-	return lastBlock;
+    return lastBlock;
 }
 
 
@@ -866,29 +866,29 @@ int LineTermType (FILE *fp)
 
 {
 
-	int			ch, nextCh, term;
+    int         ch, nextCh, term;
 
-	term = LINETERM_UNIX;	/* default if no line endings are found */
-	while ((ch = getc(fp)) != EOF)
-		{
-		if ((ch == '\n') || (ch == '\r'))
-			{
-			if (ch == '\n')
-				term = LINETERM_UNIX;
-			else /* ch = '\r' */
-				{
-				/* First test below handles one-line MAC file */
-				if (((nextCh = getc(fp)) == EOF) || (nextCh != '\n'))
-					term = LINETERM_MAC;
-				else
-					term = LINETERM_DOS;
-				}
-			break;
-			}
-		}
-	(void)fseek(fp, 0L, 0);		/* rewind */
-	
-	return (term);
+    term = LINETERM_UNIX;   /* default if no line endings are found */
+    while ((ch = getc(fp)) != EOF)
+        {
+        if ((ch == '\n') || (ch == '\r'))
+            {
+            if (ch == '\n')
+                term = LINETERM_UNIX;
+            else /* ch = '\r' */
+                {
+                /* First test below handles one-line MAC file */
+                if (((nextCh = getc(fp)) == EOF) || (nextCh != '\n'))
+                    term = LINETERM_MAC;
+                else
+                    term = LINETERM_DOS;
+                }
+            break;
+            }
+        }
+    (void)fseek(fp, 0L, 0);     /* rewind */
+    
+    return (term);
 
 }
 
@@ -900,54 +900,54 @@ int LongestLine (FILE *fp)
 
 {
 
-	int			ch, lineLength, longest;
-	
-	longest = 0;
-	lineLength = 0;
-	ch = fgetc(fp);
-	while ( ch != EOF)
-		{
-		if((ch != '\n') && (ch != '\r'))
-			{
-			ch = fgetc(fp);
-			lineLength++;
-			continue;
-			}
-		if (ch == '\r')
-			{
-			if( (ch = fgetc(fp)) == '\n' )
-				{
-				/* windows \r\n */
-				lineLength++;
-				ch = fgetc(fp);
-				}
-			else
-				{
-				/* old mac \r */
-				}
-			}
-		else  /*unix, linux,new mac or text mode read \n*/
-			{
-				ch = fgetc(fp);
-			}
+    int         ch, lineLength, longest;
+    
+    longest = 0;
+    lineLength = 0;
+    ch = fgetc(fp);
+    while ( ch != EOF)
+        {
+        if((ch != '\n') && (ch != '\r'))
+            {
+            ch = fgetc(fp);
+            lineLength++;
+            continue;
+            }
+        if (ch == '\r')
+            {
+            if( (ch = fgetc(fp)) == '\n' )
+                {
+                /* windows \r\n */
+                lineLength++;
+                ch = fgetc(fp);
+                }
+            else
+                {
+                /* old mac \r */
+                }
+            }
+        else  /*unix, linux,new mac or text mode read \n*/
+            {
+                ch = fgetc(fp);
+            }
 
-		if (lineLength > longest)
-				longest = lineLength;
-			lineLength = 0;
-		/*
-		if ((ch == '\n') || (ch == '\r'))
-			{
-			if (lineLength > longest)
-				longest = lineLength;
-			lineLength = 0;
-			}
-		else
-			lineLength++;
-			*/
-		}
-	rewind (fp);		/* rewind */
-	
-	return (longest+1); /*+1 to accommodate last character*/
+        if (lineLength > longest)
+                longest = lineLength;
+            lineLength = 0;
+        /*
+        if ((ch == '\n') || (ch == '\r'))
+            {
+            if (lineLength > longest)
+                longest = lineLength;
+            lineLength = 0;
+            }
+        else
+            lineLength++;
+            */
+        }
+    rewind (fp);        /* rewind */
+    
+    return (longest+1); /*+1 to accommodate last character*/
 
 }
 
@@ -976,7 +976,7 @@ void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper,
     int     i, width, theStart;
     MrBFlt  f, g, interval;
 
-	SortMrBFlt (vals, 0, nVals-1);
+    SortMrBFlt (vals, 0, nVals-1);
     
     width = (int)(nVals * 0.95 + 0.5);
     theStart = 0;
@@ -1022,27 +1022,27 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 
 {
 
-	int				i;
-	MrBFlt			a, aOld, s, x;
+    int             i;
+    MrBFlt          a, aOld, s, x;
 
-	a = s = 0.0;
-	for (i=0; i<nVals; i++)
-		{
-		x = vals[i];
-		aOld = a;
-		a += (x - a) / (MrBFlt) (i + 1);
-		s += (x - a) * (x - aOld);
-		}
+    a = s = 0.0;
+    for (i=0; i<nVals; i++)
+        {
+        x = vals[i];
+        aOld = a;
+        a += (x - a) / (MrBFlt) (i + 1);
+        s += (x - a) * (x - aOld);
+        }
 
-	/* mean */
-	(*mean) = a;
-	
-	/* variance */
-	if (nVals <= 1)
-		(*var) = 0.0;
-	else
-		(*var) = s / (nVals - 1);
-			
+    /* mean */
+    (*mean) = a;
+    
+    /* variance */
+    if (nVals <= 1)
+        (*var) = 0.0;
+    else
+        (*var) = s / (nVals - 1);
+            
 }
 
 
@@ -1064,51 +1064,51 @@ void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt
 
 {
 
-	int				i;
-	MrBFlt			a, aOld, s, x, y, scaler;
+    int             i;
+    MrBFlt          a, aOld, s, x, y, scaler;
 
-	a = s = 0.0;
+    a = s = 0.0;
     scaler = vals[nVals-1];
-	for (i=0; i<nVals; i++)
-		{
-		y = vals[i];
-		y -= scaler;
-		if (y > 200.0)
-			{
+    for (i=0; i<nVals; i++)
+        {
+        y = vals[i];
+        y -= scaler;
+        if (y > 200.0)
+            {
             a /= exp( y - 100.0 );
             s /= exp( 2*(y - 100));
             scaler += y - 100.0;
             y = 100.0;
-			}
+            }
 
         x=(MrBFlt)exp(y);
 
-		aOld = a;
-		a += (x - a) / (MrBFlt) (i + 1);
-		s += (x - a) * (x - aOld);
-		}
+        aOld = a;
+        a += (x - a) / (MrBFlt) (i + 1);
+        s += (x - a) * (x - aOld);
+        }
 
-	/* mean */
-	(*mean) = log(a) + scaler;
-	
-	/* variance */
+    /* mean */
+    (*mean) = log(a) + scaler;
+    
+    /* variance */
     if( var!=NULL )
         {
-	    if (nVals <= 1)
-		    (*var) = 0.0;
-	    else
-		    (*var) = log( s / (nVals)) + 2*scaler;
+        if (nVals <= 1)
+            (*var) = 0.0;
+        else
+            (*var) = log( s / (nVals)) + 2*scaler;
         }
 
-	/* variance */
+    /* variance */
     if( varEst!=NULL )
         {
-	    if (nVals <= 1)
-		    (*varEst) = 0.0;
-	    else
-		    (*varEst) = log( s / (nVals+1)) + 2*scaler;
+        if (nVals <= 1)
+            (*varEst) = 0.0;
+        else
+            (*varEst) = log( s / (nVals+1)) + 2*scaler;
         }
-			
+            
 }
 
 
@@ -1118,58 +1118,58 @@ void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt
 void MrBayesPrint (char *format, ...)
 
 {
-	va_list ptr;
+    va_list ptr;
 
-#	if defined (MPI_ENABLED)
-	if (proc_id == 0)
-		{
-		if (echoMB == YES)
-			{
-			va_start (ptr, format);
-			vprintf (format, ptr);
-			va_end(ptr);
-			fflush (stdout);
-			}
-		if (logToFile == YES)
-			{
-			if (logFileFp == NULL)
-				printf ("%s   Could not print log output to file\n", spacer);
-			else
-				{
-				va_start (ptr, format);
-				vfprintf (logFileFp, format, ptr);
-				va_end(ptr);
-				fflush (logFileFp);
-				}
-			}
-		}
-#	else
-	if (chainParams.redirect == NO)
-		{
-		if (echoMB == YES)
-			{
-			va_start (ptr, format);
-			vprintf (format, ptr);
-			va_end(ptr);
-			fflush (stdout);
-			}
-		if (logToFile == YES)
-			{
-			if (logFileFp == NULL)
-				{
-				printf ("%s   Could not print log output to file\n", spacer);
-				logToFile = NO;
-				}
-			else
-				{
-				va_start (ptr, format);
-				vfprintf (logFileFp, format, ptr);
-				va_end(ptr);
-				fflush (logFileFp);
-				}
-			}
-		}
-#	endif
+#   if defined (MPI_ENABLED)
+    if (proc_id == 0)
+        {
+        if (echoMB == YES)
+            {
+            va_start (ptr, format);
+            vprintf (format, ptr);
+            va_end(ptr);
+            fflush (stdout);
+            }
+        if (logToFile == YES)
+            {
+            if (logFileFp == NULL)
+                printf ("%s   Could not print log output to file\n", spacer);
+            else
+                {
+                va_start (ptr, format);
+                vfprintf (logFileFp, format, ptr);
+                va_end(ptr);
+                fflush (logFileFp);
+                }
+            }
+        }
+#   else
+    if (chainParams.redirect == NO)
+        {
+        if (echoMB == YES)
+            {
+            va_start (ptr, format);
+            vprintf (format, ptr);
+            va_end(ptr);
+            fflush (stdout);
+            }
+        if (logToFile == YES)
+            {
+            if (logFileFp == NULL)
+                {
+                printf ("%s   Could not print log output to file\n", spacer);
+                logToFile = NO;
+                }
+            else
+                {
+                va_start (ptr, format);
+                vfprintf (logFileFp, format, ptr);
+                va_end(ptr);
+                fflush (logFileFp);
+                }
+            }
+        }
+#   endif
 }
 
 
@@ -1178,22 +1178,22 @@ void MrBayesPrint (char *format, ...)
 void MrBayesPrintf (FILE *f, char *format, ...)
 
 {
-	va_list                 ptr;
+    va_list                 ptr;
 
-#	if defined (MPI_ENABLED)
-	if (proc_id == 0)
-		{
-		va_start (ptr, format);
-		vfprintf (f, format, ptr);
-		va_end(ptr);
-		fflush(f);
-		}
-#	else
-	va_start (ptr, format);
-	vfprintf (f, format, ptr);
-	va_end(ptr);
-	fflush(f);
-#	endif
+#   if defined (MPI_ENABLED)
+    if (proc_id == 0)
+        {
+        va_start (ptr, format);
+        vfprintf (f, format, ptr);
+        va_end(ptr);
+        fflush(f);
+        }
+#   else
+    va_start (ptr, format);
+    vfprintf (f, format, ptr);
+    va_end(ptr);
+    fflush(f);
+#   endif
 }
 
 
@@ -1218,16 +1218,16 @@ int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
         }
 
     for (i++; i<length; i++)
-		{
-		x = 1;
-		for (j=0; j<nBitsInALong; j++)
-			{
-			if (partition[i] & x)
-				return taxon;
-			taxon++;
-			x <<= 1;
-			}
-		}    
+        {
+        x = 1;
+        for (j=0; j<nBitsInALong; j++)
+            {
+            if (partition[i] & x)
+                return taxon;
+            taxon++;
+            x <<= 1;
+            }
+        }    
 
     return taxon;
 }
@@ -1239,19 +1239,19 @@ int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
 /* NumBits: Count bits in a bitfield */
 int NumBits (BitsLong *x, int len)
 {
-	int         i, n=0;
+    int         i, n=0;
     BitsLong    y;
 
-	for (i=0; i<len; i++)
+    for (i=0; i<len; i++)
         {
         y = x[i];
         while (y != 0)
             {
-		    y &= (y-1);
+            y &= (y-1);
             n++;
             }
         }
-	return n;
+    return n;
 }
 
 
@@ -1262,20 +1262,20 @@ FILE *OpenBinaryFileR (char *name)
 
 {
 
-	FILE		*fp;
+    FILE        *fp;
     char        fileName[200];
 
     strcpy(fileName, workingDir);
     strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "rb")) == NULL)  
-		{   
-		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
-		return (NULL);
-		}
-	else
-		return (fp);
-	
+        {   
+        MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
+        return (NULL);
+        }
+    else
+        return (fp);
+    
 }
 
 
@@ -1285,20 +1285,20 @@ FILE *OpenBinaryFileR (char *name)
 FILE *OpenTextFileR (char *name)
 {
 
-	FILE		*fp;
+    FILE        *fp;
     char        fileName[200];
 
     strcpy(fileName, workingDir);
     strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "r")) == NULL)  
-		{   
-		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, fileName);
-		return (NULL);
-		}
-	else
-		return (fp);
-	
+        {   
+        MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, fileName);
+        return (NULL);
+        }
+    else
+        return (fp);
+    
 }
 
 
@@ -1307,19 +1307,19 @@ FILE *OpenTextFileR (char *name)
 FILE *OpenTextFileRQuait (char *name)
 {
 
-	FILE		*fp;
+    FILE        *fp;
     char        fileName[200];
 
     strcpy(fileName, workingDir);
     strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "r")) == NULL)  
-		{   
-		return (NULL);
-		}
-	else
-		return (fp);
-	
+        {   
+        return (NULL);
+        }
+    else
+        return (fp);
+    
 }
 
 
@@ -1330,20 +1330,20 @@ FILE *OpenTextFileA (char *name)
 
 {
 
-	FILE		*fp;
+    FILE        *fp;
     char        fileName[200];
 
     strcpy(fileName, workingDir);
     strncat(fileName, name, 199 - strlen(fileName));
 
     if ((fp = fopen (fileName, "a+")) == NULL)  
-		{   
-		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
-		return (NULL);
-		}
-	else
-		return (fp);
-	
+        {   
+        MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
+        return (NULL);
+        }
+    else
+        return (fp);
+    
 }
 
 
@@ -1354,20 +1354,20 @@ FILE *OpenTextFileW (char *name)
 
 {
 
-	FILE		*fp;
+    FILE        *fp;
     char        fileName[200];
 
     strcpy(fileName, workingDir);
     strncat(fileName, name, 199 - strlen(fileName));
 
-	if ((fp = fopen (fileName, "w+")) == NULL)  
-		{   
-		MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
-		return (NULL);
-		}
-	else
-		return (fp);
-	
+    if ((fp = fopen (fileName, "w+")) == NULL)  
+        {   
+        MrBayesPrint ("%s   Could not open file \"%s\"\n", spacer, name);
+        return (NULL);
+        }
+    else
+        return (fp);
+    
 }
 
 
@@ -1384,45 +1384,45 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 
 {
 
-	int				i, j, nVals;
-	MrBFlt			aW, aOldW, sW, sWj, aB, aOldB, sB, x, R2, weight;
+    int             i, j, nVals;
+    MrBFlt          aW, aOldW, sW, sWj, aB, aOldB, sB, x, R2, weight;
 
-	aB = sB = sW = sWj = 0.0;
+    aB = sB = sW = sWj = 0.0;
     nVals = 0;
-	for (j=0; j<nRuns; j++)
-		{
-		if(count[j]==0)
-			{
-			return -1.0;
-			}
-		nVals += count[j];
-		aW = vals[j][0];
-		for (i=1; i<count[j]; i++)
-			{
-			x = vals[j][i];
-			aOldW = aW;
-			aW += (x - aW) / (MrBFlt) (i + 1);
-			sWj += (x - aW) * (x - aOldW);
-			}
+    for (j=0; j<nRuns; j++)
+        {
+        if(count[j]==0)
+            {
+            return -1.0;
+            }
+        nVals += count[j];
+        aW = vals[j][0];
+        for (i=1; i<count[j]; i++)
+            {
+            x = vals[j][i];
+            aOldW = aW;
+            aW += (x - aW) / (MrBFlt) (i + 1);
+            sWj += (x - aW) * (x - aOldW);
+            }
         sW += sWj / (MrBFlt)(count[j] - 1);
-		x = aW;
-		aOldB = aB;
-		aB += (x - aB) / (MrBFlt) (j + 1);
-		if (j!=0)
-			sB += (x - aB) * (x - aOldB);
-		}
+        x = aW;
+        aOldB = aB;
+        aB += (x - aB) / (MrBFlt) (j + 1);
+        if (j!=0)
+            sB += (x - aB) * (x - aOldB);
+        }
 
-	sB = sB / (MrBFlt) (nRuns - 1);
-	sW = sW / (MrBFlt) (nRuns);
+    sB = sB / (MrBFlt) (nRuns - 1);
+    sW = sW / (MrBFlt) (nRuns);
 
-	weight = (MrBFlt) nVals / (MrBFlt) nRuns;
+    weight = (MrBFlt) nVals / (MrBFlt) nRuns;
     if (sW > 0.0)
-		{
-		R2 = ((weight - 1.0) / weight) + ((MrBFlt)(nRuns + 1) / (MrBFlt) (nRuns)) * (sB / sW);
-		return sqrt(R2);
-		}
-	else
-		return -1.0;
+        {
+        R2 = ((weight - 1.0) / weight) + ((MrBFlt)(nRuns + 1) / (MrBFlt) (nRuns)) * (sB / sW);
+        return sqrt(R2);
+        }
+    else
+        return -1.0;
 }
 
 
@@ -1438,7 +1438,7 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
 
-	int		    i, j, lag, maxLag, samples;
+    int         i, j, lag, maxLag, samples;
     MrBFlt      *values, mean, del1, del2, varStat=0.0;
     MrBFlt      gammaStat[2000];
         
@@ -1520,17 +1520,17 @@ void *SafeCalloc(size_t n, size_t s) {
 
 
 int SafeFclose(FILE **fp) {
-	int retval=-1;
+    int retval=-1;
 #if defined MPI_ENABLED
-	if (proc_id == 0) {
+    if (proc_id == 0) {
 #endif
-	if( fp!=NULL && (*fp)!=NULL ) 
-		retval=fclose(*fp);
-	*fp = NULL;
+    if( fp!=NULL && (*fp)!=NULL ) 
+        retval=fclose(*fp);
+    *fp = NULL;
 #if defined MPI_ENABLED
-	}
+    }
 #endif
-	return retval;	
+    return retval;  
 }
 
 
@@ -1648,13 +1648,13 @@ char *SafeStrcpy (char **target, const char *source)
 /* SetBit: Set a particular bit in a series of longs */
 void SetBit (int i, BitsLong *bits)
 {
-	BitsLong		x, bitsLongOne=1;
+    BitsLong        x, bitsLongOne=1;
 
-	bits += i / nBitsInALong;
+    bits += i / nBitsInALong;
 
-	x = bitsLongOne << (i % nBitsInALong);
+    x = bitsLongOne << (i % nBitsInALong);
 
-	(*bits) |= x;
+    (*bits) |= x;
 }
 
 
@@ -1665,7 +1665,7 @@ void SortInts (int *item, int *assoc, int count, int descendingOrder)
 
 {
 
-	SortInts2 (item, assoc, 0, count-1, descendingOrder);
+    SortInts2 (item, assoc, 0, count-1, descendingOrder);
 
 }
 
@@ -1677,72 +1677,72 @@ void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
 
 {
 
-	register int	i, j, x, y;
+    register int    i, j, x, y;
 
-	if (descendingOrder == YES)
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] > x && i < right)
-				i++;
-			while (x > item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = item[i];
-				item[i] = item[j];
-				item[j] = y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortInts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortInts2 (item, assoc, i, right, descendingOrder);
-		}
-	else
-		{
-		i = left;
-		j = right;
-		x = item[(left+right)/2];
-		do 
-			{
-			while (item[i] < x && i < right)
-				i++;
-			while (x < item[j] && j > left)
-				j--;
-			if (i <= j)
-				{
-				y = item[i];
-				item[i] = item[j];
-				item[j] = y;
-				
-				if (assoc)
-					{
-					y = assoc[i];
-					assoc[i] = assoc[j];
-					assoc[j] = y;
-					}				
-				i++;
-				j--;
-				}
-			} while (i <= j);
-		if (left < j)
-			SortInts2 (item, assoc, left, j, descendingOrder);
-		if (i < right)
-			SortInts2 (item, assoc, i, right, descendingOrder);
-		}
+    if (descendingOrder == YES)
+        {
+        i = left;
+        j = right;
+        x = item[(left+right)/2];
+        do 
+            {
+            while (item[i] > x && i < right)
+                i++;
+            while (x > item[j] && j > left)
+                j--;
+            if (i <= j)
+                {
+                y = item[i];
+                item[i] = item[j];
+                item[j] = y;
+                
+                if (assoc)
+                    {
+                    y = assoc[i];
+                    assoc[i] = assoc[j];
+                    assoc[j] = y;
+                    }               
+                i++;
+                j--;
+                }
+            } while (i <= j);
+        if (left < j)
+            SortInts2 (item, assoc, left, j, descendingOrder);
+        if (i < right)
+            SortInts2 (item, assoc, i, right, descendingOrder);
+        }
+    else
+        {
+        i = left;
+        j = right;
+        x = item[(left+right)/2];
+        do 
+            {
+            while (item[i] < x && i < right)
+                i++;
+            while (x < item[j] && j > left)
+                j--;
+            if (i <= j)
+                {
+                y = item[i];
+                item[i] = item[j];
+                item[j] = y;
+                
+                if (assoc)
+                    {
+                    y = assoc[i];
+                    assoc[i] = assoc[j];
+                    assoc[j] = y;
+                    }               
+                i++;
+                j--;
+                }
+            } while (i <= j);
+        if (left < j)
+            SortInts2 (item, assoc, left, j, descendingOrder);
+        if (i < right)
+            SortInts2 (item, assoc, i, right, descendingOrder);
+        }
 
 }
 
@@ -1755,32 +1755,32 @@ void SortMrBFlt (MrBFlt *item, int left, int right)
 
 {
 
-	register int	i, j;
-	MrBFlt			x, temp;
+    register int    i, j;
+    MrBFlt          x, temp;
 
-	i = left;
-	j = right;
-	x = item[(left+right)/2];
-	do 
-		{
-		while (item[i] < x && i < right)
-			i++;
-		while (x < item[j] && j > left)
-			j--;
-		if (i <= j)
-			{
-			temp = item[i];
-			item[i] = item[j];
-			item[j] = temp;
-				
-			i++;
-			j--;
-			}
-		} while (i <= j);
-	if (left < j)
-		SortMrBFlt (item, left, j);
-	if (i < right)
-		SortMrBFlt (item, i, right);
+    i = left;
+    j = right;
+    x = item[(left+right)/2];
+    do 
+        {
+        while (item[i] < x && i < right)
+            i++;
+        while (x < item[j] && j > left)
+            j--;
+        if (i <= j)
+            {
+            temp = item[i];
+            item[i] = item[j];
+            item[j] = temp;
+                
+            i++;
+            j--;
+            }
+        } while (i <= j);
+    if (left < j)
+        SortMrBFlt (item, left, j);
+    if (i < right)
+        SortMrBFlt (item, i, right);
 }
 
 
@@ -1814,30 +1814,30 @@ int StrCmpCaseInsensitive (char *s, char *t)
 
 
 /* StripComments: Strip possibly nested comments from the string s.
-	Example: s="text1[text2[text3]]"-> s="text1" */
+    Example: s="text1[text2[text3]]"-> s="text1" */
 void StripComments (char *s)
 {
-	char	*t;
-	int		inComment;
+    char    *t;
+    int     inComment;
 
-	inComment = 0;
-	for (t=s; *s != '\0'; s++)
-		{
-		if (inComment == 0)
-			{
-			if (*s == '[')
-				inComment++;
-			else
-				*t++ = *s;
-			}
-		else
-			{
-			if (*s == ']')
-				inComment--;
+    inComment = 0;
+    for (t=s; *s != '\0'; s++)
+        {
+        if (inComment == 0)
+            {
+            if (*s == '[')
+                inComment++;
+            else
+                *t++ = *s;
+            }
+        else
+            {
+            if (*s == ']')
+                inComment--;
             else if (*s == '[')
                 inComment++;
-			}
- 		}
+            }
+        }
     *t = '\0';
 }
 
@@ -1853,7 +1853,7 @@ FILE *TestOpenTextFileR (char *name)
     strcpy(fileName, workingDir);
     strncat(fileName, name, 99 - strlen(fileName));
 
-    return fopen (fileName, "r");	
+    return fopen (fileName, "r");   
 }
 
 
@@ -1914,13 +1914,13 @@ int WantTo (const char *msg)
 
     MrBayesPrint ("%s   %s? (yes/no): ", spacer, msg);
 
-	for (i=0; i<10; i++)
-	    {
-	    if (fgets (s, 98, stdin) == NULL)
-		    {
-		    MrBayesPrint ("%s   Failed to retrieve answer; will take that as a no\n", spacer);
-		    return NO;
-		    }
+    for (i=0; i<10; i++)
+        {
+        if (fgets (s, 98, stdin) == NULL)
+            {
+            MrBayesPrint ("%s   Failed to retrieve answer; will take that as a no\n", spacer);
+            return NO;
+            }
 
         /* Strip away the newline */
         s[strlen(s)-1] = '\0';
@@ -1932,7 +1932,7 @@ int WantTo (const char *msg)
             return NO;
 
         MrBayesPrint ("%s   Enter yes or no: ", spacer);
-	    }
+        }
 
     MrBayesPrint ("%s   MrBayes does not understand; will take that as a no\n", spacer);
 

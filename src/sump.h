@@ -8,19 +8,20 @@ typedef struct
     int     firstParamLine;
     int     numRows;
     int     numColumns;
-} SumpFileInfo;
+    } SumpFileInfo;
 
 /* struct to hold info about a model probability */
 typedef struct
     {
     int     index;
     double  prob;
-    }   ModelProb;
+    } ModelProb;
 
 /* struct to hold a parameter sample, possibly from multiple files */
-typedef struct {
+typedef struct
+    {
     MrBFlt **values;
-} ParameterSample;
+    } ParameterSample;
 
 /* function declarations */
 int     AllocateParameterSamples (ParameterSample **parameterSamples, int numRuns, int numRows, int numColumns);

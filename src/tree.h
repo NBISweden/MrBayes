@@ -1,4 +1,4 @@
-#define		TREEBUFINCREASE   200
+#define     TREEBUFINCREASE   200
 
 /* tree utility functions */
 int       AddToTreeList (TreeList *treeList, Tree *tree);
@@ -8,8 +8,8 @@ int       AllocateTreePartitions (Tree *t);
 PolyTree *AllocatePolyTree (int numTaxa);
 int       AllocatePolyTreePartitions (PolyTree *pt);
 int       AllocatePolyTreeRelClockParams (PolyTree *pt, int nBSets, int nESets);
-int		  AreTopologiesSame(Tree *t1, Tree *t2);
-int		  AreTreesSame (Tree *t1, Tree *t2);
+int       AreTopologiesSame(Tree *t1, Tree *t2);
+int       AreTreesSame (Tree *t1, Tree *t2);
 int       BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames);
 int       BuildRandomRTopology (Tree *t, RandLong *seed);
 int       BuildRandomUTopology (Tree *t, RandLong *seed);
@@ -53,8 +53,8 @@ int       LabelTree (Tree *t, char **taxonNames);
 void      Mark (TreeNode *p);
 void      MarkUnconstrained (TreeNode *p);
 void      MarkDatedSubtree (TreeNode *p);
-int	      MoveCalculationRoot (Tree *t, int outgroup);
-int	      MovePolyCalculationRoot (PolyTree *t, int outgroup);
+int       MoveCalculationRoot (Tree *t, int outgroup);
+int       MovePolyCalculationRoot (PolyTree *t, int outgroup);
 int       NumConstrainedTips (TreeNode *p);
 int       NumDatedTips (TreeNode *p);
 void      OrderTips (PolyTree *t);
@@ -84,7 +84,7 @@ int       RetrieveUTree (Tree *t, int *order, MrBFlt *brlens);
 void      SetDatedNodeAges(Param* param, int chain, int state);
 void      SetNodeDepths (Tree *t);
 int       SetTreeNodeAges (Param *param, int chain, int state);
-int		  ShowPolyNodes (PolyTree *pt);
+int       ShowPolyNodes (PolyTree *pt);
 int       ShowTree (Tree *t);
 int       StoreRPolyTopology (PolyTree *t, int *order);
 int       StoreRPolyTree (PolyTree *t, int *order, MrBFlt *brlens);
