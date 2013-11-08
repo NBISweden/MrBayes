@@ -127,7 +127,7 @@ To install autoconf and automake after having installed HomeBrew, use:
 
 To install the most recent version of openmpi, use:
 
-> brew install openmpi --devel
+> brew install openmpi
 
 The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic to 
 compile MrBayes (hangs on model.c). Please update to Xcode 5 or install newer command 
@@ -173,11 +173,12 @@ Open Command Prompt (cmd.exe), "cd" to the src folder you just downloaded. E.g.,
 
 and use the following command to compile:
 
-> gcc -O3 -ffast-math -o mb bayes.c best.c command.c mb.c mbbeagle.c mbmath.c mcmc.c 
+> gcc -O3 -ffast-math -o mb bayes.c best.c command.c mbbeagle.c mbmath.c mcmc.c 
                          model.c plot.c sump.c sumt.c tree.c utils.c -lm
 
 An executable named "mb.exe" will be generated in the same folder, if everything
-goes smoothly.
+goes smoothly. You may want to edit the fist few lines in mb.h to define/undef
+some macros (SSE_ENABLED, NDEBUG, etc).
 
 
 Further references
