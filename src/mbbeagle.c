@@ -115,15 +115,16 @@ int InitBeagleInstance (ModelInfo *m, int division)
             }
         }
 
-    if (beagleResourceCount == 0) 
+    if (beagleResourceNumber >= 0 && beagleResourceNumber != 99)
         {
-        preferedFlags = beagleFlags;
-        } 
-        else 
+        resource = beagleResourceNumber;
+        beagleResourceCount = 1;
+        }
+    else if (beagleResourceCount != 0) 
         {
         resource = beagleResource[beagleInstanceCount % beagleResourceCount];
-        preferedFlags = beagleFlags;        
         }
+    preferedFlags = beagleFlags;
     
     requiredFlags = 0L;
     

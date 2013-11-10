@@ -65,7 +65,7 @@ const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is ex
 
 #define NUMCOMMANDS                     61  /* Note: NUMCOMMANDS gives the total number  */
                                             /*       of commands in the program          */
-#define NUMPARAMS                       275
+#define NUMPARAMS                       276
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -271,6 +271,7 @@ int             tryToUseBEAGLE;        /* try to use the BEAGLE library         
 int             beagleScalingScheme;   /* BEAGLE dynamic scaling                        */
 int             beagleScalingFrequency;/* BEAGLE dynamic scaling frequency              */
 long            beagleFlags;           /* BEAGLE required resource flags                */
+int             beagleResourceNumber;  /* BEAGLE resource number                        */
 int             *beagleResource;       /* BEAGLE resource choice list                   */
 int             beagleResourceCount;   /* BEAGLE resource choice list length            */
 int             beagleInstanceCount;   /* total number of BEAGLE instances              */
@@ -354,7 +355,7 @@ CmdType         commands[] =
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,                                                            {122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
             { 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-            { 38,             "Set",  NO,             DoSet, 21,               {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+            { 38,             "Set",  NO,             DoSet, 22,           {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268,275},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
             { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
             { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
             { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
@@ -7032,6 +7033,35 @@ int DoSetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
         }
+        /* set Beagle resource number (global variable BEAGLE flag) ****************************************/
+        else if (!strcmp(parmName, "Beagleresource"))
+        {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting =  Expecting(NUMBER);
+            else if (expecting == Expecting(NUMBER))
+            {
+#if defined (BEAGLE_ENABLED)
+                sscanf (tkn, "%d", &tempI);
+                if (tempI < 0)
+                    {
+                    MrBayesPrint ("%s   Beagleresource must be a valid resource number or 99 to disable resource selection\n", spacer);
+                    return ERROR;
+                    }
+                beagleResourceNumber = tempI;
+                if (beagleResourceNumber == 99)
+                    MrBayesPrint ("%s   Setting Beagleresource to %d (auto)\n", spacer, beagleResourceNumber);
+                else
+                    MrBayesPrint ("%s   Setting Beagleresource to %d\n", spacer, beagleResourceNumber);
+#else
+                BeagleNotLinked();
+#endif
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+            else
+                return (ERROR);
+        }
         /* set Beagle resources requirements (global variable BEAGLE flag) ****************************************/
         else if (!strcmp(parmName, "Beagledevice"))
         {
@@ -12678,6 +12708,9 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                   to compute the phylogenetic likelihood on a variety of high-  \n");
         MrBayesPrint ("                   performance hardware including multicore CPUs and GPUs. Some  \n"); 
         MrBayesPrint ("                   models in MrBayes are not yet supported by BEAGLE.            \n");               
+        MrBayesPrint ("   Beagleresource -- Set this option to the number of a specific resource you    \n");
+        MrBayesPrint ("                   wish to use with BEAGLE (use 'Showbeagle' to see the list of  \n");
+        MrBayesPrint ("                   available resources). Set to '99' for auto-resource selection.\n");
         MrBayesPrint ("   Beagledevice -- Set this option to 'GPU' or 'CPU' to select processor.        \n"); 
         MrBayesPrint ("   Beagleprecision -- Selection 'Single' or 'Double' precision computation.      \n");
         MrBayesPrint ("   Beaglescaling -- 'Always' rescales partial likelihoods at each evaluation.    \n");
@@ -12716,6 +12749,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Precision          <number>              %d                                   \n", precision);
 #if defined (BEAGLE_ENABLED)
         MrBayesPrint ("   Usebeagle          Yes/No                %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
+        MrBayesPrint ("   Beagleresource     <number>              %d                                   \n", beagleResourceNumber);
         MrBayesPrint ("   Beagledevice       CPU/GPU               %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
         MrBayesPrint ("   Beagleprecision    Single/Double         %s                                   \n", beagleFlags & BEAGLE_FLAG_PRECISION_SINGLE ? "Single" : "Double");
         MrBayesPrint ("   Beaglescaling      Always/Dynamic        %s                                   \n", beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ? "Always" : "Dynamic");
@@ -15139,9 +15173,10 @@ void SetUpParms (void)
     PARAM   (272, "Mixedvarpr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM   (273, "Mixedvar",       DoLinkParm,        "\0");
     PARAM   (274, "Mixedbrchrates", DoLinkParm,        "\0");
+    PARAM   (275, "Beagleresource", DoSetParm,         "\0");
 
     /* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 275; one more than last index) at the top of this file. */
+            NUMPARAMS (now 276; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 

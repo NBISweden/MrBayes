@@ -535,6 +535,7 @@ int InitializeMrBayes (void)
 #endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
+    beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment
     // beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;           /* default to SSE code                           */
     beagleResource = NULL;
