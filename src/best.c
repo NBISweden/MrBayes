@@ -15,12 +15,9 @@
  *  liuliang@stat.ohio-state.edu
  */
 
-#include    <assert.h>
-
+#include    "globals.h"
 #include    "best.h"
 #include    "command.h"
-#include    "globals.h"
-#include    "mb.h"
 #include    "mbmath.h"
 #include    "mcmc.h"
 #include    "model.h"

@@ -34,21 +34,14 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include "mb.h"
 #include "globals.h"
-#include "bayes.h"
 #include "command.h"
 #include "mbmath.h"
 #include "mcmc.h"
 #include "model.h"
 #include "sumt.h"
 #include "utils.h"
-         
+
        const char* const svnRevisionBayesC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 extern const char* const svnRevisionBestC;
 extern const char* const svnRevisionCommandC;

@@ -34,16 +34,8 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include <ctype.h>
-#include "mb.h"
 #include "globals.h"
 #include "command.h"
-#include "bayes.h"
 #include "sump.h"
 #include "mbmath.h"
 #include "mcmc.h"

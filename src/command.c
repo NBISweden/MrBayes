@@ -34,18 +34,9 @@
  *
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include <ctype.h>
-#include "mb.h"
 #include "globals.h"
-#include "mbbeagle.h"
-#include "bayes.h"
 #include "command.h"
+#include "mbbeagle.h"
 #include "mbmath.h"
 #include "model.h"
 #include "mcmc.h"

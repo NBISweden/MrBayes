@@ -34,13 +34,6 @@
  *
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <math.h>
-
-#include "mb.h"
 #include "globals.h"
 #include "utils.h"
 

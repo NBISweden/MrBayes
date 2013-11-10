@@ -1,3 +1,6 @@
+#ifndef __COMMAND_H__
+#define __COMMAND_H__
+
 int         AddString (char ***list, int len, char *token);
 BitsLong    Expecting (int y);
 int         CheckString (char **list, int len, char *token, int *matchIndex);
@@ -23,3 +26,5 @@ int         StateCode_AA (int n);
 int         StateCode_NUC4 (int n);
 int         StateCode_Std (int n);
 char        WhichNuc (int x);
+
+#endif

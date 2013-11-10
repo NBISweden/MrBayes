@@ -1,3 +1,6 @@
+#ifndef __TREE_H__
+#define __TREE_H__
+
 #define     TREEBUFINCREASE   200
 
 /* tree utility functions */
@@ -103,3 +106,5 @@ void      WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int
 void      WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int showBrlens, int isRooted);
 void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
+
+#endif

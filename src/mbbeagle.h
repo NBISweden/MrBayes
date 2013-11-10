@@ -1,3 +1,6 @@
+#ifndef __MBBEAGLE_H__
+#define __MBBEAGLE_H__
+
 void   BeaglePrintResources(void);
 void   BeaglePrintFlags(long inFlags);
 void   BeagleNotLinked(void);
@@ -17,3 +20,5 @@ int    InitBeagleInstance (ModelInfo *m, int division);
 int    TreeCondLikes_Beagle (Tree *t, int division, int chain);
 int    TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int    TreeTiProbs_Beagle (Tree *t, int division, int chain);
+
+#endif

@@ -1,4 +1,5 @@
-/* typedefs */
+#ifndef __SUMP_H__
+#define __SUMP_H__
 
 /* struct to hold info about a .p file */
 typedef struct
@@ -35,3 +36,5 @@ void    FreeParameterSamples (ParameterSample *parameterSamples);
 int     GetHeaders (char ***headerNames, char *headerLine, int *nHeaders);
 int     PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int nSamples);
 int     ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *parameterSamples, int runNo);
+
+#endif

@@ -34,16 +34,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include <ctype.h>
-#include <assert.h>
-#include "mb.h"
 #include "globals.h"
-#include "bayes.h"
 #include "best.h"
 #include "model.h"
 #include "command.h"
@@ -56,10 +47,6 @@ const char* const svnRevisionModelC="$Rev$";   /* Revision keyword which is expe
 
 #if defined(__MWERKS__)
 #include "SIOUX.h"
-#endif
-
-#ifndef NDEBUG
-#include <assert.h>
 #endif
 
 #undef  DEBUG_ADDDUMMYCHARS
@@ -19750,7 +19737,7 @@ void SetUpMoveTypes (void)
     
     /* Register the move type here when new move functions are added 
        Remember to check that the number of move types does not exceed NUM_MOVE_TYPES
-       defined in mb.h.         */
+       defined in bayes.h.         */
     int         i;
     MoveType    *mt;
 

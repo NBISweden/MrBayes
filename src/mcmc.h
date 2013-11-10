@@ -1,3 +1,6 @@
+#ifndef __MCMC_H__
+#define __MCMC_H__
+
 int     AddToPrintString (char *tempStr);
 void    AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *alphaPi, MrBFlt minTuning, MrBFlt maxTuning);
 void    AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *lambda, MrBFlt minTuning, MrBFlt maxTuning);
@@ -100,3 +103,5 @@ FILE    *OpenNewMBPrintFile (char *fileName);
 int     ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq);
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);
 int     setFilePositions (int samplePos);
+
+#endif

@@ -1,14 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <math.h>
-#include <limits.h>
-#include <float.h>
-#include <time.h>
-#include <stdarg.h>
-#include "mb.h"
-
+#ifndef __BEST_H__
+#define __BEST_H__
 
 /**************** typedefs used by Fredrik's code, derived from BEST code *******************/
 
@@ -35,3 +26,5 @@ int     Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 void    ShowUpperTriangMatrix(double *values, int squareSize);
 
 /* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */
+
+#endif

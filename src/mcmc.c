@@ -34,19 +34,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <memory.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <assert.h>
-#include "mb.h"
 #include "globals.h"
-#include "bayes.h"
 #include "best.h"
 #include "mbbeagle.h"
 #include "mcmc.h"
@@ -70,9 +58,9 @@ char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expanded/updated 
 #endif
 
 #ifdef VISUAL
-/* NO_ERROR is defined in mb.h (as 0) and also in WinError.h (as 0L) */
+/* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L) */
 #undef NO_ERROR 
-/* ERROR is defined in mb.h (as 1) and also in WinGDI.h (as 0). we use the mb.h value */
+/* ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
 #undef ERROR
 #include <windows.h>
 #undef ERROR

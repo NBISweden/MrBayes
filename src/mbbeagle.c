@@ -29,16 +29,8 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include <ctype.h>
-#include <assert.h>
-#include "mb.h"
-#include "mbbeagle.h"
 #include "globals.h"
+#include "mbbeagle.h"
 #include "utils.h"
 #include "mcmc.h"
 #include "model.h"

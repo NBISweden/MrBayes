@@ -34,23 +34,14 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include <string.h>
-#include <stdarg.h>
-#include <assert.h>
-#include "bayes.h"
+#include "globals.h"
 #include "best.h"
-#include "mb.h"
+#include "command.h"
 #include "mcmc.h"
 #include "mbmath.h"
 #include "model.h"
-#include "globals.h"
 #include "tree.h"
 #include "utils.h"
-#include "command.h"
 
 const char* const svnRevisionTreeC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 

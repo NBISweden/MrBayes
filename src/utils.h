@@ -1,8 +1,5 @@
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
+#ifndef __UTILS_H__
+#define __UTILS_H__
 
 typedef struct
     {
@@ -16,7 +13,6 @@ typedef struct
     MrBFlt          minESS;
     }
     Stat;
-
 
 int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
@@ -83,3 +79,5 @@ FILE    *TestOpenTextFileR (char *name);
 void     UpdateGrowthFxn(int *growthFxn);
 int      UpperTriangIndex(int i, int j, int size);
 int      WantTo (const char *msg);
+
+#endif

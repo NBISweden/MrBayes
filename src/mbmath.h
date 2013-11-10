@@ -1,3 +1,6 @@
+#ifndef __MBMATH_H__
+#define __MBMATH_H__
+
 #undef complex
 struct complex
     {
@@ -75,3 +78,5 @@ MrBFlt  PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator);
 MrBFlt  PsiGammaRandomVariable (MrBFlt alpha, RandLong *seed);
 MrBFlt  QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta);
 MrBFlt  RandomNumber (RandLong *seed);
+
+#endif

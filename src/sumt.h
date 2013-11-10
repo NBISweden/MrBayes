@@ -1,3 +1,6 @@
+#ifndef __SUMT_H__
+#define __SUMT_H__
+
 int      DoCompareTree (void);
 int      DoCompareTreeParm (char *parmName, char *tkn);
 int      DoSumt (void);
@@ -7,3 +10,5 @@ int      DoSumtTreeParm (char *parmName, char *tkn);
 void     ResetTranslateTable (void);
 int      ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport);
 void     ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow);
+
+#endif

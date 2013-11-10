@@ -1,3 +1,8 @@
+#ifndef __GLOBALS_H__
+#define __GLOBALS_H__
+
+#include "bayes.h"
+
 /* global variables */
 extern int              abortMove;                              /* flag determining whether to abort move        */
 extern int              *activeParams[NUM_LINKED];              /* a table holding the parameter status          */
@@ -210,3 +215,5 @@ extern MrBFlt           partnerStateInfo[7];                    /* likelihood/pr
 extern CLFlt            scalerValue[];
 extern CLFlt            logValue[];
 #endif
+
+#endif  /* __GLOBALS_H__ */
