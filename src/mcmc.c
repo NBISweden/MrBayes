@@ -27579,7 +27579,6 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed) ||
             (p->left == NULL && p->length < TIME_MIN) || (p->left != NULL && (p->left->length < TIME_MIN || p->right->length < TIME_MIN)) );
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
-    assert (p->anc != NULL);
 
 #if defined (DEBUG_CSLIDER)
     printf ("Before node slider (clock):\n");
@@ -37226,19 +37225,19 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             if (p->right->length > 0.0)
                 p->right->length = p->nodeDepth - p->right->nodeDepth;
             }
-        
-        /* in case the ancestor cannot be moved */
-        if (p->anc->anc != NULL)
-            if (p->anc->anc->anc == NULL && p->length > 0.0)
-                p->length = p->anc->nodeDepth - p->nodeDepth;
         }
+    
+    /* in case the ancestor cannot be moved */
+    p = t->root->left;
+    p->left->length = p->nodeDepth - p->left->nodeDepth;
+    p->right->length = p->nodeDepth - p->right->nodeDepth;
 
     /* check that all branch lengths are proper, which need not be the case */
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        // if (p->length < minV || p->length > maxV)
-        if (p->length < 0.0 || (p->length > 0.0 && p->length < minV) || p->length > maxV)
+        q = oldT->allDownPass[i];
+        if (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV))
             {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             abortMove = YES;
             return NO_ERROR;
