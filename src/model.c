@@ -136,6 +136,7 @@ MrBFlt          aaWAG[20][20];               /* rates for WAG model             
 MrBFlt          aacpREV[20][20];             /* rates for aacpREV model                      */
 MrBFlt          aaVt[20][20];                /* rates for VT model                           */
 MrBFlt          aaBlosum[20][20];            /* rates for Blosum62 model                     */
+MrBFlt          aaLG[20][20];                /* rates for LG model                           */
 MrBFlt          jonesPi[20];                 /* stationary frequencies for Jones model       */
 MrBFlt          dayhoffPi[20];               /* stationary frequencies for Dayhoff model     */
 MrBFlt          mtrev24Pi[20];               /* stationary frequencies for mtrev24 model     */
@@ -145,6 +146,7 @@ MrBFlt          wagPi[20];                   /* stationary frequencies for WAG m
 MrBFlt          cprevPi[20];                 /* stationary frequencies for aacpREV model     */
 MrBFlt          vtPi[20];                    /* stationary frequencies for VT model          */
 MrBFlt          blosPi[20];                  /* stationary frequencies for Blosum62 model    */
+MrBFlt          lgPi[20];                    /* stationary frequencies for LG model          */
 
 
 /* parser flags and variables */
@@ -8629,8 +8631,10 @@ int DoPrsetParm (char *parmName, char *tkn)
                             strcpy (tempStr, "Vt");
                         else if (IsSame ("Blosum", tkn) == SAME  || IsSame ("Blosum", tkn) == CONSISTENT_WITH)
                             strcpy (tempStr, "Blosum");
-                        else if (IsSame ("Blossum", tkn) == SAME  || IsSame ("Blossum", tkn) == CONSISTENT_WITH)
+                        else if (IsSame ("Blossum", tkn) == SAME || IsSame ("Blossum", tkn) == CONSISTENT_WITH)
                             strcpy (tempStr, "Blosum");
+                        else if (IsSame ("LG", tkn) == SAME      || IsSame ("LG", tkn) == CONSISTENT_WITH)
+                            strcpy (tempStr, "LG");
                         else if (IsSame ("Gtr", tkn) == SAME     || IsSame ("Gtr", tkn) == CONSISTENT_WITH)
                             strcpy (tempStr, "Gtr");
                         else
@@ -10731,6 +10735,11 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                             {
                             for (i=0; i<mp->nStates; i++)
                                 subValue[i] = blosPi[i];
+                            }
+                        else if (!strcmp(mp->aaModel, "LG"))
+                            {
+                            for (i=0; i<mp->nStates; i++)
+                                subValue[i] = lgPi[i];
                             }
                         }
                     }
@@ -16501,6 +16510,94 @@ int SetAARates (void)
     blosPi[18] = 0.032; 
     blosPi[19] = 0.073;
 
+    /* LG */
+    aaLG[ 0][ 0] = 0.000000; aaLG[ 0][ 1] = 0.425093; aaLG[ 0][ 2] = 0.276818; aaLG[ 0][ 3] = 0.395144; aaLG[ 0][ 4] = 2.489084;
+    aaLG[ 0][ 5] = 0.969894; aaLG[ 0][ 6] = 1.038545; aaLG[ 0][ 7] = 2.066040; aaLG[ 0][ 8] = 0.358858; aaLG[ 0][ 9] = 0.149830;
+    aaLG[ 0][10] = 0.395337; aaLG[ 0][11] = 0.536518; aaLG[ 0][12] = 1.124035; aaLG[ 0][13] = 0.253701; aaLG[ 0][14] = 1.177651;
+    aaLG[ 0][15] = 4.727182; aaLG[ 0][16] = 2.139501; aaLG[ 0][17] = 0.180717; aaLG[ 0][18] = 0.218959; aaLG[ 0][19] = 2.547870;
+    aaLG[ 1][ 0] = 0.425093; aaLG[ 1][ 1] = 0.000000; aaLG[ 1][ 2] = 0.751878; aaLG[ 1][ 3] = 0.123954; aaLG[ 1][ 4] = 0.534551;
+    aaLG[ 1][ 5] = 2.807908; aaLG[ 1][ 6] = 0.363970; aaLG[ 1][ 7] = 0.390192; aaLG[ 1][ 8] = 2.426601; aaLG[ 1][ 9] = 0.126991;
+    aaLG[ 1][10] = 0.301848; aaLG[ 1][11] = 6.326067; aaLG[ 1][12] = 0.484133; aaLG[ 1][13] = 0.052722; aaLG[ 1][14] = 0.332533;
+    aaLG[ 1][15] = 0.858151; aaLG[ 1][16] = 0.578987; aaLG[ 1][17] = 0.593607; aaLG[ 1][18] = 0.314440; aaLG[ 1][19] = 0.170887;
+    aaLG[ 2][ 0] = 0.276818; aaLG[ 2][ 1] = 0.751878; aaLG[ 2][ 2] = 0.000000; aaLG[ 2][ 3] = 5.076149; aaLG[ 2][ 4] = 0.528768;
+    aaLG[ 2][ 5] = 1.695752; aaLG[ 2][ 6] = 0.541712; aaLG[ 2][ 7] = 1.437645; aaLG[ 2][ 8] = 4.509238; aaLG[ 2][ 9] = 0.191503;
+    aaLG[ 2][10] = 0.068427; aaLG[ 2][11] = 2.145078; aaLG[ 2][12] = 0.371004; aaLG[ 2][13] = 0.089525; aaLG[ 2][14] = 0.161787;
+    aaLG[ 2][15] = 4.008358; aaLG[ 2][16] = 2.000679; aaLG[ 2][17] = 0.045376; aaLG[ 2][18] = 0.612025; aaLG[ 2][19] = 0.083688;
+    aaLG[ 3][ 0] = 0.395144; aaLG[ 3][ 1] = 0.123954; aaLG[ 3][ 2] = 5.076149; aaLG[ 3][ 3] = 0.000000; aaLG[ 3][ 4] = 0.062556;
+    aaLG[ 3][ 5] = 0.523386; aaLG[ 3][ 6] = 5.243870; aaLG[ 3][ 7] = 0.844926; aaLG[ 3][ 8] = 0.927114; aaLG[ 3][ 9] = 0.010690;
+    aaLG[ 3][10] = 0.015076; aaLG[ 3][11] = 0.282959; aaLG[ 3][12] = 0.025548; aaLG[ 3][13] = 0.017416; aaLG[ 3][14] = 0.394456;
+    aaLG[ 3][15] = 1.240275; aaLG[ 3][16] = 0.425860; aaLG[ 3][17] = 0.029890; aaLG[ 3][18] = 0.135107; aaLG[ 3][19] = 0.037967;
+    aaLG[ 4][ 0] = 2.489084; aaLG[ 4][ 1] = 0.534551; aaLG[ 4][ 2] = 0.528768; aaLG[ 4][ 3] = 0.062556; aaLG[ 4][ 4] = 0.000000;
+    aaLG[ 4][ 5] = 0.084808; aaLG[ 4][ 6] = 0.003499; aaLG[ 4][ 7] = 0.569265; aaLG[ 4][ 8] = 0.640543; aaLG[ 4][ 9] = 0.320627;
+    aaLG[ 4][10] = 0.594007; aaLG[ 4][11] = 0.013266; aaLG[ 4][12] = 0.893680; aaLG[ 4][13] = 1.105251; aaLG[ 4][14] = 0.075382;
+    aaLG[ 4][15] = 2.784478; aaLG[ 4][16] = 1.143480; aaLG[ 4][17] = 0.670128; aaLG[ 4][18] = 1.165532; aaLG[ 4][19] = 1.959291;
+    aaLG[ 5][ 0] = 0.969894; aaLG[ 5][ 1] = 2.807908; aaLG[ 5][ 2] = 1.695752; aaLG[ 5][ 3] = 0.523386; aaLG[ 5][ 4] = 0.084808;
+    aaLG[ 5][ 5] = 0.000000; aaLG[ 5][ 6] = 4.128591; aaLG[ 5][ 7] = 0.267959; aaLG[ 5][ 8] = 4.813505; aaLG[ 5][ 9] = 0.072854;
+    aaLG[ 5][10] = 0.582457; aaLG[ 5][11] = 3.234294; aaLG[ 5][12] = 1.672569; aaLG[ 5][13] = 0.035855; aaLG[ 5][14] = 0.624294;
+    aaLG[ 5][15] = 1.223828; aaLG[ 5][16] = 1.080136; aaLG[ 5][17] = 0.236199; aaLG[ 5][18] = 0.257336; aaLG[ 5][19] = 0.210332;
+    aaLG[ 6][ 0] = 1.038545; aaLG[ 6][ 1] = 0.363970; aaLG[ 6][ 2] = 0.541712; aaLG[ 6][ 3] = 5.243870; aaLG[ 6][ 4] = 0.003499;
+    aaLG[ 6][ 5] = 4.128591; aaLG[ 6][ 6] = 0.000000; aaLG[ 6][ 7] = 0.348847; aaLG[ 6][ 8] = 0.423881; aaLG[ 6][ 9] = 0.044265;
+    aaLG[ 6][10] = 0.069673; aaLG[ 6][11] = 1.807177; aaLG[ 6][12] = 0.173735; aaLG[ 6][13] = 0.018811; aaLG[ 6][14] = 0.419409;
+    aaLG[ 6][15] = 0.611973; aaLG[ 6][16] = 0.604545; aaLG[ 6][17] = 0.077852; aaLG[ 6][18] = 0.120037; aaLG[ 6][19] = 0.245034;
+    aaLG[ 7][ 0] = 2.066040; aaLG[ 7][ 1] = 0.390192; aaLG[ 7][ 2] = 1.437645; aaLG[ 7][ 3] = 0.844926; aaLG[ 7][ 4] = 0.569265;
+    aaLG[ 7][ 5] = 0.267959; aaLG[ 7][ 6] = 0.348847; aaLG[ 7][ 7] = 0.000000; aaLG[ 7][ 8] = 0.311484; aaLG[ 7][ 9] = 0.008705;
+    aaLG[ 7][10] = 0.044261; aaLG[ 7][11] = 0.296636; aaLG[ 7][12] = 0.139538; aaLG[ 7][13] = 0.089586; aaLG[ 7][14] = 0.196961;
+    aaLG[ 7][15] = 1.739990; aaLG[ 7][16] = 0.129836; aaLG[ 7][17] = 0.268491; aaLG[ 7][18] = 0.054679; aaLG[ 7][19] = 0.076701;
+    aaLG[ 8][ 0] = 0.358858; aaLG[ 8][ 1] = 2.426601; aaLG[ 8][ 2] = 4.509238; aaLG[ 8][ 3] = 0.927114; aaLG[ 8][ 4] = 0.640543;
+    aaLG[ 8][ 5] = 4.813505; aaLG[ 8][ 6] = 0.423881; aaLG[ 8][ 7] = 0.311484; aaLG[ 8][ 8] = 0.000000; aaLG[ 8][ 9] = 0.108882;
+    aaLG[ 8][10] = 0.366317; aaLG[ 8][11] = 0.697264; aaLG[ 8][12] = 0.442472; aaLG[ 8][13] = 0.682139; aaLG[ 8][14] = 0.508851;
+    aaLG[ 8][15] = 0.990012; aaLG[ 8][16] = 0.584262; aaLG[ 8][17] = 0.597054; aaLG[ 8][18] = 5.306834; aaLG[ 8][19] = 0.119013;
+    aaLG[ 9][ 0] = 0.149830; aaLG[ 9][ 1] = 0.126991; aaLG[ 9][ 2] = 0.191503; aaLG[ 9][ 3] = 0.010690; aaLG[ 9][ 4] = 0.320627;
+    aaLG[ 9][ 5] = 0.072854; aaLG[ 9][ 6] = 0.044265; aaLG[ 9][ 7] = 0.008705; aaLG[ 9][ 8] = 0.108882; aaLG[ 9][ 9] = 0.000000;
+    aaLG[ 9][10] = 4.145067; aaLG[ 9][11] = 0.159069; aaLG[ 9][12] = 4.273607; aaLG[ 9][13] = 1.112727; aaLG[ 9][14] = 0.078281;
+    aaLG[ 9][15] = 0.064105; aaLG[ 9][16] = 1.033739; aaLG[ 9][17] = 0.111660; aaLG[ 9][18] = 0.232523; aaLG[ 9][19] = 10.649107;
+    aaLG[10][ 0] = 0.395337; aaLG[10][ 1] = 0.301848; aaLG[10][ 2] = 0.068427; aaLG[10][ 3] = 0.015076; aaLG[10][ 4] = 0.594007;
+    aaLG[10][ 5] = 0.582457; aaLG[10][ 6] = 0.069673; aaLG[10][ 7] = 0.044261; aaLG[10][ 8] = 0.366317; aaLG[10][ 9] = 4.145067;
+    aaLG[10][10] = 0.000000; aaLG[10][11] = 0.137500; aaLG[10][12] = 6.312358; aaLG[10][13] = 2.592692; aaLG[10][14] = 0.249060;
+    aaLG[10][15] = 0.182287; aaLG[10][16] = 0.302936; aaLG[10][17] = 0.619632; aaLG[10][18] = 0.299648; aaLG[10][19] = 1.702745;
+    aaLG[11][ 0] = 0.536518; aaLG[11][ 1] = 6.326067; aaLG[11][ 2] = 2.145078; aaLG[11][ 3] = 0.282959; aaLG[11][ 4] = 0.013266;
+    aaLG[11][ 5] = 3.234294; aaLG[11][ 6] = 1.807177; aaLG[11][ 7] = 0.296636; aaLG[11][ 8] = 0.697264; aaLG[11][ 9] = 0.159069;
+    aaLG[11][10] = 0.137500; aaLG[11][11] = 0.000000; aaLG[11][12] = 0.656604; aaLG[11][13] = 0.023918; aaLG[11][14] = 0.390322;
+    aaLG[11][15] = 0.748683; aaLG[11][16] = 1.136863; aaLG[11][17] = 0.049906; aaLG[11][18] = 0.131932; aaLG[11][19] = 0.185202;
+    aaLG[12][ 0] = 1.124035; aaLG[12][ 1] = 0.484133; aaLG[12][ 2] = 0.371004; aaLG[12][ 3] = 0.025548; aaLG[12][ 4] = 0.893680;
+    aaLG[12][ 5] = 1.672569; aaLG[12][ 6] = 0.173735; aaLG[12][ 7] = 0.139538; aaLG[12][ 8] = 0.442472; aaLG[12][ 9] = 4.273607;
+    aaLG[12][10] = 6.312358; aaLG[12][11] = 0.656604; aaLG[12][12] = 0.000000; aaLG[12][13] = 1.798853; aaLG[12][14] = 0.099849;
+    aaLG[12][15] = 0.346960; aaLG[12][16] = 2.020366; aaLG[12][17] = 0.696175; aaLG[12][18] = 0.481306; aaLG[12][19] = 1.898718;
+    aaLG[13][ 0] = 0.253701; aaLG[13][ 1] = 0.052722; aaLG[13][ 2] = 0.089525; aaLG[13][ 3] = 0.017416; aaLG[13][ 4] = 1.105251;
+    aaLG[13][ 5] = 0.035855; aaLG[13][ 6] = 0.018811; aaLG[13][ 7] = 0.089586; aaLG[13][ 8] = 0.682139; aaLG[13][ 9] = 1.112727;
+    aaLG[13][10] = 2.592692; aaLG[13][11] = 0.023918; aaLG[13][12] = 1.798853; aaLG[13][13] = 0.000000; aaLG[13][14] = 0.094464;
+    aaLG[13][15] = 0.361819; aaLG[13][16] = 0.165001; aaLG[13][17] = 2.457121; aaLG[13][18] = 7.803902; aaLG[13][19] = 0.654683;
+    aaLG[14][ 0] = 1.177651; aaLG[14][ 1] = 0.332533; aaLG[14][ 2] = 0.161787; aaLG[14][ 3] = 0.394456; aaLG[14][ 4] = 0.075382;
+    aaLG[14][ 5] = 0.624294; aaLG[14][ 6] = 0.419409; aaLG[14][ 7] = 0.196961; aaLG[14][ 8] = 0.508851; aaLG[14][ 9] = 0.078281;
+    aaLG[14][10] = 0.249060; aaLG[14][11] = 0.390322; aaLG[14][12] = 0.099849; aaLG[14][13] = 0.094464; aaLG[14][14] = 0.000000;
+    aaLG[14][15] = 1.338132; aaLG[14][16] = 0.571468; aaLG[14][17] = 0.095131; aaLG[14][18] = 0.089613; aaLG[14][19] = 0.296501;
+    aaLG[15][ 0] = 4.727182; aaLG[15][ 1] = 0.858151; aaLG[15][ 2] = 4.008358; aaLG[15][ 3] = 1.240275; aaLG[15][ 4] = 2.784478;
+    aaLG[15][ 5] = 1.223828; aaLG[15][ 6] = 0.611973; aaLG[15][ 7] = 1.739990; aaLG[15][ 8] = 0.990012; aaLG[15][ 9] = 0.064105;
+    aaLG[15][10] = 0.182287; aaLG[15][11] = 0.748683; aaLG[15][12] = 0.346960; aaLG[15][13] = 0.361819; aaLG[15][14] = 1.338132;
+    aaLG[15][15] = 0.000000; aaLG[15][16] = 6.472279; aaLG[15][17] = 0.248862; aaLG[15][18] = 0.400547; aaLG[15][19] = 0.098369;
+    aaLG[16][ 0] = 2.139501; aaLG[16][ 1] = 0.578987; aaLG[16][ 2] = 2.000679; aaLG[16][ 3] = 0.425860; aaLG[16][ 4] = 1.143480;
+    aaLG[16][ 5] = 1.080136; aaLG[16][ 6] = 0.604545; aaLG[16][ 7] = 0.129836; aaLG[16][ 8] = 0.584262; aaLG[16][ 9] = 1.033739;
+    aaLG[16][10] = 0.302936; aaLG[16][11] = 1.136863; aaLG[16][12] = 2.020366; aaLG[16][13] = 0.165001; aaLG[16][14] = 0.571468;
+    aaLG[16][15] = 6.472279; aaLG[16][16] = 0.000000; aaLG[16][17] = 0.140825; aaLG[16][18] = 0.245841; aaLG[16][19] = 2.188158;
+    aaLG[17][ 0] = 0.180717; aaLG[17][ 1] = 0.593607; aaLG[17][ 2] = 0.045376; aaLG[17][ 3] = 0.029890; aaLG[17][ 4] = 0.670128;
+    aaLG[17][ 5] = 0.236199; aaLG[17][ 6] = 0.077852; aaLG[17][ 7] = 0.268491; aaLG[17][ 8] = 0.597054; aaLG[17][ 9] = 0.111660;
+    aaLG[17][10] = 0.619632; aaLG[17][11] = 0.049906; aaLG[17][12] = 0.696175; aaLG[17][13] = 2.457121; aaLG[17][14] = 0.095131;
+    aaLG[17][15] = 0.248862; aaLG[17][16] = 0.140825; aaLG[17][17] = 0.000000; aaLG[17][18] = 3.151815; aaLG[17][19] = 0.189510;
+    aaLG[18][ 0] = 0.218959; aaLG[18][ 1] = 0.314440; aaLG[18][ 2] = 0.612025; aaLG[18][ 3] = 0.135107; aaLG[18][ 4] = 1.165532;
+    aaLG[18][ 5] = 0.257336; aaLG[18][ 6] = 0.120037; aaLG[18][ 7] = 0.054679; aaLG[18][ 8] = 5.306834; aaLG[18][ 9] = 0.232523;
+    aaLG[18][10] = 0.299648; aaLG[18][11] = 0.131932; aaLG[18][12] = 0.481306; aaLG[18][13] = 7.803902; aaLG[18][14] = 0.089613;
+    aaLG[18][15] = 0.400547; aaLG[18][16] = 0.245841; aaLG[18][17] = 3.151815; aaLG[18][18] = 0.000000; aaLG[18][19] = 0.249313;
+    aaLG[19][ 0] = 2.547870; aaLG[19][ 1] = 0.170887; aaLG[19][ 2] = 0.083688; aaLG[19][ 3] = 0.037967; aaLG[19][ 4] = 1.959291;
+    aaLG[19][ 5] = 0.210332; aaLG[19][ 6] = 0.245034; aaLG[19][ 7] = 0.076701; aaLG[19][ 8] = 0.119013; aaLG[19][ 9] = 10.649107;
+    aaLG[19][10] = 1.702745; aaLG[19][11] = 0.185202; aaLG[19][12] = 1.898718; aaLG[19][13] = 0.654683; aaLG[19][14] = 0.296501;
+    aaLG[19][15] = 0.098369; aaLG[19][16] = 2.188158; aaLG[19][17] = 0.189510; aaLG[19][18] = 0.249313; aaLG[19][19] = 0.000000;
+
+    lgPi[0] = 0.079066;  lgPi[1] = 0.055941;  lgPi[2] = 0.041977;  lgPi[3] = 0.053052;
+    lgPi[4] = 0.012937;  lgPi[5] = 0.040767;  lgPi[6] = 0.071586;  lgPi[7] = 0.057337;
+    lgPi[8] = 0.022355;  lgPi[9] = 0.062157;  lgPi[10] = 0.099081; lgPi[11] = 0.064600;
+    lgPi[12] = 0.022951; lgPi[13] = 0.042302; lgPi[14] = 0.044040; lgPi[15] = 0.061197;
+    lgPi[16] = 0.053287; lgPi[17] = 0.012066; lgPi[18] = 0.034155; lgPi[19] = 0.069147;
+
     /* now, check that the matrices are symmetrical */
     for (i=0; i<20; i++)
         {
@@ -16628,6 +16725,20 @@ int SetAARates (void)
                 }
             }
         }
+    for (i=0; i<20; i++)
+        {
+        for (j=i+1; j<20; j++)
+            {
+            diff = aaLG[i][j] - aaLG[j][i];
+            if (diff < 0.0)
+                diff = -diff;
+            if (diff > 0.001)
+                {
+                MrBayesPrint ("%s   ERROR: LG model is not symmetrical.\n");
+                return (ERROR);
+                }
+            }
+        }
     
     /* rescale stationary frequencies, to make certain they sum to 1.0 */
     sum = 0.0;
@@ -16675,7 +16786,12 @@ int SetAARates (void)
         sum += blosPi[i];
     for (i=0; i<20; i++)
         blosPi[i] /= sum;
-        
+    sum = 0.0;
+    for (i=0; i<20; i++)
+        sum += lgPi[i];
+    for (i=0; i<20; i++)
+        lgPi[i] /= sum;
+    
     /* multiply entries by amino acid frequencies */
     for (i=0; i<20; i++)
         {
@@ -16689,7 +16805,8 @@ int SetAARates (void)
             aaWAG[i][j]     *= wagPi[j];
             aacpREV[i][j]   *= cprevPi[j];
             aaVt[i][j]      *= vtPi[j];
-            aaBlosum[i][j] *= blosPi[j];
+            aaBlosum[i][j]  *= blosPi[j];
+            aaLG[i][j]      *= lgPi[j];
             }
         }
         
@@ -16812,6 +16929,19 @@ int SetAARates (void)
     for (i=0; i<20; i++)
         for (j=0; j<20; j++)
             aaBlosum[i][j] *= scaler;
+    scaler = 0.0;
+    for (i=0; i<20; i++)
+        {
+        for (j=i+1; j<20; j++)
+            {
+            scaler += lgPi[i] * aaLG[i][j];
+            scaler += lgPi[j] * aaLG[j][i];
+            }
+        }
+    scaler = 1.0 / scaler;
+    for (i=0; i<20; i++)
+        for (j=0; j<20; j++)
+            aaLG[i][j] *= scaler;
     
     /* set diagonal of matrix */
     for (i=0; i<20; i++)
@@ -16903,6 +17033,16 @@ int SetAARates (void)
                 sum += aaBlosum[i][j];
             }
         aaBlosum[i][i] = -sum;
+        }
+    for (i=0; i<20; i++)
+        {
+        sum = 0.0;
+        for (j=0; j<20; j++)
+            {
+            if (i != j)
+                sum += aaLG[i][j];
+            }
+        aaLG[i][i] = -sum;
         }
 
 #   if 0
@@ -17246,6 +17386,8 @@ int SetModelInfo (void)
                 m->aaModelId = AAMODEL_VT;
             else if (!strcmp(mp->aaModel, "Blosum"))
                 m->aaModelId = AAMODEL_BLOSUM;
+            else if (!strcmp(mp->aaModel, "LG"))
+                m->aaModelId = AAMODEL_LG;
             else if (!strcmp(mp->aaModel, "Gtr"))
                 m->aaModelId = AAMODEL_GTR;
             else

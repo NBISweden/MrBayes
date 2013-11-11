@@ -819,7 +819,7 @@ int InitializeMrBayes (void)
 
     /* Aamodel */
     modelElementNames = (char ***) SafeCalloc (3, sizeof (char **));
-    modelElementNames[0] = (char **) SafeCalloc (11, sizeof (char *));
+    modelElementNames[0] = (char **) SafeCalloc (12, sizeof (char *));
     modelElementNames[0][0]  = "Poisson";
     modelElementNames[0][1]  = "Jones";
     modelElementNames[0][2]  = "Dayhoff";
@@ -830,7 +830,8 @@ int InitializeMrBayes (void)
     modelElementNames[0][7]  = "Cprev";
     modelElementNames[0][8]  = "Vt";
     modelElementNames[0][9]  = "Blosum";
-    modelElementNames[0][10] = "";
+    modelElementNames[0][10] = "LG";
+    modelElementNames[0][11] = "";
 
     /* Gtrsubmodel */
     modelElementNames[1] = (char **) SafeCalloc (204, sizeof (char *));

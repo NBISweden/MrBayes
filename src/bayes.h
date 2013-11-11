@@ -205,8 +205,9 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define AAMODEL_CPREV           7
 #define AAMODEL_VT              8
 #define AAMODEL_BLOSUM          9
-#define AAMODEL_EQ              10
-#define AAMODEL_GTR             11 /* aa models with free parameters must be listed last */
+#define AAMODEL_LG              10
+#define AAMODEL_EQ              11
+#define AAMODEL_GTR             12 /* aa models with free parameters must be listed last */
 
 #define NUCMODEL_4BY4               0
 #define NUCMODEL_DOUBLET            1

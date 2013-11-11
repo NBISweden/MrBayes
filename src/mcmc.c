@@ -47760,8 +47760,9 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
         AAMODEL_CPREV           7
         AAMODEL_VT              8
         AAMODEL_BLOSUM          9
-        AAMODEL_EQ             10
-        AAMODEL_GTR            11 */
+        AAMODEL_LG             10
+        AAMODEL_EQ             11
+        AAMODEL_GTR            12 */
         
     if (m->aaModelId >= 0)
         aaModelID = m->aaModelId;
@@ -47891,6 +47892,12 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
             for (i=0; i<20; i++)
                 for (j=0; j<20; j++)
                     a[i][j] = aaBlosum[i][j];
+            }
+        else if (aaModelID == AAMODEL_LG)
+            {
+            for (i=0; i<20; i++)
+                for (j=0; j<20; j++)
+                    a[i][j] = aaLG[i][j];
             }
         else
             {
@@ -48118,6 +48125,20 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
                     a[j][i] = aaBlosum[j][i];
                     scaler += blosPi[i] * a[i][j] * probOn;
                     scaler += blosPi[j] * a[j][i] * probOn;
+                    }
+                }
+            }
+        else if (aaModelID == AAMODEL_LG)
+            {
+            scaler = 0.0;
+            for (i=0; i<20; i++)
+                {
+                for (j=i+1; j<20; j++)
+                    {
+                    a[i][j] = aaLG[i][j];
+                    a[j][i] = aaLG[j][i];
+                    scaler += lgPi[i] * a[i][j] * probOn;
+                    scaler += lgPi[j] * a[j][i] * probOn;
                     }
                 }
             }

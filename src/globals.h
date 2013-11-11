@@ -190,6 +190,7 @@ extern MrBFlt           aaWAG[20][20];               /* rates for WAG model     
 extern MrBFlt           aacpREV[20][20];             /* rates for aacpREV model                      */
 extern MrBFlt           aaVt[20][20];                /* rates for VT model                           */
 extern MrBFlt           aaBlosum[20][20];            /* rates for Blosum62 model                     */
+extern MrBFlt           aaLG[20][20];                /* rates for LG model                           */
 extern MrBFlt           jonesPi[20];                 /* stationary frequencies for Jones model       */
 extern MrBFlt           dayhoffPi[20];               /* stationary frequencies for Dayhoff model     */
 extern MrBFlt           mtrev24Pi[20];               /* stationary frequencies for mtrev24 model     */
@@ -199,6 +200,7 @@ extern MrBFlt           wagPi[20];                   /* stationary frequencies f
 extern MrBFlt           cprevPi[20];                 /* stationary frequencies for aacpREV model     */
 extern MrBFlt           vtPi[20];                    /* stationary frequencies for VT model          */
 extern MrBFlt           blosPi[20];                  /* stationary frequencies for Blosum62 model    */
+extern MrBFlt           lgPi[20];                    /* stationary frequencies for LG model          */
 
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
 extern FILE             *rateMultfp;

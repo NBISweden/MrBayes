@@ -2241,7 +2241,7 @@ int DoCitations (void)
     MrBayesPrint ("      Poisson --                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Bishop, M.J., and A.E. Friday. 1987. Tetropad relationships: the           \n");
-    MrBayesPrint ("         molecular evidence. Pp. 123�139 in Molecules and morphology in          \n");
+    MrBayesPrint ("         molecular evidence. Pp. 123-139 in Molecules and morphology in          \n");
     MrBayesPrint ("         evolution: conflict or compromise? (C. Patterson, ed.). Cambridge       \n");
     MrBayesPrint ("         University Press, Cambridge, England.                                   \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2249,12 +2249,12 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Jones, D.T., W. R. Taylor, and J. M. Thornton. 1992. The rapid generation  \n");
     MrBayesPrint ("         of mutation data matrices from protein sequences. Comput. Appl.         \n");
-    MrBayesPrint ("         Biosci. 8:275�282.                                                      \n");
+    MrBayesPrint ("         Biosci. 8:275-282.                                                      \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Dayhoff --                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Dayhoff, M.O., R.M. Schwartz, and B.C. Orcutt. 1978. A model of evol-      \n");
-    MrBayesPrint ("         utionary change in proteins. Pp. 345�352 in Atlas of protein sequence   \n");
+    MrBayesPrint ("         utionary change in proteins. Pp. 345-352 in Atlas of protein sequence   \n");
     MrBayesPrint ("         and structure. Vol. 5, Suppl. 3. National Biomedical Research           \n");
     MrBayesPrint ("          Foundation, Washington, D.C.                                           \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2273,7 +2273,7 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Yang, Z., R. Nielsen, and M. Hasegawa. 1998.  Models of amino acid         \n");
     MrBayesPrint ("         substitution and applications to mitochondrial protein evolution        \n");
-    MrBayesPrint ("         Molecular Biology and Evolution 15:1600�1611.                           \n");
+    MrBayesPrint ("         Molecular Biology and Evolution 15:1600-1611.                           \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      WAG --                                                                     \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2306,6 +2306,10 @@ int DoCitations (void)
     MrBayesPrint ("      Muller, T., and M. Vingron. 2000. Modeling amino acid replacement.         \n");
     MrBayesPrint ("         Journal of Computational Biology 7:761-776.                             \n");
     MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      LG --                                                                      \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("      Le, Si Q. & Gascuel, O. 2008 An improved general amino- acid replacement   \n");
+    MrBayesPrint ("         matrix. Mol. Biol. Evol. 25, 1307–1320.                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   MrBayes implements a simple Jukes-Cantor-like model for restriction sites     \n");
     MrBayesPrint ("   and other binary data. A problem with some of these data is that there is a   \n");
@@ -11105,10 +11109,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    default value is 1, which gives an effect similar to a flat  \n");
         MrBayesPrint ("                    Dirichlet.                                                   \n");
         MrBayesPrint ("   Aamodelpr     -- This parameter sets the rate matrix for amino acid data.     \n");
-        MrBayesPrint ("                    You can either fix the model by specifying aamodelpr=        \n");
-        MrBayesPrint ("                    fixed(<model name>), where <model name> is 'poisson' (a      \n");
-        MrBayesPrint ("                    glorified Jukes-Cantor model), 'jones', 'dayhoff', 'mtrev',  \n");
-        MrBayesPrint ("                    'mtmam', 'wag', 'rtrev', 'cprev', 'vt', 'blosum', 'equalin'  \n");
+        MrBayesPrint ("                    You can either fix the model by specifying aamodelpr=fixed   \n");
+        MrBayesPrint ("                    (<model name>), where <model name> is 'poisson' (a glorified \n");
+        MrBayesPrint ("                    Jukes-Cantor model), 'jones', 'dayhoff', 'mtrev', 'mtmam',   \n");
+        MrBayesPrint ("                    'wag', 'rtrev', 'cprev', 'vt', 'blosum', 'lg', 'equalin'     \n");
         MrBayesPrint ("                    (a glorified Felsenstein 1981 model), or 'gtr'. You can also \n");
         MrBayesPrint ("                    average over the first ten models by specifying aamodelpr=   \n");
         MrBayesPrint ("                    mixed. If you do so, the Markov chain will sample each model \n");
@@ -14919,7 +14923,7 @@ void SetUpParms (void)
     PARAM   ( 27, "Savebrlens",     DoMcmcParm,        "Yes|No|\0");
     PARAM   ( 28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Protein|\0");
     PARAM   ( 29, "Nst",            DoLsetParm,        "1|2|6|Mixed|\0");
-    PARAM   ( 30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|\0");
+    PARAM   ( 30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|LG|\0");
     PARAM   ( 31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
     PARAM   ( 32, "Omegavar",       DoLsetParm,        "Equal|Ny98|M3|M10|\0");
     PARAM   ( 33, "Code",           DoLsetParm,        "Universal|Vertmt|Mycoplasma|Yeast|Ciliates|Metmt|\0");
