@@ -21505,12 +21505,15 @@ void SetUpMoveTypes (void)
     mt->shortName = "rjMCMC_TKnIGR";
     mt->tuningName[0] = "sigma_TK over sigma_IGR";
     mt->shortTuningName[0] = "ratio";
+    mt->tuningName[1] = "Sliding window size";
+    mt->shortTuningName[1] = "delta";
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 2.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0;
+    mt->numTuningParams = 2;
+    mt->tuningParam[0] = 9.0;  /* TK/IGR var ratio */
+    mt->tuningParam[1] = 1.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
     mt->parsimonyBased = NO;

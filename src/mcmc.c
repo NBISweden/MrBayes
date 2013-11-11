@@ -24762,7 +24762,7 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
 {
 
-    /* move one IGR relaxed clock branch length using multiplier */
+    /* move one IGR relaxed clock branch rate using multiplier */
 
     int         i;
     MrBFlt      newRate, oldRate, tuning, minR, maxR, igrvar, *igrRate, *brlens;
@@ -24944,7 +24944,7 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
 {
     
-    /* move one relaxed clock branch length using multiplier */
+    /* move one relaxed clock branch rate using multiplier */
     
     int         i, *rclModel=NULL;
     MrBFlt      newRate, oldRate, tuning, minR, maxR, mxvar, *mxRate, *brlens;
@@ -25188,38 +25188,48 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
      //chi */
     
     int         i, *rclModel;
-    MrBFlt      *mxvar, *mxRate, *brlens, ratio, tk02var, igrvar;
+    MrBFlt      *mxvar, *mxRate, *brlens, ratio, delta, tk02var, igrvar;
     Tree        *t;
     TreeNode    *p = NULL;
     ModelInfo   *m;
+    Model       *mp;
 
     /* get model settings and parameters */
     m = &modelSettings[param->relParts[0]];
+    mp = &modelParams[param->relParts[0]];
     mxvar  = GetParamVals (m->mixedvar, chain, state[chain]);
     mxRate = GetParamVals (param, chain, state[chain]);
     brlens = GetParamSubVals (param, chain, state[chain]);
     t = GetTree (param, chain, state[chain]);
     
-    /* get sigma_tk/sigma_igr ratio */
-    ratio = mvp[0];
-
     /* get current value of model indicator */
     rclModel = GetParamIntVals(param, chain, state[chain]);
 
-    /* rjMCMC between models
-        Pr(TK02) = Pr(IGR) = 1/2
-        sigma_tk = sigma_igr * ratio  */
+    /* get tk02/igr var ratio, and sliding window */
+    ratio = mvp[0];
+    delta = mvp[1];
+
     (*lnPriorRatio) = (*lnProposalRatio) = 0.0;
+    
+    /* rjMCMC between models: Pr(TK02) = Pr(IGR) = 1/2 */
+    /* the current model is TK02, move to IGR */
     if ((*rclModel) == RCL_TK02)
         {
+        /* move the var parameter */
         tk02var = (*mxvar);
+        ratio += delta * (RandomNumber(seed) - 0.5);
         igrvar = tk02var / ratio;
         if (igrvar < IGRVAR_MIN || igrvar > IGRVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);
             }
+        
+        /* take prior on Mixedvar into account */
+        if (!strcmp(mp->mixedvarPr,"Exponential"))
+            (*lnPriorRatio) += mp->mixedvarExp * (tk02var - igrvar);
 
+        /* match the rates and change the effective branch lengths */
         for (i = 0; i < t->nNodes -2; i++)
             {
             p = t->allDownPass[i];
@@ -25235,27 +25245,29 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                     }
 
                 (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                }
-            
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                // printf("lnPriorRatio nan, when moving from TK02 to IGR\n");
-                abortMove=YES;
-                return (NO_ERROR);
+                if (*lnPriorRatio != *lnPriorRatio)
+                    {
+                    // printf("lnPriorRatio nan, when moving from TK02 to IGR\n");
+                    abortMove=YES;
+                    return (NO_ERROR);
+                    }
                 }
             }
-
-        /* In this move, we simply match the parameters in each model (nu = igrvar*ratio),
-           the dimension is same, so the Jacobian is ratio. */
-        (*lnProposalRatio) += ratio;
         
+        /* In this move, we simply match the parameters in each model,
+           the dimension is same, the Jacobian is 1/ratio. */
+        (*lnProposalRatio) -= log(ratio);
+            
         /* switch model */
         (*rclModel) = RCL_IGR;
         (*mxvar) = igrvar;
         }
-    else  // if (*rclModel == RCL_IGR)
+    /* the current model is IGR, move to TK02 */
+    else
         {
+        /* move the var parameter */
         igrvar = (*mxvar);
+        ratio += delta * (RandomNumber(seed) - 0.5);
         tk02var = igrvar * ratio;
         if (tk02var < TK02VAR_MIN || tk02var > TK02VAR_MAX)
             {
@@ -25263,13 +25275,18 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             return (NO_ERROR);
             }
 
+        /* take prior on Mixedvar into account */
+        if (!strcmp(mp->mixedvarPr,"Exponential"))
+            (*lnPriorRatio) += mp->mixedvarExp * (igrvar - tk02var);
+    
+        /* match the rates and change the effective branch lengths */
         for (i = 0; i < t->nNodes -2; i++)
             {
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
                 (*lnPriorRatio) -= LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                
+
                 brlens[p->index] = p->length * (mxRate[p->index] + mxRate[p->anc->index]) /2.0;
                 if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                     {
@@ -25278,25 +25295,26 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                     }
 
                 (*lnPriorRatio) += LnProbTK02LogNormal (mxRate[p->anc->index], tk02var*p->length, mxRate[p->index]);
-                }
-                
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                // printf("lnPriorRatio nan, when moving from IGR to TK02\n");
-                abortMove=YES;
-                return (NO_ERROR);
+                if (*lnPriorRatio != *lnPriorRatio)
+                    {
+                    printf("lnPriorRatio nan, when moving from IGR to TK02\n");
+                    abortMove=YES;
+                    return (NO_ERROR);
+                    }
                 }
             }
-        
-        /* proposal ratio and Jacobian */
-        (*lnProposalRatio) += 1.0 / ratio;
-         
+            
+        /* In this move, we simply match the parameters in each model,
+           the dimension is same, the Jacobian is ratio. */
+        (*lnProposalRatio) += log(ratio);
+            
         /* switch model */
         (*rclModel) = RCL_TK02;
         (*mxvar) = tk02var;
         }
 
-    // TouchAllTreeNodes(m, chain);
+    /* since effective branch lengths are updated, we need to update likelihood calculation */
+    TouchAllTreeNodes(m, chain);
 
     return (NO_ERROR);
 
@@ -42311,7 +42329,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
 
 {
 
-    int             i, tempStrSize, id;
+    int             i, tempStrSize;
     char            *tempStr;
     Tree            *tree;
     TreeNode        *p=NULL, *q;
@@ -42440,11 +42458,11 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
                 if (SafeSprintf (&tempStr, &tempStrSize, " [&E %s]", subParm->name) == ERROR) return (ERROR);
                 if (AddToPrintString (tempStr) == ERROR) return(ERROR);
                 }
-            if (subParm->paramType == P_MIXEDBRCHRATES)
-                {
-                id = *GetParamIntVals(subParm, chain, state[chain]);
-                if (SafeSprintf (&tempStr, &tempStrSize, " [&B %s %d]", subParm->name, id) == ERROR) return (ERROR);
-                }
+            //  if (subParm->paramType == P_MIXEDBRCHRATES)
+            //  {
+            //  id = *GetParamIntVals(subParm, chain, state[chain]);
+            //  if (SafeSprintf (&tempStr, &tempStrSize, " [&B %s %d]", subParm->name, id) == ERROR) return (ERROR);
+            //  }
             else
                 if (SafeSprintf (&tempStr, &tempStrSize, " [&B %s]", subParm->name) == ERROR) return (ERROR);
             if (AddToPrintString (tempStr) == ERROR) return(ERROR);
