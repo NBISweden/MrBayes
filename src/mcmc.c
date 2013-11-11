@@ -37181,10 +37181,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         {
         p = t->allDownPass[i];
             
-        /* skip extant tip, ancestral fossil and fixed calibration */
+        /* skip extant tip and fixed calibration */
         if (p->left == NULL && p->isDated == NO)
-            continue;
-        if ((p->left == NULL && p->length < TIME_MIN) || (p->left != NULL && (p->left->length < TIME_MIN || p->right->length < TIME_MIN)))
             continue;
         if (p->isDated == YES)
             calibrationPtr = p->calibration;
@@ -37207,22 +37205,40 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             }
         p->nodeDepth *= factor;
         numChangedNodes++;
+        
+        /* update brls, be careful with ancestral fossil */
         if (p->left != NULL)
             {
-            p->left ->length = p->nodeDepth - p->left ->nodeDepth;
-            p->right->length = p->nodeDepth - p->right->nodeDepth;
+            if (p->left->length < TIME_MIN)
+                {
+                // p->left->length = 0.0;
+                p->nodeDepth = p->left->nodeDepth;
+                numChangedNodes--;
+                }
+            else if (p->right->length < TIME_MIN)
+                {
+                // p->right->length = 0.0;
+                p->nodeDepth = p->right->nodeDepth;
+                numChangedNodes--;
+                }
+            if (p->left->length > 0.0)
+                p->left->length = p->nodeDepth - p->left->nodeDepth;
+            if (p->right->length > 0.0)
+                p->right->length = p->nodeDepth - p->right->nodeDepth;
             }
-        /* we change our own node length here, in case the ancestor cannot be moved */
+        
+        /* in case the ancestor cannot be moved */
         if (p->anc->anc != NULL)
-            p->length = p->anc->nodeDepth - p->nodeDepth;
+            if (p->anc->anc->anc == NULL && p->length > 0.0)
+                p->length = p->anc->nodeDepth - p->nodeDepth;
         }
 
     /* check that all branch lengths are proper, which need not be the case */
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        q = oldT->allDownPass[i];
-        if (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV))
+        // if (p->length < minV || p->length > maxV)
+        if (p->length < 0.0 || (p->length > 0.0 && p->length < minV) || p->length > maxV)
             {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             abortMove = YES;
             return NO_ERROR;
