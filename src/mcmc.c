@@ -37208,6 +37208,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         /* update brls, be careful with ancestral fossil */
         if (p->left != NULL)
             {
+            assert(p->left->length >= 0.0 && p->right->length >= 0.0);
             if (p->left->length < TIME_MIN)
                 {
                 // p->left->length = 0.0;

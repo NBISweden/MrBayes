@@ -152,7 +152,7 @@ MrBFlt          lgPi[20];                    /* stationary frequencies for LG mo
 /* parser flags and variables */
 int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
             foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar,
-            foundFSNum, foundFSTime, tempNumStates, isNegative;
+            foundFSNum[999], foundFSTime[999], tempNumStates, isNegative;
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char        colonPr[100], clockPr[30];
 
@@ -7298,7 +7298,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
                             if (!strcmp(modelParams[i].sampleStrat,"FossilSlice"))
                                 {
-                                foundFSNum = foundFSTime = NO;
+                                foundFSNum[i] = foundFSTime[i] = NO;
                                 modelParams[i].sampleFSNum = 0;
                                 numVars[i] = 0;
                                 expecting  = Expecting(NUMBER);
@@ -7325,7 +7325,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         {
                         if (!strcmp(modelParams[i].sampleStrat,"FossilSlice"))
                             {
-                            if (foundFSNum == NO)
+                            if (foundFSNum[i] == NO)
                                 {
                                 sscanf (tkn, "%d", &tempInt);
                                 if (tempInt <= 0)
@@ -7342,10 +7342,10 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
                                 modelParams[i].sampleFSRate = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
                                 memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
-                                foundFSNum = YES;
+                                foundFSNum[i] = YES;
                                 expecting  = Expecting(COLON);
                                 }
-                            else if (foundFSTime == NO)
+                            else if (foundFSTime[i] == NO)
                                 {
                                 sscanf (tkn, "%lf", &tempD);
                                 if (tempD <= 0.0)
@@ -7359,7 +7359,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     return (ERROR);
                                     }
                                 modelParams[i].sampleFSTime[numVars[i]] = tempD;
-                                foundFSTime = YES;
+                                foundFSTime[i] = YES;
                                 expecting  = Expecting(NUMBER);
                                 }
                             else
@@ -7371,7 +7371,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     return (ERROR);
                                     }
                                 modelParams[i].sampleFSRate[numVars[i]] = tempD;
-                                foundFSTime = NO;
+                                foundFSTime[i] = NO;
                                 expecting  = Expecting(COMMA);
                                 if (nApplied == 0 && numCurrentDivisions == 1)
                                     MrBayesPrint ("%s   Setting %d FSTime FSRate to %1.2lf %1.2lf\n", spacer, numVars[i]+1,
@@ -10976,7 +10976,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                         {
                         subValue[i] = mp->aaModelPrProbs[i];
                         }
-                    
                     }
                 }
             else if (p->paramType == P_CPPRATE)
@@ -17051,10 +17050,10 @@ int SetAARates (void)
         MrBayesPrint ("%s   ", spacer);
         for (j=0; j<20; j++)
             {
-            if (aaJones[i][j] < 0.0)
-                MrBayesPrint ("%1.3lf ", aaJones[i][j]);
+            if (aaLG[i][j] < 0.0)
+                MrBayesPrint ("%1.3lf ", aaLG[i][j]);
             else
-                MrBayesPrint (" %1.3lf ", aaJones[i][j]);
+                MrBayesPrint (" %1.3lf ", aaLG[i][j]);
             }
         MrBayesPrint ("\n");
         }
@@ -21654,8 +21653,8 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 2;
-    mt->tuningParam[0] = 9.0;  /* TK/IGR var ratio */
-    mt->tuningParam[1] = 1.0;  /* window size */
+    mt->tuningParam[0] = 5.0;  /* TK/IGR var ratio */
+    mt->tuningParam[1] = 5.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
     mt->parsimonyBased = NO;
@@ -22005,8 +22004,8 @@ int ShowModel (void)
                     if (modelSettings[i].dataType == STANDARD)
                         {
                         if (!strcmp(modelParams[i].symPiPr,"Fixed"))
-                                { 
-                              if (AreDoublesEqual(modelParams[i].symBetaFix, -1.0,ETA)==YES)
+                            {
+                            if (AreDoublesEqual(modelParams[i].symBetaFix, -1.0, ETA)==YES)
                                 MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
                             else
                                 MrBayesPrint ("%s                     Symmetric Dirichlet is fixed to %1.2lf\n", spacer, modelParams[i].symBetaFix);
