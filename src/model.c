@@ -19996,7 +19996,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[3] = CLOCKRATE_EXP;
     mt->nApplicable = 4;
     mt->moveFxn = &Move_ClockRateM;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -20015,9 +20015,9 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = EXTRATE_BETA;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Extinction;
-    mt->relProposalProb = 1.1;
+    mt->relProposalProb = 1.5;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.2;  /* window size */
+    mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
@@ -20034,9 +20034,9 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = FOSLRATE_BETA;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Fossilization;
-    mt->relProposalProb = 1.1;
+    mt->relProposalProb = 1.5;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.2;  /* window size */
+    mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
@@ -21077,7 +21077,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = RATEMULT_DIR;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RateMult_Dir;
-    mt->relProposalProb = 0.5;
+    mt->relProposalProb = 0.75;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 50.0; /* alphaPi per site */
     mt->minimum[0] = 0.001;
@@ -21096,7 +21096,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = RATEMULT_DIR;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RateMult_Slider;
-    mt->relProposalProb = 0.5;
+    mt->relProposalProb = 0.75;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.05;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -21212,7 +21212,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 1.5;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.0;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -21533,7 +21533,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = TK02VAR_UNI;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Nu;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21552,7 +21552,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = TK02BRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_TK02BranchRate;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21572,7 +21572,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = IGRVAR_UNI;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_IgrVar;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21591,7 +21591,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = IGRBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IgrBranchRate;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21611,7 +21611,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = MIXEDVAR_UNI;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_MixedVar;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21630,7 +21630,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_MixedBranchRate;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21651,7 +21651,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
-    mt->relProposalProb = 2.0;
+    mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
     mt->tuningParam[0] = 5.0;  /* TK/IGR var ratio */
     mt->tuningParam[1] = 5.0;  /* window size */

@@ -31340,7 +31340,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* pick a branch */
     do  {
         p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
-    }
+        }
     while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
             (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN) );
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
