@@ -27,16 +27,16 @@ distclean: clean
 showdep:
 	@$(CC) -MM $(SRC)
 
-bayes.o: bayes.c globals.h command.h mbmath.h mcmc.h model.h sumt.h utils.h
-command.o: command.c globals.h mbbeagle.h mbmath.h model.h mcmc.h plot.h sump.h sumt.h tree.h utils.h
-mbmath.o: mbmath.c globals.h mbmath.h model.h utils.h
-mcmc.o: mcmc.c globals.h mcmc.h model.h command.h mbmath.h sump.h sumt.h plot.h tree.h utils.h mbbeagle.h best.h
-model.o: model.c globals.h model.h command.h mcmc.h mbmath.h tree.h utils.h
-plot.o: plot.c globals.h command.h plot.h sump.h utils.h
-sump.o: sump.c globals.h command.h sump.h mbmath.h mcmc.h utils.h
-sumt.o: sumt.c globals.h command.h mbmath.h mcmc.h model.h sump.h sumt.h tree.h utils.h
-tree.o: tree.c globals.h best.h command.h mcmc.h mbmath.h model.h tree.h utils.h
-utils.o: utils.c globals.h utils.h
-mbbeagle.o: mbbeagle.c globals.h mbbeagle.h utils.h mcmc.h model.h
-best.o: best.c globals.h best.h command.h mbmath.h mcmc.h model.h sumt.h tree.h utils.h
+bayes.o: bayes.c bayes.h command.h mbmath.h mcmc.h model.h sumt.h utils.h
+command.o: command.c bayes.h mbbeagle.h mbmath.h model.h mcmc.h plot.h sump.h sumt.h tree.h utils.h
+mbmath.o: mbmath.c bayes.h mbmath.h model.h utils.h
+mcmc.o: mcmc.c bayes.h mcmc.h model.h command.h mbmath.h sump.h sumt.h plot.h tree.h utils.h mbbeagle.h best.h
+model.o: model.c bayes.h model.h command.h mcmc.h mbmath.h tree.h utils.h
+plot.o: plot.c bayes.h command.h plot.h sump.h utils.h
+sump.o: sump.c bayes.h command.h sump.h mbmath.h mcmc.h utils.h
+sumt.o: sumt.c bayes.h command.h mbmath.h mcmc.h model.h sump.h sumt.h tree.h utils.h
+tree.o: tree.c bayes.h best.h command.h mcmc.h mbmath.h model.h tree.h utils.h
+utils.o: utils.c bayes.h utils.h
+mbbeagle.o: mbbeagle.c bayes.h mbbeagle.h utils.h mcmc.h model.h
+best.o: best.c bayes.h best.h command.h mbmath.h mcmc.h model.h sumt.h tree.h utils.h
 

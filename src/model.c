@@ -34,7 +34,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "best.h"
 #include "model.h"
 #include "command.h"
@@ -86,6 +86,7 @@ int       NumStates (int part);
 int       PrintCompMatrix (void);
 int       PrintMatrix (void);
 int       ProcessStdChars (RandLong *seed);
+void      SetCode (int part);
 int       SetModelParams (void);
 int       SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt);
 int       SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt);
@@ -9134,6 +9135,65 @@ int DoPrsetParm (char *parmName, char *tkn)
 
 
 
+int DoQuit (void)
+
+{
+    
+    int         i;
+    char        tempName[100];
+    
+    /* free information for model and matrix */
+    FreeModel ();
+    FreeMatrix ();
+    
+    SafeFclose (&logFileFp);
+    logToFile = NO;
+    
+    /* check to see if any memory has not been freed */
+    for (i=0; i<NUM_ALLOCS; i++)
+        {
+        if (memAllocs[i] == YES)
+            {
+            MrBayesPrint ("   WARNING: Memory (%d) has not been freed\n", i);
+            if (mode == INTERACTIVE && quitOnError == NO)
+                {
+                MrBayesPrint ("%s   Hit return key to continue  ", spacer);
+                fflush (stdin);
+                if( fgets (tempName, 100, stdin) == NULL )
+                    {
+                    printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    }
+                }
+            }
+        }
+    
+    /* free modelIndicatorParams and modelElementNames */
+    for (i=0; i<203; i++)
+        free (modelElementNames[1][i]);
+    for (i=0; i<3; i++)
+        free (modelElementNames[i]);
+    free (modelElementNames);
+    free (modelIndicatorParams);
+    
+    MrBayesPrint ("   Quitting program\n\n");
+    
+    /* If we quit while reading a mrbayes block, then we need to make certain
+     that we return a NO_ERROR_QUIT so we can break out of DoExecute cleanly,
+     and dealloc "s" there. */
+    if (inMrbayesBlock == YES)
+        {
+        inMrbayesBlock = NO;
+        return (NO_ERROR_QUIT);
+        }
+    
+    return (NO_ERROR);
+    
+}
+
+
+
+
+
 int DoReport (void)
 
 {
@@ -17061,6 +17121,158 @@ int SetAARates (void)
 
     return (NO_ERROR);
     
+}
+
+
+
+
+
+void SetCode (int part)
+
+{
+    
+    int     i, s, s1, s2, s3, ns;
+    
+    modelParams[part].codon[ 0] = 12; /* AAA Lys */
+    modelParams[part].codon[ 1] =  3; /* AAC Asn */
+    modelParams[part].codon[ 2] = 12; /* AAG Lys */
+    modelParams[part].codon[ 3] =  3; /* AAT Asn */
+    modelParams[part].codon[ 4] = 17; /* ACA Thr */
+    modelParams[part].codon[ 5] = 17; /* ACC Thr */
+    modelParams[part].codon[ 6] = 17; /* ACG Thr */
+    modelParams[part].codon[ 7] = 17; /* ACT Thr */
+    modelParams[part].codon[ 8] =  2; /* AGA Arg */
+    modelParams[part].codon[ 9] = 16; /* AGC Ser */
+    modelParams[part].codon[10] =  2; /* AGG Arg */
+    modelParams[part].codon[11] = 16; /* AGT Ser */
+    modelParams[part].codon[12] = 10; /* ATA Ile */
+    modelParams[part].codon[13] = 10; /* ATC Ile */
+    modelParams[part].codon[14] = 13; /* ATG Met */
+    modelParams[part].codon[15] = 10; /* ATT Ile */
+    modelParams[part].codon[16] =  6; /* CAA Gln */
+    modelParams[part].codon[17] =  9; /* CAC His */
+    modelParams[part].codon[18] =  6; /* CAG Gln */
+    modelParams[part].codon[19] =  9; /* CAT His */
+    modelParams[part].codon[20] = 15; /* CCA Pro */
+    modelParams[part].codon[21] = 15; /* CCC Pro */
+    modelParams[part].codon[22] = 15; /* CCG Pro */
+    modelParams[part].codon[23] = 15; /* CCT Pro */
+    modelParams[part].codon[24] =  2; /* CGA Arg */
+    modelParams[part].codon[25] =  2; /* CGC Arg */
+    modelParams[part].codon[26] =  2; /* CGG Arg */
+    modelParams[part].codon[27] =  2; /* CGT Arg */
+    modelParams[part].codon[28] = 11; /* CTA Leu */
+    modelParams[part].codon[29] = 11; /* CTC Leu */
+    modelParams[part].codon[30] = 11; /* CTG Leu */
+    modelParams[part].codon[31] = 11; /* CTT Leu */
+    modelParams[part].codon[32] =  7; /* GAA Glu */
+    modelParams[part].codon[33] =  4; /* GAC Asp */
+    modelParams[part].codon[34] =  7; /* GAG Glu */
+    modelParams[part].codon[35] =  4; /* GAT Asp */
+    modelParams[part].codon[36] =  1; /* GCA Ala */
+    modelParams[part].codon[37] =  1; /* GCC Ala */
+    modelParams[part].codon[38] =  1; /* GCG Ala */
+    modelParams[part].codon[39] =  1; /* GCT Ala */
+    modelParams[part].codon[40] =  8; /* GGA Gly */
+    modelParams[part].codon[41] =  8; /* GGC Gly */
+    modelParams[part].codon[42] =  8; /* GGG Gly */
+    modelParams[part].codon[43] =  8; /* GGT Gly */
+    modelParams[part].codon[44] = 20; /* GTA Val */
+    modelParams[part].codon[45] = 20; /* GTC Val */
+    modelParams[part].codon[46] = 20; /* GTG Val */
+    modelParams[part].codon[47] = 20; /* GTT Val */
+    modelParams[part].codon[48] = 21; /* TAA Stop*/
+    modelParams[part].codon[49] = 19; /* TAC Tyr */
+    modelParams[part].codon[50] = 21; /* TAG Stop*/
+    modelParams[part].codon[51] = 19; /* TAT Tyr */
+    modelParams[part].codon[52] = 16; /* TCA Ser */
+    modelParams[part].codon[53] = 16; /* TCC Ser */
+    modelParams[part].codon[54] = 16; /* TCG Ser */
+    modelParams[part].codon[55] = 16; /* TCT Ser */
+    modelParams[part].codon[56] = 21; /* TGA Stop*/
+    modelParams[part].codon[57] =  5; /* TGC Cys */
+    modelParams[part].codon[58] = 18; /* TGG Trp */
+    modelParams[part].codon[59] =  5; /* TGT Cys */
+    modelParams[part].codon[60] = 11; /* TTA Leu */
+    modelParams[part].codon[61] = 14; /* TTC Phe */
+    modelParams[part].codon[62] = 11; /* TTG Leu */
+    modelParams[part].codon[63] = 14; /* TTT Phe */
+    
+    if (!strcmp(modelParams[part].geneticCode, "Vertmt"))
+        {
+        /* UGA: Ter -> Trp
+           AUA: Ile -> Met
+           AGA: Arg -> Ter
+           AGG: Arg -> Ter */
+        modelParams[part].codon[ 8] = 21; /* AGA Stop */
+        modelParams[part].codon[10] = 21; /* AGG Stop */
+        modelParams[part].codon[12] = 13; /* ATA Met  */
+        modelParams[part].codon[56] = 18; /* TGA Trp  */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Mycoplasma"))
+        {
+        /* UGA: Ter -> Trp */
+        modelParams[part].codon[56] = 18; /* TGA Trp */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Yeast"))
+        {
+        /* UGA: Ter -> Trp
+           AUA: Ile -> Met
+           CUA: Leu -> Thr
+           CUC: Leu -> Thr
+           CUG: Leu -> Thr
+           CUU: Leu -> Thr */
+        modelParams[part].codon[12] = 13; /* ATA Met */
+        modelParams[part].codon[28] = 17; /* CTA Thr */
+        modelParams[part].codon[29] = 17; /* CTC Thr */
+        modelParams[part].codon[30] = 17; /* CTG Thr */
+        modelParams[part].codon[31] = 17; /* CTT Thr */
+        modelParams[part].codon[56] = 18; /* TGA Trp */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Ciliates"))
+        {
+        /* UAA: Ter -> Gln
+           UAG: Ter -> Gln */
+        modelParams[part].codon[48] =  6; /* TAA Gln */
+        modelParams[part].codon[50] =  6; /* TAG Gln */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Metmt"))
+        {
+        /* UGA: Ter -> Trp
+           AUA: Ile -> Met
+           AGA: Arg -> Ser
+           AGG: Arg -> Ser */
+        modelParams[part].codon[ 8] = 16; /* AGA Ser */
+        modelParams[part].codon[10] = 16; /* AGG Ser */
+        modelParams[part].codon[12] = 13; /* ATA Met */
+        modelParams[part].codon[56] = 18; /* TGA Trp */
+        }
+    else
+        {
+        
+        }
+    
+    ns = 0;
+    for (i=0; i<64; i++)
+        {
+        if (modelParams[part].codon[i] != 21)
+            ns++;
+        }
+    /* printf ("ns = %d\n", ns); */
+    
+    s = 0;
+    for (s1=0; s1<4; s1++)
+        for (s2=0; s2<4; s2++)
+            for (s3=0; s3<4; s3++)
+                if (modelParams[part].codon[s1*16 + s2*4 + s3] != 21)
+                    {
+                    modelParams[part].codonNucs[s][0] = s1;
+                    modelParams[part].codonNucs[s][1] = s2;
+                    modelParams[part].codonNucs[s][2] = s3;
+                    modelParams[part].codonAAs[s] = modelParams[part].codon[s1*16 + s2*4 + s3];
+                    s++;
+                    }
+
 }
 
 

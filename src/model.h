@@ -14,6 +14,7 @@ int     DoPropset (void);
 int     DoPropsetParm (char *parmName, char *tkn);
 int     DoPrset (void);
 int     DoPrsetParm (char *parmName, char *tkn);
+int     DoQuit (void);
 int     DoReport (void);
 int     DoReportParm (char *parmName, char *tkn);
 int     DoShowMcmcTrees (void);

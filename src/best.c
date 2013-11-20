@@ -15,7 +15,7 @@
  *  liuliang@stat.ohio-state.edu
  */
 
-#include    "globals.h"
+#include    "bayes.h"
 #include    "best.h"
 #include    "command.h"
 #include    "mbmath.h"

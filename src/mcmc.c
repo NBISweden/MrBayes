@@ -34,7 +34,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "best.h"
 #include "mbbeagle.h"
 #include "mcmc.h"

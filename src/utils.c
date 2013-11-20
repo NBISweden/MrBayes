@@ -34,7 +34,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "utils.h"
 
 const char* const svnRevisionUtilsC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/

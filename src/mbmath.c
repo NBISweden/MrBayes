@@ -34,7 +34,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "mbmath.h"
 #include "model.h"
 #include "utils.h"

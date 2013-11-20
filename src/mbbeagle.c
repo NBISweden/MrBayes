@@ -29,7 +29,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "mbbeagle.h"
 #include "utils.h"
 #include "mcmc.h"

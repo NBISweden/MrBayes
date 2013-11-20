@@ -34,7 +34,7 @@
  *
  */
 
-#include "globals.h"
+#include "bayes.h"
 #include "command.h"
 #include "mbbeagle.h"
 #include "mbmath.h"
@@ -14245,7 +14245,7 @@ int ParseCommand (char *s)
     inError = skipCmd = NO;
     do
         {
-        /* Get the next token. A token is a valid word in a line. Token type is defined in "globals.h". */
+        /* Get the next token. A token is a valid word in a line. Token type is defined in "bayes.h". */
         if( GetToken (token, &tokenType, &tokenP))
             {
             inError = YES; 
