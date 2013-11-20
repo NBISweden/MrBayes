@@ -870,6 +870,7 @@ int InitializeMrBayes (void)
 
 
 
+
 unsigned FindMaxRevision ( unsigned amount, ...)
 {
   const char* cur;
@@ -891,12 +892,14 @@ unsigned FindMaxRevision ( unsigned amount, ...)
 
 
 
+
+
 void PrintHeader (void)
 
 {
     char arch[4];
 #ifndef RELEASE
-    unsigned rev=FindMaxRevision ( 12, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionPlotC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC);
+    unsigned rev=FindMaxRevision ( 11, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC);
 #endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");

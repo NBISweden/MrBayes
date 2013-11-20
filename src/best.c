@@ -1892,3 +1892,6 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
     printf("\n");
 }
 
+
+
+

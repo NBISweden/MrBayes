@@ -1248,6 +1248,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
 
 #endif // BEAGLE_ENABLED
 
+
 void BeagleNotLinked()
 {
     MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
@@ -1257,3 +1258,7 @@ void BeagleThreadsNotLinked()
 {
     MrBayesPrint("%s   Pthreads library is not linked to this executable.\n", spacer);
 } 
+
+
+
+

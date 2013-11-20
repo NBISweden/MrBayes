@@ -43,7 +43,6 @@
 #include "mbmath.h"
 #include "sump.h"
 #include "sumt.h"
-#include "plot.h"
 #include "tree.h"
 #include "utils.h"
 
@@ -50479,4 +50478,7 @@ int UpDateCijk (int whichPart, int whichChain)
         return ERROR;
 
 }
+
+
+
 

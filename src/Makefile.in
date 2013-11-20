@@ -6,8 +6,8 @@ LDFLAGS   = @LDFLAGS@ -lm
 INSTALL   = @INSTALL@
 BINDIR    = /usr/local/bin
 
-SRC       =  bayes.c command.c mbmath.c mcmc.c model.c plot.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
-OBJECTS   =  bayes.o command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
+SRC       =  bayes.c command.c mbmath.c mcmc.c model.c sump.c sumt.c tree.c utils.c mbbeagle.c best.c
+OBJECTS   =  bayes.o command.o mbmath.o mcmc.o model.o sump.o sumt.o tree.o utils.o mbbeagle.o best.o
 PROGS     =  mb
 
 all: $(PROGS)
@@ -28,11 +28,10 @@ showdep:
 	@$(CC) -MM $(SRC)
 
 bayes.o: bayes.c bayes.h command.h mbmath.h mcmc.h model.h sumt.h utils.h
-command.o: command.c bayes.h mbbeagle.h mbmath.h model.h mcmc.h plot.h sump.h sumt.h tree.h utils.h
+command.o: command.c bayes.h mbbeagle.h mbmath.h model.h mcmc.h sump.h sumt.h tree.h utils.h
 mbmath.o: mbmath.c bayes.h mbmath.h model.h utils.h
-mcmc.o: mcmc.c bayes.h mcmc.h model.h command.h mbmath.h sump.h sumt.h plot.h tree.h utils.h mbbeagle.h best.h
+mcmc.o: mcmc.c bayes.h mcmc.h model.h command.h mbmath.h sump.h sumt.h tree.h utils.h mbbeagle.h best.h
 model.o: model.c bayes.h model.h command.h mcmc.h mbmath.h tree.h utils.h
-plot.o: plot.c bayes.h command.h plot.h sump.h utils.h
 sump.o: sump.c bayes.h command.h sump.h mbmath.h mcmc.h utils.h
 sumt.o: sumt.c bayes.h command.h mbmath.h mcmc.h model.h sump.h sumt.h tree.h utils.h
 tree.o: tree.c bayes.h best.h command.h mcmc.h mbmath.h model.h tree.h utils.h

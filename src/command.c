@@ -40,7 +40,6 @@
 #include "mbmath.h"
 #include "model.h"
 #include "mcmc.h"
-#include "plot.h"
 #include "sump.h"
 #include "sumt.h"
 #include "tree.h"
@@ -15768,4 +15767,7 @@ char WhichStand (int x)
         return (' ');
         
 }
+
+
+
 

@@ -10,6 +10,8 @@ int     DoLink (void);
 int     DoLinkParm (char *parmName, char *tkn);
 int     DoLset (void);
 int     DoLsetParm (char *parmName, char *tkn);
+int     DoPlot (void);
+int     DoPlotParm (char *parmName, char *tkn);
 int     DoPropset (void);
 int     DoPropsetParm (char *parmName, char *tkn);
 int     DoPrset (void);
