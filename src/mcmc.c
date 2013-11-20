@@ -38415,11 +38415,11 @@ FILE *OpenNewMBPrintFile (char *fileName)
        to have the file over-written or appended. */
     if (noWarn == YES)
         {
-        /* overwrite or append file, if already present */      
+        /* overwrite or append file, if already present */
         if ((fp = TestOpenTextFileR(fileName)) != NULL)
             {
             SafeFclose (&fp);
-            if (autoOverwrite == NO) 
+            if (autoOverwrite == NO)
                 {
                 MrBayesPrint ("%s   Appending to file \"%s\"\n", spacer, fileName); 
                 return (OpenTextFileA(fileName));
@@ -38609,7 +38609,7 @@ int PreparePrintFiles (void)
 
 {
 
-    int         i, k, n, previousResults, oldAutoOverwrite, oldNoWarn;
+    int         i, n, previousResults, oldAutoOverwrite, oldNoWarn;
     char        localFileName[100], fileName[220], bkupName[220];
     FILE        *tempFile;
 
@@ -38658,7 +38658,7 @@ int PreparePrintFiles (void)
     /* Get root of local file name */
     strcpy (localFileName, chainParams.chainFileName);
 
-    /* Prepare the .mcmc file */
+    /* Determine whether to overwrite files */
     if (noWarn == NO)
         {
         previousResults = NO;
@@ -38673,8 +38673,6 @@ int PreparePrintFiles (void)
             }
         for (n=0; n<chainParams.numRuns; n++)
             {
-            k = n;
-
             if (chainParams.numRuns == 1)
                 sprintf (fileName, "%s.p", localFileName);
             else
@@ -38723,16 +38721,27 @@ int PreparePrintFiles (void)
             }
         }
 
+    /* Prepare the .mcmc file */
+    if (chainParams.mcmcDiagn == YES)
+        {
+        sprintf (fileName, "%s.mcmc", chainParams.chainFileName);
+        if ((fpMcmc = OpenNewMBPrintFile (fileName)) == NULL)
+            {
+            noWarn = oldNoWarn;
+            autoOverwrite = oldAutoOverwrite;
+            return (ERROR);
+            }
+        }
+
+    
     /* Prepare the .p and .t files */
     for (n=0; n<chainParams.numRuns; n++)
         {
-        k = n;
-
         if (chainParams.numRuns == 1)
             sprintf (fileName, "%s.p", localFileName);
         else
             sprintf (fileName, "%s.run%d.p", localFileName, n+1);
-        if ((fpParm[k] = OpenNewMBPrintFile (fileName)) == NULL)
+        if ((fpParm[n] = OpenNewMBPrintFile (fileName)) == NULL)
             {
             noWarn = oldNoWarn;
             autoOverwrite = oldAutoOverwrite;
@@ -38749,24 +38758,12 @@ int PreparePrintFiles (void)
                 sprintf (fileName, "%s.run%d.t", localFileName, n+1);
             else
                 sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
-            if ((fpTree[k][i] = OpenNewMBPrintFile (fileName)) == NULL)
+            if ((fpTree[n][i] = OpenNewMBPrintFile (fileName)) == NULL)
                 {
                 noWarn = oldNoWarn;
                 autoOverwrite = oldAutoOverwrite;
                 return (ERROR);
                 }
-            }
-        }
-
-    /* Prepare the .mcmc file */
-    if (chainParams.mcmcDiagn == YES)
-        {
-        sprintf (fileName, "%s.mcmc", chainParams.chainFileName);
-        if ((fpMcmc = OpenNewMBPrintFile (fileName)) == NULL)
-            {
-            noWarn = oldNoWarn;
-            autoOverwrite = oldAutoOverwrite;
-            return (ERROR);
             }
         }
 
@@ -38781,8 +38778,6 @@ int PreparePrintFiles (void)
             return (ERROR);
             }
         }
-
-
 
     /* Remove previous chekpoint file if present */
     sprintf (fileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
@@ -44915,7 +44910,7 @@ int RunChain (RandLong *seed)
 #endif
 
 
-    /*All steps are assumed to have the same length. */
+    /* All steps are assumed to have the same length. */
     if ( chainParams.isSS == YES )
         {
         numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
@@ -45032,7 +45027,7 @@ int RunChain (RandLong *seed)
     if (proc_id == 0) {
 #endif
 
-    /* We get the number of samples in i */
+        /* We get the number of samples in i */
         if (ReusePreviousResults(&i, chainParams.numStepsSS-stepIndexSS-1) == ERROR)
             nErrors++;
         else if (chainParams.numRuns > 1)    /* we potentially need to add tree samples for conv diagn */
@@ -45077,7 +45072,6 @@ int RunChain (RandLong *seed)
                         }
                     else
                         {
-                        
                         if (setFilePositions(removeTo) == ERROR) nErrors++;
                         if (AddTreeSamples(removeTo+1,i,chainParams.saveTrees) == ERROR) nErrors++;
                         }
