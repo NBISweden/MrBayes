@@ -4566,29 +4566,29 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
         Range (support, sumtParams.numRuns, &min, &max);
         postProbPercent = (int) (100.0*mean + 0.5);
         postProbSdPercent = (int) (100.0 * sqrt(var) + 0.5);
-        fprintf (fp, "[&prob=%.15le,prob_stddev=%.15le,prob_range={%.15le,%.15le},prob(percent)=\"%d\",prob+-sd=\"%d+-%d\"",
+        fprintf (fp, "[&prob=%.8le,prob_stddev=%.8le,prob_range={%.8le,%.8le},prob(percent)=\"%d\",prob+-sd=\"%d+-%d\"",
             mean, sqrt(var), min, max, postProbPercent, postProbPercent, postProbSdPercent);
         }
     else
         {
         postProbPercent = (int) (100.0*support[0] + 0.5);
-        fprintf (fp, "[&prob=%.15le,prob(percent)=\"%d\"", support[0], postProbPercent);
+        fprintf (fp, "[&prob=%.8le,prob(percent)=\"%d\"", support[0], postProbPercent);
         }
     if (sumtParams.isClock == YES)
         {
         GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, ",height_mean=%.15le,height_median=%.15le,height_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",height_mean=%.8le,height_median=%.8le,height_95%%HPD={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, ",height_mean=%.15le,height_median=%.15le,height_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",height_mean=%.8le,height_median=%.8le,height_95%%CredInt={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     if (sumtParams.isCalibrated == YES)
         {
         GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, ",age_mean=%.15le,age_median=%.15le,age_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",age_mean=%.8le,age_median=%.8le,age_95%%HPD={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, ",age_mean=%.15le,age_median=%.15le,age_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, ",age_mean=%.8le,age_median=%.8le,age_95%%CredInt={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     fprintf (fp, "]");
     if (length >= 0.0)
@@ -4597,9 +4597,9 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
         {
         GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
         if (sumtParams.HPD == YES)
-            fprintf (fp, "[&length_mean=%.15le,length_median=%.15le,length_95%%HPD={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, "[&length_mean=%.8le,length_median=%.8le,length_95%%HPD={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         else
-            fprintf (fp, "[&length_mean=%.15le,length_median=%.15le,length_95%%CredInt={%.15le,%.15le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
+            fprintf (fp, "[&length_mean=%.8le,length_median=%.8le,length_95%%CredInt={%.8le,%.8le}", theStats.mean, theStats.median, theStats.lower, theStats.upper);
         }
     if (sumtParams.isClock == YES && sumtParams.isRelaxed == YES)
         {

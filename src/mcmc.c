@@ -39383,7 +39383,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 int PrintCheckPoint (int gen)
 
 {
-    int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE, hasEvents, *intValue, id;
+    int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE,
+                hasEvents, *intValue, id, oldPrecision;
     char        bkupFileName[220], oldBkupFileName[220], ckpFileName[220], *tempString=NULL;
     MrBFlt      *value, clockRate;
     Param       *p = NULL, *subParm = NULL;
@@ -39433,6 +39434,10 @@ int PrintCheckPoint (int gen)
 
     ERROR_TEST2("",free(tempString),return(ERROR));
 
+    /* use high precision for checkpointing */
+    oldPrecision = precision;
+    precision = 15;
+    
     /* write file header */
     MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n", stamp, gen);
 
@@ -39497,7 +39502,6 @@ if (proc_id == 0)
         nErrors++;
     else
         strcpy(printString,"");
-
 
     ERROR_TEST2("Memory allocation error",free(tempString),return(ERROR));
     /*
@@ -39931,6 +39935,9 @@ if (proc_id == 0)
     /* end mrbayes block */
     MrBayesPrintf (fp, "end;\n\n");
 
+    /* change precision back */
+    precision = oldPrecision;
+    
     SafeFclose (&fp);
     free (tempString);
     free (printString);
