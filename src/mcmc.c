@@ -39945,6 +39945,7 @@ if (proc_id == 0)
     return (NO_ERROR);
 
 errorExit:
+    precision = oldPrecision;
     free (tempString);
     free (printString);
     printString = NULL;
