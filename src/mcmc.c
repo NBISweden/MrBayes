@@ -39398,6 +39398,10 @@ int PrintCheckPoint (int gen)
     MrBFlt      r, sum;
 #endif
 
+    /* use high precision for checkpointing */
+    oldPrecision = precision;
+    precision = 15;
+
     /* allocate tempString */
     if ((tempString = (char *) SafeCalloc (tempStrSize, sizeof(char))) == NULL)
         nErrors++;
@@ -39433,10 +39437,6 @@ int PrintCheckPoint (int gen)
 #endif
 
     ERROR_TEST2("",free(tempString),return(ERROR));
-
-    /* use high precision for checkpointing */
-    oldPrecision = precision;
-    precision = 15;
     
     /* write file header */
     MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n", stamp, gen);
