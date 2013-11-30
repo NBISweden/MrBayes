@@ -11642,8 +11642,10 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 
 
-/*Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions may theoreticly have different clock models, while constraints apply to all partitions/trees */
+/* Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions
+   may theoreticly have different clock models, while constraints apply to all partitions/trees */
 int PruneConstraintPartitions()
+
 {
 
     int             i, j, constraintId, nLongsNeeded;
@@ -11725,7 +11727,9 @@ int PruneConstraintPartitions()
 
 
 
-int DoesTreeSatisfyConstraints(Tree *t){
+int DoesTreeSatisfyConstraints(Tree *t)
+
+{
 
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
@@ -22162,8 +22166,8 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
-    mt->tuningParam[0] = 5.0;  /* TK/IGR var ratio */
-    mt->tuningParam[1] = 5.0;  /* window size */
+    mt->tuningParam[0] = 50.0;  /* TK/IGR var ratio */
+    mt->tuningParam[1] = 10.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
     mt->parsimonyBased = NO;

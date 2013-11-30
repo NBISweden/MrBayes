@@ -1,7 +1,6 @@
 #ifndef __BAYES_H__
 #define __BAYES_H__
 
-#include <assert.h>
 #include <ctype.h>
 #include <float.h>
 #include <limits.h>
@@ -35,6 +34,10 @@
 #define VERSION_NUMBER          "3.2.3"
 #else
 #define VERSION_NUMBER          "3.2.3-svn"
+#endif
+
+#ifndef NDEBUG
+#include <assert.h>
 #endif
 
 #if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)

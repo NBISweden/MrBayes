@@ -15918,7 +15918,7 @@ MrBFlt LogPrior (int chain)
                 {
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbTruncGamma (branch->length/igrvar, 1.0/igrvar, sst[branch->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                    lnPrior += LnProbGamma (branch->length/igrvar, 1.0/igrvar, sst[branch->index]);
                 assert (fabs(sst[branch->index] - branch->length * st[branch->index]) < 0.000001);
                 assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < 0.000001);
                 }
@@ -17915,7 +17915,7 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change clock rate using multiplier */
     
     int         i, j, k, *nEvents;
-    MrBFlt      minV, maxV, minB, maxB, oldR, newR, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate;
+    MrBFlt      minV, maxV, oldR, newR, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate;
     Tree        *t, *oldT;
     TreeNode    *p, *q;
     Param       *treeParam, *subParm;
@@ -17939,8 +17939,6 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* min and max values for branch lengths in relative time and substitution units */
     minV = BRLENS_MIN;
     maxV = BRLENS_MAX;
-    minB = RELBRLENS_MIN;
-    maxB = RELBRLENS_MAX;
 
     /* clock rate applies to all clock trees */
     for (i=0; i<numTrees; i++)
@@ -18042,8 +18040,8 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                     q = oldT->allDownPass[j];
                     if (p->length > 0.0)  // not ancestral fossil
                         {
-                        (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
-                        (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
+                        (*lnPriorRatio) -= LnProbGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index]);
+                        (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
 
                         igrRate[p->index] = brlens[p->index] / p->length;
                         if (igrRate[p->index] < RATE_MIN || igrRate[p->index] > RATE_MAX)
@@ -18052,13 +18050,6 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                             return (NO_ERROR);
                             }
                         }
-                    }
-
-                /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-                if (*lnPriorRatio != *lnPriorRatio)
-                    {
-                    abortMove=YES;
-                    return (NO_ERROR);
                     }
                 }
             }
@@ -18648,9 +18639,9 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             igrRate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbTruncGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) -= LnProbGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index]);
             if (q->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbTruncGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index]);
             
             /* update effective evolutionary lengths */
             igrRate[p->index] = igrRate[q->index];
@@ -18674,17 +18665,10 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 (*lnProposalRatio) += log(q->length / oldQLength);
                 }
                         
-            (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
+            (*lnPriorRatio) += LnProbGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index]);
             if (q->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            
-            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
+                (*lnPriorRatio) += LnProbGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index]);
             }
         }
     
@@ -18912,10 +18896,10 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             igrRate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            (*lnPriorRatio) -= LnProbTruncGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldRLength/igrvar, 1.0/igrvar, brlens[r->index]);
             if (q->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbTruncGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldQLength/igrvar, 1.0/igrvar, brlens[q->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // igrRate[p->index] = igrRate[q->index];
@@ -18937,16 +18921,9 @@ int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 (*lnProposalRatio) += log(q->length / oldQLength);
                 }
             
-            (*lnPriorRatio) += LnProbTruncGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index], RELBRLENS_MIN, RELBRLENS_MAX);
+            (*lnPriorRatio) += LnProbGamma (r->length/igrvar, 1.0/igrvar, brlens[r->index]);
             if (q->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], RELBRLENS_MIN, RELBRLENS_MAX);
-            
-            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
+                (*lnPriorRatio) += LnProbGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index]);
             }
         }
 
@@ -19878,9 +19855,9 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
              /* adjust prior ratio for old branches */
-            (*lnPriorRatio) -= LnProbTruncGamma(a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma(v->length/igrvar, 1.0/igrvar, brlens[v->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma(u->length/igrvar, 1.0/igrvar, brlens[u->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, 1.0/igrvar, brlens[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, 1.0/igrvar, brlens[u->index]);
 
             /* adjust effective branch lengths and rates */
             /* we just move brlens[u->index] to new location; Hastings ratio of the alternative not worked out yet */
@@ -19888,14 +19865,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             igrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
             /* adjust prior ratio for new branch lengths */
-            (*lnPriorRatio) += LnProbTruncGamma((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index]);
             }
         }   /* next subparameter */
 
@@ -20123,7 +20093,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* adjust prior ratio for old branch length */
-            (*lnPriorRatio) -= LnProbTruncGamma ((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index]);
 
             /* adjust effective branch lengths and rates; use random number from above to subdivide  */
             /* we just rearrange brlens values; Hastings ratio not worked out yet for alternative */
@@ -20141,20 +20111,13 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 }
 
             /* adjust prior ratio for new branch lengths */
-            (*lnPriorRatio) += LnProbTruncGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (v->length/igrvar, 1.0/igrvar, brlens[v->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (u->length/igrvar, 1.0/igrvar, brlens[u->index], minB, maxB);
+            (*lnPriorRatio) += LnProbGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) += LnProbGamma (v->length/igrvar, 1.0/igrvar, brlens[v->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, 1.0/igrvar, brlens[u->index]);
 
             /* adjust proposal ratio (prop. to ratio between new and old brlen that is being split) */
             /* when we rearrange effective brlens, the proposal ratio is 1; the ratio below is NOT the correct Hastings ratio for the alternative update */
             // (*lnProposalRatio) += log ((brlens[a->index] + brlens[u->index] - 2.0*minB) / (brlens[oldA->index] - 2.0*minB));
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
             }   /* end igr branch rate parameter */
         }   /* next subparameter */
 
@@ -20712,7 +20675,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     int         i, *nEvents, numFreeOld, numFreeNew;
     MrBFlt      x, oldALength, oldCLength, extensionProb, igrvar, *igrRate,
                 *tk02Rate, *brlens, nu, ran, cumulativeProb, forwardProb,
-                backwardProb, minV, minB, maxB;
+                backwardProb, minV;
     TreeNode    *p, *q, *a, *c;
     Tree        *t;
     Param       *subParm;
@@ -20726,8 +20689,6 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* get min and max brlens in relative time and subst units */
     minV = BRLENS_MIN;
-    minB = RELBRLENS_MIN;
-    maxB = RELBRLENS_MAX;
 
     /* calculate the number of free nodes */
     numFreeOld = t->nNodes-2;
@@ -21081,23 +21042,16 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* adjust for prior (part 1) */
-            (*lnPriorRatio) -= LnProbTruncGamma (oldALength/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma (oldCLength/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma (oldALength/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldCLength/igrvar, 1.0/igrvar, brlens[c->index]);
 
             /* keep b lens constant, adjusting rates (one of many possibilities) */
             igrRate[a->index] = brlens[a->index] / a->length;
             igrRate[c->index] = brlens[c->index] / c->length;
 
             /* adjust for prior (part 2) */
-            (*lnPriorRatio) += LnProbTruncGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
+            (*lnPriorRatio) += LnProbGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index]);
             }
         }
     
@@ -24818,15 +24772,8 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     /* calculate prior ratio */
     igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
 
-    (*lnPriorRatio) -= LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, oldRate *p->length, RELBRLENS_MIN, RELBRLENS_MAX);
-    (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, newRate *p->length, RELBRLENS_MIN, RELBRLENS_MAX);
-
-    /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-    if (*lnPriorRatio != *lnPriorRatio)
-        {
-        abortMove=YES;
-        return (NO_ERROR);
-        }
+    (*lnPriorRatio) -= LnProbGamma (p->length/igrvar, 1.0/igrvar, oldRate *p->length);
+    (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, newRate *p->length);
 
     /* calculate proposal ratio */
     (*lnProposalRatio) = log (newRate / oldRate);
@@ -24874,8 +24821,8 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     maxIgrvar = IGRVAR_MAX;
     if (!strcmp(mp->igrvarPr,"Uniform"))
         {
-        minIgrvar = mp->igrvarUni[0];
-        maxIgrvar = mp->igrvarUni[1];
+        minIgrvar = (mp->igrvarUni[0] < IGRVAR_MIN) ? IGRVAR_MIN : mp->igrvarUni[0];
+        maxIgrvar = (mp->igrvarUni[1] > IGRVAR_MAX) ? IGRVAR_MAX : mp->igrvarUni[1];
         }
     
     /* get the igr variance */
@@ -24906,14 +24853,8 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             p = t->allDownPass[j];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbTruncGamma (p->length/oldIgrvar, 1.0/oldIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                (*lnPriorRatio) += LnProbTruncGamma (p->length/newIgrvar, 1.0/newIgrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                }
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
+                (*lnPriorRatio) -= LnProbGamma (p->length/oldIgrvar, 1.0/oldIgrvar, brlens[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length/newIgrvar, 1.0/newIgrvar, brlens[p->index]);
                 }
             }
         }
@@ -25041,15 +24982,8 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             return (NO_ERROR);
             }
 
-        (*lnPriorRatio) -= LnProbTruncGamma (p->length/mxvar, 1.0/mxvar, oldRate *p->length, RELBRLENS_MIN, RELBRLENS_MAX);
-        (*lnPriorRatio) += LnProbTruncGamma (p->length/mxvar, 1.0/mxvar, newRate *p->length, RELBRLENS_MIN, RELBRLENS_MAX);
-        
-        /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-        if (*lnPriorRatio != *lnPriorRatio)
-            {
-            abortMove=YES;
-            return (NO_ERROR);
-            }
+        (*lnPriorRatio) -= LnProbGamma (p->length/mxvar, 1.0/mxvar, oldRate *p->length);
+        (*lnPriorRatio) += LnProbGamma (p->length/mxvar, 1.0/mxvar, newRate *p->length);
         
         /* set update of transition probability */
         p->upDateTi = YES;
@@ -25097,8 +25031,8 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     maxVar = MIXEDVAR_MAX;
     if (!strcmp(mp->mixedvarPr,"Uniform"))
         {
-        minVar = mp->mixedvarUni[0];
-        maxVar = mp->mixedvarUni[1];
+        minVar = (mp->mixedvarUni[0] < MIXEDVAR_MIN) ? MIXEDVAR_MIN : mp->mixedvarUni[0];
+        maxVar = (mp->mixedvarUni[1] > MIXEDVAR_MAX) ? MIXEDVAR_MAX : mp->mixedvarUni[1];
         }
     
     /* get the variance */
@@ -25147,14 +25081,8 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 p = t->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbTruncGamma (p->length/oldVar, 1.0/oldVar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                    (*lnPriorRatio) += LnProbTruncGamma (p->length/newVar, 1.0/newVar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                    }
-                /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-                if (*lnPriorRatio != *lnPriorRatio)
-                    {
-                    abortMove=YES;
-                    return (NO_ERROR);
+                    (*lnPriorRatio) -= LnProbGamma (p->length/oldVar, 1.0/oldVar, brlens[p->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->length/newVar, 1.0/newVar, brlens[p->index]);
                     }
                 }
             }
@@ -25187,7 +25115,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
      //chi */
     
     int         i, *rclModel;
-    MrBFlt      *mxvar, *mxRate, *brlens, ratio, delta, tk02var, igrvar;
+    MrBFlt      *mxvar, *mxRate, *brlens, ratio, tk02var, igrvar;
     Tree        *t;
     TreeNode    *p = NULL;
     ModelInfo   *m;
@@ -25204,9 +25132,8 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     /* get current value of model indicator */
     rclModel = GetParamIntVals(param, chain, state[chain]);
 
-    /* get tk02/igr var ratio, and sliding window */
+    /* get tk02/igr var ratio */
     ratio = mvp[0];
-    delta = mvp[1];
 
     (*lnPriorRatio) = (*lnProposalRatio) = 0.0;
     
@@ -25216,8 +25143,8 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         {
         /* move the var parameter */
         tk02var = (*mxvar);
-        ratio += delta * (RandomNumber(seed) - 0.5);
-        igrvar = tk02var / ratio;
+     // ratio  *= RandomNumber(seed);
+        igrvar  = tk02var / ratio;
         if (igrvar < IGRVAR_MIN || igrvar > IGRVAR_MAX)
             {
             abortMove = YES;
@@ -25243,13 +25170,8 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                     return (NO_ERROR);
                     }
 
-                (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-                if (*lnPriorRatio != *lnPriorRatio)
-                    {
-                    // printf("lnPriorRatio nan, when moving from TK02 to IGR\n");
-                    abortMove=YES;
-                    return (NO_ERROR);
-                    }
+                (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
+             // (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
                 }
             }
         
@@ -25265,8 +25187,8 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     else
         {
         /* move the var parameter */
-        igrvar = (*mxvar);
-        ratio += delta * (RandomNumber(seed) - 0.5);
+        igrvar  = (*mxvar);
+     // ratio  *= RandomNumber(seed);
         tk02var = igrvar * ratio;
         if (tk02var < TK02VAR_MIN || tk02var > TK02VAR_MAX)
             {
@@ -25284,7 +25206,8 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
+             // (*lnPriorRatio) -= LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 
                 brlens[p->index] = p->length * (mxRate[p->index] + mxRate[p->anc->index]) /2.0;
                 if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
@@ -25294,12 +25217,6 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                     }
 
                 (*lnPriorRatio) += LnProbTK02LogNormal (mxRate[p->anc->index], tk02var*p->length, mxRate[p->index]);
-                if (*lnPriorRatio != *lnPriorRatio)
-                    {
-                    printf("lnPriorRatio nan, when moving from IGR to TK02\n");
-                    abortMove=YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
             
@@ -27085,7 +27002,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change clock tree using NNI move */
     
     int         i, *nEvents, numFreeOld, numFreeNew;
-    MrBFlt      minV, minB, maxB, x, *tk02Rate=NULL,
+    MrBFlt      minV, x, *tk02Rate=NULL,
                 *brlens, *igrRate=NULL, igrvar=0.0, nu=0.0, oldALength, oldCLength;
     TreeNode    *p, *q, *a, *c, *u, *v;
     Tree        *t;
@@ -27101,8 +27018,6 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get min and max branch lengths in relative time and substitution units */
     minV = BRLENS_MIN;
-    minB = RELBRLENS_MIN;
-    maxB = RELBRLENS_MAX;
 
 #   if defined (DEBUG_NNIClock)
     printf ("Before:\n");
@@ -27272,8 +27187,8 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* adjust for prior (part 1) */
-            (*lnPriorRatio) -= LnProbTruncGamma (oldALength/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma (oldCLength/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma (oldALength/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldCLength/igrvar, 1.0/igrvar, brlens[c->index]);
 
             /* keep b lens constant, adjusting rates (one of many possibilities) */
             igrRate[a->index] = brlens[a->index] / a->length;
@@ -27281,15 +27196,8 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             assert(a->length > 0.0 && c->length > 0.0);
 
             /* adjust for prior (part 2) */
-            (*lnPriorRatio) += LnProbTruncGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
+            (*lnPriorRatio) += LnProbGamma (a->length/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index]);
             }
         }
     
@@ -27785,11 +27693,11 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength  /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-                (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength /igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength  /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (oldRightLength /igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
             if (p->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
 
             if (p->left != NULL)
                 {
@@ -27817,18 +27725,11 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) += LnProbTruncGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-                (*lnPriorRatio) += LnProbTruncGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) += LnProbGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
             if (p->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbTruncGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-           
-            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical exceptions */ 
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
+                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index]);
             }
         }
 
@@ -27871,8 +27772,8 @@ int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBF
     maxNu = TK02VAR_MAX;
     if (!strcmp(mp->tk02varPr,"Uniform"))
         {
-        minNu = mp->tk02varUni[0];
-        maxNu = mp->tk02varUni[1];
+        minNu = (mp->tk02varUni[0] < TK02VAR_MIN) ? TK02VAR_MIN : mp->tk02varUni[0];
+        maxNu = (mp->tk02varUni[1] > TK02VAR_MAX) ? TK02VAR_MAX : mp->tk02varUni[1];
         }
     
     /* get the TK02 lognormal variance */
@@ -31427,9 +31328,9 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
              /* adjust prior ratio for old branches */
-            (*lnPriorRatio) -= LnProbTruncGamma(a->length/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma(v->length/igrvar, 1.0/igrvar, brlens[v->index], minB, maxB);
-            (*lnPriorRatio) -= LnProbTruncGamma(u->length/igrvar, 1.0/igrvar, brlens[u->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, 1.0/igrvar, brlens[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, 1.0/igrvar, brlens[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, 1.0/igrvar, brlens[u->index]);
 
             /* adjust effective branch lengths and rates */
             /* we move brens[u->index] to new location; Hastings ratio of alternative not worked out yet */
@@ -31437,14 +31338,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             igrRate[a->index] = brlens[a->index] / (a->length + u->length); /* times not changed yet */
     
             /* adjust prior ratio for new branch lengths */
-            (*lnPriorRatio) += LnProbTruncGamma((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index], minB, maxB);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, 1.0/igrvar, brlens[a->index]);
             }
         }   /* next subparameter */
 
@@ -31784,7 +31678,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* adjust prior ratio for old branch length */
-            (*lnPriorRatio) -= LnProbTruncGamma ((c->length+u->length)/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
+            (*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/igrvar, 1.0/igrvar, brlens[c->index]);
 
             /* adjust effective branch lengths and rates */
             /* we use the old values, just rearrange them; Hastings ratio of alternative not worked out yet */
@@ -31803,20 +31697,13 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
                 }
 
             /* adjust prior ratio for new branch lengths */
-            (*lnPriorRatio) += LnProbTruncGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (v->length/igrvar, 1.0/igrvar, brlens[v->index], minB, maxB);
-            (*lnPriorRatio) += LnProbTruncGamma (u->length/igrvar, 1.0/igrvar, brlens[u->index], minB, maxB);
+            (*lnPriorRatio) += LnProbGamma (c->length/igrvar, 1.0/igrvar, brlens[c->index]);
+            (*lnPriorRatio) += LnProbGamma (v->length/igrvar, 1.0/igrvar, brlens[v->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, 1.0/igrvar, brlens[u->index]);
 
             /* adjust proposal ratio */
             /* when we just rearrange old values, the proposal ratio is 1; the ratio below is NOT the correct one for the alternative update */
             // (*lnProposalRatio) += log ((brlens[c->index] + brlens[u->index]) / brlens[a->index]);
-
-            /*The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
-                }
             }   /* end igr branch rate parameter */
         }   /* next subparameter */
 
@@ -37323,23 +37210,16 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 q = oldT->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbTruncGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index], minB, maxB);
+                    (*lnPriorRatio) -= LnProbGamma (q->length/igrvar, 1.0/igrvar, brlens[q->index]);
                     brlens[p->index] = p->length * igrRate[p->index];
                     if (brlens[p->index] < minB || brlens[p->index] > maxB)
                         {
                         abortMove = YES;
                         return (NO_ERROR);
                         }
-                    (*lnPriorRatio) += LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], minB, maxB);
+                    (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
                     (*lnProposalRatio) += log(p->length / q->length);
                     }
-                }
-
-            /* The following if (*lnPriorRatio != *lnPriorRatio) should be removed if LnProbTruncGamma() would be made more exact and would never return -infinity */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove=YES;
-                return (NO_ERROR);
                 }
             }
         }
@@ -45388,7 +45268,7 @@ int RunChain (RandLong *seed)
                 modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
 
             /* make move */
-#if defined (DEBUG_MOVE)
+#if defined (DEBUG_CONSTRAINTS)
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
                 printf ("IsTreeConsistent failed before move!\n");
@@ -45412,7 +45292,7 @@ int RunChain (RandLong *seed)
 
             if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
                 {
-#if defined (DEBUG_MOVE)
+#if defined (DEBUG_CONSTRAINTS)
                 if(DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))==ABORT)
                     {
                     printf ("DEBUG ERROR: After move '%s'\n", theMove->name);
@@ -45431,7 +45311,7 @@ int RunChain (RandLong *seed)
                 lnLikelihoodRatio = lnLike - curLnL[chn];
                 lnPrior = curLnPr[chn] + lnPriorRatio;
 
-#if defined (DEBUG_MOVE)
+#ifndef NDEBUG
                 /* We check various aspects of calculations in debug version of code */
                 if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                     {

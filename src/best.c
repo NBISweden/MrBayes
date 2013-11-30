@@ -1716,11 +1716,11 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTruncGamma (oldLeftLength /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-                (*lnPriorRatio) -= LnProbTruncGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
             if (p->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbTruncGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
 
             if (p->left != NULL)
                 {
@@ -1748,18 +1748,11 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) += LnProbTruncGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ], RELBRLENS_MIN, RELBRLENS_MAX);
-                (*lnPriorRatio) += LnProbTruncGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index], RELBRLENS_MIN, RELBRLENS_MAX);
+                (*lnPriorRatio) += LnProbGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index]);
                 }
             if (p->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbTruncGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
-
-            /* The following needed only because of inaccuracies in LnProbTruncGamma that can result in numerical inaccuracies */
-            if (*lnPriorRatio != *lnPriorRatio)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
+                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index]);
             }
         }
     
