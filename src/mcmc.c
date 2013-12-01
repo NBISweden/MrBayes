@@ -25206,7 +25206,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) += LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index]);
              // (*lnPriorRatio) -= LnProbTruncGamma (p->length/igrvar, 1.0/igrvar, brlens[p->index], RELBRLENS_MIN, RELBRLENS_MAX);
 
                 brlens[p->index] = p->length * (mxRate[p->index] + mxRate[p->anc->index]) /2.0;
