@@ -45,4 +45,3 @@
 
 /* Define to enable threads in BEAGLE library */
 #undef THREADS_ENABLED
-

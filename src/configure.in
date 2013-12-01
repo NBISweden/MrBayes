@@ -10,8 +10,7 @@ if test -n "${CFLAGS+x}"; then AC_MSG_NOTICE([$CFLAGS_DEFINED]); fi
 if test "x$enable_debug" == "xyes"; then
 : ${CFLAGS="-ggdb -Wall"}
 else
-: ${CFLAGS="-O3 -ffast-math"} 
-# "NDEBUG" is specified in the mb.h
+: ${CFLAGS="-O3 -ffast-math"}; CFLAGS=$CFLAGS" -DNDEBUG";
 fi
 AC_PROG_CC
 
@@ -98,9 +97,9 @@ then
    # ----- Check for pthreads compatibility -------
    
    if test "x$enable_threads" == "xyes"
-   then                 
+   then
       AC_CHECK_LIB(pthread,pthread_create,[THREAD_LIB="-lpthread"],[AC_MSG_ERROR([pthreads library not found])])
-      AC_DEFINE(THREADS_ENABLED)        
+      AC_DEFINE(THREADS_ENABLED)
    fi
 fi
 # ------------------------------------------------------------------------------

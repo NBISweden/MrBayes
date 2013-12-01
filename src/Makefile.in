@@ -38,4 +38,3 @@ tree.o: tree.c bayes.h best.h command.h mcmc.h mbmath.h model.h tree.h utils.h
 utils.o: utils.c bayes.h utils.h
 mbbeagle.o: mbbeagle.c bayes.h mbbeagle.h utils.h mcmc.h model.h
 best.o: best.c bayes.h best.h command.h mbmath.h mcmc.h model.h sumt.h tree.h utils.h
-

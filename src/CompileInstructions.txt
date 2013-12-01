@@ -8,6 +8,7 @@ Content
 4) Tips for Windows
 5) Further references
 
+
 How to compile MrBayes from source
 ==================================
 
@@ -99,10 +100,9 @@ To stop the output, simply press ctrl-C (this will stop the output from the tail
 command, it will not stop the MrBayes run).
 
 4) assertion
-If you are compiling the trunk code (developing), assertion is enabled by default for
-extra debugging, indicated by "Debugging: assert() enabled" after the header output. 
-To disable this, either add "-DNDEBUG" to the end of "CFLAGS" (line 4 in Makefile), or
-uncomment /* #define NDEBUG */ in bayes.h (line 33), before running the "make" command.
+If you want to compile the trunk code (developing) with assertion enabled, delete
+"-DNDEBUG" at the end of "CFLAGS" (line 4 in Makefile), before running the "make" 
+command. It is indicated by "Debugging: assert() enabled" after the header output. 
 
 
 Troubleshooting for Mac

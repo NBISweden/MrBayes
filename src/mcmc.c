@@ -18599,6 +18599,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
             /* prior ratio */
+            tk02Rate[p->index] = tk02Rate[q->index];
             (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->index], nu*oldRLength, tk02Rate[r->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* p->length, tk02Rate[p->index]);
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[q->index], nu* r->length, tk02Rate[r->index]);
@@ -18609,7 +18610,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 }
             
             /* update effective evolutionary lengths */
-            tk02Rate[p->index] = tk02Rate[q->index];
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
             if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
@@ -18638,10 +18638,11 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             igrRate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
+            /* prior ratio */
+            igrRate[p->index] = igrRate[q->index];
             (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldRLength), 1.0/(igrvar*oldRLength), igrRate[r->index]);
             (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->length), 1.0/(igrvar*p->length), igrRate[p->index]);
             (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*r->length), 1.0/(igrvar*r->length), igrRate[r->index]);
-
             if (q->anc->anc != NULL)
                 {
                 (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldQLength), 1.0/(igrvar*oldQLength), igrRate[q->index]);
@@ -18649,7 +18650,6 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 }
             
             /* update effective evolutionary lengths */
-            igrRate[p->index] = igrRate[q->index];
             brlens[p->index] = igrRate[p->index] * p->length;
             brlens[r->index] = igrRate[r->index] * r->length;
             if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||

@@ -1,6 +1,7 @@
 #ifndef __BAYES_H__
 #define __BAYES_H__
 
+#include <assert.h>
 #include <ctype.h>
 #include <float.h>
 #include <limits.h>
@@ -27,17 +28,12 @@
 #   endif
 #endif
 
-/* uncomment the following 2 lines when releasing, also modify the VERSION_NUMBER below */
+/* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
 /* #define RELEASE */
-/* #define NDEBUG  */  /* if not defined, debug with assert() */
 #ifdef RELEASE
 #define VERSION_NUMBER          "3.2.3"
 #else
 #define VERSION_NUMBER          "3.2.3-svn"
-#endif
-
-#ifndef NDEBUG
-#include <assert.h>
 #endif
 
 #if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)
