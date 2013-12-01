@@ -1716,11 +1716,16 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength /igrvar, 1.0/igrvar, brlens[p->left->index ]);
-                (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, 1.0/igrvar, brlens[p->right->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldLeftLength), 1.0/(igrvar*oldLeftLength), igrRate[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldRightLength), 1.0/(igrvar*oldRightLength), igrRate[p->right->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->left->length), 1.0/(igrvar*p->left->length), igrRate[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->right->length), 1.0/(igrvar*p->right->length), igrRate[p->right->index]);
                 }
             if (p->anc->anc != NULL)
-                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, 1.0/igrvar, brlens[p->index]);
+                {
+                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldPLength), 1.0/(igrvar*oldPLength), igrRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->length), 1.0/(igrvar*p->length), igrRate[p->index]);
+                }
 
             if (p->left != NULL)
                 {
@@ -1732,8 +1737,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     abortMove = YES;
                     return (NO_ERROR);
                     }
-                (*lnProposalRatio) += log(p->left->length  / oldLeftLength);
-                (*lnProposalRatio) += log(p->right->length / oldRightLength);
                 }
             if (p->anc->anc != NULL)
                 {
@@ -1743,16 +1746,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     abortMove = YES;
                     return (NO_ERROR);
                     }
-                (*lnProposalRatio) += log(p->length / oldPLength);
                 }
-            
-            if (p->left != NULL)
-                {
-                (*lnPriorRatio) += LnProbGamma (p->left->length /igrvar, 1.0/igrvar, brlens[p->left->index ]);
-                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, 1.0/igrvar, brlens[p->right->index]);
-                }
-            if (p->anc->anc != NULL)
-                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, 1.0/igrvar, brlens[p->index]);
             }
         }
     

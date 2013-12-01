@@ -22166,8 +22166,8 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
-    mt->tuningParam[0] = 50.0;  /* TK/IGR var ratio */
-    mt->tuningParam[1] = 10.0;  /* window size */
+    mt->tuningParam[0] = 2.0;  /* TK/IGR var ratio */
+    mt->tuningParam[1] = 1.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
     mt->parsimonyBased = NO;
