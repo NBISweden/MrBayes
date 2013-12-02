@@ -53,7 +53,9 @@ invoking the configure script with option "--with-beagle=no". i.e.
 
 > ./configure --with-beagle=no
 
-Note: without beagle library MrBayes may run slower.
+Note: without beagle library MrBayes may run slower. And to compile with beagle, checkout 
+the source code from http://beagle-lib.googlecode.com/svn/trunk/ and put them in 
+/usr/local/include/libhmsbeagle-1/libhmsbeagle
 
 2) SSE code
 All main-stream modern processors have support for SSE instructions which are utilized 
