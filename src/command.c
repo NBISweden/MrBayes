@@ -11985,7 +11985,7 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("                    FossilTip                    %s ", mp->sampleStrat);
             if ((!strcmp(mp->sampleStrat, "Random")||!strcmp(mp->sampleStrat, "Diversity")) && (mp->sampleFSNum > 0))
                 {
-                MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSRate[0]);
+                MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSProb[0]);
                 if (mp->sampleFSNum > 1)  MrBayesPrint (",...\n");
                 else                      MrBayesPrint ("\n");
                 }

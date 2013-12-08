@@ -7634,11 +7634,11 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 modelParams[i].sampleFSNum = tempInt;
                                 if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
                                     {
-                                    free(modelParams[i].sampleFSRate);
+                                    free(modelParams[i].sampleFSProb);
                                     free(modelParams[i].sampleFSTime);
                                     }
                                 modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
-                                modelParams[i].sampleFSRate = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                                modelParams[i].sampleFSProb = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
                                 memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
                                 foundFSNum[i] = YES;
                                 expecting  = Expecting(COLON);
@@ -7665,18 +7665,18 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 sscanf (tkn, "%lf", &tempD);
                                 if (tempD < 0.0 || tempD > 0.999999999)
                                     {
-                                    MrBayesPrint ("%s   Rate of fossil slice sampling events must be in [0,1)\n", spacer);
+                                    MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1)\n", spacer);
                                     return (ERROR);
                                     }
-                                modelParams[i].sampleFSRate[numVars[i]] = tempD;
+                                modelParams[i].sampleFSProb[numVars[i]] = tempD;
                                 foundFSTime[i] = NO;
                                 expecting  = Expecting(COMMA);
                                 if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting %d FSTime FSRate to %1.2lf %1.2lf\n", spacer, numVars[i]+1,
-                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSRate[numVars[i]]);
+                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.2lf\n", spacer, numVars[i]+1,
+                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
                                 else
-                                    MrBayesPrint ("%s   Setting %d FSTime FSRate to %1.2lf %1.2lf for partition %d\n", spacer, numVars[i]+1,
-                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSRate[numVars[i]], i+1);
+                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
                                 numVars[i]++;
                                 if (numVars[i] == modelParams[i].sampleFSNum)
                                     expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -12125,7 +12125,7 @@ int FreeModel (void)
             free (modelParams[i].activeConstraints);
             if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
                 {
-                free(modelParams[i].sampleFSRate);
+                free(modelParams[i].sampleFSProb);
                 free(modelParams[i].sampleFSTime);
                 memAllocs[ALLOC_SAMPLEFOSSILSLICE] = NO;
                 }

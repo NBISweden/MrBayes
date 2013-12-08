@@ -16741,7 +16741,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     /* initialize */
     for (i = 0; i < sl; i++)
         {
-        rho[i] = mp->sampleFSRate[i];
+        rho[i] = mp->sampleFSProb[i];
         t_f[i] = mp->sampleFSTime[i];
         }
     rho[sl] = sF; t_f[sl] = 0.0;

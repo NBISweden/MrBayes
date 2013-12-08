@@ -1035,9 +1035,9 @@ typedef struct model
     MrBFlt      fossilizationFix;
     MrBFlt      fossilizationBeta[2];
     char        sampleStrat[100];     /* taxon sampling strategy (for b-d process)         */
-    int         sampleFSNum;          /* number of fossil slice sampling events (m) [is (m-1) in Stadler et al. 2013] */
-    MrBFlt     *sampleFSTime;         /* fossil slice sampling times (t_i, i=1,..,m)       */
-    MrBFlt     *sampleFSRate;         /* fossil slice sampling rates (rho_i, i=1,..,m)     */
+    int         sampleFSNum;          /* number of fossil slice sampling events (s) [is (m-1) in Stadler et al. 2013] */
+    MrBFlt     *sampleFSTime;         /* fossil slice sampling times (t_i,   i=1,..,s)     */
+    MrBFlt     *sampleFSProb;         /* fossil slice sampling probs (rho_i, i=1,..,s)     */
     MrBFlt      sampleProb;           /* extant taxon sampling fraction (rho)              */
     Calibration treeAgePr;            /* prior on tree age for uniform clock trees      */
     char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
