@@ -11491,19 +11491,20 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    at tips. Except 'fossiltip', the following strategies allow  \n");
         MrBayesPrint ("                    fossils also being ancestors of other samples.               \n");
         MrBayesPrint ("                    'random' (default) assumes extant taxa are sampled randomly  \n");
-        MrBayesPrint ("                    with rate rho, while fossils are sampled on the birth-death  \n");
+        MrBayesPrint ("                    with prob rho, while fossils are sampled on the birth-death  \n");
         MrBayesPrint ("                    tree with a constant rate, psi (Stadler 2010).               \n");
-        MrBayesPrint ("                    'fossilslice' assumes that fossils are sampled on the tree   \n");
-        MrBayesPrint ("                    with a constant rate psi, while with <m> slice samping events\n");
-        MrBayesPrint ("                    each happens at time <t_i> with rate <rho_i>, extant taxa are\n");
-        MrBayesPrint ("                    sampled randomly with rate rho (set in sampleprob).          \n");
+        MrBayesPrint ("                    'diversity' assumes extant taxa are sampled to maximize      \n");
+        MrBayesPrint ("                    diversity, while fossils are sampled randomly with a constant\n");
+        MrBayesPrint ("                    rate psi. Besides, there allow <s> slice samping events, each\n");
+        MrBayesPrint ("                    happens at time <t_i> with probability <rho_i>, extant taxa  \n");
+        MrBayesPrint ("                    are sampled with probability rho (set in sampleprob).        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset samplestrat = random                                \n");
         MrBayesPrint ("                       prset samplestrat = diversity                             \n");
         MrBayesPrint ("                       prset samplestrat = cluster                               \n");
         MrBayesPrint ("                       prset samplestrat = fossiltip                             \n");
-        MrBayesPrint ("                       prset samplestrat = fossilslice                           \n");
-        MrBayesPrint ("                                           <m>:<t_1> <rho_1>,...,<t_m> <rho_m>   \n");
+        MrBayesPrint ("                       prset samplestrat = random    <s>:...,<t_i> <rho_i>,...   \n");
+        MrBayesPrint ("                       prset samplestrat = diversity <s>:...,<t_i> <rho_i>,...   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
         MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
@@ -11981,8 +11982,8 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
             MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/      \n");
-            MrBayesPrint ("                    FossilTip/FossilSlice        %s ", mp->sampleStrat);
-            if (!strcmp(mp->sampleStrat, "FossilSlice") && (mp->sampleFSNum > 0))
+            MrBayesPrint ("                    FossilTip                    %s ", mp->sampleStrat);
+            if ((!strcmp(mp->sampleStrat, "Random")||!strcmp(mp->sampleStrat, "Diversity")) && (mp->sampleFSNum > 0))
                 {
                 MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSRate[0]);
                 if (mp->sampleFSNum > 1)  MrBayesPrint (",...\n");
@@ -15139,7 +15140,7 @@ void SetUpParms (void)
     PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
     PARAM   (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|FossilSlice|\0");
+    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|\0");
     PARAM   (248, "Burninss",       DoSsParm,          "\0");
     PARAM   (249, "Nsteps",         DoSsParm,          "\0");
     PARAM   (250, "Alpha",          DoSsParm,          "\0");

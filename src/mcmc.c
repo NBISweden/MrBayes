@@ -351,7 +351,6 @@ int     LnBirthDeathPriorPrCluster    (Tree *t, MrBFlt clockRate, MrBFlt *prob, 
 int     LnFossilizedBDPriorRandom     (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
 int     LnFossilizedBDPriorDiversity  (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
 int     LnFossilizedBDPriorFossilTip  (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
-int     LnFossilizedBDPriorFossilSlice(Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
 MrBFlt  LnP0 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt  LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt  LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
@@ -16421,12 +16420,10 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
     
     if (!strcmp(sS, "FossilTip"))
         return LnFossilizedBDPriorFossilTip  (t, clockRate, prob, sR, eR, sF, fR);
-    else if (!strcmp(sS, "FossilSlice"))
-        return LnFossilizedBDPriorFossilSlice(t, clockRate, prob, sR, eR, sF, fR);
     else if (!strcmp(sS, "Random"))
         return LnFossilizedBDPriorRandom     (t, clockRate, prob, sR, eR, sF, fR);
-    // else if (!strcmp(sS, "Diversity"))
-    //  return LnFossilizedBDPriorDiversity  (t, clockRate, prob, sR, eR, sF, fR);
+    else if (!strcmp(sS, "Diversity"))
+        return LnFossilizedBDPriorDiversity  (t, clockRate, prob, sR, eR, sF, fR);
     else
         {
         printf ("\n   ERROR: Sampling strategy for fossilized birth-death process not implemented.\n");
@@ -16569,7 +16566,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |   (2^(n+m-1) / n!m!).
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
+int LnFossilizedBDPriorRandom2 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
 
 {
     /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */
@@ -16666,7 +16663,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
 
 /*---------------------------------------------------------------------------------
  |
- |   LnFossilizedBDPriorFossilSlice
+ |   LnFossilizedBDPriorRandom with Fossil Slices
  |
  |   Stdaler et al. 2013 Birth–death skyline plot reveals temporal changes of 
  |           epidemic spread in HIV and hepatitis C virus (HCV). PNAS 110:228-233.
@@ -16692,7 +16689,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
+int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
 
 {
     /* Fossils in the past are sampled with a constant rate, plus several sliced sampling events
@@ -16736,7 +16733,7 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
 
     if (!x || !y || !n_d2v || !M_f || !K_f || !rho || !t_f || !c2 || !p_t)
         {
-        printf ("\n   ERROR: Problem allocating memory in LnFossilizedBDPriorFossilSlice\n");
+        printf ("\n   ERROR: Problem allocating memory in LnFossilizedBDPriorRandom\n");
         free(x); free(y); free(M_f); free(K_f); free(n_d2v); free(rho); free(t_f); free(c2); free(p_t);
         return (ERROR);
         }
@@ -16869,7 +16866,7 @@ int LnFossilizedBDPriorFossilSlice (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrB
 
 /*---------------------------------------------------------------------------------
  |
- |   LnFossilizedBDPriorDiversity, the calculation of prior prob is incorrect
+ |   LnFossilizedBDPriorDiversity
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
@@ -16936,13 +16933,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 
     /* prob condition on tmrca */
     (*prob) = 0.0;  // we need to add here the binomial coefficient
-    (*prob) += (N -2) *log(lambda) + (nExtant -N) *log(mu) + kFossil *log(psi);
-    (*prob) += 2.0 * LnP1(tmrca, lambda, mu) - 2.0 * log(1.0 - exp(LnP0(tmrca, lambda, mu)));
-    (*prob) += (N -nExtant) * LnP0(x_min, lambda, mu);
-    for (i = 0; i < nExtant +mFossil -2; i++)
-        (*prob) += LnP1(x[i], lambda, mu);
-    for (i = 0; i < mFossil; i++)
-        (*prob) += LnP0(y[i], lambda, mu) - LnP1(y[i], lambda, mu);
+    
+    /* TODO */
+    
     /* calibrations are dealt with separately in calling function */
     mp = &modelParams[t->relParts[0]];
     if (t->root->left->isDated == NO)
