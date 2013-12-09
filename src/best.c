@@ -1714,15 +1714,15 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldLeftLength), 1.0/(igrvar*oldLeftLength), igrRate[p->left->index ]);
-                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldRightLength), 1.0/(igrvar*oldRightLength), igrRate[p->right->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->left->length), 1.0/(igrvar*p->left->length), igrRate[p->left->index ]);
-                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->right->length), 1.0/(igrvar*p->right->length), igrRate[p->right->index]);
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength/igrvar, oldLeftLength/igrvar, igrRate[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, oldRightLength/igrvar, igrRate[p->right->index]);
+                (*lnPriorRatio) += LnProbGamma (p->left->length/igrvar, p->left->length/igrvar, igrRate[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, p->right->length/igrvar, igrRate[p->right->index]);
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (1.0/(igrvar*oldPLength), 1.0/(igrvar*oldPLength), igrRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/(igrvar*p->length), 1.0/(igrvar*p->length), igrRate[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, oldPLength/igrvar, igrRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, p->length /igrvar, igrRate[p->index]);
                 }
 
             if (p->left != NULL)

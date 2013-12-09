@@ -19622,7 +19622,7 @@ int SetModelParams (void)
             }
         else if (j == P_IGRVAR)
             {
-            /* Set up igr relaxed clock scaled gamma shape parameter *****************************************************************************************/
+            /* Set up igr relaxed clock variance parameter *****************************************************************************************/
             p->paramType = P_IGRVAR;
             p->nValues = 1;
             p->nSubValues = 0;
@@ -22166,8 +22166,8 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
-    mt->tuningParam[0] = 2.0;  /* TK/IGR var ratio */
-    mt->tuningParam[1] = 1.0;  /* window size */
+    mt->tuningParam[0] = 50.0;  /* TK/IGR var ratio */
+    mt->tuningParam[1] = 10.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
     mt->parsimonyBased = NO;
@@ -23750,7 +23750,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->clockVarPr,"TK02"))
                 MrBayesPrint ("%s                         The clock rate varies according to a Brownian motion model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"Igr"))
-                MrBayesPrint ("%s                         The clock rate varies according to an independent scaled gamma (white noise) model\n", spacer);
+                MrBayesPrint ("%s                         The clock rate varies according to an independent gamma (white noise) model\n", spacer);
             else /* if (!strcmp(mp->clockVarPr,"Mixed")) */
                 MrBayesPrint ("%s                         The clock rate varies according to mixed TK02 and IGR models\n", spacer);
             }

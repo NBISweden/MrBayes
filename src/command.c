@@ -2426,12 +2426,12 @@ int DoCitations (void)
     MrBayesPrint ("   the base rate of the clock).                                                  \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   The final relaxed clock model is the IGR model, in which branch rates are     \n");
-    MrBayesPrint ("   modeled as being drawn independently from a scaled gamma distribution. The    \n");
-    MrBayesPrint ("   model was originally described in the literature as the 'White Noise' model   \n");
-    MrBayesPrint ("   by Lepage et al. (2007), but the original MrBayes implementation predates that\n");
-    MrBayesPrint ("   paper. The IGR model is closely related to the uncorrelated gamma model pre-  \n");
-    MrBayesPrint ("   sented originally by Drummond et al. (2006), but it is more elegant in that   \n");
-    MrBayesPrint ("   it truly lacks time structure. See Lepage et al. (2007) for details.          \n");
+    MrBayesPrint ("   modeled as being drawn independently from gamma distributions. The model was  \n");
+    MrBayesPrint ("   originally described in the literature as the 'White Noise' model by Lepage   \n");
+    MrBayesPrint ("   et al. (2007), but the original MrBayes implementation predates that paper.   \n");
+    MrBayesPrint ("   The IGR model is closely related to the uncorrelated gamma model presented    \n");
+    MrBayesPrint ("   originally by Drummond et al. (2006), but it is more elegant in that it truly \n");
+    MrBayesPrint ("   lacks time structure. See Lepage et al. (2007) for details.                   \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Huelsenbeck, J. P., B. Larget, and D. Swofford. 2000. A compound Poisson   \n");
     MrBayesPrint ("         process for relaxing the molecular clock. Genetics 154: 1879-1892.      \n");
@@ -11607,7 +11607,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    'tk02' invokes the Brownian Motion model described by Thorne \n");
         MrBayesPrint ("                    and Kishino (2002). [autocorrelated lognormal distributions] \n");
         MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate (IGR) model where   \n");
-        MrBayesPrint ("                    each branch has an independent rate drawn from a scaled gamma\n");
+        MrBayesPrint ("                    each branch has an independent rate drawn from a gamma       \n");
         MrBayesPrint ("                    distribution (LePage et al., 2007).                          \n");
         MrBayesPrint ("                    Each of the relaxed clock models has additional parameters   \n");
         MrBayesPrint ("                    with priors. For the CPP model, it is 'cppratepr' and        \n");
