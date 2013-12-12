@@ -16888,28 +16888,30 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     mp = &modelParams[t->relParts[0]];
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-    
+
+    /* we need 2 extra slices for youngest node time and present time 0 */
+
     /* allocate space for the speciation and extinction times */
     x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     
     /* for the number of degree-two vertices in each slice */
-    n_d2v = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
+    n_d2v = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
     
     /* for the number of sampled tips in each slice, including extant */
-    M_f = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
+    M_f = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
     
     /* for the number of sampled fossil ancestors in each slice */
-    K_f = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
+    K_f = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
     
     /* for sampling prob in each slice, including extant */
-    rho = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    rho = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
     
     /* for sampling time of each slice, t_s = 0 */
-    t_f = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    t_f = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
     
-    c2  = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* B_i */
-    p_t = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
+    c2  = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));  /* B_i */
+    p_t = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
     
     if (!x || !y || !n_d2v || !M_f || !K_f || !rho || !t_f || !c2 || !p_t)
         {
@@ -31269,7 +31271,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
                 v3new=0.0, lambda, *tk02Rate=NULL, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate, nu, newProp, minLength=0.0, length = 0.0,
                 cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
-                divFactor, nStates, rateMult, v_typical, minV, minB, maxB;
+                divFactor, nStates, rateMult, v_typical, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
     Tree        *t;
@@ -31290,8 +31292,6 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     
     /* get min and max brlen in relative time and subst units */
     minV = BRLENS_MIN;
-    minB = RELBRLENS_MIN;
-    maxB = RELBRLENS_MAX;
 
 #   if defined (DEBUG_ParsSPRClock)
     printf ("Before:\n");
