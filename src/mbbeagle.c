@@ -15,7 +15,7 @@
  *
  *  Maxim Teslenko (maxim.teslenko@nrm.se)
  *
- *  and by many users (run 'acknowledgements' to see more info)
+ *  and by many users (run 'acknowledgments' to see more info)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
