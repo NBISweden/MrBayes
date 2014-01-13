@@ -16727,12 +16727,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
     
     /* initialization */
-    for (i = 0; i < sl; i++)
-        {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
-        }
-    rho[sl] = sF; t_f[sl] = 0.0;
     for (i = 0; i <= sl; i++)
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
@@ -16741,6 +16735,12 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         psi[i] = mu[i] * fR / (1.0 - fR);
         M_f[i] = K_f[i] = n_d2v[i] = 0;
         }
+    for (i = 0; i < sl; i++)
+        {
+        rho[i] = mp->sampleFSProb[i];
+        t_f[i] = mp->sampleFSTime[i];
+        }
+    rho[sl] = sF; t_f[sl] = 0.0;
 
     /* get the interior node times (x_i), etc */
     for (i = N_int = k_f = 0; i < t->nIntNodes; i++)
@@ -16826,7 +16826,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     for (i = 0; i < sl; i++)
         {
         (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i])
-                  + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+                 + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
         if (rho[i] > 0.0)
             (*prob) += (M_f[i] + K_f[i]) * log(rho[i]);
         }
@@ -16866,9 +16866,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* Extant taxa are sampled to maximize diversity. Fossils in the past are sampled with a constant rate, 
        plus several sliced sampling events in the past each with a seperate probability. */
     
-    int         i, j, N_int, sl, *n_d2v, m_f, *M_f, *K_f, k_f, M_not;
+    int         i, j, N_int, sl, s_tot, *n_d2v, m_f, *M_f, *K_f, k_f, M_not;
     MrBFlt      *x, *y, x_min, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
-    TreeNode    *p;
+    TreeNode    *p, *q;
     Model       *mp;
     
     mp = &modelParams[t->relParts[0]];
@@ -16876,40 +16876,55 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     sl = mp->sampleFSNum;
 
     /* we need 2 extra slices for youngest node time and present time 0 */
+    s_tot = sl + 2;
+    
     /* allocate space for the speciation and extinction times */
     x      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     y      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     /* for the number of degree-two vertices in each slice */
-    n_d2v  = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
+    n_d2v  = (int *)SafeMalloc((size_t) s_tot * sizeof(int));
     /* for the number of sampled tips in each slice, including extant */
-    M_f    = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
+    M_f    = (int *)SafeMalloc((size_t) s_tot * sizeof(int));
     /* for the number of sampled fossil ancestors in each slice */
-    K_f    = (int *)SafeMalloc((size_t) (sl+2) * sizeof(int));
+    K_f    = (int *)SafeMalloc((size_t) s_tot * sizeof(int));
     /* for sampling time of each slice, t_s = 0 */
-    t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
+    t_f    = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));
     /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
+    lambda = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));
+    mu     = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));
+    psi    = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));
     /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));
+    rho    = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));
     /* others */
-    c1     = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));  /* A_i */
-    c2     = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));  /* B_i */
-    p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+2) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
+    c1     = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));  /* A_i */
+    c2     = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));  /* B_i */
+    p_t    = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
     
     /* get Time of MRCA and youngest internal node */
     tmrca = t->root->left->nodeDepth / clockRate;
-    x_min = tmrca;
+    x_min = tmrca;  q = t->root->left;
     for (i = 0; i < t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         if (p->left->length > 0.0 && p->right->length > 0.0 && x_min > p->nodeDepth /clockRate)
+            {
             x_min = p->nodeDepth / clockRate;
+            q = p;
+            }
         }
+    /*
+    if (q->left->nodeDepth > 0.0 || q->right->nodeDepth > 0.0)
+        {
+        MrBayesPrint ("%s   Trouble: fossil sampling times should be older than the youngest int node\n", spacer);
+        free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(t_f);
+        free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+    */
     
     /* initialization */
-    for (i = 0; i <= sl+1; i++)
+    for (i = 0; i < s_tot; i++)
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR / (1.0 - eR);
@@ -16926,9 +16941,14 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     rho[sl]   = 0.0; t_f[sl]   = x_min;
     rho[sl+1] = 1.0; t_f[sl+1] = 0.0;
     if (sl > 0 && t_f[sl-1] < t_f[sl])
+        {
         MrBayesPrint ("%s   Trouble: fossil slice times should be older than the youngest int node\n", spacer);
-        /* TODO: should we abort the move here?? */
-
+        free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(t_f);
+        free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+    
     /* get the interior node times (x_i), etc */
     for (i = N_int = k_f = 0; i < t->nIntNodes; i++)
         {
@@ -16993,11 +17013,11 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
     
 #ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl+1; i++)
+    for (i = 0; i < s_tot; i++)
         printf("t%d=%lf \trho%d=%lf \tM%d=%d \tK%d=%d \tn%d=%d\n",
                i+1, t_f[i], i+1, rho[i], i+1, M_f[i], i+1, K_f[i], i+1, n_d2v[i]);
     printf("N_int=%d \tm=%d \tk=%d\n", N_int, m_f, k_f);
-    for (i = 0; i <= sl+1; i++)
+    for (i = 0; i < s_tot; i++)
         printf("A%d=%lf \tB%d=%lf \tp%d(t%d)=%lf\n", i+1, c1[i], i+1, c2[i], i+1, i, p_t[i]);
 #endif
     
@@ -17030,7 +17050,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    for (i = 0; i < sl; i++)
+    for (i = 0; i <= sl; i++)
         {
         m_f += M_f[i];
         k_f += K_f[i];
