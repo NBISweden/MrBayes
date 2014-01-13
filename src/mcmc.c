@@ -16925,7 +16925,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
     rho[sl]   = 0.0; t_f[sl]   = x_min;
     rho[sl+1] = 1.0; t_f[sl+1] = 0.0;
-    if (t_f[sl-1] < t_f[sl])
+    if (sl > 0 && t_f[sl-1] < t_f[sl])
         MrBayesPrint ("%s   Trouble: fossil slice times should be older than the youngest int node\n", spacer);
         /* TODO: should we abort the move here?? */
 
@@ -16993,11 +16993,11 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
     
 #ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl; i++)
+    for (i = 0; i <= sl+1; i++)
         printf("t%d=%lf \trho%d=%lf \tM%d=%d \tK%d=%d \tn%d=%d\n",
                i+1, t_f[i], i+1, rho[i], i+1, M_f[i], i+1, K_f[i], i+1, n_d2v[i]);
     printf("N_int=%d \tm=%d \tk=%d\n", N_int, m_f, k_f);
-    for (i = 0; i <= sl; i++)
+    for (i = 0; i <= sl+1; i++)
         printf("A%d=%lf \tB%d=%lf \tp%d(t%d)=%lf\n", i+1, c1[i], i+1, c2[i], i+1, i, p_t[i]);
 #endif
     
