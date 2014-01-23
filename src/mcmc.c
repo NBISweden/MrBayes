@@ -16523,8 +16523,6 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 
 /*---------------------------------------------------------------------------------
  |
- |   LnFossilizedBDPriorRandom
- |
  |   Stadler T. 2010. Sampling-through-time in birth-death trees. J Theor Biol. 267:396–404.
  |
  |
@@ -18529,7 +18527,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
 
 
 
-int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Move an ancestral fossil (brl = 0) to fossil tip (brl > 0)
 
@@ -18787,7 +18785,7 @@ int Move_AddEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
 
 
-int Move_DelEdge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Move a fossil tip (brl > 0) to be ancestral (brl =0)
 
@@ -29537,7 +29535,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change branch lengths and topology (potentially) using balanced SPR-type move
        biased according to parsimony scores. */
     
-    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa, nLongsNeeded;
+    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa;
     BitsLong    *pA, *pV, *pP, *pU, y[2];
     MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
@@ -30238,8 +30236,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         r = newA;
         q = r->anc;
         nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
-        nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
-        CopyTreeNodes (old, r, nLongsNeeded);
+        //??? nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
+        CopyTreeNodes (old, r, 0);
         do {
             p = q->anc; /* get next node before we rotate!! */
 
@@ -30251,9 +30249,9 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             q->anc = r;
             
             /* swap q and old */            
-            CopyTreeNodes (tmp, q, nLongsNeeded);
-            CopyTreeNodes (q, old, nLongsNeeded);
-            CopyTreeNodes (old, tmp, nLongsNeeded);
+            CopyTreeNodes (tmp, q, 0);
+            CopyTreeNodes (q, old, 0);
+            CopyTreeNodes (old, tmp, 0);
 
             /* make sure we get q and r initialized for next round */
             r = q;
@@ -30265,7 +30263,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         v->left = newA;
         v->right = newB;
         newA->anc = newB->anc = v;
-        CopyTreeNodes (newB, old, nLongsNeeded);
+        CopyTreeNodes (newB, old, 0);
         
         /* and reattach root to u (u pointers are unchanged) */
         if (u->anc != NULL)

@@ -1473,8 +1473,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
                     else if (calPrior == offsetExponential)
                         {
                         MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
-                        MrBayesPrint ("%s   From version 3.2.2, parameters of the offset exponential are offset age and\n", spacer);
-                        MrBayesPrint ("%s   mean age.\n", spacer);
+                        MrBayesPrint ("%s   Parameters of the offset exponential are offset age and mean age.\n", spacer);
                         }
                     else if (calPrior == offsetLogNormal)
                         {
@@ -1507,8 +1506,8 @@ int DoCalibrateParm (char *parmName, char *tkn)
                 if (tempD <= priorParams[0])
                     {
                     MrBayesPrint ("%s   Mean age must be larger than offset age.\n", spacer);
-                    MrBayesPrint ("%s   Note that from version 3.2.2, MrBayes uses offset and mean rather than\n", spacer);
-                    MrBayesPrint ("%s   offset and rate as the parameters for the offset exponential distribution.\n", spacer);
+                    MrBayesPrint ("%s   MrBayes now uses offset and mean rather than offset and rate\n", spacer);
+                    MrBayesPrint ("%s   as the parameters for the offset exponential distribution.\n", spacer);
                     return (ERROR);
                     }
                 }

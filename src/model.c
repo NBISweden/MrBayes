@@ -1977,27 +1977,6 @@ int CheckModel (void)
                 }
             }
         }
-    else
-        {
-        for (i=0; i<numTrees; i++)
-            {
-            t = GetTreeFromIndex(i,0,0);
-            if (t->isCalibrated == YES && strcmp(modelParams[t->relParts[0]].clockPr, "Uniform") != 0
-                                       && strcmp(modelParams[t->relParts[0]].clockPr, "Fossilization") != 0)
-                {
-                for (k=0; k<t->nNodes-1; k++)
-                    {
-                    p = t->allDownPass[k];
-                    if (p->calibration != NULL)
-                        {
-                        MrBayesPrint("%s   ERROR: MrBayes does not yet suppport calibration of tips or\n", spacer);
-                        MrBayesPrint("%s          interior nodes under the %s clock prior.\n", spacer, modelParams[t->relParts[0]].clockPr);
-                        return (ERROR);
-                        }
-                    }
-                }
-            }
-        }
 
     return NO_ERROR;
 }
@@ -20557,28 +20536,28 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-    /* Move_AddEdge, add-edge move for fossilization prior */
+    /* Move_AddBranch, for fossilization prior */
     mt = &moveTypes[i++];
-    mt->name = "Add edge for FossilizedBD";
-    mt->shortName = "AddEdge";
+    mt->name = "Add branch for FossilizedBD";
+    mt->shortName = "AddBranch";
     // mt->subParams = YES;
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
-    mt->moveFxn = &Move_AddEdge;
+    mt->moveFxn = &Move_AddBranch;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
     mt->isApplicable = &IsApplicable_FossilEdgeMove;
 
-    /* Move_DelEdge, delete-edge move for fossilization prior */
+    /* Move_DelBranch, for fossilization prior */
     mt = &moveTypes[i++];
-    mt->name = "Delete edge for FossilizedBD";
-    mt->shortName = "DelEdge";
+    mt->name = "Delete branch for FossilizedBD";
+    mt->shortName = "DelBranch";
     // mt->subParams = YES;
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
-    mt->moveFxn = &Move_DelEdge;
+    mt->moveFxn = &Move_DelBranch;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
