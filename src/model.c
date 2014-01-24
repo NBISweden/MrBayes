@@ -7651,10 +7651,10 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 foundFSTime[i] = NO;
                                 expecting  = Expecting(COMMA);
                                 if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.2lf\n", spacer, numVars[i]+1,
+                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf\n", spacer, numVars[i]+1,
                                                   modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
                                 else
-                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf for partition %d\n", spacer, numVars[i]+1,
                                                   modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
                                 numVars[i]++;
                                 if (numVars[i] == modelParams[i].sampleFSNum)
@@ -7690,9 +7690,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             {
                             modelParams[i].sampleProb = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Sampleprob to %1.2lf\n", spacer, modelParams[i].sampleProb);
+                                MrBayesPrint ("%s   Setting Sampleprob to %1.5lf\n", spacer, modelParams[i].sampleProb);
                             else
-                                MrBayesPrint ("%s   Setting Sampleprob to %1.2lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
+                                MrBayesPrint ("%s   Setting Sampleprob to %1.5lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
                             }
                         }
                     }
