@@ -16699,9 +16699,16 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     Model       *mp;
     
     mp = &modelParams[t->relParts[0]];
+    
+    /* time of most recent common ancestor */
+    tmrca = t->root->left->nodeDepth / clockRate;  // x[N_int -1]
+    
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-  
+    for (i = j = 0; i < sl; i++)
+        if (mp->sampleFSTime[i] > tmrca)  j++;
+    sl -= j;
+    
     /* allocate space for the speciation and extinction times */
     x      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     y      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
@@ -16735,8 +16742,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         }
     for (i = 0; i < sl; i++)
         {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
+        rho[i] = mp->sampleFSProb[i + mp->sampleFSNum - sl];
+        t_f[i] = mp->sampleFSTime[i + mp->sampleFSNum - sl];
         }
     rho[sl] = sF; t_f[sl] = 0.0;
 
@@ -16784,9 +16791,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
                 n_d2v[j]++;     /* number of degree-two vertices at silice time t_j */
             }
         }
-    
-    /* time of most recent common ancestor */
-    tmrca = t->root->left->nodeDepth / clockRate;  // x[N_int -1]
     
     for (i = sl; i >= 0; i--)
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -16870,9 +16874,16 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     Model       *mp;
     
     mp = &modelParams[t->relParts[0]];
+    
+    /* time of most recent common ancestor */
+    tmrca = t->root->left->nodeDepth / clockRate;
+    
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-
+    for (i = j = 0; i < sl; i++)
+        if (mp->sampleFSTime[i] > tmrca)  j++;
+    sl -= j;
+    
     /* we need 2 extra slices for youngest node time and present time 0 */
     s_tot = sl + 2;
     
@@ -16899,7 +16910,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     p_t    = (MrBFlt *)SafeMalloc((size_t) s_tot * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
     
     /* get Time of MRCA and youngest internal node */
-    tmrca = t->root->left->nodeDepth / clockRate;
     x_min = tmrca;  q = t->root->left;
     for (i = 0; i < t->nIntNodes; i++)
         {
@@ -16933,8 +16943,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     psi[sl+1] = 0.0;  // psi = 0 for t < x_min (0, t_f[sl])
     for (i = 0; i < sl; i++)
         {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
+        rho[i] = mp->sampleFSProb[i + mp->sampleFSNum - sl];
+        t_f[i] = mp->sampleFSTime[i + mp->sampleFSNum - sl];
         }
     rho[sl]   = 0.0; t_f[sl]   = x_min;
     rho[sl+1] = 1.0; t_f[sl+1] = 0.0;
