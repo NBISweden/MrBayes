@@ -16411,6 +16411,16 @@ MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2, MrBFl
     return log(other) - log(2 *lambda[i]);
 }
 
+/* return which slice interval t is in */
+int Slice_i (MrBFlt t, MrBFlt *t_f, int m, MrBFlt cr)
+{
+    int i = 0;
+    
+    while (t < t_f[i] + BRLENS_MIN/cr && i <= m)
+        i++;
+    
+    return i;
+}
 
 int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS)
 
@@ -16693,7 +16703,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     /* Fossils in the past are sampled with a constant rate, plus several sliced sampling events
        in the past and at the present, each with a seperate probability. */
     
-    int         i, j, N_int, sl, *n_d2v, m_f, *M_f, *K_f, k_f;
+    int         i, j, N_int, sl, *n_d2v, *m_f, *M_f, *k_f, *K_f, M, K;
     MrBFlt      *x, *y, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
@@ -16718,6 +16728,10 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     M_f    = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
     /* for the number of sampled fossil ancestors in each slice */
     K_f    = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
+    /* for the number of sampled tips between slice intervals */
+    m_f    = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
+    /* for the number of sampled fossil ancestors between slice intervals */
+    k_f    = (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
     /* for sampling time of each slice, t_s = 0 */
     t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
     /* lambda, mu, psi */
@@ -16738,7 +16752,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         lambda[i] = sR / (1.0 - eR);
         mu[i]  = lambda[i] * eR;
         psi[i] = mu[i] * fR / (1.0 - fR);
-        M_f[i] = K_f[i] = n_d2v[i] = 0;
+        M_f[i] = K_f[i] = m_f[i] = k_f[i] = n_d2v[i] = 0;
         }
     for (i = 0; i < sl; i++)
         {
@@ -16748,7 +16762,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     rho[sl] = sF; t_f[sl] = 0.0;
 
     /* get the interior node times (x_i), etc */
-    for (i = N_int = k_f = 0; i < t->nIntNodes; i++)
+    for (i = N_int = 0; i < t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         if (p->left->length > 0.0 && p->right->length > 0.0)
@@ -16759,14 +16773,17 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
                 if (AreDoublesEqual(p->nodeDepth, t_f[j] *clockRate, BRLENS_MIN) == YES)
                     break;
             if (j == sl)
-                k_f++;          /* number of fossil ancestors, not in any silice */
+                {
+                j = Slice_i(p->nodeDepth/clockRate, t_f, sl, clockRate);
+                k_f[j]++;       /* number of fossil ancestors between t[j-1] and t[j] */
+                }
             else
-                K_f[j]++;       /* number of fossil ancestors, at silice time t_j */
+                K_f[j]++;       /* number of fossil ancestors, at silice time t[j] */
             }
         }
     
     /* get the fossil tip times (y_i), etc */
-    for (i = m_f = 0; i < t->nNodes -1; i++)
+    for (i = M = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL && p->length > 0.0)  //tip
@@ -16776,10 +16793,14 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
                 for (j = 0; j < sl; j++)
                     if (AreDoublesEqual(p->nodeDepth, t_f[j] *clockRate, BRLENS_MIN) == YES)
                         break;
-                if (j == sl)    /* number of fossil tips, not in any silice */
-                    y[m_f++] = p->nodeDepth /clockRate;
+                if (j == sl)
+                    {
+                    y[M++] = p->nodeDepth /clockRate;
+                    j = Slice_i(p->nodeDepth/clockRate, t_f, sl, clockRate);
+                    m_f[j]++;   /* number of fossil tips between t[j-1] and t[j] */
+                    }
                 else
-                    M_f[j]++;   /* number of fossil tips, at silice time t_j */
+                    M_f[j]++;   /* number of fossil tips, at silice time t[j] */
                 }
             else
                 M_f[sl]++;      /* number of extant taxa */
@@ -16810,25 +16831,26 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     
 #ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf("t%d=%lf \trho%d=%lf \tM%d=%d \tK%d=%d \tn%d=%d\n",
-               i+1, t_f[i], i+1, rho[i], i+1, M_f[i], i+1, K_f[i], i+1, n_d2v[i]);
-    printf("N_int=%d \tm=%d \tk=%d\n", N_int, m_f, k_f);
+        printf("%d: t=%lf \trho=%lf \tM=%d \tK=%d \tm=%d \tk=%d \tn=%d\n",
+               i+1, t_f[i], rho[i], M_f[i], K_f[i], m_f[i], k_f[i], n_d2v[i]);
+    printf("N_int=%d\n", N_int);
     for (i = 0; i <= sl; i++)
-        printf("A%d=%lf \tB%d=%lf \tp%d(t%d)=%lf\n", i+1, c1[i], i+1, c2[i], i+1, i, p_t[i]);
+        printf("%d: A=%lf \tB=%lf \tp%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
 #endif
 
     /* now calculate prior prob of fbd tree */
-    (*prob) = 2.0 * (LnQi_fossil(tmrca, t_f, sl,c1,c2,clockRate) - log(1- p_t[0]))
-            + (m_f + k_f) * log(psi[0]) + M_f[sl] * log(rho[sl]);
-    for (i = 0; i < N_int -1; i++)  // we use psi[0] and lambda[0] here for convenience
-        (*prob) += log(lambda[0]) + LnQi_fossil(x[i], t_f, sl,c1,c2,clockRate);
-    for (i = 0; i < m_f; i++)
+    (*prob) = 2.0 * (LnQi_fossil(tmrca, t_f, sl,c1,c2,clockRate) - log(1- p_t[0])) + M_f[sl] * log(rho[sl]);
+    for (i = 0; i <= sl; i++)
+        (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
+    for (i = 0; i < N_int -1; i++)
+        (*prob) += log(lambda[Slice_i(x[i], t_f, sl, clockRate)]) + LnQi_fossil(x[i], t_f, sl, c1,c2,clockRate);
+    for (i = 0; i < M; i++)
         (*prob) += LnPi_fossil(y[i], t_f, sl, c1,c2,clockRate, lambda,mu,psi)
                  - LnQi_fossil(y[i], t_f, sl, c1,c2,clockRate);
     for (i = 0; i < sl; i++)
         {
         (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i])
-                 + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+                  + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
         if (rho[i] > 0.0)
             (*prob) += (M_f[i] + K_f[i]) * log(rho[i]);
         }
@@ -16838,19 +16860,20 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    for (i = 0; i < sl; i++)
+    M = K = 0;
+    for (i = 0; i <= sl; i++)
         {
-        m_f += M_f[i];
-        k_f += K_f[i];
+        M += m_f[i] + M_f[i];
+        K += k_f[i] + K_f[i];
         }
-    (*prob) += (M_f[sl] +m_f -1) * log(2.0) - LnFactorial(M_f[sl]) - LnFactorial(m_f +k_f);
+    (*prob) += (M - 1) * log(2.0) - LnFactorial(M_f[sl]) - LnFactorial(M - M_f[sl] + K);
 
 #ifdef DEBUG_FBDPR
     printf("prob=%lf\n", *prob);
 #endif
 
     /* free memory */
-    free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(t_f);
+    free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(m_f); free(k_f); free(t_f);
     free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
 
     return (NO_ERROR);
@@ -19088,7 +19111,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     do
         {
         if (newM < minM)
-            newM = 2* minM - newM;
+            newM = 2 * minM - newM;
         else if (newM > maxM)
             newM = 2 * maxM - newM;
         else
@@ -19208,7 +19231,7 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     do
         {
         if (newM < minM)
-            newM = 2* minM - newM;
+            newM = 2 * minM - newM;
         else if (newM > maxM)
             newM = 2 * maxM - newM;
         else
@@ -36132,7 +36155,7 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     do
         {
         if (newL < minL)
-            newL = 2* minL - newL;
+            newL = 2 * minL - newL;
         else if (newL > maxL)
             newL = 2 * maxL - newL;
         else
