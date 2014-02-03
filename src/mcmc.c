@@ -27308,6 +27308,12 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[v->index], nu* c->length, tk02Rate[c->index]);
             brlens[a->index] = a->length * (tk02Rate[a->index] + tk02Rate[a->anc->index])/2.0;
             brlens[c->index] = c->length * (tk02Rate[c->index] + tk02Rate[c->anc->index])/2.0;
+            if (brlens[a->index] < RELBRLENS_MIN || brlens[a->index] > RELBRLENS_MAX ||
+                brlens[c->index] < RELBRLENS_MIN || brlens[c->index] > RELBRLENS_MAX)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
             }
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR) )
@@ -27327,7 +27333,12 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             (*lnPriorRatio) += LnProbGamma (c->length /igrvar, c->length /igrvar, igrRate[c->index]);
             brlens[a->index] = igrRate[a->index] * a->length;
             brlens[c->index] = igrRate[c->index] * c->length;
-            assert(a->length > 0.0 && c->length > 0.0);
+            if (brlens[a->index] < RELBRLENS_MIN || brlens[a->index] > RELBRLENS_MAX ||
+                brlens[c->index] < RELBRLENS_MIN || brlens[c->index] > RELBRLENS_MAX)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
             }
         }
     
