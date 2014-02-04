@@ -11599,7 +11599,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
         MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
         MrBayesPrint ("                    constant throughout the tree. For relaxed clock models, you  \n");
-        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr'; or 'mixed' (of tk02 and igr).  \n");
+        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr'. ('mixed' is not working)       \n");
         MrBayesPrint ("                    'cpp' invokes a relaxed clock model where the rate evolves   \n");
         MrBayesPrint ("                    according to a Compound Poisson Process (CPP) (Huelsenbeck   \n");
         MrBayesPrint ("                    et al., 2000).                                               \n");

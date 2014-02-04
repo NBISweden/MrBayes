@@ -19379,7 +19379,7 @@ int SetModelParams (void)
 
             if (p->paramId != POPSIZE_FIX && p->nValues == 1)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "Popsize");
+            SafeStrcat (&p->paramHeader, "popsize");
             SafeStrcat (&p->paramHeader, partString);
             }
         else if (j == P_GROWTH)
@@ -19731,9 +19731,9 @@ int SetModelParams (void)
             if (!strcmp(mp->clockRatePr,"Normal"))
                 {
                 p->paramId      = CLOCKRATE_NORMAL;
-                p->LnPriorRatio = &LnProbRatioNormal;
+                p->LnPriorRatio = &LnProbRatioTruncatedNormal;
                 p->priorParams  = mp->clockRateNormal;
-                p->LnPriorProb  = &LnPriorProbNormal;
+                p->LnPriorProb  = &LnPriorProbTruncatedNormal;
                 }
             else if (!strcmp(mp->clockRatePr,"Lognormal"))
                 {
@@ -19764,7 +19764,7 @@ int SetModelParams (void)
                 p->LnPriorProb  = &LnPriorProbFix;
                 }
                 
-            SafeStrcat (&p->paramHeader, "Clockrate");
+            SafeStrcat (&p->paramHeader, "clockrate");
             SafeStrcat (&p->paramHeader, partString);
             if (p->paramId != CLOCKRATE_FIX)
                 p->printParam = YES;
