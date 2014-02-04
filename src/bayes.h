@@ -1704,5 +1704,4 @@ extern CLFlt            scalerValue[];
 extern CLFlt            logValue[];
 #endif
 
-
 #endif  /* __BAYES_H__ */
