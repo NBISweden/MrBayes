@@ -2831,10 +2831,9 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS(not just checks as name suggest) calibrated clock tree nodes age, depth. based on branch lengthes
-|     and checks that user defined brlens satisfy the specified calibration(s)
-|     up to tolerance tol
-|    TODO clock rate is devived here and used to set ages but clockrate paramiter is not updated here(make sure that it does not produce imconsitancy)
+| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengthes
+|     and checks that user defined brlens satisfy the specified calibration(s) up to tolerance tol
+| TODO: clock rate is devived here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistancy)
 |
 |------------------------------------------------------------------------------*/
 int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
@@ -2845,7 +2844,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
     MrBFlt          f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
     TreeNode        *p, *q, *r, *s;
 
-    /*By defauult assume the tree does not have allowed range of clockrate*/
+    /* By defauult assume the tree does not have allowed range of clockrate */
     *minClockRate = 2.0;
     *maxClockRate = 1.0;
 
@@ -2882,7 +2881,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         }
 
     /* calculate node heights in branch length units */
-    /* node depth will be set from the root for now*/
+    /* node depth will be set from the root for now  */
     p = t->root->left;
     p->nodeDepth = 0.0;
     for (i=t->nNodes-3; i>=0; i--)
@@ -2928,11 +2927,11 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
             q = t->allDownPass[j];
             if (x[q->index] < 0.0 && y[q->index] < 0.0)
                 continue;
-            if ( p->nodeDepth == q->nodeDepth) // becouse clock rate could be as low as possible we can not take approximate equality. 
+            if (p->nodeDepth == q->nodeDepth) // becouse clock rate could be as low as possible we can not take approximate equality. 
                 {
                 /* same depth so they must share a possible age */
-                if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index])
-                    || (y[p->index] != -1.0 &&  x[q->index]!=-1.0 && AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
+                if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index]) ||
+                    (y[p->index] != -1.0 && x[q->index] !=-1.0 && AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
                     {
                     isViolated = YES;
                     break;
@@ -2955,7 +2954,9 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                     f = (r->nodeDepth - s->nodeDepth) / (x[r->index] - y[s->index]);
                     if (f <= 0.0 || x[r->index] == y[s->index])
                         {
-                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.000001) == YES) //if difference is very very small we do not bail out. It could happen because of numerical inaccuracy that one node that is supposed to be slightly below the other one ends up on top
+                        if (AreDoublesEqual (r->nodeDepth, s->nodeDepth, tol*0.1) == YES)
+                            continue;
+                        if ((r->calibration != NULL && r->calibration->prior != fixed) || (s->calibration != NULL && s->calibration->prior != fixed))
                             continue;
                         isViolated = YES;
                         break;
@@ -2973,7 +2974,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                     f = (r->nodeDepth - s->nodeDepth) / (y[r->index] - x[s->index]);
                     if (f <= 0.0 || y[r->index] == x[s->index])
                         {
-                        if ( AreDoublesEqual (r->nodeDepth, s->nodeDepth, 0.00001) == YES)
+                        if (AreDoublesEqual (r->nodeDepth, s->nodeDepth, tol*0.1) == YES)
                             continue;
                         isViolated = YES;
                         break;
@@ -3000,20 +3001,20 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         return (NO);
         }
     
-    /*Allow tollerance*/
+    /* Allow tollerance */
     if(minRateConstrained == YES && maxRateConstrained == YES && AreDoublesEqual (minRate, maxRate, tol) == YES && minRate > maxRate) 
         {
         maxRate = minRate;
         }
 
-   if (minRateConstrained == YES)
+    if (minRateConstrained == YES)
         *minClockRate = minRate;
-   else
+    else
         *minClockRate = 0.0;
 
     if (maxRateConstrained == YES)
         *maxClockRate = maxRate;
-   else
+    else
         *maxClockRate = MRBFLT_MAX;
 
     /* check that minimum and maximum rates are consistent */
@@ -3037,7 +3038,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         p->age = p->nodeDepth / clockRate;
         }
 
-    /* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inacuracy)*/
+    /* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inacuracy) */
     ageToAdd = 0.0;
     for (i=0; i<t->nNodes-1; i++)
         {

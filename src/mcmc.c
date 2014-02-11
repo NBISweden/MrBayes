@@ -134,7 +134,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_ExtSS
 #undef  DEBUG_ExtTBR
 #undef  DEBUG_MOVE_TREEAGE
-#undef  DEBUG_LNLIKELIHOODRATIO /* slow if defined!! */
+#undef  DEBUG_LNLIKELIHOOD  /* slow if defined!! */
 #undef  DEBUG_NNIClock
 #undef  DEBUG_SPLITMERGE
 #undef  DEBUG_LIKE
@@ -45435,15 +45435,15 @@ int RunChain (RandLong *seed)
                     printf ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
                     return ERROR;
                     }
-                if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
+                if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.001)
                     {
                     printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
                     return ERROR;
                     }
-#if defined (DEBUG_LNLIKELIHOODRATIO)
+#if defined (DEBUG_LNLIKELIHOOD)
                 ResetFlips(chn); /* needed to return flags so they point to old state */
                 TouchEverything();
-                if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
+                if (fabs((lnLike-LogLike(chn))/lnLike) > 0.001)
                     {
                     printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
                     return ERROR;
