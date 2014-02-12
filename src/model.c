@@ -7350,6 +7350,11 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].speciationPr,"Exponential"))
                             {
                             sscanf (tkn, "%lf", &tempD);
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Exponential parameter must be positive\n", spacer);
+                                return (ERROR);
+                                }
                             modelParams[i].speciationExp = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
                                 MrBayesPrint ("%s   Setting Speciationpr to Exponential(%1.2lf)\n", spacer, modelParams[i].speciationExp);
@@ -7360,9 +7365,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].speciationPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (AreDoublesEqual(tempD, 0.0, ETA)==YES)
+                            if (tempD <= 0.0)
                                 {
-                                MrBayesPrint ("%s   Speciation rate cannot be fixed to 0.0\n", spacer);
+                                MrBayesPrint ("%s   Net speciation rate must be positive\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].speciationFix = tempD;
@@ -7445,7 +7450,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             sscanf (tkn, "%lf", &tempD);
                             if (tempD < 0.0 || tempD > 1.0)
                                 {
-                                MrBayesPrint ("%s   Relative extinction rate must be in the range [0,1]\n", spacer);
+                                MrBayesPrint ("%s   Relative extinction rate must be in range [0,1)\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].extinctionFix = tempD;
@@ -7526,9 +7531,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD > 1.0)
+                            if (tempD <= 0.0 || tempD > 1.0)
                                 {
-                                MrBayesPrint ("%s   Fossilization rate must be in the range [0,1]\n", spacer);
+                                MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1]\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilizationFix = tempD;
@@ -7680,26 +7685,23 @@ int DoPrsetParm (char *parmName, char *tkn)
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
                 {
-                sscanf (tkn, "%lf", &tempD);
-                if (tempD <= 1.0 && tempD > 0.0)
+                nApplied = NumActiveParts ();
+                for (i=0; i<numCurrentDivisions; i++)
                     {
-                    nApplied = NumActiveParts ();
-                    for (i=0; i<numCurrentDivisions; i++)
+                    if ((activeParts[i] == YES || nApplied == 0))
                         {
-                        if ((activeParts[i] == YES || nApplied == 0))
+                        sscanf (tkn, "%lf", &tempD);
+                        if (tempD <= 0.0 && tempD > 1.0)
                             {
-                            modelParams[i].sampleProb = tempD;
-                            if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Sampleprob to %1.5lf\n", spacer, modelParams[i].sampleProb);
-                            else
-                                MrBayesPrint ("%s   Setting Sampleprob to %1.5lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
+                            MrBayesPrint ("%s   Sampleprob should be in range (0,1]\n", spacer);
+                            return (ERROR);
                             }
+                        modelParams[i].sampleProb = tempD;
+                        if (nApplied == 0 && numCurrentDivisions == 1)
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.5lf\n", spacer, modelParams[i].sampleProb);
+                        else
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.5lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
                         }
-                    }
-                else
-                    {
-                    MrBayesPrint ("%s   Invalid Sampleprob argument (should be between 0 and 1)\n", spacer);
-                    return (ERROR);
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }

@@ -16841,7 +16841,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     /* now calculate prior prob of fbd tree */
     (*prob) = 2.0 * (LnQi_fossil(tmrca, t_f, sl,c1,c2,clockRate) - log(1- p_t[0])) + M_f[sl] * log(rho[sl]);
     for (i = 0; i <= sl; i++)
-        (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
+        if (psi[i] > 0.0)
+            (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
     for (i = 0; i < N_int -1; i++)
         (*prob) += log(lambda[Slice_i(x[i], t_f, sl, clockRate)]) + LnQi_fossil(x[i], t_f, sl, c1,c2,clockRate);
     for (i = 0; i < M; i++)
@@ -16849,8 +16850,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
                  - LnQi_fossil(y[i], t_f, sl, c1,c2,clockRate);
     for (i = 0; i < sl; i++)
         {
-        (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i])
-                  + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+        (*prob) += n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+        if (rho[i] < 1.0)
+            (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i]);
         if (rho[i] > 0.0)
             (*prob) += (M_f[i] + K_f[i]) * log(rho[i]);
         }
@@ -16947,14 +16949,16 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             q = p;
             }
         }
-    /*  if (q->left->nodeDepth > 0.0 || q->right->nodeDepth > 0.0)
+    if (q->left->nodeDepth > 0.0 || q->right->nodeDepth > 0.0)
         {
+#ifdef DEBUG_FBDPR
         MrBayesPrint ("%s   Trouble: fossil sampling times should be older than the youngest int node\n", spacer);
-        free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(t_f);
+#endif
+        free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(m_f); free(k_f); free(t_f);
         free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
         abortMove = YES;
         return (NO_ERROR);
-        }  */
+        }
     
     /* initialization */
     for (i = 0; i < sl_t; i++)
@@ -16975,7 +16979,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     rho[sl_t -1] = 1.0; t_f[sl_t -1] = 0.0;
     if (sl_t > 2 && t_f[sl_t -3] < x_min)
         {
+#ifdef DEBUG_FBDPR
         MrBayesPrint ("%s   Trouble: fossil slice times should be older than the youngest int node\n", spacer);
+#endif
         free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(m_f); free(k_f); free(t_f);
         free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
         abortMove = YES;
@@ -17063,7 +17069,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* now calculate prior prob of fbd tree */
     (*prob) = 2.0 * (LnQi_fossil(tmrca, t_f, sl_t -1, c1,c2,clockRate) - log(1- p_t[0])) + M_f[sl_t -1] * log(rho[sl_t -1]);
     for (i = 0; i < sl_t; i++)
-        (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
+        if (psi[i] > 0.0)
+            (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
     for (i = 0; i < N_int -1; i++)
         (*prob) += log(lambda[Slice_i(x[i], t_f, sl_t -1, clockRate)]) + LnQi_fossil(x[i], t_f, sl_t -1, c1,c2,clockRate);
     for (i = 0; i < M; i++)
@@ -17071,8 +17078,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                  - LnQi_fossil(y[i], t_f, sl_t -1, c1,c2,clockRate);
     for (i = 0; i < sl_t -1; i++)
         {
-        (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i])
-                  + n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl_t -1 ,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+        (*prob) += n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl_t -1 ,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
+        if (rho[i] < 1.0)
+            (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i]);
         if (rho[i] > 0.0)
             (*prob) += (M_f[i] + K_f[i]) * log(rho[i]);
         }
