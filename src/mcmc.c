@@ -16949,6 +16949,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             q = p;
             }
         }
+    /*
     if (q->left->nodeDepth > 0.0 || q->right->nodeDepth > 0.0)
         {
 #ifdef DEBUG_FBDPR
@@ -16959,6 +16960,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         abortMove = YES;
         return (NO_ERROR);
         }
+     */
     
     /* initialization */
     for (i = 0; i < sl_t; i++)

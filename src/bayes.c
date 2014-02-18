@@ -418,7 +418,7 @@ void GetTimeSeed (void)
     if (proc_id == 0)
         {
         curTime = time(NULL);
-        globalSeed  = (BitsLong)curTime;
+        globalSeed  = (RandLong)curTime;
         if (globalSeed < 0)
             globalSeed = -globalSeed;
         }
@@ -432,7 +432,7 @@ void GetTimeSeed (void)
         {
         /* Note: swapSeed will often be same as globalSeed */
         curTime = time(NULL);
-        swapSeed  = (BitsLong)curTime;
+        swapSeed  = (RandLong)curTime;
         if (swapSeed < 0)
             swapSeed = -swapSeed;
         }
@@ -446,7 +446,7 @@ void GetTimeSeed (void)
         {
         /* Note: runIDSeed will often be same as globalSeed */
         curTime = time(NULL);
-        runIDSeed  = (BitsLong)curTime;
+        runIDSeed  = (RandLong)curTime;
         if (runIDSeed < 0)
             runIDSeed = -runIDSeed;
         }
@@ -458,19 +458,19 @@ void GetTimeSeed (void)
 
 #   else
     curTime = time(NULL);
-    globalSeed  = (BitsLong)curTime;
+    globalSeed  = (RandLong)curTime;
     if (globalSeed < 0)
         globalSeed = -globalSeed;
         
     /* Note: swapSeed will often be the same as globalSeed */
     curTime = time(NULL);
-    swapSeed  = (BitsLong)curTime;
+    swapSeed  = (RandLong)curTime;
     if (swapSeed < 0)
         swapSeed = -swapSeed;
 
     /* Note: runIDSeed will often be the same as globalSeed */
     curTime = time(NULL);
-    runIDSeed  = (BitsLong)curTime;
+    runIDSeed  = (RandLong)curTime;
     if (runIDSeed < 0)
         runIDSeed = -runIDSeed;
         
