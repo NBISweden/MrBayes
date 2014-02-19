@@ -27,4 +27,4 @@ int         StateCode_NUC4 (int n);
 int         StateCode_Std (int n);
 char        WhichNuc (int x);
 
-#endif
+#endif  /* __COMMAND_H__ */

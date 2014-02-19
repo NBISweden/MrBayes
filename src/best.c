@@ -18,11 +18,9 @@
 #include    "bayes.h"
 #include    "best.h"
 #include    "command.h"
-#include    "mbmath.h"
 #include    "mcmc.h"
 #include    "model.h"
-#include    "sumt.h"
-#include    "tree.h"
+#include    "sumpt.h"
 #include    "utils.h"
 
 const char* const svnRevisionBestC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/

@@ -36,14 +36,11 @@
 
 #include "bayes.h"
 #include "best.h"
+#include "command.h"
 #include "mbbeagle.h"
 #include "mcmc.h"
 #include "model.h"
-#include "command.h"
-#include "mbmath.h"
-#include "sump.h"
-#include "sumt.h"
-#include "tree.h"
+#include "sumpt.h"
 #include "utils.h"
 
 char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update*/
@@ -345,6 +342,7 @@ int     LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio);
 MrBFlt  LogLike (int chain);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 MrBFlt  LogPrior (int chain);
+MrBFlt  lnDirPrior (Tree *t, ModelParams *mp, int PV);
 int     LnBirthDeathPriorPrRandom     (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int     LnBirthDeathPriorPrDiversity  (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int     LnBirthDeathPriorPrCluster    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);

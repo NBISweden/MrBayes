@@ -104,4 +104,4 @@ int     ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);
 int     setFilePositions (int samplePos);
 
-#endif
+#endif  /* __MCMC_H__ */

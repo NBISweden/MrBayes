@@ -1,5 +1,5 @@
-#ifndef __SUMP_H__
-#define __SUMP_H__
+#ifndef __SUMPT_H__
+#define __SUMPT_H__
 
 /* struct to hold info about a .p file */
 typedef struct
@@ -37,4 +37,14 @@ int     GetHeaders (char ***headerNames, char *headerLine, int *nHeaders);
 int     PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int nSamples);
 int     ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *parameterSamples, int runNo);
 
-#endif
+int     DoCompareTree (void);
+int     DoCompareTreeParm (char *parmName, char *tkn);
+int     DoSumt (void);
+int     DoSumtParm (char *parmName, char *tkn);
+int     DoSumtTree (void);
+int     DoSumtTreeParm (char *parmName, char *tkn);
+void    ResetTranslateTable (void);
+int     ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport);
+void    ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow);
+
+#endif  /* __SUMPT_H__ */

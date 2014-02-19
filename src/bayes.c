@@ -36,25 +36,24 @@
 
 #include "bayes.h"
 #include "command.h"
-#include "mbmath.h"
 #include "mcmc.h"
 #include "model.h"
-#include "sumt.h"
+#include "sumpt.h"
 #include "utils.h"
 
        const char* const svnRevisionBayesC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 extern const char* const svnRevisionBestC;
 extern const char* const svnRevisionCommandC;
-// extern const char* const svnRevisionMbC;
 extern const char* const svnRevisionMbbeagleC;
-extern const char* const svnRevisionMbmathC;
 extern const char* const svnRevisionMcmcC;
 extern const char* const svnRevisionModelC;
-extern const char* const svnRevisionPlotC;
-extern const char* const svnRevisionSumpC;
-extern const char* const svnRevisionSumtC;
-extern const char* const svnRevisionTreeC;
+extern const char* const svnRevisionSumptC;
 extern const char* const svnRevisionUtilsC;
+// extern const char* const svnRevisionMbC;
+// extern const char* const svnRevisionMbmathC;
+// extern const char* const svnRevisionPlotC;
+// extern const char* const svnRevisionSumtC;
+// extern const char* const svnRevisionTreeC;
 
 
 #ifdef HAVE_LIBREADLINE
@@ -899,7 +898,8 @@ void PrintHeader (void)
 {
     char arch[4];
 #ifndef RELEASE
-    unsigned rev=FindMaxRevision ( 11, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,svnRevisionMbmathC,svnRevisionMcmcC,svnRevisionModelC,svnRevisionSumpC,svnRevisionSumtC,svnRevisionTreeC,svnRevisionUtilsC);
+    unsigned rev = FindMaxRevision (8, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,
+                                       svnRevisionMcmcC,svnRevisionModelC,svnRevisionSumptC,svnRevisionUtilsC);
 #endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");

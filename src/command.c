@@ -37,12 +37,9 @@
 #include "bayes.h"
 #include "command.h"
 #include "mbbeagle.h"
-#include "mbmath.h"
 #include "model.h"
 #include "mcmc.h"
-#include "sump.h"
-#include "sumt.h"
-#include "tree.h"
+#include "sumpt.h"
 #include "utils.h"
 #if defined (BEAGLE_ENABLED)
 #include "libhmsbeagle/beagle.h"
