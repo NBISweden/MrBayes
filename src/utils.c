@@ -9084,8 +9084,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                     rateMult = param->rateMult[2*chain+state[chain]][p->index];
                     for (j=0; j<nEvents; j++)
                         {
-                        printf ("%s", MbPrintNum(position[j]) );
-                        printf (" %s", MbPrintNum(rateMult[j]) );
+                        printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
                         if (j != nEvents-1)
                             printf (", ");
                         }
@@ -9120,8 +9119,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                             rateMult = param->rateMult[2*chain+state[chain]][p->index];
                             for (j=0; j<nEvents; j++)
                                 {
-                                printf ("%s", MbPrintNum(position[j]) );
-                                printf (" %s", MbPrintNum(rateMult[j]) );
+                                printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
                                 if (j != nEvents-1)
                                     printf (", ");
                                 }

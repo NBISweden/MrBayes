@@ -208,12 +208,12 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define AAMODEL_EQ              11
 #define AAMODEL_GTR             12 /* aa models with free parameters must be listed last */
 
-#define NUCMODEL_4BY4               0
-#define NUCMODEL_DOUBLET            1
-#define NUCMODEL_CODON              2
-#define NUCMODEL_AA                 3
+#define NUCMODEL_4BY4           0
+#define NUCMODEL_DOUBLET        1
+#define NUCMODEL_CODON          2
+#define NUCMODEL_AA             3
 
-#define NST_MIXED                  -1     /* anything other than 1, 2, or 6 */
+#define NST_MIXED              -1  /* anything other than 1, 2, or 6 */
 
 #define MISSING                 10000000
 #define GAP                     10000001
@@ -417,7 +417,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
 #define MAX_CHAINS              256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
 
-//#define PARAM_NAME_SIZE         400
+// #define PARAM_NAME_SIZE      400
 
 typedef void * VoidPtr;
 typedef int (*CmdFxn)(void);

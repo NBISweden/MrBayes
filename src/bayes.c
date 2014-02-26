@@ -49,11 +49,6 @@ extern const char* const svnRevisionMcmcC;
 extern const char* const svnRevisionModelC;
 extern const char* const svnRevisionSumptC;
 extern const char* const svnRevisionUtilsC;
-// extern const char* const svnRevisionMbC;
-// extern const char* const svnRevisionMbmathC;
-// extern const char* const svnRevisionPlotC;
-// extern const char* const svnRevisionSumtC;
-// extern const char* const svnRevisionTreeC;
 
 
 #ifdef HAVE_LIBREADLINE
