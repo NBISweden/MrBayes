@@ -7576,7 +7576,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s\n", spacer, modelParams[i].sampleStrat);
                             else
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
-                            if (!strcmp(modelParams[i].sampleStrat,"Random") || !strcmp(modelParams[i].sampleStrat,"Diversity") || !strcmp(modelParams[i].sampleStrat,"FossilItv"))
+                            if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity") ||
+                                !strcmp(modelParams[i].sampleStrat,"RndItval") || !strcmp(modelParams[i].sampleStrat,"DivItval") )
                                 {
                                 foundFSNum[i] = foundFSTime[i] = NO;
                                 modelParams[i].sampleFSNum = 0;
@@ -7603,7 +7604,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                     {
                     if (activeParts[i] == YES || nApplied == 0)
                         {
-                        if (!strcmp(modelParams[i].sampleStrat,"Random") || !strcmp(modelParams[i].sampleStrat,"Diversity") || !strcmp(modelParams[i].sampleStrat,"FossilItv"))
+                        if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity") ||
+                            !strcmp(modelParams[i].sampleStrat,"RndItval") || !strcmp(modelParams[i].sampleStrat,"DivItval") )
                             {
                             if (foundFSNum[i] == NO)
                                 {

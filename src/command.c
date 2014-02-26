@@ -11973,8 +11973,8 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
-            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/      \n");
-            MrBayesPrint ("                    FossilTip/FossilItv          %s ", mp->sampleStrat);
+            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    \n");
+            MrBayesPrint ("                    FossilTip/RndItval/DivItval  %s ", mp->sampleStrat);
             if ((!strcmp(mp->sampleStrat, "Random")||!strcmp(mp->sampleStrat, "Diversity")) && (mp->sampleFSNum > 0))
                 {
                 MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSProb[0]);
@@ -11996,7 +11996,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->popSizeGamma[0], mp->popSizeGamma[1]);
             else
                 MrBayesPrint ("(%1.1lf)\n", mp->popSizeFix);
-            MrBayesPrint ("                    Normal/Fixed                   \n");
+            MrBayesPrint ("                    Normal/Fixed                 \n");
 
             MrBayesPrint ("   Popvarpr         Equal/Variable               %s\n", mp->popVarPr);
 
@@ -15132,7 +15132,7 @@ void SetUpParms (void)
     PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
     PARAM   (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|FossilItv|\0");
+    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|RndItval|DivItval|\0");
     PARAM   (248, "Burninss",       DoSsParm,          "\0");
     PARAM   (249, "Nsteps",         DoSsParm,          "\0");
     PARAM   (250, "Alpha",          DoSsParm,          "\0");
