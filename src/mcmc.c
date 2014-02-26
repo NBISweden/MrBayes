@@ -17020,38 +17020,38 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     if (!x || !y)
-    {
+        {
         printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorRandom\n");
         free(x); free(y);
         return (ERROR);
-    }
+        }
     
     mFossil = kFossil = nExtant = 0;
     /* get the interior node times (x_i), excluding anc fossils. also calculate k */
     for (i = j = 0; i < t->nIntNodes; i++)
-    {
+        {
         p = t->intDownPass[i];
         if (p->left->length > 0.0 && p->right->length > 0.0)
             x[j++] = p->nodeDepth / clockRate;
         else
             kFossil++;
         assert (p->left->length > TIME_MIN || p->right->length > TIME_MIN);
-    }
+        }
     /* get the fossil tip times (y_i), also calculate m, n */
     for (i = j = 0; i < t->nNodes -1; i++)
-    {
+        {
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL && p->length > 0.0)
-        {
-            if (p->nodeDepth > 0.0)
             {
+            if (p->nodeDepth > 0.0)
+                {
                 y[j++] = p->nodeDepth / clockRate;
                 mFossil++;
-            }
+                }
             else
                 nExtant++;
+            }
         }
-    }
     // printf("\tn=%d, m=%d, k=%d\n", nExtant, mFossil, kFossil);
     
     /* calculate probability of tree using standard variables */
@@ -17061,7 +17061,7 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     
     /* Eq. 5 used, condition on tmrca */
     (*prob) = (nExtant +mFossil -2) *log(lambda) + (kFossil +mFossil) *log(psi)
-    + LnP1_fossil(tmrca, rho, c1, c2) - 2 *log(1 - hatP0(tmrca, lambda, mu, rho));
+            + LnP1_fossil(tmrca, rho, c1, c2) - 2 *log(1 - hatP0(tmrca, lambda, mu, rho));
     for (i = 0; i < nExtant +mFossil -1; i++)
         (*prob) += LnP1_fossil(x[i], rho, c1, c2);
     for (i = 0; i < mFossil; i++)
