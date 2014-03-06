@@ -7446,7 +7446,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].extinctionPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD > 1.0)
+                            if (tempD < 0.0 || tempD >= 1.0)
                                 {
                                 MrBayesPrint ("%s   Relative extinction rate must be in range [0,1)\n", spacer);
                                 return (ERROR);
@@ -7647,9 +7647,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else
                                 {
                                 sscanf (tkn, "%lf", &tempD);
-                                if (tempD < 0.0 || tempD > 0.999999999)
+                                if (tempD < 0.0 || tempD > 1.0)
                                     {
-                                    MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1)\n", spacer);
+                                    MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1]\n", spacer);
                                     return (ERROR);
                                     }
                                 modelParams[i].sampleFSProb[numVars[i]] = tempD;
