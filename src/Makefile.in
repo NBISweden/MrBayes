@@ -27,11 +27,11 @@ distclean: clean
 showdep:
 	@$(CC) -MM $(SRC)
 
-bayes.o: bayes.c bayes.h command.h mcmc.h model.h sumpt.h utils.h
+bayes.o: bayes.c bayes.h command.h model.h sumpt.h utils.h
 command.o: command.c bayes.h command.h mbbeagle.h model.h mcmc.h sumpt.h utils.h
 mcmc.o: mcmc.c bayes.h best.h command.h mbbeagle.h mcmc.h model.h sumpt.h utils.h
 model.o: model.c bayes.h best.h command.h model.h mcmc.h sumpt.h utils.h
-sumpt.o: sumpt.c bayes.h command.h mcmc.h model.h sumpt.h utils.h
+sumpt.o: sumpt.c bayes.h command.h mcmc.h sumpt.h utils.h
 utils.o: utils.c bayes.h best.h command.h mcmc.h model.h utils.h
-mbbeagle.o: mbbeagle.c bayes.h mbbeagle.h utils.h mcmc.h model.h
-best.o: best.c bayes.h best.h command.h mcmc.h model.h sumpt.h utils.h
+mbbeagle.o: mbbeagle.c bayes.h mbbeagle.h utils.h
+best.o: best.c bayes.h best.h command.h mcmc.h model.h utils.h

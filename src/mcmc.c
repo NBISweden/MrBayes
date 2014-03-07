@@ -45,28 +45,21 @@
 
 char *svnRevisionMcmcC="$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update*/
 
-#if defined(BEAGLE_ENABLED)
-#include "libhmsbeagle/beagle.h"
-#endif
-
 #if defined(WIN_VERSION) && !defined(__GNUC__)
 #define VISUAL
 #endif
 
 #ifdef VISUAL
-/* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L) */
-#undef NO_ERROR 
-/* ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
-#undef ERROR
-#include <windows.h>
-#undef ERROR
-#define ERROR 1
+//#undef NO_ERROR
+//#undef ERROR
+//#include <windows.h>
+//#undef ERROR
+//#define ERROR 1
 #include <signal.h>
 #else
 #include <signal.h>
 typedef void (*sighandler_t)(int);
 #endif
-/*static int requestAbortRun;*/
 
 #if defined(__MWERKS__)
 #include "SIOUX.h"
@@ -416,13 +409,13 @@ void    ResetSiteScalers (ModelInfo *m, int chain);
 int     ReusePreviousResults(int *numSamples, int);
 int     RunChain (RandLong *seed);
 int     SafeSprintf(char **target, int *targetLen, char *fmt, ...);
-int     SetAARates (void);
 void    SetChainIds (void);
 void    SetFileNames (void);
 int     SetLikeFunctions (void);
 int     SetLocalChainsAndDataSplits (void);
 int     SetModelInfo (void);
 int     SetMoves (void);
+int     SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
 int     SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS);
 int     SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult);
 int     SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType);
@@ -454,7 +447,6 @@ int     UpDateCijk (int whichPart, int whichChain);
 int     TreeCondLikes_Beagle (Tree *t, int division, int chain);
 int     TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
-int     SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
 #endif
 
 /* globals */
@@ -8024,7 +8016,7 @@ int DoMcmc (void)
 #ifdef VISUAL
         SetConsoleCtrlHandler(CatchInterrupt2, FALSE);
 #else
-#if !defined MPI_ENABLED
+#if !defined (MPI_ENABLED)
         signal(SIGINT, sigint_oldhandler);
         signal(SIGTERM, sigterm_oldhandler);
 #endif

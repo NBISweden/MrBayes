@@ -32,8 +32,6 @@
 #include "bayes.h"
 #include "mbbeagle.h"
 #include "utils.h"
-#include "mcmc.h"
-#include "model.h"
 
 const char* const svnRevisionMbbeagleC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
 

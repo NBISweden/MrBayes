@@ -37,7 +37,6 @@
 #include "bayes.h"
 #include "command.h"
 #include "mcmc.h"
-#include "model.h"
 #include "sumpt.h"
 #include "utils.h"
 #if defined(__MWERKS__)

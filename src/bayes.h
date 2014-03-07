@@ -22,10 +22,17 @@
 #   define UNIX_VERSION 1
 #   undef  SSE_ENABLED
 #   undef  MPI_ENABLED
+#   undef  BEAGLE_ENABLED
 #   undef  FAST_LOG
-#   if !defined(XCODE_VERSION)
-#   undef  _64BIT
-#   endif
+// #undef  _64BIT
+#endif
+
+#if defined (MPI_ENABLED)
+#include "mpi.h"
+#endif
+
+#if defined (BEAGLE_ENABLED)
+#include "libhmsbeagle/beagle.h"
 #endif
 
 /* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
@@ -122,14 +129,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 // #define DEBUG(a,b)
 #endif
 
-#if defined (MPI_ENABLED)
-#include "mpi.h"
-#endif
-
-#if defined (BEAGLE_ENABLED)
-#include "libhmsbeagle/beagle.h"
-#endif
-
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
 /* A patch was sent in by Allen Smith for SafeSprintf, but I could not get
    it compiled  on SGI IRIX 6.5 (too old?) with  _xpg5_vsnprintf undefined.
@@ -142,16 +141,16 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define TEMPSTRSIZE 200
 #endif
 
-#undef NO_ERROR
-#undef ERROR
+#undef  NO_ERROR
+#undef  ERROR
 #define NO_ERROR                0
 #define ERROR                   1
 #define NO_ERROR_QUIT           2
 #define ABORT                   3
 #define SKIP_COMMAND            4
 
-#undef FALSE
-#undef TRUE
+#undef  FALSE
+#undef  TRUE
 #define FALSE                   0
 #define TRUE                    1
 

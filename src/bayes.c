@@ -36,7 +36,6 @@
 
 #include "bayes.h"
 #include "command.h"
-#include "mcmc.h"
 #include "model.h"
 #include "sumpt.h"
 #include "utils.h"
@@ -57,6 +56,8 @@ extern const char* const svnRevisionUtilsC;
 static char **readline_completion(const char *, int, int);
 #endif
 
+/* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L)
+      ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
 #if defined (WIN_VERSION)
 #   undef NO_ERROR
 #   undef ERROR
@@ -64,8 +65,8 @@ static char **readline_completion(const char *, int, int);
 #   include <winbase.h>
 #   undef NO_ERROR
 #   undef ERROR
-#   define NO_ERROR                 0
-#   define ERROR                    1
+#   define NO_ERROR     0
+#   define ERROR        1
 #endif
 
 
@@ -101,12 +102,12 @@ int         userLevel;                   /* user level                          
 PolyTree    *userTree[MAX_NUM_USERTREES];/* array of user trees                           */
 char        workingDir[100];             /* working directory                             */
 
-#           if defined (MPI_ENABLED)
+#if defined (MPI_ENABLED)
 int         proc_id;                     /* process ID (0, 1, ..., num_procs-1)                        */
 int         num_procs;                   /* number of active processors                                */
 MrBFlt      myStateInfo[7];              /* likelihood/prior/heat/ran/moveInfo vals of me              */
 MrBFlt      partnerStateInfo[7];         /* likelihood/prior/heat/ran/moveInfo vals of partner         */
-#           endif
+#endif
 
 #if defined (FAST_LOG)
 CLFlt       scalerValue[400];
@@ -158,7 +159,6 @@ int main (int argc, char *argv[])
         }
 #   endif
 
-    /*mtrace();*/
     /* calculate the size of a long - used by bit manipulation functions */
     nBitsInALong = sizeof(BitsLong) * 8;
     for (i=0; i<nBitsInALong; i++)
@@ -175,11 +175,8 @@ int main (int argc, char *argv[])
     SIOUXSettings.rows             = 60;
     SIOUXSettings.columns          = 90;
 #   endif
-
+    
 #   if defined (MPI_ENABLED)
-
-//  MrBayesPrint ("                             Parallel version of\n\n");
-
     ierror = MPI_Init(&argc, &argv);
     if (ierror != MPI_SUCCESS)
         {
@@ -199,16 +196,16 @@ int main (int argc, char *argv[])
         exit (1);
         }
 #   endif
-
-#ifdef HAVE_LIBREADLINE
+    
+#   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
-#endif
+#   endif
     /* Set up parameter table. */
     SetUpParms ();
-
+    
     /* initialize seed using current time */
     GetTimeSeed ();
-
+    
     /* Initialize the variables of the program. */
     InitializeMrBayes ();
     
@@ -221,11 +218,11 @@ int main (int argc, char *argv[])
     /* Go to the command line, process any arguments passed to the program
        and then wait for input. */
     i = CommandLine (argc, argv);
-
+    
 #   if defined (MPI_ENABLED)
     MPI_Finalize();
 #   endif
-
+    
     if (i == ERROR)
         return (1);
     else
@@ -244,13 +241,13 @@ int CommandLine (int argc, char **argv)
     int     i, message, nProcessedArgs;
     char    cmdStr[CMD_STRING_LENGTH];
 #ifdef HAVE_LIBREADLINE
-#ifndef MPI_ENABLED
-        char    *cmdStrP;
+    #ifndef MPI_ENABLED
+    char    *cmdStrP;
+    #endif
 #endif
-#endif
-#           if defined (MPI_ENABLED)
+#if defined (MPI_ENABLED)
     int     ierror;
-#           endif
+#endif
 
     for(i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
     
@@ -295,7 +292,7 @@ int CommandLine (int argc, char **argv)
                 }
             /* normally, we simply wait at the prompt for a
                user action */
-#           if defined (MPI_ENABLED)
+#if defined (MPI_ENABLED)
             if (proc_id == 0)
                 {
                 /* do not use readline because OpenMPI does not handle it */
@@ -315,7 +312,7 @@ int CommandLine (int argc, char **argv)
                 {
                 MrBayesPrint ("%s   Problem broadcasting command string\n", spacer);
                 }
-#           else
+#else
     #ifdef HAVE_LIBREADLINE
             cmdStrP = readline("MrBayes > ");
             if(cmdStrP!=NULL) 
@@ -338,7 +335,7 @@ int CommandLine (int argc, char **argv)
                     MrBayesPrint ("%s   Could not read command from stdin; quitting\n", spacer);
                 strcpy (cmdStr,"quit;\n");
                 }
-#           endif
+#endif
             }
         i = 0;
         while (cmdStr[i] != '\0' && cmdStr[i] != '\n')
@@ -369,13 +366,13 @@ int CommandLine (int argc, char **argv)
                     return (ERROR);
                     }           
 
-#               if defined (MPI_ENABLED)
+#if defined (MPI_ENABLED)
                 ierror = MPI_Barrier (MPI_COMM_WORLD);
                 if (ierror != MPI_SUCCESS)
                     {
                     MrBayesPrint ("%s   Problem at command barrier\n", spacer);
                     }
-#               endif
+#endif
 
                 MrBayesPrint ("\n");
                 }
@@ -491,11 +488,11 @@ int InitializeMrBayes (void)
     fileNameChanged      = NO;                       /* file name changed ? (used by a few commands)  */
     echoMB               = YES;                      /* flag used by Manual to control printing       */
 
-#   if defined (MPI_ENABLED)
+#if defined (MPI_ENABLED)
     sprintf(manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file     */
-#   else
-    sprintf(manFileName, "commref_mb%s.txt", VERSION_NUMBER); /* name of command reference file       */
-#   endif
+#else
+    sprintf(manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file     */
+#endif
 
     for (i=0; i<NUM_ALLOCS; i++)                     /* set allocated memory to NO                    */
         memAllocs[i] = NO;              
@@ -529,7 +526,7 @@ int InitializeMrBayes (void)
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment
-    // beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;           /* default to SSE code                           */
+    // beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;        /* default to SSE code                           */
     beagleResource = NULL;
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
@@ -582,60 +579,60 @@ int InitializeMrBayes (void)
     intValues = NULL;
     
     /* Prior model settings */
-    defaultModel.dataType = DNA;                    /* datatype                                     */
-    strcpy(defaultModel.coding, "All");             /* ascertainment bias                           */
-    strcpy(defaultModel.nucModel, "4by4");          /* nucleotide model                             */
-    strcpy(defaultModel.nst, "1");                  /* number of substitution types                 */
-    strcpy(defaultModel.aaModelPr, "Fixed");        /* amino acid model prior                       */
+    defaultModel.dataType = DNA;                        /* datatype                                     */
+    strcpy(defaultModel.coding, "All");                 /* ascertainment bias                           */
+    strcpy(defaultModel.nucModel, "4by4");              /* nucleotide model                             */
+    strcpy(defaultModel.nst, "1");                      /* number of substitution types                 */
+    strcpy(defaultModel.aaModelPr, "Fixed");            /* amino acid model prior                       */
     for (i=0; i<10; i++)
         defaultModel.aaModelPrProbs[i] = 0.0;
-    strcpy(defaultModel.aaModel, "Poisson");        /* amino acid model                             */
-    strcpy(defaultModel.parsModel, "No");           /* do not use parsimony model                   */
-    strcpy(defaultModel.geneticCode, "Universal");  /* genetic code                                 */
-    strcpy(defaultModel.ploidy, "Diploid");         /* ploidy level                                 */
-    strcpy(defaultModel.omegaVar, "Equal");         /* omega variation                              */
-    strcpy(defaultModel.ratesModel, "Equal");       /* rates across sites model                     */
-    defaultModel.numGammaCats = 4;                  /* number of categories for gamma approximation */
-    strcpy(defaultModel.useGibbs,"No");             /* do not use Gibbs sampling of rate cats by default   */
-    defaultModel.gibbsFreq = 100;                   /* default Gibbs sampling frequency of rate cats*/
-    defaultModel.numBetaCats = 5;                   /* number of categories for beta approximation  */
-    strcpy(defaultModel.covarionModel, "No");       /* use covarion model? (yes/no)                 */
-    strcpy(defaultModel.augmentData, "No");         /* should data be augmented                     */
-    strcpy(defaultModel.tRatioPr, "Beta");          /* prior for ti/tv rate ratio                   */
+    strcpy(defaultModel.aaModel, "Poisson");            /* amino acid model                             */
+    strcpy(defaultModel.parsModel, "No");               /* do not use parsimony model                   */
+    strcpy(defaultModel.geneticCode, "Universal");      /* genetic code                                 */
+    strcpy(defaultModel.ploidy, "Diploid");             /* ploidy level                                 */
+    strcpy(defaultModel.omegaVar, "Equal");             /* omega variation                              */
+    strcpy(defaultModel.ratesModel, "Equal");           /* rates across sites model                     */
+    defaultModel.numGammaCats = 4;                      /* number of categories for gamma approximation */
+    strcpy(defaultModel.useGibbs,"No");                 /* do not use Gibbs sampling of rate cats by default */
+    defaultModel.gibbsFreq = 100;                       /* default Gibbs sampling frequency of rate cats*/
+    defaultModel.numBetaCats = 5;                       /* number of categories for beta approximation  */
+    strcpy(defaultModel.covarionModel, "No");           /* use covarion model? (yes/no)                 */
+    strcpy(defaultModel.augmentData, "No");             /* should data be augmented                     */
+    strcpy(defaultModel.tRatioPr, "Beta");              /* prior for ti/tv rate ratio                   */
     defaultModel.tRatioFix = 1.0;
     defaultModel.tRatioDir[0] = 1.0;
     defaultModel.tRatioDir[1] = 1.0;
-    strcpy(defaultModel.revMatPr, "Dirichlet");     /* prior for GTR model (nucleotides)            */
+    strcpy(defaultModel.revMatPr, "Dirichlet");         /* prior for GTR model (nucleotides)            */
     for (i=0; i<6; i++)
         {
         defaultModel.revMatFix[i] = 1.0;
         defaultModel.revMatDir[i] = 1.0;
         }
-    defaultModel.revMatSymDir = 1.0;                /* default prior for GTR mixed model          */
-    strcpy (defaultModel.aaRevMatPr, "Dirichlet");  /* prior for GTR model (proteins)             */
+    defaultModel.revMatSymDir = 1.0;                    /* default prior for GTR mixed model            */
+    strcpy (defaultModel.aaRevMatPr, "Dirichlet");      /* prior for GTR model (proteins)               */
     for (i=0; i<190; i++)
         {
         defaultModel.aaRevMatFix[i] = 1.0;
         defaultModel.aaRevMatDir[i] = 1.0;
         }
-    strcpy(defaultModel.omegaPr, "Dirichlet");      /* prior for omega                              */
+    strcpy(defaultModel.omegaPr, "Dirichlet");          /* prior for omega                              */
     defaultModel.omegaFix = 1.0;
     defaultModel.omegaDir[0] = 1.0;
     defaultModel.omegaDir[1] = 1.0;
-    strcpy(defaultModel.ny98omega1pr, "Beta");      /* prior for class 1 omega (Ny98 model)         */
+    strcpy(defaultModel.ny98omega1pr, "Beta");          /* prior for class 1 omega (Ny98 model)         */
     defaultModel.ny98omega1Fixed = 0.1;
     defaultModel.ny98omega1Beta[0] = 1.0;
     defaultModel.ny98omega1Beta[1] = 1.0;
-    strcpy(defaultModel.ny98omega3pr, "Exponential");/* prior for class 3 omega (Ny98 model)        */
+    strcpy(defaultModel.ny98omega3pr, "Exponential");   /* prior for class 3 omega (Ny98 model)        */
     defaultModel.ny98omega3Fixed = 2.0;
     defaultModel.ny98omega3Uni[0] = 1.0;
     defaultModel.ny98omega3Uni[1] = 50.0;
     defaultModel.ny98omega3Exp = 1.0;
-    strcpy(defaultModel.m3omegapr, "Exponential");  /* prior for all three omegas (M3 model)        */
+    strcpy(defaultModel.m3omegapr, "Exponential");      /* prior for all three omegas (M3 model)        */
     defaultModel.m3omegaFixed[0] = 0.1;
     defaultModel.m3omegaFixed[1] = 1.0;
     defaultModel.m3omegaFixed[2] = 2.0;
-    strcpy(defaultModel.m10betapr, "Uniform");      /* prior for omega variation (M10 model)        */
+    strcpy(defaultModel.m10betapr, "Uniform");          /* prior for omega variation (M10 model)        */
     strcpy(defaultModel.m10gammapr, "Uniform");
     defaultModel.m10betaUni[0] = 0.0;
     defaultModel.m10betaUni[1] = 20.0;
@@ -649,14 +646,14 @@ int InitializeMrBayes (void)
     defaultModel.m10gammaFix[1] = 1.0;
     defaultModel.numM10GammaCats = 4;
     defaultModel.numM10BetaCats = 4;
-    strcpy(defaultModel.codonCatFreqPr, "Dirichlet");/* prior for selection cat frequencies         */
+    strcpy(defaultModel.codonCatFreqPr, "Dirichlet");   /* prior for selection cat frequencies         */
     defaultModel.codonCatFreqFix[0] = 1.0/3.0;
     defaultModel.codonCatFreqFix[1] = 1.0/3.0;
     defaultModel.codonCatFreqFix[2] = 1.0/3.0;
     defaultModel.codonCatDir[0] = 1.0;
     defaultModel.codonCatDir[1] = 1.0;
     defaultModel.codonCatDir[2] = 1.0;
-    strcpy(defaultModel.stateFreqPr, "Dirichlet");  /* prior for character state frequencies        */
+    strcpy(defaultModel.stateFreqPr, "Dirichlet");      /* prior for character state frequencies        */
     strcpy(defaultModel.stateFreqsFixType, "Equal");
     for (i=0; i<200; i++)
         {
@@ -664,7 +661,7 @@ int InitializeMrBayes (void)
         defaultModel.stateFreqsDir[i] = 1.0;
         }    
     defaultModel.numDirParams = 0;
-    strcpy(defaultModel.shapePr, "Exponential");            /* prior for gamma shape parameter              */
+    strcpy(defaultModel.shapePr, "Exponential");        /* prior for gamma shape parameter              */
     defaultModel.shapeFix = 0.5;
     defaultModel.shapeUni[0] = MIN_SHAPE_PARAM;
     defaultModel.shapeUni[1] = MAX_SHAPE_PARAM;
@@ -741,7 +738,7 @@ int InitializeMrBayes (void)
     defaultModel.speciationUni[0] = 0.0;
     defaultModel.speciationUni[1] = 10.0;
     defaultModel.speciationExp = 1.0;
-    strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover) */
+    strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover)          */
     defaultModel.extinctionFix = 0.5;
     defaultModel.extinctionBeta[0] = 1;
     defaultModel.extinctionBeta[1] = 1;
@@ -749,66 +746,66 @@ int InitializeMrBayes (void)
     defaultModel.fossilizationFix = 0.5;
     defaultModel.fossilizationBeta[0] = 1;
     defaultModel.fossilizationBeta[1] = 1;
-    strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                       */
-    defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction                */
-    defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events        */
+    strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                      */
+    defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction               */
+    defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events       */
 
-    strcpy(defaultModel.popSizePr, "Lognormal");    /* prior on coalescence population size         */
+    strcpy(defaultModel.popSizePr, "Lognormal");        /* prior on coalescence population size         */
     defaultModel.popSizeFix = 10.0;
     defaultModel.popSizeUni[0] = 1.0;
     defaultModel.popSizeUni[1] = 1000.0;
     defaultModel.popSizeNormal[0] = 100.0;
     defaultModel.popSizeNormal[1] = 30.0;
-    defaultModel.popSizeLognormal[0] = 4.6;         /* mean on log scale corresponds to N_e = 100.0 */
-    defaultModel.popSizeLognormal[1] = 2.3;         /* factor 10 in one standard deviation          */
+    defaultModel.popSizeLognormal[0] = 4.6;             /* mean on log scale corresponds to N_e = 100.0 */
+    defaultModel.popSizeLognormal[1] = 2.3;             /* factor 10 in one standard deviation          */
     defaultModel.popSizeGamma[0] = 100.0;
     defaultModel.popSizeGamma[1] = 1000.0;
-    strcpy(defaultModel.popVarPr, "Equal");         /* prior on pop. size variation across tree     */
-    strcpy(defaultModel.growthPr, "Fixed");         /* prior on coalescence growth rate prior       */
+    strcpy(defaultModel.popVarPr, "Equal");             /* prior on pop. size variation across tree     */
+    strcpy(defaultModel.growthPr, "Fixed");             /* prior on coalescence growth rate prior       */
     defaultModel.growthFix = 0.0;
     defaultModel.growthUni[0] = 0.0;
     defaultModel.growthUni[1] = 100.0;
     defaultModel.growthExp = 1.0;
     defaultModel.growthNorm[0] = 0.0;
     defaultModel.growthNorm[1] = 1.0;
-    strcpy(defaultModel.nodeAgePr, "Unconstrained");    /* prior on node depths                     */
-    strcpy(defaultModel.clockVarPr, "Strict");          /* prior on clock rate variation            */
-    strcpy(defaultModel.cppRatePr, "Exponential") ;     /* prior on rate of CPP for relaxed clock   */
+    strcpy(defaultModel.nodeAgePr, "Unconstrained");    /* prior on node depths                       */
+    strcpy(defaultModel.clockVarPr, "Strict");          /* prior on clock rate variation              */
+    strcpy(defaultModel.cppRatePr, "Exponential") ;     /* prior on rate of CPP for relaxed clock     */
     defaultModel.cppRateExp = 0.1;
     defaultModel.cppRateFix = 1.0;
-    strcpy(defaultModel.cppMultDevPr, "Fixed");     /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
+    strcpy(defaultModel.cppMultDevPr, "Fixed");         /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
     defaultModel.cppMultDevFix = 0.4;
-    strcpy(defaultModel.tk02varPr, "Exponential");  /* prior on nu parameter for BM rel clock */
+    strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on nu parameter for BM rel clock     */
     defaultModel.tk02varExp = 10.0;
     defaultModel.tk02varFix = 0.1;
     defaultModel.tk02varUni[0] = 0.0;
     defaultModel.tk02varUni[1] = 0.5;
-    strcpy(defaultModel.igrvarPr, "Exponential");   /* prior on variance increase parameter for IGR rel clock */
+    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance increase parameter for IGR rel clock */
     defaultModel.igrvarExp = 10.0;
     defaultModel.igrvarFix = 0.1;
     defaultModel.igrvarUni[0] = 0.0;
     defaultModel.igrvarUni[1] = 0.5;
-    strcpy(defaultModel.mixedvarPr, "Exponential"); /* prior on var parameter for mixed rel clock */
+    strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for mixed rel clock */
     defaultModel.mixedvarExp = 10.0;
     defaultModel.mixedvarFix = 0.1;
     defaultModel.mixedvarUni[0] = 0.0;
     defaultModel.mixedvarUni[1] = 0.5;
-    strcpy(defaultModel.ratePr, "Fixed");           /* prior on rate for a partition              */
+    strcpy(defaultModel.ratePr, "Fixed");               /* prior on rate for a partition              */
     defaultModel.ratePrDir = 1.0;
-    strcpy(defaultModel.generatePr, "Fixed");       /* prior on rate for a gene (multispecies coalescent) */
+    strcpy(defaultModel.generatePr, "Fixed");           /* prior on rate for a gene (multispecies coalescent) */
     defaultModel.generatePrDir = 1.0;
 
-    defaultModel.nStates = 4;                       /* number of states for partition             */
+    defaultModel.nStates = 4;                           /* number of states for partition             */
 
     /* Report format settings */
-    strcpy(defaultModel.tratioFormat, "Ratio");     /* default format for tratio                  */
-    strcpy(defaultModel.revmatFormat, "Dirichlet"); /* default format for revmat                  */
-    strcpy(defaultModel.ratemultFormat, "Scaled");  /* default format for ratemult                */
-    strcpy(defaultModel.treeFormat, "Brlens");      /* default format for trees                   */
-    strcpy(defaultModel.inferAncStates, "No");      /* do not infer ancestral states              */
-    strcpy(defaultModel.inferPosSel, "No");         /* do not infer positive selection            */
-    strcpy(defaultModel.inferSiteOmegas, "No");     /* do not infer site omega vals               */
-    strcpy(defaultModel.inferSiteRates, "No");      /* do not infer site rates                    */
+    strcpy(defaultModel.tratioFormat, "Ratio");         /* default format for tratio                  */
+    strcpy(defaultModel.revmatFormat, "Dirichlet");     /* default format for revmat                  */
+    strcpy(defaultModel.ratemultFormat, "Scaled");      /* default format for ratemult                */
+    strcpy(defaultModel.treeFormat, "Brlens");          /* default format for trees                   */
+    strcpy(defaultModel.inferAncStates, "No");          /* do not infer ancestral states              */
+    strcpy(defaultModel.inferPosSel, "No");             /* do not infer positive selection            */
+    strcpy(defaultModel.inferSiteOmegas, "No");         /* do not infer site omega vals               */
+    strcpy(defaultModel.inferSiteRates, "No");          /* do not infer site rates                    */
 
     /* Allocate and initialize model indicator parameter names */
     modelIndicatorParams = (char **) SafeCalloc (3, sizeof (char *));
@@ -867,21 +864,21 @@ int InitializeMrBayes (void)
 
 unsigned FindMaxRevision ( unsigned amount, ...)
 {
-  const char* cur;
-  char tmp[20];
-  unsigned val,i,max;
+    const char* cur;
+    char tmp[20];
+    unsigned val,i,max;
 
-  va_list vl;
-  va_start(vl,amount);
-  max=0;
-  for (i=0;i<amount;i++)
-  {
-    cur=va_arg(vl,const char*);
-    sscanf(cur,"%s %d",tmp,&val);
-    max=(max>val)?max:val;
-  }
-  va_end(vl);
-  return max;
+    va_list vl;
+    va_start(vl,amount);
+    max=0;
+    for (i=0;i<amount;i++)
+        {
+        cur=va_arg(vl,const char*);
+        sscanf(cur,"%s %d",tmp,&val);
+        max=(max>val)?max:val;
+        }
+    va_end(vl);
+    return max;
 }
 
 
@@ -916,9 +913,9 @@ void PrintHeader (void)
     MrBayesPrint ("                   Type \"about\" for authorship and general\n");
     MrBayesPrint ("                       information about the program.\n\n\n");
     
-#ifndef NDEBUG
-    MrBayesPrint ("Debugging: assert() enabled\n\n");
-#endif
+//  #ifndef NDEBUG
+//  MrBayesPrint ("Debugging: assert() enabled\n\n");
+//  #endif
     
 }
 
@@ -935,7 +932,7 @@ int ReinitializeMrBayes (void)
     int             i;
     
     /* reinitialize indentation */
-    strcpy (spacer, "");                             /* holds blanks for indentation                    */
+    strcpy (spacer, "");                             /* holds blanks for indentation                  */
 
     /* reset all taxa flags */
     ResetTaxaFlags();
@@ -1028,11 +1025,11 @@ int ReinitializeMrBayes (void)
     /* sumss parameters */
     sumssParams.numRuns= 2;                          /* number of independent analyses to summarize   */
     sumssParams.allRuns = YES;                       /* should data for all runs be printed (yes/no)? */
-    sumssParams.stepToPlot = 0;                      /* Which step to plot in the step plot, 0 means burnin     */
+    sumssParams.stepToPlot = 0;                      /* Which step to plot in the step plot, 0 means burnin */
     sumssParams.askForMorePlots = YES;               /* Should user be asked to plot for different discardfraction (y/n)?  */
-    sumssParams.smoothing = 0;                       /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
     sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when ploting step plot.*/
-
+    sumssParams.smoothing = 0;                       /* An integer indicating number of neighbors to average over
+                                                        when dooing smoothing of curvs on plots */
     /* comparetree parameters */
     strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
     strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */

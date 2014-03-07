@@ -41,9 +41,6 @@
 #include "mcmc.h"
 #include "sumpt.h"
 #include "utils.h"
-#if defined (BEAGLE_ENABLED)
-#include "libhmsbeagle/beagle.h"
-#endif
 #if defined(__MWERKS__)
 #include "SIOUX.h"
 #endif
