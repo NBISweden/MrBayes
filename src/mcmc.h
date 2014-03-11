@@ -14,7 +14,7 @@ int     DoSsParm (char *parmName, char *tkn);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF);
 int     LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t, MrBFlt clockRate);
-int     LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR, char *sS);
+int     LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR, char *sS);
 int     Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);

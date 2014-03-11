@@ -7576,8 +7576,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s\n", spacer, modelParams[i].sampleStrat);
                             else
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
-                            if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity") ||
-                                !strcmp(modelParams[i].sampleStrat,"RndItval") || !strcmp(modelParams[i].sampleStrat,"DivItval") )
+                            if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity"))
                                 {
                                 foundFSNum[i] = foundFSTime[i] = NO;
                                 modelParams[i].sampleFSNum = 0;
@@ -7604,67 +7603,63 @@ int DoPrsetParm (char *parmName, char *tkn)
                     {
                     if (activeParts[i] == YES || nApplied == 0)
                         {
-                        if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity") ||
-                            !strcmp(modelParams[i].sampleStrat,"RndItval") || !strcmp(modelParams[i].sampleStrat,"DivItval") )
+                        if (foundFSNum[i] == NO)
                             {
-                            if (foundFSNum[i] == NO)
+                            sscanf (tkn, "%d", &tempInt);
+                            if (tempInt <= 0)
                                 {
-                                sscanf (tkn, "%d", &tempInt);
-                                if (tempInt <= 0)
-                                    {
-                                    MrBayesPrint ("%s   Number of fossil slice sampling events must be > 0\n", spacer);
-                                    return (ERROR);
-                                    }
-                                modelParams[i].sampleFSNum = tempInt;
-                                if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
-                                    {
-                                    free(modelParams[i].sampleFSProb);
-                                    free(modelParams[i].sampleFSTime);
-                                    }
-                                modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
-                                modelParams[i].sampleFSProb = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
-                                memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
-                                foundFSNum[i] = YES;
-                                expecting  = Expecting(COLON);
+                                MrBayesPrint ("%s   Number of fossil slice sampling events must be > 0\n", spacer);
+                                return (ERROR);
                                 }
-                            else if (foundFSTime[i] == NO)
+                            modelParams[i].sampleFSNum = tempInt;
+                            if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
                                 {
-                                sscanf (tkn, "%lf", &tempD);
-                                if (tempD <= 0.0)
-                                    {
-                                    MrBayesPrint ("%s   Time of fossil slice sampling events must be > 0.\n", spacer);
-                                    return (ERROR);
-                                    }
-                                if (numVars[i] > 0 && modelParams[i].sampleFSTime[numVars[i]-1] < tempD)
-                                    {
-                                    MrBayesPrint ("%s   Time of fossil slice sampling events must be in decreasing order\n", spacer);
-                                    return (ERROR);
-                                    }
-                                modelParams[i].sampleFSTime[numVars[i]] = tempD;
-                                foundFSTime[i] = YES;
-                                expecting  = Expecting(NUMBER);
+                                free(modelParams[i].sampleFSProb);
+                                free(modelParams[i].sampleFSTime);
                                 }
+                            modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                            modelParams[i].sampleFSProb = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                            memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
+                            foundFSNum[i] = YES;
+                            expecting  = Expecting(COLON);
+                            }
+                        else if (foundFSTime[i] == NO)
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Time of fossil slice sampling events must be > 0.\n", spacer);
+                                return (ERROR);
+                                }
+                            if (numVars[i] > 0 && modelParams[i].sampleFSTime[numVars[i]-1] < tempD)
+                                {
+                                MrBayesPrint ("%s   Time of fossil slice sampling events must be in decreasing order\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].sampleFSTime[numVars[i]] = tempD;
+                            foundFSTime[i] = YES;
+                            expecting  = Expecting(NUMBER);
+                            }
+                        else
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD < 0.0 || tempD > 1.0)
+                                {
+                                MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1]\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].sampleFSProb[numVars[i]] = tempD;
+                            foundFSTime[i] = NO;
+                            expecting  = Expecting(COMMA);
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf\n", spacer, numVars[i]+1,
+                                              modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
                             else
-                                {
-                                sscanf (tkn, "%lf", &tempD);
-                                if (tempD < 0.0 || tempD > 1.0)
-                                    {
-                                    MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1]\n", spacer);
-                                    return (ERROR);
-                                    }
-                                modelParams[i].sampleFSProb[numVars[i]] = tempD;
-                                foundFSTime[i] = NO;
-                                expecting  = Expecting(COMMA);
-                                if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf\n", spacer, numVars[i]+1,
-                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
-                                else
-                                    MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf for partition %d\n", spacer, numVars[i]+1,
-                                                  modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
-                                numVars[i]++;
-                                if (numVars[i] == modelParams[i].sampleFSNum)
-                                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-                                }
+                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf for partition %d\n", spacer, numVars[i]+1,
+                                              modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
+                            numVars[i]++;
+                            if (numVars[i] == modelParams[i].sampleFSNum)
+                                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         }
                     }
@@ -11202,15 +11197,18 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 if (p->paramId == EXTRATE_FIX)
                     value[0] = mp->extinctionFix;
                 else
-                    value[0] =  0.5;
+                    value[0] = 0.5;
                 }
             else if (p->paramType == P_FOSLRATE)
                 {
                 /* Fill in fossilization rates */
-                if (p->paramId == FOSLRATE_FIX)
-                    value[0] = mp->fossilizationFix;
-                else
-                    value[0] =  0.5;
+                for (j=0; j<p->nValues; j++)
+                    {
+                    if (p->paramId == FOSLRATE_FIX)
+                        value[j] = mp->fossilizationFix;
+                    else
+                        value[j] = 0.5;
+                    }
                 }
             else if (p->paramType == P_GROWTH)
                 {
@@ -19300,7 +19298,7 @@ int SetModelParams (void)
             {
             /* Set up fossilization rates */
             p->paramType = P_FOSLRATE;
-            p->nValues = 1;
+            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
             p->nSubValues = 0;
             p->min = 0.0;
             p->max = POS_INFINITY;
@@ -19320,8 +19318,18 @@ int SetModelParams (void)
             
             if (p->paramId != FOSLRATE_FIX)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "relative_fossilization");
-            SafeStrcat (&p->paramHeader, partString);
+            
+            if (p->nValues == 1)
+                {
+                SafeStrcat (&p->paramHeader, "relative_fossilization");
+                SafeStrcat (&p->paramHeader, partString);
+                }
+            else for (i = 0; i < p->nValues; i++)
+                {
+                sprintf(tempStr, "\trelative_fossilization_%d", i+1);
+                SafeStrcat (&p->paramHeader, tempStr);
+                SafeStrcat (&p->paramHeader, partString);
+                }
             }
         else if (j == P_POPSIZE)
             {
@@ -20528,7 +20536,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = FOSLRATE_BETA;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Fossilization;
-    mt->relProposalProb = 1.5;
+    mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -23013,12 +23021,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
     MrBayesPrint ("%s   Active parameters: \n\n", spacer);
     if (numCurrentDivisions > 1)
         { 
-        MrBayesPrint ("%s                       Partition(s)\n", spacer);
-        MrBayesPrint ("%s      Parameters     ", spacer);
+        MrBayesPrint ("%s                          Partition(s)\n", spacer);
+        MrBayesPrint ("%s      Parameters        ", spacer);
         for (i=0; i<numCurrentDivisions; i++)
             MrBayesPrint (" %2d", i+1);
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s      ---------------", spacer);
+        MrBayesPrint ("%s      ------------------", spacer);
         for (i=0; i<numCurrentDivisions; i++)
             MrBayesPrint ("---");
         MrBayesPrint ("\n");
@@ -23026,7 +23034,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
     else
         {
         MrBayesPrint ("%s      Parameters\n", spacer);
-        MrBayesPrint ("%s      ------------------\n", spacer);
+        MrBayesPrint ("%s      ---------------------\n", spacer);
         }
     for (j=0; j<NUM_LINKED; j++)
         {
@@ -23043,59 +23051,59 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
         
         if (j == P_TRATIO)
             {
-            MrBayesPrint ("%s      Tratio         ", spacer);
+            MrBayesPrint ("%s      Tratio            ", spacer);
             }
         else if (j == P_REVMAT)
             {
-            MrBayesPrint ("%s      Revmat         ", spacer);
+            MrBayesPrint ("%s      Revmat            ", spacer);
             }
         else if (j == P_OMEGA)
             {
-            MrBayesPrint ("%s      Omega          ", spacer);
+            MrBayesPrint ("%s      Omega             ", spacer);
             }
         else if (j == P_PI)
             {
-            MrBayesPrint ("%s      Statefreq      ", spacer);
+            MrBayesPrint ("%s      Statefreq         ", spacer);
             }
         else if (j == P_SHAPE)
             {
-            MrBayesPrint ("%s      Shape          ", spacer);
+            MrBayesPrint ("%s      Shape             ", spacer);
             }
         else if (j == P_PINVAR)
             {
-            MrBayesPrint ("%s      Pinvar         ", spacer);
+            MrBayesPrint ("%s      Pinvar            ", spacer);
             }
         else if (j == P_CORREL)
             {
-            MrBayesPrint ("%s      Correlation    ", spacer);
+            MrBayesPrint ("%s      Correlation       ", spacer);
             }
         else if (j == P_SWITCH)
             {
-            MrBayesPrint ("%s      Switchrates    ", spacer);
+            MrBayesPrint ("%s      Switchrates       ", spacer);
             }
         else if (j == P_RATEMULT)
             {
-            MrBayesPrint ("%s      Ratemultiplier ", spacer);
+            MrBayesPrint ("%s      Ratemultiplier    ", spacer);
             }
         else if (j == P_GENETREERATE)
             {
-            MrBayesPrint ("%s      Generatemult   ", spacer);
+            MrBayesPrint ("%s      Generatemult      ", spacer);
             }
         else if (j == P_TOPOLOGY)
             {
-            MrBayesPrint ("%s      Topology       ", spacer);
+            MrBayesPrint ("%s      Topology          ", spacer);
             }
         else if (j == P_BRLENS)
             {
-            MrBayesPrint ("%s      Brlens         ", spacer);
+            MrBayesPrint ("%s      Brlens            ", spacer);
             }
         else if (j == P_SPECRATE)
             {
-            MrBayesPrint ("%s      Speciationrate ", spacer);
+            MrBayesPrint ("%s      Speciationrate    ", spacer);
             }
         else if (j == P_EXTRATE)
             {
-            MrBayesPrint ("%s      Extinctionrate ", spacer);
+            MrBayesPrint ("%s      Extinctionrate    ", spacer);
             }
         else if (j == P_FOSLRATE)
             {
@@ -23103,67 +23111,67 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_POPSIZE)
             {
-            MrBayesPrint ("%s      Popsize        ", spacer);
+            MrBayesPrint ("%s      Popsize           ", spacer);
             }
         else if (j == P_GROWTH)
             {
-            MrBayesPrint ("%s      Growthrate     ", spacer);
+            MrBayesPrint ("%s      Growthrate        ", spacer);
             } 
         else if (j == P_AAMODEL)
             {
-            MrBayesPrint ("%s      Aamodel        ", spacer);
+            MrBayesPrint ("%s      Aamodel           ", spacer);
             }
         else if (j == P_BRCORR)
             {
-            MrBayesPrint ("%s      Brownian corr. ", spacer);
+            MrBayesPrint ("%s      Brownian corr.    ", spacer);
             }
         else if (j == P_BRSIGMA)
             {
-            MrBayesPrint ("%s      Brownian sigma ", spacer);
+            MrBayesPrint ("%s      Brownian sigma    ", spacer);
             }
         else if (j == P_CPPRATE)
             {
-            MrBayesPrint ("%s      Cpprate        ", spacer);
+            MrBayesPrint ("%s      Cpprate           ", spacer);
             }
         else if (j == P_CPPMULTDEV)
             {
-            MrBayesPrint ("%s      Cppmultdev     ", spacer);
+            MrBayesPrint ("%s      Cppmultdev        ", spacer);
             }
         else if (j == P_CPPEVENTS)
             {
-            MrBayesPrint ("%s      Cppevents      ", spacer);
+            MrBayesPrint ("%s      Cppevents         ", spacer);
             }
         else if (j == P_TK02VAR)
             {
-            MrBayesPrint ("%s      TK02var        ", spacer);
+            MrBayesPrint ("%s      TK02var           ", spacer);
             }
         else if (j == P_TK02BRANCHRATES)
             {
-            MrBayesPrint ("%s      TK02           ", spacer);
+            MrBayesPrint ("%s      TK02              ", spacer);
             }
         else if (j == P_IGRVAR)
             {
-            MrBayesPrint ("%s      Igrvar         ", spacer);
+            MrBayesPrint ("%s      Igrvar            ", spacer);
             }
         else if (j == P_IGRBRANCHRATES)
             {
-            MrBayesPrint ("%s      Igrbranchrates ", spacer);
+            MrBayesPrint ("%s      Igrbranchrates    ", spacer);
             }
         else if (j == P_MIXEDVAR)
             {
-            MrBayesPrint ("%s      Mixedvar       ", spacer);
+            MrBayesPrint ("%s      Mixedvar          ", spacer);
             }
         else if (j == P_MIXEDBRCHRATES)
             {
-            MrBayesPrint ("%s      Mixedbranchrates", spacer);
+            MrBayesPrint ("%s      Mixedbranchrates  ", spacer);
             }
         else if (j == P_CLOCKRATE)
             {
-            MrBayesPrint ("%s      Clockrate      ", spacer);
+            MrBayesPrint ("%s      Clockrate         ", spacer);
             }
         else if (j == P_SPECIESTREE)
             {
-            MrBayesPrint ("%s      Speciestree    ", spacer);
+            MrBayesPrint ("%s      Speciestree       ", spacer);
             }
         else
             {
@@ -23182,14 +23190,14 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
         }
     if (numCurrentDivisions > 1)
         { 
-        MrBayesPrint ("%s      ---------------", spacer);
+        MrBayesPrint ("%s      ------------------", spacer);
         for (i=0; i<numCurrentDivisions; i++)
             MrBayesPrint ("---");
         MrBayesPrint ("\n");
         }
     else
         {
-        MrBayesPrint ("%s      ------------------\n", spacer);
+        MrBayesPrint ("%s      ---------------------\n", spacer);
         }
     
     MrBayesPrint ("\n");

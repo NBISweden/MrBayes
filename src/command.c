@@ -11384,16 +11384,16 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    form Dirichlet distribution. The default prior for uncon-    \n");
         MrBayesPrint ("                    strained branch lengths is 'exp(10)'.                        \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For clock trees with calibrated external nodes, MrBayes also \n");
-        MrBayesPrint ("                    offers the fossilized birth-death prior: 'fossilization'.    \n");
+        MrBayesPrint ("                    For clock trees with calibrated external nodes (fossils),    \n");
+        MrBayesPrint ("                    MrBayes also offers the fossilized birth-death prior:        \n");
+        MrBayesPrint ("                    'clock:fossilization'.                                       \n");
         MrBayesPrint ("                    If 'SampleStrat' is set to 'fossiltip', it assumes that upon \n");
         MrBayesPrint ("                    sampling the lineage is dead and won't produce descendants,  \n");
         MrBayesPrint ("                    meaning each fossil sample is a tip. If 'SampleStrat' is set \n");
-        MrBayesPrint ("                    to 'random' (default), fossils are sampled randomaly along   \n");
-        MrBayesPrint ("                    the birth-death tree with a constant rate (Stadler 2010),    \n");
-        MrBayesPrint ("                    meaning fossils can be tips or ancestors.                    \n");
-        MrBayesPrint ("                    See also 'Speciationpr', 'Extinctionpr', 'Fossilizationpr',  \n");
-        MrBayesPrint ("                    'SampleStrat' for more information.                          \n");
+        MrBayesPrint ("                    to 'random' (default), fossils are sampled serially along the\n");
+        MrBayesPrint ("                    birth-death tree (Stadler 2010), so they can be tips or an-  \n");
+        MrBayesPrint ("                    cestors. See 'Speciationpr', 'Extinctionpr', 'SampleStrat',  \n");
+        MrBayesPrint ("                    'Fossilizationpr' for more information.                      \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior probability distribution  \n");
         MrBayesPrint ("                    on the tree age when a uniform prior is used on the branch   \n");
@@ -11460,6 +11460,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint (" Fossilizationpr -- This parameter sets the prior on the relative fossilization  \n");
         MrBayesPrint ("                    rate (sampling proportion), psi/(mu+psi), in the fossilized  \n");
         MrBayesPrint ("                    b-d model. Values of this parameter are in range (0,1).      \n");
+        MrBayesPrint ("                    If SampleStrat is used to divide up time intervals, it sets  \n");
+        MrBayesPrint ("                    the prior for the fossilization parameter in each interval.  \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset fossilizationpr = beta(<number>,<number>)           \n");
         MrBayesPrint ("                       prset fossilizationpr = fixed(<number>)                   \n");
@@ -11481,12 +11483,14 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    fossils also being ancestors of other samples.               \n");
         MrBayesPrint ("                    'random' (default) assumes extant taxa are sampled randomly  \n");
         MrBayesPrint ("                    with prob rho, while fossils are sampled on the birth-death  \n");
-        MrBayesPrint ("                    tree with a constant rate, psi (Stadler 2010).               \n");
+        MrBayesPrint ("                    tree with piecewise constant rates, psi_i (i = 1,...,s+1).   \n");
         MrBayesPrint ("                    'diversity' assumes extant taxa are sampled to maximize      \n");
-        MrBayesPrint ("                    diversity, while fossils are sampled randomly with a constant\n");
-        MrBayesPrint ("                    rate psi. Besides, there allow <s> slice samping events, each\n");
-        MrBayesPrint ("                    happens at time <t_i> with probability <rho_i>, extant taxa  \n");
-        MrBayesPrint ("                    are sampled with probability rho (set in sampleprob).        \n");
+        MrBayesPrint ("                    diversity, while fossils are sampled randomly.               \n");
+        MrBayesPrint ("                    Time is divided by <s> slice samping events in the past, each\n");
+        MrBayesPrint ("                    at time <t_i> with probability <rho_i> (s >= 0). If rho_i = 0\n");
+        MrBayesPrint ("                    the slice is only used to divide up time intervals not for   \n");
+        MrBayesPrint ("                    sampling of fossils.  Extant taxa are sampled with prob.     \n");
+        MrBayesPrint ("                    (proportion) rho (set in sampleprob).                        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset samplestrat = random                                \n");
         MrBayesPrint ("                       prset samplestrat = diversity                             \n");
@@ -11970,16 +11974,16 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
                 
-            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    \n");
-            MrBayesPrint ("                    FossilTip/RndItval/DivItval  %s ", mp->sampleStrat);
+            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
+            MrBayesPrint ("                    FossilTip                    ");
             if ((!strcmp(mp->sampleStrat, "Random")||!strcmp(mp->sampleStrat, "Diversity")) && (mp->sampleFSNum > 0))
                 {
                 MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSProb[0]);
                 if (mp->sampleFSNum > 1)  MrBayesPrint (",...\n");
                 else                      MrBayesPrint ("\n");
                 }
-            else
-                MrBayesPrint ("\n");
+            else  MrBayesPrint ("\n");
+            
             MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
             
             MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
@@ -12012,8 +12016,7 @@ int GetUserHelp (char *helpTkn)
 
             MrBayesPrint ("   Nodeagepr        Unconstrained/Calibrated     %s\n", mp->nodeAgePr);
 
-            MrBayesPrint ("   Clockratepr      Fixed/Normal/Lognormal/\n%s", spacer);
-            MrBayesPrint ("                    Exponential/Gamma            %s", mp->clockRatePr);
+            MrBayesPrint ("   Clockratepr      Fixed/Normal/Lognormal/      %s", mp->clockRatePr);
             if (!strcmp(mp->clockRatePr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->clockRateFix);
             else if (!strcmp(mp->clockRatePr,"Exponential"))
@@ -12027,6 +12030,7 @@ int GetUserHelp (char *helpTkn)
                 assert (!strcmp(mp->clockRatePr,"Gamma"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->clockRateGamma[0], mp->clockRateGamma[1]);
                 }
+            MrBayesPrint ("                    Exponential/Gamma            \n");
 
             MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    %s\n", mp->clockVarPr);
 
@@ -13087,7 +13091,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
         MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
         MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
-        MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
+    //  MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
         MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
         MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n"); 
         MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n"); 
@@ -13135,7 +13139,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
         MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
         MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
-        MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
+    //  MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
         MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
         MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n");
         MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n");
@@ -15129,7 +15133,7 @@ void SetUpParms (void)
     PARAM   (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
     PARAM   (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM   (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
-    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|RndItval|DivItval|\0");
+    PARAM   (247, "Samplestrat",    DoPrsetParm,       "Random|Diversity|Cluster|FossilTip|\0");
     PARAM   (248, "Burninss",       DoSsParm,          "\0");
     PARAM   (249, "Nsteps",         DoSsParm,          "\0");
     PARAM   (250, "Alpha",          DoSsParm,          "\0");
