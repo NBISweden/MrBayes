@@ -29586,7 +29586,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change branch lengths and topology (potentially) using balanced SPR-type move
        biased according to parsimony scores. */
     
-    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa;
+    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot;
     BitsLong    *pA, *pV, *pP, *pU, y[2];
     MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
@@ -30286,7 +30286,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* label node we come from as r, node we rotate q, and next node p */
         r = newA;
         q = r->anc;
-        nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
+        // nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
         //??? nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
         CopyTreeNodes (old, r, 0);
         do {

@@ -269,16 +269,17 @@ int             tryToUseThreads;       /* try to use pthreads with BEAGLE librar
 /* local (to this file) */
 char            *tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
 Calibration     defaultCalibration = {
-                    /* name   = */ "Unconstrained",
-                    /* prior  = */ 0,   /* = unconstrained */
-                    /* priorParams = */ { -1.0, -1.0, -1.0 },
-                    /* LnPriorProb = */ NULL,
-                    /* LnPriorRatio = */ NULL,
-                    /* min = */ -1.0,
-                    /* max = */ -1.0};
+                    "Unconstrained",      /* name */
+                    unconstrained,        /* prior */
+                    { -1.0, -1.0, -1.0 }, /* priorParams */
+                    NULL,                 /* LnPriorProb */
+                    NULL,                 /* LnPriorRatio */
+                    -1.0,                 /* min */
+                    -1.0                  /* max */
+                };
 
-CmdType         commands[] =
-                {
+CmdType     commands[] =
+            {
             /*  Information on commands initialization:
              
                     1 = Command number (cmdNumber)
@@ -365,9 +366,9 @@ CmdType         commands[] =
                                                                                                                                                      270,273,274},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
             { 59,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
             { 60,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
-        /* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
+            /* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
             { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
-        };
+            };
 int                 inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRead, isFirstInterleavedBlock, 
                     taxonCount, fromI, toJ, everyK, foundDash, foundSlash, foundFirst, isMixed, whichPartition,
                     isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
