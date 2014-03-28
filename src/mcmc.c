@@ -45514,8 +45514,8 @@ int RunChain (RandLong *seed)
                 theMove->lastAcceptanceRate[i] = (MrBFlt) theMove->nAccepted[i] / (MrBFlt) theMove->nTried[i];
                 theMove->nTried[i] = 0;
                 theMove->nAccepted[i] = 0;
-                theMove->nBatches[i]++;
-                if (chainParams.autotune == YES && theMove->moveType->Autotune != NULL)
+                theMove->nBatches[i]++;            /* we only autotune at most 100 times from the starting */
+                if (chainParams.autotune == YES && theMove->moveType->Autotune != NULL && theMove->nBatches[i] < 100)
                     {
                     theMove->moveType->Autotune(theMove->lastAcceptanceRate[i],
                                                 theMove->targetRate[i],
