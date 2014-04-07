@@ -16453,7 +16453,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     if (!x || !y)
         {
-        printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorFossilTip\n");
+        MrBayesPrint ("%s   ERROR: Problem allocating x & y in LnFossilizedBDPriorFossilTip\n", spacer);
         free(x); free(y);
         return (ERROR);
         }
@@ -16554,36 +16554,24 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
 
 {
-    /* Fossils in the past are sampled with piecewise constant rates, plus several sliced sampling events
-       in the past and at the present, each with a seperate probability. */
+    /* Fossils in the past are sampled with piecewise constant rates, also in several time slices
+       each with a seperate probability. Extant taxa are sampled at the present (the last slice at time 0). */
     
-    int         i, j, N_int, sl, *n_d2v, *m_f, *M_f, *k_f, *K_f, M, K;
-    MrBFlt      *x, *y, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
+    int         i, j, sl, K, M, E;
+    MrBFlt      x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
     mp = &modelParams[t->relParts[0]];
     
     /* time of most recent common ancestor */
-    tmrca = t->root->left->nodeDepth / clockRate;  // x[t->nIntNodes -1]
+    tmrca = t->root->left->nodeDepth / clockRate;
     
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
     
     /* allocate space for the speciation and extinction times */
-    x      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    y      = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    /* for the number of degree-two vertices in each slice */
-    n_d2v  =    (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
-    /* for the number of sampled tips in each slice, including extant */
-    M_f    =    (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
-    /* for the number of sampled fossil ancestors in each slice */
-    K_f    =    (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
-    /* for the number of sampled tips between slice intervals */
-    m_f    =    (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
-    /* for the number of sampled fossil ancestors between slice intervals */
-    k_f    =    (int *)SafeMalloc((size_t) (sl+1) * sizeof(int));
-    /* for sampling time of each slice, t_s = 0 */
+    /* for sampling time of each slice, t_f[sl] = 0 */
     t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
     /* lambda, mu, psi */
     lambda = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
@@ -16596,80 +16584,34 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     c2     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* B_i */
     p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
     
+    if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorRandom\n", spacer);
+        free(lambda); free(mu); free(psi); free(rho);
+        free(t_f); free(c1); free(c2); free(p_t);
+        }
+    
     /* initialization */
     for (i = 0; i <= sl; i++)
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR / (1.0 - eR);
-        mu[i]  = lambda[i] * eR;
-        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
-        M_f[i] = K_f[i] = m_f[i] = k_f[i] = n_d2v[i] = 0;
+        mu[i]     = lambda[i] * eR;
+        psi[i]    = mu[i] * fR[i] / (1.0 - fR[i]);
+        if (i < sl) {
+            rho[i] = mp->sampleFSProb[i];
+            t_f[i] = mp->sampleFSTime[i];
+            }
+        else {
+            rho[sl] = sF;
+            t_f[sl] = 0.0;
+            }
         }
-    for (i = 0; i < sl; i++)
-        {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
-        }
-    rho[sl] = sF;
-    t_f[sl] = 0.0;
     if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
     
-    /* get the interior node times (x_i), etc */
-    for (i = N_int = 0; i < t->nIntNodes; i++)
-        {
-        p = t->intDownPass[i];
-        if (p->left->length > 0.0 && p->right->length > 0.0)
-            x[N_int++] = p->nodeDepth / clockRate;
-        else
-            {
-            for (j = 0; j < sl; j++)
-                if (AreDoublesEqual(p->nodeDepth, t_f[j] *clockRate, BRLENS_MIN) == YES)
-                    break;
-            if (j == sl)
-                {
-                j = Slice_i(p->nodeDepth/clockRate, t_f, sl, clockRate);
-                k_f[j]++;       /* number of fossil ancestors between t[j-1] and t[j] */
-                }
-            else
-                K_f[j]++;       /* number of fossil ancestors, at silice time t[j] */
-            }
-        }
-    
-    /* get the fossil tip times (y_i), etc */
-    for (i = M = 0; i < t->nNodes -1; i++)
-        {
-        p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL && p->length > 0.0)  //tip
-            {
-            if (p->nodeDepth > 0.0)
-                {
-                for (j = 0; j < sl; j++)
-                    if (AreDoublesEqual(p->nodeDepth, t_f[j] *clockRate, BRLENS_MIN) == YES)
-                        break;
-                if (j == sl)
-                    {
-                    y[M++] = p->nodeDepth /clockRate;
-                    j = Slice_i(p->nodeDepth/clockRate, t_f, sl, clockRate);
-                    m_f[j]++;   /* number of fossil tips between t[j-1] and t[j] */
-                    }
-                else
-                    M_f[j]++;   /* number of fossil tips, at silice time t[j] */
-                }
-            else
-                M_f[sl]++;      /* number of extant taxa */
-            }
-        for (j = 0; j < sl; j++)
-            {
-            if ((p->nodeDepth +BRLENS_MIN < t_f[j] *clockRate) &&
-                (p->nodeDepth +BRLENS_MIN + p->length > t_f[j] *clockRate))
-                n_d2v[j]++;     /* number of degree-two vertices at silice time t_j */
-            }
-        }
-    
     for (i = sl; i >= 0; i--)
+        {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
-    for (i = sl; i >= 0; i--)
-        {
         if (i == sl)
             c2[i] = ((1 - 2* (1-rho[i])) *lambda[i] +mu[i] +psi[i]) /c1[i];
         else
@@ -16684,57 +16626,98 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     
 #ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf("%d: lambad=%lf mu=%lf psi=%lf\n",i+1, lambda[i], mu[i], psi[i]);
-    for (i = 0; i <= sl; i++)
-        printf("%d: t=%lf rho=%lf M=%d K=%d m=%d k=%d n=%d\n",
-               i+1, t_f[i], rho[i], M_f[i], K_f[i], m_f[i], k_f[i], n_d2v[i]);
+        printf("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
         printf("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
-    printf("N_int=%d\n", N_int);
 #endif
 
-    /* now calculate prior prob of fbd tree */
-    (*prob) = 2.0 * (LnQi_fossil(tmrca, t_f, sl,c1,c2,clockRate) - log(1- p_t[0])) + M_f[sl] * log(rho[sl]);
-    for (i = 0; i <= sl; i++)
-        if (psi[i] > 0.0)
-            (*prob) += (m_f[i] + k_f[i]) * log(psi[i]);
-    for (i = 0; i < N_int -1; i++)
-        (*prob) += log(lambda[Slice_i(x[i], t_f, sl, clockRate)]) + LnQi_fossil(x[i], t_f, sl, c1,c2,clockRate);
-    for (i = 0; i < M; i++)
-        (*prob) += LnPi_fossil(y[i], t_f, sl, c1,c2,clockRate, lambda,mu,psi)
-                 - LnQi_fossil(y[i], t_f, sl, c1,c2,clockRate);
-    for (i = 0; i < sl; i++)
+    /* calculate prior prob of the fbd tree */
+    (*prob) = 0.0;
+
+    for (K = M = E = 0, i = 0; i < t->nNodes -1; i++)
         {
-        (*prob) += n_d2v[i] * LnQi_fossil(t_f[i], t_f, sl,c1,c2,clockRate) + M_f[i] * log(p_t[i+1]);
-        if (rho[i] < 1.0)
-            (*prob) += (n_d2v[i] - K_f[i]) * log(1- rho[i]);
-        if (rho[i] > 0.0)
-            (*prob) += (M_f[i] + K_f[i]) * log(rho[i]);
+        p = t->allDownPass[i];
+        x = p->nodeDepth / clockRate;
+
+        if (p->left != NULL && p->right != NULL)  // internal
+            {
+            if (p->left->length > 0.0 && p->right->length > 0.0)
+                {
+                if (p != t->root->left)
+                    (*prob) += log(lambda[Slice_i(x, t_f, sl, clockRate)]) + LnQi_fossil(x, t_f, sl, c1,c2, clockRate);
+                }
+            else
+                {
+                for (j = 0; j < sl; j++)
+                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                if (j == sl)  /* fossil ancestor between t[j-1] and t[j] */
+                    {
+                    (*prob) += log(psi[Slice_i(x, t_f, sl, clockRate)]);
+                    }
+                else          /* fossil ancestor at silice time t[j] */
+                    {
+                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    if (rho[j] < 1.0)  (*prob) -= log(1 - rho[j]);
+                    }
+                K++;
+                }
+            }
+        else if (p->left == NULL && p->right == NULL && p->length > 0.0)  // tip
+            {
+            if (p->nodeDepth > 0.0)
+                {
+                for (j = 0; j < sl; j++)
+                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                if (j == sl)  /* fossil tip between t[j-1] and t[j] */
+                    {
+                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, clockRate, lambda,mu,psi)
+                             - LnQi_fossil(x, t_f, sl, c1,c2, clockRate);
+                    (*prob) += log(psi[Slice_i(x, t_f, sl, clockRate)]);
+                    }
+                else          /* fossil tip at silice time t[j] */
+                    {
+                    (*prob) += log(p_t[j+1]);
+                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    }
+                M++;
+                }
+            else              /* extant taxa */
+                {
+                (*prob) += log(rho[sl]);
+                E++;
+                }
+            }
+
+        for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
+            {
+            if ((p->nodeDepth +BRLENS_MIN < t_f[j] *clockRate) && (p->nodeDepth +BRLENS_MIN + p->length > t_f[j] *clockRate))
+                {
+                (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2, clockRate);
+                if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
+                }
+            }
         }
+    
+    (*prob) += 2.0 * (LnQi_fossil(tmrca, t_f, sl, c1,c2, clockRate) - log(1- p_t[0]));
     
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    M = K = 0;
-    for (i = 0; i <= sl; i++)
-        {
-        M += m_f[i] + M_f[i];
-        K += k_f[i] + K_f[i];
-        }
-    (*prob) += (M - 1) * log(2.0) - LnFactorial(M_f[sl]) - LnFactorial(M - M_f[sl] + K);
-
+    (*prob) += (M + E - 1) * log(2.0) - LnFactorial(E) - LnFactorial(M + K);
+    
 #ifdef DEBUG_FBDPR
+    printf("K=%d M=%d E=%d\n", K, M, E);
     printf("prob=%lf\n", *prob);
 #endif
-
+    
     /* free memory */
-    free(x); free(y); free(n_d2v); free(M_f); free(K_f); free(m_f); free(k_f); free(t_f);
-    free(lambda); free(mu); free(psi); free(rho); free(c1); free(c2); free(p_t);
-
+    free(lambda); free(mu); free(psi); free(rho);
+    free(t_f); free(c1); free(c2); free(p_t);
+    
     return (NO_ERROR);
-
+    
 }
 
 /*---------------------------------------------------------------------------------
@@ -16801,7 +16784,7 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
     if (!x || !y)
         {
-        printf ("\n   ERROR: Problem allocating x & y in LnFossilizedBDPriorRandom\n");
+        MrBayesPrint ("%s   ERROR: Problem allocating x & y in LnFossilizedBDPriorRandom1\n", spacer);
         free(x); free(y);
         return (ERROR);
         }
@@ -27135,8 +27118,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change clock tree using NNI move */
     
     int         i, *nEvents, numFreeOld, numFreeNew;
-    MrBFlt      minV, x, *tk02Rate=NULL,
-                *brlens, *igrRate=NULL, igrvar=0.0, nu=0.0, oldALength, oldCLength;
+    MrBFlt      x, *tk02Rate=NULL, *brlens, *igrRate=NULL, igrvar=0.0, nu=0.0, oldALength, oldCLength;
     TreeNode    *p, *q, *a, *c, *u, *v;
     Tree        *t;
     Param       *subParm;
@@ -27148,9 +27130,6 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-
-    /* get min and max branch lengths in relative time and substitution units */
-    minV = BRLENS_MIN;
 
 #   if defined (DEBUG_NNIClock)
     printf ("Before:\n");
@@ -27167,7 +27146,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth + minV)
+        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth + BRLENS_MIN)
             numFreeOld++;
         }
 
@@ -27186,7 +27165,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-        } while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + minV);
+        } while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + BRLENS_MIN);
         
     /* set up pointers for nodes around the picked branch */
     /* consider ancestral fossil (brl=0) in fossilized bd tree */
@@ -27225,8 +27204,8 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* adjust branch lengths */
     a->length = u->nodeDepth - a->nodeDepth;
     c->length = v->nodeDepth - c->nodeDepth;
-    assert (a->length > minV);
-    assert (c->length > minV);
+    assert (a->length > BRLENS_MIN);
+    assert (c->length > BRLENS_MIN);
 
     /* no reassignment of CPP events or branch rates necessary */
 
@@ -27254,7 +27233,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             q = p->anc->right;
         else
             q = p->anc->left;
-        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth + minV)
+        if (p->isLocked == NO && p->nodeDepth >= q->nodeDepth + BRLENS_MIN)
             numFreeNew++;
         }
         
@@ -37209,13 +37188,13 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             assert(p->left->length >= 0.0 && p->right->length >= 0.0);
             if (p->left->length < TIME_MIN)
                 {
-                // p->left->length = 0.0;
+                p->left->length = 0.0;
                 p->nodeDepth = p->left->nodeDepth;
                 numChangedNodes--;
                 }
             else if (p->right->length < TIME_MIN)
                 {
-                // p->right->length = 0.0;
+                p->right->length = 0.0;
                 p->nodeDepth = p->right->nodeDepth;
                 numChangedNodes--;
                 }
@@ -37232,11 +37211,12 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     p->right->length = p->nodeDepth - p->right->nodeDepth;
 
     /* check that all branch lengths are proper, which need not be the case */
-    for (i=0; i<t->nNodes-2; i++)
+    for (i = 0; i < t->nNodes -2; i++)
         {
         p = t->allDownPass[i];
         q = oldT->allDownPass[i];
-        if (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV))
+        if ( p->length < 0.0 || p->length > maxV ||
+            (q->length > minV && p->length < minV) || (q->length < minV && p->length > minV) )
             {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             abortMove = YES;
             return NO_ERROR;
