@@ -16570,8 +16570,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
     
-    /* allocate space for the speciation and extinction times */
-    /* for sampling time of each slice, t_f[sl] = 0 */
+    /* alloc memory for time of each slice, t_f[sl] = 0 */
     t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
     /* lambda, mu, psi */
     lambda = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
@@ -16579,10 +16578,10 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     psi    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
     /* for sampling prob in each slice, including extant */
     rho    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    /* others */
-    c1     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* A_i */
-    c2     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* B_i */
-    p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));  /* p_i(t_{i-1}) */
+    /* A_i, B_i, ... */
+    c1     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    c2     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
     
     if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
         {
@@ -16650,41 +16649,41 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
                 {
                 for (j = 0; j < sl; j++)
                     if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
-                if (j == sl)  /* fossil ancestor between t[j-1] and t[j] */
+                if (j == sl)      /* fossil ancestor between t[j-1] and t[j] */
                     {
                     (*prob) += log(psi[Slice_i(x, t_f, sl, clockRate)]);
                     }
-                else          /* fossil ancestor at silice time t[j] */
+                else              /* fossil ancestor at silice time t[j] */
                     {
                     if (rho[j] > 0.0)  (*prob) += log(rho[j]);
                     if (rho[j] < 1.0)  (*prob) -= log(1 - rho[j]);
                     }
-                K++;
+                K++;              /* number of fossil ancestors */
                 }
             }
-        else if (p->left == NULL && p->right == NULL && p->length > 0.0)  // tip
+        else if (p->left == NULL && p->length > 0.0)  // tip
             {
             if (p->nodeDepth > 0.0)
                 {
                 for (j = 0; j < sl; j++)
                     if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
-                if (j == sl)  /* fossil tip between t[j-1] and t[j] */
+                if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
                     (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, clockRate, lambda,mu,psi)
                              - LnQi_fossil(x, t_f, sl, c1,c2, clockRate);
                     (*prob) += log(psi[Slice_i(x, t_f, sl, clockRate)]);
                     }
-                else          /* fossil tip at silice time t[j] */
+                else              /* fossil tip at silice time t[j] */
                     {
                     (*prob) += log(p_t[j+1]);
                     if (rho[j] > 0.0)  (*prob) += log(rho[j]);
                     }
-                M++;
+                M++;              /* number of fossil tips */
                 }
-            else              /* extant taxa */
+            else
                 {
                 (*prob) += log(rho[sl]);
-                E++;
+                E++;              /* number of extant taxa */
                 }
             }
 
@@ -27565,7 +27564,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
 {
     int         i, *nEvents;
-    MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth,
+    MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth, minL, minR,
                 oldLeftLength=0.0, oldRightLength=0.0, oldPLength=0.0, x, clockRate,
                 lambda=0.0, nu=0.0, igrvar=0.0, *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL;
     TreeNode    *p, *q;
@@ -27576,8 +27575,6 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     Calibration *calibrationPtr;
 
     window = mvp[0]; /* window size */
-
-    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
  
     m = &modelSettings[param->relParts[0]];
     mp = &modelParams[param->relParts[0]];
@@ -27592,8 +27589,8 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         clockRate = *GetParamVals (m->clockRate, chain, state[chain]);
 
     /* check whether or not we can change root */
-    if ( ((!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization")) && mp->treeAgePr.prior == fixed)
-         || (t->root->left->isDated == YES && t->root->left->calibration->prior == fixed) )
+    if ((t->root->left->isDated == YES && t->root->left->calibration->prior == fixed) ||
+        ((!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization")) && mp->treeAgePr.prior == fixed))
         i = t->nNodes - 2;
     else
         i = t->nNodes - 1;
@@ -27602,9 +27599,8 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     do  {
         p = t->allDownPass[(int)(RandomNumber(seed)*i)];
         }
-    while ( (p->left == NULL && p->isDated == NO) || (p->isDated == YES && p->calibration->prior == fixed) ||
-            (p->left == NULL && p->length < TIME_MIN) || (p->left != NULL && (p->left->length < TIME_MIN || p->right->length < TIME_MIN)) );
-            /* consider ancestral fossil (brl=0) in fossilized bd tree */
+    while ((p->left == NULL && p->isDated == NO) || (p->length < TIME_MIN) ||
+           (p->isDated == YES && p->calibration->prior == fixed));
 
 #if defined (DEBUG_CSLIDER)
     printf ("Before node slider (clock):\n");
@@ -27628,16 +27624,32 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     /* determine lower and upper bound */
     if (p->left == NULL)
         minDepth = 0.0;
-    else
+    else      // internal node
         {
-        minDepth = p->left->nodeDepth + BRLENS_MIN;
-        if (p->right->nodeDepth + BRLENS_MIN > minDepth)
-            minDepth = p->right->nodeDepth + BRLENS_MIN;
+        if (p->left->length > 0.0)
+            minL = p->left->nodeDepth + BRLENS_MIN;
+        else  // ancestral fossil
+            minL = p->left->calibration->min * clockRate;
+        if (p->right->length > 0.0)
+            minR = p->right->nodeDepth + BRLENS_MIN;
+        else  // ancestral fossil
+            minR = p->right->calibration->min * clockRate;
+        if (minL > minR)
+            minDepth = minL;
+        else
+            minDepth = minR;
         }
+    
     if (p->anc->anc == NULL)
         maxDepth = TREEHEIGHT_MAX;
     else
         maxDepth = p->anc->nodeDepth - BRLENS_MIN;
+    if (p->left != NULL && p->left->length < TIME_MIN)
+        if (maxDepth > p->left->calibration->max * clockRate)
+            maxDepth = p->left->calibration->max * clockRate;
+    if (p->right != NULL && p->right->length < TIME_MIN)
+        if (maxDepth > p->right->calibration->max * clockRate)
+            maxDepth = p->right->calibration->max * clockRate;
     
     if (p->isDated == YES)
         calibrationPtr = p->calibration;
@@ -27647,14 +27659,14 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         calibrationPtr = NULL;
     if (calibrationPtr != NULL)
         {
-        if (calibrationPtr->max * clockRate < maxDepth)
+        if (maxDepth > calibrationPtr->max * clockRate)
             maxDepth = calibrationPtr->max * clockRate;
-        if (calibrationPtr->min * clockRate > minDepth)
+        if (minDepth < calibrationPtr->min * clockRate)
             minDepth = calibrationPtr->min * clockRate;
         }
 
     /* abort if impossible */
-    if (minDepth >= maxDepth)
+    if (minDepth > maxDepth -BRLENS_MIN)
         {
         abortMove = YES;
         return (NO_ERROR);
@@ -27684,25 +27696,32 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     /* determine new branch lengths around p and set update of transition probabilities */
     if (p->left != NULL)
         {
-        p->left->length = p->nodeDepth - p->left->nodeDepth;
-        assert (p->left->length >= BRLENS_MIN);
-        p->left->upDateTi = YES;
-        p->right->length = p->nodeDepth - p->right->nodeDepth;
-        assert (p->right->length >= BRLENS_MIN);
-        p->right->upDateTi = YES;
+        if (p->left->length > 0.0) {
+            p->left->length = p->nodeDepth - p->left->nodeDepth;
+            p->left->upDateTi = YES;
+            }
+        else
+            p->left->nodeDepth = p->nodeDepth;
+        if (p->right->length > 0.0) {
+            p->right->length = p->nodeDepth - p->right->nodeDepth;
+            p->right->upDateTi = YES;
+            }
+        else
+            p->right->nodeDepth = p->nodeDepth;
         }
     if (p->anc->anc != NULL)
         {
         p->length = p->anc->nodeDepth - p->nodeDepth;
-        assert (p->length >= BRLENS_MIN);
         p->upDateTi = YES;
         }
 
     /* adjust age of p if dated */
     if (calibrationPtr != NULL)
-        {
         p->age = p->nodeDepth / clockRate;
-        }
+    if ((p->left != NULL) && (p->left->length < TIME_MIN))
+        p->left->age = p->nodeDepth / clockRate;
+    if ((p->right != NULL) && (p->right->length < TIME_MIN))
+        p->right->age = p->nodeDepth / clockRate;
 
     /* set flags for update of cond likes from p and down to root */
     q = p;
@@ -27713,7 +27732,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         }
 
     /* calculate proposal ratio */
-    (*lnProposalRatio) = 0.0;
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
 
     /* calculate and adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
@@ -27762,36 +27781,36 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             tk02Rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
-            /* no proposal ratio effect */
-
-            /* prior ratio */
+            /* prior ratio & update effective evolutionary lengths */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
+                if (p->left->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
+                    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
+                    brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
+                    if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
+                if (p->right->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
+                    (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
+                    brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
+                    if (brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
                 }
             if (p->anc->anc != NULL)
                 {
                 (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
                 (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
-                }
-
-            /* update effective evolutionary lengths */
-            if (p->left != NULL)
-                {
-                brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
-                brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
-                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
-                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
-                }
-            if (p->anc != NULL)
-                {
                 brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[p->anc->index])/2.0;
                 if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                     {
@@ -27809,34 +27828,37 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
-            
+                
+            /* prior ratio & update effective evolutionary lengths */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength/igrvar, oldLeftLength/igrvar, igrRate[p->left->index ]);
-                (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, oldRightLength/igrvar, igrRate[p->right->index]);
-                (*lnPriorRatio) += LnProbGamma (p->left->length/igrvar, p->left->length/igrvar, igrRate[p->left->index ]);
-                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, p->right->length/igrvar, igrRate[p->right->index]);
+                if (p->left->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbGamma (oldLeftLength/igrvar, oldLeftLength/igrvar, igrRate[p->left->index ]);
+                    (*lnPriorRatio) += LnProbGamma (p->left->length/igrvar, p->left->length/igrvar, igrRate[p->left->index ]);
+                    brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
+                    if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
+                if (p->right->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, oldRightLength/igrvar, igrRate[p->right->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, p->right->length/igrvar, igrRate[p->right->index]);
+                    brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
+                    if (brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
                 }
             if (p->anc->anc != NULL)
                 {
                 (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, oldPLength/igrvar, igrRate[p->index]);
                 (*lnPriorRatio) += LnProbGamma (p->length /igrvar, p->length /igrvar, igrRate[p->index]);
-                }
-            
-            /* update effective evolutionary lengths */
-            if (p->left != NULL)
-                {
-                brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
-                brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
-                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
-                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
-                }
-            if (p->anc->anc != NULL)
-                {
                 brlens[p->index] = igrRate[p->index] * p->length;
                 if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                     {
@@ -37122,7 +37144,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
 {
     int         i, j, *nEvents, numChangedNodes;
-    MrBFlt      minV, maxV, minB, maxB, tuning, factor, lambda=0.0, x,
+    MrBFlt      minV, maxV, tuning, factor, lambda=0.0, x,
                 *brlens=NULL, nu=0.0, igrvar=0.0, *tk02Rate=NULL, *igrRate=NULL;
     TreeNode    *p, *q;
     ModelParams *mp;
@@ -37145,8 +37167,6 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* min and max branch lengths in relative time and substitution units */
     minV = BRLENS_MIN;
     maxV = BRLENS_MAX;
-    minB = RELBRLENS_MIN;
-    maxB = RELBRLENS_MAX;
 
     /* determine multiplication factor */
     factor = exp(tuning * (RandomNumber(seed) - 0.5));
@@ -37277,7 +37297,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[q->anc->index], nu*q->length, tk02Rate[q->index]);
                     (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
                     brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
-                    if (brlens[p->index] < minB || brlens[p->index] > maxB)
+                    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {
                         abortMove = YES;
                         return (NO_ERROR);
@@ -37305,7 +37325,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     (*lnPriorRatio) -= LnProbGamma (q->length/igrvar, q->length/igrvar, igrRate[q->index]);
                     (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, igrRate[p->index]);
                     brlens[p->index] = p->length * igrRate[p->index];
-                    if (brlens[p->index] < minB || brlens[p->index] > maxB)
+                    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {
                         abortMove = YES;
                         return (NO_ERROR);
