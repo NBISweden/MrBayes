@@ -42,7 +42,7 @@
 #include "proposal.h"
 #include "utils.h"
 
-const char* const svnRevisionProposalC = "$Rev: 840 $";   /* Revision keyword which is expanded/updated by svn on each commit/update */
+const char* const svnRevisionProposalC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
 
 /* debugging compiler statements */
