@@ -1092,7 +1092,38 @@ void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper,
 
 
 
-/*NOTE!!!! The result of this function should be used before consequtive call to it again. It means NEVER use it like this:  printf( "%s %s", MbPrintNum (a),MbPrintNum (b) ) */
+MrBFlt MaximumValue (MrBFlt x, MrBFlt y)
+
+{
+    
+    if (x > y)
+        return (x);
+    else
+        return (y);
+    
+}
+
+
+
+
+
+MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
+
+{
+    
+    if (x < y)
+        return (x);
+    else
+        return (y);
+    
+}
+
+
+
+
+
+/* NOTE!!!! The result of this function should be used before consequtive call to it again.
+   It means NEVER use it like this:  printf( "%s %s", MbPrintNum (a),MbPrintNum (b) ) */
 char *MbPrintNum (MrBFlt num)
 {
     static char s[40];

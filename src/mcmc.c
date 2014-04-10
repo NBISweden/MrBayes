@@ -43,8 +43,11 @@
 #include "proposal.h"
 #include "sumpt.h"
 #include "utils.h"
+#if defined(__MWERKS__)
+#include "SIOUX.h"
+#endif
 
-char *svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
+const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
 #if defined(WIN_VERSION) && !defined(__GNUC__)
 #define VISUAL
@@ -60,10 +63,6 @@ char *svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/update
 #else
 #include <signal.h>
 typedef void (*sighandler_t)(int);
-#endif
-
-#if defined(__MWERKS__)
-#include "SIOUX.h"
 #endif
 
 #define A                           0

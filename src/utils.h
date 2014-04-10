@@ -257,6 +257,8 @@ MrBFlt    LnProbScaledGamma (MrBFlt alpha, MrBFlt x);
 MrBFlt    LnRatioTK02LogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
+MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
+MrBFlt    MinimumValue (MrBFlt x, MrBFlt y);
 void      MultiplyMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result);
 int       MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result);
 MrBFlt    PointNormal (MrBFlt prob);

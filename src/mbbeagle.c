@@ -58,7 +58,6 @@ void    FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 extern int *chainId;
 extern int numLocalChains;
 
-//#define DEBUG_MB_BEAGLE_FLOW
 
 #if defined (BEAGLE_ENABLED)
 /*------------------------------------------------------------------------

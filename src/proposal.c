@@ -42,7 +42,7 @@
 #include "proposal.h"
 #include "utils.h"
 
-char *svnRevisionProposalC = "$Rev: 840 $";   /* Revision keyword which is expanded/updated by svn on each commit/update */
+const char* const svnRevisionProposalC = "$Rev: 840 $";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
 
 /* debugging compiler statements */
@@ -61,66 +61,9 @@ char *svnRevisionProposalC = "$Rev: 840 $";   /* Revision keyword which is expan
 
 
 extern int *chainId;
-int         gTopologyHasChanged;  /* flag whether topology has changed */
+int  gTopologyHasChanged;  /* flag whether topology has changed */
 
-void        TouchAllTreeNodes (ModelInfo *m, int chain);
-
-
-/*----------------------------------------------------------------
- |
- |   MarkClsBelow: We mark all of the nodes below p as in need of
- |      updating for the conditional likelihoods. Note that we do
- |      do not mark p itself or the very root node of the tree.
- |
- ----------------------------------------------------------------*/
-void MarkClsBelow (TreeNode *p)
-
-{
-    
-    TreeNode *q;
-    
-    q = p;
-    while (q->anc != NULL)
-        {
-        if (q != p)
-            q->upDateCl = YES;
-        q = q->anc;
-        }
-
-}
-
-
-
-
-
-MrBFlt MaximumValue (MrBFlt x, MrBFlt y)
-
-{
-    
-    if (x > y)
-        return (x);
-    else
-        return (y);
-    
-}
-
-
-
-
-
-MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
-
-{
-    
-    if (x < y)
-        return (x);
-    else
-        return (y);
-    
-}
-
-
-
+void TouchAllTreeNodes (ModelInfo *m, int chain);
 
 
 int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
@@ -19137,6 +19080,29 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
 
 
+
+/*----------------------------------------------------------------
+ |
+ |   MarkClsBelow: We mark all of the nodes below p as in need of
+ |      updating for the conditional likelihoods. Note that we do
+ |      do not mark p itself or the very root node of the tree.
+ |
+ ----------------------------------------------------------------*/
+void MarkClsBelow (TreeNode *p)
+
+{
+    
+    TreeNode *q;
+    
+    q = p;
+    while (q->anc != NULL)
+    {
+        if (q != p)
+            q->upDateCl = YES;
+        q = q->anc;
+    }
+    
+}
 
 /*----------------------------------------------------------------
 |
