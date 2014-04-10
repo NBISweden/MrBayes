@@ -41,7 +41,7 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionUtilsC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+const char* const svnRevisionUtilsC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 
 #define MAX_GAMMA_CATS                      20

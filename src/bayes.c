@@ -40,12 +40,13 @@
 #include "sumpt.h"
 #include "utils.h"
 
-       const char* const svnRevisionBayesC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+       const char* const svnRevisionBayesC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 extern const char* const svnRevisionBestC;
 extern const char* const svnRevisionCommandC;
 extern const char* const svnRevisionMbbeagleC;
 extern const char* const svnRevisionMcmcC;
 extern const char* const svnRevisionModelC;
+extern const char* const svnRevisionProposalC;
 extern const char* const svnRevisionSumptC;
 extern const char* const svnRevisionUtilsC;
 
@@ -890,8 +891,8 @@ void PrintHeader (void)
 {
     char arch[4];
 #ifndef RELEASE
-    unsigned rev = FindMaxRevision (8, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,
-                                       svnRevisionMcmcC,svnRevisionModelC,svnRevisionSumptC,svnRevisionUtilsC);
+    unsigned rev = FindMaxRevision (9, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,
+                                       svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
 #endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");

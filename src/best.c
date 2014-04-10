@@ -20,9 +20,10 @@
 #include    "command.h"
 #include    "mcmc.h"
 #include    "model.h"
+#include    "proposal.h"
 #include    "utils.h"
 
-const char* const svnRevisionBestC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+const char* const svnRevisionBestC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 /****************************** Local functions converted by Fredrik from BEST code *****************************/
 int         CompareDepths (const void *x, const void *y);

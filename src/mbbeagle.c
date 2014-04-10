@@ -35,7 +35,7 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionMbbeagleC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+const char* const svnRevisionMbbeagleC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 /* Functions and variables defined in mcmc.c that are not exported in mcmc.h */
 void    LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL);
@@ -53,7 +53,6 @@ int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
 int     TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain);
 int     TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain);
 
-MrBFlt  GetRate (int division, int chain);
 void    FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 
 extern int *chainId;

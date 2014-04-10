@@ -1,9 +1,9 @@
-srcdir    = @srcdir@
+srcdir    = .
 RM        = rm
-CC        = @CC@
-CFLAGS    = @CFLAGS@ -DUSECONFIG_H
-LDFLAGS   = @LDFLAGS@ -lm
-INSTALL   = @INSTALL@
+CC        = gcc
+CFLAGS    = -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H
+LDFLAGS   = -lreadline -lm
+INSTALL   = /usr/bin/install -c
 BINDIR    = /usr/local/bin
 
 SRC       =  bayes.c command.c mcmc.c model.c proposal.c sumpt.c utils.c mbbeagle.c best.c

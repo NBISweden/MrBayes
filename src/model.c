@@ -39,10 +39,11 @@
 #include "command.h"
 #include "model.h"
 #include "mcmc.h"
+#include "proposal.h"
 #include "sumpt.h"
 #include "utils.h"
 
-const char* const svnRevisionModelC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+const char* const svnRevisionModelC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 #if defined(__MWERKS__)
 #include "SIOUX.h"

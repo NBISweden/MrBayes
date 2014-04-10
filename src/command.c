@@ -45,7 +45,7 @@
 #include "SIOUX.h"
 #endif
 
-const char* const svnRevisionCommandC="$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update*/
+const char* const svnRevisionCommandC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 #define NUMCOMMANDS                     61  /* Note: NUMCOMMANDS gives the total number  */
                                             /*       of commands in the program          */
