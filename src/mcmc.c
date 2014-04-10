@@ -9493,6 +9493,7 @@ int ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo)
 
 
 
+
 int ExtendChainQuery ()
 
 {
@@ -9564,7 +9565,10 @@ int ExtendChainQuery ()
 
 }
 
-        
+
+
+
+
 int FillNumSitesOfPat (void)
 
 {
