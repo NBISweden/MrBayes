@@ -5154,7 +5154,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
     if (modelSettings[param->relParts[0]].clockRate != NULL)
         clockRate = *GetParamVals(modelSettings[param->relParts[0]].clockRate, chain, state);
     else
-        clockRate = 0.0;
+        clockRate = 1.0;
 
     if (CheckConstraints(tree)==ERROR) {
         printf ("Tree does not obey constraints\n");
@@ -5230,7 +5230,8 @@ int IsTreeConsistent (Param *param, int chain, int state)
                         p->index, p->age, p->calibration->priorParams[0]);
                     return NO;
                     }
-                else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age >p->calibration->max))
+                else if (p->calibration->prior == uniform &&
+                         (p->age - p->calibration->min < -BRLENS_MIN || p->age - p->calibration->max > BRLENS_MIN))
                     {
                     printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
