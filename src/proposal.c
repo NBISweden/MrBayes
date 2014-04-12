@@ -693,10 +693,11 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         for (j=0; j<t->nNodes-1; j++)
             {
             p = t->allDownPass[j];
+            q = oldT->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root or fossil ancestors)*/
             if ( p->anc->anc != NULL &&
-                (p->length < 0.0 || p->length > maxV || (p->length /factor > minV && p->length < minV)) )
+                (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV) || (q->length < TIME_MIN && p->length > TIME_MIN)) )
                 {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
                 abortMove = YES;
                 return (NO_ERROR);
@@ -731,11 +732,11 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                      (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02) )
                 {
                 if (subParm->paramType == P_TK02BRANCHRATES)
-                    nu   = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+                    nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
                 else
-                    nu   = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                    nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
                 tk02Rate = GetParamVals (subParm, chain, state[chain]);
-                brlens   = GetParamSubVals (subParm, chain, state[chain]);
+                brlens = GetParamSubVals (subParm, chain, state[chain]);
 
                 /* no proposal ratio effect */
 
@@ -18965,8 +18966,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         {
         p = t->allDownPass[i];
         q = oldT->allDownPass[i];
-        if ( p->length < 0.0 || p->length > maxV ||
-            (q->length > minV && p->length < minV) || (q->length < minV && p->length > minV) )
+        if (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV) || (q->length < TIME_MIN && p->length > TIME_MIN))
             {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
             abortMove = YES;
             return NO_ERROR;

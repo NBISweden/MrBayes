@@ -15876,8 +15876,8 @@ MrBFlt LogPrior (int chain)
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
                     lnPrior += LnProbGamma (branch->length/igrvar, branch->length/igrvar, st[branch->index]);
-                assert (fabs(sst[branch->index] - branch->length * st[branch->index]) < 0.000001);
-                assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < 0.000001);
+                assert (fabs(sst[branch->index] - branch->length * st[branch->index]) < BRLENS_MIN);
+                assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < BRLENS_MIN);
                 }
             }
         else if (p->paramType == P_MIXEDVAR)
@@ -16885,7 +16885,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             if (x_min > p->nodeDepth / clockRate)
                 x_min = p->nodeDepth / clockRate;
         }
-    if (t_min < x_min || (sl > 0 && mp->sampleFSTime[sl-1] < x_min))
+    if (t_min < x_min || (sl > 1 && mp->sampleFSTime[sl-2] < x_min))
         {
 #ifdef DEBUG_FBDPR
         MrBayesPrint ("%s   Trouble: fossil times should be older than the youngest int node\n", spacer);
@@ -16895,7 +16895,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         abortMove = YES;
         return (NO_ERROR);
         }
-    if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
+    if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
     
     /* initialization */
     for (i = 0; i <= sl; i++)
