@@ -16616,7 +16616,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
             else
                 {
                 for (j = 0; j < sl; j++)
-                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                    if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/2) == YES)  break;
                 if (j == sl)      /* fossil ancestor between t[j-1] and t[j] */
                     {
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
@@ -16634,7 +16634,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
             if (p->nodeDepth > 0.0)
                 {
                 for (j = 0; j < sl; j++)
-                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                    if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/2) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
                     (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
@@ -16657,7 +16657,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (x + BRLENS_MIN/clockRate < t_f[j] && t_f[j] < x + (p->length +BRLENS_MIN)/clockRate)
+            if ((p->nodeDepth +BRLENS_MIN < t_f[j]*clockRate) && (t_f[j]*clockRate < p->nodeDepth + p->length +BRLENS_MIN))
                 {
                 (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
                 if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
@@ -16958,7 +16958,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             else
                 {
                 for (j = 0; j < sl; j++)
-                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                    if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/2) == YES)  break;
                 if (j == sl)      /* fossil ancestor between t[j-1] and t[j] */
                     {
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
@@ -16976,7 +16976,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             if (p->nodeDepth > 0.0)
                 {
                 for (j = 0; j < sl; j++)
-                    if (AreDoublesEqual(x, t_f[j] , BRLENS_MIN/clockRate) == YES)  break;
+                    if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/2) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
                     (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
@@ -16999,7 +16999,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (x + BRLENS_MIN/clockRate < t_f[j] && t_f[j] < x + (p->length +BRLENS_MIN)/clockRate)
+            if ((p->nodeDepth +BRLENS_MIN < t_f[j]*clockRate) && (t_f[j]*clockRate < p->nodeDepth + p->length +BRLENS_MIN))
                 {
                 (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
                 if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
@@ -24681,12 +24681,14 @@ int RunChain (RandLong *seed)
                 modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
 
             /* make move */
-#if defined (DEBUG_CONSTRAINTS)
+#ifndef NDEBUG
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
                 printf ("IsTreeConsistent failed before move!\n");
                 return ERROR;
                 }
+#endif
+#if defined (DEBUG_CONSTRAINTS)
             if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
                 {
                 printf ("DEBUG ERROR: DoesTreeSatisfyConstraints failed before a move\n");
@@ -24708,7 +24710,7 @@ int RunChain (RandLong *seed)
 #if defined (DEBUG_CONSTRAINTS)
                 if(DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))==ABORT)
                     {
-                    printf ("DEBUG ERROR: After move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: DoesTreeSatisfyConstraints failed after move '%s'\n", theMove->name);
                     }
 #endif
                 abortMove = YES;

@@ -10070,7 +10070,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         //MrBayesPrint ("%s   Branch lengths and relaxed clock subparameters of a parameter '%s' are reset.\n", spacer, param->name);
                         if (param->paramId == TOPOLOGY_SPECIESTREE)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         }
                     else if (param->paramType == P_BRLENS)
                         {
@@ -10202,7 +10202,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             MrBayesPrint ("%s   Could not set the species tree parameter '%s'\n", spacer, param->name);
                             return (ERROR);
                             }
-                        assert (IsTreeConsistent(param, chainId, 0) == YES);
+                        //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         }
                     }
                     /*

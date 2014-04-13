@@ -655,8 +655,6 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     TreeNode    *p, *q;
     Param       *treeParam, *subParm;
 
-    assert (IsTreeConsistent(modelSettings[param->relParts[0]].brlens, chain, state[chain]) == YES);
-
     /* get old value of clock rate */
     oldR = *GetParamVals(param, chain, state[chain]);
 
@@ -686,6 +684,7 @@ int Move_ClockRateM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
         oldT      = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
+        //assert (IsTreeConsistent(treeParam, chain, state[chain]) == YES);
 
         /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
         
@@ -10236,11 +10235,17 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         if (p->left->length > 0.0)
             minL = p->left->nodeDepth + BRLENS_MIN;
         else  // ancestral fossil
+            {
+            assert(p->left->calibration != NULL);
             minL = p->left->calibration->min * clockRate;
+            }
         if (p->right->length > 0.0)
             minR = p->right->nodeDepth + BRLENS_MIN;
         else  // ancestral fossil
+            {
+            assert(p->right->calibration != NULL);
             minR = p->right->calibration->min * clockRate;
+            }
         if (minL > minR)
             minDepth = minL;
         else
@@ -10252,11 +10257,17 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     else
         maxDepth = p->anc->nodeDepth - BRLENS_MIN;
     if (p->left != NULL && p->left->length < TIME_MIN)
+        {
+        assert(p->left->calibration != NULL);
         if (maxDepth > p->left->calibration->max * clockRate)
             maxDepth = p->left->calibration->max * clockRate;
+        }
     if (p->right != NULL && p->right->length < TIME_MIN)
+        {
+        assert(p->right->calibration != NULL);
         if (maxDepth > p->right->calibration->max * clockRate)
             maxDepth = p->right->calibration->max * clockRate;
+        }
     
     if (p->isDated == YES)
         calibrationPtr = p->calibration;
@@ -18941,12 +18952,32 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 {
                 p->left->length = 0.0;
                 p->nodeDepth = p->left->nodeDepth;
+                if (calibrationPtr != NULL)
+                    {
+                    assert(p->left->calibration != NULL);
+                    p->age = p->left->age;
+                    if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
                 numChangedNodes--;
                 }
             else if (p->right->length < TIME_MIN)
                 {
                 p->right->length = 0.0;
                 p->nodeDepth = p->right->nodeDepth;
+                if (calibrationPtr != NULL)
+                    {
+                    assert(p->right->calibration != NULL);
+                    p->age = p->right->age;
+                    if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
                 numChangedNodes--;
                 }
             if (p->left->length > 0.0)
