@@ -18630,8 +18630,24 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         }
     if (p->left != NULL)
         {
-        brlens[p->left->index ] = p->left->length  * (tk02Rate[p->left->index ] + newRate) / 2.0;
-        brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index] + newRate) / 2.0;
+        if (p->left->length > 0.0)
+            {
+            brlens[p->left->index] = p->left->length  * (tk02Rate[p->left->index] + newRate) / 2.0;
+            if (brlens[p->left->index] < RELBRLENS_MIN || brlens[p->left->index] > RELBRLENS_MAX)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+            }
+        if (p->right->length > 0.0)
+            {
+            brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index] + newRate) / 2.0;
+            if (brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+            }
         }
     
     /* set update of ti probs */
