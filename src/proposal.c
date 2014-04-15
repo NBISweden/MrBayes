@@ -8333,9 +8333,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     MrBFlt          x, y, h1, h2, h3, h[3], tempD, ran, distUv, distCv,
                     oldALength, oldBLength, oldCLength, oldULength, oldVLength, lambda, nu,
                     *tk02Rate=NULL, *brlens, oldTreeLength, newTreeLength;
-#if 0   /* test */
-    MrBFlt          newDepth, oldDepth, factor, diff;
-#endif
+ // MrBFlt          newDepth, oldDepth, factor, diff;
     TreeNode        *u, *v, *w=NULL, *a, *b, *c, *deepestChild, *p;
     Tree            *t;
     Param           *subParm;

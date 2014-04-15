@@ -111,9 +111,9 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_RUN_WITHOUT_DATA
 #undef  DEBUG_CONSTRAINTS
 #undef  DEBUG_LNLIKELIHOOD  /* slow if defined!! */
-#undef  DEBUG_LIKE
-#undef  DEBUG_FBDPR
-#undef  FBDPR_CONN  /* condition on number of extant taxa in FBD prior */
+#undef  DEBUG_LIKELIHOOD
+#undef  DEBUG_FBDPR    // #define DEBUG_FBDPR
+#undef  FBDPR_CondOnN  /* condition on number of extant taxa in FBD prior */
 #undef  SHOW_MOVE
 
 //#define TIMING_ANALIZ
@@ -12903,7 +12903,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -12953,7 +12953,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #ifdef DEBUG_OUTPUT
                 printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13133,7 +13133,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13190,7 +13190,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #ifdef DEBUG_OUTPUT
                 printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13290,7 +13290,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13328,7 +13328,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 #ifdef DEBUG_OUTPUT
                 printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
 #endif
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13426,7 +13426,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13481,7 +13481,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13568,7 +13568,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13605,7 +13605,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13900,7 +13900,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13947,7 +13947,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -14038,7 +14038,7 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         /* check against LIKE_EPSILON (values close to zero are problematic) */
         if (like < LIKE_EPSILON)
             {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
             (*lnL)=MRBFLT_NEG_MAX;
@@ -14130,7 +14130,7 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
         /* check against LIKE_EPSILON (values close to zero are problematic) */
         if (like < LIKE_EPSILON)
             {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
             (*lnL)=MRBFLT_NEG_MAX;
@@ -14207,7 +14207,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     pObserved =  1.0 - pUnobserved;
     if (pObserved < LIKE_EPSILON)
         {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
         MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #endif
         (*lnL)=MRBFLT_NEG_MAX;
@@ -14226,7 +14226,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         /* check against LIKE_EPSILON (values close to zero are problematic) */
         if (like < LIKE_EPSILON)
             {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
             (*lnL)=MRBFLT_NEG_MAX;
@@ -14326,7 +14326,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     pObserved =  1.0 - pUnobserved;
     if (pObserved < LIKE_EPSILON)
         {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
         MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #endif
         (*lnL)=MRBFLT_NEG_MAX;
@@ -14340,7 +14340,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
         /* check against LIKE_EPSILON (values close to zero are problematic) */
         if (like < LIKE_EPSILON)
             {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
             (*lnL)=MRBFLT_NEG_MAX;
@@ -14457,7 +14457,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -14537,7 +14537,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#ifdef DEBUG_LIKE
+#ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -16398,7 +16398,6 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
         }
 }
 
-// #define DEBUG_FBDPR
 int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
 
 {
@@ -16468,7 +16467,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-#ifdef FBDPR_CONN
+#ifdef FBDPR_CondOnN
     /* Eq. 8 used, condition on n */
     (*prob) = log(4.0) + log(rho) + nFossil * log(psi) + (nTaxa - 1) * log(lambda);
     (*prob) -= log(c1) + log(c2 + 1) + c1 * tmrca + log((1 - c2) * exp(-c1 * tmrca) + 1 + c2);
@@ -16802,7 +16801,7 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-#ifdef FBDPR_CONN
+#ifdef FBDPR_CondOnN
     /* Eq. 8 used, condition on n */
     (*prob) = log(4.0) + log(rho) + (kFossil +mFossil) * log(psi) + (nExtant +mFossil - 1) * log(lambda);
     (*prob) -= log(c1) + log(c2 + 1) + c1 * tmrca + log((1 - c2) * exp(-c1 * tmrca) + 1 + c2);

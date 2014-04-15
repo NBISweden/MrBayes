@@ -4500,7 +4500,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     MrBFlt          treeAgeMin, treeAgeMax;
     Calibration     *calibrationPtr;
 
-#if 0 
+#ifdef DEBUG_CALIBRATION
     printf ("Before initializing calibrated brlens\n");
     ShowNodes(t->root, 0, YES);
 #endif
@@ -4629,7 +4629,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
             }
         }
 
-#if 0   
+#ifdef DEBUG_CALIBRATION
     printf ("after\n");
     ShowNodes (t->root, 0, YES);
     getchar();
@@ -5232,7 +5232,6 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 else if (p->calibration->prior == uniform &&
                          (p->age < p->calibration->min || p->age > p->calibration->max))
-                    //(p->age < p->calibration->min -BRLENS_MIN || p->age > p->calibration->max +BRLENS_MIN)
                     {
                     printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
@@ -7871,7 +7870,7 @@ int SetTreeNodeAges (Param *param, int chain, int state)
     if (param->paramType != P_TOPOLOGY && param->paramType != P_BRLENS && param->paramType != P_SPECIESTREE)
         return YES;
 
-    tree      = GetTree(param, chain, state);
+    tree = GetTree(param, chain, state);
     if (modelSettings[param->relParts[0]].clockRate != NULL)
         clockRate = *GetParamVals(modelSettings[param->relParts[0]].clockRate, chain, state);
     else
@@ -7880,7 +7879,7 @@ int SetTreeNodeAges (Param *param, int chain, int state)
 
     /* Clock trees */
 
-    /* Check that lengths and depths are consistant. That would work for the case when we set up branch lenght from starting tree  */
+    /* Check that lengths and depths are consistant. That would work for the case when we set up branch length from starting tree  */
     for (i=0; i<tree->nNodes-1; i++) {
         p = tree->allDownPass[i];
         p->age =  p->nodeDepth / clockRate;
@@ -7905,13 +7904,13 @@ int SetTreeNodeAges (Param *param, int chain, int state)
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
-                else if (p->age - p->calibration->min < -BRLENS_MIN)
+                else if (p->age < p->calibration->min)
                     {
                     printf ("Node %d has age %f but should be minimally of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
-                else if (p->age - p->calibration->max > BRLENS_MIN)
+                else if (p->age > p->calibration->max)
                     {
                     printf ("Node %d has age %f but should be maximally of age %f\n",
                         p->index, p->age, p->calibration->max);
