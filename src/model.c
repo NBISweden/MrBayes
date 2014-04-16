@@ -11340,7 +11340,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 if (p->paramId == TK02VAR_UNI)
                     value[0] = RandomNumber(seed) * (mp->tk02varUni[1] - mp->tk02varUni[0]) + mp->tk02varUni[0];
                 else if (p->paramId == TK02VAR_EXP)
-                    value[0] =   (-(1.0/mp->tk02varExp) * log(1.0 - RandomNumber(seed)));
+                    value[0] = 2.0/(mp->tk02varExp);
                 else if (p->paramId == TK02VAR_FIX)
                     value[0] = mp->tk02varFix;
                 }
@@ -11354,7 +11354,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 if (p->paramId == IGRVAR_UNI)
                     value[0] = RandomNumber(seed) * (mp->igrvarUni[1] - mp->igrvarUni[0]) + mp->igrvarUni[0];
                 else if (p->paramId == IGRVAR_EXP)
-                    value[0] =   (-(1.0/mp->igrvarExp) * log(1.0 - RandomNumber(seed)));
+                    value[0] = 1.0/(mp->igrvarExp);
                 else if (p->paramId == IGRVAR_FIX)
                     value[0] = mp->igrvarFix;
                 }
@@ -11368,7 +11368,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 if (p->paramId == MIXEDVAR_UNI)
                     value[0] = RandomNumber(seed) * (mp->mixedvarUni[1] - mp->mixedvarUni[0]) + mp->mixedvarUni[0];
                 else if (p->paramId == MIXEDVAR_EXP)
-                    value[0] =   (-(1.0/mp->mixedvarExp) * log(1.0 - RandomNumber(seed)));
+                    value[0] = 1.0/(mp->mixedvarExp);
                 else if (p->paramId == MIXEDVAR_FIX)
                     value[0] = mp->mixedvarFix;
                 }

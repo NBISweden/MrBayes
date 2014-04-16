@@ -4588,7 +4588,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 
     /* try to make root node deeper than minimum age */
     p = t->root->left;
-    if( p->nodeDepth==0.0 ) p->nodeDepth = 1.0;
+    if (p->nodeDepth==0.0)  p->nodeDepth = 1.0;
     if (p->nodeDepth * 1.5 < treeAgeMax)
         p->nodeDepth = p->age = 1.5 * p->nodeDepth;
     else
