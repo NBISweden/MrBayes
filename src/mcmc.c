@@ -16569,8 +16569,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
             t_f[i] = mp->sampleFSTime[i];
             }
         else {
-            rho[sl] = sF;
-            t_f[sl] = 0.0;
+            rho[i] = sF;
+            t_f[i] = 0.0;
             }
         }
     if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
@@ -16848,7 +16848,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-    /* plus 1 extra slice for youngest node time to shift psi */
+    /* plus 1 extra slice for at time of youngest node (x_cut) to shift psi */
     sl += 1;
     
     /* alloc memory for time of each slice */
@@ -16896,24 +16896,23 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
     if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
     
-    /* initialization */
-    for (i = 0; i <= sl; i++)
+    /* initialization (sl >= 1) */
+    for (i = 0; i < sl; i++)
         {
-        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR / (1.0 - eR);
-        mu[i] = lambda[i] * eR;
-        if (i < sl)
-            psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
-        else
-            psi[i] = 0.0;  // psi = 0 for t < x_min
+        mu[i]  = lambda[i] * eR;
+        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         }
+    lambda[sl] = lambda[sl-1];
+    mu[sl]     = mu[sl-1];
+    psi[sl]    = 0.0;  // psi = 0 for t < t_f[sl-1]
     for (i = 0; i < sl-1; i++)
         {
         rho[i] = mp->sampleFSProb[i];
         t_f[i] = mp->sampleFSTime[i];
         }
     rho[sl-1] = 0.0;
-    t_f[sl-1] = x_min;
+    t_f[sl-1] = x_min * 0.95;
     rho[sl]   = 1.0;  // not sF
     t_f[sl]   = 0.0;
     
@@ -16939,7 +16938,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         printf("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
 #endif
     
-    /* calculate prior prob of the fbd tree */
+    /* first calculate prob of the fbd tree assuming complete sampling */
     (*prob) = 0.0;
     
     for (K = M = E = 0, i = 0; i < t->nNodes -1; i++)
@@ -17011,8 +17010,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* number of extant taxa not sampled */
     M_x = (int)floor(E/sF + 0.5) - E; /* equal to round(E/sF) plus it is compatible with MS Visual Studio */
     
-    /* !! this is only for constant lambda, mu !! and we also need to add the binomial coefficient */
-    (*prob) += M_x * (log(lambda[0] *(1.- exp((mu[0]-lambda[0])*x_min))) - log(lambda[0]- mu[0]*exp((mu[0]-lambda[0])*x_min)));
+    /* then calculate the prob of the fbd tree assuming diversified sampling of extant */
+    (*prob) += M_x * ( log(lambda[sl] * (1.0 - exp((mu[sl]-lambda[sl])*t_f[sl-1]))) - log(lambda[sl] - mu[sl] * exp((mu[sl]-lambda[sl])*t_f[sl-1])) );
     
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
