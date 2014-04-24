@@ -11131,8 +11131,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Omegapr       -- This parameter specifies the prior on the nonsynonymous/     \n");
         MrBayesPrint ("                    synonymous rate ratio. The options are:                      \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                       prset omegapr = uniform(<number>,<number>)                \n");
-        MrBayesPrint ("                       prset omegapr = exponential(<number>)                     \n");
+        MrBayesPrint ("                       prset omegapr = dirichlet(<number>,<number>)              \n");
         MrBayesPrint ("                       prset omegapr = fixed(<number>)                           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    This parameter is only in effect if the nucleotide sub-      \n");
@@ -14925,7 +14924,7 @@ void SetUpParms (void)
     PARAM   ( 35, "Seqerror",       DoPrsetParm,       "\0");
     PARAM   ( 36, "Tratiopr",       DoPrsetParm,       "Beta|Fixed|\0");
     PARAM   ( 37, "Revmatpr",       DoPrsetParm,       "Dirichlet|Fixed|\0");
-    PARAM   ( 38, "Omegapr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+    PARAM   ( 38, "Omegapr",        DoPrsetParm,       "Dirichlet|Fixed|\0");
     PARAM   ( 39, "Statefreqpr",    DoPrsetParm,       "Dirichlet|Fixed|\0");
     PARAM   ( 40, "Ngammacat",      DoLsetParm,        "\0");
     PARAM   ( 41, "Shapepr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");

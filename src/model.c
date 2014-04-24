@@ -4477,7 +4477,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
-                    flag=0;
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
@@ -4485,7 +4485,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             strcpy(modelParams[i].tRatioPr, tempStr);
                             modelParams[i].tRatioDir[0] = modelParams[i].tRatioDir[1] = 1.0;
                             modelParams[i].tRatioFix = 1.0;
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -4584,6 +4584,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
@@ -4592,7 +4593,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             modelParams[i].revMatDir[0] = modelParams[i].revMatDir[1] = 1.0;
                             modelParams[i].revMatDir[2] = modelParams[i].revMatDir[3] = 1.0;
                             modelParams[i].revMatDir[4] = modelParams[i].revMatDir[5] = 1.0;
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -4719,6 +4720,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && modelSettings[i].dataType == PROTEIN)
@@ -4726,7 +4728,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             strcpy(modelParams[i].aaRevMatPr, tempStr);
                             for (j=0; j<190; j++)
                                 modelParams[i].aaRevMatDir[j] = 1.0;
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -4987,6 +4989,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
@@ -4994,7 +4997,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             strcpy(modelParams[i].omegaPr, tempStr);
                             modelParams[i].omegaDir[0] = modelParams[i].omegaDir[1] = 1.0;
                             modelParams[i].omegaFix = 1.0;
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5038,7 +5041,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 return (ERROR);
                                 }
                             modelParams[i].omegaDir[numVars[i]++] = tempD;
-                            if (numVars[i] < 1)
+                            if (numVars[i] == 1)
                                 expecting = Expecting(COMMA);
                             else
                                 {
@@ -5093,12 +5096,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].ny98omega1pr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5182,12 +5186,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].ny98omega3pr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5281,12 +5286,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].m3omegapr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5377,12 +5383,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].codonCatFreqPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5473,12 +5480,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN || modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
                             {
                             strcpy(modelParams[i].shapePr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5592,12 +5600,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN))
                             {
                             strcpy(modelParams[i].pInvarPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5691,12 +5700,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].adGammaCorPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5806,12 +5816,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
                             {
                             strcpy(modelParams[i].brownCorPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -5921,9 +5932,10 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].ratePr, "Dirichlet");
@@ -5941,7 +5953,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 if (tempStr[0]=='V')
                                     strcpy (tempStr,"Variable");
                                 }
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -6186,12 +6198,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN))
                             {
                             strcpy(modelParams[i].covSwitchPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -6296,12 +6309,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if (IsArgValid(tkn, tempStr) == NO_ERROR)
                         {
                         nApplied = NumActiveParts ();
+                        flag = 0;
                         for (i=0; i<numCurrentDivisions; i++)
                             {
                             if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == STANDARD || modelParams[i].dataType == RESTRICTION))
                                 {
                                 strcpy(modelParams[i].symPiPr, tempStr);
-                                flag=1;
+                                flag = 1;
                                 }
                             }
                         if( flag == 0)
@@ -6434,12 +6448,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if (IsArgValid(tkn, tempStr) == NO_ERROR)
                         {
                         nApplied = NumActiveParts ();
+                        flag = 0;
                         for (i=0; i<numCurrentDivisions; i++)
                             {
-                            if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                            if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
                                 {
                                 strcpy(modelParams[i].stateFreqPr, tempStr);
-                                flag=1;
+                                flag = 1;
                                 }
                             }
                         if( flag == 0)
@@ -9084,12 +9099,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
                             {
                             strcpy(modelParams[i].brownScalesPr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -9198,12 +9214,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].m10betapr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
@@ -9302,12 +9319,13 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
+                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
                             {
                             strcpy(modelParams[i].m10gammapr, tempStr);
-                            flag=1;
+                            flag = 1;
                             }
                         }
                     if( flag == 0)
