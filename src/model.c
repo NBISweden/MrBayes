@@ -19261,7 +19261,10 @@ int SetModelParams (void)
             {
             /* Set up speciation rate ******************************************************************************/
             p->paramType = P_SPECRATE;
-            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+            if (!strcmp(mp->clockPr,"Fossilization"))
+                p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+            else
+                p->nValues = 1;
             p->nSubValues = 0;
             p->min = 0.0;
             p->max = POS_INFINITY;
@@ -19300,10 +19303,13 @@ int SetModelParams (void)
             {
             /* Set up extinction rates ******************************************************************************/
             p->paramType = P_EXTRATE;
-            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+            if (!strcmp(mp->clockPr,"Fossilization"))
+                p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+            else
+                p->nValues = 1;
             p->nSubValues = 0;
             p->min = 0.0;
-            p->max = POS_INFINITY;
+            p->max = 1.0;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].extinctionRates = p;
@@ -19340,7 +19346,7 @@ int SetModelParams (void)
             p->nValues = mp->sampleFSNum +1;  // rate in each time interval
             p->nSubValues = 0;
             p->min = 0.0;
-            p->max = POS_INFINITY;
+            p->max = 1.0;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].fossilizationRates = p;
