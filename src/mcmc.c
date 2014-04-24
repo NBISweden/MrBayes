@@ -309,9 +309,9 @@ MrBFlt    LogPrior (int chain);
 int       LnBirthDeathPriorPrRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrCluster   (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int       LnFossilizedBDPriorRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR);
-int       LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR);
-int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR);
+int       LnFossilizedBDPriorRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
+int       LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
+int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
 MrBFlt    LnP0 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt    LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
@@ -14985,7 +14985,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 
 {
-    MrBFlt          oldLnPrior, newLnPrior, theta, N, growth, sR, eR, sF, clockRate, *fR;
+    MrBFlt          oldLnPrior, newLnPrior, theta, N, growth, clockRate, sF, *sR, *eR, *fR;
     char            *sS;
     Model           *mp;
     ModelInfo       *m;
@@ -15038,16 +15038,16 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     else if (!strcmp(mp->clockPr,"Birthdeath"))
         {
         /* birth-death prior */
-        sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-        eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+        sR = GetParamVals (m->speciationRates, chain, state[chain]);
+        eR = GetParamVals (m->extinctionRates, chain, state[chain]);
         sS = mp->sampleStrat;
         sF = mp->sampleProb;
-        if (LnBirthDeathPriorPr (oldTree, clockRate, &oldLnPrior, sR, eR, sS, sF) == ERROR)
+        if (LnBirthDeathPriorPr (oldTree, clockRate, &oldLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
             }
-        if (LnBirthDeathPriorPr (newTree, clockRate, &newLnPrior, sR, eR, sS, sF) == ERROR)
+        if (LnBirthDeathPriorPr (newTree, clockRate, &newLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
@@ -15057,8 +15057,8 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         /* fossilized birth-death prior */
-        sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-        eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+        sR = GetParamVals (m->speciationRates, chain, state[chain]);
+        eR = GetParamVals (m->extinctionRates, chain, state[chain]);
         sF = mp->sampleProb;
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
         sS = mp->sampleStrat;
@@ -15263,7 +15263,7 @@ MrBFlt LogPrior (int chain)
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
     const int       *rateCat;
     MrBFlt          *st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
-                    sR, eR, sF, *fR,  freq, pInvar, lambda, sigma, nu, igrvar, **rateMultiplier;
+                    sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, igrvar, **rateMultiplier;
     char            *sS;
     CLFlt           *nSitesOfPat;
     Param           *p;
@@ -15618,15 +15618,15 @@ MrBFlt LogPrior (int chain)
                 else if (p->paramId == BRLENS_CLOCK_BD)
                     {
                     /* birth-death prior */
-                    sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-                    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+                    sR = GetParamVals (m->speciationRates, chain, state[chain]);
+                    eR = GetParamVals (m->extinctionRates, chain, state[chain]);
                     sS = mp->sampleStrat;
                     sF = mp->sampleProb;
                     if (m->clockRate != NULL)
                         clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
                     else
                         clockRate = 1.0;
-                    if (LnBirthDeathPriorPr (t, clockRate, &x, sR, eR, sS, sF) == ERROR)
+                    if (LnBirthDeathPriorPr (t, clockRate, &x, *sR, *eR, sS, sF) == ERROR)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
                         }
@@ -15635,8 +15635,8 @@ MrBFlt LogPrior (int chain)
                 else if (p->paramId == BRLENS_CLOCK_FOSSIL)
                     {
                     /* fossilized birth-death prior */
-                    sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
-                    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+                    sR = GetParamVals (m->speciationRates, chain, state[chain]);
+                    eR = GetParamVals (m->extinctionRates, chain, state[chain]);
                     sF = mp->sampleProb;
                     fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
                     sS = mp->sampleStrat;
@@ -15712,11 +15712,13 @@ MrBFlt LogPrior (int chain)
             /* speciation rate parameter */
             if (p->paramId == SPECRATE_UNI)
                 {
-                lnPrior += log(1.0) - log(mp->speciationUni[1] - mp->speciationUni[0]);
+                for (i=0; i<p->nValues; i++)
+                    lnPrior += log(1.0) - log(mp->speciationUni[1] - mp->speciationUni[0]);
                 }
             else if (p->paramId == SPECRATE_EXP)
                 {
-                lnPrior += log(mp->speciationExp) - mp->speciationExp * st[0];
+                for (i=0; i<p->nValues; i++)
+                    lnPrior += log(mp->speciationExp) - mp->speciationExp * st[i];
                 }
             }
         else if (p->paramType == P_EXTRATE)
@@ -15724,13 +15726,13 @@ MrBFlt LogPrior (int chain)
             /* extinction rate parameter */
             if (p->paramId == EXTRATE_BETA)
                 {
-                alphaDir = mp->extinctionBeta;
-                newProp[0] =  st[0];
-                newProp[1] =  (1.0 - newProp[0]);
-                x = 0.0;
-                for (i=0; i<2; i++)
-                    x += (alphaDir[i]-1.0)*log(newProp[i]);
-                lnPrior += x;
+                for (i=0; i<p->nValues; i++)
+                    {
+                    alphaDir = mp->extinctionBeta;
+                    newProp[0] =  st[i];
+                    newProp[1] =  (1.0 - newProp[0]);
+                    lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
+                    }
                 }
             }
         else if (p->paramType == P_FOSLRATE)
@@ -15738,14 +15740,13 @@ MrBFlt LogPrior (int chain)
             /* fossilization rate parameter */
             if (p->paramId == FOSLRATE_BETA)
                 {
-                alphaDir = mp->fossilizationBeta;
-                newProp[0] =  st[0];
-                newProp[1] =  (1.0 - newProp[0]);
-                x = 0.0;
-                for (i=0; i<2; i++)
-                    x += (alphaDir[i]-1.0)*log(newProp[i]);
                 for (i=0; i<p->nValues; i++)
-                    lnPrior += x;
+                    {
+                    alphaDir = mp->fossilizationBeta;
+                    newProp[0] =  st[i];
+                    newProp[1] =  (1.0 - newProp[0]);
+                    lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
+                    }
                 }
             }
         else if (p->paramType == P_POPSIZE)
@@ -16379,7 +16380,7 @@ MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2, MrBFl
     return log(other) - log(2 *lambda[i]);
 }
 
-int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR, char *sS)
+int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS)
 
 {
     /* fossilization priors 
@@ -16398,7 +16399,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, 
         }
 }
 
-int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 
 {
     /* Calculate Eq.5 in Th.3.8 under fossil being only tips: k = 0, also omit p_0(y_i) */
@@ -16409,10 +16410,9 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     Model       *mp;
     
     /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
-    lambda = sR / (1.0 - eR);
-    // mu  = lambda * eR * (1.0 - fR);
+    lambda = (*sR) / (1.0 - (*eR));
+    psi    = lambda * (*eR) * (*fR);
     rho    = sF;
-    psi    = lambda * eR * fR[0];
     
     /* allocate space for the speciation and extinction times */
     x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
@@ -16452,12 +16452,12 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* calculate probability of tree using standard variables */
     tmrca = t->root->left->nodeDepth / clockRate;
     // tmrca = x[t->nIntNodes-1];
-    c1 = sqrt(sR*sR + 4 *lambda *psi);
-    c2 = (2 *lambda *rho - sR) / c1;
+    c1 = sqrt((*sR)*(*sR) + 4 *lambda *psi);
+    c2 = (2 *lambda *rho - (*sR)) / c1;
 
     /* Eq. 5 used, condition on tmrca */
     (*prob) = (nTaxa - 2) * log(lambda) + nFossil * log(psi)
-            + LnP1_fossil(tmrca, rho, c1, c2) - 2 * log(1 - hatP0_tip(tmrca, sR, lambda, rho));
+            + LnP1_fossil(tmrca, rho, c1, c2) - 2 * log(1 - hatP0_tip(tmrca, *sR, lambda, rho));
     for (i = 0; i < nTaxa-1; i++)
         (*prob) += LnP1_fossil(x[i], rho, c1, c2);
     for (i = 0; i < nFossil; i++)
@@ -16517,7 +16517,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
@@ -16561,8 +16561,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     for (i = 0; i <= sl; i++)
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-        lambda[i] = sR / (1.0 - eR);
-        mu[i]     = lambda[i] * eR;
+        lambda[i] = sR[i] / (1.0 - eR[i]);
+        mu[i]     = lambda[i] * eR[i];
         psi[i]    = mu[i] * fR[i] / (1.0 - fR[i]);
         if (i < sl) {
             rho[i] = mp->sampleFSProb[i];
@@ -16729,7 +16729,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |   (2^(n+m-1) / n!m!).
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 
 {
     /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */
@@ -16740,10 +16740,10 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     Model       *mp;
     
     /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-    lambda = sR / (1.0 - eR);
-    mu     = lambda * eR;
+    lambda = (*sR) / (1.0 - (*eR));
+    mu     = lambda * (*eR);
     rho    = sF;
-    psi    = mu * fR[0] / (1.0 - fR[0]);
+    psi    = mu * (*fR) / (1.0 - (*fR));
     
     /* allocate space for the speciation and extinction times */
     x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
@@ -16829,7 +16829,7 @@ int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
  |   LnFossilizedBDPriorDiversity
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
@@ -16899,8 +16899,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* initialization (sl >= 1) */
     for (i = 0; i < sl; i++)
         {
-        lambda[i] = sR / (1.0 - eR);
-        mu[i]  = lambda[i] * eR;
+        lambda[i] = sR[i] / (1.0 - eR[i]);
+        mu[i]  = lambda[i] * eR[i];
         psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         }
     lambda[sl] = lambda[sl-1];

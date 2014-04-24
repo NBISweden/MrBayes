@@ -388,22 +388,22 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_BRLENS                10
 #define P_SPECRATE              11
 #define P_EXTRATE               12
-#define P_POPSIZE               13
-#define P_AAMODEL               14
-#define P_BRCORR                15
-#define P_BRSIGMA               16
-#define P_GROWTH                17
-#define P_CPPMULTDEV            18
-#define P_CPPRATE               19
-#define P_CPPEVENTS             20
-#define P_TK02VAR               21
-#define P_TK02BRANCHRATES       22
-#define P_IGRVAR                23
-#define P_IGRBRANCHRATES        24
-#define P_CLOCKRATE             25
-#define P_SPECIESTREE           26
-#define P_GENETREERATE          27
-#define P_FOSLRATE              28
+#define P_FOSLRATE              13
+#define P_POPSIZE               14
+#define P_AAMODEL               15
+#define P_BRCORR                16
+#define P_BRSIGMA               17
+#define P_GROWTH                18
+#define P_CPPMULTDEV            19
+#define P_CPPRATE               20
+#define P_CPPEVENTS             21
+#define P_TK02VAR               22
+#define P_TK02BRANCHRATES       23
+#define P_IGRVAR                24
+#define P_IGRBRANCHRATES        25
+#define P_CLOCKRATE             26
+#define P_SPECIESTREE           27
+#define P_GENETREERATE          28
 #define P_MIXEDVAR              29
 #define P_MIXEDBRCHRATES        30
 /* NOTE: If you add another parameter, change NUM_LINKED */
@@ -944,7 +944,7 @@ typedef struct model
     char        aaModelPr[100];    /* prior for amino acid model                   */
     char        aaModel[100];
     MrBFlt      aaModelPrProbs[10];
-    char        aaRevMatPr[100];     /* prior for aa GTR model                     */
+    char        aaRevMatPr[100];   /* prior for aa GTR model                       */
     MrBFlt      aaRevMatFix[190];
     MrBFlt      aaRevMatDir[190];
     char        omegaPr[100];      /* prior for omega                              */
@@ -967,7 +967,7 @@ typedef struct model
     MrBFlt      m10gammaExp;
     MrBFlt      m10gammaUni[2];
     MrBFlt      m10gammaFix[2];
-    char        codonCatFreqPr[100];/* prior for selection cat frequencies         */
+    char        codonCatFreqPr[100];  /* prior for selection cat frequencies       */
     MrBFlt      codonCatFreqFix[3];
     MrBFlt      codonCatDir[3];
     char        stateFreqPr[100];  /* prior for character state frequencies        */
@@ -1000,7 +1000,7 @@ typedef struct model
     char        brownCorPr[100];   /* prior for correlation of Brownian model      */
     MrBFlt      brownCorrFix;
     MrBFlt      brownCorrUni[2];
-    char        brownScalesPr[100];/* prior for scales of Brownian model           */
+    char        brownScalesPr[100];  /* prior for scales of Brownian model         */
     MrBFlt      brownScalesFix;
     MrBFlt      brownScalesUni[2];
     MrBFlt      brownScalesGamma[2];
@@ -1008,7 +1008,7 @@ typedef struct model
 
     char        topologyPr[100];   /* prior for tree topology                      */
     int         topologyFix;       /* user tree index for fixed topology           */
-    int         *activeConstraints;/* which constraints are active?                */
+    int         *activeConstraints;  /* which constraints are active?              */
     int         numActiveConstraints;
     int         numActiveLocks;
     char        brlensPr[100];     /* prior on branch lengths                      */
@@ -1017,72 +1017,71 @@ typedef struct model
     MrBFlt      brlensExp;
     MrBFlt      brlens2Ex[2];
     MrBFlt      brlensDir[4];
-    char        speciesTreeBrlensPr[100];     /* prior on branch lengths of species tree   */
-    char        unconstrainedPr[100]; /* prior on branch lengths if unconstrained          */
-    char        clockPr[100];         /* prior on branch if clock enforced                 */
-    char        clockVarPr[100];      /* prior on clock rate variation (strict, cpp, tk02, igr, ...) */
-    char        nodeAgePr[100];       /* prior on node depths (unconstrained, constraints) */
-    char        speciationPr[100];    /* prior on speciation rate (net diversification)    */
+    char        speciesTreeBrlensPr[100];  /* prior on branch lengths of species tree       */
+    char        unconstrainedPr[100];  /* prior on branch lengths if unconstrained          */
+    char        clockPr[100];          /* prior on branch if clock enforced                 */
+    char        clockVarPr[100];       /* prior on clock rate variation (strict, cpp, tk02, igr, ...) */
+    char        nodeAgePr[100];        /* prior on node depths (unconstrained, constraints) */
+    char        speciationPr[100];     /* prior on speciation rate (net diversification)    */
     MrBFlt      speciationFix;
     MrBFlt      speciationUni[2];
     MrBFlt      speciationExp;
-    char        extinctionPr[100];    /* prior on relative extinction rate (turnover)      */
+    char        extinctionPr[100];     /* prior on relative extinction rate (turnover)      */
     MrBFlt      extinctionFix;
     MrBFlt      extinctionBeta[2];
-//  MrBFlt      extinctionExp;
-    char        fossilizationPr[100]; /* prior on fossilization rate (sampling proportion) */
+    char        fossilizationPr[100];  /* prior on fossilization rate (sampling proportion) */
     MrBFlt      fossilizationFix;
     MrBFlt      fossilizationBeta[2];
-    char        sampleStrat[100];     /* taxon sampling strategy (for b-d process)         */
-    int         sampleFSNum;          /* number of fossil slice sampling events (s) [is (m-1) in Stadler et al. 2013] */
-    MrBFlt     *sampleFSTime;         /* fossil slice sampling times (t_i,   i=1,..,s)     */
-    MrBFlt     *sampleFSProb;         /* fossil slice sampling probs (rho_i, i=1,..,s)     */
-    MrBFlt      sampleProb;           /* extant taxon sampling fraction (rho)              */
-    Calibration treeAgePr;            /* prior on tree age for uniform clock trees      */
-    char        clockRatePr[100];     /* prior on base substitution rate of tree for clock trees */
+    char        sampleStrat[100];      /* taxon sampling strategy (for b-d process)         */
+    int         sampleFSNum;           /* number of fossil slice sampling events (s)        */
+    MrBFlt     *sampleFSTime;          /* fossil slice sampling times (t_i,   i=1,..,s)     */
+    MrBFlt     *sampleFSProb;          /* fossil slice sampling probs (rho_i, i=1,..,s)     */
+    MrBFlt      sampleProb;            /* extant taxon sampling fraction (rho)              */
+    Calibration treeAgePr;             /* prior on tree age for uniform clock trees         */
+    char        clockRatePr[100];      /* prior on base substitution rate of tree for clock trees */
     MrBFlt      clockRateNormal[2];
     MrBFlt      clockRateLognormal[2];
     MrBFlt      clockRateGamma[2];
     MrBFlt      clockRateExp;
     MrBFlt      clockRateFix;
-    char        popSizePr[100];       /* prior on population size                     */
+    char        popSizePr[100];        /* prior on population size                     */
     MrBFlt      popSizeFix;
     MrBFlt      popSizeUni[2];
     MrBFlt      popSizeLognormal[2];
     MrBFlt      popSizeGamma[2];
     MrBFlt      popSizeNormal[2];
-    char        popVarPr[100];        /* prior on pop. size variation across tree     */
-    char        growthPr[100];        /* prior on coalescence growth rate             */
+    char        popVarPr[100];         /* prior on pop. size variation across tree     */
+    char        growthPr[100];         /* prior on coalescence growth rate             */
     MrBFlt      growthFix;
     MrBFlt      growthUni[2];
     MrBFlt      growthExp;
     MrBFlt      growthNorm[2];
-    char        cppRatePr[100];     /* prior on CPP rate                              */
+    char        cppRatePr[100];        /* prior on CPP rate                            */
     MrBFlt      cppRateFix;
     MrBFlt      cppRateExp;
-    char        cppMultDevPr[100];  /* prior on CPP rate multiplier Lognormal variance */
+    char        cppMultDevPr[100];     /* prior on CPP rate multiplier Lognormal variance */
     MrBFlt      cppMultDevFix;
-    char        tk02varPr[100];     /* prior on TK02 lognormal rate variance           */
+    char        tk02varPr[100];        /* prior on TK02 lognormal rate variance         */
     MrBFlt      tk02varFix;
     MrBFlt      tk02varUni[2];
     MrBFlt      tk02varExp;
-    char        igrvarPr[100];      /* prior on IGR gamma distribution variance        */
+    char        igrvarPr[100];         /* prior on IGR gamma distribution variance      */
     MrBFlt      igrvarFix;
     MrBFlt      igrvarUni[2];
     MrBFlt      igrvarExp;
-    char        mixedvarPr[100];    /* prior on mixed relaxed clock rate variance      */
+    char        mixedvarPr[100];       /* prior on mixed relaxed clock rate variance    */
     MrBFlt      mixedvarFix;
     MrBFlt      mixedvarUni[2];
     MrBFlt      mixedvarExp;
 
-    char        tratioFormat[30];      /* format used to report tratio                 */
-    char        revmatFormat[30];      /* format used to report revmat                 */
-    char        ratemultFormat[30];    /* format used to report ratemult               */
-    char        treeFormat[30];        /* format used to report trees/topologies       */
-    char        inferAncStates[5];     /* should ancestral states be inferred (Yes/No)?*/
-    char        inferSiteOmegas[5];    /* should site omega vals be inferred (Yes/No)? */
-    char        inferSiteRates[5];     /* should site rates be inferred (Yes/No)?      */
-    char        inferPosSel[5];        /* should site selection be inferred (Yes/No)?  */
+    char        tratioFormat[30];      /* format used to report tratio                  */
+    char        revmatFormat[30];      /* format used to report revmat                  */
+    char        ratemultFormat[30];    /* format used to report ratemult                */
+    char        treeFormat[30];        /* format used to report trees/topologies        */
+    char        inferAncStates[5];     /* should ancestral states be inferred (Yes/No)? */
+    char        inferSiteOmegas[5];    /* should site omega vals be inferred (Yes/No)?  */
+    char        inferSiteRates[5];     /* should site rates be inferred (Yes/No)?       */
+    char        inferPosSel[5];        /* should site selection be inferred (Yes/No)?   */
     } Model, ModelParams;
 
 typedef struct chain

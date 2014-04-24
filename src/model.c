@@ -5932,10 +5932,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     nApplied = NumActiveParts ();
-                    flag = 0;
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
+                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].ratePr, "Dirichlet");
@@ -5953,15 +5952,14 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 if (tempStr[0]=='V')
                                     strcpy (tempStr,"Variable");
                                 }
-                            flag = 1;
                             }
                         }
-                    if( flag == 0)
+                    /* if(flag == 0)
                         {
                         MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
                             Currently there is no active partition with such data.\n", spacer, parmName);
                         return (ERROR);
-                        }
+                        } */
                     }
                 else
                     {
@@ -6059,8 +6057,8 @@ int DoPrsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-            /* set Generatepr (generatePr) *****************************************************************/
-        else if (!strcmp(parmName, "Ratepr"))
+        /* set Generatepr (generatePr) *****************************************************************/
+        else if (!strcmp(parmName, "Generatepr"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
@@ -6448,21 +6446,17 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if (IsArgValid(tkn, tempStr) == NO_ERROR)
                         {
                         nApplied = NumActiveParts ();
-                        flag = 0;
                         for (i=0; i<numCurrentDivisions; i++)
                             {
-                            if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
-                                {
+                            if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
                                 strcpy(modelParams[i].stateFreqPr, tempStr);
-                                flag = 1;
-                                }
                             }
-                        if( flag == 0)
+                        /* if(flag == 0)
                             {
                             MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
                             Currently there is no active partition with such data. ", spacer, parmName);
                             return (ERROR);
-                            }
+                            } */
                         }
                     else
                         {
@@ -11205,18 +11199,24 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
             else if (p->paramType == P_SPECRATE)
                 {
                 /* Fill in speciation rates *****************************************************************************/
-                if (p->paramId == SPECRATE_FIX)
-                    value[0] = mp->speciationFix;
-                else 
-                    value[0] = 1.0;
+                for (j=0; j<p->nValues; j++)
+                    {
+                    if (p->paramId == SPECRATE_FIX)
+                        value[j] = mp->speciationFix;
+                    else
+                        value[j] = 1.0;
+                    }
                 }
             else if (p->paramType == P_EXTRATE)
                 {
                 /* Fill in extinction rates *****************************************************************************/
-                if (p->paramId == EXTRATE_FIX)
-                    value[0] = mp->extinctionFix;
-                else
-                    value[0] = 0.5;
+                for (j=0; j<p->nValues; j++)
+                    {
+                    if (p->paramId == EXTRATE_FIX)
+                        value[j] = mp->extinctionFix;
+                    else
+                        value[j] = 0.5;
+                    }
                 }
             else if (p->paramType == P_FOSLRATE)
                 {
@@ -19261,7 +19261,7 @@ int SetModelParams (void)
             {
             /* Set up speciation rate ******************************************************************************/
             p->paramType = P_SPECRATE;
-            p->nValues = 1;
+            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
             p->nSubValues = 0;
             p->min = 0.0;
             p->max = POS_INFINITY;
@@ -19283,14 +19283,24 @@ int SetModelParams (void)
 
             if (p->paramId != SPECRATE_FIX)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "net_speciation");
-            SafeStrcat (&p->paramHeader, partString);
+                
+            if (p->nValues == 1)
+                {
+                SafeStrcat (&p->paramHeader, "net_speciation");
+                SafeStrcat (&p->paramHeader, partString);
+                }
+            else for (i = 0; i < p->nValues; i++)
+                {
+                sprintf(tempStr, "\tnet_speciation_%d", i+1);
+                SafeStrcat (&p->paramHeader, tempStr);
+                SafeStrcat (&p->paramHeader, partString);
+                }
             }
         else if (j == P_EXTRATE)
             {
             /* Set up extinction rates ******************************************************************************/
             p->paramType = P_EXTRATE;
-            p->nValues = 1;
+            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
             p->nSubValues = 0;
             p->min = 0.0;
             p->max = POS_INFINITY;
@@ -19310,8 +19320,18 @@ int SetModelParams (void)
 
             if (p->paramId != EXTRATE_FIX)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "relative_extinction");
-            SafeStrcat (&p->paramHeader, partString);
+                
+            if (p->nValues == 1)
+                {
+                SafeStrcat (&p->paramHeader, "relative_extinction");
+                SafeStrcat (&p->paramHeader, partString);
+                }
+            else for (i = 0; i < p->nValues; i++)
+                {
+                sprintf(tempStr, "\trelative_extinction_%d", i+1);
+                SafeStrcat (&p->paramHeader, tempStr);
+                SafeStrcat (&p->paramHeader, partString);
+                }
             }
         else if (j == P_FOSLRATE)
             {
@@ -20536,7 +20556,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = EXTRATE_BETA;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Extinction;
-    mt->relProposalProb = 1.5;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -20555,7 +20575,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = FOSLRATE_BETA;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Fossilization;
-    mt->relProposalProb = 2.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -21733,7 +21753,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation;
-    mt->relProposalProb = 1.5;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.0;  /* window size */
     mt->minimum[0] = 0.00001;

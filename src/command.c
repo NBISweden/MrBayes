@@ -11473,8 +11473,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    death' (Höhna et al. 2011), three strategies: 'random',      \n");
         MrBayesPrint ("                    'diversity' and 'cluster' sampling can be used for extant    \n");
         MrBayesPrint ("                    taxa. No extinct sample (fossil) is allowed in this prior.   \n");
-        MrBayesPrint ("                    For data with extant and extinct samples, use 'fossilization'\n");
-        MrBayesPrint ("                    fossilized birth-death prior (Stadler 2010; Zhang et al.).   \n");
+        MrBayesPrint ("                    For data with extant and extinct samples, use 'prset brlenspr\n");
+        MrBayesPrint ("                    =clock:fossilization'. (Stadler 2010; Zhang et al.)          \n");
         MrBayesPrint ("                    For the fossilized birth-death prior, 'fossiltip' assumes    \n");
         MrBayesPrint ("                    extant taxa are sampled randomly, and extinct taxa (fossils) \n");
         MrBayesPrint ("                    are sampled with constant rate and upon sampling the lineage \n");

@@ -1670,8 +1670,8 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* change relative extinction rate using sliding window */
     
-    int         i, isValidM;
-    MrBFlt      oldM, newM, window, minM, maxM, ran, sR, eR, sF, *fR, oldLnPrior, newLnPrior,
+    int         i, isValidM, valIndex;
+    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 oldProp[2], newProp[2], x, y, *alphaDir, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -1689,8 +1689,12 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     minM = 0.0;
     maxM = 1.0;
 
+    /* get pointer to value to be changed */
+    valIndex = (int)(RandomNumber(seed) * param->nValues);
+    valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
+    
     /* get old value */
-    oldM = *(GetParamVals(param, chain, state[chain]));
+    oldM = *valPtr;
 
     /* change value */
     ran = RandomNumber(seed);
@@ -1712,32 +1716,26 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             isValidM = YES;
         } while (isValidM == NO);
 
-    /* get proportions */
-    oldProp[0] = oldM;
-    oldProp[1] = 1.0 - oldM;
-    newProp[0] = newM;
-    newProp[1] = 1.0 - newM;
-
     /* get proposal ratio */
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
     t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-    sR = *(GetParamVals (m->speciationRates, chain, state[chain]));
+    sR = GetParamVals (m->speciationRates, chain, state[chain]);
+    eR = GetParamVals (param, chain, state[chain]);
     sF = mp->sampleProb;
     sS = mp->sampleStrat;
-    clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
+    clockRate = *GetParamVals (m->clockRate, chain, state[chain]);
     
     if (!strcmp(mp->clockPr,"Birthdeath"))
         {
-        eR = oldM;
-        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sS, sF) == ERROR)
+        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
             }
-        eR = newM;
-        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sS, sF) == ERROR)
+        *valPtr = newM;  // update with new value
+        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
@@ -1746,13 +1744,12 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        eR = oldM;
         if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
-        eR = newM;
+        *valPtr = newM;  // update with new value
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -1764,6 +1761,12 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         return (ERROR);
         }
     
+    /* get proportions */
+    oldProp[0] = oldM;
+    oldProp[1] = 1.0 - oldM;
+    newProp[0] = newM;
+    newProp[1] = 1.0 - newM;
+    
     /* adjust prior ratio according to beta distribution */
     alphaDir = mp->extinctionBeta;
     x = y = 0.0;
@@ -1773,9 +1776,6 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         y += (alphaDir[i]-1.0)*log(oldProp[i]);
     (*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;
     
-    /* copy new value back */
-    *GetParamVals(param, chain, state[chain]) = newM;
-
     return (NO_ERROR);
 
 }
@@ -1791,7 +1791,7 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     /* change fossilization rate using sliding window */
     
     int         i, isValidM, valIndex;
-    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, ran, sR, eR, sF, *fR, oldLnPrior, newLnPrior,
+    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 oldProp[2], newProp[2], x, y, *alphaDir, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -1840,12 +1840,12 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-    sR = *GetParamVals (m->speciationRates, chain, state[chain]);
-    eR = *GetParamVals (m->extinctionRates, chain, state[chain]);
+    t   = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    sR = GetParamVals (m->speciationRates, chain, state[chain]);
+    eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     fR = GetParamVals (param, chain, state[chain]);
-    sF = mp->sampleProb;
-    sS = mp->sampleStrat;
+    sF  = mp->sampleProb;
+    sS  = mp->sampleStrat;
     clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
     if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
@@ -17868,8 +17868,8 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* change speciation rate using sliding window */
     
-    int         isLPriorExp, isValidL;
-    MrBFlt      oldL, newL, window, minL, maxL, lambdaExp=0.0, ran, sR, eR, sF, *fR, oldLnPrior, newLnPrior,
+    int         isLPriorExp, isValidL, valIndex;
+    MrBFlt      *valPtr, oldL, newL, window, minL, maxL, lambdaExp=0.0, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 clockRate;
     char        *sS;
     ModelParams *mp;
@@ -17898,8 +17898,12 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         isLPriorExp = YES;
         }
 
+    /* get pointer to value to be changed */
+    valIndex = (int)(RandomNumber(seed) * param->nValues);
+    valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
+    
     /* get old value */
-    oldL = *(GetParamVals(param, chain, state[chain]));
+    oldL = *valPtr;
 
     /* change value */
     ran = RandomNumber(seed);
@@ -17926,21 +17930,21 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     
     /* calculate prior ratio */
     t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+    sR = GetParamVals (param, chain, state[chain]);
+    eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     sF = mp->sampleProb;
     sS = mp->sampleStrat;
-    clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
+    clockRate = *GetParamVals (m->clockRate, chain, state[chain]);
     
     if (!strcmp(mp->clockPr,"Birthdeath"))
         {
-        sR = oldL;
-        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sS, sF) == ERROR)
+        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
             }
-        sR = newL;
-        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sS, sF) == ERROR)
+        *valPtr = newL;  // update with new value
+        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
@@ -17949,13 +17953,12 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        sR = oldL;
         if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
-        sR = newL;
+        *valPtr = newL;  // update with new value
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -17966,14 +17969,12 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         MrBayesPrint ("%s   Move_Speciation not applicable\n", spacer);
         return (ERROR);
         }
+
     if (isLPriorExp == NO)
         *lnPriorRatio = newLnPrior - oldLnPrior;
     else
         *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
     
-    /* copy new value back */
-    *GetParamVals(param, chain, state[chain]) = newL;
-
     return (NO_ERROR);
     
 }
@@ -17988,8 +17989,8 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* change speciation rate using multiplier */
     
-    int         isLPriorExp, isValidL;
-    MrBFlt      oldL, newL, minL, maxL, lambdaExp=0.0, ran, sR, eR, sF, *fR, oldLnPrior, newLnPrior,
+    int         isLPriorExp, isValidL, valIndex;
+    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 tuning, factor, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -18018,8 +18019,12 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         isLPriorExp = YES;
         }
 
+    /* get pointer to value to be changed */
+    valIndex = (int)(RandomNumber(seed) * param->nValues);
+    valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
+    
     /* get old value */
-    oldL = *(GetParamVals(param, chain, state[chain]));
+    oldL = *valPtr;
 
     /* change value */
     ran = RandomNumber(seed);
@@ -18042,22 +18047,22 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     *lnProposalRatio = log (newL / oldL);
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-    eR = *(GetParamVals (m->extinctionRates, chain, state[chain]));
+    t   = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    sR = GetParamVals (param, chain, state[chain]);
+    eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     sF = mp->sampleProb;
     sS = mp->sampleStrat;
     clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
     
     if (!strcmp(mp->clockPr,"Birthdeath"))
         {
-        sR = oldL;
-        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, sR, eR, sS, sF) == ERROR)
+        if (LnBirthDeathPriorPr (t, clockRate, &oldLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
             }
-        sR = newL;
-        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, sR, eR, sS, sF) == ERROR)
+        *valPtr = newL;  // update with new value
+        if (LnBirthDeathPriorPr (t, clockRate, &newLnPrior, *sR, *eR, sS, sF) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
             return (ERROR);
@@ -18066,13 +18071,12 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        sR = oldL;
         if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
-        sR = newL;
+        *valPtr = newL;  // update with new value
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -18088,9 +18092,6 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     else
         *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
     
-    /* copy new value back */
-    *GetParamVals(param, chain, state[chain]) = newL;
-
     return (NO_ERROR);
     
 }
