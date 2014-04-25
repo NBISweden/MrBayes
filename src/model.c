@@ -19266,7 +19266,7 @@ int SetModelParams (void)
             else
                 p->nValues = 1;
             p->nSubValues = 0;
-            p->min = 0.0;
+            p->min = POS_MIN;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -20531,7 +20531,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-    /* Move_ClockRateM */
+    /* Move_ClockRate_M */
     mt = &moveTypes[i++];
     mt->name = "Multiplier";
     mt->shortName = "Multiplier";
@@ -20542,7 +20542,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[2] = CLOCKRATE_GAMMA;
     mt->applicableTo[3] = CLOCKRATE_EXP;
     mt->nApplicable = 4;
-    mt->moveFxn = &Move_ClockRateM;
+    mt->moveFxn = &Move_ClockRate_M;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */

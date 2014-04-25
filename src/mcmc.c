@@ -24815,7 +24815,7 @@ int RunChain (RandLong *seed)
                 theMove->lastAcceptanceRate[i] = (MrBFlt) theMove->nAccepted[i] / (MrBFlt) theMove->nTried[i];
                 theMove->nTried[i] = 0;
                 theMove->nAccepted[i] = 0;
-                theMove->nBatches[i]++;            /* we only autotune at most 100 times from the starting */
+                theMove->nBatches[i]++;                                     /* we only autotune at most 100 times */
                 if (chainParams.autotune == YES && theMove->moveType->Autotune != NULL && theMove->nBatches[i] < 100)
                     {
                     theMove->moveType->Autotune(theMove->lastAcceptanceRate[i],
@@ -25608,11 +25608,11 @@ int SafeSprintf(char **target, int *targetLen, char *fmt, ...) {
         /* readjust length */
         if (retval > -1)     /* some C compilers will return true length in retval */
             *targetLen = retval + 1;     /* exactly what is needed */
-    else                 /* some C compilers will return -1 on buffer overwrite */
+        else                 /* some C compilers will return -1 on buffer overwrite */
             *targetLen += TARGETLENDELTA;
 
-    /* reallocate target */
-    *target = SafeRealloc ((void *)*target, *targetLen);
+        /* reallocate target */
+        *target = SafeRealloc ((void *)*target, *targetLen);
         if (*target == NULL)
             return ERROR;
         }
@@ -25689,7 +25689,7 @@ void SetChainIds (void)
         }
 #   else
 
-    int     chn;
+    int chn;
     
     for (chn=0; chn<numLocalChains; chn++)
         chainId[chn] = chn;
