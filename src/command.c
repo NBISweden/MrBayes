@@ -10009,7 +10009,7 @@ int GetUserHelp (char *helpTkn)
 {
 
     int         i, j, k, tempInt;
-    char        yesNoStr[4], tempString[100];
+    char        tempString[100];
     Model       *mp;
     
     if (!strcmp(helpTkn, "Begin"))
@@ -12437,8 +12437,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   user starting tree. This allows you to have something         \n");
         MrBayesPrint ("                   between completely random and user-defined trees start        \n");
         MrBayesPrint ("                   the chain.                                                    \n");
-        MrBayesPrint ("   Savebrlens   -- This specifies whether branch length information is           \n");
-        MrBayesPrint ("                   saved on the trees.                                           \n");
+/*      MrBayesPrint ("   Savebrlens   -- This specifies whether branch length information is           \n");
+        MrBayesPrint ("                   saved on the trees.                                           \n"); */
         MrBayesPrint ("   Data         -- When Data is set to NO, the chain is run without data. This   \n");
         MrBayesPrint ("                   should be used only for examining induced priors. DO NOT SET  \n");
         MrBayesPrint ("                   'DATA' TO 'NO' UNLESS YOU KNOW WHAT YOU ARE DOING!            \n");
@@ -12468,7 +12468,7 @@ int GetUserHelp (char *helpTkn)
         }
     else if (!strcmp(helpTkn, "Mcmcp"))
         {
-        PrintYesNo (chainParams.saveBrlens, yesNoStr);
+        // PrintYesNo (chainParams.saveBrlens, yesNoStr);
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         MrBayesPrint ("   Mcmcp                                                                         \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12598,7 +12598,7 @@ int GetUserHelp (char *helpTkn)
         }
 else if (!strcmp(helpTkn, "Ssp"))
         {
-        PrintYesNo (chainParams.saveBrlens, yesNoStr);
+        // PrintYesNo (chainParams.saveBrlens, yesNoStr);
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         MrBayesPrint ("   Ssp                                                                           \n");
         MrBayesPrint ("                                                                                 \n");

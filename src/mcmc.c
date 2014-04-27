@@ -8586,7 +8586,7 @@ int DoMcmcParm (char *parmName, char *tkn)
                     free(tempStr);
                     return (ERROR);
                     }
-                if (chainParams.saveBrlens == YES)
+                if (chainParams.saveTrees == YES)
                     MrBayesPrint ("%s   Saving trees for MCMC diagnostics in memory (if needed)\n", spacer);
                 else
                     MrBayesPrint ("%s   Not saving trees for MCMC diagnostics in memory\n", spacer);
@@ -8611,6 +8611,8 @@ int DoMcmcParm (char *parmName, char *tkn)
                         chainParams.diagnStat = AVGSTDDEV;
                     else /* if (!strcmp(tempStr, "Maxstddev")) */
                         chainParams.diagnStat = MAXSTDDEV;
+                    MrBayesPrint ("%s   Setting diagnostics statistic to %s\n", spacer, chainParams.diagnStat);
+                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                     }
                 else
                     {
@@ -8618,11 +8620,6 @@ int DoMcmcParm (char *parmName, char *tkn)
                     free(tempStr);
                     return (ERROR);
                     }
-                if (chainParams.saveBrlens == YES)
-                    MrBayesPrint ("%s   Saving trees for MCMC diagnostics in memory (if needed)\n", spacer);
-                else
-                    MrBayesPrint ("%s   Not saving trees for MCMC diagnostics in memory\n", spacer);
-                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
             else
                 {
@@ -8650,7 +8647,7 @@ int DoMcmcParm (char *parmName, char *tkn)
                     free(tempStr);
                     return (ERROR);
                     }
-                if (chainParams.saveBrlens == YES)
+                if (chainParams.checkPoint == YES)
                     MrBayesPrint ("%s   Setting check-pointing ('Checkpoint') to yes\n", spacer);
                 else
                     MrBayesPrint ("%s   Setting check-pointing ('Checkpoint') to no\n", spacer);
