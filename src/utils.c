@@ -5231,19 +5231,19 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     return NO;
                     }
                 else if (p->calibration->prior == uniform &&
-                         (p->age < p->calibration->min || p->age > p->calibration->max))
+                        ((p->age - p->calibration->min)/p->age < -0.000001 || (p->age - p->calibration->max)/p->age > 0.000001))
                     {
                     printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
-                else if (p->age < p->calibration->min) //(p->age < p->calibration->min -BRLENS_MIN)
+                else if ((p->age - p->calibration->min)/p->age < -0.000001)
                     {
                     printf ("Node %d has age %f but should be at least of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
-                else if (p->age > p->calibration->max) //(p->age > p->calibration->max +BRLENS_MIN)
+                else if ((p->age - p->calibration->max)/p->age > 0.000001)
                     {
                     printf ("Node %d has age %f but should be no older than %f\n",
                         p->index, p->age, p->calibration->max);

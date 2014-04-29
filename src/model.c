@@ -7539,7 +7539,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD <= 0.0 || tempD > 1.0)
+                            if (tempD < 0.0 || tempD > 1.0)
                                 {
                                 MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1]\n", spacer);
                                 return (ERROR);
@@ -10881,7 +10881,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                             value[2] = mp->ny98omega3Uni[0] + RandomNumber(seed) * (mp->ny98omega3Uni[1] - mp->ny98omega3Uni[0]);
                         else if (p->paramId == OMEGA_BED || p->paramId == OMEGA_BEF || p->paramId == OMEGA_FED ||
                                  p->paramId == OMEGA_FEF)
-                            value[2] =  (1.0 + -(1.0/mp->ny98omega3Exp) * log(1.0 - RandomNumber(seed)));
+                            value[2] =  (1.0 - (1.0/mp->ny98omega3Exp) * log(RandomNumber(seed)));
                         else
                             value[2] = mp->ny98omega3Fixed;
                         if (p->paramId == OMEGA_BUD || p->paramId == OMEGA_BED || p->paramId == OMEGA_BFD || 
@@ -11111,7 +11111,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 /* first get hyperprior */
                 if (p->paramId == SHAPE_UNI)
                     {
-                    value[0] = 100.0;
+                    value[0] = 10.0;
                     if (value[0] < mp->shapeUni[0] || value[0] > mp->shapeUni[1])
                         value[0] = mp->shapeUni[0] + (mp->shapeUni[1] - mp->shapeUni[0]) *  0.5;
                     }
@@ -11153,7 +11153,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                         value[j] = RandomNumber(seed) * (mp->covswitchUni[1] - mp->covswitchUni[0]) + mp->covswitchUni[0];
 
                     else if (p->paramId == SWITCH_EXP)
-                        value[j] =   (-(1.0/mp->covswitchExp) * log(1.0 - RandomNumber(seed)));
+                        value[j] = -(1.0/mp->covswitchExp) * log(RandomNumber(seed));
 
                     else if (p->paramId == SWITCH_FIX)
                         value[j] = mp->covswitchFix[j];
@@ -11338,7 +11338,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 {
                 /* Fill in lambda (cpp rate) ********************************************************************************************/
                 if (p->paramId == CPPRATE_EXP)
-                    value[0] = (-(1.0/mp->cppRateExp) * log(1.0 - RandomNumber(seed)));
+                    value[0] = -(1.0/mp->cppRateExp) * log(RandomNumber(seed));
                 else if (p->paramId == CPPRATE_FIX)
                     value[0] = mp->cppRateFix;
                 }
@@ -11394,7 +11394,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 {
                 /* initialize the mixed relaxed clock model to TK02 or IGR */
                 intValue[0] = (RandomNumber(seed) <0.5) ? RCL_TK02 : RCL_IGR;
-                // intValue[0] = RCL_TK02;
                 /* We fill in the rest when we fill in tree params **************************************************************************/
                 }
             else if (p->paramType == P_CLOCKRATE)

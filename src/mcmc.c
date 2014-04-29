@@ -112,8 +112,7 @@ typedef void (*sighandler_t)(int);
 #undef  DEBUG_CONSTRAINTS
 #undef  DEBUG_LNLIKELIHOOD  /* slow if defined!! */
 #undef  DEBUG_LIKELIHOOD
-#undef  DEBUG_FBDPR    // #define DEBUG_FBDPR
-#undef  FBDPR_CondOnN  /* condition on number of extant taxa in FBD prior */
+#undef  DEBUG_FBDPR       // #undef  FBDPR_CondOnN
 #undef  SHOW_MOVE
 
 //#define TIMING_ANALIZ
@@ -16396,13 +16395,49 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
         }
 }
 
+/*---------------------------------------------------------------------------------
+ |
+ |                                          time  ___  0
+ |     \                            /            |
+ |      \                          /             |___  y2
+ |       \                   \    /              |
+ |        \                   \  /               |
+ |         \                   \/         x3  ___|
+ |          \                  /                 |___  y1
+ |           \         \      /                  |
+ |            \         \    /                   |
+ |             \         \  /                    |
+ |              \         \/              x2  ___|
+ |               \        /                      |
+ |                \      /                       |
+ |                 \    /                        |
+ |                  \  /                         |
+ |                   \/                   x1  ___|
+ |
+ |
+ |   T:   oriented tree
+ |   b:   birth (speciation) rate
+ |   d:   death (extintion) rate
+ |   p:   extant sampling rate
+ |   q:   fossil sampling rate
+ |   n:   number of extant taxa
+ |   m:   number of fossil tips
+ |
+ |
+ |                     [p1(x1)]^2    n+m-1            m    q
+ |   f(T|tmrca) = ---------------- * prod b*p1(xi) * prod -----  .
+ |                [1 - ^p0(x1)]^2    i=2             i=1  p1(yi)
+ |
+ |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
+ |
+ ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 
 {
-    /* Calculate Eq.5 in Th.3.8 under fossil being only tips: k = 0, also omit p_0(y_i) */
+    /* special case: upon sampling the lineage is dead and won’t produce descendants. Each extinct sample is a tip */
     
-    int         i, j, nTaxa, nFossil, nExtant;
-    MrBFlt      *x, *y,  lambda, rho, psi, tmrca, c1, c2;
+    int         i, n, m;
+    MrBFlt      x, lambda, rho, psi, tmrca, c1, c2;
     TreeNode    *p;
     Model       *mp;
     
@@ -16411,76 +16446,45 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     psi    = lambda * (*eR) * (*fR);
     rho    = sF;
     
-    /* allocate space for the speciation and extinction times */
-    x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    if (!x || !y)
-        {
-        MrBayesPrint ("%s   ERROR: Problem allocating x & y in LnFossilizedBDPriorFossilTip\n", spacer);
-        free(x); free(y);
-        return (ERROR);
-        }
-
-    /* get the interior node times (x_i) */
-    for (i = 0; i < t->nIntNodes; i++)
-        {
-        p = t->intDownPass[i];
-        x[i] = p->nodeDepth / clockRate;
-        }
-
-    /* get the fossil node times (y_i), also calculate the number of taxa */
-    nFossil = nExtant = 0;
-    for (i = j = 0; i < t->nNodes -1; i++)
-        {
-        p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL)
-            {
-            if (p->nodeDepth > 0.0)
-                {
-                y[j++] = p->nodeDepth / clockRate;
-                nFossil++;
-                }
-            else
-                nExtant++;
-            }
-        }
-    nTaxa = nFossil + nExtant;
-       
-    /* calculate probability of tree using standard variables */
     tmrca = t->root->left->nodeDepth / clockRate;
-    // tmrca = x[t->nIntNodes-1];
     c1 = sqrt((*sR)*(*sR) + 4 *lambda *psi);
     c2 = (2 *lambda *rho - (*sR)) / c1;
 
-    /* Eq. 5 used, condition on tmrca */
-    (*prob) = (nTaxa - 2) * log(lambda) + nFossil * log(psi)
-            + LnP1_fossil(tmrca, rho, c1, c2) - 2 * log(1 - hatP0_tip(tmrca, *sR, lambda, rho));
-    for (i = 0; i < nTaxa-1; i++)
-        (*prob) += LnP1_fossil(x[i], rho, c1, c2);
-    for (i = 0; i < nFossil; i++)
-        (*prob) -= LnP1_fossil(y[i], rho, c1, c2);
-    /* calibrations are dealt with separately in calling function */
+    /* calculate prior prob of the fbd tree */
+    (*prob) = 0.0;
+
+    for (n = m = i = 0; i < t->nNodes -1; i++)
+        {
+        p = t->allDownPass[i];
+        x = p->nodeDepth / clockRate;
+
+        if (p->left != NULL && p->right != NULL)  // internal
+            {
+            if (p != t->root->left)
+                (*prob) += log(lambda) + LnP1_fossil(x, rho, c1, c2);
+            }
+        else if (p->left == NULL && p->right == NULL)  // tip
+            {
+            if (p->nodeDepth > 0.0)
+                {
+                (*prob) += log(psi) - LnP1_fossil(x, rho, c1, c2);
+                m++;
+                }
+            else
+                n++;
+            }
+        }
+
+    (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0_tip(tmrca, *sR, lambda, rho)));
+
+    /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-#ifdef FBDPR_CondOnN
-    /* Eq. 8 used, condition on n */
-    (*prob) = log(4.0) + log(rho) + nFossil * log(psi) + (nTaxa - 1) * log(lambda);
-    (*prob) -= log(c1) + log(c2 + 1) + c1 * tmrca + log((1 - c2) * exp(-c1 * tmrca) + 1 + c2);
-    for (i = 0; i < nTaxa-1; i++)
-        (*prob) += LnP1_fossil(x[i], rho, c1, c2);
-    for (i = 0; i < nFossil; i++)
-        (*prob) -= LnP1_fossil(y[i], rho, c1, c2);
-#endif
-    
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (nTaxa - 1) * log(2.0) - LnFactorial(nExtant) - LnFactorial(nFossil);
+    (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
-    /* free memory */
-    free(x);
-    free(y);
-    
     return (NO_ERROR);
 
 }
@@ -16495,15 +16499,15 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  |
  |
- |                                       0  _____________  t3, rho3, M3=2, n3=0
+ |                                       0  _____________  t3, rho3
  |     \                            /          |
  |      \                          /           |___  y2
- |       \                   \    /   _________|_________  t2, rho2, M2=0, K2=0, n2=2
+ |       \                   \    /   _________|_________  t2, rho2
  |        \                   \  /             |
  |         \                   \/       x3  ___|
  |          \                  /               |___  y1
  |           \         \      /                |
- |           _\         \    /        _________|_________  t1, rho1, M1=0, K1=1, n1=3
+ |           _\         \    /        _________|_________  t1, rho1
  |             \         \  /                  |
  |              \         \/            x2  ___|
  |               \        /                    |
@@ -16512,6 +16516,9 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |                  \  /                       |
  |                   \/                 x1  ___|
  |
+ |
+ |    sl = 2, t1 > t2 > t3 = 0
+ |    E = 2, K = 1, M = 2
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
@@ -16678,144 +16685,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     /* free memory */
     free(lambda); free(mu); free(psi); free(rho);
     free(t_f); free(c1); free(c2); free(p_t);
-    
-    return (NO_ERROR);
-    
-}
-
-/*---------------------------------------------------------------------------------
- |
- |   Stadler T. 2010. Sampling-through-time in birth-death trees. J Theor Biol. 267:396–404.
- |
- |
- |                                          time  ___  0
- |     \                            /            |
- |      \                          /             |___  y2
- |       \                   \    /              |
- |        \                   \  /               |
- |         \                   \/         x3  ___|
- |          \                  /                 |___  y1
- |           \         \      /                  |
- |           _\         \    /                   |
- |             \         \  /                    |
- |              \         \/              x2  ___|
- |               \        /                      |
- |                \      /                       |
- |                 \    /                        |
- |                  \  /                         |
- |                   \/                   x1  ___|
- |
- |
- |   T:   oriented tree
- |   b:   birth (speciation) rate
- |   d:   death (extintion) rate
- |   p:   extant sampling rate
- |   q:   fossil sampling rate
- |   n:   number of extant taxa
- |   m:   number of extinct inds without sampled descendants (fossil tips)
- |   k:   number of extinct inds with sampled descendants (fossil ancestors)
- |
- |
- |                  b^(n+m-2) * q^(m+k)            n+m-1          m   p0(yi)
- |   f(T|tmrca) = ----------------------* p1(x1) * prod p1(xi) * prod -----  .
- |                    [1 - ^p0(x1)]^2              i=1           i=1  p1(yi)
- |
- |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
- |
- |   To translate this to a density on labeled tree, the density needs to be multiplied by
- |   (2^(n+m-1) / n!m!).
- |
- ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorRandom1 (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
-
-{
-    /* Calculate Eq.5 in Th.3.8, see also 4.2.1 Conditioning on the time (Stadler T. 2010) */
-    
-    int         i, j, nExtant, mFossil, kFossil;
-    MrBFlt      *x, *y, lambda, mu, rho, psi, tmrca, c1, c2;
-    TreeNode    *p;
-    Model       *mp;
-    
-    /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-    lambda = (*sR) / (1.0 - (*eR));
-    mu     = lambda * (*eR);
-    rho    = sF;
-    psi    = mu * (*fR) / (1.0 - (*fR));
-    
-    /* allocate space for the speciation and extinction times */
-    x = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    y = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
-    if (!x || !y)
-        {
-        MrBayesPrint ("%s   ERROR: Problem allocating x & y in LnFossilizedBDPriorRandom1\n", spacer);
-        free(x); free(y);
-        return (ERROR);
-        }
-    
-    mFossil = kFossil = nExtant = 0;
-    /* get the interior node times (x_i), excluding anc fossils. also calculate k */
-    for (i = j = 0; i < t->nIntNodes; i++)
-        {
-        p = t->intDownPass[i];
-        if (p->left->length > 0.0 && p->right->length > 0.0)
-            x[j++] = p->nodeDepth / clockRate;
-        else
-            kFossil++;
-        assert (p->left->length > TIME_MIN || p->right->length > TIME_MIN);
-        }
-    /* get the fossil tip times (y_i), also calculate m, n */
-    for (i = j = 0; i < t->nNodes -1; i++)
-        {
-        p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL && p->length > 0.0)
-            {
-            if (p->nodeDepth > 0.0)
-                {
-                y[j++] = p->nodeDepth / clockRate;
-                mFossil++;
-                }
-            else
-                nExtant++;
-            }
-        }
-    
-    /* calculate probability of tree using standard variables */
-    tmrca = t->root->left->nodeDepth / clockRate;
-    c1 = sqrt(pow(lambda-mu-psi, 2) + 4*lambda*psi);
-    c2 = (2 *lambda *rho -lambda +mu +psi) / c1;
-    
-    /* Eq. 5 used, condition on tmrca */
-    (*prob) = (nExtant +mFossil -2) *log(lambda) + (kFossil +mFossil) *log(psi)
-            + LnP1_fossil(tmrca, rho, c1, c2) - 2 *log(1 - hatP0(tmrca, lambda, mu, rho));
-    for (i = 0; i < nExtant +mFossil -1; i++)
-        (*prob) += LnP1_fossil(x[i], rho, c1, c2);
-    for (i = 0; i < mFossil; i++)
-        (*prob) -= LnP1_fossil(y[i], rho, c1, c2);
-    for (i = 0; i < mFossil; i++)
-        (*prob) += LnP0_fossil(y[i], lambda, mu, psi, c1, c2);
-    /* calibrations are dealt with separately in calling function */
-    mp = &modelParams[t->relParts[0]];
-    if (t->root->left->isDated == NO)
-        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
-    
-#ifdef FBDPR_CondOnN
-    /* Eq. 8 used, condition on n */
-    (*prob) = log(4.0) + log(rho) + (kFossil +mFossil) * log(psi) + (nExtant +mFossil - 1) * log(lambda);
-    (*prob) -= log(c1) + log(c2 + 1) + c1 * tmrca + log((1 - c2) * exp(-c1 * tmrca) + 1 + c2);
-    for (i = 0; i < nExtant +mFossil -1; i++)
-        (*prob) += LnP1_fossil(x[i], rho, c1, c2);
-    for (i = 0; i < mFossil; i++)
-        (*prob) -= LnP1_fossil(y[i], rho, c1, c2);
-    for (i = 0; i < mFossil; i++)
-        (*prob) += LnP0_fossil(y[i], lambda, mu, psi, c1, c2);
-#endif
-    
-    /* conversion to labeled tree from oriented tree */
-    (*prob) += (nExtant +mFossil -1) * log(2.0) - LnFactorial(nExtant) - LnFactorial(mFossil +kFossil);
-    
-    /* free memory */
-    free(x);
-    free(y);
     
     return (NO_ERROR);
     
@@ -23854,7 +23723,7 @@ int RunChain (RandLong *seed)
     int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
     MrBFlt      stepLengthSS=0,meanSS,varSS, *tempX;
     char        ckpFileName[220],bkupFileName[220];
-
+    RandLong    oldSeed;
 
 #if defined (BEAGLE_ENABLED)
     int         ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
@@ -24676,6 +24545,7 @@ int RunChain (RandLong *seed)
                 modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
 
             /* make move */
+            oldSeed = *seed;
 #ifndef NDEBUG
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
@@ -24733,15 +24603,17 @@ int RunChain (RandLong *seed)
                     printf ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
                     return ERROR;
                     }
-                if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.001)
+                if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
                     printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
+                    printf("seed before: %ld\nseed after:  %ld\n", oldSeed, *seed);
+                    // ResetFlips(chn);  state[chn] ^= 1;  PrintCheckPoint (n);
                     return ERROR;
                     }
 #if defined (DEBUG_LNLIKELIHOOD)
                 ResetFlips(chn); /* needed to return flags so they point to old state */
                 TouchEverything();
-                if (fabs((lnLike-LogLike(chn))/lnLike) > 0.001)
+                if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
                     {
                     printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
                     return ERROR;
