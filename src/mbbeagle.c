@@ -147,11 +147,11 @@ int InitBeagleInstance (ModelInfo *m, int division)
     else
         {
         MrBayesPrint( "\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
-#if defined (THREADS_ENABLED)
+#   if defined (THREADS_ENABLED)
         MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
-#else
+#   else
         MrBayesPrint( " (non-threaded)\n");
-#endif
+#   endif
         MrBayesPrint( "%s      Rsrc Name : %s\n", spacer, details.resourceName);
         MrBayesPrint( "%s      Impl Name : %s\n", spacer, details.implName);    
         MrBayesPrint( "%s      Flags:", spacer);
@@ -232,9 +232,9 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
     if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) 
         {
     
-#if defined (DEBUG_MB_BEAGLE_FLOW)
+#   if defined (DEBUG_MB_BEAGLE_FLOW)
         printf("ALWAYS RESCALING\n");
-#endif
+#   endif
         /* Flip and copy or reset site scalers */
         FlipSiteScalerSpace(m, chain);
         if (m->upDateAll == YES) {
@@ -320,9 +320,9 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
                 }
             m->succesCount[chain] = 0;
     rescale_all:
-#if defined (DEBUG_MB_BEAGLE_FLOW)
+#   if defined (DEBUG_MB_BEAGLE_FLOW)
             printf("NUMERICAL RESCALING\n");
-#endif
+#   endif
 
             m->rescaleBeagleAll = YES;
             FlipSiteScalerSpace(m, chain);
@@ -570,10 +570,10 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {
     for (d=0; d<numCurrentDivisions; d++)
         {
         
-#if defined (BEST_MPI_ENABLED)
+#   if defined (BEST_MPI_ENABLED)
         if (isDivisionActive[d] == NO)
             continue;
-#endif
+#   endif
         m = &modelSettings[d];
         
         if (m->upDateCl == YES) 
@@ -906,10 +906,10 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     ModelInfo   *m;
     double      pUnobserved;
 
-#if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
+#   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     static unsigned countBeagleDynamicFail=0;
     static unsigned countALL=0;
-#endif
+#   endif
 
     /* find root node */
     p = t->root->left;
@@ -1050,15 +1050,15 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           NULL,
                                           NULL);       
         }
-#if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
+#   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
-#endif
+#   endif
     if( beagleReturn == BEAGLE_ERROR_FLOATING_POINT )
     {
-#if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
+#   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
         countBeagleDynamicFail++;
         printf("#####DEBUG INFO (it is not an error)############## countBeagleDynamicFail:%d countALL:%d\n",countBeagleDynamicFail,countALL);
-#endif
+#   endif
         return beagleReturn;
     }
     assert(beagleReturn == BEAGLE_SUCCESS);

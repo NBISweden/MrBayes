@@ -1252,7 +1252,7 @@ int DoCalibrate (void)
     int         i;
 
     /* show calibration times (for debugging) */
-#if 0
+#   if 0
     MrBayesPrint ("Taxon ages\n");
     for (i=0; i<numTaxa; i++)
         MrBayesPrint ("%4d  --  %s\n", i+1, tipCalibration[i].name);
@@ -1263,7 +1263,7 @@ int DoCalibrate (void)
             continue;
         MrBayesPrint ("%4d  --  %s\n", i+1, nodeCalibration[i].name);
         }
-#endif
+#   endif
 
     /* Update model if calibrations enforced */
     for (i=0; i<numCurrentDivisions; i++)
@@ -3744,9 +3744,9 @@ int DoExecute (void)
     char        *s, exeFileName[100];
     FILE        *fp;
     CmdType     *oldCommandPtr;
-#               if defined (MPI_ENABLED)
+#   if defined (MPI_ENABLED)
     int         sumErrors;
-#               endif
+#   endif
         
     nErrors = 0;
     cmdLine = 0;
@@ -6962,7 +6962,7 @@ int DoSetParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 strcpy (workingDir, tkn);
-#if defined (WIN_VERSION)
+#   if defined (WIN_VERSION)
                 /* Reformat to Windows with trailing '\' */
                 for (index=0; index<(int)strlen(workingDir); index++)
                     {
@@ -6971,7 +6971,7 @@ int DoSetParm (char *parmName, char *tkn)
                     }
                 if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '\\')
                     strcat(workingDir,"\\");
-#else
+#   else
                 /* Reformat to Unix with trailing '/' */
                 for (index=0; index<(int)strlen(workingDir); index++)
                     {
@@ -6980,7 +6980,7 @@ int DoSetParm (char *parmName, char *tkn)
                     }
                 if (strlen(workingDir) > 0 && workingDir[strlen(workingDir)-1] != '/')
                     strcat(workingDir,"/");
-#endif
+#   endif
                 MrBayesPrint ("%s   Setting working directory to \"%s\"\n", spacer, workingDir);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
@@ -6994,7 +6994,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
                     if (!strcmp(tempStr, "Yes"))
@@ -7011,9 +7011,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Setting usebeagle to yes\n", spacer);
                 else
                     MrBayesPrint ("%s   Setting usebeagle to no\n", spacer);
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7028,7 +7028,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting =  Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 sscanf (tkn, "%d", &tempI);
                 if (tempI < 0)
                     {
@@ -7040,9 +7040,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Setting Beagleresource to %d (auto)\n", spacer, beagleResourceNumber);
                 else
                     MrBayesPrint ("%s   Setting Beagleresource to %d\n", spacer, beagleResourceNumber);
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7057,7 +7057,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
                     long oldFlags = beagleFlags;
@@ -7087,9 +7087,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beagledevice\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7103,7 +7103,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {
                     long oldFlags = beagleFlags;
@@ -7131,9 +7131,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beagleprecision\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7147,7 +7147,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {                    
                     long oldFlags = beagleFlags;
@@ -7173,9 +7173,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7189,7 +7189,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
                 {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 sscanf (tkn, "%d", &tempI);
                 if (tempI < 0)
                     {
@@ -7198,9 +7198,9 @@ int DoSetParm (char *parmName, char *tkn)
                     }
                 beagleScalingFrequency= tempI;
                 MrBayesPrint ("%s   Setting Beaglefreq to %d\n", spacer, beagleScalingFrequency);
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7214,7 +7214,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {                    
                     long oldFlags = beagleFlags;
@@ -7240,9 +7240,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7257,7 +7257,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
                 {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {                    
                     long oldFlags = beagleFlags;
@@ -7287,9 +7287,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
                     return (ERROR);
                     }
-#else
+#   else
                 BeagleNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7304,7 +7304,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED) && defined (THREADS_ENABLED)
+#   if defined (BEAGLE_ENABLED) && defined (THREADS_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {                                        
                     if (!strcmp(tempStr, "Yes"))
@@ -7326,9 +7326,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beaglethreads\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleThreadsNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7340,7 +7340,7 @@ int DoSetParm (char *parmName, char *tkn)
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
             {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                 {                                        
                     if (!strcmp(tempStr, "Always"))
@@ -7362,9 +7362,9 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for beaglescaling\n", spacer);
                     return (ERROR);
                 }               
-#else
+#   else
                 BeagleThreadsNotLinked();
-#endif
+#   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7510,11 +7510,11 @@ int DoShowUserTrees (void)
 int DoShowBeagle (void)
 
 {
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
     BeaglePrintResources(); 
-#else
+#   else
     BeagleNotLinked();
-#endif     
+#   endif
     return (NO_ERROR);
 }
 
@@ -10944,9 +10944,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                mented in this program. If you really believe that the pars-     \n");
         MrBayesPrint ("                imony model makes the biological assumptions described by        \n");
         MrBayesPrint ("                Tuffley and Steel, then the parsimony method is miss-named.      \n");
-        /*MrBayesPrint ("   Augment   -- This allows the chain to consider the missing entries of         \n");
+    /*  MrBayesPrint ("   Augment   -- This allows the chain to consider the missing entries of         \n");
         MrBayesPrint ("                the data matrix as random variables. A Gibbs sampler is          \n");
-        MrBayesPrint ("                used to sample states.                                           \n");*/
+        MrBayesPrint ("                used to sample states.                                           \n"); */
         MrBayesPrint ("                                                                                 \n");
         if (numCurrentDivisions == 0)
             tempInt = 1;
@@ -10975,7 +10975,7 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  %s                         \n", mp->ratesModel);
             MrBayesPrint ("   Ngammacat    <number>                              %d                         \n", mp->numGammaCats);
 #if 0
-            /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
+/* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
             MrBayesPrint ("   Usegibbs     Yes/No                                %s                         \n", mp->useGibbs);
             MrBayesPrint ("   Gibbsfreq    <number>                              %d                         \n", mp->gibbsFreq);
 #endif
@@ -10985,7 +10985,7 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Coding       All/Variable/Noabsencesites/                                     \n");
             MrBayesPrint ("                Nopresencesites                       %s                         \n", mp->coding);
             MrBayesPrint ("   Parsmodel    No/Yes                                %s                         \n", mp->parsModel);
-            /*MrBayesPrint ("   Augment      No/Yes                                %s                         \n", mp->augmentData);*/
+        /*  MrBayesPrint ("   Augment      No/Yes                                %s                         \n", mp->augmentData); */
             MrBayesPrint ("   ------------------------------------------------------------------            \n");       
             MrBayesPrint ("                                                                                 \n");
             }
@@ -12691,7 +12691,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Precision    -- Precision allows you to set the number of decimals to be prin-\n");
         MrBayesPrint ("                   ted when sampled values are written to file. Precision must be\n");
         MrBayesPrint ("                   in the range 3 to 15.                                         \n");
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
         MrBayesPrint ("   Usebeagle    -- Set this option to 'Yes' to attempt to use the BEAGLE library \n");
         MrBayesPrint ("                   to compute the phylogenetic likelihood on a variety of high-  \n");
         MrBayesPrint ("                   performance hardware including multicore CPUs and GPUs. Some  \n"); 
@@ -12705,14 +12705,14 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                    'Dynamic' rescales less frequently and should run faster.    \n");
         MrBayesPrint ("   Beaglesse    -- Use SSE instructions on Intel CPU processors.                 \n");
         MrBayesPrint ("   Beagleopenmp -- Use OpenMP to parallelize across multi-core CPU processors.   \n");
-#endif
-#if defined (THREADS_ENABLED)
+#   endif
+#   if defined (THREADS_ENABLED)
         MrBayesPrint ("   Beaglethreads -- Set this option to 'Yes' to employ multiple threads to drive \n");
         MrBayesPrint ("                    multiple BEAGLE resource simultaneously. This is highly      \n");
         MrBayesPrint ("                    recommended for more than one GPU, and for sufficiently large\n");
         MrBayesPrint ("                    data partitions, multi-core CPUs should also demonstrate     \n");
         MrBayesPrint ("                    speed-ups.                                                   \n");       
-#endif
+#   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Current settings:                                                             \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12735,7 +12735,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Quitonerror        Yes/No                %s                                   \n", quitOnError == YES ? "Yes" : "No");
         MrBayesPrint ("   Scientific         Yes/No                %s                                   \n", scientific == YES ? "Yes" : "No");
         MrBayesPrint ("   Precision          <number>              %d                                   \n", precision);
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
         MrBayesPrint ("   Usebeagle          Yes/No                %s                                   \n", tryToUseBEAGLE == YES ? "Yes" : "No");
         MrBayesPrint ("   Beagleresource     <number>              %d                                   \n", beagleResourceNumber);
         MrBayesPrint ("   Beagledevice       CPU/GPU               %s                                   \n", beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU ? "GPU" : "CPU");
@@ -12743,10 +12743,10 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Beaglescaling      Always/Dynamic        %s                                   \n", beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ? "Always" : "Dynamic");
         MrBayesPrint ("   Beaglesse          Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
         MrBayesPrint ("   Beagleopenmp       Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
-#endif
-#if defined (THREADS_ENABLED)
+#   endif
+#   if defined (THREADS_ENABLED)
         MrBayesPrint ("   Beaglethreads   Yes/No                   %s                                   \n", tryToUseThreads == YES ? "Yes" : "No");
-#endif
+#   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }

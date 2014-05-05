@@ -4960,7 +4960,7 @@ int DoSumt (void)
                 }
 
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMULTIPLIERS_CPP)
             sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
             if ( (rateMultfp=OpenNewMBPrintFile (tempName)) == NULL )
                 {
@@ -4968,7 +4968,7 @@ int DoSumt (void)
                 goto errorExit;
                 }
             fprintf(rateMultfp,"rateMult_CPP\n");
-#endif
+#   endif
 
 
             /* Set up cheap status bar. */
@@ -5679,9 +5679,9 @@ int DoSumt (void)
         SafeFclose (&fpCon);
         SafeFclose (&fpTrees);
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMULTIPLIERS_CPP)
         SafeFclose (&rateMultfp);
-#endif
+#   endif
 
         /* free pointer array to partitions */
         free (treeParts);
@@ -5723,9 +5723,9 @@ int DoSumt (void)
         SafeFclose (&fpCon);
         SafeFclose (&fpTrees);
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMULTIPLIERS_CPP)
         SafeFclose (&rateMultfp);
-#endif
+#   endif
 
         /* free pointer array to partitions, part and tree counters */
         free (treeParts);
@@ -6258,16 +6258,16 @@ int DoSumtTree (void)
     PolyTree        *t;
     PolyNode        *p;
 
-    #if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMULTIPLIERS_CPP)
 
-            /* get depths if relevant */
-        if (sumtParams.tree->isClock)
-            GetPolyDepths (sumtParams.tree);
+    /* get depths if relevant */
+    if (sumtParams.tree->isClock)
+        GetPolyDepths (sumtParams.tree);
 
-                    if(rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
-                        DELETE_ME_dump_depth(sumtParams.tree->root);
-                        //fprintf(rateMultfp,"%s\n",tkn);
-    #endif
+    if(rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
+        DELETE_ME_dump_depth(sumtParams.tree->root);
+    //fprintf(rateMultfp,"%s\n",tkn);
+#   endif
 
     /* increment number of trees read in */
     sumtParams.numFileTrees[sumtParams.runId]++;

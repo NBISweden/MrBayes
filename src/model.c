@@ -11731,9 +11731,9 @@ int DoesTreeSatisfyConstraints(Tree *t)
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
-#if defined (DEBUG_CONSTRAINTS)
+#   if defined (DEBUG_CONSTRAINTS)
     int         locks_count=0;
-#endif
+#   endif
 
     if( t->checkConstraints == NO)
         return YES;
@@ -11749,8 +11749,8 @@ int DoesTreeSatisfyConstraints(Tree *t)
         {
         ResetTreePartitions(t);  /*Inefficient function, rewrite faster version*/
         }
-#if defined (DEBUG_CONSTRAINTS)
-     for (i=0; i<t->nIntNodes; i++)
+#   if defined (DEBUG_CONSTRAINTS)
+    for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         if(p->isLocked == YES)
@@ -11772,11 +11772,11 @@ int DoesTreeSatisfyConstraints(Tree *t)
         printf("DEBUG ERROR: locks_count:%d should be locks_count:%d\n", locks_count, t->nLocks);
         return ABORT;
         }
-#endif
+#   endif
 
     for (k=0; k<numDefinedConstraints; k++)
         {
-#if defined (DEBUG_CONSTRAINTS)
+#   if defined (DEBUG_CONSTRAINTS)
         if( t->constraints[k] == YES && definedConstraintsType[k] == HARD )
             {
             if( t->isRooted == YES )
@@ -11811,7 +11811,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
                 //assert(0);
                 }
             }
-#endif
+#   endif
 
         if( t->constraints[k] == NO || definedConstraintsType[k] == HARD )
             continue;
@@ -12017,13 +12017,13 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                         if( DoesTreeSatisfyConstraints(tree)==YES )
                             break;
                         }
-#if defined (DEBUG_CONSTRAINTS)
+#   if defined (DEBUG_CONSTRAINTS)
                     if (theTree->checkConstraints == YES && CheckConstraints (tree) == ERROR)
                         {
                         printf ("Error in constraints of starting tree\n");
                         getchar();
                         }
-#endif
+#   endif
                     FreePolyTree (constraintTree);
                     FreePolyTree (constraintTreeRef);
                     if(i==100)
@@ -17785,7 +17785,7 @@ int SetModelInfo (void)
 
         m->parsimonyBasedMove = NO;
 
-#if defined (BEAGLE_ENABLED)
+#   if defined (BEAGLE_ENABLED)
         m->beagleInstance = -1;               /* beagle instance                              */
         m->logLikelihoods = NULL;             /* array of log likelihoods from Beagle         */
         m->inRates = NULL;                    /* array of category rates for Beagle           */
@@ -17796,7 +17796,7 @@ int SetModelInfo (void)
         m->childBufferIndices = NULL;         /* array of child partial indices (unrooted)    */
         m->childTiProbIndices = NULL;         /* array of child ti prob indices (unrooted)    */
         m->cumulativeScaleIndices = NULL;     /* array of cumulative scale indices            */
-#endif
+#   endif
 
         /* likelihood calculator flags */
         m->useSSE = NO;                       /* use SSE code for this partition?             */
@@ -24486,13 +24486,13 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 
     if (p != NULL)
         {
-#ifdef DEBUG_CPP
+#   ifdef DEBUG_CPP
         if (baseRate < POS_MIN || baseRate > POS_INFINITY)
             {
             printf("baseRate out of bounds (%.15e for node %d\n", baseRate, p->index);
             return (ERROR);
             }
-#endif
+#   endif
         p->upDateTi = YES;
         p->upDateCl = YES;
         if (nEvents[p->index] == 0)
@@ -24522,7 +24522,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
         for (i=0; i<nEvents[p->index]; i++)
             endRate *= rateMult[p->index][i];
 
-#ifdef DEBUG_CPP
+#   ifdef DEBUG_CPP
         if (endRate < POS_MIN || endRate > POS_INFINITY)
             {
             printf ("endRate out of bounds (%.15e for node %d)\n", endRate, p->index);
@@ -24533,7 +24533,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
             printf ("Effective branch length out of bounds (%.15e for node %d)\n", evolLength[p->index], p->index);
             return (ERROR);
             }
-#endif
+#   endif
         /* call left and right descendants */
         if (UpdateCppEvolLength (nEvents, pos, rateMult, evolLength, p->left, endRate)==ERROR)
             return (ERROR);

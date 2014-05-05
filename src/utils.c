@@ -1643,15 +1643,15 @@ void *SafeCalloc(size_t n, size_t s) {
 
 int SafeFclose(FILE **fp) {
     int retval=-1;
-#if defined MPI_ENABLED
+#   if defined MPI_ENABLED
     if (proc_id == 0) {
-#endif
+#   endif
     if( fp!=NULL && (*fp)!=NULL ) 
         retval=fclose(*fp);
     *fp = NULL;
-#if defined MPI_ENABLED
+#   if defined MPI_ENABLED
     }
-#endif
+#   endif
     return retval;  
 }
 
@@ -3431,9 +3431,9 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
     int         i;
     PolyNode    *p;
     TreeNode    *q, *q1;
-#if defined (DEBUG_SPECIESTREE)
+#   if defined (DEBUG_SPECIESTREE)
     int         j;
-#endif
+#   endif
 
     /* make sure assumptions are correct */
     assert (from->isRooted == YES);
@@ -3444,7 +3444,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
     assert (to->nNodes == from->nNodes + 1);
 
     /* make sure indices are set correctly for from nodes */
-#if defined (DEBUG_SPECIESTREE)
+#   if defined (DEBUG_SPECIESTREE)
     for (i=0; i<from->nNodes; i++)
         {
         for (j=0; j<from->nNodes; j++)
@@ -3456,7 +3456,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
         assert (j != from->nNodes);
         assert (!(p->left == NULL && p->index >= numSpecies));
         }
-#endif
+#   endif
 
     /* copy nodes */
     for (i=0; i<from->nNodes; i++)
@@ -4500,10 +4500,10 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     MrBFlt          treeAgeMin, treeAgeMax;
     Calibration     *calibrationPtr;
 
-#ifdef DEBUG_CALIBRATION
+#   ifdef DEBUG_CALIBRATION
     printf ("Before initializing calibrated brlens\n");
     ShowNodes(t->root, 0, YES);
-#endif
+#   endif
     
     if (t->isRooted == NO)
         {
@@ -4629,11 +4629,11 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
             }
         }
 
-#ifdef DEBUG_CALIBRATION
+#   ifdef DEBUG_CALIBRATION
     printf ("after\n");
     ShowNodes (t->root, 0, YES);
     getchar();
-#endif
+#   endif
 
     return (NO_ERROR);
     
@@ -8138,10 +8138,10 @@ int ShowTree (Tree *t)
         MrBayesPrint ("   %s %s\n", treeLine, labelLine);
         }
     
-#if defined (DEBUG_CONSTRAINTS)
+#   if defined (DEBUG_CONSTRAINTS)
     for (i=0; i<t->nNodes; i++)
         printf ("%d -- %s\n", t->allDownPass[i]->index + 1, t->allDownPass[i]->isLocked == YES ? "locked" : "free");
-#endif
+#   endif
 
     return (NO_ERROR);
        

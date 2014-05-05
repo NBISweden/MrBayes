@@ -241,14 +241,14 @@ int CommandLine (int argc, char **argv)
 
     int     i, message, nProcessedArgs;
     char    cmdStr[CMD_STRING_LENGTH];
-#ifdef HAVE_LIBREADLINE
-    #ifndef MPI_ENABLED
+#   ifdef HAVE_LIBREADLINE
+#       ifndef MPI_ENABLED
     char    *cmdStrP;
-    #endif
-#endif
-#if defined (MPI_ENABLED)
+#       endif
+#   endif
+#   if defined (MPI_ENABLED)
     int     ierror;
-#endif
+#   endif
 
     for(i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
     
@@ -293,7 +293,7 @@ int CommandLine (int argc, char **argv)
                 }
             /* normally, we simply wait at the prompt for a
                user action */
-#if defined (MPI_ENABLED)
+#   if defined (MPI_ENABLED)
             if (proc_id == 0)
                 {
                 /* do not use readline because OpenMPI does not handle it */
@@ -313,8 +313,8 @@ int CommandLine (int argc, char **argv)
                 {
                 MrBayesPrint ("%s   Problem broadcasting command string\n", spacer);
                 }
-#else
-    #ifdef HAVE_LIBREADLINE
+#   else
+#       ifdef HAVE_LIBREADLINE
             cmdStrP = readline("MrBayes > ");
             if(cmdStrP!=NULL) 
                     {
@@ -324,11 +324,11 @@ int CommandLine (int argc, char **argv)
                     free (cmdStrP);
                     }
             else /* fall through to if (feof(stdin))..*/
-    #else
+#       else
             MrBayesPrint ("MrBayes > ");
             fflush (stdin);
             if (fgets (cmdStr, CMD_STRING_LENGTH - 2, stdin) == NULL)
-    #endif
+#       endif
                 {
                 if (feof(stdin))
                     MrBayesPrint ("%s   End of File encountered on stdin; quitting\n", spacer);
@@ -336,7 +336,7 @@ int CommandLine (int argc, char **argv)
                     MrBayesPrint ("%s   Could not read command from stdin; quitting\n", spacer);
                 strcpy (cmdStr,"quit;\n");
                 }
-#endif
+#   endif
             }
         i = 0;
         while (cmdStr[i] != '\0' && cmdStr[i] != '\n')
@@ -367,13 +367,13 @@ int CommandLine (int argc, char **argv)
                     return (ERROR);
                     }           
 
-#if defined (MPI_ENABLED)
+#   if defined (MPI_ENABLED)
                 ierror = MPI_Barrier (MPI_COMM_WORLD);
                 if (ierror != MPI_SUCCESS)
                     {
                     MrBayesPrint ("%s   Problem at command barrier\n", spacer);
                     }
-#endif
+#   endif
 
                 MrBayesPrint ("\n");
                 }
@@ -383,16 +383,16 @@ int CommandLine (int argc, char **argv)
 }
 
 #ifdef HAVE_LIBREADLINE
-
 extern char *command_generator(const char *text, int state);
 
-char **readline_completion(const char *text, int start, int stop) {
+char **readline_completion (const char *text, int start, int stop)
+{
     char **matches = (char **) NULL;
 
-#ifdef COMPLETIONMATCHES    
+#   ifdef COMPLETIONMATCHES
     if(start == 0)
             matches = rl_completion_matches (text, command_generator);
-#endif
+#   endif
 
     return (matches);   
 }
@@ -489,11 +489,11 @@ int InitializeMrBayes (void)
     fileNameChanged      = NO;                       /* file name changed ? (used by a few commands)  */
     echoMB               = YES;                      /* flag used by Manual to control printing       */
 
-#if defined (MPI_ENABLED)
+#   if defined (MPI_ENABLED)
     sprintf(manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file     */
-#else
+#   else
     sprintf(manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file     */
-#endif
+#   endif
 
     for (i=0; i<NUM_ALLOCS; i++)                     /* set allocated memory to NO                    */
         memAllocs[i] = NO;              
@@ -517,12 +517,12 @@ int InitializeMrBayes (void)
     precision = 6;                                   /* set default precision                         */
     showmovesParams.allavailable = NO;               /* do not show all available moves               */
     strcpy(workingDir,"");                           /* working directory                             */
-#if defined (BEAGLE_ENABLED)
-#if defined (WIN_VERSION)
+#   if defined (BEAGLE_ENABLED)
+#       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
-#else
+#       else
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Windows (NO untill SSE single prec. works )*/
-#endif
+#       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
@@ -532,10 +532,10 @@ int InitializeMrBayes (void)
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
     beagleScalingFrequency = 1000;  
-#endif
-#if defined (THREADS_ENABLED)
+#   endif
+#   if defined (THREADS_ENABLED)
     tryToUseThreads = NO;                            /* try to use pthread with BEAGLE library        */
-#endif
+#   endif
 
     /* set the proposal information */
     SetUpMoveTypes ();
@@ -562,14 +562,14 @@ int InitializeMrBayes (void)
     doublet[14].first  = 8;   doublet[14].second = 4;
     doublet[15].first  = 8;   doublet[15].second = 8;
 
-#if defined (FAST_LOG)
+#   if defined (FAST_LOG)
     /* set up log table */
     for (i=0; i<400; i++)
         {
         scalerValue[i] = (CLFlt) ldexp (1.0, 1-i);  /* offset 1 needed to deal with scaler == 1.0 */
         logValue[i] = (CLFlt) log (scalerValue[i]);     
         }
-#endif
+#   endif
 
     /* user trees */
     for (i=0; i<MAX_NUM_USERTREES; i++)
@@ -890,24 +890,24 @@ void PrintHeader (void)
 
 {
     char arch[4];
-#ifndef RELEASE
+#   ifndef RELEASE
     unsigned rev = FindMaxRevision (9, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,
                                        svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
-#endif
+#   endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");
 
     MrBayesPrint ("\n\n");
-#ifdef RELEASE
+#   ifdef RELEASE
     MrBayesPrint ("                            MrBayes v%s %s\n\n", VERSION_NUMBER,arch);
-#else
+#   else
     MrBayesPrint ("                        MrBayes v%s(r%d) %s\n\n", VERSION_NUMBER,rev,arch);
-#endif
+#   endif
     MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
-#       if defined (MPI_ENABLED)
+#   if defined (MPI_ENABLED)
     MrBayesPrint ("                             (Parallel version)\n");
     MrBayesPrint ("                         (%d processors available)\n\n", num_procs);
-#       endif
+#   endif
     MrBayesPrint ("              Distributed under the GNU General Public License\n\n\n");
     MrBayesPrint ("               Type \"help\" or \"help <command>\" for information\n");
     MrBayesPrint ("                     on the commands that are available.\n\n");

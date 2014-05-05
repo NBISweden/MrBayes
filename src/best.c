@@ -1518,14 +1518,14 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     /* pick a node to be changed */
     p = geneTree->intDownPass[(int)(RandomNumber(seed)*geneTree->nIntNodes)];
 
-#if defined (DEBUG_CSLIDER)
+#   if defined (DEBUG_CSLIDER)
     printf ("Before node slider (gene tree):\n");
     printf ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
     if (p->anc->anc == NULL)
         printf ("Old clock rate: %f\n", clockRate);
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
-#endif
+#   endif
 
     /* get gene tree prior prob before move */
     (*lnPriorRatio) -= LnPriorProbGeneTree(geneTree, clockRate, speciesTree, popSizePtr);
@@ -1746,13 +1746,13 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             }
         }
     
-#if defined (DEBUG_CSLIDER)
+#   if defined (DEBUG_CSLIDER)
     printf ("After node slider (gene tree):\n");
     printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
         oldDepth, newDepth, (*lnPriorRatio), (*lnProposalRatio));
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
-#endif
+#   endif
 
     return (NO_ERROR);
     
@@ -1826,21 +1826,21 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     forwardLnProposalProb  = LnProposalProbSpeciesTree (newSpeciesTree, depthMatrix, forwardLambda );
     (*lnProposalRatio) = backwardLnProposalProb - forwardLnProposalProb;
 
-#if defined (BEST_MPI_ENABLED)
+#   if defined (BEST_MPI_ENABLED)
     // Broadcast the proposed species tree to all processors if MPI version
-#endif
+#   endif
 
-#if defined (BEST_MPI_ENABLED)
+#   if defined (BEST_MPI_ENABLED)
     // Let each processor calculate the ln probability ratio of its current gene tree(s)
     //    given the new and old species tree in the MPI version
 
     // Assemble the ln probability ratios across the processors and to lnPriorRatio
-#else
+#   else
     /* calculate the ln probability ratio of the current gene trees
        given the new and old species trees */
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
     oldLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, oldSpeciesTree, chain);
-#endif
+#   endif
 
     /* set (*lnPriorRatio) to ln probability ratio */
     (*lnPriorRatio) = (newLnProb - oldLnProb);
