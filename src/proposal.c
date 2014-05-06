@@ -650,7 +650,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* change clock rate using multiplier */
     
     int         i, j, k, *nEvents;
-    MrBFlt      minV, maxV, oldR, newR, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate;
+    MrBFlt      oldR, newR, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate;
     Tree        *t, *oldT;
     TreeNode    *p, *q;
     Param       *treeParam, *subParm;
@@ -669,12 +669,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* calculate factor */
     factor = newR / oldR;
 
-    /* min and max values for branch lengths in relative time and substitution units */
-    minV = BRLENS_MIN;
-    maxV = BRLENS_MAX;
-
     /* clock rate applies to all clock trees */
-    for (i=0; i<numTrees; i++)
+    for (i = 0; i < numTrees; i++)
         {
         t = GetTreeFromIndex(i, chain, state[chain]);
         if (t->isClock == NO)
@@ -682,21 +678,21 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         if (!strcmp(modelParams[t->relParts[0]].clockPr, "Fixed"))
             continue;
 
-        oldT      = GetTreeFromIndex(i, chain, 1^state[chain]);
+        oldT = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
-        //assert (IsTreeConsistent(treeParam, chain, state[chain]) == YES);
 
         /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
         
         /* adjust the node depths and lengths */
-        for (j=0; j<t->nNodes-1; j++)
+        for (j = 0; j < t->nNodes-1; j++)
             {
             p = t->allDownPass[j];
             q = oldT->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root or fossil ancestors)*/
-            if ( p->anc->anc != NULL &&
-                (p->length < 0.0 || p->length > maxV || (q->length > minV && p->length < minV) || (q->length < TIME_MIN && p->length > TIME_MIN)) )
+            if (p->length < 0.0 || p->length > BRLENS_MAX ||
+                (q->length > BRLENS_MIN && p->length < BRLENS_MIN) ||
+                (q->length < TIME_MIN   && p->length > TIME_MIN) )
                 {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
                 abortMove = YES;
                 return (NO_ERROR);
@@ -704,7 +700,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             }
         
         /* adjust proposal and prior ratio for relaxed clock models */
-        for (k=0; k<treeParam->nSubParams; k++)
+        for (k = 0; k < treeParam->nSubParams; k++)
             {
             subParm = treeParam->subParams[k];
             if (subParm->paramType == P_CPPEVENTS)
@@ -740,7 +736,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 /* no proposal ratio effect */
 
                 /* prior ratio and update of brlens */
-                for (j=0; j<t->nNodes-2; j++)
+                for (j = 0; j < t->nNodes-2; j++)
                     {
                     p = t->allDownPass[j];
                     q = oldT->allDownPass[j];
@@ -768,8 +764,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 igrRate = GetParamVals (subParm, chain, state[chain]);
                 brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-                /* prior ratio and update of igr rates */
-                for (j=0; j<t->nNodes-2; j++)
+                /* prior ratio and update of brlens */
+                for (j = 0; j < t->nNodes-2; j++)
                     {
                     p = t->allDownPass[j];
                     q = oldT->allDownPass[j];
