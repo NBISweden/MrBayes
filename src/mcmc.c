@@ -16624,9 +16624,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
+                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
-                    if (rho[j] < 1.0)  (*prob) -= log(1 - rho[j]);
+                    (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
                 K++;              /* number of fossil ancestors */
                 }
@@ -16827,9 +16827,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
+                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
-                    if (rho[j] < 1.0)  (*prob) -= log(1 - rho[j]);
+                    (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
                 K++;              /* number of fossil ancestors */
                 }

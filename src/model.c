@@ -20240,7 +20240,6 @@ int SetUpAnalysis (RandLong *seed)
     if (ProcessStdChars(seed) == ERROR)
         return (ERROR);
 
-    
     /* Fill in trees */
     if (FillTreeParams (seed, 0, numGlobalChains) == ERROR)
         return (ERROR);
@@ -20249,6 +20248,8 @@ int SetUpAnalysis (RandLong *seed)
     if (SetMoves () == ERROR)
         return (ERROR);
 
+    /* TODO: Clock:Fossilization is not compatible with CPP clock */
+    
     setUpAnalysisSuccess=YES;
     
     return (NO_ERROR);
