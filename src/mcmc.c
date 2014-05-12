@@ -568,7 +568,7 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
                 }
             }
         for (i = 0; i < 2; i++)
-            lnprior += nb[i]*log(mp->brlens2Ex[i]) - tb[i]*(mp->brlens2Ex[i]);
+            lnprior += nb[i]*log(mp->brlens2Exp[i]) - tb[i]*(mp->brlens2Exp[i]);
         }
     
     return lnprior;
@@ -15686,16 +15686,16 @@ MrBFlt LogPrior (int chain)
                 else if (p->paramId == BRLENS_GamDir)  
                     {
                     lnPrior += LogDirPrior(t, mp, 2);
-                    lnPrior += (mp->brlensDir[0])*log(mp->brlensDir[1]) -LnGamma(mp->brlensDir[0])
-                    +LnGamma( mp->brlensDir[2] *numTaxa + mp->brlensDir[2] * mp->brlensDir[3] *(numTaxa-3) ) 
-                    -numTaxa*LnGamma(mp->brlensDir[2]) -(numTaxa-3)*LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                    lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
+                                + LnGamma( mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3) )
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     } 
                 else if (p->paramId == BRLENS_iGmDir)
                     {
                     lnPrior += LogDirPrior(t, mp, 3);
-                    lnPrior += (mp->brlensDir[0])*log(mp->brlensDir[1]) -LnGamma(mp->brlensDir[0])
-                    +LnGamma( mp->brlensDir[2] *numTaxa + mp->brlensDir[2] * mp->brlensDir[3] *(numTaxa-3) ) 
-                    -numTaxa*LnGamma(mp->brlensDir[2]) -(numTaxa-3)*LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                    lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
+                                + LnGamma( mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3) )
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     }
                 /* twoExp priors */
                 else if (p->paramId == BRLENS_twoExp)

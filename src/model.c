@@ -7229,20 +7229,20 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else if (!strcmp(modelParams[i].unconstrainedPr,"twoExp"))
                                 {
                                     sscanf (tkn, "%lf", &tempD);
-                                    modelParams[i].brlens2Ex[numVars[i]++] = tempD;
+                                    modelParams[i].brlens2Exp[numVars[i]++] = tempD;
                                     if (numVars[i] == 1)
                                         expecting  = Expecting(COMMA);
                                     else
                                     {
-                                        if (modelParams[i].brlens2Ex[0] <= 0.0 || modelParams[i].brlens2Ex[1] <= 0.0)
+                                        if (modelParams[i].brlens2Exp[0] <= 0.0 || modelParams[i].brlens2Exp[1] <= 0.0)
                                             {
                                             MrBayesPrint ("%s   Values for 2exponential must > 0.0\n", spacer);
                                             return (ERROR);
                                             }
                                         if (nApplied == 0 && numCurrentDivisions == 1)
-                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlens2Ex[0], modelParams[i].brlens2Ex[1]);
+                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brlens2Exp[0], modelParams[i].brlens2Exp[1]);
                                         else
-                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlens2Ex[0], modelParams[i].brlens2Ex[1], i+1);
+                                            MrBayesPrint ("%s   Setting Brlenspr to Unconstrained:twoExp(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brlens2Exp[0], modelParams[i].brlens2Exp[1], i+1);
                                         expecting  = Expecting(RIGHTPAR);
                                     }
                                 }
@@ -13903,9 +13903,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                         }
                     else if (!strcmp(modelParams[part1].unconstrainedPr, "twoExp"))
                         {
-                            if (AreDoublesEqual (modelParams[part1].brlens2Ex[0], modelParams[part2].brlens2Ex[0], (MrBFlt) 0.00001) == NO)
+                            if (AreDoublesEqual (modelParams[part1].brlens2Exp[0], modelParams[part2].brlens2Exp[0], (MrBFlt) 0.00001) == NO)
                                 isSame = NO;
-                            if (AreDoublesEqual (modelParams[part1].brlens2Ex[1], modelParams[part2].brlens2Ex[1], (MrBFlt) 0.00001) == NO)
+                            if (AreDoublesEqual (modelParams[part1].brlens2Exp[1], modelParams[part2].brlens2Exp[1], (MrBFlt) 0.00001) == NO)
                                 isSame = NO;
                         }
                     else
@@ -23537,7 +23537,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     else if (!strcmp(mp->unconstrainedPr, "Exponential"))
                         MrBayesPrint ("(%1.1lf)\n", mp->brlensExp);
                     else if (!strcmp(mp->unconstrainedPr, "twoExp"))
-                        MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->brlens2Ex[0], mp->brlens2Ex[1]);
+                        MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->brlens2Exp[0], mp->brlens2Exp[1]);
                     else
                         MrBayesPrint ("(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n", mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
                     }

@@ -1015,8 +1015,9 @@ typedef struct model
     int         brlensFix;         /* user tree index for fixed brlens             */
     MrBFlt      brlensUni[2];
     MrBFlt      brlensExp;
-    MrBFlt      brlens2Ex[2];
+    MrBFlt      brlens2Exp[2];
     MrBFlt      brlensDir[4];
+    MrBFlt      brlensGamma[2];
     char        speciesTreeBrlensPr[100];  /* prior on branch lengths of species tree       */
     char        unconstrainedPr[100];  /* prior on branch lengths if unconstrained          */
     char        clockPr[100];          /* prior on branch if clock enforced                 */

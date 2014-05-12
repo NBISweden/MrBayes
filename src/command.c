@@ -11935,7 +11935,7 @@ int GetUserHelp (char *helpTkn)
                     MrBayesPrint (":iGamDir(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n",
                                 mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
                 else if (!strcmp(mp->unconstrainedPr, "twoExp"))
-                    MrBayesPrint (":2Exp(%1.1lf,%1.1lf)\n", mp->brlens2Ex[0], mp->brlens2Ex[1]);
+                    MrBayesPrint (":twoExp(%1.1lf,%1.1lf)\n", mp->brlens2Exp[0], mp->brlens2Exp[1]);
                 else
                     MrBayesPrint (":Exp(%1.1lf)\n", mp->brlensExp);
                 }

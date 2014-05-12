@@ -666,7 +666,7 @@ int InitializeMrBayes (void)
     defaultModel.shapeFix = 0.5;
     defaultModel.shapeUni[0] = MIN_SHAPE_PARAM;
     defaultModel.shapeUni[1] = MAX_SHAPE_PARAM;
-    defaultModel.shapeExp = 2.0;
+    defaultModel.shapeExp = 1.0;
     strcpy(defaultModel.pInvarPr, "Uniform");           /* prior for proportion of invariable sites     */
     defaultModel.pInvarFix = 0.1;
     defaultModel.pInvarUni[0] = 0.0;
@@ -705,8 +705,8 @@ int InitializeMrBayes (void)
     defaultModel.brlensUni[0] = BRLENS_MIN;
     defaultModel.brlensUni[1] = 10.0;
     defaultModel.brlensExp    = 10.0;
-    defaultModel.brlens2Ex[0] = 100.0;                  /* 1st param of twoExp prior (for internal branches) */
-    defaultModel.brlens2Ex[1] = 10.0;                   /* 2nd param of twoExp prior (for external branches) */
+    defaultModel.brlens2Exp[0]= 100.0;                  /* 1st param of twoExp prior (for internal branches) */
+    defaultModel.brlens2Exp[1]= 10.0;                   /* 2nd param of twoExp prior (for external branches) */
     defaultModel.brlensDir[0] = 1.0;                    /* 1st param of GammaDir prior   */
 //  defaultModel.brlensDir[0] = 3.0;                    /* 1st param of invGamDir prior  */
     defaultModel.brlensDir[1] = 0.1;                    /* 2nd param of GammaDir prior   */
