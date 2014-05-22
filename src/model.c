@@ -7214,9 +7214,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     expecting  = Expecting(COMMA);
                                 else
                                     {
-                                    if (modelParams[i].brlensDir[0] <= 0.0 || modelParams[i].brlensDir[1] <= 0.0 || modelParams[i].brlensDir[2] <= 0.0 || modelParams[i].brlensDir[3] <= 0.0)
+                                    if (modelParams[i].brlensDir[0] <= 2.0 || modelParams[i].brlensDir[1] <= 0.0 || modelParams[i].brlensDir[2] <= 0.0 || modelParams[i].brlensDir[3] <= 0.0)
                                         {
-                                        MrBayesPrint ("%s   alphaT & betaT & a & c for invGamDir prior must > 0.0\n", spacer);
+                                        MrBayesPrint ("%s   alphaT must > 2.0, betaT & a & c for invGamDir prior must > 0.0\n", spacer);
                                         return (ERROR);
                                         }
                                     if (nApplied == 0 && numCurrentDivisions == 1)
@@ -7236,7 +7236,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     {
                                         if (modelParams[i].brlens2Exp[0] <= 0.0 || modelParams[i].brlens2Exp[1] <= 0.0)
                                             {
-                                            MrBayesPrint ("%s   Values for 2exponential must > 0.0\n", spacer);
+                                            MrBayesPrint ("%s   Values for the two exponentials must > 0.0\n", spacer);
                                             return (ERROR);
                                             }
                                         if (nApplied == 0 && numCurrentDivisions == 1)

@@ -552,9 +552,9 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
             }
         lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
         if (PV == 2)
-            lnprior += ( aT - a*nb[1] - a*c*nb[0])*log(treeL) - bT*treeL;
+            lnprior += ( aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT*treeL;
         else
-            lnprior += (-aT - a*nb[1] - a*c*nb[0])*log(treeL) - bT/treeL;
+            lnprior += (-aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT/treeL;
         }
     /* or 4: twoExp prior */
     else if (PV == 4)
@@ -568,7 +568,7 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
                 }
             }
         for (i = 0; i < 2; i++)
-            lnprior += nb[i]*log(mp->brlens2Exp[i]) - tb[i]*(mp->brlens2Exp[i]);
+            lnprior += nb[i] * log(mp->brlens2Exp[i]) - tb[i] * (mp->brlens2Exp[i]);
         }
     
     return lnprior;

@@ -711,10 +711,10 @@ int InitializeMrBayes (void)
 //  defaultModel.brlensDir[0] = 3.0;                    /* 1st param of invGamDir prior  */
     defaultModel.brlensDir[1] = 0.1;                    /* 2nd param of GammaDir prior   */
 //  defaultModel.brlensDir[1] = 20.0;                   /* 2nd param of invGamDir prior  */
-    defaultModel.brlensDir[2] = 0.7;                    /* 3rd param of Dirichlet priors */
+    defaultModel.brlensDir[2] = 1.0;                    /* 3rd param of Dirichlet priors */
     defaultModel.brlensDir[3] = 1.0;                    /* 4th param of Dirichlet priors */
     
-    strcpy(defaultModel.unconstrainedPr, "Exponential");/* prior on branches if unconstrained           */
+    strcpy(defaultModel.unconstrainedPr, "GammaDir");   /* prior on branches if unconstrained           */
     strcpy(defaultModel.clockPr, "Uniform");            /* prior on branch lengths if clock enforced    */
     defaultModel.treeAgePr.prior = standardGamma;       /* calibration prior on tree age */
     strcpy(defaultModel.treeAgePr.name, "Gamma(1.00,1.00)");
