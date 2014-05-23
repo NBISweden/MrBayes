@@ -7461,7 +7461,7 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     minR = RATE_MIN;
     maxR = RATE_MAX;
     
-    /* randomly pick a length */
+    /* randomly pick a branch */
     do  {
         i = (int) (RandomNumber(seed) * (t->nNodes - 2));
         p = t->allDownPass[i];
@@ -7470,7 +7470,7 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     
     /* find new rate using multiplier */
     oldRate = igrRate[p->index];
-    newRate = oldRate * (exp ((0.5 - RandomNumber (seed)) * tuning));
+    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -7485,8 +7485,8 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
     /* calculate prior ratio */
     igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
-    (*lnPriorRatio) -= LnProbGamma (p->length/igrvar, p->length/igrvar, oldRate);
-    (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, newRate);
+    (*lnPriorRatio) = LnProbGamma (p->length/igrvar, p->length/igrvar, newRate)
+                    - LnProbGamma (p->length/igrvar, p->length/igrvar, oldRate);
 
     /* calculate proposal ratio */
     (*lnProposalRatio) = log (newRate / oldRate);
@@ -7512,6 +7512,93 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
     return (NO_ERROR);
 
+}
+
+
+
+
+
+int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+    
+    /* move one IGR relaxed clock branch rate using sliding window */
+    
+    int         i;
+    MrBFlt      newRate, oldRate, window, minR, maxR, igrvar, *igrRate, *brlens;
+    TreeNode    *p = NULL;
+    ModelInfo   *m;
+    Tree        *t;
+    TreeNode    *q;
+    
+    /* get the tuning parameter */
+    window = mvp[0];
+    
+    /* get the model settings */
+    m = &modelSettings[param->relParts[0]];
+    
+    /* get the IGR branch rate and effective branch length data */
+    igrRate = GetParamVals (param, chain, state[chain]);
+    brlens = GetParamSubVals (param, chain, state[chain]);
+    
+    /* get tree */
+    t = GetTree (param, chain, state[chain]);
+    
+    /* get minimum and maximum rate */
+    minR = RATE_MIN;
+    maxR = RATE_MAX;
+    
+    /* randomly pick a branch */
+    do  {
+        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        p = t->allDownPass[i];
+        }
+    while (p->length < TIME_MIN);  // not ancestral fossil
+    
+    /* find new rate using multiplier */
+    oldRate = igrRate[p->index];
+    newRate = oldRate + window * (RandomNumber (seed) - 0.5);
+    
+    /* reflect if necessary */
+    while (newRate < minR || newRate > maxR)
+        {
+        if (newRate < minR)
+            newRate = 2 * minR - newRate;
+        if (newRate > maxR)
+            newRate = 2 * maxR - newRate;
+        }
+    
+    igrRate[p->index] = newRate;
+    
+    /* calculate prior ratio */
+    igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
+    (*lnPriorRatio) = LnProbGamma (p->length/igrvar, p->length/igrvar, newRate)
+                    - LnProbGamma (p->length/igrvar, p->length/igrvar, oldRate);
+    
+    /* calculate proposal ratio */
+    (*lnProposalRatio) = 0.0;
+    
+    /* update branch evolution lengths */
+    brlens[p->index] = newRate * p->length;
+    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+    
+    /* set update of transition probability */
+    p->upDateTi = YES;
+    
+    /* set update of cond likes down to root */
+    q = p->anc;
+    while (q->anc != NULL)
+        {
+        q->upDateCl = YES;
+        q = q->anc;
+        }
+    
+    return (NO_ERROR);
+    
 }
 
 
@@ -7639,7 +7726,7 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     
     /* find new rate using multiplier */
     oldRate = mxRate[p->index];
-    newRate = oldRate * (exp ((0.5 - RandomNumber (seed)) * tuning));
+    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -18583,7 +18670,7 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* find new rateMultiplier */
     oldRate = tk02Rate[p->index];
-    newRate = oldRate * (exp ((0.5 - RandomNumber (seed)) * tuning));
+    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -18598,7 +18685,7 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* calculate prior ratio */
     nu = *GetParamVals (m->tk02var, chain, state[chain]);
-    (*lnPriorRatio) += LnRatioTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, newRate, oldRate);
+    (*lnPriorRatio) = LnRatioTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, newRate, oldRate);
     if (p->left != NULL)
         {
         if (p->left->length > 0.0)
