@@ -212,7 +212,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     /* pick a branch */
     do
         {
-        p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -2))];
         } while (p->anc == NULL || (p->anc->anc == NULL));
 
     /* get number of events for convenience */
@@ -591,10 +591,10 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #endif
 
     /* pick a branch */
-    do
-        {
-        p = t->allDownPass[(int)(RandomNumber(seed)*t->nNodes)];
-        } while (p->anc == NULL || (t->isRooted == YES && p->anc->anc == NULL));
+    do  {
+        p = t->allDownPass[(int)(RandomNumber(seed) * t->nNodes)];
+        }
+    while (p->anc == NULL || (t->isRooted == YES && p->anc->anc == NULL));
 
     /* determine new length */
     m = p->length;
@@ -2494,7 +2494,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     
     /* pick a branch */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
         }
     while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
             (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN) );
@@ -3433,7 +3433,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* pick a branch */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -2))];
         if (p->anc->left == p)
             q = p->anc->right;
         else
@@ -7463,14 +7463,14 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     
     /* randomly pick a branch */
     do  {
-        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        i = (int) (RandomNumber(seed) * (t->nNodes -2));
         p = t->allDownPass[i];
         }
     while (p->length < TIME_MIN);  // not ancestral fossil
     
     /* find new rate using multiplier */
     oldRate = igrRate[p->index];
-    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
+    newRate = oldRate * exp ((0.5 - RandomNumber(seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -7550,14 +7550,14 @@ int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* randomly pick a branch */
     do  {
-        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        i = (int) (RandomNumber(seed) * (t->nNodes -2));
         p = t->allDownPass[i];
         }
     while (p->length < TIME_MIN);  // not ancestral fossil
     
     /* find new rate using multiplier */
     oldRate = igrRate[p->index];
-    newRate = oldRate + window * (RandomNumber (seed) - 0.5);
+    newRate = oldRate + window * (RandomNumber(seed) - 0.5);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -7719,7 +7719,7 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     
     /* randomly pick a length */
     do  {
-        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        i = (int) (RandomNumber(seed) * (t->nNodes -2));
         p = t->allDownPass[i];
         }
     while (p->length < TIME_MIN);  // not ancestral fossil
@@ -9844,14 +9844,14 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
 
     /* pick an interior branch, around which it is possible to make an NNI */
-    do
-        {
+    do  {
         p = t->intDownPass[(int)(RandomNumber(seed)*(t->nIntNodes-1))];
         if (p->anc->left == p)
             q = p->anc->right;
         else
             q = p->anc->left;
-        } while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + BRLENS_MIN);
+        }
+    while (p->isLocked == YES || p->nodeDepth < q->nodeDepth + BRLENS_MIN);
         
     /* set up pointers for nodes around the picked branch */
     /* consider ancestral fossil (brl=0) in fossilized bd tree */
@@ -10284,9 +10284,10 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
     /* pick a node that can be changed in position */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed)*i)];
+        p = t->allDownPass[(int)(RandomNumber(seed) * i)];
         }
-    while ((p->left == NULL && p->isDated == NO) || (p->length < TIME_MIN) ||
+    while ((p->left == NULL && p->isDated == NO) ||
+           (p->left == NULL && p->length < TIME_MIN) ||
            (p->isDated == YES && p->calibration->prior == fixed));
 
 #if defined (DEBUG_CSLIDER)
@@ -11878,7 +11879,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* pick a random branch */
-    p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 2))];
+    p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -2))];
     q = p->anc->right;
     if (q == p)
         q = p->anc->left;
@@ -12372,7 +12373,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     /* pick a random branch */
-    p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
+    p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
     q = p->anc->right;
     if (q == p)
         q = p->anc->left;
@@ -13196,7 +13197,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     
     /* pick a branch */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed)*(t->nNodes - 1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 1))];
         }
     while ( (p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
             (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN) );
@@ -18663,14 +18664,14 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* randomly pick a rate */
     do  {
-        i = (int) (RandomNumber(seed) * (t->nNodes - 2));
+        i = (int) (RandomNumber(seed) * (t->nNodes -2));
         p = t->allDownPass[i];
         }
     while (p->length < TIME_MIN);  // not ancestral fossil
     
     /* find new rateMultiplier */
     oldRate = tk02Rate[p->index];
-    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
+    newRate = oldRate * exp ((0.5 - RandomNumber(seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)

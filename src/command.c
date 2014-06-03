@@ -12065,7 +12065,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
                 }
             
-            MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
+            /*  MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
             if (!strcmp(mp->mixedvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);
             else if (!strcmp(mp->mixedvarPr,"Exponential"))
@@ -12074,7 +12074,7 @@ int GetUserHelp (char *helpTkn)
                 {
                 assert (!strcmp(mp->mixedvarPr,"Uniform"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->mixedvarUni[0], mp->mixedvarUni[1]);
-                }
+                }  */
 
             MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
             if (!strcmp(mp->ratePr, "Dirichlet"))

@@ -14994,7 +14994,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
     m  = &modelSettings[param->relParts[0]];
     
     newTree = GetTree (m->brlens, chain, state[chain]);
-    oldTree = GetTree (m->brlens, chain, state[chain] ^ 1);
+    oldTree = GetTree (m->brlens, chain, state[chain] ^1);
 
     if (m->clockRate != NULL)
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);

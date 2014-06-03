@@ -98,9 +98,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #endif
 #endif
 
-/*#define PRINT_RATEMULTIPLIERS_CPP*/
-
-
 #if defined GCC_SSE         /* gcc compiler */
 #define ALIGNED_MALLOC(X,Y,Z)  posix_memalign(X,Y,Z)
 #define ALIGNED_FREE free
@@ -290,11 +287,11 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define TREEAGE_MAX             1000000.0f
 #define CPPLAMBDA_MIN           0.00001f
 #define CPPLAMBDA_MAX           100.0f
-#define TK02VAR_MIN             0.00001f
+#define TK02VAR_MIN             0.000001f
 #define TK02VAR_MAX             10000.0f
-#define IGRVAR_MIN              0.00001f
+#define IGRVAR_MIN              0.000001f
 #define IGRVAR_MAX              10000.0f
-#define MIXEDVAR_MIN            0.00001f
+#define MIXEDVAR_MIN            0.000001f
 #define MIXEDVAR_MAX            10000.0f
 #define OMEGA_MAX               1000000.0f
 

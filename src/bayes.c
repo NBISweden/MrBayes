@@ -777,10 +777,10 @@ int InitializeMrBayes (void)
     strcpy(defaultModel.cppMultDevPr, "Fixed");         /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
     defaultModel.cppMultDevFix = 0.4;
     strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on nu parameter for BM rel clock     */
-    defaultModel.tk02varExp = 10.0;
-    defaultModel.tk02varFix = 0.1;
+    defaultModel.tk02varExp = 1.0;
+    defaultModel.tk02varFix = 1.0;
     defaultModel.tk02varUni[0] = 0.0;
-    defaultModel.tk02varUni[1] = 0.5;
+    defaultModel.tk02varUni[1] = 5.0;
     strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance increase parameter for IGR rel clock */
     defaultModel.igrvarExp = 10.0;
     defaultModel.igrvarFix = 0.1;
@@ -790,7 +790,7 @@ int InitializeMrBayes (void)
     defaultModel.mixedvarExp = 10.0;
     defaultModel.mixedvarFix = 0.1;
     defaultModel.mixedvarUni[0] = 0.0;
-    defaultModel.mixedvarUni[1] = 0.5;
+    defaultModel.mixedvarUni[1] = 5.0;
     strcpy(defaultModel.ratePr, "Fixed");               /* prior on rate for a partition              */
     defaultModel.ratePrDir = 1.0;
     strcpy(defaultModel.generatePr, "Fixed");           /* prior on rate for a gene (multispecies coalescent) */
@@ -993,7 +993,7 @@ int ReinitializeMrBayes (void)
     chainParams.orderTaxa = NO;                      /* should taxa be ordered in output trees?       */
     chainParams.append = NO;                         /* append to previous analysis?                  */
     chainParams.autotune = YES;                      /* autotune?                                     */
-    chainParams.tuneFreq = 1000;                     /* autotuning frequency                          */
+    chainParams.tuneFreq = 100;                      /* autotuning frequency                          */
     chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
     chainParams.checkFreq = 100000;                  /* check-pointing frequency                      */
     chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */

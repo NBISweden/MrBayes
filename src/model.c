@@ -19694,7 +19694,7 @@ int SetModelParams (void)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].igrBranchRates = p;
             
-            p->paramTypeName = "Branch rates of IGR relaxed clock";
+            p->paramTypeName = "Branch lengths of IGR relaxed clock";
             SafeStrcat(&p->name, "IgrBrlens");
             SafeStrcat(&p->name, partString);
             
@@ -22189,8 +22189,8 @@ void SetUpMoveTypes (void)
 
     /* Move_RelaxedClockModel */
     mt = &moveTypes[i++];
-    mt->name = "rjMCMC between Relaxed Clock Models";
-    mt->shortName = "rjMCMC_TKnIGR";
+    mt->name = "rjMCMC among Relaxed Clock Models";
+    mt->shortName = "rjMCMC_RCL";
     mt->tuningName[0] = "sigma_TK over sigma_IGR";
     mt->shortTuningName[0] = "ratio";
     mt->tuningName[1] = "Sliding window size";
@@ -22200,7 +22200,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
-    mt->tuningParam[0] = 50.0;  /* TK/IGR var ratio */
+    mt->tuningParam[0] = 100.0; /* TK/IGR var ratio */
     mt->tuningParam[1] = 10.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
@@ -23192,7 +23192,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_TK02BRANCHRATES)
             {
-            MrBayesPrint ("%s      TK02              ", spacer);
+            MrBayesPrint ("%s      TK02branchrates   ", spacer);
             }
         else if (j == P_IGRVAR)
             {
@@ -23388,7 +23388,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     MrBayesPrint ("%s            Prior      = Symmetric dirichlet with exponential(%1.2lf) variance parameter\n", spacer, mp->symBetaExp);
                 else
                     { /* mp->symBetaFix == -1 */
-                      if (AreDoublesEqual(mp->symBetaFix, 1.0, ETA)==YES)
+                    if (AreDoublesEqual(mp->symBetaFix, 1.0, ETA)==YES)
                         MrBayesPrint ("%s            Prior      = State frequencies are equal\n", spacer);
                     else
                         MrBayesPrint ("%s            Prior      = Symmetric dirichlet with fixed(%1.2lf) variance parameter\n", spacer, mp->symBetaFix);
@@ -23747,7 +23747,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_IGRBRANCHRATES)
             {
-            MrBayesPrint ("%s            Prior      = Scaledgamma (variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].igrvar->name);
+            MrBayesPrint ("%s            Prior      = Gamma (expectation = v, variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].igrvar->name);
             MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
             }
         else if (j == P_MIXEDVAR)
@@ -24570,11 +24570,11 @@ int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
     
     q = p->anc;
     while (q->anc != NULL)
-    {
+        {
         for (i=0; i<nEvents[q->index]; i++)
             baseRate *= rateMult[q->index][i];
         q = q->anc;
-    }
+        }
     
     if (UpdateCppEvolLength (nEvents, pos, rateMult, evolLength, p, baseRate)==ERROR)
         return (ERROR);
@@ -24596,10 +24596,10 @@ int UpdateTK02EvolLengths (Param *param, Tree *t, int chain)
     tk02Rate = GetParamVals (param, chain, state[chain]);
     brlens = GetParamSubVals (param, chain, state[chain]);
     for (i=0; i<t->nNodes-2; i++)
-    {
+        {
         p = t->allDownPass[i];
         brlens[p->index] = p->length * (tk02Rate[p->index] + tk02Rate[p->anc->index]) / 2.0;
-    }
+        }
     
     return (NO_ERROR);
 }
