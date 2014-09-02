@@ -24076,7 +24076,7 @@ int RunChain (RandLong *seed)
 
 
     /* All steps are assumed to have the same length. */
-    if ( chainParams.isSS == YES )
+    if (chainParams.isSS == YES)
         {
         numGenInStepSS = ( chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq )/ chainParams.numStepsSS;
         numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq); /*make muliple of chainParams.sampleFreq*/
@@ -24183,22 +24183,19 @@ int RunChain (RandLong *seed)
             }
         }
 
-
-
     /* Append to previous analysis if this is requested, otherwise just open new print files */
     if (chainParams.append == YES)
         {
 #   if defined (MPI_ENABLED)
     if (proc_id == 0) {
 #   endif
-
         /* We get the number of samples in i */
-        if (ReusePreviousResults(&i, chainParams.numStepsSS-stepIndexSS-1) == ERROR)
+        if (ReusePreviousResults(&i, chainParams.numStepsSS-stepIndexSS-1) == ERROR || i < 2)
             nErrors++;
-        else if (chainParams.numRuns > 1)    /* we potentially need to add tree samples for conv diagn */
+        else if (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES)  /* we potentially need to add tree samples for conv diagn */
             {
             /* Add tree samples to partition counters */
-            if ( chainParams.relativeBurnin == YES )
+            if (chainParams.relativeBurnin == YES)
                 {
                 if( chainParams.isSS == NO )
                     {
@@ -24220,7 +24217,8 @@ int RunChain (RandLong *seed)
                         if (j < i)
                             {
                             if (AddTreeSamples(1,j,chainParams.saveTrees) == ERROR) nErrors++;
-                            if (AddTreeSamples(j+1,i,NO) == ERROR) nErrors++; /*since we never need to remove trees from partition counter after total burnin we put NO in the last argument. */
+                            if (AddTreeSamples(j+1,i,NO) == ERROR) nErrors++;
+                            /* Since we never need to remove trees from partition counter after total burnin we put NO in the last argument */
                             }
                         else
                             {
@@ -24293,7 +24291,7 @@ int RunChain (RandLong *seed)
                 }
             }
 #   if defined (MPI_ENABLED)
-        if ( chainParams.isSS == YES )
+        if (chainParams.isSS == YES)
             {
             MPI_Bcast ( marginalLnLSS, chainParams.numRuns, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -24392,7 +24390,7 @@ int RunChain (RandLong *seed)
             }
 #   endif
 
-        if( chainParams.mcmcDiagn == YES )
+        if(chainParams.mcmcDiagn == YES)
             {
             if (PrintMCMCDiagnosticsToFile (0) == ERROR)
                 {
@@ -24412,7 +24410,7 @@ int RunChain (RandLong *seed)
                 }
 #   endif
         
-            if( chainParams.isSS == YES && chainParams.burninSS == 0 && chainParams.numRuns > 1 )
+            if(chainParams.isSS == YES && chainParams.burninSS == 0 && chainParams.numRuns > 1)
                 {
                 /* Remove first sample (generation 0) from diagnostics */
                 removeTo=1;
@@ -24435,9 +24433,9 @@ int RunChain (RandLong *seed)
 #   endif
                 }
             }
-        if( chainParams.isSS == YES)
+        if(chainParams.isSS == YES)
             {
-            if(chainParams.burninSS == 0 )
+            if(chainParams.burninSS == 0)
                 MrBayesPrint("%s   Sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
 
             /*Printing SS header*/
@@ -24721,8 +24719,8 @@ int RunChain (RandLong *seed)
                 }
             }
 
-        /* print information to screen . Non-blocking for MPI*/
-        if ( n % chainParams.printFreq == 0)
+        /* print information to screen. Non-blocking for MPI*/
+        if (n % chainParams.printFreq == 0)
             {
             PrintToScreen(n, numPreviousGen, time(0), startingT);
 #   if defined (TIMING_ANALIZ)
@@ -24732,7 +24730,7 @@ int RunChain (RandLong *seed)
 
         /* print information to files */
         /* this will also add tree samples to topological convergence diagnostic counters */
-        if ( n == chainParams.numGen || n % chainParams.sampleFreq == 0)
+        if (n == chainParams.numGen || n % chainParams.sampleFreq == 0)
             {
 #   if defined (MPI_ENABLED)
             MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -24763,8 +24761,7 @@ int RunChain (RandLong *seed)
 
 
         /* print mcmc diagnostics. Blocking for MPI */
-        if ( chainParams.mcmcDiagn == YES && ((n % chainParams.diagnFreq == 0 || n == chainParams.numGen)
-                                             || ( chainParams.isSS == YES && ( n-lastStepEndSS ) % numGenInStepSS == 0 ) ) )
+        if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
             {
             if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && ( n-lastStepEndSS )> numGenInStepBurninSS ) ))
                                             || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
@@ -24781,11 +24778,11 @@ int RunChain (RandLong *seed)
                         {
                         if ( RemoveTreeSamples (removeFrom+1, removeTo ) == ERROR)
                             {
-                             MrBayesPrint("%s   Problem removing tree samples\n");
+                            MrBayesPrint("%s   Problem removing tree samples\n");
 #   if defined (MPI_ENABLED)
-                               nErrors++;
+                            nErrors++;
 #   else
-                              return ERROR;
+                            return ERROR;
 #   endif
                             }
                         }
@@ -24800,7 +24797,7 @@ int RunChain (RandLong *seed)
                     }
 
                 lastDiagnostics = (n/chainParams.sampleFreq)+1; /* +1 because we always have start tree sampled*/
-                if ( chainParams.relativeBurnin == YES )
+                if (chainParams.relativeBurnin == YES)
                     {
                     i = lastDiagnostics - removeTo;
                     }
@@ -24923,34 +24920,34 @@ int RunChain (RandLong *seed)
             }
 
         /* check if time to break because stopVal reached */
-        if ( chainParams.isSS == NO && (chainParams.stopRule == YES && stopChain == YES ) )
+        if (chainParams.isSS == NO && (chainParams.stopRule == YES && stopChain == YES))
             {
             MrBayesPrint ("\n%s   Analysis stopped because convergence diagnostic hit stop value.\n", spacer);
             break;
             }
             
         /* user may want to extend chain */
-        if (chainParams.isSS == NO && ( n == chainParams.numGen && autoClose == NO ))
+        if (chainParams.isSS == NO && (n == chainParams.numGen && autoClose == NO))
             {
-              stoppingT1 = time(0); 
-              currentCPUTime = clock();
-              CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
-              previousCPUTime = currentCPUTime;
-              chainParams.numGen += ExtendChainQuery ();
-              stoppingT2 = time(0);
-              startingT += (stoppingT2-stoppingT1);
-              previousCPUTime = clock();
-              /* timers should not be increased during the wait for a reply */
+            stoppingT1 = time(0);
+            currentCPUTime = clock();
+            CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
+            previousCPUTime = currentCPUTime;
+            chainParams.numGen += ExtendChainQuery ();
+            stoppingT2 = time(0);
+            startingT += (stoppingT2-stoppingT1);
+            previousCPUTime = clock();
+            /* timers should not be increased during the wait for a reply */
             }
 
         /* Do stepping sampling staf if needed */
-        if ( chainParams.isSS == YES && n >= chainParams.burninSS*chainParams.sampleFreq )
+        if (chainParams.isSS == YES && n >= chainParams.burninSS*chainParams.sampleFreq)
             {
 #   ifndef SAMPLE_ALL_SS
-            if(( n-lastStepEndSS ) % chainParams.sampleFreq == 0 )
+            if((n-lastStepEndSS) % chainParams.sampleFreq == 0)
 #   endif
                 {
-                if(  n > chainParams.burninSS*chainParams.sampleFreq &&  ( n-lastStepEndSS > numGenInStepBurninSS) )
+                if(n > chainParams.burninSS*chainParams.sampleFreq && (n-lastStepEndSS > numGenInStepBurninSS))
                     { /* do sampling*/
                     for (chn=0; chn<numLocalChains; chn++)
                         {
@@ -24970,17 +24967,17 @@ int RunChain (RandLong *seed)
                     }
                 }
 
-            if( ( n-lastStepEndSS ) == numGenInStepBurninSS )
+            if((n-lastStepEndSS) == numGenInStepBurninSS)
                 {
                 /* Remove all previouse samples from diagnostics */
-                if( chainParams.mcmcDiagn == YES && chainParams.numRuns > 1 )
+                if(chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
                     {
                     removeFrom = removeTo;
                     removeTo = (int)(n/chainParams.sampleFreq); /* (n/chainParams.sampleFreq+1) is the current number of samples including 0 one*/
                     removeTo++;
-                    if( removeFrom < removeTo )
+                    if(removeFrom < removeTo)
                         {
-                        if ( RemoveTreeSamples ( removeFrom+1, removeTo ) == ERROR)
+                        if (RemoveTreeSamples (removeFrom+1, removeTo) == ERROR)
                             {
                             nErrors++;
                             }
@@ -24989,12 +24986,12 @@ int RunChain (RandLong *seed)
                     }               
                 } 
 
-            if( ( n-lastStepEndSS ) % numGenInStepSS == 0 )      /* prepare sample of next step */
+            if((n-lastStepEndSS) % numGenInStepSS == 0)      /* prepare sample of next step */
                 {
                 assert( n-lastStepEndSS <= numGenInStepSS );
                 lastStepEndSS=n;
 
-                if( n > chainParams.burninSS*chainParams.sampleFreq )
+                if(n > chainParams.burninSS*chainParams.sampleFreq)
                     {
                     /* dump to file current step contribution */
                     MrBayesPrintf (fpSS, "%3d\t%.4f", chainParams.numStepsSS-stepIndexSS, powerSS);
@@ -25088,7 +25085,6 @@ int RunChain (RandLong *seed)
                 if (proc_id == 0)
                         {
 #   endif
-                                
                         /* figure out check-point file names */
                         sprintf (ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
                         sprintf (bkupFileName,"%s.ss%d", ckpFileName,chainParams.numStepsSS-stepIndexSS);                   
@@ -25103,11 +25099,9 @@ int RunChain (RandLong *seed)
 #   if defined (MPI_ENABLED)
                         } /* end of if(proc_id == 0)*/
 #   endif
-                        
                         }
                 }             
             }
-
 
         /* print check-point file. Blocking for MPI*/
         if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
@@ -25119,9 +25113,6 @@ int RunChain (RandLong *seed)
                 }
             ERROR_TEST2("Error in printing checkpoint",return(ERROR),);
             }
-
-
-
 
         } /* end run chain */
     endingT = time(0);
