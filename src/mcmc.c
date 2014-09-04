@@ -20708,7 +20708,11 @@ int PrintStatesToFiles (int curGen)
                 tree = GetTree(param, coldId, state[coldId]);
                 if (param->paramType == P_TOPOLOGY)
                     {
-                    if (PrintTree (curGen, param, coldId, NO, 0.0) == ERROR)
+                    if (tree->isClock == YES)
+                        clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, coldId, state[coldId]);
+                    else
+                        clockRate = 0.0;
+                    if (PrintTree (curGen, param, coldId, NO, clockRate) == ERROR)
                         return (ERROR);
                     }
                 else
@@ -20721,18 +20725,18 @@ int PrintStatesToFiles (int curGen)
                         return (ERROR);
                     }
 
-                MrBayesPrintf (fpTree[runId][i], "%s", printString);
+                fprintf (fpTree[runId][i], "%s", printString);
                 fflush (fpTree[runId][i]);
                 free(printString);
 
-                if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
+                j = printTreeTopologyIndex[i];
+                if (j<numTopologies)
                     {
-                    if (chainParams.relativeBurnin == YES || curGen >= chainParams.chainBurnIn * chainParams.sampleFreq)
+                    if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
                         {
-                        j = printTreeTopologyIndex[i];
-                        if (j<numTopologies)
+                        if (chainParams.relativeBurnin == YES || curGen >= chainParams.chainBurnIn * chainParams.sampleFreq)
                             {
-                            if (AddTreeToPartitionCounters (tree, i, runId) == ERROR)
+                            if (AddTreeToPartitionCounters (tree, j, runId) == ERROR)
                                 return ERROR;
                             if (chainParams.relativeBurnin == YES && chainParams.saveTrees == YES && (noWarn == NO || curGen <= chainParams.stopTreeGen))
                                 {
@@ -21011,32 +21015,37 @@ int PrintStatesToFiles (int curGen)
                 j = printTreeTopologyIndex[i];
                 if (j < numTopologies)
                     {
-                    char *s = NULL;
-                    StripComments (printString);
-                    /* if it is the first tree, we strip out the translate block first (twice)*/
-                    if (curGen==0) {
-                      if (strtok (printString, ";")==NULL) /* get translate lock */
-                                              return (ERROR);
-                      if (strtok (NULL, ";")==NULL) 
-                                              return (ERROR);
-                                          if(strtok (NULL, "\n\t\r ")==NULL) /* get 'tree' */
-                                              return (ERROR);
-                                        } else {
-                                            if(strtok (printString, "\n\t\r ")==NULL) /* get 'tree' */
-                                                return (ERROR);
-                                        }
-                    if(strtok (NULL, " =")==NULL)  /* get 'rep.xxxx' */
-                        return (ERROR);
-                    if((s = strtok (NULL, " =;"))==NULL)  /* get Newick string */ 
-                        return (ERROR);
                     if (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES)
                         {
-                        ResetTopology (chainParams.dtree, s);
-                        AddTreeToPartitionCounters (chainParams.dtree, j, runId);
-                        if (chainParams.relativeBurnin == YES && chainParams.saveTrees == YES && (noWarn == NO || curGen <= chainParams.stopTreeGen))
+                        if (chainParams.relativeBurnin == YES || curGen >= chainParams.chainBurnIn * chainParams.sampleFreq)
                             {
-                            if (AddToTreeList (&chainParams.treeList[runId*numTopologies+j], chainParams.dtree) == ERROR)
+                            char *s = NULL;
+                            StripComments (printString);
+                            /* if it is the first tree, we strip out the translate block first (twice) */
+                            if (curGen==0) {
+                                if (strtok (printString, ";")==NULL) /* get translate lock */
+                                    return (ERROR);
+                                if (strtok (NULL, ";")==NULL)
+                                    return (ERROR);
+                                if(strtok (NULL, "\n\t\r ")==NULL) /* get 'tree' */
+                                    return (ERROR);
+                                }
+                            else {
+                                if(strtok (printString, "\n\t\r ")==NULL) /* get 'tree' */
+                                    return (ERROR);
+                                }
+                            if(strtok (NULL, " =")==NULL)  /* get 'rep.xxxx' */
                                 return (ERROR);
+                            if((s = strtok (NULL, " =;"))==NULL)  /* get Newick string */
+                                return (ERROR);
+                            ResetTopology (chainParams.dtree, s);
+                            if (AddTreeToPartitionCounters (chainParams.dtree, j, runId) == ERROR)
+                                return ERROR;
+                            if (chainParams.relativeBurnin == YES && chainParams.saveTrees == YES && (noWarn == NO || curGen <= chainParams.stopTreeGen))
+                                {
+                                if (AddToTreeList (&chainParams.treeList[runId*numTopologies+j], chainParams.dtree) == ERROR)
+                                    return (ERROR);
+                                }
                             }
                         }
                     }
@@ -21057,6 +21066,7 @@ int PrintStatesToFiles (int curGen)
     return (NO_ERROR);
     
 }
+
 
 
 
@@ -21215,6 +21225,7 @@ int PrintSwapInfo (void)
     return (NO_ERROR);
         
 }
+
 
 
 
@@ -21443,6 +21454,9 @@ int PrintTopConvInfo (void)
     free (tempStr);
     return (NO_ERROR);
 }
+
+
+
 
 
 void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
@@ -24719,7 +24733,7 @@ int RunChain (RandLong *seed)
                 }
             }
 
-        /* print information to screen. Non-blocking for MPI*/
+        /* print information to screen. Non-blocking for MPI */
         if (n % chainParams.printFreq == 0)
             {
             PrintToScreen(n, numPreviousGen, time(0), startingT);
@@ -24758,7 +24772,6 @@ int RunChain (RandLong *seed)
                 }
 #   endif
             }
-
 
         /* print mcmc diagnostics. Blocking for MPI */
         if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
