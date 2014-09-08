@@ -10661,7 +10661,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   distribution used by MrBayes are shape (alpha) and rate (beta). If you want   \n");
         MrBayesPrint ("   to use the standard parameterization, the conversions are as follows:         \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      exponential distributon: mean = 1 / rate                                   \n");
+        MrBayesPrint ("      exponential distributon: mean    = 1 / rate                                \n");
         MrBayesPrint ("      gamma distributon:       mean    = alpha / beta                            \n");
         MrBayesPrint ("                               st.dev. = square_root( alpha / beta^2 )           \n");
         MrBayesPrint ("      lognormal distributon:   mean    = exp( mean_log + st.dev._log^2/2 )       \n");
@@ -10715,7 +10715,7 @@ int GetUserHelp (char *helpTkn)
         if (j > 0)
             {
             MrBayesPrint ("                                                                                 \n");
-            MrBayesPrint ("   Currently defined calibrations:                                                \n");
+            MrBayesPrint ("   Currently defined calibrations:                                               \n");
             MrBayesPrint ("                                                                                 \n");
             MrBayesPrint ("   Node name                Type       Calibration                               \n");
             MrBayesPrint ("   ------------------------------------------------------------------            \n");       
@@ -10841,8 +10841,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                vertebrate mitocondrial DNA, \"mycoplasma\", \"yeast\",          \n");
         MrBayesPrint ("                \"ciliates\", and \"metmt\" (for metazoan mitochondrial DNA      \n");
         MrBayesPrint ("                except vertebrates).                                             \n");
-        MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\",    \n");
-        MrBayesPrint ("                \"Diploid\" or \"Zlinked\". This option is used when a coalescence\n");
+        MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\",   \n");
+        MrBayesPrint ("                \"Diploid\" or \"Zlinked\". This option is used when a coalescent\n");
         MrBayesPrint ("                prior is used on trees.                                          \n");
         MrBayesPrint ("   Rates     -- Sets the model for among-site rate variation. In general, the    \n");
         MrBayesPrint ("                rate at a site is considered to be an unknown random variable.   \n");
@@ -12708,10 +12708,10 @@ else if (!strcmp(helpTkn, "Set"))
 #   endif
 #   if defined (THREADS_ENABLED)
         MrBayesPrint ("   Beaglethreads -- Set this option to 'Yes' to employ multiple threads to drive \n");
-        MrBayesPrint ("                    multiple BEAGLE resource simultaneously. This is highly      \n");
-        MrBayesPrint ("                    recommended for more than one GPU, and for sufficiently large\n");
-        MrBayesPrint ("                    data partitions, multi-core CPUs should also demonstrate     \n");
-        MrBayesPrint ("                    speed-ups.                                                   \n");       
+        MrBayesPrint ("                   multiple BEAGLE resource simultaneously. This is highly       \n");
+        MrBayesPrint ("                   recommended for more than one GPU, and for sufficiently large \n");
+        MrBayesPrint ("                   data partitions, multi-core CPUs should also demonstrate      \n");
+        MrBayesPrint ("                   speed-ups.                                                    \n");
 #   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Current settings:                                                             \n");

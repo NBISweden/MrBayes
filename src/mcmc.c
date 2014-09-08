@@ -24108,27 +24108,27 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   Additionally at the begining of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if(chainParams.startFromPriorSS==YES)
-            MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior. \n", spacer);
+            MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior.   \n", spacer);
         else
             {
-            MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to\n", spacer);
-            MrBayesPrint ("%s   posterior.                                                             \n", spacer);
+            MrBayesPrint ("%s   Sampling from posterior to prior, i.e. first step samples from close to \n", spacer);
+            MrBayesPrint ("%s   posterior.                                                              \n", spacer);
             }
-        if( numGenOld != chainParams.numGen)
+        if(numGenOld != chainParams.numGen)
             {
-            MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multiple\n", spacer);
-            MrBayesPrint ("%s   of sampling frequency. That is why, in total it will be taken %d gene-    \n", spacer, chainParams.numGen ); 
-            MrBayesPrint ("%s   rations instead of requested %d.                                          \n", spacer, numGenOld ); 
+            MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multi-\n", spacer);
+            MrBayesPrint ("%s   ple of sampling frequency. That is why, in total it will be taken %d    \n", spacer, chainParams.numGen );
+            MrBayesPrint ("%s   generations instead of requested %d.                                    \n", spacer, numGenOld );
             }
         MrBayesPrint ("\n");
-        if( (numGenInStepSS-numGenInStepBurninSS)/chainParams.sampleFreq < 1  )
+        if((numGenInStepSS-numGenInStepBurninSS)/chainParams.sampleFreq < 1)
             {
             MrBayesPrint ("%s   There is less then one sample in each step of stepping-stone sampling.  \n", spacer);
             MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
             MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
             return ERROR; /*All MPI run will return here since all of them have the same values*/
             }
-        if( numPreviousGen==0 ||  numPreviousGen < chainParams.burninSS * chainParams.sampleFreq )
+        if(numPreviousGen==0 || numPreviousGen < chainParams.burninSS * chainParams.sampleFreq)
             {
             lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
             stepIndexSS = chainParams.numStepsSS-1;
@@ -24136,7 +24136,7 @@ int RunChain (RandLong *seed)
                 removeTo=(numPreviousGen/chainParams.sampleFreq)+1;
             if(chainParams.startFromPriorSS==YES)
                 {
-                //powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+                // powerSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
                 powerSS = 0.0;
                 stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-powerSS;
                 }
@@ -24177,7 +24177,7 @@ int RunChain (RandLong *seed)
             /*marginalLnLSS will be red from file and destributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if(samplesCountSS!=0) they will be redestributed. */
             }
 
-        if( samplesCountSS==0 ) /*in appended case it also can happen*/
+        if(samplesCountSS == 0) /* in appended case it also can happen */
             {
             for (run=0; run<chainParams.numRuns; run++)
                 {
@@ -24256,10 +24256,9 @@ int RunChain (RandLong *seed)
                 }
             else if (chainParams.chainBurnIn < i)
                 {
-                /* AddTreeSamples uses chainParams.dtree, so this will have to be allocated */
-                if ((chainParams.dtree = AllocateTree(numLocalTaxa)) == NULL) nErrors++;
-                else if (AddTreeSamples(chainParams.chainBurnIn,i-1,chainParams.saveTrees) == ERROR) nErrors++;
-                else FreeTree (chainParams.dtree);
+                // if ((chainParams.dtree = AllocateTree(numLocalTaxa)) == NULL) nErrors++;  else
+                if (AddTreeSamples(chainParams.chainBurnIn,i-1,chainParams.saveTrees) == ERROR) nErrors++;
+                // else FreeTree (chainParams.dtree);
                 }
             }
         if (nErrors == 0)
