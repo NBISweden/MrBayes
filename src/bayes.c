@@ -752,15 +752,15 @@ int InitializeMrBayes (void)
     defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events       */
 
     strcpy(defaultModel.popSizePr, "Lognormal");        /* prior on coalescence population size         */
-    defaultModel.popSizeFix = 10.0;
-    defaultModel.popSizeUni[0] = 1.0;
+    defaultModel.popSizeFix = 100.0;                    /* N_e = 100 */
+    defaultModel.popSizeUni[0] = 0.0;
     defaultModel.popSizeUni[1] = 1000.0;
     defaultModel.popSizeNormal[0] = 100.0;
     defaultModel.popSizeNormal[1] = 30.0;
     defaultModel.popSizeLognormal[0] = 4.6;             /* mean on log scale corresponds to N_e = 100.0 */
     defaultModel.popSizeLognormal[1] = 2.3;             /* factor 10 in one standard deviation          */
-    defaultModel.popSizeGamma[0] = 100.0;
-    defaultModel.popSizeGamma[1] = 1000.0;
+    defaultModel.popSizeGamma[0] = 1.0;                 /* exponential with mean 1/10 = 0.1 */
+    defaultModel.popSizeGamma[1] = 10.0;
     strcpy(defaultModel.popVarPr, "Equal");             /* prior on pop. size variation across tree     */
     strcpy(defaultModel.growthPr, "Fixed");             /* prior on coalescence growth rate prior       */
     defaultModel.growthFix = 0.0;
