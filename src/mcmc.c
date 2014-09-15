@@ -18684,7 +18684,7 @@ int PrintCheckPoint (int gen)
         }
     
 #if defined (MPI_ENABLED)
-    } /* end of if(proc_id == 0)*/
+        } /* end of if(proc_id == 0)*/
 #endif
 
     ERROR_TEST2("",free(tempString),return(ERROR));
@@ -18697,7 +18697,6 @@ int PrintCheckPoint (int gen)
         /* dump to .ckp file current step contribution */
         MrBayesPrintf (fp, "[SsAcumulators:");
 #       if defined (MPI_ENABLED)
-
         for (j=0; j<chainParams.numRuns ; j++)
             {
             if( stepAcumulatorSS[j]==0 )

@@ -5994,9 +5994,9 @@ void PrintTranslateBlock (FILE *fp, Tree *t)
             if (t->allDownPass[j]->index == i)
                 break;
         if (i == nTaxa-1)
-            fprintf(fp, "\t\t%d\t%s;\n", i+1, t->allDownPass[j]->label);
+            fprintf (fp, "\t\t%d\t%s;\n", i+1, t->allDownPass[j]->label);
         else
-            fprintf(fp, "\t\t%d\t%s,\n", i+1, t->allDownPass[j]->label);
+            fprintf (fp, "\t\t%d\t%s,\n", i+1, t->allDownPass[j]->label);
         }
 }
 

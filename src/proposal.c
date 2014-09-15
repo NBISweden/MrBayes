@@ -11861,7 +11861,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
 #   if defined (DEBUG_ParsSPR)
-    // WriteTopologyToFile (stdout, t->root->left, t->isRooted);  fprintf(stdout, ";\t");
+    // WriteTopologyToFile (stdout, t->root->left, t->isRooted);  fprintf (stdout, ";\t");
     printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
@@ -12249,7 +12249,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
 #   if defined (DEBUG_ParsSPR)
     // WriteTopologyToFile (stdout, t->root->left, t->isRooted);
-    // fprintf(stdout, ";\t");  fprintf(stdout, "%lf\n", *lnProposalRatio);
+    // fprintf (stdout, ";\t");  fprintf (stdout, "%lf\n", *lnProposalRatio);
     printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
