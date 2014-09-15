@@ -657,9 +657,7 @@ int AddToPrintString (char *tempStr)
             }
         }
     strcat(printString, tempStr);   
-#   if 0
-    MrBayesPrint ("printString(%d) -> \"%s\"\n", printStringSize, printString);
-#   endif   
+    // printf ("printString(%d) -> \"%s\"\n", printStringSize, printString);
     return (NO_ERROR);
     
     errorExit:
@@ -2143,7 +2141,7 @@ void CloseMBPrintFiles (void)
             {
             if (fpTree[k][i])
                 {
-                MrBayesPrintf (fpTree[k][i], "end;\n");
+                fprintf (fpTree[k][i], "end;\n");
                 SafeFclose (&fpTree[k][i]);
                 }
             fpTree[k][i] = NULL;
@@ -6671,8 +6669,6 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps( scP,  m1);
         scP += FLOATS_PER_VEC;
 
-#   undef FAST_LOG
-
 #   if defined (FAST_LOG)
         frexp (scaler, &index);
         index = 1-index;
@@ -7182,8 +7178,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps( scP,  m1);
         scP += FLOATS_PER_VEC;
 
-#   undef FAST_LOG
-
 #   if defined (FAST_LOG)
         frexp (scaler, &index);
         index = 1-index;
@@ -7546,7 +7540,7 @@ BOOL WINAPI CatchInterrupt2(DWORD signum)
 {
     /* set up signal handler to do the same */
 
-    MrBayesPrint("\n   Ctrl-C detected\n");
+    MrBayesPrint ("\n   Ctrl-C detected\n");
     requestAbortRun = YES;
     return TRUE;
 }
@@ -7558,7 +7552,7 @@ void CatchInterrupt(int signum)
 
     requestAbortRun = YES;
     
-    MrBayesPrint("\n   Ctrl-C detected\n");
+    MrBayesPrint ("\n   Ctrl-C detected\n");
 }
 #endif
 
@@ -7609,17 +7603,17 @@ void DebugTreeScalers(int chain, int d) {
     tree = GetTree(m->brlens, chain, state[chain]);
     
     if (m->parsModelId == NO)
-    {
-        for (i=0; i<tree->nIntNodes; i++)
         {
+        for (i=0; i<tree->nIntNodes; i++)
+            {
             p = tree->intDownPass[i];
             
-            if (p->scalerNode == YES){          
-                MrBayesPrint ("Node:%d Sum scalers:%f\n",p->index,DebugNodeScalers(p, d, chain));
+            if (p->scalerNode == YES)
+                {
+                printf ("Node:%d Sum scalers:%f\n",p->index,DebugNodeScalers(p, d, chain));
                 }
-                
+            }
         }
-    }
 }
    
 
@@ -9517,7 +9511,7 @@ int ExtendChainQuery ()
 
                 if( fgets (s, 100, stdin) == NULL )
                     {
-                    MrBayesPrint ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
                 sscanf (s, "%d", &additionalCycles);
 
@@ -9546,7 +9540,7 @@ int ExtendChainQuery ()
 
             if( fgets (s, 20, stdin) == NULL )
                 {
-                MrBayesPrint ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                 }
             sscanf (s, "%d", &additionalCycles);
 
@@ -12228,13 +12222,13 @@ int InitInvCondLikes (void)
             {
             for (c=0; c<m->numChars; c++)
                 {
-                MrBayesPrint ("%4d -- ", c);
+                printf ("%4d -- ", c);
                 for (s=0; s<m->numModelStates; s++)
                     {
-                    MrBayesPrint ("%1.0lf", *cI);
+                    printf ("%1.0lf", *cI);
                     cI++;
                     }
-                MrBayesPrint ("\n");
+                printf ("\n");
                 }
             }
         }
@@ -12889,8 +12883,8 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
                 for (j=0; j<nStates; j++)
                     {
                     like += (*(clP[k]++)) * bs[j];
-#   ifdef DEBUG_OUTPUT
-                    MrBayesPrint ("char=%d cat=%d j=%d like %E\n",c, k,j,like);
+#   ifdef DEBUG_LIKELIHOOD
+                    // printf ("char=%d cat=%d j=%d like %E\n",c, k,j,like);
 #   endif
                     }
             like *= freq;
@@ -12945,10 +12939,8 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#   ifdef DEBUG_OUTPUT
-                MrBayesPrint ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
-#   endif
 #   ifdef DEBUG_LIKELIHOOD
+                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13182,10 +13174,8 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#   ifdef DEBUG_OUTPUT
-                MrBayesPrint ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
-#   endif
 #   ifdef DEBUG_LIKELIHOOD
+                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -13277,8 +13267,8 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
             for (j=0; j<nStates; j++)
                 {
                 like += (*(clP++)) * bs[j];
-#   ifdef DEBUG_OUTPUT
-                MrBayesPrint ("char=%d cat=%d j=%d like %E\n",c, k,j,like);
+#   ifdef DEBUG_LIKELIHOOD
+                // printf("char=%d cat=%d j=%d like %E\n",c, k,j,like);
 #   endif
                 }
 
@@ -13320,10 +13310,8 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
             /* check against LIKE_EPSILON (values close to zero are problematic) */
             if (like < LIKE_EPSILON)
                 {
-#   ifdef DEBUG_OUTPUT
-                MrBayesPrint ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
-#   endif
 #   ifdef DEBUG_LIKELIHOOD
+                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
                 (*lnL)=MRBFLT_NEG_MAX;
@@ -16595,9 +16583,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        MrBayesPrint ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
+        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
-        MrBayesPrint ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
     
     /* calculate prior prob of the fbd tree */
@@ -16678,8 +16666,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     (*prob) += (M + E - 1) * log(2.0) - LnFactorial(E) - LnFactorial(M + K);
     
 #   ifdef DEBUG_FBDPR
-    MrBayesPrint ("K=%d M=%d E=%d\n", K, M, E);
-    MrBayesPrint ("prob=%lf\n", *prob);
+    printf ("K=%d M=%d E=%d\n", K, M, E);
+    printf ("prob=%lf\n", *prob);
 #   endif
     
     /* free memory */
@@ -16799,9 +16787,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        MrBayesPrint ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
+        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
-        MrBayesPrint ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
     
     /* first calculate prob of the fbd tree assuming complete sampling */
@@ -16888,8 +16876,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     (*prob) += (M + E - 1) * log(2.0) - LnFactorial(E) - LnFactorial(M + K);
     
 #   ifdef DEBUG_FBDPR
-    MrBayesPrint ("K=%d M=%d E=%d\n", K, M, E);
-    MrBayesPrint ("prob=%lf\n", *prob);
+    printf ("K=%d M=%d E=%d\n", K, M, E);
+    printf ("prob=%lf\n", *prob);
 #   endif
     
     /* free memory */
@@ -16989,7 +16977,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
     
     /*for (i=0, k=numLocalTaxa; i<nNodes; i++)
         {
-        MrBayesPrint ("%4d -- %2d %lf\n", i, k, ct[i]);
+        printf ("%4d -- %2d %lf\n", i, k, ct[i]);
         k--;
         }*/
         
@@ -17023,7 +17011,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
         (*prob) = (numLocalTaxa - 1) * log(2.0 / theta) + tempD;
         }
 
-    /* MrBayesPrint ("coal pr = %lf theta = %lf, nNodes = %d, nt = %d tempD = %lf\n", *prob, theta, nNodes, numLocalTaxa, tempD); */
+    /* printf ("coal pr = %lf theta = %lf, nNodes = %d, nt = %d tempD = %lf\n", *prob, theta, nNodes, numLocalTaxa, tempD); */
 
     /* free memory */
     free (ct);
@@ -19475,14 +19463,17 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 int PrintMPISlaves (FILE *fp)
 {
     char        *s=NULL;
-    int         i, ierror, nErrors, sumErrors, tag;
-    size_t      len;
+    int         i, len, ierror, nErrors, sumErrors, tag;
     MPI_Status  status;
 
     nErrors = sumErrors = tag = 0;
     if (proc_id==0)
         {
         s = (char *) SafeCalloc (100, sizeof(char));
+        // if (s!=NULL)
+        //    lenS = 100;
+        // else
+        //    lenS = 0;
         }
 
     for (i=1; i<num_procs; i++)
@@ -19501,7 +19492,7 @@ int PrintMPISlaves (FILE *fp)
         else if (proc_id == i)
             {
             /* send size */
-            len = strlen(printString);
+            len = (int)strlen(printString);
             ierror = MPI_Send (&len, 1, MPI_INT, 0, tag, MPI_COMM_WORLD);
             if (ierror != MPI_SUCCESS)
                 {
@@ -19524,7 +19515,7 @@ int PrintMPISlaves (FILE *fp)
             if (proc_id == 0)
                 {
                 /* receive string */
-                ierror = MPI_Recv (s, (int)(len+1), MPI_CHAR, i, tag, MPI_COMM_WORLD, &status);
+                ierror = MPI_Recv (s, len+1, MPI_CHAR, i, tag, MPI_COMM_WORLD, &status);
                 if (ierror != MPI_SUCCESS)
                     {
                     MrBayesPrint ("%s   Problem receiving printString from proc_id = %d\n", spacer, i);
@@ -19537,7 +19528,7 @@ int PrintMPISlaves (FILE *fp)
             else if (proc_id == i)
                 {
                 /* send string */
-                ierror = MPI_Send (printString, (int)(len+1), MPI_CHAR, 0, tag, MPI_COMM_WORLD);
+                ierror = MPI_Send (printString, len+1, MPI_CHAR, 0, tag, MPI_COMM_WORLD);
                 if (ierror != MPI_SUCCESS)
                     {
                     MrBayesPrint ("%s   Problem sending printString from proc_id = %d\n", spacer, i);
@@ -19669,7 +19660,7 @@ int PrintParsMatrix (void)
                 MrBayesPrint ("\n");
                 }
             MrBayesPrint("\n");
-            MrBayesPrint ("Do you want to stop (y/n)?\n");
+            printf ("Do you want to stop (y/n)?\n");
             inputChar = getchar();
             if (inputChar == 'y' || inputChar == 'Y')
                 return NO_ERROR;
@@ -20119,8 +20110,8 @@ int PrintStates (int curGen, int coldId)
                         goto errorExit;
                     }
                 }
-            /*for (i=0; i<numChar; i++)
-                MrBayesPrint ("%4d -- %3d %3d\n", i, compCharPos[i], compColPos[i]);*/
+            /* for (i=0; i<numChar; i++)
+                printf ("%4d -- %3d %3d\n", i, compCharPos[i], compColPos[i]); */
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
@@ -20156,8 +20147,8 @@ int PrintStates (int curGen, int coldId)
                         goto errorExit;
                     }
                 }
-            /*for (i=0; i<numChar; i++)
-                MrBayesPrint ("%4d -- %3d %3d\n", i, compCharPos[i], compColPos[i]);*/
+            /* for (i=0; i<numChar; i++)
+                printf ("%4d -- %3d %3d\n", i, compCharPos[i], compColPos[i]); */
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
@@ -20550,7 +20541,7 @@ int PrintStates (int curGen, int coldId)
                     }
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                /* MrBayesPrint ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
+                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
                 }
             }
         }
@@ -20592,7 +20583,7 @@ int PrintStates (int curGen, int coldId)
                     }
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                /* MrBayesPrint ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
+                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
                 }
             }
         }
@@ -20694,7 +20685,7 @@ int PrintStatesToFiles (int curGen)
             /* print parameter values */
             if (PrintStates (curGen, coldId) == ERROR)
                 return (ERROR);
-            MrBayesPrintf (fpParm[runId], "%s", printString);
+            fprintf (fpParm[runId], "%s", printString);
             fflush (fpParm[runId]);
             free(printString);
 
@@ -20722,7 +20713,7 @@ int PrintStatesToFiles (int curGen)
                         return (ERROR);
                     }
 
-                MrBayesPrintf (fpTree[runId][i], "%s", printString);
+                fprintf (fpTree[runId][i], "%s", printString);
                 fflush (fpTree[runId][i]);
                 free(printString);
 
@@ -20747,7 +20738,6 @@ int PrintStatesToFiles (int curGen)
                 }
             }
         }
-
 #   else
     /* print parameter values and trees (parallel version) */
     
@@ -20888,7 +20878,7 @@ int PrintStatesToFiles (int curGen)
         /* Print the string with the parameter information if we are proc_id = 0. */
         if (proc_id == 0)
             {
-            MrBayesPrintf (fpParm[runId], "%s", printString);
+            fprintf (fpParm[runId], "%s", printString);
             fflush (fpParm[runId]);
             free(printString);
             }
@@ -21008,7 +20998,7 @@ int PrintStatesToFiles (int curGen)
             /* Print the string with the parameter information if we are proc_id = 0. */
             if (proc_id == 0)
                 {
-                MrBayesPrintf (fpTree[runId][i], "%s", printString);
+                fprintf (fpTree[runId][i], "%s", printString);
                 fflush (fpTree[runId][i]);
                 j = printTreeTopologyIndex[i];
                 if (j < numTopologies)
@@ -21300,38 +21290,38 @@ void PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates)
 
     tiP = tP;
 
-    MrBayesPrint ("\nTransition matrix\n");
+    printf ("\nTransition matrix\n");
     for (i=0; i<nStates; i++)
         {
-        MrBayesPrint ("\t%d", i);
+        printf ("\t%d", i);
         }
-    MrBayesPrint ("\tsum\n");
+    printf ("\tsum\n");
 
     for (i=0; i<nStates; i++)
         {
-        MrBayesPrint ("%d\t", i);
+        printf ("%d\t", i);
         sum = 0.0;
         for (j=0; j<nStates; j++)
             {
-            MrBayesPrint ("\t%.6f",tP[j]);
+            printf ("\t%.6f",tP[j]);
             sum += tP[j];
             }
-        MrBayesPrint ("\t%.6f\n",sum);
+        printf ("\t%.6f\n",sum);
         tP += nStates;
         }
 
-    MrBayesPrint ("\nStationary state frequencies\n");
+    printf ("\nStationary state frequencies\n");
     for (i=0; i<nStates; i++)
-        MrBayesPrint ("%d -- %f\n",i,bs[i]);
+        printf("%d -- %f\n",i,bs[i]);
     
-    MrBayesPrint ("\nTime reversibility\n");
+    printf ("\nTime reversibility\n");
 
-    MrBayesPrint ("State 1\tState 2\tforward\tbackward\tabs diff\n");
+    printf ("State 1\tState 2\tforward\tbackward\tabs diff\n");
     for (i=0; i<nStates; i++)
         {
         for (j=i+1; j<nStates; j++)
             {
-            MrBayesPrint ("%d\t%d\t%.6f\t%.6f\t%.6f\n", i, j, tiP[i*nStates+j]*bs[i],
+            printf ("%d\t%d\t%.6f\t%.6f\t%.6f\n", i, j, tiP[i*nStates+j]*bs[i],
                 tiP[j*nStates+i]*bs[j], fabs(tiP[i*nStates+j]*bs[i] - tiP[j*nStates+i]*bs[j]));
             }
         }
@@ -23132,7 +23122,7 @@ int ConfirmAbortRun(void)
     MrBayesPrint("   Do you really want to stop the run (y/n)?");
     if( fgets (line,98,stdin) == NULL )
         {
-        MrBayesPrint ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+        printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
         }
     for (i=0; (c=line[i])!='\0' && !isgraph(c); i++)
         ;
@@ -24528,7 +24518,7 @@ int RunChain (RandLong *seed)
             whichMove = PickProposal(seed, chainId[chn]);
             theMove = usedMoves[whichMove];
 #   if defined SHOW_MOVE
-            MrBayesPrint ("Making move '%s'\n", theMove->name);
+            printf ("Making move '%s'\n", theMove->name);
 #   endif
 
 #   if defined (BEST_MPI_ENABLED)
@@ -24557,20 +24547,20 @@ int RunChain (RandLong *seed)
 #   ifndef NDEBUG
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
-                MrBayesPrint ("IsTreeConsistent failed before move!\n");
+                printf ("IsTreeConsistent failed before move!\n");
                 return ERROR;
                 }
 #   endif
 #   if defined (DEBUG_CONSTRAINTS)
             if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
                 {
-                MrBayesPrint ("DEBUG ERROR: DoesTreeSatisfyConstraints failed before a move\n");
+                printf ("DEBUG ERROR: DoesTreeSatisfyConstraints failed before a move\n");
                 return ERROR;
                 }
 #   endif
             if ((theMove->moveFxn)(theMove->parm, chn, seed, &lnPriorRatio, &lnProposalRatio, theMove->tuningParam[chainId[chn]]) == ERROR)
                 {
-                MrBayesPrint ("%s   Error in move %s\n", spacer, theMove->name);
+                printf ("%s   Error in move %s\n", spacer, theMove->name);
 #   if defined (MPI_ENABLED)
                 nErrors++;
 #   else
@@ -24583,7 +24573,7 @@ int RunChain (RandLong *seed)
 #   if defined (DEBUG_CONSTRAINTS)
                 if(DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))==ABORT)
                     {
-                    MrBayesPrint ("DEBUG ERROR: DoesTreeSatisfyConstraints failed after move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: DoesTreeSatisfyConstraints failed after move '%s'\n", theMove->name);
                     }
 #   endif
                 abortMove = YES;
@@ -24603,18 +24593,18 @@ int RunChain (RandLong *seed)
                 /* We check various aspects of calculations in debug version of code */
                 if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                     {
-                    MrBayesPrint ("DEBUG ERROR: IsTreeConsistent failed after move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: IsTreeConsistent failed after move '%s'\n", theMove->name);
                     return ERROR;
                     }
                 if (lnPriorRatio != lnPriorRatio)
                     {
-                    MrBayesPrint ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
                     return ERROR;
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
-                    MrBayesPrint ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
-                    MrBayesPrint ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
+                    printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
+                    printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
                     return ERROR;
                     }
 #       if defined (DEBUG_LNLIKELIHOOD)
@@ -24622,13 +24612,13 @@ int RunChain (RandLong *seed)
                 TouchEverything();
                 if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
                     {
-                    MrBayesPrint ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
+                    printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);
                     return ERROR;
                     }
 #       endif
                 if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES && IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
                     {
-                    MrBayesPrint ("%s   Branch lengths of the tree do not satisfy the requirements of a clock tree.\n", spacer);
+                    printf ("%s   Branch lengths of the tree do not satisfy the requirements of a clock tree.\n", spacer);
                     ShowNodes(GetTree (theMove->parm, chn, state[chn])->root,0,YES);
                     return (ERROR);
                     }
@@ -26543,13 +26533,13 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
         for (i=0; i<8; i++)
             {
             for (j=0; j<8; j++)
-                MrBayesPrint ("%1.10lf ", a[i][j]);
-            MrBayesPrint ("\n");
+                printf ("%1.10lf ", a[i][j]);
+            printf ("\n");
             }
         for (i=0; i<4; i++)
-            MrBayesPrint ("%lf ", bs[i]);
-        MrBayesPrint ("\n");
-        MrBayesPrint ("s01 = %lf s10 = %lf pi1 = %lf pi0 = %lf\n", s01, s10, probOn, 1-probOn);
+            printf ("%lf ", bs[i]);
+        printf ("\n");
+        printf ("s01 = %lf s10 = %lf pi1 = %lf pi0 = %lf\n", s01, s10, probOn, 1-probOn);
 #       endif
         }
     else if (n == 16) 
@@ -26882,8 +26872,8 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
     for (i=0; i<n; i++)
         {
         for (j=0; j<n; j++)
-            MrBayesPrint ("%0.5lf ", a[i][j]);
-        MrBayesPrint ("\n");
+            printf ("%0.5lf ", a[i][j]);
+        printf ("\n");
         }
 #   endif
 
@@ -27071,8 +27061,8 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
         for (i=0; i<20; i++)
             {
             for (j=0; j<20; j++)
-                MrBayesPrint ("%1.3lf ", a[i][j]);
-            MrBayesPrint ("\n");
+                printf ("%1.3lf ", a[i][j]);
+            printf ("\n");
             }
 #       endif
         }
@@ -27423,8 +27413,8 @@ int SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType)
     for (i=0; i<nStates; i++)
         {
         for (j=0; j<nStates; j++)
-            MrBayesPrint ("%0.5lf ", a[i][j]);
-        MrBayesPrint ("\n");
+            printf ("%0.5lf ", a[i][j]);
+        printf ("\n");
         }
 #   endif
 
@@ -28234,14 +28224,14 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         }
 
 #   if 0
-    MrBayesPrint ("v = %lf (%d)\n", t, p->index);
+    printf ("v = %lf (%d)\n", t, p->index);
     for (i=index=0; i<n; i++)
         {
         for (j=0; j<n; j++)
-            MrBayesPrint ("%1.4lf ", tiP[index++]);
-        MrBayesPrint ("\n");
+            printf ("%1.4lf ", tiP[index++]);
+        printf ("\n");
         }
-    MrBayesPrint ("\n");
+    printf ("\n");
 #   endif
 
     return NO_ERROR;
@@ -28378,8 +28368,8 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
     for (i=index=0; i<n; i++)
         {
         for (j=0; j<n; j++)
-            MrBayesPrint ("%1.4lf ", tiP[index++]);
-        MrBayesPrint ("\n");
+            printf ("%1.4lf ", tiP[index++]);
+        printf ("\n");
         }
 #   endif
 

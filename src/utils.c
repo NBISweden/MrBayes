@@ -292,7 +292,7 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
         /* atoi returns 0 when word is not integer number */
         if (atoi(word)>lastGen)
             break;
-        MrBayesPrintf (toFile,"%s",strBuf);
+        fprintf (toFile,"%s",strBuf);
         fflush (toFile);
         }
     
@@ -328,7 +328,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
         /* atoi returns 0 when word is not integer number */
         if (atoi(word)>lastStep)
             break;
-        MrBayesPrintf (toFile,"%s",strBuf);
+        fprintf (toFile,"%s",strBuf);
         fflush (toFile);
         curStep = atoi(word);
         if ( curStep > 0 )
@@ -403,10 +403,10 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
             if (atoi(word+4)>lastGen)
                 break;
             (*numTrees)++;
-            MrBayesPrintf (toFile,"%s",strBuf);
+            fprintf (toFile,"%s",strBuf);
             }
         else if (*numTrees == 0)   /* do not print the end statement */
-            MrBayesPrintf (toFile,"%s",strBuf);
+            fprintf (toFile,"%s",strBuf);
         fflush (toFile);
         }
         
@@ -4501,7 +4501,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     Calibration     *calibrationPtr;
 
 #   ifdef DEBUG_CALIBRATION
-    MrBayesPrint ("Before initializing calibrated brlens\n");
+    printf ("Before initializing calibrated brlens\n");
     ShowNodes(t->root, 0, YES);
 #   endif
     
@@ -4630,7 +4630,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
         }
 
 #   ifdef DEBUG_CALIBRATION
-    MrBayesPrint ("after\n");
+    printf ("after\n");
     ShowNodes (t->root, 0, YES);
     getchar();
 #   endif
@@ -5157,19 +5157,19 @@ int IsTreeConsistent (Param *param, int chain, int state)
         clockRate = 1.0;
 
     if (CheckConstraints(tree)==ERROR) {
-        MrBayesPrint ("Tree does not obey constraints\n");
+        printf ("Tree does not obey constraints\n");
         return NO;
     }
 
     /* check that the last few indices are not taken in a rooted tree */
     if (tree->isRooted == YES && tree->root->index != tree->nNodes - 1)
         {
-        MrBayesPrint ("Problem with root index\n");
+        printf ("Problem with root index\n");
         return NO;
         }
     if (tree->isRooted == YES && tree->root->left->index != tree->nNodes - 2)
         {
-        MrBayesPrint ("Problem with interior root index\n");
+        printf ("Problem with interior root index\n");
         return NO;
         }
 
@@ -5181,9 +5181,9 @@ int IsTreeConsistent (Param *param, int chain, int state)
             if (p->length <= 0.0)
                 {
                 if(p->length == 0.0)
-                    MrBayesPrint ("Node %d has zero branch length %f\n", p->index, p->length);
+                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
                 else
-                    MrBayesPrint ("Node %d has negative branch length %f\n", p->index, p->length);
+                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
                 return NO;
                 }
             }
@@ -5196,16 +5196,16 @@ int IsTreeConsistent (Param *param, int chain, int state)
     for (i=0; i<tree->nNodes-2; i++) {
         p = tree->allDownPass[i];
         if (p->length < 0.0) {
-            MrBayesPrint ("Node %d has negative branch length %f\n", p->index, p->length);
+            printf ("Node %d has negative branch length %f\n", p->index, p->length);
             return NO;
         }
         if (fabs(p->anc->nodeDepth - p->nodeDepth - p->length) > 0.000001) {
-            MrBayesPrint ("Node %d has length %f but nodeDepth %f and ancNodeDepth %f\n",
+            printf ("Node %d has length %f but nodeDepth %f and ancNodeDepth %f\n",
                 p->index, p->length, p->nodeDepth, p->anc->nodeDepth);
             return NO;
         }
         if (p->left == NULL && p->isDated == NO && p->nodeDepth != 0.0) {
-                MrBayesPrint ("Node %d is an autodated tip (0.0) but has node depth %lf\n",
+                printf ("Node %d is an autodated tip (0.0) but has node depth %lf\n",
                     p->index, p->nodeDepth);
                 return NO;
         }
@@ -5220,32 +5220,32 @@ int IsTreeConsistent (Param *param, int chain, int state)
             if (p->isDated == YES) {
                 if (fabs((p->age - p->nodeDepth/clockRate)/p->age) > 0.000001)
                     {
-                    MrBayesPrint ("Node %d has age %f but nodeDepth %f when clock rate is %f\n",
+                    printf ("Node %d has age %f but nodeDepth %f when clock rate is %f\n",
                         p->index, p->age, p->nodeDepth, clockRate);
                     return NO;
                     }
                 if (p->calibration->prior == fixed && fabs((p->age - p->calibration->priorParams[0])/p->age) > 0.000001)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be fixed to age %f\n",
+                    printf ("Node %d has age %f but should be fixed to age %f\n",
                         p->index, p->age, p->calibration->priorParams[0]);
                     return NO;
                     }
                 else if (p->calibration->prior == uniform &&
                         ((p->age - p->calibration->min)/p->age < -0.000001 || (p->age - p->calibration->max)/p->age > 0.000001))
                     {
-                    MrBayesPrint ("Node %d has age %f but should be in the interval [%f,%f]\n",
+                    printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
                 else if ((p->age - p->calibration->min)/p->age < -0.000001)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be at least of age %f\n",
+                    printf ("Node %d has age %f but should be at least of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
                 else if ((p->age - p->calibration->max)/p->age > 0.000001)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be no older than %f\n",
+                    printf ("Node %d has age %f but should be no older than %f\n",
                         p->index, p->age, p->calibration->max);
                     return NO;
                     }
@@ -5262,7 +5262,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
             rAnc = GetParamVals(subParm, chain, state)[tree->root->left->index];
             if (fabs(rAnc - 1.0) > 1E-6)
                 {
-                MrBayesPrint("%s   TK02 relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
+                printf ("%s   TK02 relaxed clock mismatch in root rate, which is %e\n", spacer, rAnc);
                 return NO;
                 }
             for (j=0; j<tree->nNodes-2; j++)
@@ -5273,7 +5273,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 rAnc = GetParamVals(subParm, chain, state)[p->anc->index];
                 if (fabs(p->length * (r + rAnc) / 2.0 - b) > 0.000001)
                     {
-                    MrBayesPrint("%s   TK02 relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    printf ("%s   TK02 relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }
@@ -5287,7 +5287,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 r = GetParamVals(subParm, chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
-                    MrBayesPrint("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    printf ("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }
@@ -5597,7 +5597,7 @@ int MovePolyCalculationRoot (PolyTree *t, int outgroup)
         {
         MrBayesPrint ("%s   Outgroup index set for internal node\n", spacer);
         for (i=0; i<t->nNodes; i++)
-            MrBayesPrint ("%d -- %d\n", i, t->allDownPass[i]->index);
+            printf ("%d -- %d\n", i, t->allDownPass[i]->index);
         getchar();
         return (ERROR);
         }
@@ -5867,11 +5867,11 @@ void PrintNodes (Tree *t)
     int         i;
     TreeNode    *p;
 
-    MrBayesPrint ("Node\tleft\tright\tanc\tlength\n");
+    printf ("Node\tleft\tright\tanc\tlength\n");
     for (i=0; i<t->nNodes; i++)
         {
         p = &t->nodes[i];
-        MrBayesPrint ("%d\t%d\t%d\t%d\t%f\t%f\n",
+        printf ("%d\t%d\t%d\t%d\t%f\t%f\n",
             p->index,
             p->left == NULL ? -1 : p->left->index,
             p->right == NULL ? -1 : p->right->index,
@@ -5881,29 +5881,29 @@ void PrintNodes (Tree *t)
         }
 
     if (t->root == NULL)
-        MrBayesPrint ("root: NULL\n");
+        printf ("root: NULL\n");
     else
-        MrBayesPrint ("root: %d\n", t->root->index);
+        printf ("root: %d\n", t->root->index);
 
-    MrBayesPrint ("allDownPass:");
+    printf ("allDownPass:");
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
         if (p!=NULL)
-            MrBayesPrint ("  %d", p->index);
+            printf ("  %d", p->index);
         else
-            MrBayesPrint ("  NULL");
+            printf ("  NULL");
         }
-    MrBayesPrint ("\nintDownPass:  ");
+    printf ("\nintDownPass:  ");
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         if (p!=NULL)
-            MrBayesPrint ("  %d\t", p->index);
+            printf ("  %d\t", p->index);
         else
-            MrBayesPrint ("  NULL\t");
+            printf ("  NULL\t");
         }
-    MrBayesPrint ("\n");
+    printf ("\n");
 }
 
 
@@ -5916,11 +5916,11 @@ void PrintPolyNodes (PolyTree *pt)
     int         i, j, k;
     PolyNode    *p;
 
-    MrBayesPrint ("Node\tleft\tsib\tanc\tlength\tlabel\n");
+    printf ("Node\tleft\tsib\tanc\tlength\tlabel\n");
     for (i=0; i<pt->memNodes; i++)
         {
         p = &pt->nodes[i];
-        MrBayesPrint ("%d\t%d\t%d\t%d\t%f\t%s\n",
+        printf ("%d\t%d\t%d\t%d\t%f\t%s\n",
             p->index,
             p->left == NULL ? -1 : p->left->index,
             p->sib == NULL ? -1 : p->sib->index,
@@ -5928,21 +5928,21 @@ void PrintPolyNodes (PolyTree *pt)
             p->length,
             p->label);
         }
-    MrBayesPrint ("root: %d\n", pt->root->index); 
+    printf ("root: %d\n", pt->root->index);
     fflush(stdout);
 
     if (pt->nBSets > 0)
         {
         for (i=0; i<pt->nBSets; i++)
             {
-            MrBayesPrint ("Effective branch length set '%s'\n", pt->bSetName[i]);
+            printf ("Effective branch length set '%s'\n", pt->bSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
-                MrBayesPrint ("%d:%f", j, pt->effectiveBrLen[pt->nBSets][j]);
+                printf ("%d:%f", j, pt->effectiveBrLen[pt->nBSets][j]);
                 if (j != pt->nNodes-1)
-                    MrBayesPrint (", ");
+                    printf (", ");
                 }
-            MrBayesPrint ("\n");
+            printf ("\n");
             }
         }
     
@@ -5950,22 +5950,22 @@ void PrintPolyNodes (PolyTree *pt)
         {
         for (i=0; i<pt->nESets; i++)
             {
-            MrBayesPrint ("Cpp event set '%s'\n", pt->eSetName[i]);
+            printf ("Cpp event set '%s'\n", pt->eSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
                 if (pt->nEvents[i*pt->nNodes+j] > 0)
                     {
-                    MrBayesPrint ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
+                    printf ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
                     for (k=0; k<pt->nEvents[i][j]; k++)
                         {
-                        MrBayesPrint ("%f %f", pt->position[i][j][k], pt->rateMult[i][j][k]);
+                        printf ("%f %f", pt->position[i][j][k], pt->rateMult[i][j][k]);
                         if (k != pt->nEvents[i][j]-1)
-                            MrBayesPrint (", ");
+                            printf (", ");
                         }
-                    MrBayesPrint (")\n");
+                    printf (")\n");
                     }
                 }
-            MrBayesPrint ("\n");
+            printf ("\n");
             }
         }
 
@@ -5986,7 +5986,7 @@ void PrintTranslateBlock (FILE *fp, Tree *t)
     else
         nTaxa = t->nNodes - t->nIntNodes - 1;
 
-    MrBayesPrintf (fp, "\ttranslate\n");
+    fprintf (fp, "\ttranslate\n");
 
     for (i=0; i<nTaxa; i++)
         {
@@ -5994,9 +5994,9 @@ void PrintTranslateBlock (FILE *fp, Tree *t)
             if (t->allDownPass[j]->index == i)
                 break;
         if (i == nTaxa-1)
-            MrBayesPrintf (fp, "\t\t%d\t%s;\n", i+1, t->allDownPass[j]->label);
+            fprintf(fp, "\t\t%d\t%s;\n", i+1, t->allDownPass[j]->label);
         else
-            MrBayesPrintf (fp, "\t\t%d\t%s,\n", i+1, t->allDownPass[j]->label);
+            fprintf(fp, "\t\t%d\t%s,\n", i+1, t->allDownPass[j]->label);
         }
 }
 
@@ -7894,25 +7894,25 @@ int SetTreeNodeAges (Param *param, int chain, int state)
             if (p->isDated == YES) {
                 if (p->calibration->prior == fixed && fabs((p->age - p->calibration->priorParams[0])/p->age) > 0.000001)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be fixed to age %f\n",
+                    printf ("Node %d has age %f but should be fixed to age %f\n",
                         p->index, p->age, p->calibration->priorParams[0]);
                     return NO;
                     }
                 else if (p->calibration->prior == uniform && (p->age < p->calibration->min || p->age > p->calibration->max))
                     {
-                    MrBayesPrint ("Node %d has age %f but should be in the interval [%f,%f]\n",
+                    printf ("Node %d has age %f but should be in the interval [%f,%f]\n",
                         p->index, p->age, p->calibration->min, p->calibration->max);
                     return NO;
                     }
                 else if (p->age < p->calibration->min)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be minimally of age %f\n",
+                    printf ("Node %d has age %f but should be minimally of age %f\n",
                         p->index, p->age, p->calibration->min);
                     return NO;
                     }
                 else if (p->age > p->calibration->max)
                     {
-                    MrBayesPrint ("Node %d has age %f but should be maximally of age %f\n",
+                    printf ("Node %d has age %f but should be maximally of age %f\n",
                         p->index, p->age, p->calibration->max);
                     return NO;
                     }
@@ -7936,39 +7936,39 @@ int ShowPolyNodes (PolyTree *pt)
     PolyNode        *p;
 
     /* this is the tree, on a node-by-node basis */
-    MrBayesPrint ("   memnodes = %d  nNodes = %d  nIntNodes = %d  root = %d\n", pt->memNodes, pt->nNodes, pt->nIntNodes, pt->root->index);
-    MrBayesPrint ("   isRooted = %d\n", pt->isRooted);
-    MrBayesPrint ("   no. index (left sib anc) -- locked/free -- label (p->x)\n");
+    printf ("   memnodes = %d  nNodes = %d  nIntNodes = %d  root = %d\n", pt->memNodes, pt->nNodes, pt->nIntNodes, pt->root->index);
+    printf ("   isRooted = %d\n", pt->isRooted);
+    printf ("   no. index (left sib anc) -- locked/free -- label (p->x)\n");
     for (i=0; i<pt->memNodes; i++)
         {
         p = &pt->nodes[i];
         if (!(p->left == NULL && p->sib == NULL && p->anc == NULL))
             {
-            MrBayesPrint ("%4d -- %4d ", i, p->index);
+            printf ("%4d -- %4d ", i, p->index);
             if (p->left != NULL)
-                MrBayesPrint ("(%4d ", p->left->index);
+                printf ("(%4d ", p->left->index);
             else
-                MrBayesPrint ("(null ");
+                printf ("(null ");
 
             if (p->sib != NULL)
-                MrBayesPrint ("%4d ", p->sib->index);
+                printf ("%4d ", p->sib->index);
             else
-                MrBayesPrint ("null ");
+                printf ("null ");
                 
             if (p->anc != NULL)
-                MrBayesPrint ("%4d)", p->anc->index);
+                printf ("%4d)", p->anc->index);
             else
-                MrBayesPrint ("null)");
+                printf ("null)");
             
             if (p->isLocked == YES)
-                MrBayesPrint ("-- locked -- ");
+                printf ("-- locked -- ");
             else
-                MrBayesPrint ("-- free --");
+                printf ("-- free --");
 
             if (p->left == NULL && p->anc != NULL)
-                MrBayesPrint ("  \"%s\" (%d)\n", p->label, p->x);
+                printf ("  \"%s\" (%d)\n", p->label, p->x);
             else
-                MrBayesPrint (" \"\" (%d)\n", p->x);
+                printf (" \"\" (%d)\n", p->x);
             }
         }
 
@@ -8140,7 +8140,7 @@ int ShowTree (Tree *t)
     
 #   if defined (DEBUG_CONSTRAINTS)
     for (i=0; i<t->nNodes; i++)
-        MrBayesPrint ("%d -- %s\n", t->allDownPass[i]->index + 1, t->allDownPass[i]->isLocked == YES ? "locked" : "free");
+        printf ("%d -- %s\n", t->allDownPass[i]->index + 1, t->allDownPass[i]->isLocked == YES ? "locked" : "free");
 #   endif
 
     return (NO_ERROR);
@@ -9105,67 +9105,67 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
         {
         if (p->left == NULL && p->right == NULL)
             {
-            MrBayesPrint ("%d:%s", p->index + 1, MbPrintNum(p->length));
+            printf ("%d:%s", p->index + 1, MbPrintNum(p->length));
             if (param->paramType == P_CPPEVENTS)
                 {
                 nEvents = param->nEvents[2*chain+state[chain]][p->index];
                 if (nEvents > 0)
                     {
-                    MrBayesPrint ("[&E %s %d: (", param->name, nEvents);
+                    printf ("[&E %s %d: (", param->name, nEvents);
                     position = param->position[2*chain+state[chain]][p->index];
                     rateMult = param->rateMult[2*chain+state[chain]][p->index];
                     for (j=0; j<nEvents; j++)
                         {
-                        MrBayesPrint ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+                        printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
                         if (j != nEvents-1)
-                            MrBayesPrint (", ");
+                            printf (", ");
                         }
-                    MrBayesPrint (")]");
+                    printf (")]");
                     }
                 else
-                    MrBayesPrint ("[&E %s 0]", param->name);
+                    printf ("[&E %s 0]", param->name);
                 }
             brlen = GetParamSubVals (param, chain, state[chain])[p->index];
             // brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
-            MrBayesPrint ("[&B %s %s]", param->name, MbPrintNum(brlen));
+            printf ("[&B %s %s]", param->name, MbPrintNum(brlen));
             }
         else
             {
             if (p->anc != NULL)
-                MrBayesPrint ("(");
+                printf ("(");
             WriteEventTree(p->left, chain, param);
-            MrBayesPrint (",");
+            printf (",");
             WriteEventTree(p->right, chain, param);
             if (p->anc != NULL)
                 {               
                 if (p->anc->anc != NULL)
                     {
-                    MrBayesPrint ("):%s", MbPrintNum(p->length));
+                    printf ("):%s", MbPrintNum(p->length));
                     if (param->paramType == P_CPPEVENTS)
                         {
                         nEvents = param->nEvents[2*chain+state[chain]][p->index];
                         if (nEvents > 0)
                             {
-                            MrBayesPrint ("[&E %s %d: (", param->name, nEvents);
+                            printf ("[&E %s %d: (", param->name, nEvents);
                             position = param->position[2*chain+state[chain]][p->index];
                             rateMult = param->rateMult[2*chain+state[chain]][p->index];
                             for (j=0; j<nEvents; j++)
                                 {
-                                MrBayesPrint ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+                                printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
                                 if (j != nEvents-1)
-                                    MrBayesPrint (", ");
+                                    printf (", ");
                                 }
-                            MrBayesPrint (")]");
+                            printf (")]");
                             }
                         else
-                            MrBayesPrint ("[&E %s 0]", param->name);
+                            printf ("[&E %s 0]", param->name);
                         }
                     brlen = GetParamSubVals (param, chain, state[chain])[p->index];
                     // brlen = (GetParamSubVals (param, chain, state[chain])[p->index] + GetParamVals (param, chain, state[chain])[p->anc->index]) / 2.0;
-                    MrBayesPrint ("[&B %s %s]", param->name, MbPrintNum(brlen));
+                    printf ("[&B %s %s]", param->name, MbPrintNum(brlen));
                     }
                 else
-                    MrBayesPrint(")");
+                    printf(")");
                 }
             }
         }
@@ -9315,21 +9315,21 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
         length = GetParamSubVals(param, chain, state[chain]);
         if (p->left == NULL && p->right == NULL)
             {
-            MrBayesPrint ("%d:%s", p->index + 1, MbPrintNum(length[p->index]));
+            printf ("%d:%s", p->index + 1, MbPrintNum(length[p->index]));
             }
         else
             {
             if (p->anc != NULL)
-                MrBayesPrint ("(");
+                printf ("(");
             WriteEvolTree(p->left, chain, param);
-            MrBayesPrint (",");
+            printf (",");
             WriteEvolTree(p->right, chain, param);
             if (p->anc != NULL)
                 {               
                 if (p->anc->anc != NULL)
-                    MrBayesPrint ("):%s", MbPrintNum(length[p->index]));
+                    printf ("):%s", MbPrintNum(length[p->index]));
                 else
-                    MrBayesPrint(")");
+                    printf(")");
                 }
             }
         }
@@ -9455,20 +9455,20 @@ void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
     if (p != NULL)
         {
         if (p->left == NULL && p->right == NULL)
-            MrBayesPrintf (fp, "%d", p->index + 1);
+            fprintf (fp, "%d", p->index + 1);
         else
             {
             if (p->anc != NULL)
-                MrBayesPrintf (fp, "(");
+                fprintf (fp, "(");
             WriteTopologyToFile (fp, p->left, isRooted);
             if (p->anc != NULL)
-                MrBayesPrintf (fp, ",");
+                fprintf (fp, ",");
             WriteTopologyToFile (fp, p->right, isRooted);   
             if (p->anc != NULL)
                 {
                 if (p->anc->anc == NULL && isRooted == NO)
-                    MrBayesPrintf (fp, ",%d", p->anc->index + 1);
-                MrBayesPrintf (fp, ")");
+                    fprintf (fp, ",%d", p->anc->index + 1);
+                fprintf (fp, ")");
                 }
             }
         }

@@ -114,7 +114,7 @@ MrBFlt      partnerStateInfo[7];         /* likelihood/prior/heat/ran/moveInfo v
 CLFlt       scalerValue[400];
 CLFlt       logValue[400];
 #endif
-
+/* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
 
 
 int main (int argc, char *argv[])
@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
         sprintf(poltmp, "\nlastError = %d", lastError);
-        MrBayesPrint (poltmp);
+        printf(poltmp);
         }
 #   endif
 
@@ -211,9 +211,6 @@ int main (int argc, char *argv[])
     InitializeMrBayes ();
     
     /* Print the nifty header. */
-#   if defined (MPI_ENABLED)
-    if (proc_id == 0)
-#   endif
     PrintHeader ();
     
     /* Go to the command line, process any arguments passed to the program

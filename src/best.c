@@ -427,7 +427,7 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
     for (w=0; w<numGeneTrees; w++)
         {
         if (trace) {
-            MrBayesPrint ("\nGene %d\n",w);
+            printf ("\nGene %d\n",w);
             ShowTree(geneTrees[w]);
             }
 
@@ -469,17 +469,17 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
     if (trace)
         {
         index = 0;
-        MrBayesPrint ("Mindepth matrix\n");
+        printf ("Mindepth matrix\n");
         for(i=0;i<numSpecies;i++) {
             for (j=0; j<i; j++)
-                MrBayesPrint ("         ");
+                printf ("         ");
             for(j=i+1;j<numSpecies;j++) {
-                MrBayesPrint ("%.6f ",depthMatrix[index]);
+                printf ("%.6f ",depthMatrix[index]);
                 index++;
                 }
-            MrBayesPrint ("\n");
+            printf ("\n");
             }
-        MrBayesPrint ("\n");
+        printf ("\n");
         }
 
     free (speciesSets[0]);
@@ -913,9 +913,9 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 
     // Debug output of qsort result
     if (trace) {
-        MrBayesPrint ("index -- x -- nodeDepth for gene tree\n");
+        printf ("index -- x -- nodeDepth for gene tree\n");
         for (i=0; i<geneTree->nIntNodes; i++)
-            MrBayesPrint ("%d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
+            printf ("%d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
         }
 
     // Now calculate probability after making sure species tree nodes appear in index order
@@ -1107,15 +1107,15 @@ void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
     LineagesIn(geneTree->root->left, speciesTree->root->left);
 
     if (trace) {
-        MrBayesPrint ("index -- x -- y   for species tree\n");
+        printf ("index -- x -- y   for species tree\n");
         for (i=0; i<speciesTree->nNodes-1; i++)
-            MrBayesPrint ("%-2d -- %d -- %d\n", speciesTree->allDownPass[i]->index, speciesTree->allDownPass[i]->x, speciesTree->allDownPass[i]->y);
+            printf ("%-2d -- %d -- %d\n", speciesTree->allDownPass[i]->index, speciesTree->allDownPass[i]->x, speciesTree->allDownPass[i]->y);
         }
 
     if (trace) {
-        MrBayesPrint ("index -- x -- nodeDepth for gene tree\n");
+        printf ("index -- x -- nodeDepth for gene tree\n");
         for (i=0; i<geneTree->nIntNodes; i++)
-            MrBayesPrint ("%-2d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
+            printf ("%-2d -- %d -- %e\n", geneTree->intDownPass[i]->index, geneTree->intDownPass[i]->x, geneTree->intDownPass[i]->nodeDepth);
         }
 
     // Free space
@@ -1519,10 +1519,10 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     p = geneTree->intDownPass[(int)(RandomNumber(seed)*geneTree->nIntNodes)];
 
 #   if defined (DEBUG_CSLIDER)
-    MrBayesPrint ("Before node slider (gene tree):\n");
-    MrBayesPrint ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
+    printf ("Before node slider (gene tree):\n");
+    printf ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
     if (p->anc->anc == NULL)
-        MrBayesPrint ("Old clock rate: %f\n", clockRate);
+        printf ("Old clock rate: %f\n", clockRate);
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
 #   endif
@@ -1747,8 +1747,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
     
 #   if defined (DEBUG_CSLIDER)
-    MrBayesPrint ("After node slider (gene tree):\n");
-    MrBayesPrint ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
+    printf ("After node slider (gene tree):\n");
+    printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
         oldDepth, newDepth, (*lnPriorRatio), (*lnProposalRatio));
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
@@ -1862,17 +1862,17 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
     int     i, j, index;
 
     index = 0;
-    MrBayesPrint ("Upper triang matrix:\n");
+    printf ("Upper triang matrix:\n");
     for(i=0; i<squareSize; i++) {
         for (j=0; j<i; j++)
-            MrBayesPrint ("         ");
+            printf ("         ");
         for(j=i+1; j<squareSize; j++) {
-            MrBayesPrint ("%.6f ", values[index]);
+            printf ("%.6f ", values[index]);
             index++;
         }
-        MrBayesPrint ("\n");
+        printf ("\n");
     }
-    MrBayesPrint ("\n");
+    printf ("\n");
 }
 
 

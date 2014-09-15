@@ -146,17 +146,17 @@ int InitBeagleInstance (ModelInfo *m, int division)
         }
     else
         {
-        MrBayesPrint( "\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
+        MrBayesPrint ( "\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
 #   if defined (THREADS_ENABLED)
-        MrBayesPrint( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
+        MrBayesPrint ( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
 #   else
-        MrBayesPrint( " (non-threaded)\n");
+        MrBayesPrint ( " (non-threaded)\n");
 #   endif
-        MrBayesPrint( "%s      Rsrc Name : %s\n", spacer, details.resourceName);
-        MrBayesPrint( "%s      Impl Name : %s\n", spacer, details.implName);    
-        MrBayesPrint( "%s      Flags:", spacer);
+        MrBayesPrint ( "%s      Rsrc Name : %s\n", spacer, details.resourceName);
+        MrBayesPrint ( "%s      Impl Name : %s\n", spacer, details.implName);
+        MrBayesPrint ( "%s      Flags:", spacer);
         BeaglePrintFlags(details.flags);
-        MrBayesPrint( "\n");
+        MrBayesPrint ( "\n");
         beagleInstanceCount++;          
         }
 
@@ -431,20 +431,20 @@ void BeaglePrintResources()
             {
             MrBayesPrint ("\tDesc: %s\n", beagleResources->list[i].description);
             }
-        MrBayesPrint("\tFlags:");
+        MrBayesPrint ("\tFlags:");
         BeaglePrintFlags(beagleResources->list[i].supportFlags);
-        MrBayesPrint("\n\n");
+        MrBayesPrint ("\n\n");
         }
 }
 
 int BeagleCheckFlagCompatability(long inFlags) {
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
         if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
-            MrBayesPrint("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
+            MrBayesPrint ("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
             return NO;
         }
         if (inFlags & BEAGLE_FLAG_THREADING_OPENMP) {
-            MrBayesPrint("%s   Simultaneous use of GPU and OpenMP not available.\n", spacer);
+            MrBayesPrint ("%s   Simultaneous use of GPU and OpenMP not available.\n", spacer);
             return NO;
         }
     }
@@ -509,7 +509,7 @@ void BeaglePrintFlags(long inFlags)
         if (inFlags & flags[i])
             {
             if (k%4 == 0 && k > 0)
-                MrBayesPrint("\n%s            ", spacer);
+                MrBayesPrint ("\n%s            ", spacer);
             MrBayesPrint (" %s", names[i]);
             k++;
             }
@@ -1249,12 +1249,12 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
 
 void BeagleNotLinked()
 {
-    MrBayesPrint("%s   BEAGLE library is not linked to this executable.\n", spacer);
+    MrBayesPrint ("%s   BEAGLE library is not linked to this executable.\n", spacer);
 }
 
 void BeagleThreadsNotLinked()
 {
-    MrBayesPrint("%s   Pthreads library is not linked to this executable.\n", spacer);
+    MrBayesPrint ("%s   Pthreads library is not linked to this executable.\n", spacer);
 } 
 
 

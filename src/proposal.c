@@ -585,7 +585,7 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 
 #if defined (DEBUG_CONSTRAINTS)
     if (CheckConstraints(t) == ERROR) {
-        MrBayesPrint ("Constraint error in input tree to brlen multiplier\n");
+        printf ("Constraint error in input tree to brlen multiplier\n");
         getchar();
         }
 #endif
@@ -1948,7 +1948,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -2405,15 +2405,15 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
 #   if defined (DEBUG_FTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -2429,7 +2429,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to eSPR2\n");
+        printf ("Constraint error in output tree to eSPR2\n");
         getchar();
         }
 #endif
@@ -2488,7 +2488,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtSPRClock)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
 #   endif
     
@@ -2870,10 +2870,10 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
 #   if defined (DEBUG_ExtSPRClock)
     ShowNodes (t->root, 2, YES);
-    MrBayesPrint ("After\nProposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("After\nProposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
 #   endif
 
     return (NO_ERROR);
@@ -3064,11 +3064,11 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
 
 #   if defined (DEBUG_ExtSS)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("directionUp = %d -- directionLeft = %d -- moveInRoot = %d\n", directionUp, directionLeft, moveInRoot);
+    printf ("directionUp = %d -- directionLeft = %d -- moveInRoot = %d\n", directionUp, directionLeft, moveInRoot);
     getchar();
 #   endif
     
@@ -3360,16 +3360,16 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ExtSS)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",exp(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",exp(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
-    MrBayesPrint ("directionUp = %d -- directionLeft = %d\n", directionUp, directionLeft);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("directionUp = %d -- directionLeft = %d\n", directionUp, directionLeft);
     getchar();
 #   endif
 
@@ -3861,7 +3861,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -4262,15 +4262,15 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -4286,7 +4286,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to eTBR\n");
+        printf ("Constraint error in output tree to eTBR\n");
         getchar();
         }
 #endif
@@ -4376,7 +4376,7 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
     
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -4756,15 +4756,15 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
             c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
     
@@ -4779,10 +4779,10 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
-        {
-        MrBayesPrint ("Constraint error in input tree to eTBR\n");
+    {
+        printf ("Constraint error in input tree to eTBR\n");
         getchar();
-        }
+    }
 #endif
     
     return (NO_ERROR);
@@ -4827,7 +4827,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to eTBR1\n");
+        printf ("Constraint error in input tree to eTBR1\n");
         getchar();
         }
 #endif
@@ -4875,7 +4875,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -5307,15 +5307,15 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -5331,7 +5331,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to eTBR1\n");
+        printf ("Constraint error in output tree to eTBR1\n");
         getchar();
         }
 #endif
@@ -5380,7 +5380,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to eTBR2\n");
+        printf ("Constraint error in input tree to eTBR2\n");
         getchar();
         }
 #endif
@@ -5428,7 +5428,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -5909,15 +5909,15 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -5933,7 +5933,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to eTBR2\n");
+        printf ("Constraint error in output tree to eTBR2\n");
         getchar();
         }
 #endif
@@ -5984,7 +5984,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to eTBR3\n");
+        printf ("Constraint error in input tree to eTBR3\n");
         getchar();
         }
 #endif
@@ -6032,7 +6032,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -6555,15 +6555,15 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -6579,7 +6579,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to eTBR3\n");
+        printf ("Constraint error in output tree to eTBR3\n");
         getchar();
         }
 #endif
@@ -6628,7 +6628,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to eTBR4\n");
+        printf ("Constraint error in input tree to eTBR4\n");
         getchar();
         }
 #endif
@@ -6676,7 +6676,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -7104,15 +7104,15 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ExtTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -7128,7 +7128,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to eTBR4\n");
+        printf ("Constraint error in input tree to eTBR4\n");
         getchar();
         }
 #endif
@@ -8083,7 +8083,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to LOCAL\n");
+        printf ("Constraint error in input tree to LOCAL\n");
         getchar();
         }
 #endif
@@ -8131,7 +8131,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_LOCAL)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -8356,13 +8356,13 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_LOCAL)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -8376,7 +8376,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree of LOCAL\n");
+        printf ("Constraint error in output tree of LOCAL\n");
         getchar();
         }
 #endif
@@ -8430,11 +8430,11 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         p = t->allDownPass[i];
         /* the two checkings don't consider ancestral fossil (brl=0) in fossilized bd tree */
         if (p->length < minV) {
-            MrBayesPrint ("%s   ERROR when entering LocalClock: node %d has length %lf", spacer, p->index, p->length);
+            printf ("%s   ERROR when entering LocalClock: node %d has length %lf", spacer, p->index, p->length);
             return ERROR;
         }
         if (p->nodeDepth >= p->anc->nodeDepth) {
-            MrBayesPrint ("%s   ERROR when entering LocalClock: node %d has depth %lf larger than its ancestor %d depth %lf", spacer, p->index, p->nodeDepth, p->anc->index, p->anc->nodeDepth);
+            printf ("%s   ERROR when entering LocalClock: node %d has depth %lf larger than its ancestor %d depth %lf", spacer, p->index, p->nodeDepth, p->anc->index, p->anc->nodeDepth);
             return ERROR;
         }
     }
@@ -8443,7 +8443,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_LOCAL)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
 #   endif
 
@@ -8873,9 +8873,9 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     (*lnPriorRatio) += x;
     
 #   if defined (DEBUG_LOCAL)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
 #   endif
     
 #   if defined (TOPOLOGY_MOVE_STATS)
@@ -8890,11 +8890,11 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     for (i=0; i<t->nNodes-2; i++) {
         p = t->allDownPass[i];
         if (p->length < minV) {
-            MrBayesPrint ("%s   ERROR when leaving LocalClock: node %d has length %lf", spacer, p->index, p->length);
+            printf ("%s   ERROR when leaving LocalClock: node %d has length %lf", spacer, p->index, p->length);
             return ERROR;
         }
         if (p->nodeDepth >= p->anc->nodeDepth) {
-            MrBayesPrint ("%s   ERROR when leaving LocalClock: node %d has depth %lf larger than its ancestor %d depth %lf", spacer, p->index, p->nodeDepth, p->anc->index, p->anc->nodeDepth);
+            printf ("%s   ERROR when leaving LocalClock: node %d has depth %lf larger than its ancestor %d depth %lf", spacer, p->index, p->nodeDepth, p->anc->index, p->anc->nodeDepth);
             return ERROR;
         }
     }
@@ -8968,7 +8968,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
 #endif
 
 #   if defined (DEBUG_MLSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -9187,7 +9187,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         }
     if (c->marked != YES)
         {
-        MrBayesPrint ("Could not select node\n");
+        printf ("Could not select node\n");
         getchar();
         }
 
@@ -9304,13 +9304,13 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     free (nSitesOfPat);
 
 #   if defined (DEBUG_ParsSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -9390,7 +9390,7 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #endif
 
 #   if defined (DEBUG_MLSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -9602,7 +9602,7 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
     if (c->marked != YES)
         {
-        MrBayesPrint ("Could not select node\n");
+        printf ("Could not select node\n");
         getchar();
         }
 
@@ -9697,13 +9697,13 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
 
 #   if defined (DEBUG_MLSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -9818,7 +9818,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     t = GetTree (param, chain, state[chain]);
 
 #   if defined (DEBUG_NNIClock)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -10007,12 +10007,12 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
 #   if defined (DEBUG_NNIClock)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -10291,10 +10291,10 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
            (p->isDated == YES && p->calibration->prior == fixed));
 
 #if defined (DEBUG_CSLIDER)
-    MrBayesPrint ("Before node slider (clock):\n");
-    MrBayesPrint ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
+    printf ("Before node slider (clock):\n");
+    printf ("Picked branch with index %d and depth %f\n", p->index, p->nodeDepth);
     if (p->anc->anc == NULL)
-        MrBayesPrint ("Old clock rate: %f\n", clockRate);
+        printf ("Old clock rate: %f\n", clockRate);
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
 #endif
@@ -10570,8 +10570,8 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         }
 
 #if defined (DEBUG_CSLIDER)
-    MrBayesPrint ("After node slider (clock):\n");
-    MrBayesPrint ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
+    printf ("After node slider (clock):\n");
+    printf ("Old depth: %f -- New depth: %f -- LnPriorRatio %f -- LnProposalRatio %f\n",
         oldDepth, newDepth, (*lnPriorRatio), (*lnProposalRatio));
     ShowNodes (t->root, 0, t->isRooted);
     getchar();
@@ -11861,8 +11861,8 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
 #   if defined (DEBUG_ParsSPR)
-    // WriteTopologyToFile (stdout, t->root->left, t->isRooted);  MrBayesPrintf (stdout, ";\t");
-    MrBayesPrint ("Before:\n");
+    // WriteTopologyToFile (stdout, t->root->left, t->isRooted);  fprintf(stdout, ";\t");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -12249,13 +12249,13 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
 #   if defined (DEBUG_ParsSPR)
     // WriteTopologyToFile (stdout, t->root->left, t->isRooted);
-    // MrBayesPrintf (stdout, ";\t");  MrBayesPrintf (stdout, "%lf\n", *lnProposalRatio);
-    MrBayesPrint ("After:\n");
+    // fprintf(stdout, ";\t");  fprintf(stdout, "%lf\n", *lnProposalRatio);
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -12356,7 +12356,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 #endif
     
 #   if defined (DEBUG_ParsSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -12750,12 +12750,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         free (nSitesOfPat);
         
 #   if defined (DEBUG_ParsSPR)
-        MrBayesPrint ("After:\n");
+        printf ("After:\n");
         ShowNodes (t->root, 2, YES);
         getchar();
-        MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-        MrBayesPrint ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-        MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+        printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+        printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+        printf ("Has topology changed? %d\n",topologyHasChanged);
         getchar();
 #   endif
 
@@ -13113,12 +13113,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         free (nSitesOfPat);
         
 #   if defined (DEBUG_ParsSPR)
-        MrBayesPrint ("After:\n");
+        printf ("After:\n");
         ShowNodes (t->root, 2, YES);
         getchar();
-        MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-        MrBayesPrint ("v: %d  u: %d  c: %d  d: %d\n",v->index, u->index, c->index, d->index);
-        MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+        printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+        printf ("v: %d  u: %d  c: %d  d: %d\n",v->index, u->index, c->index, d->index);
+        printf ("Has topology changed? %d\n",topologyHasChanged);
         getchar();
 #   endif
 
@@ -13190,7 +13190,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     minV = BRLENS_MIN;
 
 #   if defined (DEBUG_ParsSPRClock)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -13680,12 +13680,12 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     (*lnPriorRatio) += x;
 
 #   if defined (DEBUG_ParsSPRClock)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  a: %d  b: %d c: %d\n",v->index, u->index, a->index, b->index, c->index);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d c: %d\n",v->index, u->index, a->index, b->index, c->index);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -13774,7 +13774,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
     
 #   if defined (DEBUG_ParsTBR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
 #   endif
@@ -13903,12 +13903,12 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
     
 #   if defined (DEBUG_ParsTBR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    //  MrBayesPrint ("v: %d  u: %d  c: %d  d: %d\n",v->index, u->index, c->index, d->index);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    //  printf ("v: %d  u: %d  c: %d  d: %d\n",v->index, u->index, c->index, d->index);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
     
@@ -14288,7 +14288,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to rSPR1\n");
+        printf ("Constraint error in input tree to rSPR1\n");
         getchar();
         }
 #endif
@@ -14314,7 +14314,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -14785,15 +14785,15 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index, q->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -14809,7 +14809,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to rSPR1\n");
+        printf ("Constraint error in output tree to rSPR1\n");
         getchar();
         }
 #endif
@@ -14845,7 +14845,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to rSPR2\n");
+        printf ("Constraint error in input tree to rSPR2\n");
         getchar();
         }
 #endif
@@ -14871,7 +14871,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -15354,15 +15354,15 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index, q->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -15378,7 +15378,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to rSPR2\n");
+        printf ("Constraint error in output tree to rSPR2\n");
         getchar();
         }
 #endif
@@ -15415,7 +15415,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to rSPR3\n");
+        printf ("Constraint error in input tree to rSPR3\n");
         getchar();
         }
 #endif
@@ -15441,7 +15441,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -15496,10 +15496,10 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
     if (numWindowNodes > 120)
         {
-        MrBayesPrint ("error\n");
+        printf ("error\n");
         ShowNodes (t->root, 0, t->isRooted);
         for (i=0; i<t->nNodes; i++)
-            MrBayesPrint ("%d\t%d\n", t->allDownPass[i]->index, t->allDownPass[i]->x);
+            printf ("%d\t%d\n", t->allDownPass[i]->index, t->allDownPass[i]->x);
         getchar();
         }
 
@@ -15991,15 +15991,15 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index, q->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -16015,7 +16015,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to rSPR3\n");
+        printf ("Constraint error in output tree to rSPR3\n");
         getchar();
         }
 #endif
@@ -16051,7 +16051,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in input tree to rSPR4\n");
+        printf ("Constraint error in input tree to rSPR4\n");
         getchar();
         }
 #endif
@@ -16077,7 +16077,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     topologyHasChanged = NO;
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("Before:\n");
+    printf ("Before:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
 #   endif
@@ -16171,10 +16171,10 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
     if (numWindowNodes > 120)
         {
-        MrBayesPrint ("error\n");
+        printf ("error\n");
         ShowNodes (t->root, 0, t->isRooted);
         for (i=0; i<t->nNodes; i++)
-            MrBayesPrint ("%d\t%d\n", t->allDownPass[i]->index, t->allDownPass[i]->x);
+            printf ("%d\t%d\n", t->allDownPass[i]->index, t->allDownPass[i]->x);
         getchar();
         }
 
@@ -16675,15 +16675,15 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
 #   if defined (DEBUG_RanSPR)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
-    MrBayesPrint ("Proposal ratio: %f\n",(*lnProposalRatio));
-    MrBayesPrint ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index,
+    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
         c->index, d->index, a->index, b->index, q->index);
-    MrBayesPrint ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    MrBayesPrint ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    MrBayesPrint ("Has topology changed? %d\n",topologyHasChanged);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
 
@@ -16699,7 +16699,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #if defined DEBUG_CONSTRAINTS
     if (CheckConstraints (t) == ERROR)
         {
-        MrBayesPrint ("Constraint error in output tree to rSPR4\n");
+        printf ("Constraint error in output tree to rSPR4\n");
         getchar();
         }
 #endif
@@ -17631,13 +17631,13 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
 #if defined (DEBUG_SPLITMERGE)
     if (*lnPriorRatio != *lnPriorRatio)
         {
-        MrBayesPrint ("prob_merge=%f prob_split=%f nCompositeRates=%d nOldRates=%d nNewRates=%d\n", prob_merge, prob_split, nCompositeRates, nOldRates, nNewRates);
-        MrBayesPrint ("merge=%s n_i=%d n_j=%d rateProps[0]=%f R=%f R_i=%f R_j=%f\n", merge == NO ? "NO" : "YES", n_i, n_j, rateProps[0], R, R_i, R_j);
-        MrBayesPrint ("Old rates={%f,%f,%f,%f,%f,%f}\n", oldValue[0], oldValue[1], oldValue[2], oldValue[3], oldValue[4], oldValue[5]);
-        MrBayesPrint ("Old growth fxn={%d,%d,%d,%d,%d,%d}\n", oldGrowthFxn[0], oldGrowthFxn[1], oldGrowthFxn[2], oldGrowthFxn[3], oldGrowthFxn[4], oldGrowthFxn[5]);
-        MrBayesPrint ("New rates={%f,%f,%f,%f,%f,%f}\n", newValue[0], newValue[1], newValue[2], newValue[3], newValue[4], newValue[5]);
-        MrBayesPrint ("New growth fxn={%d,%d,%d,%d,%d,%d}\n", newGrowthFxn[0], newGrowthFxn[1], newGrowthFxn[2], newGrowthFxn[3], newGrowthFxn[4], newGrowthFxn[5]);
-        MrBayesPrint ("lnPriorRatio=%f  lnProposalRatio=%f\n", *lnPriorRatio, *lnProposalRatio);
+        printf ("prob_merge=%f prob_split=%f nCompositeRates=%d nOldRates=%d nNewRates=%d\n", prob_merge, prob_split, nCompositeRates, nOldRates, nNewRates);
+        printf ("merge=%s n_i=%d n_j=%d rateProps[0]=%f R=%f R_i=%f R_j=%f\n", merge == NO ? "NO" : "YES", n_i, n_j, rateProps[0], R, R_i, R_j);
+        printf ("Old rates={%f,%f,%f,%f,%f,%f}\n", oldValue[0], oldValue[1], oldValue[2], oldValue[3], oldValue[4], oldValue[5]);
+        printf ("Old growth fxn={%d,%d,%d,%d,%d,%d}\n", oldGrowthFxn[0], oldGrowthFxn[1], oldGrowthFxn[2], oldGrowthFxn[3], oldGrowthFxn[4], oldGrowthFxn[5]);
+        printf ("New rates={%f,%f,%f,%f,%f,%f}\n", newValue[0], newValue[1], newValue[2], newValue[3], newValue[4], newValue[5]);
+        printf ("New growth fxn={%d,%d,%d,%d,%d,%d}\n", newGrowthFxn[0], newGrowthFxn[1], newGrowthFxn[2], newGrowthFxn[3], newGrowthFxn[4], newGrowthFxn[5]);
+        printf ("lnPriorRatio=%f  lnProposalRatio=%f\n", *lnPriorRatio, *lnProposalRatio);
         getchar();
         }
 #endif
@@ -18914,7 +18914,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
 #if defined (DEBUG_CONSTRAINTS)
     if (CheckConstraints(t) == ERROR) {
-        MrBayesPrint ("Constraint error in input tree to treelen multiplier\n");
+        printf ("Constraint error in input tree to treelen multiplier\n");
         getchar();
         }
 #endif
@@ -19198,8 +19198,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     TouchAllTreeNodes(m, chain);
 
 #if defined (DEBUG_TREESTRETCH)
-    MrBayesPrint ("After treestretch:\n");
-    MrBayesPrint ("Old tree height: %f -- New tree height: %f -- lnPriorRatio = %f -- lnProposalRatio = %f\n",
+    printf ("After treestretch:\n");
+    printf ("Old tree height: %f -- New tree height: %f -- lnPriorRatio = %f -- lnProposalRatio = %f\n",
         oldT->root->left->nodeDepth, t->root->left->nodeDepth, (*lnPriorRatio), (*lnProposalRatio));
 #endif
 
@@ -19417,7 +19417,7 @@ int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         {
         p = t->allDownPass[i];
         if (p->marked == YES || p->x > 0)
-            MrBayesPrint ("%4d %4d %4d \n", p->index, p->marked, p->x);
+            printf ("%4d %4d %4d \n", p->index, p->marked, p->x);
         }
 #   endif
         
@@ -19441,7 +19441,7 @@ int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
             }
         }
 #   if defined (DEBUG_UNROOTED_SLIDER)
-    MrBayesPrint ("pathLength1=%lf pathLength2=%lf\n", pathLength1, pathLength2);
+    printf ("pathLength1=%lf pathLength2=%lf\n", pathLength1, pathLength2);
 #   endif
         
     /* Change the length of branch marked by v and w. While we are at it, we
@@ -19484,7 +19484,7 @@ int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         pathLength = pathLength2;
     dist = -(1.0 / expParam) * log(1.0 - RandomNumber(seed) * (1.0 - exp(-expParam * pathLength)));
 #   if defined (DEBUG_UNROOTED_SLIDER)
-    MrBayesPrint ("dist=%lf pathLength=%lf\n", dist, pathLength);
+    printf ("dist=%lf pathLength=%lf\n", dist, pathLength);
 #   endif
     
     /* Find the new attachment branch. This is a pain in the neck. */
@@ -19802,7 +19802,7 @@ int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         GetDownPass (t);
         }
 #   if defined (DEBUG_UNROOTED_SLIDER)
-    MrBayesPrint ("After:\n");
+    printf ("After:\n");
     ShowNodes (t->root, 3, NO);
 #   endif
 

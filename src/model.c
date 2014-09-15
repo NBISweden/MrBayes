@@ -996,7 +996,7 @@ int AllocateTreeParams (void)
                 else
                     {
                     MrBayesPrint ("%s   A clock tree cannot have more than one set of branch lengths\n", spacer);
-                    MrBayesPrint ("nparam:%d paramid:%d",p->nSubParams,p->paramId);
+                    printf ("nparam:%d paramid:%d",p->nSubParams,p->paramId);
                     return (ERROR);
                     }
                 }
@@ -1424,37 +1424,37 @@ int ChangeNumRuns (int from, int to)
         p = &params[i];
         if (p->paramType == P_CPPEVENTS)
             {
-            MrBayesPrint ("Trees before changing number of runs\n");
+            printf ("Trees before changing number of runs\n");
             for (j=0; j<numGlobalChains; j++)
                 {
-                MrBayesPrint ("Event tree for chain %d\n", j+1);
+                printf ("Event tree for chain %d\n", j+1);
                 for (k=0; k<2*numLocalTaxa; k++)
                     {
-                    MrBayesPrint ("%d -- %d:", k, p->nEvents[2*j][k]);
+                    printf ("%d -- %d:", k, p->nEvents[2*j][k]);
                     for (i1=0; i1<p->nEvents[2*j][k]; i1++)
                         {
                         if (i1 == 0)
-                            MrBayesPrint ("( %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf ("( %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
                         else if (i1 == p->nEvents[2*j][k]-1)
-                            MrBayesPrint (" %lf %lf)", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf (" %lf %lf)", p->position[2*j][k], p->rateMult[2*j][k]);
                         else
-                            MrBayesPrint (" %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf (" %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
                         }
-                    MrBayesPrint ("\n");
+                    printf ("\n");
                     }
                 for (k=0; k<2*numLocalTaxa; k++)
                     {
-                    MrBayesPrint ("%d -- %d:", k, p->nEvents[2*j][k]);
+                    printf ("%d -- %d:", k, p->nEvents[2*j][k]);
                     for (i1=0; i1<p->nEvents[2*j+1][k]; i1++)
                         {
                         if (i1 == 0)
-                            MrBayesPrint ("( %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf ("( %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         else if (i1 == p->nEvents[2*j][k]-1)
-                            MrBayesPrint (" %lf %lf)", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf (" %lf %lf)", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         else
-                            MrBayesPrint (" %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf (" %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         }
-                    MrBayesPrint ("\n");
+                    printf ("\n");
                     }
                 }
             }
@@ -1642,39 +1642,39 @@ int ChangeNumRuns (int from, int to)
         p = &params[i];
         if (p->paramType == P_CPPEVENTS)
             {
-            MrBayesPrint ("Trees after changing number of runs\n");
+            printf ("Trees after changing number of runs\n");
             for (j=0; j<numGlobalChains; j++)
                 {
-                MrBayesPrint ("Event tree for chain %d\n", j+1);
+                printf ("Event tree for chain %d\n", j+1);
                 for (k=0; k<2*numLocalTaxa; k++)
                     {
-                    MrBayesPrint ("%d -- %d:", k, p->nEvents[2*j][k]);
+                    printf ("%d -- %d:", k, p->nEvents[2*j][k]);
                     assert (p->nEvents[2*j] >= 0);
                     for (i1=0; i1<p->nEvents[2*j][k]; i1++)
                         {
                         if (i1 == 0)
-                            MrBayesPrint ("( %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf ("( %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
                         else if (i1 == p->nEvents[2*j][k]-1)
-                            MrBayesPrint (" %lf %lf)", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf (" %lf %lf)", p->position[2*j][k], p->rateMult[2*j][k]);
                         else
-                            MrBayesPrint (" %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
+                            printf (" %lf %lf,", p->position[2*j][k], p->rateMult[2*j][k]);
                         }
-                    MrBayesPrint ("\n");
+                    printf ("\n");
                     }
                 for (k=0; k<2*numLocalTaxa; k++)
                     {
-                    MrBayesPrint ("%d -- %d:", k, p->nEvents[2*j+1][k]);
+                    printf ("%d -- %d:", k, p->nEvents[2*j+1][k]);
                     assert (p->nEvents[2*j+1] >= 0);
                     for (i1=0; i1<p->nEvents[2*j+1][k]; i1++)
                         {
                         if (i1 == 0)
-                            MrBayesPrint ("( %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf ("( %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         else if (i1 == p->nEvents[2*j][k]-1)
-                            MrBayesPrint (" %lf %lf)", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf (" %lf %lf)", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         else
-                            MrBayesPrint (" %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
+                            printf (" %lf %lf,", p->position[2*j+1][k], p->rateMult[2*j+1][k]);
                         }
-                    MrBayesPrint ("\n");
+                    printf ("\n");
                     }
                 }
             }
@@ -2033,7 +2033,7 @@ int CheckExpandedModels (void)
                         break;
                     }
                 firstChar = c;
-                /* MrBayesPrint ("   first character = %d\n", firstChar); */
+                /*printf ("   first character = %d\n", firstChar);*/
                 
                 /* find last character in this partition */
                 for (c=numChar-1; c>=0; c--)
@@ -2042,7 +2042,7 @@ int CheckExpandedModels (void)
                         break;
                     }
                 lastChar = c;
-                /* MrBayesPrint ("   last character = %d\n", lastChar); */
+                /*printf ("   last character = %d\n", lastChar);*/
                 
                 /* check that the number of characters in partition is divisible by 3 */
                 numCharsInPart = 0;
@@ -2052,7 +2052,7 @@ int CheckExpandedModels (void)
                         continue;
                     numCharsInPart++;
                     }
-                /* MrBayesPrint ("   numCharsInPart = %d\n", numCharsInPart); */
+                /*printf ("   numCharsInPart = %d\n", numCharsInPart);*/
                 if (numCharsInPart % 3 != 0)
                     {
                     if (numCurrentDivisions == 1)
@@ -2295,8 +2295,8 @@ int CheckExpandedModels (void)
         
 #   if 0
     for (c=0; c<numChar; c++)
-        MrBayesPrint (" %d", charId[c]);
-    MrBayesPrint ("\n");
+            printf (" %d", charId[c]);
+    printf ("\n");
 #   endif
     free (tempStr);
     return (NO_ERROR);
@@ -9447,7 +9447,7 @@ int DoQuit (void)
                 fflush (stdin);
                 if( fgets (tempName, 100, stdin) == NULL )
                     {
-                    MrBayesPrint ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
                 }
             }
@@ -11757,7 +11757,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
             {
             if ( IsUnionEqThird (definedConstraintPruned[p->lockID], definedConstraintPruned[p->lockID], p->partition, nLongsNeeded) == NO && IsUnionEqThird (definedConstraintTwoPruned[p->lockID], definedConstraintTwoPruned[p->lockID], p->partition, nLongsNeeded) == NO)
                 {
-                MrBayesPrint ("DEBUG ERROR: Locked node does not represent right partition. \n");
+                printf ("DEBUG ERROR: Locked node does not represent right partition. \n");
                 return ABORT;
                 }
             else
@@ -11769,7 +11769,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
 
     if(locks_count != t->nLocks)
         {
-        MrBayesPrint ("DEBUG ERROR: locks_count:%d should be locks_count:%d\n", locks_count, t->nLocks);
+        printf("DEBUG ERROR: locks_count:%d should be locks_count:%d\n", locks_count, t->nLocks);
         return ABORT;
         }
 #   endif
@@ -11806,7 +11806,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
 
             if( i==t->nIntNodes )
                 {
-                MrBayesPrint ("DEBUG ERROR: Hard constraint is not satisfied. \n");
+                printf ("DEBUG ERROR: Hard constraint is not satisfied. \n");
                 return ABORT;
                 //assert(0);
                 }
@@ -12020,7 +12020,7 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
 #   if defined (DEBUG_CONSTRAINTS)
                     if (theTree->checkConstraints == YES && CheckConstraints (tree) == ERROR)
                         {
-                        MrBayesPrint ("Error in constraints of starting tree\n");
+                        printf ("Error in constraints of starting tree\n");
                         getchar();
                         }
 #   endif
@@ -12533,10 +12533,10 @@ void GetPossibleAAs (int aaCode, int aa[])
             aa[m] = 1;
         }
 #   if 0
-    MrBayesPrint ("%2d -- ", aaCode);
+    printf ("%2d -- ", aaCode);
     for (m=0; m<20; m++)
-        MrBayesPrint("%d", aa[m]);
-    MrBayesPrint ("\n");
+        printf ("%d", aa[m]);
+    printf ("\n");
 #   endif
 
 }
@@ -12677,10 +12677,10 @@ void GetPossibleRestrictionSites (int resSiteCode, int *sites)
         sites[0] = sites[1] = 1;
 
 #   if 0
-    MrBayesPrint ("%2d -- ", aaCode);
+    printf ("%2d -- ", aaCode);
     for (m=0; m<20; m++)
-        MrBayesPrint ("%d", aa[m]);
-    MrBayesPrint ("\n");
+        printf ("%d", aa[m]);
+    printf ("\n");
 #   endif
 
 }
@@ -17556,7 +17556,7 @@ void SetCode (int part)
         if (modelParams[part].codon[i] != 21)
             ns++;
         }
-    /* MrBayesPrint ("ns = %d\n", ns); */
+    /* printf ("ns = %d\n", ns); */
     
     s = 0;
     for (s1=0; s1<4; s1++)
@@ -24490,7 +24490,7 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 #   ifdef DEBUG_CPP
         if (baseRate < POS_MIN || baseRate > POS_INFINITY)
             {
-            MrBayesPrint ("baseRate out of bounds (%.15e for node %d\n", baseRate, p->index);
+            printf ("baseRate out of bounds (%.15e for node %d\n", baseRate, p->index);
             return (ERROR);
             }
 #   endif
@@ -24526,12 +24526,12 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 #   ifdef DEBUG_CPP
         if (endRate < POS_MIN || endRate > POS_INFINITY)
             {
-            MrBayesPrint ("endRate out of bounds (%.15e for node %d)\n", endRate, p->index);
+            printf ("endRate out of bounds (%.15e for node %d)\n", endRate, p->index);
             return (ERROR);
             }
         if (p->anc != NULL && p->anc->anc != NULL && (evolLength[p->index] < POS_MIN || evolLength[p->index] > POS_INFINITY))
             {
-            MrBayesPrint ("Effective branch length out of bounds (%.15e for node %d)\n", evolLength[p->index], p->index);
+            printf ("Effective branch length out of bounds (%.15e for node %d)\n", evolLength[p->index], p->index);
             return (ERROR);
             }
 #   endif

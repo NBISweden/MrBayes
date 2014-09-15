@@ -31,17 +31,14 @@
 #undef MAC_VERSION
 #undef WINDOWS_VERSION
 
-/* Define to 1 if you want to compile the debug version */
-#undef DEBUGOUTPUT
-
 /* Define if used on a 64bit cpu */
 #undef _64BIT
-
-/* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
-#undef FAST_VERSION
 
 /* Define to enable beagle library */
 #undef BEAGLE_ENABLED
 
 /* Define to enable threads in BEAGLE library */
 #undef THREADS_ENABLED
+
+/* Define to 1 if you want to compile the debug version */
+#undef DEBUGOUTPUT

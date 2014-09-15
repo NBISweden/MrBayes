@@ -44,13 +44,13 @@
 #endif
 
 #if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)
-#ifdef __MWERKS__
-#define MAC_VERSION
-#elif defined __APPLE__
-#define MAC_VERSION
-#else
-#define WIN_VERSION
-#endif
+#  ifdef __MWERKS__
+#    define MAC_VERSION
+#  elif defined __APPLE__
+#    define MAC_VERSION
+#  else
+#    define WIN_VERSION
+#  endif
 #endif
 
 

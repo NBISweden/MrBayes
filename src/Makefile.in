@@ -6,9 +6,9 @@ LDFLAGS   = @LDFLAGS@ -lm
 INSTALL   = @INSTALL@
 BINDIR    = /usr/local/bin
 
-SRC       =  bayes.c command.c mcmc.c model.c proposal.c sumpt.c utils.c mbbeagle.c best.c
-OBJECTS   =  bayes.o command.o mcmc.o model.o proposal.o sumpt.o utils.o mbbeagle.o best.o
-PROGS     =  mb
+SRC       = bayes.c command.c mcmc.c model.c proposal.c sumpt.c utils.c mbbeagle.c best.c
+OBJECTS   = bayes.o command.o mcmc.o model.o proposal.o sumpt.o utils.o mbbeagle.o best.o
+PROGS     = mb
 
 all: $(PROGS)
 
