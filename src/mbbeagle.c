@@ -233,7 +233,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         {
     
 #   if defined (DEBUG_MB_BEAGLE_FLOW)
-        printf("ALWAYS RESCALING\n");
+        MrBayesPrint ("ALWAYS RESCALING\n");
 #   endif
         /* Flip and copy or reset site scalers */
         FlipSiteScalerSpace(m, chain);
@@ -321,7 +321,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             m->succesCount[chain] = 0;
     rescale_all:
 #   if defined (DEBUG_MB_BEAGLE_FLOW)
-            printf("NUMERICAL RESCALING\n");
+            MrBayesPrint ("NUMERICAL RESCALING\n");
 #   endif
 
             m->rescaleBeagleAll = YES;
@@ -1057,7 +1057,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     {
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
         countBeagleDynamicFail++;
-        printf("#####DEBUG INFO (it is not an error)############## countBeagleDynamicFail:%d countALL:%d\n",countBeagleDynamicFail,countALL);
+        MrBayesPrint ("#####DEBUG INFO (not an error)############## countBeagleDynamicFail:%d countALL:%d\n", countBeagleDynamicFail, countALL);
 #   endif
         return beagleReturn;
     }

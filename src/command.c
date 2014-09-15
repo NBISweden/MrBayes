@@ -2062,7 +2062,7 @@ int DoCharStat (void)
                 fflush (stdin);
                 if( fgets (tempName, 100, stdin) == NULL )
                     {
-                        printf("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                        MrBayesPrint ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
                 }
             }
@@ -9492,7 +9492,7 @@ int FindValidParam (char *tk, int *numMatches)
         {
         q = paramTable + (p->parmList[i]);
         targetLen = (int) strlen(q->string);
-        /*printf ("%s %d (%s %d)\n", q->string, targetLen, tk, p->numParms);*/
+        /* MrBayesPrint ("%s %d (%s %d)\n", q->string, targetLen, tk, p->numParms); */
         if (!strcmp(q->string, "Xxxxxxxxxx"))
             {
             (*numMatches)++;
@@ -15177,10 +15177,10 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 {
     if (p != NULL)
         {
-        printf ("   ");
+        MrBayesPrint ("   ");
         if (p->left == NULL && p->right == NULL && p->anc != NULL)
             {
-            printf("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d isDated=%d ", 
+            MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d isDated=%d ",
             indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode, p->isDated);
             }
         else if (p->left != NULL && p->right == NULL && p->anc == NULL)
@@ -15188,15 +15188,15 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
             if (isThisTreeRooted == NO)
                 {
                 if (p->label[0] == '\0' || p->label[0] == '\n' || p->label[0] == ' ')
-                    printf("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d ", 
+                    MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d ",
                     indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
                 else
-                    printf("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d ", 
+                    MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d ",
                     indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label, p->scalerNode);
                 }
             else
                 {
-                printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ", 
+                MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ",
                 indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
                 }
             }
@@ -15205,17 +15205,17 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
             if (p->anc != NULL)
                 {
                 if (p->anc->anc == NULL && isThisTreeRooted == YES)
-                    printf("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ", 
+                    MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ",
                     indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
                 else    
-                    printf("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d ", 
+                    MrBayesPrint ("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d ",
                     indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->scalerNode);
                 }
             }
         if (isThisTreeRooted == YES)
-            printf ("depth=%1.15lf\n", p->nodeDepth);
+            MrBayesPrint ("depth=%1.15lf\n", p->nodeDepth);
         else
-            printf ("\n");
+            MrBayesPrint ("\n");
         ShowNodes (p->left,  indent + 2, isThisTreeRooted);
         ShowNodes (p->right, indent + 2, isThisTreeRooted);
         }

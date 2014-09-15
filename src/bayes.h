@@ -89,28 +89,28 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 /* Define a compiler and vector size for the SSE code */
 #if defined (SSE_ENABLED)
-#define FLOATS_PER_VEC 4
-#if defined (WIN_VERSION)
-#define MS_VCPP_SSE
-#else
-#define GCC_SSE
-#undef ICC_SSE
-#endif
+#  define FLOATS_PER_VEC 4
+#  if defined (WIN_VERSION)
+#    define MS_VCPP_SSE
+#  else
+#    define GCC_SSE
+#    undef ICC_SSE
+#  endif
 #endif
 
 #if defined GCC_SSE         /* gcc compiler */
-#define ALIGNED_MALLOC(X,Y,Z)  posix_memalign(X,Y,Z)
-#define ALIGNED_FREE free
-#include <xmmintrin.h>
+#  define ALIGNED_MALLOC(X,Y,Z)  posix_memalign(X,Y,Z)
+#  define ALIGNED_FREE free
+#  include <xmmintrin.h>
 #elif defined ICC_SSE       /* icc compiler */
-#define ALIGNED_MALLOC _mm_malloc
-#define ALIGNED_FREE _mm_free
+#  define ALIGNED_MALLOC _mm_malloc
+#  define ALIGNED_FREE _mm_free
 #elif defined MS_VCPP_SSE   /* Visual .Net */
-#define ALIGNED_MALLOC _aligned_malloc
-#define ALIGNED_FREE _aligned_free
-#include <xmmintrin.h>
+#  define ALIGNED_MALLOC _aligned_malloc
+#  define ALIGNED_FREE _aligned_free
+#  include <xmmintrin.h>
 #else
-#define ALIGNED_MALLOC malloc
+#  define ALIGNED_MALLOC malloc
 #endif
 
 /* For comparing floating points: two values are the same if the absolute difference is less then 
@@ -121,7 +121,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #endif
 
 #if defined (DEBUGOUTPUT)
-#define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__);printf(fmt,arg);
+#define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__); printf(fmt,arg);
 // #else
 // #define DEBUG(a,b)
 #endif
