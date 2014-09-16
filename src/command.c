@@ -7586,7 +7586,7 @@ int DoTaxlabelsParm (char *parmName, char *tkn)
         {
         if (CheckString (taxaNames, numNamedTaxa, tkn, &index) == ERROR)
             {
-            if ( strlen(tkn)>99 )
+            if (strlen(tkn)>99)
                 {
                 MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
                 return (ERROR);
@@ -14863,7 +14863,7 @@ int SetTaxaFromTranslateTable (void)
 
     for (i=0; i<numTranslates; i++)
         {
-        if ( strlen(transFrom[i])>99 )
+        if (strlen(transFrom[i])>99)
             {
             MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, transFrom[i]);
             return (ERROR);

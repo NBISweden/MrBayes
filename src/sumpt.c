@@ -7162,9 +7162,9 @@ int OpenSumtFiles (int treeNo)
         }
 
     /* print #NEXUS if appropriate */
-    MrBayesPrintf (fpCon,   "#NEXUS\n\n");
+    MrBayesPrintf (fpCon,   "#NEXUS\n");
     if (sumtParams.calcTreeprobs == YES)
-        MrBayesPrintf (fpTrees, "#NEXUS\n\n");
+        MrBayesPrintf (fpTrees, "#NEXUS\n");
 
     /* print unique identifiers to each file */
     len = (int) strlen (stamp);

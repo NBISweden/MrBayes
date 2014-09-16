@@ -642,10 +642,10 @@ int AddToPrintString (char *tempStr)
 
 {
 
-    size_t          len1, len2;
+    size_t  len1, len2;
     
-    len1 = (int) strlen(printString);
-    len2 = (int) strlen(tempStr);
+    len1 = strlen(printString);
+    len2 = strlen(tempStr);
     if (len1 + len2 + 5 > printStringSize)
         {
         printStringSize += len1 + len2 - printStringSize + 200;
@@ -672,7 +672,7 @@ int AddToPrintString (char *tempStr)
 /* AddTreeSamples: Add tree samples from .t files to partition counters. if saveToList == YES then also save trees in tree list */
 int AddTreeSamples (int from, int to, int saveToList)
 {
-    int i, j, k, longestLine;
+    int     i, j, k, longestLine;
     BitsLong    lastBlock;
     char    *word, *s, *lineBuf;
     FILE    *fp;
@@ -18690,7 +18690,7 @@ int PrintCheckPoint (int gen)
     ERROR_TEST2("",free(tempString),return(ERROR));
     
     /* write file header */
-    MrBayesPrintf (fp, "#NEXUS\n[run stamp:%s]\n[generation: %d]\n", stamp, gen);
+    MrBayesPrintf (fp, "#NEXUS\n[ID: %s]\n[generation: %d]\n", stamp, gen);
 
     if( chainParams.isSS == YES)
         {
@@ -19225,7 +19225,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
     /* Simply print header if curGen == 0 */
     if (curGen == 0)
         {
-        MrBayesPrintf (fpMcmc, "[LEGEND:]\n");
+        // MrBayesPrintf (fpMcmc, "[LEGEND:]\n");
         MrBayesPrintf (fpMcmc, "[ID: %s]\n", stamp);
         MrBayesPrintf (fpMcmc, "[   Gen                --  Generation]\n");
         if (chainParams.allChains == YES)
@@ -20095,7 +20095,7 @@ int PrintStates (int curGen, int coldId)
                 }
             }
 
-       if (inferPosSel == YES)
+        if (inferPosSel == YES)
             {
             for (i=0; i<numChar; i++)
                 printedChar[i] = NO;
@@ -24439,7 +24439,7 @@ int RunChain (RandLong *seed)
                 MrBayesPrint("%s   Sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS );
 
             /*Printing SS header*/
-            MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling. ]\n");
+            MrBayesPrintf (fpSS, "[LEGEND: The file contains statistics on the Steppingstone Sampling.]\n");
             MrBayesPrintf (fpSS, "[ID: %s]\n", stamp);
             MrBayesPrintf (fpSS, "[   Step                --  Index of the step ]\n");
             MrBayesPrintf (fpSS, "[   Power               --  At each step we sample from the distribution with density (Likelihood^Power)*Prior ]\n");
