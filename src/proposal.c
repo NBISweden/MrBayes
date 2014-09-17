@@ -4033,9 +4033,9 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             (*lnPriorRatio) += brlensExp * (m - u->length);
         }
     u->upDateTi = YES;
-        
+
     /* move around in root subtree */
-    for (nRootNodes=0; (alwaysMoveRoot == YES && nRootNodes == 0) || RandomNumber(seed)<extensionProb; nRootNodes++) 
+    for (nRootNodes=0; (alwaysMoveRoot == YES && nRootNodes == 0) || RandomNumber(seed) < extensionProb; nRootNodes++)
         {
         if (directionUp == YES) 
             {   /* going up tree */
@@ -4109,13 +4109,13 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     if (nRootNodes > 0)
         {
         if (isRootStartConstrained == YES && isStopConstrained == NO)
-            (*lnProposalRatio) -= log (2.0 * (log(1.0 - extensionProb)));
+            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
         else if (isRootStartConstrained == NO && isStopConstrained == YES)
-            (*lnProposalRatio) += log (2.0 * (log(1.0 - extensionProb)));
+            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
         }
 
     /* move around in crown subtree */
-    for (nCrownNodes=0; (alwaysMoveRoot == NO && nCrownNodes == 0) || RandomNumber(seed)<extensionProb; nCrownNodes++) 
+    for (nCrownNodes=0; (alwaysMoveRoot == NO && nCrownNodes == 0) || RandomNumber(seed) < extensionProb; nCrownNodes++)
         {
         if (c->left == NULL || c->isLocked == YES)
             break;  /* can't go further */
@@ -4150,9 +4150,9 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     if (nCrownNodes > 0)
         {
         if (isCrownStartConstrained == YES && isStopConstrained == NO)
-            (*lnProposalRatio) -= log (2.0 * (log(1.0 - extensionProb)));
+            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
         else if (isCrownStartConstrained == NO && isStopConstrained == YES)
-            (*lnProposalRatio) += log (2.0 * (log(1.0 - extensionProb)));
+            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
         }
 
     /* combine the subtrees */

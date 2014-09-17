@@ -7851,7 +7851,7 @@ int DoMcmc (void)
             temp[i] = '\0';
             numPreviousGen = atoi(temp);
             }
-        if ( chainParams.isSS==YES && c!=EOF)
+        if (chainParams.isSS==YES && c!=EOF)
             {
             do { c = fgetc(tempFile);
                 } while (c!=':' && c!=EOF);
@@ -12895,7 +12895,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -12940,10 +12940,9 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             if (like < LIKE_EPSILON)
                 {
 #   ifdef DEBUG_LIKELIHOOD
-                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13123,7 +13122,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13175,10 +13174,9 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
             if (like < LIKE_EPSILON)
                 {
 #   ifdef DEBUG_LIKELIHOOD
-                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13278,7 +13276,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13311,10 +13309,9 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
             if (like < LIKE_EPSILON)
                 {
 #   ifdef DEBUG_LIKELIHOOD
-                printf ("lnScaler[%d] = %lf likeI = %lf\n", c, lnScaler[c], likeI);
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13412,7 +13409,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13467,7 +13464,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13554,7 +13551,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13591,7 +13588,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13613,77 +13610,76 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 
 
 
-//
 //#if defined (SSE_ENABLED)
 ///*------------------------------------------------------------------
-//|
-//| Likelihood_NUC4_GibbsGamma: 4by4 nucleotide models with rate
-//|     variation using Gibbs sampling from gamma rate categories
-//|
-//-------------------------------------------------------------------*/
+// |
+// | Likelihood_NUC4_GibbsGamma: 4by4 nucleotide models with rate
+// |     variation using Gibbs sampling from gamma rate categories
+// |
+// -------------------------------------------------------------------*/
 //int Likelihood_NUC4_GibbsGamma_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 //
 //{
-//
-//  int             c, i, r, nGammaCats, *rateCat;
-//  MrBFlt          *bs, like;
-//  CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
-//  __m128          *clP, *clInvar=NULL;
+//    
+//    int             c, i, r, nGammaCats, *rateCat;
+//    MrBFlt          *bs, like;
+//    CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
+//    __m128          *clP, *clInvar=NULL;
 //    __m128          m1, mA, mC, mG, mT, mFreq, mPInvar, mLike;
-//  ModelInfo       *m;
-//
+//    ModelInfo       *m;
+//    
 //#if defined (FAST_LOG)
-//  int             k, index;
-//  MrBFlt          likeAdjust = 1.0, f;
+//    int             k, index;
+//    MrBFlt          likeAdjust = 1.0, f;
 //#endif
-//
-//  /* find model settings and invar cond likes */
-//  m = &modelSettings[division];
-//  clInvar = (__m128 *)m->invCondLikes;
-//  /* find conditional likelihood pointer */
-//  clP = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->index]];
-//
-//  lnL_SSE  = m->lnL_SSE;
+//    
+//    /* find model settings and invar cond likes */
+//    m = &modelSettings[division];
+//    clInvar = (__m128 *)m->invCondLikes;
+//    /* find conditional likelihood pointer */
+//    clP = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->index]];
+//    
+//    lnL_SSE  = m->lnL_SSE;
 //    lnLI_SSE = m->lnLI_SSE;
-//  
-//  /* find base frequencies */
-//  bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-//
-//  /* find tree scaler */
-//  lnScaler = m->scalers[m->siteScalerIndex[chain]];
-//  
-//  /* find nSitesOfPat */
-//  nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
-//  
-//  /* find rate category index  and number of gamma categories */
-//  rateCat = m->tiIndex + chain * m->numChars;
-//  nGammaCats = m->numGammaCats;
-//
-//  /* reset lnL */
-//  *lnL = 0.0;
-//
-//  /* calculate variable likelihood */
-//  for (c=0; c<m->numSSEChars; c++)
-//      {
-//      mLike = _mm_mul_ps (clP[A], mA);
+//    
+//    /* find base frequencies */
+//    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+//    
+//    /* find tree scaler */
+//    lnScaler = m->scalers[m->siteScalerIndex[chain]];
+//    
+//    /* find nSitesOfPat */
+//    nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
+//    
+//    /* find rate category index  and number of gamma categories */
+//    rateCat = m->tiIndex + chain * m->numChars;
+//    nGammaCats = m->numGammaCats;
+//    
+//    /* reset lnL */
+//    *lnL = 0.0;
+//    
+//    /* calculate variable likelihood */
+//    for (c=0; c<m->numSSEChars; c++)
+//    {
+//        mLike = _mm_mul_ps (clP[A], mA);
 //        m1    = _mm_mul_ps (clP[C], mC);
 //        mLike = _mm_add_ps (mLike, m1);
 //        m1    = _mm_mul_ps (clP[G], mG);
 //        mLike = _mm_add_ps (mLike, m1);
 //        m1    = _mm_mul_ps (clP[T], mT);
 //        mLike = _mm_add_ps (mLike, m1);
-//
-//      clP += 4;
-//      _mm_store_ps (lnL_SSE, mLike);
+//        
+//        clP += 4;
+//        _mm_store_ps (lnL_SSE, mLike);
 //        lnL_SSE += FLOATS_PER_VEC;
-//      }
+//    }
 //    
 //    /* calculate invariable likelihood */
 //    if (hasPInvar == YES)
+//    {
+//        for (c=0; c<m->numSSEChars; c++)
 //        {
-//      for (c=0; c<m->numSSEChars; c++)
-//          {
-//          mLike = _mm_mul_ps (clInvar[A], mA);
+//            mLike = _mm_mul_ps (clInvar[A], mA);
 //            m1    = _mm_mul_ps (clInvar[C], mC);
 //            mLike = _mm_add_ps (mLike, m1);
 //            m1    = _mm_mul_ps (clInvar[G], mG);
@@ -13691,73 +13687,74 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //            m1    = _mm_mul_ps (clInvar[T], mT);
 //            mLike = _mm_add_ps (mLike, m1);
 //            mLike = _mm_mul_ps (mLike, mPInvar);
-//
+//            
 //            _mm_store_ps (lnLI_SSE, mLike);
 //            clInvar += 4;
 //            lnLI_SSE += FLOATS_PER_VEC;
+//        }
+//    }
+//    
+//    
+//    /* loop over characters */
+//    if (m->pInvar == NULL)
+//    {
+//        for (c=i=0; c<m->numChars; c++)
+//        {
+//            like = m->lnL_SSE[c];
+//            /* check against LIKE_EPSILON (values close to zero are problematic) */
+//            if (like < LIKE_EPSILON)
+//            {
+//                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+//                (*lnL) = MRBFLT_NEG_MAX;
+//                return ERROR;
+//            }
+//            else
+//            {
+//#if defined (FAST_LOG)
+//                f = frexp (like, &index);
+//                index = 1-index;
+//                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
+//                for (k=0; k<(int)nSitesOfPat[c]; k++)
+//                    likeAdjust *= f;
+//#else
+//                (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
+//#endif
 //            }
 //        }
-//
-//
-//  /* loop over characters */
-//  if (m->pInvar == NULL)
-//      {
-//      for (c=i=0; c<m->numChars; c++)
-//          {
-//          like = m->lnL_SSE[c];
-//          /* check against LIKE_EPSILON (values close to zero are problematic) */
-//          if (like < LIKE_EPSILON)
-//              {
-//              MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
-//              (*lnL)=MRBFLT_NEG_MAX;
-//              return ERROR;
-//              }
-//          else    
-//              {
+//    }
+//    else
+//    {
+//        /* has invariable category */
+//        for (c=i=0; c<m->numChars; c++)
+//        {
+//            r = rateCat[c];
+//            if (r < nGammaCats)
+//                like = m->lnL_SSE[c];
+//            else
+//                like = m->lnLI_SSE[c];
+//            
+//            /* check against LIKE_EPSILON (values close to zero are problematic) */
+//            if (like < LIKE_EPSILON)
+//            {
+//                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
+//                (*lnL) = MRBFLT_NEG_MAX;
+//                return ERROR;
+//            }
+//            else
+//            {
+//                (*lnL) += (log (like) + lnScaler[c]) * nSitesOfPat[c];
+//            }
+//        }       
+//    }
+//    
 //#if defined (FAST_LOG)
-//              f = frexp (like, &index);
-//              index = 1-index;
-//              (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-//              for (k=0; k<(int)nSitesOfPat[c]; k++)
-//                  likeAdjust *= f;
-//#else
-//              (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
+//    (*lnL) += log (likeAdjust);
 //#endif
-//              }
-//          }
-//      }
-//  else
-//      {
-//      /* has invariable category */
-//      for (c=i=0; c<m->numChars; c++)
-//          {
-//          r = rateCat[c];
-//          if (r < nGammaCats)
-//              like = m->lnL_SSE[c];
-//          else
-//              like = m->lnLI_SSE[c];
-//
-//          /* check against LIKE_EPSILON (values close to zero are problematic) */
-//          if (like < LIKE_EPSILON)
-//              {
-//              MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
-//              (*lnL)=MRBFLT_NEG_MAX;
-//              return ERROR;
-//              }
-//          else    
-//              {
-//              (*lnL) += (log (like) + lnScaler[c]) * nSitesOfPat[c];
-//              }
-//          }       
-//      }
-//      
-//#if defined (FAST_LOG)
-//  (*lnL) += log (likeAdjust);
-//#endif
-//
-//  return NO_ERROR;
+//    
+//    return NO_ERROR;
 //}
 //#endif
+
 
 
 
@@ -13886,7 +13883,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -13933,7 +13930,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -14024,7 +14021,7 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 #   ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-            (*lnL)=MRBFLT_NEG_MAX;
+            (*lnL) = MRBFLT_NEG_MAX;
             abortMove = YES;
             return ERROR;
             }
@@ -14116,7 +14113,7 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 #   ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-            (*lnL)=MRBFLT_NEG_MAX;
+            (*lnL) = MRBFLT_NEG_MAX;
             abortMove = YES;
             return ERROR;
             }
@@ -14193,7 +14190,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #   ifdef DEBUG_LIKELIHOOD
         MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #   endif
-        (*lnL)=MRBFLT_NEG_MAX;
+        (*lnL) = MRBFLT_NEG_MAX;
         abortMove = YES;
         return ERROR;
         }
@@ -14212,7 +14209,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #   ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-            (*lnL)=MRBFLT_NEG_MAX;
+            (*lnL) = MRBFLT_NEG_MAX;
             abortMove = YES;
             return ERROR;
             }
@@ -14312,7 +14309,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #   ifdef DEBUG_LIKELIHOOD
         MrBayesPrint ("%s   WARNING: p(Observed) < LIKE_EPSILON - for division %d p(Observed) = %1.30le\n", spacer, division+1, pObserved);
 #   endif
-        (*lnL)=MRBFLT_NEG_MAX;
+        (*lnL) = MRBFLT_NEG_MAX;
         abortMove = YES;
         return ERROR;
         }
@@ -14326,7 +14323,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #   ifdef DEBUG_LIKELIHOOD
             MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-            (*lnL)=MRBFLT_NEG_MAX;
+            (*lnL) = MRBFLT_NEG_MAX;
             abortMove = YES;
             return ERROR;
             }
@@ -14421,7 +14418,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
         pObserved =  1.0 - pUnobserved;
         if (pObserved < LIKE_EPSILON)
-            pObserved =  LIKE_EPSILON;
+            pObserved = LIKE_EPSILON;
 
         for (c=m->numDummyChars; c<m->numChars; c++)
             {
@@ -14443,7 +14440,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -14488,7 +14485,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
         pObserved =  1.0 - pUnobserved;
         if (pObserved < LIKE_EPSILON)
-            pObserved =  LIKE_EPSILON;
+            pObserved = LIKE_EPSILON;
 
         for (c=m->numDummyChars; c<m->numChars; c++)
             {
@@ -14523,7 +14520,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #   ifdef DEBUG_LIKELIHOOD
                 MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30le\n", spacer, division+1, c+1, like);
 #   endif
-                (*lnL)=MRBFLT_NEG_MAX;
+                (*lnL) = MRBFLT_NEG_MAX;
                 abortMove = YES;
                 return ERROR;
                 }
@@ -23343,7 +23340,7 @@ void ResetFlips (int chain)
             m->rescaleBeagleAll == YES )
                 {
                 FlipSiteScalerSpace (m, chain);
-                if (m->useBeagle == YES && m->rescaleBeagleAll == YES )
+                if (m->useBeagle == YES && m->rescaleBeagleAll == YES)
                     m->rescaleFreq[chain] = m->rescaleFreqOld;
                 }
 #else
@@ -23369,8 +23366,8 @@ void ResetFlips (int chain)
 #if defined (BEAGLE_ENABLED)
                     if( m->useBeagle == NO || 
                         beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-                        ( m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES ))
-                            FlipNodeScalerSpace (m, chain, p->index);
+                        (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES) )
+                        FlipNodeScalerSpace (m, chain, p->index);
 #else
                     FlipNodeScalerSpace (m, chain, p->index);
 #endif
@@ -23722,10 +23719,9 @@ int RunChain (RandLong *seed)
     time_t      startingT, endingT, stoppingT1, stoppingT2;
     clock_t     previousCPUTime, currentCPUTime;
     /* Stepping-stone sampling variables */
-    int         run, samplesCountSS=0, stepIndexSS=0,numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
-    MrBFlt      stepLengthSS=0,meanSS,varSS, *tempX;
-    char        ckpFileName[220],bkupFileName[220];
-    RandLong    oldSeed;
+    int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
+    MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
+    char        ckpFileName[220], bkupFileName[220];
 
 #   if defined (BEAGLE_ENABLED)
     int         ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
@@ -24040,7 +24036,7 @@ int RunChain (RandLong *seed)
     /* initialize likelihoods and prior                  */
     /* touch everything and calculate initial cond likes */
 #   if defined (BEAGLE_ENABLED)
-    if ( ResetScalersNeeded )
+    if (ResetScalersNeeded)
         ResetScalers();
 #   else
     ResetScalers();
@@ -24066,7 +24062,7 @@ int RunChain (RandLong *seed)
             }
         MrBayesPrint ("%s      Chain %d -- %.6lf -- %.6lf\n", spacer, (chn % chainParams.numChains) + 1, curLnL[chn], curLnPr[chn]);
         }
-     MrBayesPrint("\n");
+    MrBayesPrint("\n");
 
 #   if defined (MPI_ENABLED)
     if (num_procs > 2)
@@ -24074,7 +24070,6 @@ int RunChain (RandLong *seed)
     else if (num_procs==2)
         MrBayesPrint ("%s   There are %d more chains on the other processor\n\n", spacer, numGlobalChains - numLocalChains);
 #   endif
-
 
     /* All steps are assumed to have the same length. */
     if (chainParams.isSS == YES)
@@ -24489,10 +24484,9 @@ int RunChain (RandLong *seed)
             ResetScalers();
 #   endif
 
-        oldSeed = *seed;  // *seed = 12345; /* record the old seed for debugging */
+        // RandLong oldSeed = *seed; *seed = 12345; /* record the old seed for debugging */
         for (chn=0; chn<numLocalChains; chn++)
             {
-
             /* Do Gibbs resampling of rate categories for current state if time to do so */
             for (i=0; i<numCurrentDivisions; i++)
                 {
@@ -24542,11 +24536,10 @@ int RunChain (RandLong *seed)
             for (i=0; i<theMove->parm->nRelParts; i++)
                 modelSettings[theMove->parm->relParts[i]].upDateCl = YES;
 
-            /* make move */
 #   ifndef NDEBUG
             if (IsTreeConsistent(theMove->parm, chn, state[chn]) != YES)
                 {
-                printf ("IsTreeConsistent failed before move!\n");
+                printf ("IsTreeConsistent failed before a move!\n");
                 return ERROR;
                 }
 #   endif
@@ -24557,6 +24550,7 @@ int RunChain (RandLong *seed)
                 return ERROR;
                 }
 #   endif
+            /* make move */
             if ((theMove->moveFxn)(theMove->parm, chn, seed, &lnPriorRatio, &lnProposalRatio, theMove->tuningParam[chainId[chn]]) == ERROR)
                 {
                 printf ("%s   Error in move %s\n", spacer, theMove->name);
@@ -24567,7 +24561,7 @@ int RunChain (RandLong *seed)
 #   endif
                 }
 
-            if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))!=YES)
+            if (theMove->parm->paramType == P_TOPOLOGY && DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn])) != YES)
                 {
 #   if defined (DEBUG_CONSTRAINTS)
                 if(DoesTreeSatisfyConstraints(GetTree (theMove->parm, chn, state[chn]))==ABORT)
@@ -24598,15 +24592,27 @@ int RunChain (RandLong *seed)
                 if (lnPriorRatio != lnPriorRatio)
                     {
                     printf ("DEBUG ERROR: Log prior ratio nan after move '%s'\n", theMove->name);
+                    // printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
                     return ERROR;
                     }
                 if (fabs((lnPrior-LogPrior(chn))/lnPrior) > 0.0001)
                     {
                     printf ("DEBUG ERROR: Log prior incorrect after move '%s' :%e :%e\n", theMove->name,lnPrior,LogPrior(chn));
-                    printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
+                    // printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
                     return ERROR;
                     }
-#       if defined (DEBUG_LNLIKELIHOOD)
+                if (lnProposalRatio != lnProposalRatio)
+                    {
+                    printf ("DEBUG ERROR: Log proposal ratio nan after move '%s'\n", theMove->name);
+                    // printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
+                    return ERROR;
+                    }
+                if (lnLike != lnLike)
+                    {
+                    printf ("DEBUG ERROR: Log likelihood nan after move '%s'\n", theMove->name);
+                    return ERROR;
+                    }
+#       if defined (DEBUG_LNLIKELIHOOD) /* slow */
                 ResetFlips(chn); /* needed to return flags so they point to old state */
                 TouchEverything();
                 if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
@@ -24615,7 +24621,8 @@ int RunChain (RandLong *seed)
                     return ERROR;
                     }
 #       endif
-                if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES && IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
+                if (theMove->parm->paramType == P_TOPOLOGY && GetTree (theMove->parm, chn, state[chn])->isClock == YES &&
+                    IsClockSatisfied (GetTree (theMove->parm, chn, state[chn]),0.001) == NO)
                     {
                     printf ("%s   Branch lengths of the tree do not satisfy the requirements of a clock tree.\n", spacer);
                     ShowNodes(GetTree (theMove->parm, chn, state[chn])->root,0,YES);
@@ -24659,9 +24666,9 @@ int RunChain (RandLong *seed)
                     ResetFlips(chn);
                 state[chn] ^= 1;
 #   if defined (BEAGLE_ENABLED)
-                if ( recalcScalers == YES )
+                if (recalcScalers == YES)
                     {
-                    recalculateScalers( chn );
+                    recalculateScalers(chn);
                     recalcScalers = NO;
                     }
 #   endif
@@ -24692,13 +24699,12 @@ int RunChain (RandLong *seed)
                     }
                 }
 
-            /*ShowValuesForChain (chn); */
+            /* ShowValuesForChain (chn); */
 
             if (curLnL[chn] > maxLnL0[chainId[chn]])
                 maxLnL0[chainId[chn]] = curLnL[chn];
 
             }
-
 
         /* attempt swap(s) Non-blocking for MPI if no swap with external process. */
         if (chainParams.numChains > 1 && n % chainParams.swapFreq == 0)
@@ -24762,8 +24768,10 @@ int RunChain (RandLong *seed)
         /* print mcmc diagnostics. Blocking for MPI */
         if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
             {
-            if (chainParams.numRuns > 1 && ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && ( n-lastStepEndSS )> numGenInStepBurninSS ) ))
-                                            || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
+            if (chainParams.numRuns > 1
+                && ((n > 0 && chainParams.relativeBurnin == YES &&
+                     (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
+                    || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
                 {
                 /* we need some space for coming output */
                 MrBayesPrint ("\n");
@@ -24811,7 +24819,7 @@ int RunChain (RandLong *seed)
                 /* output statistics */
                 if (numTopologies == 1)
                     {
-                    f=-1.0;
+                    f = -1.0;
                     if (chainParams.stat[0].numPartitions == 0)
                         {
                         MrBayesPrint ("%s   Average standard deviation of split frequencies: NA (no splits above min. frequency)\n", spacer);
@@ -25253,7 +25261,6 @@ int RunChain (RandLong *seed)
             }
         }
 
-
     if ( chainParams.isSS == YES )
         {
         MrBayesPrint ("\n");
@@ -25425,7 +25432,6 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   tuning MCMC proposal or heating parameters.                               \n", spacer);
             }
         }
-
 
     return (NO_ERROR);
 }
