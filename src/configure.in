@@ -75,11 +75,11 @@ fi
 # ------------------------------------------------------------------------------
 
 AC_ARG_WITH([beagle],
-   [AS_HELP_STRING([--with-beagle[[=PATH]]],
-   [enable beagle and optionally set prefix where beagle is installed if not 
+    [AS_HELP_STRING([--with-beagle[[=PATH]]],
+    [enable beagle and optionally set prefix where beagle is installed if not 
     /usr/local @<:@default=yes@:>@])],
-   [],
-   [with_beagle=yes])
+    [],
+    [with_beagle=yes])
    
 AC_ARG_ENABLE(threads, 
     [--enable-threads=[no/yes] enable thread-support when using BEAGLE [default="no"]]
@@ -87,12 +87,12 @@ AC_ARG_ENABLE(threads,
 
 if test "x$with_beagle" != "xno"
 then
-   if test "x$with_beagle" == "xyes"
-   then
-      with_beagle=/usr/local
-   fi
+    if test "x$with_beagle" == "xyes"
+    then
+        with_beagle=/usr/local
+    fi
 
-   AC_CHECK_FILE($with_beagle/include/libhmsbeagle/libhmsbeagle/beagle.h,
+    AC_CHECK_FILE($with_beagle/include/libhmsbeagle/libhmsbeagle/beagle.h,
        [BEAGLE_CFLAGS="-I$with_beagle/include/libhmsbeagle"],
        [AC_CHECK_FILE($with_beagle/include/libhmsbeagle-1/libhmsbeagle/beagle.h,
         [BEAGLE_CFLAGS="-I$with_beagle/include/libhmsbeagle-1"],   
@@ -102,7 +102,7 @@ then
          beagle library from http://code.google.com/p/beagle-lib/ or disable use of 
          beagle library by invoking configure script with option --with-beagle=no. 
          Note: without beagle library MrBayes may run slower.)])])
-   AC_CHECK_FILE($with_beagle/include/libhmsbeagle/libhmsbeagle/platform.h,,
+    AC_CHECK_FILE($with_beagle/include/libhmsbeagle/libhmsbeagle/platform.h,,
        [AC_CHECK_FILE($with_beagle/include/libhmsbeagle-1/libhmsbeagle/platform.h,,   
         [AC_MSG_ERROR([beagle's library include file platform.h is not found neither in 
          ${with_beagle}/include/libhmsbeagle/libhmsbeagle/ nor in 
@@ -110,24 +110,24 @@ then
          beagle library from http://code.google.com/p/beagle-lib/ or disable use of 
          beagle library by invoking configure script with option --with-beagle=no. 
          Note: without beagle library MrBayes may run slower.)])])
-   AC_CHECK_FILE($with_beagle/lib,[BEAGLE_LIBS="-L$with_beagle/lib -lhmsbeagle"],
+    AC_CHECK_FILE($with_beagle/lib,[BEAGLE_LIBS="-L$with_beagle/lib -lhmsbeagle"],
        [AC_MSG_ERROR([beagle library is not found in ${with_beagle}]. You should either 
         install beagle library from http://code.google.com/p/beagle-lib/ or disable use 
         of beagle library by invoking configure script with option --with-beagle=no. 
         Note: without beagle library MrBayes may run slower.)])
 
-   AC_DEFINE(BEAGLE_ENABLED)
-   CFLAGS="${CFLAGS} ${BEAGLE_CFLAGS}"
-   LDFLAGS="${LDFLAGS} ${BEAGLE_LIBS}"
+    AC_DEFINE(BEAGLE_ENABLED)
+    CFLAGS="${CFLAGS} ${BEAGLE_CFLAGS}"
+    LDFLAGS="${LDFLAGS} ${BEAGLE_LIBS}"
    
-   # ----- Check for pthreads compatibility -------
+    # ----- Check for pthreads compatibility -------
    
-   if test "x$enable_threads" == "xyes"
-   then
-      AC_CHECK_LIB(pthread,pthread_create,[THREAD_LIB="-lpthread"],
-      [AC_MSG_ERROR([pthreads library not found])])
-      AC_DEFINE(THREADS_ENABLED)
-   fi
+    if test "x$enable_threads" == "xyes"
+    then
+        AC_CHECK_LIB(pthread,pthread_create,[THREAD_LIB="-lpthread"],
+        [AC_MSG_ERROR([pthreads library not found])])
+        AC_DEFINE(THREADS_ENABLED)
+    fi
 fi
 # ------------------------------------------------------------------------------
 
@@ -175,7 +175,6 @@ AC_RUN_IFELSE(
 dnl finish
 if test "x$enable_mpi" == "xyes"; then
     CC=mpicc
-    LDFLAGS=${LDFLAGS}" -lmpi"
 fi
 
 AC_CONFIG_FILES([Makefile])
