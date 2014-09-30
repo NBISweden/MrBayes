@@ -16550,8 +16550,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i]     = lambda[i] * eR[i];
-        psi[i]    = mu[i] * fR[i] / (1.0 - fR[i]);
+        mu[i]  = lambda[i] * eR[i];
+        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         if (i < sl) {
             rho[i] = mp->sampleFSProb[i];
             t_f[i] = mp->sampleFSTime[i];
@@ -16699,7 +16699,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-    /* plus 1 extra slice for at time of youngest node (x_cut) to shift psi */
+    /* plus 1 extra slice (x_cut) to shift psi to 0 */
     sl += 1;
     
     /* alloc memory for time of each slice */
@@ -16735,21 +16735,19 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             if (x_min > p->nodeDepth / clockRate)
                 x_min = p->nodeDepth / clockRate;
         }
-    if (t_min < x_min || (sl > 1 && mp->sampleFSTime[sl-2] < x_min))
-        {
-#   ifdef DEBUG_FBDPR
-        MrBayesPrint ("%s   Trouble: fossil times should be older than the youngest int node\n", spacer);
-#   endif
-        free(lambda); free(mu); free(psi); free(rho);
-        free(t_f); free(c1); free(c2); free(p_t);
-        abortMove = YES;
-        return (NO_ERROR);
-        }
+
+    /* lower the cutoff time if not compatible */
+    if (x_min > t_min)
+        x_min = t_min;
+    if (sl > 1 && mp->sampleFSTime[sl-2] < x_min)
+        x_min = mp->sampleFSTime[sl-2];
+    
     if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
     
     /* initialization (sl >= 1) */
     for (i = 0; i < sl; i++)
         {
+        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR[i] / (1.0 - eR[i]);
         mu[i]  = lambda[i] * eR[i];
         psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
@@ -16763,8 +16761,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         t_f[i] = mp->sampleFSTime[i];
         }
     rho[sl-1] = 0.0;
-    t_f[sl-1] = x_min * 0.95;
-    rho[sl]   = 1.0;  // not sF
+    t_f[sl-1] = x_min * 0.95; // x_cut
+    rho[sl]   = 1.0;          // not sF
     t_f[sl]   = 0.0;
     
     for (i = sl; i >= 0; i--)
