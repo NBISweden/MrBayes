@@ -16466,7 +16466,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-    /* conversion to labeled tree from oriented tree */
+    /* conversion to labeled tree from oriented tree , constant for a given dataset */
     (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
     return (NO_ERROR);

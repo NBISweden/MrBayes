@@ -13,7 +13,7 @@ How to compile MrBayes from source
 ==================================
 
 Pre-requirements:
-* gcc (or other C++ compiler) (version 4.6 or later recommended)
+* gcc (or other C++ compiler)
 * autotools (autoconf, automake, etc)
 * optional: MPI compiler and library
 * optional: Beagle library
@@ -48,14 +48,17 @@ Configuration options
 
 1) BEAGLE
 MrBayes 3.2 uses the BEAGLE library by default. You should either install the BEAGLE 
-library from "http://code.google.com/p/beagle-lib/" or disable use of the library by 
-invoking the configure script with option "--with-beagle=no". i.e. 
+library from "http://beast.bio.ed.ac.uk/BEAGLE" or disable use of the library by 
+invoking the configure script with option "--with-beagle=no", i.e. 
 
 > ./configure --with-beagle=no
 
 Note: without beagle library MrBayes may run slower. And to compile with beagle, checkout 
-the source code from http://beagle-lib.googlecode.com/svn/trunk/ and put them in 
-/usr/local/include/libhmsbeagle-1/libhmsbeagle
+the header files using
+
+> svn checkout http://beagle-lib.googlecode.com/svn/trunk/ beagle-lib
+
+and put them in "/usr/local/include/libhmsbeagle-1/libhmsbeagle".
 
 2) SSE code
 All main-stream modern processors have support for SSE instructions which are utilized 
@@ -101,10 +104,11 @@ This will print the lines onto the screen as they get added to the file "output.
 To stop the output, simply press ctrl-C (this will stop the output from the tail
 command, it will not stop the MrBayes run).
 
-4) assertion
-If you want to compile the trunk code (developing) with assertion enabled, delete
-"-DNDEBUG" at the end of "CFLAGS" (line 4 in Makefile), before running the "make" 
-command. It is indicated by "Debugging: assert() enabled" after the header output. 
+4) Debugging
+For testing or developing purpose, you may need to compile a debugging version by 
+invoking the configure script with the option "--enable-debug=yes", i.e.
+
+> ./configure --enable-debug=yes
 
 
 Troubleshooting for Mac
@@ -119,8 +123,8 @@ To install these tools, we recommend using HomeBrew, see below.
 Problem: The compilation process hangs on model.c. For instance, this happens when 
 using the compiler that ships with Xcode 4.6 (in the command line tools).
 
-Solution: Install newer command line tools (e.g., in Xcode 5), or install a different
-gcc version for Mac using HomeBrew, see below.
+Solution: Install newer command line tools (e.g., in Xcode 5 or higher), or install a 
+different gcc version for Mac using HomeBrew, see below.
 
 -----------------------
 To install missed Unix tools, we recommend using HomeBrew (http://brew.sh). Follow the
@@ -137,9 +141,12 @@ To install the most recent version of openmpi, use:
 
 > brew install openmpi
 
-The modified gcc version (llvm-gcc 4.2) shipping with Xcode 4.6 is problematic to 
-compile MrBayes (hangs on model.c). Please update to Xcode 5 or install newer command 
-line tools. To install an alternative gcc using HomeBrew, use the following commands:
+Simply, you can even install MrBayes using HomeBrew:
+
+> brew tap homebrew/science
+> brew install mrbayes
+
+To install an alternative gcc (not recommended), use the following commands:
 
 > brew tap homebrew/versions
 > brew install gcc48
@@ -152,11 +159,6 @@ For instance, you can use the following commands:
 > sudo mv -i /usr/bin/gcc /usr/bin/gcc-alt
 > sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
-Simply, you can even install MrBayes using HomeBrew:
-
-> brew tap homebrew/science
-> brew install mrbayes
-
 
 Tips for Windows
 ================
@@ -166,27 +168,26 @@ downloading all the files from SourceForge (e.g., Download Snapshot).
 http://sourceforge.net/p/mrbayes/code/HEAD/tree/
 
 Here we introduce another way to compile using MinGW (http://www.mingw.org/). You need
-to download the installer from "https://sourceforge.net/projects/mingw/files/Installer/"
-and install it in Windows. Then double click the shortcut on your desktop (or from 
-start menu) to open "MinGW Installation Manager". 
-Click the square before "mingw32-base" under "Basic Setup" and choose "Mark for 
-Installation", then choose "Apply Changes" from the "Installation" menu. 
+to download the installer "mingw-get-setup.exe" and install it in Windows. Then open 
+"MinGW Installation Manager" you just installed. Click the square before "mingw32-base" 
+under "Basic Setup" and choose "Mark for Installation", then choose "Apply Changes" from
+the "Installation" menu. 
 
-Additionally, add "C:\MinGW\bin" (the default folder) to your system path in setting
-"Environment Variables" (please Google :))
+Additionally, add "C:\MinGW\bin" (path to your MinGW installation) to your system path
+in setting "Environment Variables" (please Google :))
 
-Open Command Prompt (cmd.exe), "cd" to the src folder you just downloaded. E.g., 
+Open Command Prompt (cmd.exe), "cd" to the src folder you just downloaded, e.g., 
 
-> cd Desktop\MrBayes\trunk\src
+> cd Downloads\MrBayes\trunk\src
 
 and use the following command to compile:
 
-> gcc -O3 -ffast-math -o mb 
+> gcc -O3 -ffast-math -DNDEBUG -o mb 
        bayes.c best.c command.c mbbeagle.c mcmc.c model.c proposal.c sumpt.c utils.c -lm
 
 An executable named "mb.exe" will be generated in the same folder, if everything
 goes smoothly. You may want to edit the fist few lines in bayes.h to define/undef
-some macros (SSE_ENABLED, NDEBUG, etc).
+some macros (SSE_ENABLED, etc).
 
 
 Further references
