@@ -551,7 +551,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
         else
             p->sib = NULL;
         p->anc = polyTree->root;
-    }
+        }
     p = polyTree->root;
     p->index = 2*numSpecies - 2;
     p->left = &polyTree->nodes[0];
@@ -576,7 +576,6 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
         } while (!IsPartNested(minDepth[i].pairSet, p->partition, nLongsNeeded));
 
         if (p->left->sib->sib != NULL) {
-
             // This node is still a polytomy
             
             // Find left and right descendants of new node
@@ -622,11 +621,9 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             r->anc = u;
             }
         else if (p == polyTree->root && p->depth < 0.0) {
-
             // This is the first time we hit the root of the tree && it is resolved
             p->depth = minDepth[i].depth;
-            assert (p->depth > 0.0);
-
+            // assert (p->depth > 0.0);
             }
         // other cases should not be added to tree
         }

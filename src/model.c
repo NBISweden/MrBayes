@@ -6081,9 +6081,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 if (tempStr[0]=='V')
                                     strcat (tempStr," [Dirichlet(..,1,..)]");
                                 if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Ratepr to %s\n", spacer, tempStr);
+                                    MrBayesPrint ("%s   Setting Generatepr to %s\n", spacer, tempStr);
                                 else
-                                    MrBayesPrint ("%s   Setting Ratepr to %s for partition %d\n", spacer, tempStr, i+1);
+                                    MrBayesPrint ("%s   Setting Generatepr to %s for partition %d\n", spacer, tempStr, i+1);
                                 if (tempStr[0]=='V')
                                     strcpy (tempStr,"Variable");
                                 }
@@ -6659,7 +6659,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 else
                                     MrBayesPrint ("%s   Setting Topologypr to %s for partition %d\n", spacer, modelParams[i].topologyPr, i+1);
                                 /* adjust branch length prior if necessary */
-                                if (strcmp(modelParams[i].topologyPr,"Fixed") != 0 && strcmp(modelParams[i].brlensPr,"Fixed") == 0 )
+                                if (strcmp(modelParams[i].topologyPr,"Fixed") != 0 && strcmp(modelParams[i].brlensPr,"Fixed") == 0)
                                     {
                                     MrBayesPrint ("%s   Resetting Brlenspr to default\n", spacer);
                                     if (strcmp(modelParams[i].clockPr,"Clock") == 0)
@@ -11170,7 +11170,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->nSubValues > 0)
                         {
                         /* num uncompressed chars */
-                        subValue[j] =  (modelSettings[p->relParts[j]].numUncompressedChars);
+                        subValue[j] = (modelSettings[p->relParts[j]].numUncompressedChars);
                         /* Dirichlet parameters */
                         subValue[p->nValues + j] = modelParams[p->relParts[j]].ratePrDir;
                         }
@@ -11182,17 +11182,15 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 for (j=0; j<p->nValues; j++)
                     {
                     value[j] = 1.0;
-
                     /* Dirichlet parameters fixed to 1.0 for now; ignored if the rate is fixed */
-                    subValue[p->nValues + j] = 1.0;
-
-                    /* Get number of uncompressed chars from tree */
-                    tree = GetTreeFromIndex(j, 0, 0);
-                    subValue[j] = 0.0;
-                    for (i=0; i<tree->nRelParts; i++)
+                    if (p->nSubValues > 0)
                         {
-                        /* num uncompressed chars */
-                        subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
+                        subValue[p->nValues + j] = 1.0;
+                        /* Get number of uncompressed chars from tree */
+                        tree = GetTreeFromIndex(j, 0, 0);
+                        subValue[j] = 0.0;
+                        for (i=0; i<tree->nRelParts; i++)  /* num uncompressed chars */
+                            subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
                         }
                     }
                 }
@@ -18134,7 +18132,7 @@ int SetModelParams (void)
     MrBFlt      lnPriorRatio = 0.0, lnProposalRatio = 0.0;
 #   endif
 
-        /* allocate space for parameters */
+    /* allocate space for parameters */
     if (memAllocs[ALLOC_PARAMS] == YES)
         {
         for (i=0; i<numParams; i++)
@@ -18945,8 +18943,7 @@ int SetModelParams (void)
                 {
                 p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
                 p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
-                                                         /* also keep Dirichlet prior parameters here                  */
-                }
+                }                                        /* also keep Dirichlet prior parameters here                  */
             p->min = 0.0;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
@@ -18984,9 +18981,16 @@ int SetModelParams (void)
             {
             /* Set up rateMult for partition specific rates ***********************************************************/
             p->paramType = P_GENETREERATE;
-            p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
-            p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
-                                                     /* also keep Dirichlet prior parameters here                  */
+            if (!strcmp(mp->generatePr,"Fixed"))
+                {
+                p->nValues = 1;
+                p->nSubValues = 0;
+                }
+            else
+                {
+                p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
+                p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
+                }                                        /* also keep Dirichlet prior parameters here                  */
             p->min = 0.0;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
@@ -23495,20 +23499,25 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_GENETREERATE)
             {
-            MrBayesPrint ("%s            Prior      = Dirichlet(", spacer);
-            printedCol = (int)(strlen(spacer)) + 25 + 10;
-            for (n=0; n<numTrees-1; n++)
+            if (p->nValues == 1)
+                MrBayesPrint ("%s            Prior      = Fixed(1.0)\n", spacer);
+            else
                 {
-                if (printedCol + 5 > screenWidth)
+                MrBayesPrint ("%s            Prior      = Dirichlet(", spacer);
+                printedCol = (int)(strlen(spacer)) + 25 + 10;
+                for (n=0; n<numTrees-1; n++)
                     {
-                    MrBayesPrint("\n%s                                   ", spacer);
-                    printedCol = (int)(strlen(spacer)) + 25 + 10;
+                    if (printedCol + 5 > screenWidth)
+                        {
+                        MrBayesPrint("\n%s                                   ", spacer);
+                        printedCol = (int)(strlen(spacer)) + 25 + 10;
+                        }
+                    if (n == numTrees-2)
+                        MrBayesPrint ("1.00)\n");
+                    else
+                        MrBayesPrint ("1.00,");
+                    printedCol += 5;
                     }
-                if (n == numTrees-2)
-                    MrBayesPrint ("1.00)\n");
-                else
-                    MrBayesPrint ("1.00,");
-                printedCol += 5;
                 }
             }
         else if (j == P_TOPOLOGY)
