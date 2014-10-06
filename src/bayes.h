@@ -98,15 +98,15 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #endif
 
 #if defined GCC_SSE         /* gcc compiler */
-#  define ALIGNED_MALLOC(X,Y,Z)  posix_memalign(X,Y,Z)
-#  define ALIGNED_FREE free
+#  define ALIGNED_MALLOC posix_memalign
+#  define ALIGNED_FREE   free
 #  include <xmmintrin.h>
 #elif defined ICC_SSE       /* icc compiler */
 #  define ALIGNED_MALLOC _mm_malloc
-#  define ALIGNED_FREE _mm_free
+#  define ALIGNED_FREE   _mm_free
 #elif defined MS_VCPP_SSE   /* Visual .Net */
 #  define ALIGNED_MALLOC _aligned_malloc
-#  define ALIGNED_FREE _aligned_free
+#  define ALIGNED_FREE   _aligned_free
 #  include <xmmintrin.h>
 #else
 #  define ALIGNED_MALLOC malloc
@@ -1625,7 +1625,6 @@ extern char             sumpToken[];                            /* string holdin
 extern char             *sumpTokenP;                            /* pointer to a .p file token                    */
 extern Sumt             sumtParams;                             /* holds parameters for sumt command             */
 extern Sumss            sumssParams;                            /* holds parameters for sumss command            */
-extern char             stamp[11];                              /* holds a unique identifier for each analysis   */
 extern int              stdStateFreqsRowSize;                   /* row size for stdStateFreqs                    */
 extern int              *sympiIndex;                            /* sympi state freq index for multistate chars   */
 extern TaxaInformation  *taxaInfo;                              /* holds critical information about taxa         */
