@@ -43,7 +43,6 @@
 
 const char* const svnRevisionUtilsC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
-
 #define MAX_GAMMA_CATS                      20
 #define PI                                  3.14159265358979324
 #define PIOVER2                             1.57079632679489662
@@ -58,7 +57,6 @@ const char* const svnRevisionUtilsC = "$Rev$";   /* Revision keyword which is ex
 #define MIN(a,b)                            (((a) < (b)) ? (a) : (b))
 #endif
 #define SQUARE(a)                           ((a)*(a))
-
 
 /* local global variable */
 char    noLabel[] = "";
@@ -134,9 +132,6 @@ void    TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, 
 void    TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBFlt **tMat, MrBFlt **fMat, MrBFlt **sMat);
 
 
-
-
-
 /* AddBitfield: Add bitfield to list of bitfields. The function uses global variable nLongsNeeded. */
 int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 {
@@ -161,9 +156,6 @@ int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 }
 
 
-
-
-
 #if defined (SSE_ENABLED)
 void * AlignedMalloc (size_t size, size_t alignment)
 {
@@ -184,9 +176,6 @@ void * AlignedMalloc (size_t size, size_t alignment)
 }
 
 
-
-
-
 void AlignedSafeFree (void **ptr)
 {
 
@@ -203,9 +192,6 @@ void AlignedSafeFree (void **ptr)
 #endif
 
 
-
-
-
 int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
 {
     int i;
@@ -220,9 +206,6 @@ int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   Bit: return 1 if bit n is set in BitsLong *p
@@ -230,9 +213,7 @@ int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
 |
 -----------------------------------------------------------------*/
 int Bit (int n, BitsLong *p)
-
 {
-
     BitsLong        x, bitsLongOne;
 
     bitsLongOne = 1;
@@ -246,9 +227,6 @@ int Bit (int n, BitsLong *p)
         return 1;
 
 }
-
-
-
 
 
 /* ClearBit: Clear one bit in a bitfield */
@@ -265,9 +243,6 @@ void ClearBit (int i, BitsLong *bits)
 }
 
 
-
-
-
 /* ClearBits: Clear all bits in a bitfield */
 void ClearBits (BitsLong *bits, int nLongs)
 {
@@ -278,9 +253,6 @@ void ClearBits (BitsLong *bits, int nLongs)
 }
 
 
-
-
-
 /* Copy bitfields */
 void CopyBits (BitsLong *dest, BitsLong *source, int length)
 {
@@ -289,9 +261,6 @@ void CopyBits (BitsLong *dest, BitsLong *source, int length)
     for (i=0; i<length; i++)
         dest[i] = source[i];
 }
-
-
-
 
 
 /* CopyResults: copy results from one file to another up to lastGen*/
@@ -397,7 +366,6 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
 }
 
 
-
 /* CopyTreeResults: copy tree results upto lastGen from one file to another. numTrees is return containing number of trees that were copied. */
 int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTrees)
 {
@@ -443,14 +411,9 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
 }
 
 
-
-
-
 /* FirstTaxonInPartition: Find index of first taxon in partition */
 int FirstTaxonInPartition (BitsLong *partition, int length)
-
 {
-
     int         i, j, nBits, taxon;
     BitsLong    x, bitsLongOne=1;
 
@@ -470,11 +433,7 @@ int FirstTaxonInPartition (BitsLong *partition, int length)
         }
 
     return taxon;
-
 }
-
-
-
 
 
 /* FirstTree: Return file position of first tree after current position */
@@ -494,28 +453,17 @@ long FirstTree (FILE *fp, char *lineBuf, int longestLine)
 }
 
 
-
-
-
 int Flip01 (int x)
-
 {
-
     if (x == 0)
         return (1);
     else
         return (0);
-        
 }
 
 
-
-
-
 void FlipBits (BitsLong *partition, int length, BitsLong *mask)
-
 {
-
     int         i;
     
     for (i=0; i<length; i++)
@@ -525,28 +473,19 @@ void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   FlipOneBit: flip bit n in BitsLong *p
 |
 ------------------------------------------------------------------*/
 void FlipOneBit (int n, BitsLong *p)
-
 {
-
     BitsLong        x, bitsLongOne=1;
 
     p += n/nBitsInALong;
     x = bitsLongOne << (n % nBitsInALong);
     (*p) ^= x;
-
 }
-
-
-
 
 
 /* Convert from 0-based growth function over six states to model index */
@@ -597,9 +536,6 @@ int FromGrowthFxnToIndex(int *growthFxn)
 }
 
 
-
-
-
 /* Convert from model index to 0-based growth function over six states */
 void FromIndexToGrowthFxn(int index, int *growthFxn)
 {
@@ -637,14 +573,9 @@ void FromIndexToGrowthFxn(int index, int *growthFxn)
 }
 
 
-
-
-
 /* GetIntSummary: Get summary statistics for a number of runs (int version) */
 void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HPD)
-
 {
-
     int     i, j, nVals;
     MrBFlt  *theValues, *p;
 
@@ -675,9 +606,6 @@ void GetIntSummary (int **vals, int nRows, int *rowCount, Stat *theStats, int HP
 }
 
 
-
-
-
 /* Get k from 0-based growth function */
 int GetKFromGrowthFxn(int *growthFxn)
 {
@@ -691,14 +619,9 @@ int GetKFromGrowthFxn(int *growthFxn)
 }
 
 
-
-
-
 /* GetSummary: Get summary statistics for a number of runs */
 void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HPD)
-
 {
-
     int     i, nVals;
     MrBFlt  *theValues, *p, *ESS;
 
@@ -742,9 +665,6 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     free (ESS);
     free (theValues);
 }
-
-
-
 
 
 /* HarmonicArithmeticMean: Calculate harmonic and arithmetic mean from log values */
@@ -823,18 +743,12 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
         return (NO_ERROR);
     else
         return (ERROR);
-    
 }
-
-
-
 
 
 /* IsBitSet: Is bit i set in BitsLong *bits ? */
 int IsBitSet (int i, BitsLong *bits)
-
 {
-
     BitsLong        x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
@@ -845,11 +759,7 @@ int IsBitSet (int i, BitsLong *bits)
         return (YES);
     else
         return (NO);
-        
 }
-
-
-
 
 
 /* IsConsistentWith: Is token consistent with expected word, case insensitive ? */
@@ -870,9 +780,6 @@ int IsConsistentWith (const char *token, const char *expected)
 
     return YES;
 }
-
-
-
 
 
 /* IsPartCompatible: Determine whether two partitions are nonoverlapping or nested (compatible) or
@@ -901,13 +808,9 @@ int IsPartCompatible (BitsLong *smaller, BitsLong *larger, int length)
 }
 
 
-
-
 /* IsPartNested: Test whether smaller partition is nested in larger partition */
 int IsPartNested (BitsLong *smaller, BitsLong *larger, int length)
-
 {
-
     int i;
 
     for (i=0; i<length; i++)
@@ -918,11 +821,7 @@ int IsPartNested (BitsLong *smaller, BitsLong *larger, int length)
         return YES;
     else
         return NO;
-
 }
-
-
-
 
 
 /* IsSectionEmpty: Test whether section of two bitfields is empty */
@@ -938,9 +837,6 @@ int IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length)
 }
 
 
-
-
-
 /* IsSectionEmpty: Test whether union of bitField1 and bitField2 equal to bitField3*/
 int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField3, int length)
 {
@@ -952,9 +848,6 @@ int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField
         
     return YES;
 }
-
-
-
 
 
 /* LastBlock: Return file position of last block in file */
@@ -977,13 +870,8 @@ long LastBlock (FILE *fp, char *lineBuf, int longestLine)
 }
 
 
-
-
-
 int LineTermType (FILE *fp)
-
 {
-
     int         ch, nextCh, term;
 
     term = LINETERM_UNIX;   /* default if no line endings are found */
@@ -1007,17 +895,12 @@ int LineTermType (FILE *fp)
     (void)fseek(fp, 0L, 0);     /* rewind */
     
     return (term);
-
 }
-
-
 
 
 /*The longest line in a file including line terminating characters present in binary mode.*/
 int LongestLine (FILE *fp)
-
 {
-
     int         ch, lineLength, longest;
     
     longest = 0;
@@ -1066,11 +949,7 @@ int LongestLine (FILE *fp)
     rewind (fp);        /* rewind */
     
     return (longest+1); /*+1 to accommodate last character*/
-
 }
-
-
-
 
 
 /* LowerUpperMedian: Determine median and 95 % credible interval */
@@ -1084,8 +963,6 @@ void LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, Mr
     *median = vals[nVals/2];
 
 }
-
-
 
 
 /* LowerUpperMedianHPD: Use a simple way to determine HPD */
@@ -1116,37 +993,22 @@ void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper,
 }
 
 
-
-
-
 MrBFlt MaximumValue (MrBFlt x, MrBFlt y)
-
 {
-    
     if (x > y)
         return (x);
     else
         return (y);
-    
 }
 
 
-
-
-
 MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
-
 {
-    
     if (x < y)
         return (x);
     else
         return (y);
-    
 }
-
-
-
 
 
 /* NOTE!!!! The result of this function should be used before consequtive call to it again.
@@ -1164,13 +1026,8 @@ char *MbPrintNum (MrBFlt num)
 }
 
 
-
-
-
 void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
-
 {
-
     int             i;
     MrBFlt          a, aOld, s, x;
 
@@ -1191,28 +1048,19 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
         (*var) = 0.0;
     else
         (*var) = s / (nVals - 1);
-            
 }
 
 
-
-
-
 /*  Compute mean and variance of log scaled values.
-
 @param vals    pointer to values in log scale
 @param nVals   number of "vals", minimum 1
 @param mean    adress of variable where computed mean is returned by the function
 @param var     adress of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
 @param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
                Could be set to NULL if this value need not to be returened.
-
-Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences.
-    */
+Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
 void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst )
-
 {
-
     int             i;
     MrBFlt          a, aOld, s, x, y, scaler;
 
@@ -1257,15 +1105,10 @@ void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt
         else
             (*varEst) = log( s / (nVals+1)) + 2*scaler;
         }
-            
 }
 
 
-
-
-
 void MrBayesPrint (char *format, ...)
-
 {
     va_list ptr;
 
@@ -1322,10 +1165,7 @@ void MrBayesPrint (char *format, ...)
 }
 
 
-
-
 void MrBayesPrintf (FILE *f, char *format, ...)
-
 {
     va_list                 ptr;
 
@@ -1344,9 +1184,6 @@ void MrBayesPrintf (FILE *f, char *format, ...)
     fflush(f);
 #   endif
 }
-
-
-
 
 
 /** Next taxon in partition, for cycling over set bits in bit fields */
@@ -1382,7 +1219,16 @@ int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
 }
 
 
-
+/* NBits: count bits in an int */
+int NBits (int x)
+{
+    int n=0;
+    
+    for (n=0; x != 0; n++)
+        x &= (x-1);
+    
+    return n;
+}
 
 
 /* NumBits: Count bits in a bitfield */
@@ -1404,13 +1250,8 @@ int NumBits (BitsLong *x, int len)
 }
 
 
-
-
-
 FILE *OpenBinaryFileR (char *name)
-
 {
-
     FILE        *fp;
     char        fileName[200];
 
@@ -1424,16 +1265,11 @@ FILE *OpenBinaryFileR (char *name)
         }
     else
         return (fp);
-    
 }
-
-
-
 
 
 FILE *OpenTextFileR (char *name)
 {
-
     FILE        *fp;
     char        fileName[200];
 
@@ -1447,15 +1283,11 @@ FILE *OpenTextFileR (char *name)
         }
     else
         return (fp);
-    
 }
-
-
 
 
 FILE *OpenTextFileRQuait (char *name)
 {
-
     FILE        *fp;
     char        fileName[200];
 
@@ -1468,17 +1300,11 @@ FILE *OpenTextFileRQuait (char *name)
         }
     else
         return (fp);
-    
 }
 
 
-
-
-
 FILE *OpenTextFileA (char *name)
-
 {
-
     FILE        *fp;
     char        fileName[200];
 
@@ -1492,17 +1318,11 @@ FILE *OpenTextFileA (char *name)
         }
     else
         return (fp);
-    
 }
 
 
-
-
-
 FILE *OpenTextFileW (char *name)
-
 {
-
     FILE        *fp;
     char        fileName[200];
 
@@ -1516,11 +1336,7 @@ FILE *OpenTextFileW (char *name)
         }
     else
         return (fp);
-    
 }
-
-
-
 
 
 /*!
@@ -1530,9 +1346,7 @@ FILE *OpenTextFileW (char *name)
 \return PSRF
 */
 MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
-
 {
-
     int             i, j, nVals;
     MrBFlt          aW, aOldW, sW, sWj, aB, aOldB, sB, x, R2, weight;
 
@@ -1575,9 +1389,6 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 }
 
 
-
-
-
 /*!
 \param vals[0..nRuns][count[]]   All records for all runs 
 \param nRuns                     Number of runs
@@ -1586,7 +1397,6 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 */
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
-
     int         i, j, lag, maxLag, samples;
     MrBFlt      *values, mean, del1, del2, varStat=0.0;
     MrBFlt      gammaStat[2000];
@@ -1632,11 +1442,7 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
             }
         returnESS[i] = (gammaStat[0] * samples) / varStat;
         }
-
 }
-
-
-
 
 
 /* SafeCalloc: Print error if out of memory */
@@ -1665,9 +1471,6 @@ void *SafeCalloc(size_t n, size_t s) {
 }
 
 
-
-
-
 int SafeFclose(FILE **fp) {
     int retval=-1;
 #   if defined MPI_ENABLED
@@ -1683,9 +1486,6 @@ int SafeFclose(FILE **fp) {
 }
 
 
-
-
-
 /* SafeFree: Set pointer to freed space to NULL */
 void SafeFree (void **ptr)
 {
@@ -1693,9 +1493,6 @@ void SafeFree (void **ptr)
 
     (*ptr) = NULL;
 }
-
-
-
 
 
 /* SafeMalloc: Print error if out of memory; clear memory */
@@ -1722,9 +1519,6 @@ void *SafeMalloc(size_t s) {
 
     return memset(ptr,0,s);
 }
-
-
-
 
 
 /* SafeRealloc: Print error if out of memory */
@@ -1758,9 +1552,6 @@ void *SafeRealloc(void *ptr, size_t s) {
 }
 
 
-
-
-
 /* SafeStrcat: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcat (char **target, const char *source)
 {
@@ -1776,12 +1567,9 @@ char *SafeStrcat (char **target, const char *source)
 }
 
 
-
-
 /* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcpy (char **target, const char *source)
 {
-
     *target = (char *) SafeRealloc ((void *)*target, (size_t)(strlen(source)+1)*sizeof(char));
 
     if (*target)
@@ -1789,9 +1577,6 @@ char *SafeStrcpy (char **target, const char *source)
 
     return (*target);
 }
-
-
-
 
 
 /* SetBit: Set a particular bit in a series of longs */
@@ -1807,25 +1592,14 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
-
-
-
 void SortInts (int *item, int *assoc, int count, int descendingOrder)
-
 {
-
     SortInts2 (item, assoc, 0, count-1, descendingOrder);
-
 }
 
 
-
-
-
 void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
-
 {
-
     register int    i, j, x, y;
 
     if (descendingOrder == YES)
@@ -1892,18 +1666,12 @@ void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
         if (i < right)
             SortInts2 (item, assoc, i, right, descendingOrder);
         }
-
 }
-
-
-
 
 
 /* SortMrBFlt: Sort in increasing order */
 void SortMrBFlt (MrBFlt *item, int left, int right)
-
 {
-
     register int    i, j;
     MrBFlt          x, temp;
 
@@ -1933,9 +1701,6 @@ void SortMrBFlt (MrBFlt *item, int left, int right)
 }
 
 
-
-
-
 /* StrCmpCaseInsensitive: Case insensitive string comparison */
 int StrCmpCaseInsensitive (char *s, char *t)
 {
@@ -1957,9 +1722,6 @@ int StrCmpCaseInsensitive (char *s, char *t)
     else
         return -1;
 }
-
-
-
 
 
 /* StripComments: Strip possibly nested comments from the string s.
@@ -1991,11 +1753,7 @@ void StripComments (char *s)
 }
 
 
-
-
-
 FILE *TestOpenTextFileR (char *name)
-
 {
     char        fileName[100];
 
@@ -2004,9 +1762,6 @@ FILE *TestOpenTextFileR (char *name)
 
     return fopen (fileName, "r");   
 }
-
-
-
 
 
 /*---------
@@ -2041,9 +1796,6 @@ void UpdateGrowthFxn(int *growthFxn)
 }
 
 
-
-
-
 int UpperTriangIndex(int i, int j, int size)
 {
     if (i < j)
@@ -2051,9 +1803,6 @@ int UpperTriangIndex(int i, int j, int size)
     else
         return (2*size - j - 3) * j / 2 + i - 1;
 }
-
-
-
 
 
 int WantTo (const char *msg)
@@ -2089,15 +1838,10 @@ int WantTo (const char *msg)
 }
 
 
-
-
-
 /* the following are moved from tree.c */
 /* AddToTreeList: Add tree at end of tree list */
 int AddToTreeList (TreeList *treeList, Tree *tree)
-
 {
-
     TreeListElement     *listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
     if (!listElement)
         return (ERROR);
@@ -2122,9 +1866,6 @@ int AddToTreeList (TreeList *treeList, Tree *tree)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* AllocatePolyTree: Allocate memory space for a polytomous tree */
@@ -2191,9 +1932,6 @@ PolyTree *AllocatePolyTree (int numTaxa)
 }
 
 
-
-
-
 /* AllocatePolyTreeRelClockParams: Allocate space for relaxed clock parameters */
 int AllocatePolyTreeRelClockParams (PolyTree *pt, int nBSets, int nESets)
 {
@@ -2236,9 +1974,6 @@ int AllocatePolyTreeRelClockParams (PolyTree *pt, int nBSets, int nESets)
 }
 
 
-
-
-
 /* AllocatePolyTreePartitions: Allocate space for and set partitions for polytomous tree */
 int AllocatePolyTreePartitions (PolyTree *pt)
 {
@@ -2264,9 +1999,6 @@ int AllocatePolyTreePartitions (PolyTree *pt)
     
     return (NO_ERROR);
 }
-
-
-
 
 
 /* AllocateTree: Allocate memory space for a tree (unrooted or rooted) */
@@ -2325,9 +2057,6 @@ Tree *AllocateTree (int numTaxa)
 
     return t;
 }
-
-
-
 
 
 /* AllocateFixedTree: Allocate memory space for a fixed unrooted or rooted tree */
@@ -2399,9 +2128,6 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
 }
 
 
-
-
-
 /* AllocateTreePartitions: Allocate space for and set partitions for tree */
 int AllocateTreePartitions (Tree *t)
 {
@@ -2438,11 +2164,7 @@ int AllocateTreePartitions (Tree *t)
 }
 
 
-
-
-
 int AreTopologiesSame (Tree *t1, Tree *t2)
-
 {
     int         i, j, k, nLongsNeeded, nTaxa;
     BitsLong    *mask;
@@ -2503,11 +2225,7 @@ int AreTopologiesSame (Tree *t1, Tree *t2)
 }
 
 
-
-
-
 int AreTreesSame (Tree *t1, Tree *t2)
-
 {
     int         i, j, k, nLongsNeeded, nTaxa;
     BitsLong    *mask;
@@ -2579,9 +2297,6 @@ int AreTreesSame (Tree *t1, Tree *t2)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   BuildConstraintTree: Build constraint tree. The tree t is
@@ -2590,9 +2305,7 @@ int AreTreesSame (Tree *t1, Tree *t2)
 |
 ----------------------------------------------------------------*/
 int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
-
 {
-
     int             i, j, k, constraintId, nLongsNeeded, nextNode;
     BitsLong        *constraintPartition, *mask;
     PolyNode        *pp, *qq, *rr, *ss, *tt;
@@ -2818,9 +2531,6 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 }
 
 
-
-
-
 /*----------------------------------------------
 |
 |   BuildRandomRTopology: Builds a random rooted
@@ -2891,9 +2601,6 @@ int BuildRandomRTopology (Tree *t, RandLong *seed)
 }
 
 
-
-
-
 /*----------------------------------------------
 |
 |   BuildRandomUTopology: Builds a random unrooted
@@ -2962,18 +2669,13 @@ int BuildRandomUTopology (Tree *t, RandLong *seed)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CheckConstraints: Check that tree complies with constraints
 |
 ----------------------------------------------------------------*/
 int CheckConstraints (Tree *t)
-
 {
-
     int             a, i, j, k, nLongsNeeded;
     BitsLong        *constraintPartition, *mask;
     TreeNode        *p=NULL;
@@ -3058,17 +2760,13 @@ int CheckConstraints (Tree *t)
 }
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CheckSetConstraints: Check and set tree constraints
 |
 ----------------------------------------------------------------*/
 int CheckSetConstraints (Tree *t)
-
 {
-
     int             a, i, j, k, nLongsNeeded, foundIt, numLocks;
     BitsLong        *constraintPartition, *mask;
     TreeNode        *p;
@@ -3187,9 +2885,6 @@ int CheckSetConstraints (Tree *t)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------------
 |
 |   ColorClusters: Recursive function to color the clusters in a tree by
@@ -3208,9 +2903,6 @@ void ColorClusters (TreeNode *p, int *index)
         ColorClusters(p->right, index);
         }
 }
-
-
-
 
 
 /* CopyPolyNodes: Copies everything except pointers and memoryIndex */
@@ -3238,14 +2930,9 @@ void CopyPolyNodes (PolyNode *p, PolyNode *q, int nLongsNeeded)
 }
 
 
-
-
-
 void CopySubtreeToTree (Tree *subtree, Tree *t)
-
 {
-    
-        int         i, /*j,*/ k;
+    int         i, /*j,*/ k;
     TreeNode    *p, *q=NULL, *r;
 
     for (i=/*j=*/0; i<subtree->nNodes - 1; i++)
@@ -3313,9 +3000,6 @@ void CopySubtreeToTree (Tree *subtree, Tree *t)
             }
         }
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -3437,11 +3121,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -3452,9 +3132,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 |
 -----------------------------------------------------------------*/
 int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
-
 {
-
     int         i;
     PolyNode    *p;
     TreeNode    *q, *q1;
@@ -3547,9 +3225,6 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   CopyToTreeFromPolyTree: copies second tree (polytomous) to first
@@ -3562,9 +3237,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 |
 -----------------------------------------------------------------*/
 int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
-
 {
-
     int         i, j;
     PolyNode    *p;
     TreeNode    *q, *q1;
@@ -3686,9 +3359,6 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   CopyToTreeFromTree: copies second tree to first tree
@@ -3698,9 +3368,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 |
 -----------------------------------------------------------------*/
 int CopyToTreeFromTree (Tree *to, Tree *from)
-
 {
-
     int         i, numTaxa, nLongsNeeded;
     TreeNode    *p, *q;
 
@@ -3767,17 +3435,12 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* Copy node q to node p */
 void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 {
-
     /* copies everything except pointers and memoryIndex */
     p->index                  = q->index;
     p->scalerNode             = q->scalerNode;          
@@ -3804,13 +3467,8 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 }
 
 
-
-
-
 void CopyTreeToSubtree (Tree *t, Tree *subtree)
-
 {
-    
     int         i, j, k;
     TreeNode    *p, *q, *r;
 
@@ -3864,9 +3522,6 @@ void CopyTreeToSubtree (Tree *t, Tree *subtree)
 }
 
 
-
-
-
 /* DatedNodeDepths: Recursive function to get node depths */
 void DatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths, int *index)
 {
@@ -3883,9 +3538,6 @@ void DatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths, int *index)
 }
 
 
-
-
-
 /* DatedNodes: Recursive function to get dated tips or interior nodes */
 void DatedNodes (TreeNode *p, TreeNode **datedNodes, int *index)
 {
@@ -3899,9 +3551,6 @@ void DatedNodes (TreeNode *p, TreeNode **datedNodes, int *index)
         datedNodes[(*index)++] = p;
         }
 }
-
-
-
 
 
 /* Deroot: Deroot a rooted polytomous tree with branch lengths */
@@ -3970,9 +3619,6 @@ int Deroot (PolyTree *pt)
 }
 
 
-
-
-
 /* EraseTreeList: Erase all trees in treeList */
 void EraseTreeList (TreeList *treeList)
 {
@@ -3992,8 +3638,6 @@ void EraseTreeList (TreeList *treeList)
 
     treeList->first = treeList->last = NULL;
 }
-
-
 
 
 void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
@@ -4033,10 +3677,7 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
             p->age = p->nodeDepth / clockRate;
             }
         }
-
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -4085,11 +3726,7 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate )
         {
         IsCalibratedClockSatisfied (t,minClockRate,maxClockRate, 0.001);
         }
-
 }
-
-
-
 
 
 /* FreePolyTree: Free memory space for a polytomous tree (unrooted or rooted) */
@@ -4107,9 +3744,6 @@ void FreePolyTree (PolyTree *pt)
 }
 
 
-
-
-
 /* FreePolyTreePartitions: Free memory space for polytomous tree partitions */
 void FreePolyTreePartitions (PolyTree *pt)
 {
@@ -4124,9 +3758,6 @@ void FreePolyTreePartitions (PolyTree *pt)
 }
 
 
-
-
-
 /* FreePolyTreePopSizeParams: Free population size set parameters of polytree */
 void FreePolyTreePopSizeParams (PolyTree *pt)
 {
@@ -4139,9 +3770,6 @@ void FreePolyTreePopSizeParams (PolyTree *pt)
     pt->popSize = NULL;
     pt->popSizeSetName = NULL;
 }
-
-
-
 
 
 /* FreePolyTreeRelClockParams: Free relaxed clock parameters of polytree */
@@ -4189,9 +3817,6 @@ void FreePolyTreeRelClockParams (PolyTree *pt)
 }
 
 
-
-
-
 /* FreeTree: Free memory space for a tree (unrooted or rooted) */
 void FreeTree (Tree *t)
 {
@@ -4204,9 +3829,6 @@ void FreeTree (Tree *t)
         free (t);
         }
 }
-
-
-
 
 
 /* FreeTreePartitions: Free memory space for tree partitions */
@@ -4222,9 +3844,6 @@ void FreeTreePartitions (Tree *t)
             t->nodes[i].partition = NULL;
         }
 }
-
-
-
 
 
 /*-------------------------------------------------------------------------------------------
@@ -4248,9 +3867,6 @@ void GetDatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   GetDatedNodes: Get an array containing the dated tips,
@@ -4271,30 +3887,19 @@ void GetDatedNodes (TreeNode *p, TreeNode **datedNodes)
 }
 
 
-
-
-
 /* get down pass for tree t (wrapper function) */
 void GetDownPass (Tree *t)
-
 {
-
     int i, j;
 
     i = j = 0;
     GetNodeDownPass (t, t->root, &i, &j);
-        
 }
-
-
-
 
 
 /* get the actual down pass sequences */
 void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
-
 {
-    
     if (p != NULL )
         {
         GetNodeDownPass (t, p->left,  i, j);
@@ -4313,11 +3918,7 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
             t->allDownPass[(*j)++] = p;
             }
         }
-        
 }
-
-
-
 
 
 /* GetPolyAges: Get PolyTree node ages */
@@ -4334,9 +3935,6 @@ void GetPolyAges (PolyTree *t)
         p->age = p->depth / t->clockRate;
         }
 }
-
-
-
 
 
 /* GetPolyDepths: Get PolyTree node depths */
@@ -4364,31 +3962,20 @@ void GetPolyDepths (PolyTree *t)
 }
 
 
-
-
-
 /* get down pass for polytomous tree t (wrapper function) */
 void GetPolyDownPass (PolyTree *t)
-
 {
-
     int i, j;
 
     i = j = 0;
     GetPolyNodeDownPass (t, t->root, &i, &j);
     assert( t->nIntNodes==j );
-        
 }
-
-
-
 
 
 /* get the actual down pass sequences for a polytomous tree */
 void GetPolyNodeDownPass (PolyTree *t, PolyNode *p, int *i, int *j)
-
 {
-    
     PolyNode    *q;
     
     if (p->left != NULL)
@@ -4400,16 +3987,11 @@ void GetPolyNodeDownPass (PolyTree *t, PolyNode *p, int *i, int *j)
     t->allDownPass[(*i)++] = p;
     if (p->left != NULL )
         t->intDownPass[(*j)++] = p;
-
 }
-
-
-
 
 
 /* GetFromTreeList: Get first tree from a tree list and remove it from the list*/
 int GetFromTreeList (TreeList *treeList, Tree *tree)
-
 {
     TreeListElement *listElement;
 
@@ -4437,9 +4019,6 @@ int GetFromTreeList (TreeList *treeList, Tree *tree)
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   InitBrlens: This routine will set all branch lengths of a
@@ -4447,7 +4026,6 @@ int GetFromTreeList (TreeList *treeList, Tree *tree)
 |
 ------------------------------------------------------------------*/
 int InitBrlens (Tree *t, MrBFlt v)
-
 {
     int         i;
     TreeNode    *p;
@@ -4463,9 +4041,6 @@ int InitBrlens (Tree *t, MrBFlt v)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* 
@@ -4500,11 +4075,7 @@ MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
         assert( calibrUp - l > 0.0 );
         return node->age = l + ( calibrUp - l )/levUp;
         }
-
 }
-
-
-
 
 
 /*-------------------------------------------------------------------
@@ -4518,9 +4089,7 @@ MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
 |
 --------------------------------------------------------------------*/
 int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
-
 {
-
     int             i;
     TreeNode        *p;
     Model           *mp;
@@ -4663,11 +4232,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 #   endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*-------------------------------------------------------
@@ -4681,9 +4246,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 |
 --------------------------------------------------------*/
 int InitClockBrlens (Tree *t)
-
 {
-
     int             i, maxBrSegments=0;
     TreeNode        *p;
 
@@ -4739,17 +4302,11 @@ int InitClockBrlens (Tree *t)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmbeddedTrees)
-
 {
-    
     int         i, j, k, n, ran, *pP, *pL, *pR, nLeaves, *nSubTrees;
     TreeNode    *p=NULL, **leaf;
 
@@ -4858,9 +4415,6 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
     return (NO_ERROR);
 }
 
-
-        
-        
         
 /*-----------------------------------------------------------------------------
 |
@@ -4870,9 +4424,7 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
 |
 |------------------------------------------------------------------------------*/
 int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
-
 {
-
     int             i, j, maxRateConstrained, minRateConstrained, isViolated;
     MrBFlt          f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
     TreeNode        *p, *q, *r, *s;
@@ -5100,17 +4652,11 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
     SetNodeDepths(t);
 
     return (YES);
-    
 }
 
 
-
-
-
 int IsClockSatisfied (Tree *t, MrBFlt tol)
-
 {
-
     int             i, foundFirstLength, isClockLike;
     MrBFlt          firstLength=0.0, length;
     TreeNode        *p, *q;
@@ -5158,11 +4704,7 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
         isClockLike = NO;
 
     return (isClockLike);
-    
 }
-
-
-
 
 
 /* Check that tree obeys topology constraints and that node depths and ages are consistent */
@@ -5328,9 +4870,6 @@ int IsTreeConsistent (Param *param, int chain, int state)
 }
 
 
-
-
-
 /* LabelTree: Label tree; remove previous labels if any */
 int LabelTree (Tree *t, char **taxonNames)
 {
@@ -5375,9 +4914,6 @@ int LabelTree (Tree *t, char **taxonNames)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   Mark: This routine will mark up a subtree rooted at p
@@ -5392,9 +4928,6 @@ void Mark (TreeNode *p)
         Mark (p->right);
         }
 }
-
-
-
 
 
 /*-------------------------------------------------------------------------------------------
@@ -5433,9 +4966,6 @@ void MarkDistance (Tree *t, TreeNode *p)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
  |
  |   MarkUnconstrained: This routine will mark up an unconstrained subtree rooted at p
@@ -5455,9 +4985,6 @@ void MarkUnconstrained (TreeNode *p)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   MarkDatedSubtree: This routine will mark up a subtree rooted at p with dated tips, whether
@@ -5475,9 +5002,6 @@ void MarkDatedSubtree (TreeNode *p)
 }
 
 
-
-
-
 /* MarkDatedSubtreeNodes: Recursive function to mark parts of a dated subtree */
 void MarkDatedSubtreeNodes (TreeNode *p)
 {
@@ -5493,10 +5017,6 @@ void MarkDatedSubtreeNodes (TreeNode *p)
 }
 
 
-
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   MoveCalculationRoot: This routine will move the calculation root to the terminal with 
@@ -5504,9 +5024,7 @@ void MarkDatedSubtreeNodes (TreeNode *p)
 |
 ---------------------------------------------------------------------------------------------*/
 int MoveCalculationRoot (Tree *t, int outgroup)
-
 {
-
     int             i;
     TreeNode        *p, *q, *r;
     
@@ -5577,9 +5095,6 @@ int MoveCalculationRoot (Tree *t, int outgroup)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   MovePolyCalculationRoot: This routine will move the calculation root to the terminal with 
@@ -5587,9 +5102,7 @@ int MoveCalculationRoot (Tree *t, int outgroup)
 |
 ---------------------------------------------------------------------------------------------*/
 int MovePolyCalculationRoot (PolyTree *t, int outgroup)
-
 {
-
     int             i;
     PolyNode        *p = NULL, *q, *r;
 
@@ -5701,9 +5214,6 @@ int MovePolyCalculationRoot (PolyTree *t, int outgroup)
 }
 
 
-
-
-
 /* 
 @return the number of levels for the tree rooted at the "node" 
 */
@@ -5721,9 +5231,6 @@ int NrSubTreeLevels(TreeNode *node)
 
     return ((r>l)?(r):(l))+1;
 }
-
-
-
 
 
 /*-------------------------------------------------------------------------------------------
@@ -5747,9 +5254,6 @@ int NumConstrainedTips (TreeNode *p)
 }
 
 
-
-
-
 /* NConstrainedTips: Recursive function to get the number of constrained tips */
 int NConstrainedTips (TreeNode *p)
 {
@@ -5767,9 +5271,6 @@ int NConstrainedTips (TreeNode *p)
         }
     return i;
 }
-
-
-
 
 
 /*-------------------------------------------------------------------------------------------
@@ -5790,9 +5291,6 @@ int NumDatedTips (TreeNode *p)
 }
 
 
-
-
-
 /* NDatedTips: recursive function to get the number of dated tips */
 int NDatedTips (TreeNode *p)
 {
@@ -5809,9 +5307,6 @@ int NDatedTips (TreeNode *p)
         return i;
         }
 }
-
-
-
 
 
 /* OrderTips: Order tips in a polytomous tree */
@@ -5885,9 +5380,6 @@ void OrderTips (PolyTree *t)
 }
 
 
-
-
-
 /* PrintNodes: Print a list of tree nodes, pointers and length */
 void PrintNodes (Tree *t)
 {
@@ -5932,9 +5424,6 @@ void PrintNodes (Tree *t)
         }
     printf ("\n");
 }
-
-
-
 
 
 /* PrintPolyNodes: Print a list of polytomous tree nodes, pointers and length */
@@ -6000,9 +5489,6 @@ void PrintPolyNodes (PolyTree *pt)
 }
 
 
-
-
-
 /* PrintTranslateBlock: Print a translate block to file fp for tree t */
 void PrintTranslateBlock (FILE *fp, Tree *t)
 {
@@ -6028,9 +5514,6 @@ void PrintTranslateBlock (FILE *fp, Tree *t)
 }
 
 
-
-
-
 /**
 Update relaxed clock parameter of the branch of a node with index "b" after node with index "a" is removed. 
 i.e. make branch of node with index "b" be a concatenation of its original branch and the branch of node with index "a"
@@ -6043,11 +5526,9 @@ a       |
 |   ->  |
 |       |
 |       b
-b
-
-*/
-void AppendRelaxedBranch (int a,int b,PolyTree *t){
-
+b                */
+void AppendRelaxedBranch (int a,int b,PolyTree *t)
+{
     int i,len;
 
     for (i=0; i<t->nBSets; i++)
@@ -6075,14 +5556,11 @@ void AppendRelaxedBranch (int a,int b,PolyTree *t){
 }
 
 
-
-
-
 /**
 Swap relaxed clock paramiters of the branch of nodes with index "a" and "b".
 */
-void SwapRelaxedBranchInfo (int a,int b,PolyTree *t){
-
+void SwapRelaxedBranchInfo (int a,int b,PolyTree *t)
+{
     int i,j;
     MrBFlt tmp, *tmpp;
 
@@ -6114,9 +5592,6 @@ void SwapRelaxedBranchInfo (int a,int b,PolyTree *t){
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   PrunePolyTree: This routine will prune a polytomous tree according to the currently
@@ -6127,9 +5602,7 @@ void SwapRelaxedBranchInfo (int a,int b,PolyTree *t){
 |
 ---------------------------------------------------------------------------------------------*/
 int PrunePolyTree (PolyTree *pt)
-
 {
-
     int             i, j, numDeleted, numTermPruned, numIntPruned, index;
     PolyNode        *p = NULL, *q=NULL, *r=NULL, *qa;
 
@@ -6296,11 +5769,7 @@ int PrunePolyTree (PolyTree *pt)
     assert(j==pt->nIntNodes);
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*--------------------------------------------------------------------
@@ -6310,7 +5779,6 @@ int PrunePolyTree (PolyTree *pt)
 ---------------------------------------------------------------------*/
 int RandPerturb (Tree *t, int nPert, RandLong *seed)
 {
-    
     int         i, whichNode;
     TreeNode    *p, *q, *a, *b, *c;
     
@@ -6379,9 +5847,6 @@ int RandPerturb (Tree *t, int nPert, RandLong *seed)
 }
 
 
-
-
-
 /*
 |       Reorder array of nodes "nodeArray" such that first nodes in it could be paired with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint.  
 |       
@@ -6395,7 +5860,6 @@ int RandPerturb (Tree *t, int nPert, RandLong *seed)
 */
 int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
 {
-
     int             i, j,  k, FirstEmpty;
     BitsLong        **constraintPartition;
     PolyNode        *tmp;
@@ -6471,8 +5935,6 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 }
 
 
-
-
 /*
 |               Check if "partition" violate any constraint.  
 |       
@@ -6485,7 +5947,6 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 */
 int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
 {
-
     int             j, k;
     BitsLong        **constraintPartition;
 
@@ -6523,10 +5984,6 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
 }
 
 
-
-
-
-
 /*
 |         Remove from activeConstraints references to constraints that become satisfied if PolyNode "w" exist, i.e. they do not need to be checked furter thus become not active  
 |
@@ -6538,7 +5995,6 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
 */
 int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
 {
-
     int             j,  k;
     BitsLong        **constraintPartition;
     //PolyNode        *tmp;
@@ -6581,9 +6037,6 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 }
 
 
-
-
-
 /*--------------------------------------------------------------------
 |
 |           RandResolve: Randomly resolve a polytomous tree
@@ -6593,9 +6046,7 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 | @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
 int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
-
 {
-
     int         i, j, k, nextNode, stopNode, rand1, rand2, nTaxa, nLongsNeeded, tmp;
     PolyNode    *p=NULL, *q, *r, *u, *w1, *w2;
     int         nodeArrayAllowedSize, nodeArraySize, activeConstraintsSize;
@@ -6743,9 +6194,6 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
 }
 
 
-
-
-
 /* ResetTreeNode: Reset tree node except for memory index */
 void ResetTreeNode (TreeNode *p)
 {
@@ -6771,9 +6219,6 @@ void ResetTreeNode (TreeNode *p)
 }
 
 
-
-
-
 /* ResetPolyNode: Reset all values of one node in a polytree */
 void ResetPolyNode (PolyNode *p)
 {
@@ -6794,9 +6239,6 @@ void ResetPolyNode (PolyNode *p)
     p->support = 0.0;
     p->x = p->y = 0;
 }
-
-
-
 
 
 /* ResetPolyTree: Reset polytomous tree to pristine state but keep relevant memory. */
@@ -6841,9 +6283,6 @@ void ResetPolyTree (PolyTree *pt)
 }
 
 
-
-
-
 /* ResetPolyTreePartitions: Reset and set bit patterns describing partitions */
 void ResetPolyTreePartitions (PolyTree *pt)
 {
@@ -6878,9 +6317,6 @@ void ResetPolyTreePartitions (PolyTree *pt)
             }
         }
 }
-
-
-
 
 
 /*----------------------------------------------
@@ -6935,9 +6371,6 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 }
 
 
-
-
-
 /*----------------------------------------------
 |
 |   ResetTipIndices: reset tip indices to be from 
@@ -6978,9 +6411,6 @@ void ResetTipIndices(PolyTree *pt)
             }
         }
 }
-
-
-
 
 
 /*----------------------------------------------
@@ -7094,9 +6524,6 @@ int ResetTopology (Tree *t, char *s)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   ResetBrlensFromTree: copies brlens and depths from second tree (vTree) to
@@ -7104,9 +6531,7 @@ int ResetTopology (Tree *t, char *s)
 |
 -----------------------------------------------------------------*/
 int ResetBrlensFromTree (Tree *tree, Tree *vTree)
-
 {
-
     int         i, j, k, nLongsNeeded, numTips;
     MrBFlt      d1, d2;
     TreeNode    *p, *q;
@@ -7173,11 +6598,7 @@ int ResetBrlensFromTree (Tree *tree, Tree *vTree)
     FreeTreePartitions(vTree);
     
     return (NO_ERROR);
-        
 }
-
-
-
 
 
 /* ResetIntNodeIndices: Set int node indices in downpass order from numTaxa to 2*numTaxa-2 */
@@ -7205,9 +6626,6 @@ void ResetIntNodeIndices (PolyTree *t)
         index++;
         }
 }
-
-
-
 
 
 /* ResetTopologyFromTree: use top to set topology in tree */
@@ -7277,9 +6695,6 @@ int ResetTopologyFromTree (Tree *tree, Tree *top)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* ResetTopologyFromPolyTree: use polytree top to set topology in tree */
@@ -7382,9 +6797,6 @@ int ResetTopologyFromPolyTree (Tree *tree, PolyTree *top)
 }
 
 
-
-
-
 /* ResetTreePartitions: Reset bitsets describing tree partitions */
 void ResetTreePartitions (Tree *t)
 {
@@ -7421,9 +6833,6 @@ void ResetTreePartitions (Tree *t)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   RetrieveRTopology: This routine will rebuild a rooted
@@ -7433,7 +6842,6 @@ void ResetTreePartitions (Tree *t)
 |
 --------------------------------------------------------*/
 int RetrieveRTopology (Tree *t, int *order)
-
 {
     int         i, numTaxa;
     TreeNode    *p, *q, *r;
@@ -7489,9 +6897,6 @@ int RetrieveRTopology (Tree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   RetrieveRTree: This routine will rebuild a rooted
@@ -7501,7 +6906,6 @@ int RetrieveRTopology (Tree *t, int *order)
 |
 --------------------------------------------------------*/
 int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, numTaxa;
     TreeNode    *p, *q, *r;
@@ -7571,9 +6975,6 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   RetrieveRTreeWithIndices: This routine will rebuild a rooted
@@ -7583,7 +6984,6 @@ int RetrieveRTree (Tree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, numTaxa;
     TreeNode    *p, *q, *r;
@@ -7661,9 +7061,6 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   RetrieveUTopology: This routine will rebuild an unrooted
@@ -7673,7 +7070,6 @@ int RetrieveRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int RetrieveUTopology (Tree *t, int *order)
-
 {
     int         i, numTips;
     TreeNode    *p, *q, *r;
@@ -7731,9 +7127,6 @@ int RetrieveUTopology (Tree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   RetrieveUTree: This routine will rebuild an unrooted
@@ -7743,7 +7136,6 @@ int RetrieveUTopology (Tree *t, int *order)
 |
 --------------------------------------------------------*/
 int RetrieveUTree (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, numTips;
     TreeNode    *p, *q, *r;
@@ -7806,13 +7198,8 @@ int RetrieveUTree (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 void SetDatedNodeAges (Param *param, int chain, int state)
-
 {
-
     int         i;
     MrBFlt      clockRate;
     ModelInfo   *m;
@@ -7840,13 +7227,8 @@ void SetDatedNodeAges (Param *param, int chain, int state)
 }
 
 
-
-
-
 void SetNodeDepths (Tree *t)
-
 {
-
     int     i;
     MrBFlt      d1, d2;
     TreeNode    *p;
@@ -7879,9 +7261,6 @@ void SetNodeDepths (Tree *t)
             p->nodeDepth = p->anc->nodeDepth - p->length;
         }
 }
-
-
-
 
 
 /* Set ages of a clock tree according to depth and clockrate. Check that resulting ages are consistant with calibration.
@@ -7951,14 +7330,8 @@ int SetTreeNodeAges (Param *param, int chain, int state)
 }
 
 
-
-
-
-
 int ShowPolyNodes (PolyTree *pt)
-
 {
-
     int             i;
     PolyNode        *p;
 
@@ -8003,14 +7376,9 @@ int ShowPolyNodes (PolyTree *pt)
 }
 
 
-
-
-
 /* ShowTree: Show tree on screen */
 int ShowTree (Tree *t)
-
 {
-
     int             i, j, k, x, nLines, nLevels, levelDepth, from, to;
     char            treeLine[SCREENWIDTH2], labelLine[100];
     TreeNode        *p;
@@ -8171,11 +7539,7 @@ int ShowTree (Tree *t)
 #   endif
 
     return (NO_ERROR);
-       
 }
-
-
-
 
 
 /*-------------------------------------------------------
@@ -8185,7 +7549,6 @@ int ShowTree (Tree *t)
 |
 --------------------------------------------------------*/
 int StoreRPolyTopology (PolyTree *t, int *order)
-
 {
     int         i, numTaxa;
     PolyNode    *p, *q;
@@ -8273,9 +7636,6 @@ int StoreRPolyTopology (PolyTree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreRPolyTree: Same as StoreRTree but for
@@ -8283,7 +7643,6 @@ int StoreRPolyTopology (PolyTree *t, int *order)
 |
 --------------------------------------------------------*/
 int StoreRPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, j, numTaxa;
     PolyNode    *p, *q;
@@ -8379,9 +7738,6 @@ int StoreRPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreRTopology: This routine will break a rooted tree
@@ -8392,7 +7748,6 @@ int StoreRPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int StoreRTopology (Tree *t, int *order)
-
 {
     int         i, numTaxa;
     TreeNode    *p, *q;
@@ -8461,9 +7816,6 @@ int StoreRTopology (Tree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreRTree: This routine will break a rooted tree
@@ -8475,7 +7827,6 @@ int StoreRTopology (Tree *t, int *order)
 |
 --------------------------------------------------------*/
 int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, j, numTaxa;
     TreeNode    *p, *q;
@@ -8561,9 +7912,6 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreRTreeWithIndices: This routine will break a rooted
@@ -8575,7 +7923,6 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, j, k, numTaxa;
     TreeNode    *p, *q;
@@ -8665,9 +8012,6 @@ int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreUPolyTopology: Same as StoreUTopology but for
@@ -8675,7 +8019,6 @@ int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int StoreUPolyTopology (PolyTree *t, int *order)
-
 {
     int         i, numTips;
     PolyNode    *p, *q;
@@ -8768,9 +8111,6 @@ int StoreUPolyTopology (PolyTree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreUPolyTree: Same as StoreUTopology but for
@@ -8778,7 +8118,6 @@ int StoreUPolyTopology (PolyTree *t, int *order)
 |
 --------------------------------------------------------*/
 int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, j, numTips;
     PolyNode    *p, *q;
@@ -8887,9 +8226,6 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreUTopology: This routine will break an unrooted tree
@@ -8900,7 +8236,6 @@ int StoreUPolyTree (PolyTree *t, int *order, MrBFlt *brlens)
 |
 --------------------------------------------------------*/
 int StoreUTopology (Tree *t, int *order)
-
 {
     int         i, numTips;
     TreeNode    *p, *q;
@@ -8973,9 +8308,6 @@ int StoreUTopology (Tree *t, int *order)
 }
 
 
-
-
-
 /*-------------------------------------------------------
 |
 |   StoreUTree: This routine will break an unrooted tree
@@ -8987,7 +8319,6 @@ int StoreUTopology (Tree *t, int *order)
 |
 --------------------------------------------------------*/
 int StoreUTree (Tree *t, int *order, MrBFlt *brlens)
-
 {
     int         i, j, numTips;
     TreeNode    *p, *q;
@@ -9079,9 +8410,6 @@ int StoreUTree (Tree *t, int *order, MrBFlt *brlens)
 }
 
 
-
-
-
 /* TreeLength: Calculate tree length */
 MrBFlt TreeLen (Tree *t)
 {
@@ -9100,9 +8428,6 @@ MrBFlt TreeLen (Tree *t)
 }
 
 
-
-
-
 /*-------------------------------------------------------------------------------------------
 |
 |   Unmark: This routine will unmark a subtree rooted at p
@@ -9119,11 +8444,7 @@ void Unmark (TreeNode *p)
 }
 
 
-
-
-
 void WriteEventTree (TreeNode *p, int chain, Param *param)
-
 {
     int             j, nEvents;
     MrBFlt          brlen, *position, *rateMult;
@@ -9199,11 +8520,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
 }
 
 
-
-
-
 void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int printAll)
-
 {
     char            *tempStr;
     int             i, j, nEvents, tempStrSize = TEMPSTRSIZE;
@@ -9329,11 +8646,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
 }
 
 
-
-
-
 void WriteEvolTree (TreeNode *p, int chain, Param *param)
-
 {
     MrBFlt          *length;
 
@@ -9363,11 +8676,7 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
 }
 
 
-
-
-
 void WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int showBrlens, int isRooted)
-
 {
     char            *tempStr;
     int             i, tempStrSize = TEMPSTRSIZE, nEvents;
@@ -9472,12 +8781,8 @@ void WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int show
 }
 
 
-
-
-
 /* WriteTopologyToFile: Simply write topology to file */
 void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
-
 {
     if (p != NULL)
         {
@@ -9502,8 +8807,6 @@ void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
 }
 
 
-
-
 /* the following are moved from mbmath.c */
 /*---------------------------------------------------------------------------------
 |
@@ -9514,9 +8817,7 @@ void WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted)
 |
 ---------------------------------------------------------------------------------*/
 void AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
-
 {
-
     int         row, col;
 
     for (row=0; row<dim; row++)
@@ -9526,11 +8827,7 @@ void AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
             result[row][col] = a[row][col] + b[row][col];
             }
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9541,9 +8838,7 @@ void AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
 |
 ---------------------------------------------------------------------------------*/
 complex **AllocateSquareComplexMatrix (int dim)
-
 {
-
     int         i;
     complex     **m;
 
@@ -9565,12 +8860,7 @@ complex **AllocateSquareComplexMatrix (int dim)
         }
         
     return (m);
-    
 }
-
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9581,9 +8871,7 @@ complex **AllocateSquareComplexMatrix (int dim)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt **AllocateSquareDoubleMatrix (int dim)
-
 {
-
     int         i;
     MrBFlt      **m;
     
@@ -9605,11 +8893,7 @@ MrBFlt **AllocateSquareDoubleMatrix (int dim)
         }
 
     return (m);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9620,9 +8904,7 @@ MrBFlt **AllocateSquareDoubleMatrix (int dim)
 |
 ---------------------------------------------------------------------------------*/
 int **AllocateSquareIntegerMatrix (int dim)
-
 {
-
     int     i, **m;
     
     m = (int **)SafeMalloc((size_t)((dim)*sizeof(int*)));
@@ -9643,11 +8925,7 @@ int **AllocateSquareIntegerMatrix (int dim)
         }
 
     return (m);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9660,9 +8938,7 @@ int **AllocateSquareIntegerMatrix (int dim)
 |
 ---------------------------------------------------------------------------------*/
 int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
-
 {
-
     int         i, j, i1, i2;
     MrBFlt      point[MAX_GAMMA_CATS], x, y, large = 20.0, sum;
 
@@ -9719,11 +8995,7 @@ int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
 #   endif
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9732,9 +9004,7 @@ int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
 |
 ---------------------------------------------------------------------------------*/
 void BackSubstitutionRow (int dim, MrBFlt **u, MrBFlt *b)
-
 {
-
     int             i, j;
     MrBFlt          dotProduct;
 
@@ -9746,11 +9016,7 @@ void BackSubstitutionRow (int dim, MrBFlt **u, MrBFlt *b)
             dotProduct += u[i][j] * b[j];
         b[i] = (b[i] - dotProduct) / u[i][i];
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -9802,9 +9068,7 @@ void BackSubstitutionRow (int dim, MrBFlt **u, MrBFlt *b)
 |   
 ---------------------------------------------------------------------------------*/
 void Balanc (int dim, MrBFlt **a, int *low, int *high, MrBFlt *scale)
-
 {
-
     int         i, j, k, l, m, noconv;
     MrBFlt      c, f, g, r, s, b2;
 
@@ -10116,9 +9380,6 @@ int balanc (int *nm, int *n, MrBFlt *a, int *low, int *igh, MrBFlt *scale)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   BalBak
@@ -10152,9 +9413,7 @@ int balanc (int *nm, int *n, MrBFlt *a, int *low, int *igh, MrBFlt *scale)
 |   
 ---------------------------------------------------------------------------------*/
 void BalBak (int dim, int low, int high, MrBFlt *scale, int m, MrBFlt **z)
-
 {
-
     int         i, j, k, ii;
     MrBFlt      s;
 
@@ -10270,13 +9529,8 @@ int balbak (int *nm, int *n, int *low, int *igh, MrBFlt *scale, int *m, MrBFlt *
 }
 
 
-
-
-
 void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
-
 {
-
     int             i;
     MrBFlt          r, quantile, lower, upper;
             
@@ -10299,17 +9553,11 @@ void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
         MrBayesPrint ("%4d %lf %lf\n", i, values[i]);
         }
 #   endif
-
 }
 
 
-
-
-
 MrBFlt BetaCf (MrBFlt a, MrBFlt b, MrBFlt x)
-
 {
-
     int         m, m2;
     MrBFlt      aa, c, d, del, h, qab, qam, qap;
     
@@ -10353,17 +9601,11 @@ MrBFlt BetaCf (MrBFlt a, MrBFlt b, MrBFlt x)
         exit(0);
         }
     return (h);
-    
 }
 
 
-
-
-
 MrBFlt BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x)
-
 {
-
     int     i, stopIter, direction, nswitches;
     MrBFlt  curPos, curFraction, increment;
     
@@ -10432,11 +9674,7 @@ MrBFlt BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x)
         }
         
     return (curPos);
-        
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10450,9 +9688,7 @@ MrBFlt BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 |
 ---------------------------------------------------------------------------------*/
 void CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v)
-
 {
-
     register int    i, j, k;
     MrBFlt          *pc;
 
@@ -10461,11 +9697,7 @@ void CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v)
         for (j=0; j<dim; j++)
             for (k=0; k<dim; k++)
                 *pc++ = u[i][k] * v[k][j];
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10476,15 +9708,9 @@ void CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt CdfBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
-
 {
-
     return (LBinormal(h1, h2, r) + CdfNormal(h1) + CdfNormal(h2) - 1.0);
-   
 }    
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10498,9 +9724,7 @@ MrBFlt CdfBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt CdfNormal (MrBFlt x)
-
 {
-
     int             invers = 0;
     MrBFlt          p, limit = 10.0, t = 1.28, y = x*x/2.0;
 
@@ -10526,11 +9750,7 @@ MrBFlt CdfNormal (MrBFlt x)
             (x + 3.99019417011))))));
             
     return (invers ? p : 1-p);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10541,20 +9761,14 @@ MrBFlt CdfNormal (MrBFlt x)
 |
 ---------------------------------------------------------------------------------*/
 complex Complex (MrBFlt a, MrBFlt b)
-
 {
-
     complex c;
     
     c.re = a;
     c.im = b;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10565,9 +9779,7 @@ complex Complex (MrBFlt a, MrBFlt b)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt ComplexAbsoluteValue (complex a)
-
 {
-
     MrBFlt      x, y, answer, temp;
     
     x = fabs(a.re);
@@ -10588,11 +9800,7 @@ MrBFlt ComplexAbsoluteValue (complex a)
         }
 
     return (answer);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10603,20 +9811,14 @@ MrBFlt ComplexAbsoluteValue (complex a)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexAddition (complex a, complex b)
-
 {
-
     complex     c;
     
     c.re = a.re + b.re;
     c.im = a.im + b.im;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10627,20 +9829,14 @@ complex ComplexAddition (complex a, complex b)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexConjugate (complex a)
-
 {
-
     complex     c;
     
     c.re = a.re;
     c.im = -a.im;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10651,9 +9847,7 @@ complex ComplexConjugate (complex a)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexDivision (complex a, complex b)
-
 {
-
     complex     c;
     MrBFlt      r, den;
     
@@ -10673,11 +9867,7 @@ complex ComplexDivision (complex a, complex b)
         }
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10689,9 +9879,7 @@ complex ComplexDivision (complex a, complex b)
 |
 ---------------------------------------------------------------------------------*/
 void ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, MrBFlt *ci)
-
 {
-
     MrBFlt      s, ais, bis, ars, brs;
 
     s = fabs(br) + fabs(bi);
@@ -10702,11 +9890,7 @@ void ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, M
     s = brs*brs + bis*bis;
     *cr = (ars*brs + ais*bis) / s;
     *ci = (ais*brs - ars*bis) / s;
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10717,9 +9901,7 @@ void ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, M
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexExponentiation (complex a)
-
 {
-
     complex     c;
 
     c.re = exp(a.re);
@@ -10732,10 +9914,7 @@ complex ComplexExponentiation (complex a)
         }
 
     return (c);
-   
 }
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10756,9 +9935,7 @@ complex ComplexExponentiation (complex a)
 |
 ---------------------------------------------------------------------------------*/
 int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex **aInverse, complex *col)
-
 {
-
     int             isSingular, i, j;
 
     isSingular = ComplexLUDecompose (dim, a, dwork, indx, (MrBFlt *)NULL);
@@ -10777,11 +9954,7 @@ int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex
         }
 
     return (isSingular);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10792,9 +9965,7 @@ int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexLog (complex a)
-
 {
-
     complex     c;
     
     c.re = log(ComplexAbsoluteValue(a));
@@ -10808,12 +9979,7 @@ complex ComplexLog (complex a)
         }
         
     return (c);
-    
 }
-
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10825,9 +9991,7 @@ complex ComplexLog (complex a)
 |      
 ---------------------------------------------------------------------------------*/
 void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
-
 {
-
     int             i, ip, j, ii = -1;
     complex         sum;
 
@@ -10852,12 +10016,7 @@ void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
             sum = ComplexSubtraction (sum, ComplexMultiplication (a[i][j], b[j]));
         b[i] = ComplexDivision (sum, a[i][i]);
         }
-        
 }
-
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10878,9 +10037,7 @@ void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
 |
 ---------------------------------------------------------------------------------*/
 int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
-
 {
-
     int             i, imax, j, k;
     MrBFlt          big, dum, temp, d;
     complex         sum, cdum;
@@ -10953,11 +10110,7 @@ int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
         *pd = d;
         
     return (0);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10968,20 +10121,14 @@ int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexMultiplication (complex a, complex b)
-
 {
-
     complex     c;
     
     c.re = a.re * b.re - a.im * b.im;
     c.im = a.im * b.re + a.re * b.im;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -10992,9 +10139,7 @@ complex ComplexMultiplication (complex a, complex b)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexSquareRoot (complex a)
-
 {
-
     complex         c;
     MrBFlt          x, y, w, r;
     
@@ -11030,11 +10175,7 @@ complex ComplexSquareRoot (complex a)
             }
         return (c);
         }
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11045,20 +10186,14 @@ complex ComplexSquareRoot (complex a)
 |
 ---------------------------------------------------------------------------------*/
 complex ComplexSubtraction (complex a, complex b)
-
 {
-
     complex     c;
     
     c.re = a.re - b.re;
     c.im = a.im - b.im;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11070,9 +10205,7 @@ complex ComplexSubtraction (complex a, complex b)
 |
 ---------------------------------------------------------------------------------*/
 int ComputeEigenSystem (int dim, MrBFlt **a, MrBFlt *v, MrBFlt *vi, MrBFlt **u, int *iwork, MrBFlt *dwork)
-
 {
-
     int         i, rc;
 
     rc = EigensForRealMatrix (dim, a, v, vi, u, iwork, dwork);
@@ -11088,11 +10221,7 @@ int ComputeEigenSystem (int dim, MrBFlt **a, MrBFlt *v, MrBFlt *vi, MrBFlt **u, 
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11106,9 +10235,7 @@ int ComputeEigenSystem (int dim, MrBFlt **a, MrBFlt *v, MrBFlt *vi, MrBFlt **u, 
 |
 ---------------------------------------------------------------------------------*/
 void ComputeLandU (int dim, MrBFlt **aMat, MrBFlt **lMat, MrBFlt **uMat)
-
 {
-
     int         i, j, k, m, row, col;
 
     for (j=0; j<dim; j++) 
@@ -11141,11 +10268,7 @@ void ComputeLandU (int dim, MrBFlt **aMat, MrBFlt **lMat, MrBFlt **uMat)
                 }
             }
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11163,9 +10286,7 @@ void ComputeLandU (int dim, MrBFlt **aMat, MrBFlt **lMat, MrBFlt **uMat)
 |
 ---------------------------------------------------------------------------------*/
 void ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f)
-
 {
-
     int         i, j, k, negativeFactor;
     MrBFlt      maxAValue, c, **d, **n, **x, **cX;
 
@@ -11223,11 +10344,7 @@ void ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f)
     FreeSquareDoubleMatrix (n);
     FreeSquareDoubleMatrix (x);
     FreeSquareDoubleMatrix (cX);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11238,9 +10355,7 @@ void ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f)
 |
 ---------------------------------------------------------------------------------*/
 void CopyComplexMatrices (int dim, complex **from, complex **to)
-
 {
-
     int         i, j;
     
     for (i=0; i<dim; i++)
@@ -11251,11 +10366,7 @@ void CopyComplexMatrices (int dim, complex **from, complex **to)
             to[i][j].im = from[i][j].im;
             }
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11266,9 +10377,7 @@ void CopyComplexMatrices (int dim, complex **from, complex **to)
 |
 ---------------------------------------------------------------------------------*/
 void CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to)
-
 {
-
     int         i, j;
     
     for (i=0; i<dim; i++)
@@ -11278,11 +10387,7 @@ void CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to)
             to[i][j] = from[i][j];
             }
         }
-        
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11295,9 +10400,7 @@ void CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to)
 |      
 ---------------------------------------------------------------------------------*/
 void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
-
 {
-
     int     i;
     MrBFlt  sum;
 
@@ -11312,9 +10415,6 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   DiscreteGamma
@@ -11324,9 +10424,7 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
 |
 ---------------------------------------------------------------------------------*/
 int DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median)
-
 {
-
     int             i;
     MrBFlt          gap05 = 1.0/(2.0*K), t, factor = alfa/beta*K, lnga1;
 
@@ -11359,11 +10457,7 @@ int DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median)
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11374,9 +10468,7 @@ int DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median)
 |      
 ---------------------------------------------------------------------------------*/
 void DivideByTwos (int dim, MrBFlt **a, int power)
-
 {
-
     int         divisor = 1, i, row, col;
 
     for (i=0; i<power; i++)
@@ -11385,11 +10477,7 @@ void DivideByTwos (int dim, MrBFlt **a, int power)
     for (row=0; row<dim; row++)
         for (col=0; col<dim; col++)
             a[row][col] /= divisor;
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11400,19 +10488,13 @@ void DivideByTwos (int dim, MrBFlt **a, int power)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt D_sign (MrBFlt a, MrBFlt b)
-
 {
-
     MrBFlt      x;
 
     x = (a >= 0 ? a : -a);
     
     return (b >= 0 ? x : -x);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11425,9 +10507,7 @@ MrBFlt D_sign (MrBFlt a, MrBFlt b)
 |      
 ---------------------------------------------------------------------------------*/
 int EigensForRealMatrix (int dim, MrBFlt **a, MrBFlt *wr, MrBFlt *wi, MrBFlt **z, int *iv1, MrBFlt *fv1)
-
 {
-
     static int  is1, is2;
     int         ierr;
 
@@ -11439,11 +10519,7 @@ int EigensForRealMatrix (int dim, MrBFlt **a, MrBFlt *wr, MrBFlt *wi, MrBFlt **z
         BalBak (dim, is1, is2, fv1, dim, z);
 
     return (ierr);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11478,7 +10554,6 @@ int EigensForRealMatrix (int dim, MrBFlt **a, MrBFlt *wr, MrBFlt *wi, MrBFlt **z
 |
 ---------------------------------------------------------------------------------*/
 void ElmHes (int dim, int low, int high, MrBFlt **a, int *interchanged)
-
 {
     int         i, j, m, la, mm1, kp1, mp1;
     MrBFlt      x, y;
@@ -11656,9 +10731,6 @@ int elmhes (int *nm, int *n, int *low, int *igh, MrBFlt *a, int *int__)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   ElTran
@@ -11694,9 +10766,7 @@ int elmhes (int *nm, int *n, int *low, int *igh, MrBFlt *a, int *int__)
 |   
 ---------------------------------------------------------------------------------*/
 void ElTran (int dim, int low, int high, MrBFlt **a, int *interchanged, MrBFlt **z)
-
 {
-
     int         i, j, mp;
 
     /* initialize z to identity matrix */
@@ -11801,18 +10871,13 @@ int eltran (int *nm, int *n, int *low, int *igh, MrBFlt *a, int *int__, MrBFlt *
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   Exchange
 |
 ---------------------------------------------------------------------------------*/
 void Exchange (int j, int k, int l, int m, int n, MrBFlt **a, MrBFlt *scale)
-
 {
-
     int         i;
     MrBFlt      f;
 
@@ -11832,11 +10897,7 @@ void Exchange (int j, int k, int l, int m, int n, MrBFlt **a, MrBFlt *scale)
             a[m][i] = f;
             }
         }
-        
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11847,9 +10908,7 @@ void Exchange (int j, int k, int l, int m, int n, MrBFlt **a, MrBFlt *scale)
 |      
 ---------------------------------------------------------------------------------*/
 MrBFlt Factorial (int x)
-
 {
-
     int         i;
     MrBFlt      fac;
     
@@ -11860,11 +10919,7 @@ MrBFlt Factorial (int x)
         }
         
     return (fac);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11873,9 +10928,7 @@ MrBFlt Factorial (int x)
 |
 ---------------------------------------------------------------------------------*/
 void ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b)
-
 {
-
     int         i, j;
     MrBFlt      dotProduct;
 
@@ -11887,11 +10940,7 @@ void ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b)
             dotProduct += L[i][j] * b[j];
         b[i] = (b[i] - dotProduct) / L[i][i];
         }
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11902,16 +10951,10 @@ void ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b)
 |      
 ---------------------------------------------------------------------------------*/
 void FreeSquareComplexMatrix (complex **m)
-
 {
-
     free((char *) (m[0]));
     free((char *) (m));
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11922,15 +10965,10 @@ void FreeSquareComplexMatrix (complex **m)
 |      
 ---------------------------------------------------------------------------------*/
 void FreeSquareDoubleMatrix (MrBFlt **m)
-
 {
-
     free((char *) (m[0]));
     free((char *) (m));
-    
 }
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11941,16 +10979,10 @@ void FreeSquareDoubleMatrix (MrBFlt **m)
 |      
 ---------------------------------------------------------------------------------*/
 void FreeSquareIntegerMatrix (int **m)
-
 {
-
     free((char *) (m[0]));
     free((char *) (m));
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11962,15 +10994,9 @@ void FreeSquareIntegerMatrix (int **m)
 |      
 ---------------------------------------------------------------------------------*/
 MrBFlt GammaRandomVariable (MrBFlt a, MrBFlt b, RandLong *seed)
-
 {
-
     return (RndGamma (a, seed) / b);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -11979,9 +11005,7 @@ MrBFlt GammaRandomVariable (MrBFlt a, MrBFlt b, RandLong *seed)
 |      
 ---------------------------------------------------------------------------------*/
 void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
-
 {
-
     int         i, k;
     MrBFlt      *bVec, **lMat, **uMat;
 
@@ -12017,11 +11041,7 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
     FreeSquareDoubleMatrix (lMat);
     FreeSquareDoubleMatrix (uMat);
     free (bVec);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -12032,9 +11052,7 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 |
 ---------------------------------------------------------------------------------*/
 int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs)
-
 {
-
     int         i, j, rc, *iWork, isComplex;
     MrBFlt      **tempWork, *dWork;
     complex     **cWork, *Ccol;
@@ -12111,13 +11129,9 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
 
     free (dWork);
     free (iWork);
-    
+
     return (isComplex);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -12176,9 +11190,7 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
 |   
 ---------------------------------------------------------------------------------*/
 int Hqr2 (int dim, int low, int high, MrBFlt **h, MrBFlt *wr, MrBFlt *wi, MrBFlt **z)
-
 {
-
     int         i, j, k, l, m, na, en, notlas, mp2, itn, its, enm2, twoRoots;
     MrBFlt      norm, p=0.0, q=0.0, r=0.0, s=0.0, t, w=0.0, x, y=0.0, ra, sa, vi, vr, zz=0.0, tst1, tst2;
 
@@ -13258,13 +12270,8 @@ int hqr2 (int *nm, int *n, int *low, int *igh, MrBFlt *h__, MrBFlt *wr, MrBFlt *
 }
 
 
-
-
-
 MrBFlt IncompleteBetaFunction (MrBFlt alpha, MrBFlt beta, MrBFlt x)
-
 {
-
     MrBFlt      bt, gm1, gm2, gm3, temp;
     
     if (x < 0.0 || x > 1.0) 
@@ -13288,11 +12295,7 @@ MrBFlt IncompleteBetaFunction (MrBFlt alpha, MrBFlt beta, MrBFlt x)
         return (bt * BetaCf(alpha, beta, x) / alpha);
     else
         return (1.0 - bt * BetaCf(beta, alpha, 1.0-x) / beta);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -13308,9 +12311,7 @@ MrBFlt IncompleteBetaFunction (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt IncompleteGamma (MrBFlt x, MrBFlt alpha, MrBFlt LnGamma_alpha)
-
 {
-
     int             i;
     MrBFlt      p = alpha, g = LnGamma_alpha,
                     accurate = 1e-8, overflow = 1e30,
@@ -13374,11 +12375,7 @@ MrBFlt IncompleteGamma (MrBFlt x, MrBFlt alpha, MrBFlt LnGamma_alpha)
         gin = 1.0-factor*gin;
     l50:
         return (gin);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -13391,9 +12388,7 @@ MrBFlt IncompleteGamma (MrBFlt x, MrBFlt alpha, MrBFlt LnGamma_alpha)
 |      
 ---------------------------------------------------------------------------------*/
 int InvertMatrix (int dim, MrBFlt **a, MrBFlt *col, int *indx, MrBFlt **aInv)
-
 {
-
     int         rc, i, j;
     
     rc = LUDecompose (dim, a, col, indx, (MrBFlt *)NULL);
@@ -13411,11 +12406,7 @@ int InvertMatrix (int dim, MrBFlt **a, MrBFlt *col, int *indx, MrBFlt **aInv)
         }
         
     return (rc);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -13430,9 +12421,7 @@ int InvertMatrix (int dim, MrBFlt **a, MrBFlt *col, int *indx, MrBFlt **aInv)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt LBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
-
 {
-      
     int i;
     MrBFlt      x[]={0.04691008, 0.23076534, 0.5, 0.76923466, 0.95308992};
     MrBFlt      w[]={0.018854042, 0.038088059, 0.0452707394,0.038088059,0.018854042};
@@ -13503,11 +12492,7 @@ MrBFlt LBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
         Lh = (1.0 - CdfNormal(h1)) * (1.0 - CdfNormal(h2)) + r * Lh;
         }
     return (Lh);
-   
 }    
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -13529,9 +12514,6 @@ MrBFlt  LnFactorial (int value)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   LnGamma
@@ -13550,9 +12532,7 @@ MrBFlt  LnFactorial (int value)
 |      
 ---------------------------------------------------------------------------------*/
 MrBFlt LnGamma (MrBFlt alp)
-
 {
-
     MrBFlt      x = alp, f = 0.0, z;
     
     if (x < 7) 
@@ -13567,12 +12547,8 @@ MrBFlt LnGamma (MrBFlt alp)
     z = 1.0 / (x*x);
     return  (f + (x-0.5)*log(x) - x + 0.918938533204673 + 
             (((-0.000595238095238*z+0.000793650793651)*z-0.002777777777778)*z +
-            0.083333333333333)/x);  
-
+            0.083333333333333)/x);
 }
-
-
-
 
 
 /* Calculate probability of a realization for exponential random variable */
@@ -13582,17 +12558,11 @@ MrBFlt LnPriorProbExponential (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for exponential random variable; parameter mean and not rate */
 MrBFlt LnPriorProbExponential_Param_Mean (MrBFlt val, MrBFlt *params)
 {
     return -log(params[0]) - val / params[0];
 }
-
-
-
 
 
 /* Calculate probability of a realization for a fixed variable */
@@ -13605,17 +12575,11 @@ MrBFlt LnPriorProbFix (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for gamma random variable */
 MrBFlt LnPriorProbGamma (MrBFlt val, MrBFlt *params)
 {
     return (params[0] - 1) * log(val) + params[0] * log(params[1]) - params[1] * val - LnGamma(params[0]);
 }
-
-
-
 
 
 /* Calculate probability of a realization for gamma random variable; parameters mean and sd */
@@ -13630,9 +12594,6 @@ MrBFlt LnPriorProbGamma_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for lognormal random variable */
 MrBFlt LnPriorProbLognormal (MrBFlt val, MrBFlt *params)
 {
@@ -13642,9 +12603,6 @@ MrBFlt LnPriorProbLognormal (MrBFlt val, MrBFlt *params)
 
     return -log(params[1] * val * sqrt(2.0 * PI)) - z * z / 2.0;
 }
-
-
-
 
 
 /* Calculate probability of a realization for lognormal random variable; parameters mean and sd on linear scale */
@@ -13661,9 +12619,6 @@ MrBFlt LnPriorProbLognormal_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for normal random variable */
 MrBFlt LnPriorProbNormal (MrBFlt val, MrBFlt *params)
 {
@@ -13675,17 +12630,11 @@ MrBFlt LnPriorProbNormal (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for an offset exponential random variable */
 MrBFlt LnPriorProbOffsetExponential (MrBFlt val, MrBFlt *params)
 {
     return log(params[1]) - params[1] * (val - params[0]);
 }
-
-
-
 
 
 /* Calculate probability of a realization for an offset exponential random variable; parameters offset and mean */
@@ -13700,9 +12649,6 @@ MrBFlt LnPriorProbOffsetExponential_Param_Offset_Mean (MrBFlt val, MrBFlt *param
 }
 
 
-
-
-
 /* Calculate probability of a realization for an offset gamma random variable */
 MrBFlt LnPriorProbOffsetGamma (MrBFlt val, MrBFlt *params)
 {
@@ -13714,9 +12660,6 @@ MrBFlt LnPriorProbOffsetGamma (MrBFlt val, MrBFlt *params)
 
     return (alpha - 1) * log(x) + alpha * log(beta) - beta * x - LnGamma(alpha);
 }
-
-
-
 
 
 /* Calculate probability of a realization for an offset gamma random variable; parameters offset, mean and sd */
@@ -13735,9 +12678,6 @@ MrBFlt LnPriorProbOffsetGamma_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability of a realization for an offset lognormal random variable */
 MrBFlt LnPriorProbOffsetLognormal (MrBFlt val, MrBFlt *params)
 {
@@ -13751,9 +12691,6 @@ MrBFlt LnPriorProbOffsetLognormal (MrBFlt val, MrBFlt *params)
 
     return -log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
 }
-
-
-
 
 
 /* Calculate probability of a realization for an offset lognormal random variable; parameters offset, mean and sd */
@@ -13773,9 +12710,6 @@ MrBFlt LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *para
 }
 
 
-
-
-
 /* Calculate probability of a realization for truncated (only positive values) normal random variable */
 MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
 {
@@ -13788,9 +12722,6 @@ MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
 
     return -log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
 }
-
-
-
 
 
 /* Calculate probability of a realization for arbitrarily truncated normal random variable; parameters truncation point, mean and sd */
@@ -13807,17 +12738,11 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
 }
 
 
-
-
-
 /* Calculate probability of a realization for uniform random variable */
 MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
     return - log(params[1] - params[0]);
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for exponential random variable */
@@ -13830,9 +12755,6 @@ MrBFlt LnProbRatioExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for exponential random variable; parameter mean and not rate */
 MrBFlt LnProbRatioExponential_Param_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13843,9 +12765,6 @@ MrBFlt LnProbRatioExponential_Param_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *para
 }
 
 
-
-
-
 /* Calculate probability of a realization for a fixed variable */
 MrBFlt LnProbRatioFix (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13854,9 +12773,6 @@ MrBFlt LnProbRatioFix (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
     else
         return NEG_INFINITY;
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for gamma random variable */
@@ -13874,9 +12790,6 @@ MrBFlt LnProbRatioGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for gamma random variable; parameters mean and sd */
 MrBFlt LnProbRatioGamma_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13892,9 +12805,6 @@ MrBFlt LnProbRatioGamma_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for log normal random variable */
 MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13908,9 +12818,6 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX) - log(newX);
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for log normal random variable; parameters mean and sd */
@@ -13931,9 +12838,6 @@ MrBFlt LnProbRatioLognormal_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *par
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for normal random variable */
 MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13946,9 +12850,6 @@ MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for offset exponential random variable */
 MrBFlt LnProbRatioOffsetExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13959,9 +12860,6 @@ MrBFlt LnProbRatioOffsetExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for offset exponential random variable; parameters offset and mean */
 MrBFlt LnProbRatioOffsetExponential_Param_Offset_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -13970,9 +12868,6 @@ MrBFlt LnProbRatioOffsetExponential_Param_Offset_Mean (MrBFlt newX, MrBFlt oldX,
 
     return (oldX - newX) / (params[1] - params[0]);
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for offset gamma random variable */
@@ -13990,9 +12885,6 @@ MrBFlt LnProbRatioOffsetGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
     return (alpha - 1.0) * (log(newZ) - log(oldZ)) - beta * (newZ - oldZ);
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for offset gamma random variable; parameters offset, mean and sd */
@@ -14016,9 +12908,6 @@ MrBFlt LnProbRatioOffsetGamma_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX, Mr
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for offset lognormal random variable */
 MrBFlt LnProbRatioOffsetLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -14032,9 +12921,6 @@ MrBFlt LnProbRatioOffsetLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(oldX-params[0]) - log(newX-params[0]);
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for offset lognormal random variable; parameters offset, mean and sd */
@@ -14056,9 +12942,6 @@ MrBFlt LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for truncated normal random variable */
 MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -14074,9 +12957,6 @@ MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 
     return (oldZ * oldZ - newZ * newZ) / 2.0;
 }
-
-
-
 
 
 /* Calculate probability ratio of realizations for arbitrarily truncated normal random variable; parameters truncation point, mean and sd */
@@ -14096,9 +12976,6 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 }
 
 
-
-
-
 /* Calculate probability ratio of realizations for uniform random variable */
 MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
@@ -14106,13 +12983,9 @@ MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 }
 
 
-
-
-
 /* Log probability for a value drawn from a lognormal distribution; parameters are
    mean and variance of value (not of log value) */
 MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
-
 {
     MrBFlt      z, lnProb, mu, sigma;
 
@@ -14127,12 +13000,8 @@ MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
 }
 
 
-
-
-
 /* Log probability for a value drawn from a gamma distribution */
 MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
-
 {
     MrBFlt lnProb;
 
@@ -14142,12 +13011,8 @@ MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
 }
 
 
-
-
-
 /* Log probability for a value drawn from a lognormal distribution */
 MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
-
 {
     MrBFlt      z, lnProb;
 
@@ -14159,12 +13024,8 @@ MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
 }
 
 
-
-
-
 /* Log probability for a value drawn from a scaled gamma distribution */
 MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
-
 {
     MrBFlt lnProb;
 
@@ -14174,12 +13035,8 @@ MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
 }
 
 
-
-
-
 /* Log probability for a value drawn from a truncated gamma distribution */
 MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max)
-
 {
     MrBFlt lnProb;
 
@@ -14191,12 +13048,8 @@ MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt
 }
 
 
-
-
-
 /* Log ratio for two values drawn from a lognormal distribution */
 MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
-
 {
     MrBFlt  newZ, oldZ, mu, sigma;
 
@@ -14210,12 +13063,8 @@ MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
 }
 
 
-
-
-
 /* Log ratio for two values drawn from a lognormal distribution */
 MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
-
 {
     MrBFlt  newZ, oldZ;
 
@@ -14226,9 +13075,6 @@ MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   LogBase2Plus1
@@ -14237,9 +13083,7 @@ MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
 |      
 ---------------------------------------------------------------------------------*/
 int LogBase2Plus1 (MrBFlt x)
-
 {
-
     int     j = 0;
 
     while(x > 1.0 - 1.0e-07) 
@@ -14249,11 +13093,7 @@ int LogBase2Plus1 (MrBFlt x)
         }
         
     return (j);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14264,9 +13104,7 @@ int LogBase2Plus1 (MrBFlt x)
 |      
 ---------------------------------------------------------------------------------*/
 MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
-
 {
-
     MrBFlt      x;
     
     x = PointNormal(RandomNumber(seed));
@@ -14278,9 +13116,6 @@ MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   LUBackSubstitution
@@ -14289,9 +13124,7 @@ MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
 |      
 ---------------------------------------------------------------------------------*/
 void LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b)
-
 {
-
     int         i, ip, j, ii = -1;
     MrBFlt      sum;
 
@@ -14316,11 +13149,7 @@ void LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b)
             sum -= a[i][j] * b[j];
         b[i] = sum / a[i][i];
         }
-        
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14331,9 +13160,7 @@ void LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b)
 |      
 ---------------------------------------------------------------------------------*/
 int LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd)
-
 {
-
     int         i, imax=0, j, k;
     MrBFlt      big, dum, sum, temp, d;
 
@@ -14401,11 +13228,7 @@ int LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd)
         *pd = d;
         
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14416,9 +13239,7 @@ int LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 |
 ---------------------------------------------------------------------------------*/
 void MultiplyMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
-
 {
-
     register int    i, j, k;
     MrBFlt          **temp;
 
@@ -14444,11 +13265,7 @@ void MultiplyMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
         }
         
     FreeSquareDoubleMatrix (temp);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14459,19 +13276,13 @@ void MultiplyMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
 |
 ---------------------------------------------------------------------------------*/
 void MultiplyMatrixByScalar (int dim, MrBFlt **a, MrBFlt scalar, MrBFlt **result)
-
 {
-
     int         row, col;
 
     for (row=0; row<dim; row++)
         for (col=0; col<dim; col++)
              result[row][col] = a[row][col] * scalar;
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14480,9 +13291,7 @@ void MultiplyMatrixByScalar (int dim, MrBFlt **a, MrBFlt scalar, MrBFlt **result
 |
 ---------------------------------------------------------------------------------*/
 int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
-
 {
-
     register int    i, j;
     int             k, numSquares, numRemaining;
     MrBFlt          **TempIn, **TempOut;
@@ -14532,11 +13341,7 @@ int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14548,9 +13353,7 @@ int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
-
 {
-
     MrBFlt      e = 0.5e-6, aa = 0.6931471805, p = prob, g,
                     xx, c, ch, a = 0.0, q = 0.0, p1 = 0.0, p2 = 0.0, t = 0.0, 
                     x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6;
@@ -14609,11 +13412,7 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
         if (fabs(q/ch-1.0) > e) 
             goto l4;
         return (ch);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14635,9 +13434,7 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt PointNormal (MrBFlt prob)
-
 {
-
     MrBFlt      a0 = -0.322232431088, a1 = -1.0, a2 = -0.342242088547, a3 = -0.0204231210245,
                     a4 = -0.453642210148e-4, b0 = 0.0993484626060, b1 = 0.588581570495,
                     b2 = 0.531103462366, b3 = 0.103537752850, b4 = 0.0038560700634,
@@ -14650,11 +13447,7 @@ MrBFlt PointNormal (MrBFlt prob)
     z = y + ((((y*a4+a3)*y+a2)*y+a1)*y+a0) / ((((y*b4+b3)*y+b2)*y+b1)*y+b0);
     
     return (p<0.5 ? -z : z);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14665,9 +13458,7 @@ MrBFlt PointNormal (MrBFlt prob)
 |
 ---------------------------------------------------------------------------------*/
 void PrintComplexVector (int dim, complex *vec)
-
 {
-
     int     i;
 
     MrBayesPrint ("{");
@@ -14678,11 +13469,7 @@ void PrintComplexVector (int dim, complex *vec)
             MrBayesPrint("\n    ");
         }
     MrBayesPrint ("%lf + %lfi}\n", vec[dim - 1].re, vec[dim - 1].im);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14693,9 +13480,7 @@ void PrintComplexVector (int dim, complex *vec)
 |
 ---------------------------------------------------------------------------------*/
 void PrintSquareComplexMatrix (int dim, complex **m)
-
 {
-
     int     row, col;
 
     MrBayesPrint ("{");
@@ -14720,11 +13505,7 @@ void PrintSquareComplexMatrix (int dim, complex **m)
         }
     MrBayesPrint ("%lf + %lfi}}", m[dim - 1][dim - 1].re, m[dim - 1][dim - 1].im);
     MrBayesPrint ("\n");
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14735,9 +13516,7 @@ void PrintSquareComplexMatrix (int dim, complex **m)
 |
 ---------------------------------------------------------------------------------*/
 void PrintSquareDoubleMatrix (int dim, MrBFlt **matrix)
-
 {
-
     int         i, j;
     
     for (i=0; i<dim; i++) 
@@ -14746,11 +13525,7 @@ void PrintSquareDoubleMatrix (int dim, MrBFlt **matrix)
             MrBayesPrint ("%1.6lf ", matrix[i][j]);
         MrBayesPrint ("\n");
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14761,9 +13536,7 @@ void PrintSquareDoubleMatrix (int dim, MrBFlt **matrix)
 |
 ---------------------------------------------------------------------------------*/
 void PrintSquareIntegerMatrix (int dim, int **matrix)
-
 {
-
     int         i, j;
     
     for (i=0; i<dim; i++) 
@@ -14772,11 +13545,7 @@ void PrintSquareIntegerMatrix (int dim, int **matrix)
             MrBayesPrint ("%d ", matrix[i][j]);
         MrBayesPrint ("\n");
         }
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14787,20 +13556,14 @@ void PrintSquareIntegerMatrix (int dim, int **matrix)
 |
 ---------------------------------------------------------------------------------*/
 complex ProductOfRealAndComplex (MrBFlt a, complex b)
-
 {
-
     complex     c;
     
     c.re = a * b.re;
     c.im = a * b.im;
     
     return (c);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14810,7 +13573,6 @@ complex ProductOfRealAndComplex (MrBFlt a, complex b)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt  PsiExp (MrBFlt alpha)
-
 {
     MrBFlt      digamma, y, r, s, c, s3, s4, s5, d1;
     
@@ -14844,11 +13606,7 @@ MrBFlt  PsiExp (MrBFlt alpha)
     digamma -= r * (s3 - r * (s4 - r * s5));
     
     return (exp (digamma));
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14869,9 +13627,6 @@ MrBFlt  PsiGammaLnProb (MrBFlt alpha, MrBFlt value)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   PsiGammaLnRatio: Calculates the log prob ratio of two PsiGamma distributed
@@ -14879,7 +13634,6 @@ MrBFlt  PsiGammaLnProb (MrBFlt alpha, MrBFlt value)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt  PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator)
-
 {
     MrBFlt beta, lnRatio;
 
@@ -14889,9 +13643,6 @@ MrBFlt  PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator)
     
     return (lnRatio);
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14905,28 +13656,19 @@ MrBFlt  PsiGammaRandomVariable (MrBFlt alpha, RandLong *seed)
 }
 
 
-
-
-
 /*---------------------------------------------------------------------------------
 |
 |   QuantileGamma
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta)
-
 {
-
     MrBFlt      quantile;
 
     quantile = POINTGAMMA(x, alfa, beta);
     
     return (quantile);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14939,7 +13681,6 @@ MrBFlt QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt RandomNumber (RandLong *seed)
-
 {
     RandLong    lo, hi, test;
 
@@ -14951,11 +13692,7 @@ MrBFlt RandomNumber (RandLong *seed)
     else
         *seed = test + 2147483647;
     return ((MrBFlt)(*seed) / (MrBFlt)2147483647);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14964,9 +13701,7 @@ MrBFlt RandomNumber (RandLong *seed)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt RndGamma (MrBFlt s, RandLong *seed)
-
 {
-
     MrBFlt  r=0.0;
     
     if (s <= 0.0)    
@@ -14980,11 +13715,7 @@ MrBFlt RndGamma (MrBFlt s, RandLong *seed)
         r -= log(RandomNumber(seed));
         
     return (r);
-   
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -14993,9 +13724,7 @@ MrBFlt RndGamma (MrBFlt s, RandLong *seed)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
-
 {
-
     MrBFlt          r, x=0.0, small=1e-37, w;
     static MrBFlt   a, p, uf, ss=10.0, d;
     
@@ -15024,11 +13753,7 @@ MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
         }
         
     return (x);
-   
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15037,9 +13762,7 @@ MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt RndGamma2 (MrBFlt s, RandLong *seed)
-
 {
-
     MrBFlt          r , d, f, g, x;
     static MrBFlt   b, h, ss=0.0;
     
@@ -15064,11 +13787,7 @@ MrBFlt RndGamma2 (MrBFlt s, RandLong *seed)
         }
         
     return (x);
-   
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15093,9 +13812,7 @@ MrBFlt RndGamma2 (MrBFlt s, RandLong *seed)
 |
 ---------------------------------------------------------------------------------*/
 int SetQvalue (MrBFlt tol)
-
 {
-
     int         qV;
     MrBFlt      x;
     
@@ -15108,11 +13825,7 @@ int SetQvalue (MrBFlt tol)
         }
         
     return (qV);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15123,19 +13836,13 @@ int SetQvalue (MrBFlt tol)
 |
 ---------------------------------------------------------------------------------*/
 void SetToIdentity (int dim, MrBFlt **matrix)
-
 {
-
     int         row, col;
 
     for (row=0; row<dim; row++)
         for (col=0; col<dim; col++)
             matrix[row][col] = (row == col ? 1.0 : 0.0);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15158,9 +13865,7 @@ void SetToIdentity (int dim, MrBFlt **matrix)
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt Tha (MrBFlt h1, MrBFlt h2, MrBFlt a1, MrBFlt a2)
-
 {
-
     int             ng = 5, i;
     MrBFlt          U[] = {0.0744372, 0.2166977, 0.3397048, 0.4325317, 0.4869533},
                     R[] = {0.1477621, 0.1346334, 0.1095432, 0.0747257, 0.0333357},
@@ -15220,11 +13925,7 @@ MrBFlt Tha (MrBFlt h1, MrBFlt h2, MrBFlt a1, MrBFlt a2)
         }
         
     return (MAX(rt*x2/pai2,0)*sign);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15233,9 +13934,7 @@ MrBFlt Tha (MrBFlt h1, MrBFlt h2, MrBFlt a1, MrBFlt a2)
 |
 ---------------------------------------------------------------------------------*/
 void TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrBFlt r, MrBFlt **tMat, MrBFlt **fMat, MrBFlt **sMat)
-
 {
-
     int             i, j, s;
     MrBFlt          sum, sumF, sumS, *ptr, EigValexp[192];
 
@@ -15287,11 +13986,7 @@ void TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrB
                 }
             }
         }
-        
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -15308,9 +14003,7 @@ void TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrB
 |
 ---------------------------------------------------------------------------------*/
 void TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBFlt **tMat, MrBFlt **fMat, MrBFlt **sMat)
-
 {
-
     int         qValue;
     MrBFlt      **a, tol;
     
@@ -15331,9 +14024,5 @@ void TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBFlt 
         MultiplyMatrices (dim, qMat, tMat, fMat);
         MultiplyMatrices (dim, qMat, fMat, sMat);
         }
-                
 }
-
-
-
 

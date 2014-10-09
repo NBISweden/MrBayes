@@ -61,7 +61,6 @@ const char* const svnRevisionCommandC = "$Rev$";   /* Revision keyword which is 
 #undef SHOW_TOKENS
 #undef ECHO_PROCESSED_COMMANDS
 
-
 /* Local function prototypes */
 int      AddNameSet(NameSet **nameSetList, int numNameSets, char **nameSet, int numNames);
 int      AddToSet (int i, int j, int k, int id);
@@ -146,7 +145,6 @@ int      GetUserHelp (char *helpTkn);
 int      IsAmbig (int charCode, int dType);
 int      IsMissing (int charCode, int dType);
 int      MBResID (char nuc);
-int      NBits (int x);
 int      NucID (char nuc);
 void     PrintSettings (char *command, ModelInfo *mp);
 void     PrintYesNo (int yn, char s[4]);
@@ -156,12 +154,7 @@ int      SetSpeciespartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
 void     WhatVariableExp (BitsLong exp, char *st);
-char     WhichAA (int x);
 MrBFlt   WhichCont (int x);
-char     WhichRes (int x);
-char     WhichStand (int x);
-
-
 
 /* globals */
 int             autoClose;             /* autoclose                                     */
@@ -264,7 +257,6 @@ int             beagleInstanceCount;   /* total number of BEAGLE instances      
 #if defined (THREADS_ENABLED)
 int             tryToUseThreads;       /* try to use pthreads with BEAGLE library       */
 #endif
-
 
 /* local (to this file) */
 char            *tokenP, token[CMD_STRING_LENGTH], *cmdStr=NULL;
@@ -381,11 +373,8 @@ TreeNode            *pPtr, *qPtr;
 enum ConstraintType     consrtainType; /* Used only in processing of constraine command to indicate what is the type of constrain */
 
 
-
 int AddToGivenSet (int i, int j, int k, int id, int *Set)
-
 {
-
     int     m, n;
     
     if (id <= 0)
@@ -450,15 +439,10 @@ int AddToGivenSet (int i, int j, int k, int id, int *Set)
 }
 
 
-
-
-
 int AddToSet (int i, int j, int k, int id)
 {
     return AddToGivenSet (i, j, k,id, tempSet);
 }
-
-
 
 
 /* AddNameSet: Push a name set onto the end of a list of name sets, with reallocation
@@ -480,9 +464,6 @@ int AddNameSet (NameSet **nameSetList, int numNameSets, char **nameSet, int numN
 }
 
 
-
-
-
 /* AddString: Push a string onto the end of a list, with reallocation of list
       to hold the extra element. The calling function needs to keep track of
       the counter holding the length of the list. */
@@ -502,13 +483,8 @@ int AddString (char ***list, int len, char *token)
 }
 
 
-
-
-
 int AllocCharacters (void)
-
 {
-
     int     i, tempSetSize;
 
     if (memAllocs[ALLOC_MATRIX] == YES)
@@ -601,11 +577,7 @@ int AllocCharacters (void)
 }
 
 
-
-
-
 int AllocMatrix (void)
-
 {
     if (memAllocs[ALLOC_TAXA] == NO && AllocTaxa() == ERROR)
         return ERROR;
@@ -614,13 +586,8 @@ int AllocMatrix (void)
 }
 
 
-
-
-
 int AllocTaxa (void)
-
 {
-
     int i;
 
     if (defTaxa==NO)
@@ -723,29 +690,17 @@ errorExit:
 }
 
 
-
-
-
 char ChangeCase (char c)
-
 {
-
     int     x;
     
     x = tolower(c);
     return (x);
-        
 }
 
 
-
-
-
 int CharacterCode (char ch, int *charCode, int chType)
-
 {
-
-    
     if (chType == DNA || chType == RNA)
         {
         if ((*charCode = NucID (ch)) == -1)
@@ -789,17 +744,11 @@ int CharacterCode (char ch, int *charCode, int chType)
         }
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int CharacterNumber (int charCode, int chType)
-
 {
-
     int i, x = charCode;
     
     if (chType == CONTINUOUS)
@@ -809,17 +758,11 @@ int CharacterNumber (int charCode, int chType)
         x >>= 1;
 
     return (i);
-
 }
 
 
-
-
-
 int CheckInitialPartitions (void)
-
 {
-
     int     i;
     
     for (i=0; i<numChar; i++)
@@ -832,17 +775,11 @@ int CheckInitialPartitions (void)
         }
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int CheckStringValidity (char *s)
-
 {
-
     int         i, numUnknownChars, tempNumComments, tempInComment;
     char        temp[100];
 
@@ -919,11 +856,7 @@ int CheckStringValidity (char *s)
         return (ERROR);
     else
         return (NO_ERROR);
-
 }
-
-
-
 
 
 /* CheckString: This function simply checks a vector of strings for a match against token.
@@ -947,25 +880,14 @@ int CheckString (char **list, int len, char *token, int *matchIndex)
 }
 
 
-
-
-
 int Dex (TreeNode *p)
-
 {
-
     return (p == NULL) ? -1 : p->index;
-
 }
 
 
-
-
-
 int DoAbout (void)
-
 {
-
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
     MrBayesPrint ("   About the program                                                             \n");
     MrBayesPrint ("                                                                                 \n");
@@ -1023,17 +945,11 @@ int DoAbout (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoAcknowledgments (void)
-
 {
-
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
     MrBayesPrint ("   Acknowledgments                                                               \n");
     MrBayesPrint ("                                                                                 \n");
@@ -1062,17 +978,11 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoBeginParm (char *parmName, char *tkn)
-
 {
-        
     if (expecting == Expecting(PARAMETER))
         {
         /* set Data (inDataBlock) *************************************************************/
@@ -1140,17 +1050,11 @@ int DoBeginParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoBreaks (void)
-
 {
-
     int         i, numBreaks;
     
     numBreaks = 0;
@@ -1188,17 +1092,11 @@ int DoBreaks (void)
         }
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoBreaksParm (char *parmName, char *tkn)
-
 {
-
     int     i, tempInt;
         
     if (defMatrix == NO)
@@ -1237,17 +1135,11 @@ int DoBreaksParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoCalibrate (void)
-
 {
-
     int         i;
 
     /* show calibration times (for debugging) */
@@ -1279,13 +1171,8 @@ int DoCalibrate (void)
 }
 
 
-
-
-
 int DoCalibrateParm (char *parmName, char *tkn)
-
 {
-
     static int              isTaxon, paramIndex;
     static char             nodeName[100], calName[100];
     static MrBFlt           priorParams[3];
@@ -1682,16 +1569,11 @@ int DoCalibrateParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
 int DoCharset (void)
-
 {
-
     /* first add set to tempSet */
     if (fromI >= 0 && toJ < 0)
         {
@@ -1723,17 +1605,11 @@ int DoCharset (void)
     numCharSets++;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoCharsetParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt, allDigit;
     
     if (defMatrix == NO)
@@ -1929,17 +1805,11 @@ int DoCharsetParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoCharStat (void)
-
 {
-
     int         i, j, numDivs;
     char        tempName[100];
     
@@ -2068,17 +1938,11 @@ int DoCharStat (void)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoCitations (void)
-
 {
-
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
     MrBayesPrint ("   Citations                                                                     \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2525,17 +2389,11 @@ int DoCitations (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoConstraint (void)
-
 {
-
     int         i, howMany;
     int         *tset;
 
@@ -2689,17 +2547,11 @@ int DoConstraint (void)
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoConstraintParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
     MrBFlt  tempD;
     static int      *tempSetCurrent;
@@ -3021,17 +2873,11 @@ int DoConstraintParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoCtype (void)
-
 {
-
     int         i, foundIllegal, marks[5], numAppliedTo;
 
     /* add set to tempSet */
@@ -3120,17 +2966,11 @@ int DoCtype (void)
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoCtypeParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
     
     if (defMatrix == NO)
@@ -3329,17 +3169,11 @@ int DoCtypeParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoDelete (void)
-
 {
-
     int         i, alreadyDone;
 
     MrBayesPrint ("%s   Excluding taxa\n", spacer);
@@ -3387,17 +3221,11 @@ int DoDelete (void)
 #   endif
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoDeleteParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
         
     if (defMatrix == NO)
@@ -3542,18 +3370,12 @@ int DoDeleteParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-    MrBayesPrint ("%s", parmName);  /*just because I am tired of seeing the unused parameter error msg */
-    
+    MrBayesPrint ("%s", parmName);  /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
-
-
-
 int DoDimensions (void)
-
 {
-
     if (inDataBlock == NO && inTaxaBlock == NO && inCharactersBlock == NO)
         {
         MrBayesPrint ("%s   Dimensions can only be defined in a data, characters or taxa block\n", spacer);
@@ -3590,17 +3412,11 @@ int DoDimensions (void)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoDimensionsParm (char *parmName, char *tkn)
-
 {
-
     if (expecting == Expecting(PARAMETER))
         {
         expecting = Expecting(EQUALSIGN);
@@ -3653,13 +3469,8 @@ int DoDimensionsParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoDisclaimer (void)
-
 {
-
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
     MrBayesPrint ("   Disclaimer                                                                    \n");
     MrBayesPrint ("                                                                                 \n");
@@ -3673,17 +3484,11 @@ int DoDisclaimer (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoEndBlock (void)
-
 {
-
     if (inMrbayesBlock == YES)
         {
         MrBayesPrint ("   Exiting mrbayes block\n");
@@ -3728,17 +3533,11 @@ int DoEndBlock (void)
 
     strcpy(spacer,"");  /* reset indentation */
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoExecute (void)
-
 {
-
     int         c, i, rc, cmdLine, lineTerm, longestLineLength, nErrors;
     char        *s, exeFileName[100];
     FILE        *fp;
@@ -4036,18 +3835,12 @@ int DoExecute (void)
 
         commandPtr = oldCommandPtr;
 
-        return (ERROR); 
-    
+        return (ERROR);
 }
 
 
-
-
-
 int DoExecuteParm (char *parmName, char *tkn)
-
 {
-    
     if(strlen(tkn)>99)
         {
         MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
@@ -4061,17 +3854,11 @@ int DoExecuteParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoExclude (void)
-
 {
-
     int         i, alreadyDone;
 
     MrBayesPrint ("%s   Excluding character(s)\n", spacer);
@@ -4115,17 +3902,11 @@ int DoExclude (void)
         return ERROR;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoExcludeParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
         
     if (defMatrix == NO)
@@ -4280,17 +4061,11 @@ int DoExcludeParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoFormat (void)
-
 {
-
     if (inDataBlock == NO && inCharactersBlock == NO)
         {
         MrBayesPrint ("%s   Formats can only be defined in a data or characters block\n", spacer);
@@ -4301,13 +4076,8 @@ int DoFormat (void)
 }
 
 
-
-
-
 int DoFormatParm (char *parmName, char *tkn)
-
 {
-
     int         i, tempInt;
     char        tempStr[100];
     
@@ -4795,17 +4565,11 @@ int DoFormatParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoHelp (void)
-
 {
-
     int         i, j, longestDescription;
     CmdType     *p;
 
@@ -4857,17 +4621,11 @@ int DoHelp (void)
     foundFirst = NO;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoHelpParm (char *parmName, char *tkn)
-
 {
-        
     int         i, j, tkLen, targetLen, numDiff, numMatches;
     CmdType     *p, *q=NULL;
 
@@ -4922,17 +4680,11 @@ int DoHelpParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoInclude (void)
-
 {
-
     int         i, alreadyDone;
 
     MrBayesPrint ("%s   Including character(s)\n", spacer);
@@ -4974,17 +4726,11 @@ int DoInclude (void)
         return ERROR;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoIncludeParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
         
     if (defMatrix == NO)
@@ -5139,17 +4885,11 @@ int DoIncludeParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoLog (void)
-
 {
-
     if (logToFile == YES)
         {
         SafeFclose (&logFileFp);
@@ -5178,17 +4918,11 @@ int DoLog (void)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoLogParm (char *parmName, char *tkn)
-
 {
-    
     if (expecting == Expecting(PARAMETER))
         {
         if (!strcmp(parmName, "Start"))
@@ -5245,17 +4979,11 @@ int DoLogParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoManual (void)
-
 {
-
     int     i, j, logSetting;
     char    title[100];
     FILE    *fp, *logfp;
@@ -5369,17 +5097,11 @@ int DoManual (void)
         echoMB = YES;
 
         return (ERROR);
-        
 }
 
 
-
-
-
 int DoManualParm (char *parmName, char *tkn)
-
 {
-    
     if (expecting == Expecting(PARAMETER))
         {
         expecting = Expecting(EQUALSIGN);
@@ -5409,17 +5131,11 @@ int DoManualParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoMatrix (void)
-
 {
-
     int         i, j, hasMissingAmbig;
     
     if (taxonCount != numTaxa)
@@ -5542,17 +5258,11 @@ int DoMatrix (void)
 #   endif
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoMatrixParm (char *parmName, char *tkn)
-
 {
-
     int             i, j, charCode=0, index;
     MrBFlt          charValue;
 
@@ -5810,17 +5520,11 @@ int DoMatrixParm (char *parmName, char *tkn)
         numTaxa=taxonCount;
         FreeMatrix();
         return (ERROR);
-
 }
 
 
-
-
-
 int DoNexusParm (char *parmName, char *tkn)
-
 {
-
     if (!strcmp(parmName, "NEXUS"))
         {
         MrBayesPrint ("%s   Expecting NEXUS formatted file\n", spacer);
@@ -5833,32 +5537,18 @@ int DoNexusParm (char *parmName, char *tkn)
         }
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 int DoOutgroup (void)
-
 {
-
     MrBayesPrint ("%s   Setting outgroup to taxon \"%s\"\n", spacer, taxaNames[outGroupNum]);
-    
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoOutgroupParm (char *parmName, char *tkn)
-
-
 {
-
     int     index, tempInt;
 
     if (expecting == Expecting(ALPHA))
@@ -5898,17 +5588,11 @@ int DoOutgroupParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-    
 }
 
 
-
-
-
 int DoPairs (void)
-
 {
-
     MrBayesPrint ("\n");
     MrBayesPrint ("%s   Successfully defined character pairings\n", spacer);
 
@@ -5916,17 +5600,11 @@ int DoPairs (void)
     foundFirst = NO;
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoPairsParm (char *parmName, char *tkn)
-
 {
-
     int     i, tempInt;
         
     if (defMatrix == NO)
@@ -6025,17 +5703,11 @@ int DoPairsParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
 
 
-
-
-
 int DoPartition (void)
-
 {
-
     int     i, *partTypes;
         
     /* add set to tempSet */
@@ -6117,17 +5789,11 @@ int DoPartition (void)
     numDefinedPartitions++;
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoPartitionParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
     
     if (defMatrix == NO)
@@ -6343,14 +6009,11 @@ int DoPartitionParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
 int DoRestore (void)
-
 {
-
     int         i, alreadyDone;
 
     MrBayesPrint ("%s   Restore taxa\n", spacer);
@@ -6398,17 +6061,11 @@ int DoRestore (void)
 #   endif
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoRestoreParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
         
     if (defMatrix == NO)
@@ -6554,29 +6211,17 @@ int DoRestoreParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-
 }
-
-
-
 
 
 int DoSet (void)
-
 {
-
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoSetParm (char *parmName, char *tkn)
-
 {
-
     int         index;
     char        tempStr[100];
     int         tempI;
@@ -6988,24 +6633,24 @@ int DoSetParm (char *parmName, char *tkn)
             }
         /* set Usebeagle (global variable BEAGLE usage) ***************************************************************/    
         else if (!strcmp(parmName, "Usebeagle"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {
+                    {
                     if (!strcmp(tempStr, "Yes"))
                         tryToUseBEAGLE = YES;
                     else
                         tryToUseBEAGLE = NO;
-                }
+                    }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for usebeagle\n", spacer);
                     return (ERROR);
-                }
+                    }
                 if (tryToUseBEAGLE == YES)
                     MrBayesPrint ("%s   Setting usebeagle to yes\n", spacer);
                 else
@@ -7016,17 +6661,17 @@ int DoSetParm (char *parmName, char *tkn)
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         /* set Beagle resource number (global variable BEAGLE flag) ****************************************/
         else if (!strcmp(parmName, "Beagleresource"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting =  Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 sscanf (tkn, "%d", &tempI);
                 if (tempI < 0)
@@ -7045,20 +6690,20 @@ int DoSetParm (char *parmName, char *tkn)
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         /* set Beagle resources requirements (global variable BEAGLE flag) ****************************************/
         else if (!strcmp(parmName, "Beagledevice"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {
+                    {
                     long oldFlags = beagleFlags;
                     if (!strcmp(tempStr, "Gpu"))
                         {
@@ -7074,114 +6719,117 @@ int DoSetParm (char *parmName, char *tkn)
                         }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
-                    } else {
+                        }
+                    else {
                         if (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU)
                             MrBayesPrint ("%s   Setting beagledevice to GPU\n", spacer);
                         else
                             MrBayesPrint ("%s   Setting beagledevice to CPU\n", spacer);
+                        }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beagledevice\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         else if (!strcmp(parmName, "Beagleprecision"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {
+                    {
                     long oldFlags = beagleFlags;
                     if (!strcmp(tempStr, "Single"))
-                    {                     
+                        {
                         beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;
                         beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;                       
-                    }
+                        }
                     else
-                    {  
+                        {
                         beagleFlags &= ~BEAGLE_FLAG_PRECISION_SINGLE;
                         beagleFlags |= BEAGLE_FLAG_PRECISION_DOUBLE;
-                    }
+                        }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
-                    } else {
+                        }
+                    else {
                         if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE)
                             MrBayesPrint ("%s   Setting beagleprecision to double\n", spacer);
                         else
                             MrBayesPrint ("%s   Setting beagleprecision to single\n", spacer);
+                        }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beagleprecision\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        } 
+            }
         else if (!strcmp(parmName, "Beagleopenmp"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {                    
+                    {
                     long oldFlags = beagleFlags;
                     if (!strcmp(tempStr, "Yes"))
-                    {                      
+                        {
                         beagleFlags |= BEAGLE_FLAG_THREADING_OPENMP;
-                    }
+                        }
                     else
-                    {  
+                        {
                         beagleFlags &= ~BEAGLE_FLAG_THREADING_OPENMP;                       
-                    }             
+                        }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
-                    } else {
+                        }
+                    else {
                         if (beagleFlags & BEAGLE_FLAG_THREADING_OPENMP)
                             MrBayesPrint ("%s   Setting beagleopenmp to Yes\n", spacer);
                         else
                             MrBayesPrint ("%s   Setting beagleopenmp to No\n", spacer);
+                        }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         else if (!strcmp(parmName, "Beaglefreq"))
             {
             if (expecting == Expecting(EQUALSIGN))
@@ -7208,47 +6856,48 @@ int DoSetParm (char *parmName, char *tkn)
                 return (ERROR);
             }        
         else if (!strcmp(parmName, "Beaglesse"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {                    
+                    {
                     long oldFlags = beagleFlags;
                     if (!strcmp(tempStr, "Yes"))
-                    {                      
+                        {
                         beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;
-                    }
+                        }
                     else
-                    {  
+                        {
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;                     
-                    }             
+                        }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
-                    } else {
+                        }
+                    else {
                         if (beagleFlags & BEAGLE_FLAG_VECTOR_SSE)
                             MrBayesPrint ("%s   Setting beaglesse to Yes\n", spacer);
                         else
                             MrBayesPrint ("%s   Setting beaglesse to No\n", spacer);
+                        }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }   
+            }
 #if 0
         else if (!strcmp(parmName, "Beaglevec"))
             {
@@ -7265,19 +6914,19 @@ int DoSetParm (char *parmName, char *tkn)
                         beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX;
                         }
-                    else if (!strcmp(tempStr, "Avx" )
+                    else if (!strcmp(tempStr, "Avx"))
                         {  
-                        beagleFlags |= ~BEAGLE_FLAG_VECTOR_AVX          
+                        beagleFlags |= ~BEAGLE_FLAG_VECTOR_AVX;
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
                         }
-                    else if ( !strcmp(tempStr, "None" )
+                    else if ( !strcmp(tempStr, "None"))
                         {
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
-                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX:
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX;
                         }
                     else
                         {
-                        MrBayesPrint("%s   Unrecognized argument for beaglevec\n", spacer );
+                        MrBayesPrint("%s   Unrecognized argument for beaglevec\n", spacer);
                         }
                     MrBayesPrint ("%s   Setting beaglevec to %s\n", spacer, tempStr);
                     }
@@ -7292,102 +6941,95 @@ int DoSetParm (char *parmName, char *tkn)
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }   
+            }
 #endif
         else if (!strcmp(parmName, "Beaglethreads"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED) && defined (THREADS_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {                                        
+                    {
                     if (!strcmp(tempStr, "Yes"))
-                    {                      
+                        {
                         tryToUseThreads = YES;
-                    }
+                        }
                     else
-                    {  
+                        {
                         tryToUseThreads = NO;                       
-                    }             
+                        }
                     
                     if (tryToUseThreads == YES)
                         MrBayesPrint ("%s   Setting beaglethreads to Yes\n", spacer);
                     else
                         MrBayesPrint ("%s   Setting beaglethreads to No\n", spacer);                    
-                }
+                    }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beaglethreads\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleThreadsNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
             }
-        }
         else if (!strcmp(parmName, "Beaglescaling"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
-            {
+                {
 #   if defined (BEAGLE_ENABLED)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                {                                        
+                    {
                     if (!strcmp(tempStr, "Always"))
-                    {                      
+                        {
                         beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;
-                    }
+                        }
                     else
-                    {  
+                        {
                         beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;                      
-                    }             
+                        }
                     
                     if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
                         MrBayesPrint ("%s   Setting beaglescaling to Always\n", spacer);
                     else
                         MrBayesPrint ("%s   Setting beaglescaling to Dynamic\n", spacer);                    
-                }
+                    }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid argument for beaglescaling\n", spacer);
                     return (ERROR);
-                }               
+                    }
 #   else
                 BeagleThreadsNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }           
+                }
             else
                 return (ERROR);
-        }                
+            }
         else
-            return (ERROR);         
-            
+            return (ERROR);
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoShowMatrix (void)
-
 {
-
     int         i, j, nameLen, start, finish, ct, longestName;
     char        tempStr[100], stride;
     
@@ -7471,17 +7113,11 @@ int DoShowMatrix (void)
         } while (finish != numChar);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoShowUserTrees (void)
-
 {
-
     int         i;
 
     if (numUserTrees == 0)
@@ -7499,15 +7135,10 @@ int DoShowUserTrees (void)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoShowBeagle (void)
-
 {
 #   if defined (BEAGLE_ENABLED)
     BeaglePrintResources(); 
@@ -7518,13 +7149,8 @@ int DoShowBeagle (void)
 }
 
 
-
-
-
 int DoTaxlabels (void)
-
 {
-
     isTaxsetDef = YES;
 
     /* add default speciespartition name to list of valid speciespartitions */
@@ -7541,17 +7167,11 @@ int DoTaxlabels (void)
     numDefinedSpeciespartitions = 1;
         
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoTaxlabelsParm (char *parmName, char *tkn)
-
 {
-
     int         index;
 
     if (inTaxaBlock == NO)
@@ -7614,18 +7234,12 @@ int DoTaxlabelsParm (char *parmName, char *tkn)
 
     return (NO_ERROR);
     MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
-    MrBayesPrint ("%s", tkn); 
-
+    MrBayesPrint ("%s", tkn);
 }
 
 
-
-
-
 int DoSpeciespartition (void)
-
 {
-
     int     i, *partCount;
         
     /* add set to tempSet */
@@ -7739,17 +7353,11 @@ int DoSpeciespartition (void)
     numDefinedSpeciespartitions++;
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoSpeciespartitionParm (char *parmName, char *tkn)
-
 {
-
     int             i, index, tempInt;
     
     if (defTaxa == NO || numTaxa == 0)
@@ -7998,15 +7606,10 @@ int DoSpeciespartitionParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoTaxaset (void)
-
 {
     /* add set to tempSet */
     if (fromI >= 0 && toJ < 0)
@@ -8045,17 +7648,11 @@ int DoTaxaset (void)
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoTaxasetParm (char *parmName, char *tkn)
-
 {
-
     int     i, index, tempInt;
     
     if (defMatrix == NO)
@@ -8249,17 +7846,11 @@ int DoTaxasetParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoTaxaStat (void)
-
 {
-
     int         i, j, maxLen, nameLen, nIncludedTaxa;
     char        tempName[100];
     
@@ -8386,15 +7977,10 @@ int DoTaxaStat (void)
     MrBayesPrint ("%s   Arrow indicates current outgroup. \n", spacer);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoTranslate (void)
-
 {
     int     i, j;
 
@@ -8424,17 +8010,11 @@ int DoTranslate (void)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoTranslateParm (char *parmName, char *tkn)
-
 {
-
     int         index;
     static int  whichTranslate;
 
@@ -8515,13 +8095,8 @@ int DoTranslateParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoTree (void)
-
 {
-
     readComment = NO;
 
     if (inSumtCommand == YES || inComparetreeCommand == YES)
@@ -8531,13 +8106,8 @@ int DoTree (void)
 }
 
 
-
-
-
 int DoTreeParm (char *parmName, char *tkn)
-
 {
-
     int                 i, tempInt, index;
     MrBFlt              tempD;
     char                tempName[100];
@@ -8564,7 +8134,6 @@ int DoTreeParm (char *parmName, char *tkn)
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
     */
-
 
     if (isTaxsetDef == NO)
         {
@@ -9286,30 +8855,20 @@ int DoTreeParm (char *parmName, char *tkn)
         else
             return(ERROR);
         }
-    return (NO_ERROR);
-    
-    MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
 
+    return (NO_ERROR);
+    MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
-
-
-
-
 int DoUserTree (void)
-
 {
     MrBayesPrint ("%s   Usertree command deprecated. Define the tree in a treeblock and use 'Startvals' instead.\n", spacer);
     return (ERROR);
 }
 
 
-
-
-
 int DoUserTreeParm (char *parmName, char *tkn)
-
 {
     if (expecting == Expecting(EQUALSIGN))
         {
@@ -9357,17 +8916,13 @@ int DoUserTreeParm (char *parmName, char *tkn)
         }
     else
         return (ERROR);
+
     return (NO_ERROR);
 }
 
 
-
-
-
 int DoVersion (void)
-
 {
-
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
     MrBayesPrint ("   Version                                                                       \n");
     MrBayesPrint ("                                                                                 \n");
@@ -9375,32 +8930,23 @@ int DoVersion (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 BitsLong Expecting (int y)
-
 {
-
     BitsLong x;
     
-    x = (BitsLong)pow(2.0, (MrBFlt)y);
+    x = (BitsLong) pow (2.0, (MrBFlt)y);
     
     return (x);
-
 }
-
-
-
 
 
 #ifdef HAVE_LIBREADLINE
 /* This function is for commandline substitution: first word is always a command */
-char *command_generator(const char *text, int state) {
+char *command_generator(const char *text, int state)
+{
     static int list_index, len;
     char *command;
 
@@ -9421,11 +8967,8 @@ char *command_generator(const char *text, int state) {
 #endif
 
 
-
 int FindValidCommand (char *tk, int *numMatches)
-
 {
-
     int             i, j, tkLen, targetLen, numDiff;
     CmdType         *p;
 
@@ -9462,17 +9005,11 @@ int FindValidCommand (char *tk, int *numMatches)
         }
     else
         return (ERROR);
-    
 }
 
 
-
-
-
 int FindValidParam (char *tk, int *numMatches)
-
 {
-
     int         i, j, tkLen, targetLen, numDiff;
     CmdType     *p;
     ParmInfoPtr q;
@@ -9518,17 +9055,11 @@ int FindValidParam (char *tk, int *numMatches)
         return (NO_ERROR);
     else
         return (ERROR);
-    
 }
 
 
-
-
-
 int FreeCharacters (void)
-
 {
-
     int     i, memoryLetFree;
     
     memoryLetFree = NO;
@@ -9613,26 +9144,16 @@ int FreeCharacters (void)
 }
 
 
-
-
-
 int FreeMatrix (void)
-
 {
-
     if (FreeCharacters() == ERROR)
         return ERROR;
 
     return (FreeTaxa());
-
 }
 
 
-
-
-
 int FreeTaxa (void)
-
 {
     int i, memoryLetFree;
 
@@ -9741,13 +9262,8 @@ int FreeTaxa (void)
 }
 
 
-
-
-
 int GetNumPartDivisions (int n)
-
 {
-
     int         i, maxDiv, numDivs, *divFound;
     
     maxDiv = 0;
@@ -9771,17 +9287,11 @@ int GetNumPartDivisions (int n)
     free (divFound);
 
     return (numDivs + 1);
-    
 }
 
 
-
-
-
 int GetToken (char *token, int *tokenType, char **sourceH)
-
 {
-        
     int             allNumbers, foundExp, foundExpSign;
     register char   *temp;
     char            *tempMax;
@@ -9996,17 +9506,11 @@ int GetToken (char *token, int *tokenType, char **sourceH)
 
     *temp = '\0';
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int GetUserHelp (char *helpTkn)
-
 {
-
     int         i, j, k, tempInt;
     char        tempString[100];
     Model       *mp;
@@ -13883,20 +13387,14 @@ else if (!strcmp(helpTkn, "Set"))
         }
         
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /* IsAmbig: This function returns YES if character is set as ambiguous
    either by using parenthetic notation or by ambiguity codes. It returns
    NO if character is unambiguous, missing or gapped */ 
 int IsAmbig (int charCode, int dType)
-
 {
-
     if (dType == DNA || dType == RNA || dType == STANDARD
         || dType == RESTRICTION || dType == PROTEIN)
         {
@@ -13915,17 +13413,11 @@ int IsAmbig (int charCode, int dType)
         }
 
     return (NO);
-
 }
 
 
-
-
-
 int IsArgValid (char *tk, char *validArg)
-
 {
-
     int         i, j, k, tkLen, targetLen, numDiff, numStrMatches;
     char        tempStr[100];
     ParmInfoPtr p;
@@ -13974,34 +13466,22 @@ int IsArgValid (char *tk, char *validArg)
         MrBayesPrint ("%s   Argument \"%s\" is ambiguous\n", spacer, tk);
         return (ERROR);
         }
-        
 }
 
 
-
-
-
 int IsIn (char ch, char *s)
-
 {
-
     while (*s)
         {
         if (*s++ == ch)
             return 1;
         }
     return 0;
-
 }
 
 
-
-
-
 int IsMissing (int charCode, int dType)
-
 {
-
     if (dType == DNA || dType == RNA)
         {
         if (charCode == 15 || charCode == 16)
@@ -14026,17 +13506,11 @@ int IsMissing (int charCode, int dType)
         MrBayesPrint ("Unknown datatype in \"IsMissing\"\n", spacer);
         }
     return (NO);
-
 }
 
 
-
-
-
 int IsSame (char *s1, char *s2)
-
 {
-
     int         i, nDiff, isIdentical, len;
     
     isIdentical = YES;
@@ -14062,17 +13536,11 @@ int IsSame (char *s1, char *s2)
         return (CONSISTENT_WITH);
     else
         return (DIFFERENT);
-
 }
 
 
-
-
-
 int IsWhite (char c)
-
 {
-
     if (c == ' ' || c == '\t' || c == '\n' || c == '\r')
         {
         if (c == '\n' || c == '\r')
@@ -14080,35 +13548,11 @@ int IsWhite (char c)
         return 1;
         }
     return 0;
-    
 }
-
-
-
-
-
-/* NBits: count bits in an int */
-int NBits (int x)
-
-{
-
-    int n=0;
-
-    for (n=0; x != 0; n++)
-        x &= (x-1);
-    
-    return n;
-
-}
-
-
-
 
 
 int NucID (char nuc)
-
 {
-
     char        n;
     
     if (nuc == 'U' || nuc == 'u')
@@ -14186,11 +13630,7 @@ int NucID (char nuc)
         }
     else
         return -1;
-        
 }
-
-
-
 
 
 /*-------| ParseCommand |------------------------------------------------
@@ -14220,9 +13660,7 @@ int NucID (char nuc)
 |
 */
 int ParseCommand (char *s)
-
 {
-
     int             rc, tokenType, inError, numMatches, skipCmd;
     char            errStr[100];
 
@@ -14440,15 +13878,10 @@ int ParseCommand (char *s)
         }
     else
         return (NO_ERROR);
-        
 }
 
 
-
-
-
 void PrintSettings (char *command, ModelInfo *mp)
-
 {
     char yesNoStr[20];
 
@@ -14509,28 +13942,17 @@ void PrintSettings (char *command, ModelInfo *mp)
 }
 
 
-
-
 void PrintYesNo (int yn, char s[4])
-
 {
-
     if (yn == YES)
         strcpy (s, "Yes");
     else
         strcpy (s, "No");
-        
 }
 
 
-
-
-
 int ProtID (char aa)
-
 {
-
-    
     if (aa == 'A' || aa == 'a')      /* Ala */
         {
         return 1;
@@ -14625,17 +14047,11 @@ int ProtID (char aa)
         }
     else
         return -1;
-        
 }
 
 
-
-
-
 int RemoveLastFromString (char *s1)
-
 {
-
     int     i, j, numPrev, numRemoved;
     
     /* We remove the last name from the string simply by deleting the last "|". */
@@ -14669,17 +14085,11 @@ int RemoveLastFromString (char *s1)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int MBResID (char nuc)
-
 {
-
     char        n;
     
     n = nuc;
@@ -14702,11 +14112,7 @@ int MBResID (char nuc)
         }
     else
         return -1;
-        
 }
-
-
-
 
 
 /* Reset character flags */
@@ -14734,9 +14140,6 @@ void ResetCharacterFlags (void)
 }
 
 
-
-
-
 /* Reset taxa flags */
 void ResetTaxaFlags (void)
 {
@@ -14757,12 +14160,8 @@ void ResetTaxaFlags (void)
 }
 
 
-
-
- 
 /* SetPartition: Set model partition */
 int SetPartition (int part)
-
 {
     int     i, j;
     
@@ -14826,12 +14225,8 @@ int SetPartition (int part)
 }
 
 
-
-
-
 /* SetSpeciespartition: Set speciespartition */
 int SetSpeciespartition (int part)
-
 {
     int     i, j;
     
@@ -14849,9 +14244,6 @@ int SetSpeciespartition (int part)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 int SetTaxaFromTranslateTable (void)
@@ -14876,13 +14268,8 @@ int SetTaxaFromTranslateTable (void)
 }
 
 
-
-
-
 void SetUpParms (void)
-
 {
-
     ParmInfoPtr p = paramTable;
 
     PARAM   (  0, "NEXUS",          DoNexusParm,       "NEXUS|\0");
@@ -15168,11 +14555,7 @@ void SetUpParms (void)
 }
 
 
-
-
-
 void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
-
 {
     if (p != NULL)
         {
@@ -15218,17 +14601,11 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
         ShowNodes (p->left,  indent + 2, isThisTreeRooted);
         ShowNodes (p->right, indent + 2, isThisTreeRooted);
         }
-   
 }
 
 
-
-
-
 int StandID (char nuc)
-
 {
-
     char        n;
     
     /* Note that if you change how many states are recognized, you need 
@@ -15285,11 +14662,7 @@ int StandID (char nuc)
         }
     else
         return -1;
-        
 }
-
-
-
 
 
 void State_CODON (char *state, int code, int division)
@@ -15301,9 +14674,6 @@ void State_CODON (char *state, int code, int division)
 }
 
 
-
-
-
 void State_DOUBLET (char *state, int code)
 {
     state[0] = code/4 + 'A';
@@ -15312,11 +14682,7 @@ void State_DOUBLET (char *state, int code)
 }
 
 
-
-
-
 int StateCode_AA (int n)
-
 {
     if (n == 0)
         return 'A';      /* Ala */
@@ -15363,9 +14729,7 @@ int StateCode_AA (int n)
 }
 
 
-
 int StateCode_NUC4 (int n)
-
 {
     if (n == 0)
         return 'A';
@@ -15379,10 +14743,7 @@ int StateCode_NUC4 (int n)
 }
 
 
-
-
 int StateCode_Std (int n)
-
 {
     if (n <= 9 && n >= 0)
         return '0' + n;
@@ -15390,12 +14751,8 @@ int StateCode_Std (int n)
 }
 
 
-
-
 void WhatVariableExp (BitsLong exp, char *st)
-
 {
-
     int         n;
     
     strcpy (st, "");
@@ -15578,17 +14935,11 @@ void WhatVariableExp (BitsLong exp, char *st)
             n++;
             }
         }
-
 }
 
 
-
-
-
 char WhichAA (int x)
-
 {
-
     if (x == 1)
         return ('A');
     else if (x == 2)
@@ -15637,29 +14988,17 @@ char WhichAA (int x)
         return ('-');
     else 
         return (' ');
-        
 }
-
-
-
 
 
 MrBFlt WhichCont (int x)
-
 {
-
     return ((MrBFlt)(x / 1000.0));
-    
 }
 
 
-
-
-
 char WhichNuc (int x)
-
 {
-
     if (x == 1)
         return ('A');
     else if (x == 2)
@@ -15696,17 +15035,11 @@ char WhichNuc (int x)
         return ('-');
     else 
         return (' ');
-        
 }
 
 
-
-
-
 char WhichRes (int x)
-
 {
-
     if (x == 1)
         return ('0');
     else if (x == 2)
@@ -15719,17 +15052,11 @@ char WhichRes (int x)
         return ('-');
     else 
         return (' ');
-        
 }
 
 
-
-
-
 char WhichStand (int x)
-
 {
-
     if (x == 1)
         return ('0');
     else if (x == 2)
@@ -15758,9 +15085,5 @@ char WhichStand (int x)
         return ('-');
     else 
         return (' ');
-        
 }
-
-
-
 

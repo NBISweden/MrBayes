@@ -215,16 +215,14 @@ int InitBeagleInstance (ModelInfo *m, int division)
 }
 
 
-
-
 /*-----------------------------------------------------------------
 |
 |   LaunchBEAGLELogLikeForDivision: calculate the log likelihood  
 |       of the new state of the chain for a single division
 |
 -----------------------------------------------------------------*/
-void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)  {
-
+void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, MrBFlt* lnL)
+{
     int i, rescaleFreqNew;
     int *isScalerNode;
     TreeNode *p;
@@ -388,7 +386,9 @@ void recalculateScalers(int chain)
         }
 }
 
-void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) {       
+
+void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount)
+{
     BeagleResourceList* beagleResources;
     int i, gpuCount;
     
@@ -406,16 +406,18 @@ void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount) 
     *beagleResourceCount = gpuCount;            
 }
 
-void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount) {
+
+void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount)
+{
     *beagleResourceCount = 0;
 }
+
 
 /*-----
 |
 | BeaglePrintResources: outputs the available BEAGLE resources
 |
 ----------*/
-
 void BeaglePrintResources() 
 {
     int i;
@@ -437,7 +439,9 @@ void BeaglePrintResources()
         }
 }
 
-int BeagleCheckFlagCompatability(long inFlags) {
+
+int BeagleCheckFlagCompatability(long inFlags)
+{
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
         if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
             MrBayesPrint ("%s   Simultaneous use of GPU and SSE not available.\n", spacer);
@@ -515,8 +519,10 @@ void BeaglePrintFlags(long inFlags)
             }
         }
 }
-    
-int ScheduleLogLikeForAllDivisions() {
+
+
+int ScheduleLogLikeForAllDivisions()
+{
     int d;
     int divisionsToLaunch = 0;
     ModelInfo       *m;
@@ -534,8 +540,10 @@ int ScheduleLogLikeForAllDivisions() {
     return (divisionsToLaunch > 1);
 }
 
+
 #if defined(THREADS_ENABLED)
-void *LaunchThreadLogLikeForDivision(void *arguments) {
+void *LaunchThreadLogLikeForDivision(void *arguments)
+{
     int d, chain;
     MrBFlt *lnL;
     LaunchStruct* launchStruct;
@@ -548,7 +556,9 @@ void *LaunchThreadLogLikeForDivision(void *arguments) {
     return 0;
 }
 
-MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {  
+
+MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain)
+{
     int d;
     int threadError;
     pthread_t* threads;
@@ -614,6 +624,7 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain) {
     return chainLnLike;
 }
 #endif
+
 
 /*----------------------------------------------------------------
  |
@@ -694,8 +705,6 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
     
     return NO_ERROR;
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -886,9 +895,6 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
 }
 
 
-
-
-
 /**---------------------------------------------------------------------------
 |
 |   TreeLikelihood_Beagle: Accumulate the log likelihoods calculated by Beagle
@@ -896,7 +902,6 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
 |
 ---------------------------------------- -------------------------------------*/
 int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
     int         i, j, c = 0, nStates, hasPInvar, beagleReturn;
     MrBFlt      *swr, s01, s10, probOn, probOff, covBF[40], pInvar=0.0, *bs, freq, likeI, lnLikeI, diff, *omegaCatFreq;
@@ -1057,7 +1062,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     {
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
         countBeagleDynamicFail++;
-        MrBayesPrint ("#####DEBUG INFO (not an error)############## countBeagleDynamicFail:%d countALL:%d\n", countBeagleDynamicFail, countALL);
+        MrBayesPrint ("DEBUG INFO (not an error) countBeagleDynamicFail:%d countALL:%d\n", countBeagleDynamicFail, countALL);
 #   endif
         return beagleReturn;
     }
@@ -1122,9 +1127,6 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   TreeTiProbs_Beagle: This routine updates all transition
@@ -1132,9 +1134,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 |
 -----------------------------------------------------------------*/
 int TreeTiProbs_Beagle (Tree *t, int division, int chain)
-
 {
-    
     int         i, j, k, count;
     MrBFlt      correctionFactor, theRate, baseRate, *catRate, length;
     TreeNode    *p;
@@ -1252,11 +1252,9 @@ void BeagleNotLinked()
     MrBayesPrint ("%s   BEAGLE library is not linked to this executable.\n", spacer);
 }
 
+
 void BeagleThreadsNotLinked()
 {
     MrBayesPrint ("%s   Pthreads library is not linked to this executable.\n", spacer);
 } 
-
-
-
 

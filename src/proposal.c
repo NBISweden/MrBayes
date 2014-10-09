@@ -44,7 +44,6 @@
 
 const char* const svnRevisionProposalC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
-
 /* debugging compiler statements */
 #undef  DEBUG_LOCAL
 #undef  DEBUG_UNROOTED_SLIDER
@@ -67,9 +66,7 @@ void TouchAllTreeNodes (ModelInfo *m, int chain);
 
 
 int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change amino acid model for model mixing 
        amino acid model ID's
         AAMODEL_POISSON         0
@@ -173,17 +170,11 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* add or delete one Poisson process event */
     
     int         i, k, addEvent, *nEvents, numEvents;
@@ -328,15 +319,11 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         }
 
     return (NO_ERROR);
-    
 }
-
-
 
 
 int Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-
     /* Change correlation parameter (-1, 1) of adgamma model */
 
     int         i, isValidP;
@@ -402,13 +389,8 @@ int Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 }
 
 
-
-
-
 int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change symmetric Dirichlet variance using multiplier */
 
     int         i, j, k, isValidB, isPriorExp, nStates;
@@ -520,17 +502,11 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change one branch length */
 
     MrBFlt      tuning, maxV, minV, m, newM, brlensPrExp=0.0;
@@ -637,16 +613,11 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-
     /* change clock rate using multiplier */
     
     int         i, j, k, *nEvents;
@@ -787,15 +758,10 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         }
  
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     /* move the position of one CPP event */
 
@@ -886,13 +852,8 @@ int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
 }
 
 
-
-
-
 int Move_CPPRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move the CPP rate (lambda) using multiplier */
 
     int         i, j, *nEvents, sumEvents;
@@ -957,17 +918,11 @@ int Move_CPPRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move one CPP rate multiplier using multiplier */
 
     int         i, j, k, *nEvents;
@@ -1056,17 +1011,11 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt 
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move one CPP rate multiplier by redrawing from prior */
 
     int         i, j, k, *nEvents;
@@ -1143,11 +1092,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
@@ -1405,9 +1350,6 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 }
 
 
-
-
-
 int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Move a fossil tip (brl > 0) to be ancestral (brl =0)
@@ -1657,13 +1599,8 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 }
 
 
-
-
-
 int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change relative extinction rate using sliding window */
     
     int         i, isValidM, valIndex;
@@ -1773,17 +1710,11 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     (*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* change fossilization rate using sliding window */
     
     int         i, isValidM, valIndex;
@@ -1872,17 +1803,11 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     (*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;            
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SPR (unrooted) 
        with extension probability (rather than window). */
 
@@ -2437,17 +2362,11 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     assert (nCrownNodes > 0 || nRootNodes > 0);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SPR-type move 
        with extension probability (rather than window, attachment rate or similar).
        The move is Metropolized, which should improve mixing. However, this means 
@@ -2877,16 +2796,11 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
 int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using Subtree Swapping (unrooted) 
        with extension probability.
 
@@ -3374,17 +3288,11 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SS-type move 
        with extension probability (rather than window, attachment rate or similar). */
 
@@ -3778,17 +3686,11 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     assert(*lnPriorRatio == *lnPriorRatio);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using TBR (unrooted) 
        with extension probability (rather than window). */
 
@@ -4294,17 +4196,12 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     assert (nCrownNodes > 0 || nRootNodes > 0);
 
     return (NO_ERROR);
-    
 }
-
-
 
 
 /* Move_ExtTBR in v3.1.2 */
 int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* Change branch lengths and topology (potentially) using TBR (unrooted)
      with extension probability (rather than window). */
     
@@ -4786,17 +4683,11 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using TBR (unrooted) 
        with extension probability (rather than window). */
 
@@ -5337,17 +5228,11 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using TBR (unrooted) 
        with extension probability (rather than window). */
 
@@ -5939,17 +5824,11 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using TBR (unrooted) 
        with extension probability (rather than window). */
 
@@ -6585,17 +6464,11 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using TBR (unrooted) 
        with extension probability (rather than window). */
 
@@ -7134,11 +7007,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -7148,9 +7017,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 |
 ----------------------------------------------------------------*/
 int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, nRates, isValid;
     MrBFlt      alphaPi, rate_pot, *value, *subValue, numSites, *alphaDir, x, y, sum,
                 *dirParm, *oldRate, *newRate;
@@ -7259,17 +7126,11 @@ int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     free (dirParm);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change gamma shape parameter using multiplier */
     
     int         i, isAPriorExp, isValidA;
@@ -7349,17 +7210,11 @@ int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     MrBFlt          oldG, newG, lambda, minG, maxG, ran, oldLnPrior, newLnPrior, curTheta, clockRate;
     ModelParams     *mp;
     ModelInfo       *m;
@@ -7424,17 +7279,11 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     *GetParamVals(param, chain, state[chain]) = newG;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move one IGR relaxed clock branch rate using multiplier */
 
     int         i;
@@ -7511,17 +7360,11 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* move one IGR relaxed clock branch rate using sliding window */
     
     int         i;
@@ -7598,17 +7441,11 @@ int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         }
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move the variance of the IGR relaxed clock model using multiplier */
 
     int         i, j;
@@ -7680,17 +7517,11 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* move one relaxed clock branch rate using multiplier */
     
     int         i, *rclModel=NULL;
@@ -7809,15 +7640,10 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         }
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     /* move the variance of the mixed relaxed clock models using multiplier */
 
@@ -7909,15 +7735,10 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     /* rjMCMC move between TK02 (correlated lognormal) and IGR (independent gamma rate)  
      //chi */
@@ -8037,11 +7858,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     TouchAllTreeNodes(m, chain);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -8066,9 +7883,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
 |
 ----------------------------------------------------------------*/
 int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     int         topologyHasChanged, isVPriorExp, directionUp, moveX;
     MrBFlt      oldM, newM, x, y, newX, newY,
                 tuning, minV, maxV, brlensExp=0.0;
@@ -8382,11 +8197,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #endif
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -8409,9 +8220,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 |
 ----------------------------------------------------------------*/
 int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     int             i, topologyHasChanged, vIsRoot, aSister, bSister, cSister, *nEvents;
     MrBFlt          x, y, h1, h2, h3, h[3], tempD, ran, distUv, distCv,
                     oldALength, oldBLength, oldCLength, oldULength, oldVLength, lambda, nu,
@@ -8901,11 +8710,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 #endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 #if 0
@@ -8915,9 +8720,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 |   
 |--------------------------------------------------------------------*/
 int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SPR-type move 
        biased according to likelihood scores. */
 
@@ -9022,7 +8825,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         }
     
     /* get variance of lognormal */
-
     
     /* clip tree */
     a->anc = b;
@@ -9042,7 +8844,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     
     /* allocate space for temporary cond likes and condlike pointers */
     tempCondLikes = (CLFlt *) SafeCalloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
-    tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *)));
+    tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *));
     if (!tempCondLikes || !tempCondLikePtr)
         {
         free (tempCondLikes);
@@ -9328,18 +9130,12 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
 #endif
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* change topology using LSPR1 */
 int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SPR-type move 
        biased according to likelihood scores. */
 
@@ -9448,7 +9244,7 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
     /* allocate space for temporary cond likes and condlike pointers */
     tempCondLikes = (CLFlt *) SafeCalloc (nNodes*m->numChars*m->numModelStates, sizeof (CLFlt));
-    tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *)));
+    tempCondLikePtr = (CLFlt **) SafeCalloc (nNodes, sizeof (CLFlt *));
     if (!tempCondLikes || !tempCondLikePtr)
         {
         free (tempCondLikes);
@@ -9721,19 +9517,13 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 #endif
 
     return (NO_ERROR);
-
 }
 #endif
 
 
-
-
-
 /* Move_NNI, change topology using NNI move */
 int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     TreeNode    *p, *u, *v, *a, *b, *c;
     Tree        *t;
     
@@ -9790,17 +9580,11 @@ int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrB
     GetDownPass(t);
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change clock tree using NNI move */
     
     int         i, *nEvents, numFreeOld, numFreeNew;
@@ -10017,18 +9801,12 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 #   endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /* Move_NNI_Hetero, change topology with unlinked brlens using NNI */
 int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, brIndex, moveType;
     TreeNode    *p, *u, *v, *a, *b, *c;
     Tree        *t;
@@ -10114,11 +9892,7 @@ int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
     
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------------------------
@@ -10127,7 +9901,6 @@ int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 |
 -------------------------------------------------------------------------------------*/
 int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     MrBFlt      tuning, maxV, minV, oldM, newM, brlensPrExp=0.0, newMin, newMax, oldMin, oldMax;
     TreeNode    *p, *q;
@@ -10238,9 +10011,6 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 }
 
 
-
-
-
 /*-----------------------------------------------------------------------------------
 |
 |   Move_NodeSliderClock: Move the position of one (root or nonroot) node in clock tree.
@@ -10248,7 +10018,6 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 |
 -------------------------------------------------------------------------------------*/
 int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int         i, *nEvents;
     MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth, minL, minR,
@@ -10578,17 +10347,11 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* move the variance of the TK02 relaxed clock lognormal using multiplier */
 
     int         i, j;
@@ -10660,11 +10423,7 @@ int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBF
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -10674,9 +10433,7 @@ int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBF
 |
 ----------------------------------------------------------------*/
 int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change omega using sliding window */
     
     int         i, isValidO;
@@ -10745,11 +10502,7 @@ int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -10760,9 +10513,7 @@ int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 |
 ----------------------------------------------------------------*/
 int Move_Omega_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change omega using multiplier */
     
     int         i, isValidO;
@@ -10828,11 +10579,7 @@ int Move_Omega_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -10843,9 +10590,7 @@ int Move_Omega_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 |
 ----------------------------------------------------------------*/
 int Move_OmegaBeta_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isValidVal, whichParam;
     MrBFlt      oldVal, newVal, minVal, maxVal, *vals, *subVals, tuning, ran, factor;
     ModelParams *mp;
@@ -10916,11 +10661,7 @@ int Move_OmegaBeta_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -10931,9 +10672,7 @@ int Move_OmegaBeta_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 |
 ----------------------------------------------------------------*/
 int Move_OmegaGamma_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isValidVal, whichParam;
     MrBFlt      oldVal, newVal, minVal, maxVal, *vals, *subVals, tuning, ran, factor, quantile95;
     ModelParams *mp;
@@ -11017,17 +10756,11 @@ int Move_OmegaGamma_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_OmegaCat (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, localNumCats, numBetaAndGammaCats;
     MrBFlt      dirichletParameters[3], *newSubVals, *oldSubVals, *newFreqs, *oldFreqs, *priorParams, sum, alpha, x, y;
     ModelParams *mp;
@@ -11126,11 +10859,7 @@ int Move_OmegaCat (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -11140,9 +10869,7 @@ int Move_OmegaCat (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 |
 ----------------------------------------------------------------*/
 int Move_OmegaM3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isValidO, whichOmega;
     MrBFlt      newO, window, minO, maxO, ran, *value, *oldValue, x, y;
 
@@ -11205,11 +10932,7 @@ int Move_OmegaM3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -11219,9 +10942,7 @@ int Move_OmegaM3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 |
 ----------------------------------------------------------------*/
 int Move_OmegaNeu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isOPriorExp, isValidO;
     MrBFlt      oldO, newO, window, minO, maxO, ran, *value, x, y;
 
@@ -11288,11 +11009,7 @@ int Move_OmegaNeu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -11302,9 +11019,7 @@ int Move_OmegaNeu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 |
 ----------------------------------------------------------------*/
 int Move_OmegaPos (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isValidO, omegaUni, omegaExp1, omegaExp2;
     MrBFlt      oldO, newO, window, minO=0.0, maxO=0.0, ran, *value, x, y;
     ModelParams *mp;
@@ -11396,11 +11111,7 @@ int Move_OmegaPos (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -11410,9 +11121,7 @@ int Move_OmegaPos (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 |
 ----------------------------------------------------------------*/
 int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, isOPriorExp, isValidO;
     MrBFlt      oldO, newO, window, minO, maxO, ran, *value, x, y;
 
@@ -11482,11 +11191,7 @@ int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -11502,9 +11207,7 @@ int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 |
 ----------------------------------------------------------------*/
 int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, j, isVPriorExp, nSubTerminals, nEmbeddedTrees;
     MrBFlt      alphaPi, warp, minV, maxV, minP, maxP, brlensExp=0.0, newM, oldM, maxLen,
                 *brlensCur, *brlensNew, *parslensCur, *parslensNew,
@@ -11779,17 +11482,11 @@ errorExit:
     free (tInfo.leaf);
 
     return (ERROR);
-
 }
 
 
-
-
-
 int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using unbalanced (rooted asymmetrically) SPR-type move
        biased according to parsimony scores. */
 
@@ -12273,18 +11970,12 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
     
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* Move_ParsSPR1 */
 int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* Change branch lengths and topology (potentially) using balanced SPR-type move
        biased according to parsimony scores. */
     
@@ -13142,17 +12833,11 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 #endif
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using SPR-type move,
        parsimony-biased */
 
@@ -13691,18 +13376,13 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     free (nSitesOfPat);
     return (NO_ERROR);
-    
 }
-
-
 
 
 #if 0
 /* Move_ParsTBR */
 int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* Change branch lengths and topology (potentially) using TBR-type move
      biased according to parsimony scores. */
     
@@ -13926,17 +13606,12 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
     
     return (NO_ERROR);
-    
 }
 #endif
 
 
-
-
 int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change proportion of invariable sites (pInvar) */
 
     int             i, c, isValidP, *rateCat, nGammaCats;
@@ -14021,17 +13696,11 @@ int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     /* TO DO */
     
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int             isValidN, valIndex;
     MrBFlt          *valPtr, oldN, newN, tuning, minN, maxN, ran, oldLnPrior, newLnPrior, growth,
                     oldT, newT, clockRate;
@@ -14146,11 +13815,7 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     (*lnPriorRatio) += newLnPrior - oldLnPrior;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* Generalized lognormal move for positive real random variables */
@@ -14199,9 +13864,6 @@ int Move_PosRealLognormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* Generalized multiplier move for positive real random variables */
@@ -14257,12 +13919,8 @@ int Move_PosRealMultiplier (Param *param, int chain, RandLong *seed, MrBFlt *lnP
 }
 
 
-
-
 int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* Change branch lengths and topology (potentially) using random SPR (unrooted) */
 
     /* This move type picks a random interior branch and another randomly chosen interior
@@ -14815,17 +14473,11 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* This move is like Move_RanSPR1, except that branches are chosen with equal probability in two subtrees
        defined by the initially chosen interior branch */
     
@@ -15384,17 +15036,11 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* This is a random SPR move controlled by a window defined by a certain node distance radius,
        within which the random subtree swapping occurs */
     
@@ -16021,17 +15667,11 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* This move is like Move_RanSPR3, except that it swaps branches in subtrees with equal probabilities */
     
     int         i, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
@@ -16705,11 +16345,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -16719,9 +16355,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 |
 ----------------------------------------------------------------*/
 int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, nRates, isValid;
     MrBFlt      alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum, rate_pot,
                 *dirParm, *oldRate, *newRate;
@@ -16830,11 +16464,7 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     free (dirParm);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -16844,9 +16474,7 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 |
 ----------------------------------------------------------------*/
 int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, indexI, indexJ, nRates;
     MrBFlt      delta, *value, *subValue, sum, *alphaDir, x, numSites,
                 oldRateProps[2], newRateProps[2], min, max;
@@ -16917,11 +16545,7 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -16931,9 +16555,7 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 |
 ----------------------------------------------------------------*/
 int Move_Revmat_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change revMat using Dirichlet proposal */
     
     int             i, nRates,isValid;
@@ -17040,11 +16662,7 @@ int Move_Revmat_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -17056,9 +16674,7 @@ int Move_Revmat_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 |
 ----------------------------------------------------------------*/
 int Move_Revmat_DirMix (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, j, k, isValid, *growthFxn, nRates, groupSize[6];
     MrBFlt      *value, dirParm[6], newRate[6], oldRate[6], alphaPi, symDir, sum, rate_pot, x, y;
     ModelParams *mp;
@@ -17184,11 +16800,7 @@ int Move_Revmat_DirMix (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -17204,9 +16816,7 @@ int Move_Revmat_DirMix (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 |
 ----------------------------------------------------------------*/
 int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, j, nRates, isValid;
     MrBFlt      delta, *newRate, *oldRate, *priorAlpha, x, y, sum, min, max;
     ModelParams *mp;
@@ -17286,11 +16896,7 @@ int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -17302,9 +16908,7 @@ int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 |
 ----------------------------------------------------------------*/
 int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, j, k, index_i, index_j, n_i, n_j, foundFirstI, foundFirstJ,
                 *newGrowthFxn, *oldGrowthFxn, nOldRates, nNewRates, merge,
                 groupSize[6], nCompositeRates;
@@ -17652,11 +17256,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -17665,9 +17265,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
 |
 ----------------------------------------------------------------*/
 int Move_Revmat_SplitMerge2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, k, n_i, n_j, index_i, index_j, groupIndex_i, groupIndex_j,
                 *newGrowthFxn, *oldGrowthFxn;
     MrBFlt      R_i, R_j, r_j, alphaPi, *newValue, *oldValue, symDir,
@@ -17939,17 +17537,11 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, RandLong *seed, MrBFlt *ln
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change speciation rate using sliding window */
     
     int         isLPriorExp, isValidL, valIndex;
@@ -18060,17 +17652,11 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change speciation rate using multiplier */
     
     int         isLPriorExp, isValidL, valIndex;
@@ -18177,17 +17763,11 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change pi */
     int         i, nStates, isValid;
     MrBFlt      dirichletParameters[64], *newPi, *oldPi, *priorAlpha, sum, alphaPi, x, y;
@@ -18257,11 +17837,7 @@ int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -18278,9 +17854,7 @@ int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 |
 ----------------------------------------------------------------*/
 int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, j, nStates, isValid;
     MrBFlt      delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
 
@@ -18350,17 +17924,11 @@ int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change state freqs of multistate characters */
     /* ideally, we would let the likelihood calculator deal with only the affected character
        but we do not have the mechanism for doing that in the current version of mrbayes, so
@@ -18443,17 +18011,11 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, Mr
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change switch rate of covarion model using sliding window */
     
     int         i, isSPriorExp, isValidS, whichRate;
@@ -18536,17 +18098,11 @@ int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change switch rate of covarion model using multiplier */
 
     int         i, isSPriorExp, isValidS, whichRate;
@@ -18626,16 +18182,11 @@ int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
 
 
-
-
 int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-    
     /* move one TK02 relaxed clock branch rate using multiplier */
     
     int         i;
@@ -18752,17 +18303,11 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         }
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int Move_Tratio_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change tratio using Dirichlet proposal */
     
     int         i;
@@ -18846,17 +18391,12 @@ int Move_Tratio_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-
 }
-
-
 
 
 /* Code added by Jeremy Brown and modified by Maxim Teslenko */
 int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     /* change all branch lengths */
 
     MrBFlt      begin_tl, treescaler, tuning, maxV, minV, brlensPrExp=0.0;
@@ -18970,10 +18510,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
     return (NO_ERROR);
-    
 }
-
-
 
 
 /*-----------------------------------------------------------------------------------
@@ -18982,7 +18519,6 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 |
 -------------------------------------------------------------------------------------*/
 int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int         i, j, *nEvents, numChangedNodes;
     MrBFlt      minV, maxV, tuning, factor, lambda=0.0, x,
@@ -19204,11 +18740,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 #endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -19219,9 +18751,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
  |
  ----------------------------------------------------------------*/
 void MarkClsBelow (TreeNode *p)
-
 {
-    
     TreeNode *q;
     
     q = p;
@@ -19231,8 +18761,8 @@ void MarkClsBelow (TreeNode *p)
             q->upDateCl = YES;
         q = q->anc;
     }
-    
 }
+
 
 /*----------------------------------------------------------------
 |
@@ -19243,9 +18773,7 @@ void MarkClsBelow (TreeNode *p)
 |
 ----------------------------------------------------------------*/
 int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
-
     int         i, topologyHasChanged, isVPriorExp, isBranchAnc, direction=0, stopPathGen, moveToWhichPath, stopLoop;
     MrBFlt      tuning, expParam, minV, maxV, brlensExp=0.0, pathLength, pathLength1, pathLength2, oldM, newM, dist, sum, excess;
     TreeNode    *v, *w, *p, *q, *a, *b, *c, *d, *newAttachmentNode;
@@ -19819,10 +19347,7 @@ int Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         }
 
     return (NO_ERROR);
-
 }
-
-
 
 
 /* Generalized normal move for real random variables */
@@ -19870,11 +19395,7 @@ int Move_RealNormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* Generalized slider move for real random variables */
@@ -19926,17 +19447,11 @@ int Move_RealSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 void TouchAllTreeNodes (ModelInfo *m, int chain)
-
 {
-    
     int         i;
     Tree        *t;
     TreeNode    *p;
@@ -19949,9 +19464,5 @@ void TouchAllTreeNodes (ModelInfo *m, int chain)
         p->upDateTi = YES;
         }
     m->upDateAll = YES;
-
 }
-
-
-
 

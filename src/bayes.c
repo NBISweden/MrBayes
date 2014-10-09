@@ -50,7 +50,6 @@ extern const char* const svnRevisionProposalC;
 extern const char* const svnRevisionSumptC;
 extern const char* const svnRevisionUtilsC;
 
-
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -60,8 +59,6 @@ static char **readline_completion(const char *, int, int);
 /* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L)
       ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
 #if defined (WIN_VERSION)
-#   undef NO_ERROR
-#   undef ERROR
 #   include <windows.h>
 #   include <winbase.h>
 #   undef NO_ERROR
@@ -70,14 +67,12 @@ static char **readline_completion(const char *, int, int);
 #   define ERROR        1
 #endif
 
-
 /* local prototypes */
 int  CommandLine (int argc, char **argv);
 void GetTimeSeed (void);
 int  InitializeMrBayes (void);
 void PrintHeader (void);
 int  ReinitializeMrBayes (void);
-
 
 /* global variables, declared in this file */
 BitsLong    bitsLongWithAllBitsSet;      /* BitsLong with all bits set, for bit ops       */
@@ -118,7 +113,6 @@ CLFlt       logValue[400];
 
 
 int main (int argc, char *argv[])
-
 {
     int i;
 
@@ -225,17 +219,11 @@ int main (int argc, char *argv[])
         return (1);
     else
         return (0);
-    
 }
 
 
-
-
-
 int CommandLine (int argc, char **argv)
-
 {
-
     int     i, message, nProcessedArgs;
     char    cmdStr[CMD_STRING_LENGTH];
 #   ifdef HAVE_LIBREADLINE
@@ -376,8 +364,8 @@ int CommandLine (int argc, char **argv)
                 }
             }
         }
-
 }
+
 
 #ifdef HAVE_LIBREADLINE
 extern char *command_generator(const char *text, int state);
@@ -395,10 +383,9 @@ char **readline_completion (const char *text, int start, int stop)
 }
 #endif
 
+
 void GetTimeSeed (void)
-
 {
-
     time_t      curTime;
 
 #   if defined (MPI_ENABLED)
@@ -464,15 +451,10 @@ void GetTimeSeed (void)
         runIDSeed = -runIDSeed;
         
 #   endif
-
 }
 
 
-
-
-
 int InitializeMrBayes (void)
-
 {
     /* this function initializes the program; only call it at the start of execution */
     
@@ -858,8 +840,6 @@ int InitializeMrBayes (void)
 }
 
 
-
-
 unsigned FindMaxRevision ( unsigned amount, ...)
 {
     const char* cur;
@@ -880,11 +860,7 @@ unsigned FindMaxRevision ( unsigned amount, ...)
 }
 
 
-
-
-
 void PrintHeader (void)
-
 {
     char arch[4];
 #   ifndef RELEASE
@@ -910,17 +886,11 @@ void PrintHeader (void)
     MrBayesPrint ("                     on the commands that are available.\n\n");
     MrBayesPrint ("                   Type \"about\" for authorship and general\n");
     MrBayesPrint ("                       information about the program.\n\n\n");
-
 }
 
 
-
-
-
 int ReinitializeMrBayes (void)
-
 {
-
     /* this function resets everything dependent on a matrix */
     
     int             i;
@@ -1036,9 +1006,5 @@ int ReinitializeMrBayes (void)
     strcpy(plotParams.match, "Perfect");             /* matching for plot command                     */
     
     return (NO_ERROR);
-
 }
-
-
-
 

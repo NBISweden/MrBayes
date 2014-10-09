@@ -101,7 +101,6 @@ typedef void (*sighandler_t)(int);
 #define MAXLOGTUNINGPARAM           100000      /* limit to ensure convergence for autotuning */
 #define SAMPLE_ALL_SS               /*if defined makes ss sample every generation instead of every sample frequency*/
 
-
 /* debugging compiler statements */
 #undef  DEBUG_SETUPTERMSTATE
 #undef  DEBUG_RUNCHAIN
@@ -149,7 +148,6 @@ typedef void (*sighandler_t)(int);
         }
 #endif
 
-
 /* local (to this file) data types */
 typedef struct pfnode
     {
@@ -158,7 +156,6 @@ typedef struct pfnode
     int             *count;
     BitsLong        *partition;
     } PFNODE;
-
 
 /* local prototypes */
 int       AddTreeSamples (int from, int to, int saveToList);
@@ -503,8 +500,6 @@ int             highestLocalRunId;           /* highest local run Id            
 #endif
 
 
-
-
 /* ------------------------------------------------------------------------------------------------------------- */
 /* Joint distribution of branch lengths t under gamma-Dirichlet prior:                                           */
 /* (Zhang et al. 2012, Eq. 4; Rannala et al. 2012, Eq. 36):                                                      */
@@ -575,8 +570,6 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
 }
 
 
-
-
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
 PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId)
 {
@@ -635,13 +628,8 @@ PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId)
 }
 
 
-
-
-
 int AddToPrintString (char *tempStr)
-
 {
-
     size_t  len1, len2;
     
     len1 = strlen(printString);
@@ -662,11 +650,7 @@ int AddToPrintString (char *tempStr)
     
     errorExit:
         return (ERROR);
-
 }
-
-
-
 
 
 /* AddTreeSamples: Add tree samples from .t files to partition counters. if saveToList == YES then also save trees in tree list */
@@ -790,9 +774,6 @@ int AddTreeSamples (int from, int to, int saveToList)
 }
 
 
-
-
-
 /* AddTreeToPartitionCounters: Break a tree into partitions and add those to counters */
 int AddTreeToPartitionCounters (Tree *tree, int treeId, int runId)
 {
@@ -830,12 +811,8 @@ int AddTreeToPartitionCounters (Tree *tree, int treeId, int runId)
 }
 
 
-
-
-
 int AttemptSwap (int swapA, int swapB, RandLong *seed)
 {
-
     int             d, tempX, reweightingChars, isSwapSuccessful, chI, chJ, runId;
     MrBFlt          tempA, tempB, lnLikeA, lnLikeB, lnPriorA, lnPriorB, lnR, r,
                     lnLikeStateAonDataB=0.0, lnLikeStateBonDataA=0.0, lnL;
@@ -1496,11 +1473,7 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
 #   endif
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /* Autotune Dirichlet move */
@@ -1524,9 +1497,6 @@ void AutotuneDirichlet (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrB
 }
 
 
-
-
-
 /* Autotune multiplier move */
 void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *lambda, MrBFlt minTuning, MrBFlt maxTuning)
 {
@@ -1548,9 +1518,6 @@ void AutotuneMultiplier (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, Mr
 }
 
 
-
-
-
 /* Autotune sliding window move */
 void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *width, MrBFlt minTuning, MrBFlt maxTuning)
 {
@@ -1570,9 +1537,6 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
     if (newTuning > minTuning && newTuning < maxTuning)
         *width = newTuning;
 }
-
-
-
 
 
 void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo)
@@ -1646,18 +1610,13 @@ void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tI
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   BuildParsTrees: Fill in trees using random add seq with parsimony
 |
 ------------------------------------------------------------------*/
 int BuildParsTrees (RandLong *seed)
-
 {
-
     int         k, chn;
     Param       *p, *q;
     Tree        *tree;
@@ -1705,9 +1664,6 @@ int BuildParsTrees (RandLong *seed)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* build (starting) topology stepwise */
@@ -1793,16 +1749,12 @@ int BuildStepwiseTree (Tree *t, int chain, RandLong *seed) {
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   CalcLike_Adgamma: calc likelihood for one adgamma correlation HMM
 |
 -------------------------------------------------------------------*/
 int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
-
 {
     int             c, i, j, nRates, posit, lastCharId;
     MrBFlt          logScaler, max, prob, *F,
@@ -1973,11 +1925,7 @@ int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
     free (inHMM);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* CalcPartFreqStats: Calculate standard deviation of partition frequencies */
@@ -2064,9 +2012,6 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CalculateTopConvDiagn: Calculate average and max standard
@@ -2100,13 +2045,8 @@ void CalculateTopConvDiagn (int numSamples)
 }
 
 
-
-
-
 int CheckTemperature (void)
-
 {
-
     if (chainParams.userDefinedTemps == YES)
             {
           if(AreDoublesEqual(chainParams.userTemps[0], 1.0, ETA)==NO)
@@ -2117,10 +2057,7 @@ int CheckTemperature (void)
         }
 
     return (NO_ERROR);
-    
 }
-
-
 
 
 void CloseMBPrintFiles (void)
@@ -2162,9 +2099,7 @@ void CloseMBPrintFiles (void)
 
     if ( chainParams.isSS == YES )
         SafeFclose (&fpSS);
-        
 }
-
 
 
 /* CompactTree: prune partition tree */
@@ -2212,8 +2147,6 @@ PFNODE *CompactTree (PFNODE *p)
 }
 
 
-
-
 #if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
@@ -2222,9 +2155,7 @@ PFNODE *CompactTree (PFNODE *p)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Bin (TreeNode *p, int division, int chain)
-
 {
-
     int             c, k;
     CLFlt           *clL, *clR, *clP, *pL, *pR, *tiPL, *tiPR;
     ModelInfo       *m;
@@ -2269,8 +2200,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
 #if defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
@@ -2279,7 +2208,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           *pL, *pR, *tiPL, *tiPR;
@@ -2344,12 +2272,8 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -2359,9 +2283,7 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Gen (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, h, i, k, j, shortCut, *lState=NULL, *rState=NULL,
                     nObsStates, nStates, nStatesSquared, preLikeJump;
     CLFlt           likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
@@ -2532,11 +2454,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -2547,9 +2465,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
-
 {
-
     int             c, c1, h, i, j, k, t, shortCut, *lState=NULL, *rState=NULL, nStates, nStatesSquared, nObsStates, preLikeJump;
     CLFlt           *pL, *pR, *tiPL, *tiPR;
     __m128          *clL, *clR, *clP;
@@ -2749,12 +2665,8 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
             break;
         }
     return NO_ERROR;
-    
 }
 #endif
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -2764,9 +2676,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
                     nObsStates, nStates, nStatesSquared, nGammaCats;
     CLFlt           likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
@@ -2947,12 +2857,7 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -2962,7 +2867,6 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
-
 {
     int             c, h, i, j, k, shortCut, *lState=NULL, *rState=NULL;
     CLFlt           *clL, *clR, *clP, *pL, *pR, *tiPL, *tiPR;
@@ -3112,11 +3016,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -3126,7 +3026,6 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
     int             c, h, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL,
                     nGammaCats;
@@ -3292,11 +3191,7 @@ int CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -3307,7 +3202,6 @@ int CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           *pL, *pR, *tiPL, *tiPR;
@@ -3459,9 +3353,6 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
-
 #if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
@@ -3469,9 +3360,7 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_NY98 (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, nStates, nStatesSquared;
     CLFlt           likeL, likeR, *pL, *pR, *tiPL, *tiPR, *clL, *clR, *clP;
     ModelInfo       *m;
@@ -3617,10 +3506,8 @@ int CondLikeDown_NY98 (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
 
 
 #if defined (SSE_ENABLED)
@@ -3630,9 +3517,7 @@ int CondLikeDown_NY98 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
-
 {
-
     int             c, c1, h, i, j, k, t, shortCut, *lState=NULL, *rState=NULL, nStates, nStatesSquared;
     CLFlt           *pL, *pR, *tiPL, *tiPR;
     __m128          *clL, *clR, *clP;
@@ -3810,12 +3695,8 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -3825,9 +3706,7 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Std (TreeNode *p, int division, int chain)
-
 {
-
     int             a, c, h, i, j, k, nStates, nCats, tmp;
     CLFlt           *clL, *clR, *clP, *pL, *pR, *tiPL, *tiPR, likeL, likeR;
     ModelInfo       *m;
@@ -3896,8 +3775,6 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 }
 
 
-
-
 #if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
@@ -3906,9 +3783,7 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
-
 {
-
     int             c, k;
     CLFlt           *clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
     ModelInfo       *m;
@@ -3954,12 +3829,8 @@ int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -3970,7 +3841,6 @@ int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Bin_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
@@ -4064,8 +3934,6 @@ int CondLikeRoot_Bin_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_Gen: general n-state model with or without rate
@@ -4073,9 +3941,7 @@ int CondLikeRoot_Bin_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, d, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
                     nObsStates, nStates, nStatesSquared, preLikeJump;
     CLFlt           likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
@@ -4320,9 +4186,6 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
 }
 
 
-
-
-
 #if defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
@@ -4331,9 +4194,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
-
 {
-
     int             c, c1, t, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL, nObsStates, preLikeJump,
                     nStates, nStatesSquared;
     CLFlt           *pL, *pR, *pA,
@@ -4631,8 +4492,6 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_Gen_GibbsGamma: general n-state model with rate
@@ -4641,9 +4500,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL,
                     *rState=NULL, *aState=NULL, nObsStates, nStates,
                     nStatesSquared, nGammaCats;
@@ -4881,9 +4738,6 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_NUC4: 4by4 nucleotide model with or without rate
@@ -4891,7 +4745,6 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
-
 {
     int             a, c, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL;
     CLFlt           *clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
@@ -5112,11 +4965,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -5126,7 +4975,6 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
     int             c, h, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
                     nGammaCats;
@@ -5345,11 +5193,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -5360,7 +5204,6 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
@@ -5561,11 +5404,8 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
-
 
 
 #if !defined (SSE_ENABLED) || 1
@@ -5575,9 +5415,7 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
-
 {
-
     int             a, b, c, d, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
                     nStates, nStatesSquared;
     CLFlt           likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
@@ -5787,9 +5625,6 @@ int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
-
 #if defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
@@ -5797,9 +5632,7 @@ int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
-
 {
-
     int             c, c1, t, h, i, j, k, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
                     nStates, nStatesSquared;
     CLFlt           *pL, *pR, *pA,
@@ -6065,8 +5898,6 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_Std: variable number of states model
@@ -6074,9 +5905,7 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_Std (TreeNode *p, int division, int chain)
-
 {
-
     int             a, c, h, i, j, k, nStates=0, nCats=0, tmp;
     CLFlt           *clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA,
                     likeL, likeR, likeA;
@@ -6147,8 +5976,6 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 }
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeUp_Bin: pull likelihoods up and calculate scaled
@@ -6156,9 +5983,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeUp_Bin (TreeNode *p, int division, int chain)
-
 {
-
     int             c, k;
     CLFlt           *clFA, *clFP, *clDP, *tiP, condLikeUp[2], sum[2];
     ModelInfo       *m;
@@ -6217,10 +6042,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
         }   
 
     return NO_ERROR;
-    
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -6230,9 +6052,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeUp_Gen (TreeNode *p, int division, int chain)
-
 {
-
     int             a, c, i, j, k, nStates, nStatesSquared, nGammaCats;
     CLFlt           *clFA, *clFP, *clDP, *tiP, *condLikeUp, sum;
     ModelInfo       *m;
@@ -6313,8 +6133,6 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 }
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeUp_NUC4: pull likelihoods up and calculate scaled
@@ -6322,9 +6140,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
-
 {
-
     int             c, k, nGammaCats;
     CLFlt           *clFA, *clFP, *clDP, *tiP, condLikeUp[4], sum[4];
     ModelInfo       *m;
@@ -6410,9 +6226,6 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeUp_Std: pull likelihoods up and calculate scaled
@@ -6421,7 +6234,6 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 {
-
     int             a, c, i, j, k, t, nStates, nCats, coppySize,tmp;
     CLFlt           *clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[10], sum;
     ModelInfo       *m;
@@ -6533,9 +6345,6 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeScaler_Gen: general n-state model with or without rate
@@ -6543,9 +6352,7 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
-
 {
-
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
     ModelInfo       *m;
@@ -6610,11 +6417,7 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -6625,7 +6428,6 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k, n, nStates;
     CLFlt           *scP, *lnScaler;
@@ -6700,11 +6502,8 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return (NO_ERROR);
-
 }
 #endif
-
-
 
 
 /*----------------------------------------------------------------
@@ -6714,9 +6513,7 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
-
     int             c, i, j, n, nStates, *rateCat, nGammaCats;
     CLFlt           scaler, *clP, *scP, *lnScaler;
     ModelInfo       *m;
@@ -6787,11 +6584,7 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -6801,7 +6594,6 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           scaler, *scP, *lnScaler, *clPtr, **clP;
@@ -6871,11 +6663,7 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;   /* set flag marking scalers set */
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -6886,7 +6674,6 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k;
     CLFlt           *scP, *lnScaler;
@@ -6951,9 +6738,6 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   CondLikeScaler_NUC4_GibbsGamma: 4by4 nucleotide model with rate
@@ -6961,7 +6745,6 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
-
 {
     int             c, i, j, nGammaCats, *rateCat;
     CLFlt           scaler, *clP, *scP, *lnScaler;
@@ -7039,11 +6822,7 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if !defined (SSE_ENABLED) || 1
@@ -7053,7 +6832,6 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
-
 {
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
@@ -7119,12 +6897,8 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return (NO_ERROR);
-
 }
 #endif
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -7134,7 +6908,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c, k, n, nStates;
     CLFlt           *scP, *lnScaler;
@@ -7209,11 +6982,8 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
 
     return (NO_ERROR);
-
 }
 #endif
-
-
 
 
 /*----------------------------------------------------------------
@@ -7223,9 +6993,7 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int CondLikeScaler_Std (TreeNode *p, int division, int chain)
-
 {
-
     int             c, n, k, nStates, numReps;
     CLFlt           scaler, *clPtr, **clP, *scP, *lnScaler;
     ModelInfo       *m;
@@ -7302,11 +7070,7 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     m->scalersSet[chain][p->index] = YES;
         
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -7315,9 +7079,7 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 void CopyParams (int chain)
-
 {
-
     int         i, j, k, fromState, toState, *fromInt, *toInt;
     MrBFlt      *from, *to;
     ModelInfo   *m;
@@ -7411,11 +7173,7 @@ void CopyParams (int chain)
         }
         
     return;
-
 }
-
-
-
 
 
 /* CopySiteScalers: Copy site scalers from scratch space into current space */
@@ -7449,9 +7207,6 @@ void CopySiteScalers (ModelInfo *m, int chain)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   CopyTrees: copies touched trees for chain
@@ -7461,9 +7216,7 @@ void CopySiteScalers (ModelInfo *m, int chain)
 |
 -----------------------------------------------------------------*/
 void CopyTrees (int chain)
-
 {
-
     int         i, j, n, nTaxa, nLongsNeeded;
     TreeNode    *p, *q;
     Tree        *from, *to;
@@ -7528,11 +7281,7 @@ void CopyTrees (int chain)
         }
     
     return;
-
 }
-
-
-
 
 
 #ifdef VISUAL
@@ -7557,15 +7306,12 @@ void CatchInterrupt(int signum)
 #endif
 
 
-
-
 /*----------------------------------------------------------------
 |
 |   DebugNodeScalers: Calculate node scalers sum
 |
 -----------------------------------------------------------------*/
 CLFlt DebugNodeScalers (TreeNode *p, int division, int chain)
-
 {
     int             c;
     CLFlt           *scP;
@@ -7582,10 +7328,7 @@ CLFlt DebugNodeScalers (TreeNode *p, int division, int chain)
         sum += scP[c];
 
     return sum;
-    
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -7593,7 +7336,8 @@ CLFlt DebugNodeScalers (TreeNode *p, int division, int chain)
 |   DebugTreeScalers: Calculate DebugNodeScalers for each node and printit
 |
 -----------------------------------------------------------------*/
-void DebugTreeScalers(int chain, int d) {
+void DebugTreeScalers(int chain, int d)
+{
     int i;
     TreeNode        *p;
     ModelInfo       *m;
@@ -7615,15 +7359,10 @@ void DebugTreeScalers(int chain, int d) {
             }
         }
 }
-   
-
-
 
 
 int DoMcmc (void)
-
 {
-
     RandLong    seed;
     int         rc, i, j, run;
     char        c;
@@ -8014,17 +7753,11 @@ int DoMcmc (void)
     errorExit:
         FreeChainMemory ();
         return (ERROR);
-    
 }
 
 
-
-
-
 int DoMcmcp (void)
-
 {
-
     if (defMatrix == NO)
         {
         MrBayesPrint ("%s   A character matrix must be defined first\n", spacer);
@@ -8043,17 +7776,11 @@ int DoMcmcp (void)
     MrBayesPrint ("%s   Successfully set chain parameters\n", spacer);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoSsParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[5];
@@ -8165,13 +7892,8 @@ int DoSsParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoMcmcParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        *tempStr;
@@ -9404,11 +9126,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         }
     free(tempStr);
     return (NO_ERROR);
-        
 }
-
-
-
 
 
 int DoSs (void)
@@ -9440,22 +9158,14 @@ int DoSs (void)
 }
 
 
-
-
-
 int DoSsp (void)
 {
     return NO_ERROR;
 }
 
 
-
-
-
 int ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo)
-
 {
-
     int         i, j, k;
     TreeNode    *p;
     
@@ -9480,13 +9190,8 @@ int ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo)
 }
 
 
-
-
-
 int ExtendChainQuery ()
-
 {
-
     int             extendChain, additionalCycles;
     char            s[100];
     
@@ -9555,13 +9260,8 @@ int ExtendChainQuery ()
 }
 
 
-
-
-
 int FillNumSitesOfPat (void)
-
 {
-
     int         i, j, n, *increased, *decreased, nToDecrease, nToIncrease, whichToChange;
     MrBFlt      ran, sum;
     CLFlt       wtIncrement;
@@ -9711,11 +9411,7 @@ int FillNumSitesOfPat (void)
         if (increased)
             free (increased);
         return (ERROR);
-    
 }
-
-
-
 
 
 /* FindBestNode: Recursive function for finding best attachment point */
@@ -9779,9 +9475,6 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLengt
 }
 
 
-
-
-
 /* FlipCijkSpace: Flip space for cijks with scratch area */
 void FlipCijkSpace (ModelInfo* m, int chain)
 {
@@ -9793,9 +9486,6 @@ void FlipCijkSpace (ModelInfo* m, int chain)
 }
 
 
-
-
-
 /* FlipCondLikeSpace: Flip space for conditional likelihoods with scratch area */
 void FlipCondLikeSpace (ModelInfo* m, int chain, int nodeIndex)
 {
@@ -9805,9 +9495,6 @@ void FlipCondLikeSpace (ModelInfo* m, int chain, int nodeIndex)
     m->condLikeIndex[chain][nodeIndex] = m->condLikeScratchIndex[nodeIndex];
     m->condLikeScratchIndex[nodeIndex] = temp;
 }
-
-
-
 
 
 /* FlipNodeScalerSpace: Flip space for node scalers and scaler flag with scratch area */
@@ -9823,9 +9510,6 @@ void FlipNodeScalerSpace (ModelInfo* m, int chain, int nodeIndex)
     m->scalersSet[chain][nodeIndex]      = m->scalersSetScratch[nodeIndex];
     m->scalersSetScratch[nodeIndex]      = temp;
 }
-
-
-
 
 
 /* FlipSiteScalerSpace: Flip space for ln site scalers */
@@ -9852,9 +9536,6 @@ void FlipSiteScalerSpace (ModelInfo *m, int chain)
 }
 
 
-
-
-
 /* FlipTiProbsSpace: Flip space for ti probs with scratch area */
 void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
 {
@@ -9866,13 +9547,8 @@ void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
 }
 
 
-
-
-
 void FreeChainMemory (void)
-
 {
-
     int         i, j, k, nRateCats;
     ModelInfo   *m;
 
@@ -10238,12 +9914,8 @@ void FreeChainMemory (void)
 }
 
 
-
-
-
 MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int destination)
 {
-
     int         c, i;
     BitsLong    x[2], *pS1, *pS2, *pD;
     MrBFlt      length = 0.0;
@@ -10297,13 +9969,8 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
 }
 
 
-
-
-
 MrBFlt GetParsDP (Tree *t, TreeNode *p, int chain)
-
 {
-    
     int             n, division;
     MrBFlt          length;
     ModelInfo       *m;
@@ -10335,13 +10002,8 @@ MrBFlt GetParsDP (Tree *t, TreeNode *p, int chain)
 }
 
 
-
-
-
 void GetParsFP (Tree *t, TreeNode *p, int chain)
-
 {
-    
     int             i, c, n, division;
     BitsLong        *pL, *pR, *pP, *pA, x[2];
     ModelInfo       *m;
@@ -10410,13 +10072,8 @@ void GetParsFP (Tree *t, TreeNode *p, int chain)
 }
 
 
-
-
-
 int GetParsimonyBrlens (Tree *t, int chain, MrBFlt *brlens)
-
 {
-    
     int             c, i, j, n, division;
     BitsLong        *pP, *pA;
     CLFlt           *nSitesOfPat;
@@ -10471,17 +10128,11 @@ int GetParsimonyBrlens (Tree *t, int chain, MrBFlt *brlens)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 MrBFlt GetParsimonyLength (Tree *t, int chain)
-
 {
-    
     int             c, i, n, division;
     BitsLong        *pP, *pA;
     CLFlt           *nSitesOfPat;
@@ -10537,17 +10188,11 @@ MrBFlt GetParsimonyLength (Tree *t, int chain)
         }
 
     return length;
-
 }
 
 
-
-
-
 void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
-
 {
-    
     int             c, i, n, division;
     BitsLong        *pD, *pP, *pA, x[2];
     TreeNode        *p;
@@ -10623,18 +10268,12 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
                 break;
             }
         }
-
 }
-
-
-
 
 
 /* GetRate: retrieve the base rate for the division and chain in current state */
 MrBFlt GetRate (int division, int chain)
-
 {
-
     Param   *p;
     MrBFlt  *values, rate;
     int     i;
@@ -10672,17 +10311,11 @@ MrBFlt GetRate (int division, int chain)
         }
     
     return rate;
-
 }
 
 
-
-
-
 void GetStamp (void)
-
 {
-
     int     i;
 
     for (i=0; i<10; i++)
@@ -10693,13 +10326,8 @@ void GetStamp (void)
 }
 
 
-
-
-
 void GetSwappers (int *swapA, int *swapB, int run)
-
 {
-
     int         i;
     
     /* this works for both the serial and parallel versions because the swapSeed is identical for all
@@ -10737,29 +10365,19 @@ void GetSwappers (int *swapA, int *swapB, int run)
 }
 
 
-
-
-
 void GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp)
-
 {
-    
     if (p != NULL)
         {
         GetTempDownPassSeq (p->left,  i, dp);
         GetTempDownPassSeq (p->right, i, dp);
         dp[(*i)++] = p;
         }
-        
 }
-
-
-
 
 
 MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
 {
-
     int             c, i, k, *rateCat, nStates, nRateCats, nGammaCats, id;
     CLFlt           **catLike, **catLnScaler, *lnScaler, maxLnScaler,
                     *clRoot, f, bs[64], *clInvar, pInvar, freq;
@@ -10913,9 +10531,6 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
 
     return (deltaLnL);
 }
-
-
-
 
 
 /*------------------------------------------------------------------------
@@ -11126,9 +10741,6 @@ int InitAdGamma (void)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   InitAugmentedModels: allocate and initialize space for augmented
@@ -11205,9 +10817,7 @@ int InitAugmentedModels (void)
 |
 -------------------------------------------------------------------------*/
 int InitChainCondLikes (void)
-
 {
-
     int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
                 clIndex, tiIndex, scalerIndex, indexStep;
     BitsLong    *charBits;
@@ -11908,9 +11518,6 @@ int InitChainCondLikes (void)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   InitEigenSystemInfo: set info about eigen decompositions
@@ -11997,9 +11604,6 @@ int InitEigenSystemInfo (ModelInfo *m)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   InitFinalStateCondLikes: allocate space for final conditional
@@ -12025,9 +11629,6 @@ int InitFinalStateCondLikes (void)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   InitInvCondLikes: allocate and initialize invariable conditional
@@ -12038,9 +11639,7 @@ int InitFinalStateCondLikes (void)
 |
 -------------------------------------------------------------------------*/
 int InitInvCondLikes (void)
-
 {
-
     int         c, d, i, s, isConstant, usingInvCondLikes;
     BitsLong    *charBits;
     CLFlt       *cI;
@@ -12223,18 +11822,13 @@ int InitInvCondLikes (void)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   InitParsSets: allocate space for and set parsimony state sets
 |
 -------------------------------------------------------------------------*/
 int InitParsSets (void)
-
 {
-
     int             c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode;
     BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne;
@@ -12455,11 +12049,7 @@ int InitParsSets (void)
         }
     
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*------------------------------------------------
@@ -12469,7 +12059,6 @@ int InitParsSets (void)
 |
 ------------------------------------------------*/
 int InitPrintParams (void)
-
 {
     int     i, j, k, k1=0;
     Param   *p;
@@ -12618,9 +12207,6 @@ int InitPrintParams (void)
 }
 
 
-
-
-
 int IsPFNodeEmpty (PFNODE *p)
 {
     int i;
@@ -12637,13 +12223,8 @@ int IsPFNodeEmpty (PFNODE *p)
 }
 
 
-
-
-
 void JukesCantor (MrBFlt *tiP, MrBFlt length)
-
 {
-
     int     i, j, index;
     MrBFlt  pChange, pNoChange;
     
@@ -12662,11 +12243,7 @@ void JukesCantor (MrBFlt *tiP, MrBFlt length)
                 tiP[index++] = pChange;
             }
         }
-        
 }
-
-
-
 
 
 /* LargestNonemptyPFNode: recursive function to largest nonempty node in a subtree */
@@ -12696,9 +12273,6 @@ PFNODE *LargestNonemptyPFNode (PFNODE *p, int *i, int j)
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_Adgamma: all n-state models with autocorrelated
@@ -12707,9 +12281,7 @@ PFNODE *LargestNonemptyPFNode (PFNODE *p, int *i, int j)
 |
 -------------------------------------------------------------------*/
 int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, j, k, i, nStates, nStatesDiv2;
     MrBFlt          *bs, *swr, s01, s10, probOn, probOff, covBF[40];
     MrBFlt          like, *rP;
@@ -12772,11 +12344,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     *lnL =  0.0;
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -12785,9 +12353,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 |       variation
 |
 -------------------------------------------------------------------*/
-
 int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
     int             c, j, k, nStates, hasPInvar;
     MrBFlt          s01, s10, probOn, probOff, *swr;
@@ -12939,10 +12505,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         }
         
     return NO_ERROR;
-    
 }
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -12959,7 +12522,6 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 //    m = &modelSettings[division];
 //    nStates = m->numModelStates;
 //    /* find conditional likelihood pointers */
-//
 //
 //    temp_vector =  DeleteME;
 //
@@ -12989,16 +12551,13 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 //#   endif
 
 
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_Gen_SSE: general n-state model with or without rate
 |       variation
 |
 -------------------------------------------------------------------*/
-
 int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {   
     int             c, j, k, nStates, hasPInvar;
     MrBFlt          like, *bs;
@@ -13178,17 +12737,13 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 #endif
 
 
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_Gen_GibbsGamma: general n-state models using
 |       Gibbs resampling of discrete gamma rate categories
 |
 -------------------------------------------------------------------*/
-
 int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
     int             c, j, nStates, nGammaCats, *rateCat;
     MrBFlt          s01, s10, probOn, probOff, *swr;
@@ -13308,11 +12863,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
         }
         
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -13322,9 +12873,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
 |
 -------------------------------------------------------------------*/
 int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, k, hasPInvar;
     MrBFlt          freq, likeI, *bs, like, pInvar=0.0;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat, *clInvar=NULL;
@@ -13476,9 +13025,6 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_NUC4_GibbsGamma: 4by4 nucleotide models with rate
@@ -13486,9 +13032,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 |
 -------------------------------------------------------------------*/
 int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, i, r, nGammaCats, *rateCat;
     MrBFlt          *bs, like;
     CLFlt           *clP, *lnScaler, *nSitesOfPat, *clInvar;
@@ -13592,9 +13136,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 }
 
 
-
-
-
 //#if defined (SSE_ENABLED)
 ///*------------------------------------------------------------------
 // |
@@ -13603,9 +13144,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 // |
 // -------------------------------------------------------------------*/
 //int Likelihood_NUC4_GibbsGamma_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-//
 //{
-//    
 //    int             c, i, r, nGammaCats, *rateCat;
 //    MrBFlt          *bs, like;
 //    CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
@@ -13741,9 +13280,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //#endif
 
 
-
-
-
 #if defined (SSE_ENABLED)
 /*------------------------------------------------------------------
 |
@@ -13752,9 +13288,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 |
 -------------------------------------------------------------------*/
 int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, k, hasPInvar;
     MrBFlt          freq, *bs, pInvar=0.0, like, likeI;
     CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
@@ -13943,9 +13477,6 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 #endif
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_NY98: Codon model with three selection categories,
@@ -13953,9 +13484,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 |
 -------------------------------------------------------------------*/
 int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, j, k, nStates;
     MrBFlt          catLike, like, *bs, *omegaCatFreq;
     CLFlt           **clP,*clPtr, *lnScaler, *nSitesOfPat;
@@ -14017,11 +13546,7 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -14032,9 +13557,7 @@ int Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 |
 -------------------------------------------------------------------*/
 int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, j, k, nStates;
     MrBFlt          like, *bs, *omegaCatFreq;
     CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE;
@@ -14109,11 +13632,8 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
         }
 
     return NO_ERROR;
-    
 }
 #endif
-
-
 
 
 /*------------------------------------------------------------------
@@ -14123,9 +13643,7 @@ int Likelihood_NY98_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 |
 -------------------------------------------------------------------*/
 int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, k;
     MrBFlt          *bs, freq, like, pUnobserved, pObserved;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
@@ -14208,11 +13726,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     (*lnL) -=  log(pObserved) * (m->numUncompressedChars);
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -14223,9 +13737,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |
 -------------------------------------------------------------------*/
 int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
     int             c, k;
     MrBFlt          freq, *bs, like, pUnobserved, pObserved;
     CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE;
@@ -14322,13 +13834,8 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     (*lnL) -=  log(pObserved) * (m->numUncompressedChars);
 
     return NO_ERROR;
-
-
 }
 #endif
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -14338,7 +13845,6 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 |
 -------------------------------------------------------------------*/
 int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
     int             b, c, j, k, nBetaCats, nGammaCats, nStates, numReps;
     MrBFlt          catLike, catFreq, gammaFreq, like, *bs, *bsBase,
@@ -14520,11 +14026,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     (*lnL) -=  log(pObserved) * (m->numUncompressedChars);
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -14554,9 +14056,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |
 -------------------------------------------------------------------*/
 int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-    
     int             c, i, nStates;
     BitsLong        done, *pL, *pR, *pP, *pA, *oldpP, x;
     CLFlt           nParsChars, treeLength;
@@ -14672,17 +14172,11 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     m->parsTreeLength[2 * chain + state[chain]] = treeLength;
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-
 #   if 0
     int             x, y;
     TreeNode        *q;
@@ -14698,11 +14192,7 @@ int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int
     MrBayesPrint ("%s   Parsimony calculator for codons not yet implemented\n", spacer);
     
     return ERROR;
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -14735,9 +14225,7 @@ int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int
 |
 -------------------------------------------------------------------*/
 int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-
 {
-    
     int             c, i, *nStates;
     BitsLong        *pL, *pR, *pP, *pA, x;
     CLFlt           *treeLength;
@@ -14815,11 +14303,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     free (treeLength);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -14828,7 +14312,8 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 |       new state of the chain for a single division
 |
 -----------------------------------------------------------------*/
-void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
+void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
+{
     int i;
     TreeNode        *p;
     ModelInfo       *m;
@@ -14943,12 +14428,8 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL) {
 }
 
 
-
-
-
 /* ln prior ratio for clock trees */
 int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
-
 {
     MrBFlt          oldLnPrior, newLnPrior, theta, N, growth, clockRate, sF, *sR, *eR, *fR;
     char            *sS;
@@ -15078,9 +14559,6 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   LogLike: calculate the log likelihood of the new state of the
@@ -15088,9 +14566,7 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
 |
 -----------------------------------------------------------------*/
 MrBFlt LogLike (int chain)
-
 {
-
     int             i, d;
     ModelInfo       *m;
     MrBFlt          chainLnLike, lnL;
@@ -15195,7 +14671,6 @@ MrBFlt LogLike (int chain)
 
 
 MrBFlt LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3)
-
 {
 
     /* This function returns the log prior probability of 
@@ -15214,17 +14689,11 @@ MrBFlt LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3)
     lnProb =  (log(36.0) - 4.0 * log(1.0 + w1 + w2 + w3));
      
     return (lnProb);
-     
 }
-
-
-
 
  
 MrBFlt LogPrior (int chain)
-
 {
-
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
     const int       *rateCat;
     MrBFlt          *st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
@@ -15878,15 +15347,10 @@ MrBFlt LogPrior (int chain)
 #   endif
 
     return (lnPrior);
-
 }
 
 
-
-
-
 int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF)
-
 {
     if (!strcmp(sS, "Random")) 
         {
@@ -15991,9 +15455,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |
 ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
-
 {
-
     int             i, nTaxa;
     MrBFlt          *nt, lambda, mu, rho;
     TreeNode        *p;
@@ -16044,15 +15506,14 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     return (NO_ERROR);
 }
 
+
 /*---------------------------------------------------------------------------------
  |
  |   LnBirthDeathPriorPrDiversity
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
-
 {
-    
     int             i, nTaxa, n, m;
     MrBFlt          *nt, lambda, mu;
     TreeNode        *p;
@@ -16104,15 +15565,14 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     return (NO_ERROR);
 }
 
+
 /*---------------------------------------------------------------------------------
  |
  |   LnBirthDeathPriorPrCluster
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
-
 {
-    
     int             i, nTaxa, n, m;
     MrBFlt          *nt, lambda, mu;
     TreeNode        *p;
@@ -16178,13 +15638,11 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
  */
 MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d)
 {
-    
     MrBFlt      p0t;
     
     p0t = d*(1.0-exp((d-b)*t)) / (b -d*exp((d-b)*t));
     
     return (log(p0t));
-    
 }
 
 /*
@@ -16201,13 +15659,11 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d)
  */
 MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
-    
     MrBFlt      p0t;
     
     p0t = (f*d + (b*(1.0-f) - d)*exp((d-b)*t)) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
     
     return (log(p0t));
-    
 }
 
 /*
@@ -16223,7 +15679,6 @@ MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
  */
 MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
 {
-    
     MrBFlt      p0t;
     
     p0t = 2.0 * log(b-d) - (b-d)*t;
@@ -16231,7 +15686,6 @@ MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
     p0t -= 2.0 * log(b - d*exp((d-b)*t));
     
     return p0t;
-    
 }
 
 /*
@@ -16248,17 +15702,12 @@ MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
  */
 MrBFlt LnP1Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
-    
     MrBFlt      p0t;
     
     p0t = (b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
     
     return (2.0*log(p0t) + (d-b)*t);
-    
 }
-
-
-
 
 
 /* probability that an individual alive at time t before today has
@@ -16318,6 +15767,7 @@ int Slice_i (MrBFlt t, MrBFlt *t_f, int m)
     return i;
 }
 
+
 /* probability density of an individual at time t giving rise to an edge
    between time t and t_i with q_i(t_i) = 1
  */
@@ -16345,8 +15795,8 @@ MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2, MrBFl
     return log(other) - log(2 *lambda[i]);
 }
 
-int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS)
 
+int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS)
 {
     /* fossilization priors 
      //chi */
@@ -16363,6 +15813,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
         return (ERROR);
         }
 }
+
 
 /*---------------------------------------------------------------------------------
  |
@@ -16401,7 +15852,6 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
-
 {
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
@@ -16455,8 +15905,8 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
     return (NO_ERROR);
-
 }
+
 
 /*---------------------------------------------------------------------------------
  |
@@ -16491,7 +15941,6 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
-
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
        also in several time slices each with a seperate probability.
@@ -16657,8 +16106,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     free(t_f); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
-    
 }
+
 
 /*---------------------------------------------------------------------------------
  |
@@ -16666,7 +16115,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
-
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
        also in several time slices each with a seperate probability. 
@@ -16865,11 +16313,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     free(t_f); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -16928,9 +16372,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 |
 ---------------------------------------------------------------------------------*/
 int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
-
 {
-
     int             i, j, k, nNodes;
     MrBFlt          *ct, tempD, lastCoalescenceTime, coalescenceTime, intervalLength;
     TreeNode        *p;
@@ -16997,11 +16439,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
     free (ct);
     
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*---------------------------------------------------------------------------------
@@ -17036,7 +16474,6 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
 |
 ---------------------------------------------------------------------------------*/
 MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
-
 {
     int         i, j, k, *nLineages=NULL, nDatedTips, nLineagesIn, nLineagesOut, nTips;
     MrBFlt      lnProb, treeAge, *nodeDepths=NULL;
@@ -17180,9 +16617,6 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   NewtonRaphsonBrlen: Find one maximum likelihood branch length using
@@ -17192,7 +16626,6 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
 |
 ------------------------------------------------------------------------*/
 int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
-
 {
     int         c, i, j, s, k, n, d, division, nIterations, maxNumIterations,
                 index, *rateCat, r;
@@ -17541,17 +16974,11 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
         } while (fabs(p->length - vOld) > tolerance && nIterations < maxNumIterations);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 void NodeToNodeDistances (Tree *t, TreeNode *fromNode)
-
 {
-
     int             i;
     TreeNode        *p;
     
@@ -17605,11 +17032,7 @@ void NodeToNodeDistances (Tree *t, TreeNode *fromNode)
                 }
             }
         }
-
 }
-
-
-
 
 
 int NumCppEvents (Param *p, int chain)
@@ -17626,18 +17049,13 @@ int NumCppEvents (Param *p, int chain)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   OpenNewMBPrintFile: Open a file the first time for printing
 |
 ------------------------------------------------------------------------*/
 FILE *OpenNewMBPrintFile (char *fileName)
-
 {
-
     int     overWrite;
     FILE    *fp;
 
@@ -17690,33 +17108,21 @@ FILE *OpenNewMBPrintFile (char *fileName)
 }
 
 
-
-
-
 int PickProposal (RandLong *seed, int chainIndex)
-
 {
-    
     MrBFlt      ran;
     int         i;
 
     ran = RandomNumber (seed);
     
-    for (i=0; usedMoves[i]->cumProposalProb[chainIndex] <= ran; i++)
-        ;
+    for (i=0; usedMoves[i]->cumProposalProb[chainIndex] <= ran; i++);
         
     return i;
-
 }
 
 
-
-
-
 int PosSelProbs (TreeNode *p, int division, int chain)
-
 {
-
     int             c, j, k, nStates;
     MrBFlt          catLike, like[100], *bs, *omegaCatFreq, *omega,
                     posProb, *ps, sum;
@@ -17765,17 +17171,11 @@ int PosSelProbs (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 
 
-
-
-
 int SiteOmegas (TreeNode *p, int division, int chain)
-
 {
-
     int             c, j, k, nStates;
     MrBFlt          catLike, like[100], *bs, *omegaCatFreq, *omega,
                     siteOmega, *ps, sum;
@@ -17823,11 +17223,7 @@ int SiteOmegas (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -17836,9 +17232,7 @@ int SiteOmegas (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------------*/
 int PreparePrintFiles (void)
-
 {
-
     int         i, n, previousResults, oldAutoOverwrite, oldNoWarn;
     char        localFileName[100], fileName[220], bkupName[220];
     FILE        *tempFile;
@@ -18020,9 +17414,6 @@ int PreparePrintFiles (void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   PrintAncStates_Bin: print ancestral states after final pass
@@ -18030,9 +17421,7 @@ int PreparePrintFiles (void)
 |
 -----------------------------------------------------------------*/
 int PrintAncStates_Bin (TreeNode *p, int division, int chain)
-
 {
-
     int             c, i, k;
     MrBFlt          *bs, freq;
     CLFlt           *clFP, *cL, sum, **clP;
@@ -18106,11 +17495,8 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
         }
 
     free (tempStr);
-    return NO_ERROR;    
-
+    return NO_ERROR;
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -18120,9 +17506,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int PrintAncStates_Gen (TreeNode *p, int division, int chain)
-
 {
-
     int             c, i, k, nStates, hasPInvar, nGammaCats;
     const int       *rateCat;
     MrBFlt          *bsVals;
@@ -18298,11 +17682,8 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
         }
     free (tempStr);
     free (printedChar);
-    return NO_ERROR;    
-
+    return NO_ERROR;
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -18312,9 +17693,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
-
 {
-
     int             c, i, k, *rateCat, hasPInvar, nGammaCats;
     MrBFlt          *bsVals;
     CLFlt           *cL, sum, pInvar=0.0, bs[4], freq, f;
@@ -18476,11 +17855,8 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         if (AddToPrintString (tempStr) == ERROR) return ERROR;
         }
     free (tempStr);
-    return NO_ERROR;    
-
+    return NO_ERROR;
 }
-
-
 
 
 /*----------------------------------------------------------------
@@ -18490,9 +17866,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int PrintAncStates_Std (TreeNode *p, int division, int chain)
-
 {
-
     int             c, i, j, k, s, nStates, numReps;
     MrBFlt          *bsBase, *bs, freq;
     CLFlt           *clFP, *cL, sum,** clP;
@@ -18600,10 +17974,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
             }
         }
     free (tempStr);
-    return NO_ERROR;    
-
+    return NO_ERROR;
 }
-
 
 
 /*-----------------------------------------------------------------------
@@ -18612,7 +17984,6 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------------*/
 int PrintCheckPoint (int gen)
-
 {
     int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE,
                 hasEvents, *intValue, id, oldPrecision;
@@ -19185,9 +18556,6 @@ errorExit:
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   PrintMCMCDiagnosticsToFile: Print acceptance ratios, swapping
@@ -19195,9 +18563,7 @@ errorExit:
 |
 ------------------------------------------------------------------------*/
 int PrintMCMCDiagnosticsToFile (int curGen)
-
 {
-
     int         i, j, n;
     MCMCMove    *theMove;
     char        *diagnstat;
@@ -19430,9 +18796,6 @@ int PrintMCMCDiagnosticsToFile (int curGen)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------------
 |
 |   PrintMPISlaves: Print strings from MPI slave nodes
@@ -19537,18 +18900,13 @@ int PrintMPISlaves (FILE *fp)
 #endif
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   PrintParamValues: print parameter values and subvalues for param
 |
 ----------------------------------------------------------------------*/
 void PrintParamValues (Param *p, int chain, char *s)
-
 {
-    
     int         j;
     MrBFlt      *value0, *value1;
     
@@ -19574,11 +18932,7 @@ void PrintParamValues (Param *p, int chain, char *s)
     MrBayesPrint ("\n\n");
 
     return;
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -19589,9 +18943,7 @@ void PrintParamValues (Param *p, int chain, char *s)
 |
 ------------------------------------------------------------------------*/
 int PrintParsMatrix (void)
-
 {
-
     int             i, j=0, k, c, d, printWidth, nextColumn, nChars, inputChar;
     BitsLong        x, y, bitsLongOne;
     char            ch;
@@ -19649,11 +19001,7 @@ int PrintParsMatrix (void)
         }   /* next division */
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -19661,9 +19009,7 @@ int PrintParsMatrix (void)
 |   PrintSiteRates_Gen: general n-state models with rate variation
 |
 -------------------------------------------------------------------*/
-
 int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
-
 {
     int             c, j, k, nStates, hasPInvar;
     MrBFlt          freq, siteLike, invLike, catLike, pInvar=0.0, *bs,
@@ -19800,11 +19146,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     free (tempStr);
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -19812,9 +19154,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 |   PrintSiteRates_Std: standard model with rate variation
 |
 -------------------------------------------------------------------*/
-
 int PrintSiteRates_Std (TreeNode *p, int division, int chain)
-
 {
     int             c, j, k, nStates;
     MrBFlt          siteLike, catLike, *bs, *catRate, baseRate;
@@ -19877,17 +19217,11 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 
     free (tempStr);
     return NO_ERROR;
-
 }
 
 
-
-
-
 int PrintStates (int curGen, int coldId)
-
 {
-
     int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
     char            *partString=NULL, stateString[4];
     MrBFlt          *st, *sst, sum;
@@ -20542,7 +19876,6 @@ int PrintStates (int curGen, int coldId)
                 }
             }
 
-
         /* print the site omegas for the appropriate sites in the original alignment */
         /* note that we use posSelProbs to pass values between SiteOmegas and this function */
         for (i=0; i<numChar; i++)
@@ -20623,11 +19956,7 @@ int PrintStates (int curGen, int coldId)
         free (tempStr);
         SafeFree ((void **)&partString);
         return (ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -20639,9 +19968,7 @@ int PrintStates (int curGen, int coldId)
 |
 ------------------------------------------------------------------------*/
 int PrintStatesToFiles (int curGen)
-
 {
-
     int             i, j, chn, coldId, runId;
     MrBFlt          clockRate;
     Tree            *tree=NULL;
@@ -21031,17 +20358,11 @@ int PrintStatesToFiles (int curGen)
 #   endif
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int PrintSwapInfo (void)
-
 {
-
     int         i, j, n, maxNumExchanges, len, maxLen, reweightingChars=0;
     char        *tempStr;
     int             tempStrSize;
@@ -21190,11 +20511,7 @@ int PrintSwapInfo (void)
         
     free (tempStr);
     return (NO_ERROR);
-        
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -21203,9 +20520,7 @@ int PrintSwapInfo (void)
 |
 ------------------------------------------------------------------------*/
 int PrintTermState (void)
-
 {
-
     int             i, j=0, c, d, printWidth, nextColumn, nDigits, nReps;
     ModelInfo       *m;
     ModelParams     *mp;
@@ -21246,11 +20561,7 @@ int PrintTermState (void)
         }   /* next division */
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*--------------------------------------------------
@@ -21262,7 +20573,6 @@ int PrintTermState (void)
 |
 ---------------------------------------------------*/
 void PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates)
-
 {
     int     i, j;
     CLFlt   *tiP, sum;
@@ -21310,13 +20620,8 @@ void PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates)
 }
 
 
-
-
-
 int PrintTopConvInfo (void)
-
 {
-
     int         i, j, n, len, maxLen;
     char        *tempStr;
     int         tempStrSize;
@@ -21423,12 +20728,8 @@ int PrintTopConvInfo (void)
 }
 
 
-
-
-
 void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 {
-
     int         i, chn, nHours, nMins, nSecs;
     MrBFlt      timePerGen;
 
@@ -21585,13 +20886,8 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 }
 
 
-
-
-
 int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate)
-
 {
-
     int             i, tempStrSize;
     char            *tempStr;
     Tree            *tree;
@@ -21752,11 +21048,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
 
     free (tempStr); 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 #if defined (MPI_ENABLED)
@@ -21803,9 +21095,6 @@ int ReassembleMoveInfo (void)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 int ReassembleParamVals (int *curId)
@@ -22176,9 +21465,6 @@ int ReassembleParamVals (int *curId)
 }
 
 
-
-
-
 int ReassembleSwapInfo (void)
 {
     int i, j, n, x, sum, ierror;
@@ -22209,9 +21495,6 @@ int ReassembleSwapInfo (void)
 
     return (NO_ERROR);
 }
-
-
-
 
 
 int ReassembleTuningParams (void)
@@ -22264,11 +21547,7 @@ int ReassembleTuningParams (void)
 }
 
 
-
-
-
 void RedistributeMoveInfo (void)
-
 {
     int         i, j, k;
     MCMCMove    *mv;
@@ -22305,9 +21584,6 @@ void RedistributeMoveInfo (void)
             }
         }
 }
-
-
-
 
 
 int RedistributeParamVals (void)
@@ -22613,9 +21889,6 @@ int RedistributeParamVals (void)
 }
 
 
-
-
-
 int RedistributeTuningParams (void)
 {
     int     i, j, k, lower, ierror;
@@ -22683,16 +21956,12 @@ int RedistributeTuningParams (void)
 #endif
 
 
-
-
-
 /*----------------------------------------------------------------
 |
 |   RemoveNodeScalers: Remove node scalers
 |
 -----------------------------------------------------------------*/
 int RemoveNodeScalers (TreeNode *p, int division, int chain)
-
 {
     int             c;
     CLFlt           *scP, *lnScaler;
@@ -22712,11 +21981,7 @@ int RemoveNodeScalers (TreeNode *p, int division, int chain)
         lnScaler[c] -= scP[c];
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 #if defined (SSE_ENABLED)
@@ -22726,7 +21991,6 @@ int RemoveNodeScalers (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int RemoveNodeScalers_SSE (TreeNode *p, int division, int chain)
-
 {
     int             c;
     __m128          *scP_SSE, *lnScaler_SSE;
@@ -22751,9 +22015,6 @@ int RemoveNodeScalers_SSE (TreeNode *p, int division, int chain)
     
 }
 #endif
-
-
-
 
 
 /* RemovePartition: Remove a partition from the tree keeping track of partition frequencies */
@@ -22804,16 +22065,11 @@ int RemovePartition (PFNODE *r, BitsLong *p, int runId)
 }
 
 
-
-
-
 /* RemoveTreeFromPartitionCounters: Break a tree into partitions and remove those from counters */
 int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
 {
     int         i, j, nTaxa;
     TreeNode    *p;
-
-    extern void ShowParts (FILE *,BitsLong *,int);
 
     if (tree->isRooted == YES)
         nTaxa = tree->nNodes - tree->nIntNodes - 1;
@@ -22845,9 +22101,6 @@ int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
 
     return NO_ERROR;
 }
-
-
-
 
 
 /* RemoveTreeSamples: Remove tree samples from partition counters */
@@ -23020,9 +22273,6 @@ int RemoveTreeSamples (int from, int to)
 }
 
 
-
-
-
 int ReopenMBPrintFiles (void)
 {
     int     i, k, n;
@@ -23086,11 +22336,7 @@ int ReopenMBPrintFiles (void)
 }
 
 
-
-
-
-int ConfirmAbortRun(void) 
-
+int ConfirmAbortRun(void)
 {
     char c, line[100];
     int  ret=0, i;
@@ -23114,9 +22360,6 @@ int ConfirmAbortRun(void)
         }
     return ret;
 }
-
-
-
 
 
 /*-------------------------------------------------------------------
@@ -23289,11 +22532,7 @@ void ResetChainIds (void)
         }
 
     free (curId);
-
 }
-
-
-
 
 
 /* ResetFlips: Reset flipped cond likes etc after rejection */
@@ -23371,10 +22610,6 @@ void ResetFlips (int chain)
 }
 
 
-
-
-
-
 /*-------------------------------------------------------------------
 |
 |   ResetScalersPartition: reset scaler nodes of the given tree by appropriately setting isScalerNode array.
@@ -23386,7 +22621,6 @@ void ResetFlips (int chain)
 |
 --------------------------------------------------------------------*/
 int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
-
 {
     int         n;
     TreeNode    *p;
@@ -23437,9 +22671,6 @@ int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
 
     return NO_ERROR;
 }
-
-
-
 
 
 /*-------------------------------------------------------------------
@@ -23516,9 +22747,6 @@ int ResetScalers (void)
 }
 
 
-
-
-
 void ResetSiteScalers (ModelInfo *m, int chain)
 {
     int     c;
@@ -23537,9 +22765,6 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   ReusePreviousResults: Save old .p, .t, .ss and .mcmc files with ~ extension,
@@ -23548,9 +22773,7 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 |
 ------------------------------------------------------------------------*/
 int ReusePreviousResults (int *numSamples, int steps)
-
 {
-
     int         i, k, n;
     char        localFileName[100], fileName[220], bkupName[220];
 
@@ -23686,13 +22909,8 @@ int ReusePreviousResults (int *numSamples, int steps)
 }
 
 
-
-
-
 int RunChain (RandLong *seed)
-
 {
-    
     int         i, j, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
     int         lastDiagnostics;    // the sample no. when last diagnostic was performed
     int         removeFrom, removeTo=0;
@@ -25420,12 +24638,10 @@ int RunChain (RandLong *seed)
 }
 
 
-
-
-
 #define TARGETLENDELTA (100)
 
-int SafeSprintf(char **target, int *targetLen, char *fmt, ...) {
+int SafeSprintf(char **target, int *targetLen, char *fmt, ...)
+{
     va_list    argp;
     int        retval;
 
@@ -25465,13 +24681,8 @@ int SafeSprintf(char **target, int *targetLen, char *fmt, ...) {
 }
 
 
-
-
-
 void SetChainIds (void)
-
 {
-
     /* Fill <chainId[]> with the global chain number.
        Ex. For proc_0, chain[0] = 0;
              chain[1] = 1;
@@ -25543,8 +24754,6 @@ void SetChainIds (void)
 #   endif
         
 }
-
-
 
 
 /* setFilePositions sets chainParams.tFilePos[] to point immidiatly after sampled tree in position "samplePos" for all .t files.  */
@@ -25639,8 +24848,6 @@ int setFilePositions (int samplePos)
 }
 
 
-
-
 /* SetFileNames: Set file names */
 void SetFileNames (void)
 {
@@ -25664,9 +24871,6 @@ void SetFileNames (void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------------
 |
 |   SetLikeFunctions: This function will set up the pointers from each
@@ -25674,9 +24878,7 @@ void SetFileNames (void)
 |
 -----------------------------------------------------------------------------*/
 int SetLikeFunctions (void)
-
 {
-    
     int         i;
 
     ModelInfo   *m;
@@ -26076,17 +25278,12 @@ int SetLikeFunctions (void)
         }
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /* Determine number of chains and data splits to be handled by MPI processors or threads */
 int SetLocalChainsAndDataSplits(void)
 {
-
 #   if defined (MPI_ENABLED)
     
     /* tell user how many chains each processor has been assigned */
@@ -26149,16 +25346,12 @@ int SetLocalChainsAndDataSplits(void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------------
 |
 |   ShowMoveSummary: Show summary of moves that will be used in MCMC sampling
 |
 -----------------------------------------------------------------------------*/
 int ShowMoveSummary (void)
-
 {
     int         i, run, chain, areRunsSame, areChainsSame, chainIndex;
     MCMCMove    *mv;
@@ -26247,9 +25440,6 @@ int ShowMoveSummary (void)
 }
 
 
-
-
-
 int SetBinaryQMatrix (MrBFlt **a, int whichChain, int division)
 {
     MrBFlt          scaler, *bs;
@@ -26270,13 +25460,8 @@ int SetBinaryQMatrix (MrBFlt **a, int whichChain, int division)
 }
 
 
-
-
-
 int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS)
-    
 {
-
     register int    i, j, k;
     int             isTransition=0, nDiff, rtNum=0;
     MrBFlt          scaler, mult=0.0, probOn, sum, *swr, s01, s10, s[4][4], nonsyn, *rateValues=NULL, *bs, dN, dS;
@@ -26871,17 +26056,11 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
 #   endif
 
     return (NO_ERROR);
-    
 }
-
-    
-
 
 
 int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult)
-
 {
-
     register int    i, j, k;
     int             aaModelID;
     MrBFlt          scaler, probOn, sum, *swr, s01, s10, *bs, *rt;
@@ -27334,17 +26513,11 @@ int SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt r
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType)
-
 {
-
     register int    i, j;
     MrBFlt          scaler;
 
@@ -27407,11 +26580,7 @@ int SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType)
 #   endif
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -27474,9 +26643,6 @@ int SetUpPartitionCounters (void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   SetupTermState: create matrix holding unambiguous states for
@@ -27484,9 +26650,7 @@ int SetUpPartitionCounters (void)
 |
 -----------------------------------------------------------------------*/
 int SetUpTermState (void)
-
 {
-
     int         i, k, n, c, d, x=0, *termStatePtr;
     BitsLong    *p;
     ModelInfo   *m;
@@ -27610,11 +26774,7 @@ int SetUpTermState (void)
 #   endif
 
     return NO_ERROR;
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------------------
@@ -27626,9 +26786,7 @@ int SetUpTermState (void)
 |
 -----------------------------------------------------------------------------*/
 int SetUsedMoves (void)
-
 {
-    
     int         i, j, moveIndex, numGlobalChains;
     MrBFlt      prob, sum, cumSum;
 
@@ -27722,17 +26880,11 @@ int SetUsedMoves (void)
         }
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 void ShowValuesForChain (int chn)
-
 {
-
     int             i;
     char            s[100];
         
@@ -27858,11 +27010,7 @@ void ShowValuesForChain (int chn)
     for (i=0; i<sizeOfParamValues; i++)
         MrBayesPrint ("%4d -- %lf\n", i, paramValues[i]);
 #   endif
-
 }
-
-
-
 
 
 /* SmallestNonemptyPFNode: recursive function to smallest nonempty node in a subtree */
@@ -27890,9 +27038,6 @@ PFNODE *SmallestNonemptyPFNode (PFNODE *p, int *i, int j)
         return SmallestNonemptyPFNode (p->left, i, j);
         }
 }
-
-
-
 
 
 /* Talloc: Allocate space for a new node in the tree keeping track of partition frequencies */
@@ -27923,13 +27068,8 @@ PFNODE *Talloc (void)
 }
 
 
-
-
-
 MrBFlt Temperature (int id)
-
 {
-
     /* let id be number of chain in run */
     id %= chainParams.numChains;
     
@@ -27941,11 +27081,7 @@ MrBFlt Temperature (int id)
         {
         return (1.0 / (1.0 + chainParams.chainTemp * id));
         }
-
 }
-
-
-
 
 
 /* Tfree: Free space for partition frequency counter tree */
@@ -27965,13 +27101,8 @@ void Tfree (PFNODE *r)
 }
 
 
-
-
-
 int TiProbs_Fels (TreeNode *p, int division, int chain)
-
 {
-
     int         i, j, k, index;
     MrBFlt      t, u, x, z, beta, bigPi_j[4], pij, bigPij,
                 *catRate, baseRate, theRate, *pis, length;
@@ -28078,11 +27209,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -28098,9 +27225,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int TiProbs_Gen (TreeNode *p, int division, int chain)
-
 {
-    
     register int    i, j, k, n, s, index;
     MrBFlt          t, *catRate, baseRate, *eigenValues, *cijk, *bs,
                     EigValexp[64], sum, *ptr, theRate, correctionFactor,
@@ -28223,11 +27348,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
 #   endif
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------
@@ -28238,9 +27359,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
 |
 -----------------------------------------------------------------*/
 int TiProbs_GenCov (TreeNode *p, int division, int chain)
-
 {
-    
     register int    i, j, k, n, s, index;
     int             sizeOfSingleCijk;
     MrBFlt          t, *eigenValues, *cijk, EigValexp[64], sum, *ptr, correctionFactor,
@@ -28362,11 +27481,7 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 #   endif
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -28377,9 +27492,7 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------*/
 int TiProbs_Hky (TreeNode *p, int division, int chain)
-
 {
-
     int         i, j, k, index;
     MrBFlt      t, kap, u, w, x, y, z, beta, bigPi_j[4], pij, bigPij, *pis,
                 *catRate, baseRate, theRate, length;
@@ -28493,11 +27606,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
         }
         
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -28508,9 +27617,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------*/
 int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
-
 {
-    
     /* calculate Jukes Cantor transition probabilities */
     
     int         i, j, k, index;
@@ -28600,9 +27707,6 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   TiProbs_Res: update transition probabilities for binary
@@ -28610,9 +27714,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------*/
 int TiProbs_Res (TreeNode *p, int division, int chain)
-
 {
-    
     int         k, index;
     MrBFlt      baseRate, eV, mu, theRate, v,
                 *bs, *catRate, length;
@@ -28695,11 +27797,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------
@@ -28709,9 +27807,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 |
 ------------------------------------------------------------------*/
 int TiProbs_Std (TreeNode *p, int division, int chain)
-
 {
-    
     int         b, c, i, j, k, n, s, nStates, index=0, index2;
     MrBFlt      v, eV1, eV2, eV3, eV4, eV5, *catRate,
                 baseRate, theRate, pi, f1, f2, f3, f4, f5, f6, f7, root, EigValexp[10],
@@ -29121,17 +28217,11 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-
 }
 
 
-
-
-
 void TouchAllCijks (int chain)
-
 {
-
     int i;
 
     for (i=0; i<numCurrentDivisions; i++)
@@ -29141,17 +28231,11 @@ void TouchAllCijks (int chain)
         }
 
     return;
-    
 }
 
 
-
-
-
 void TouchAllPartitions (void)
-
 {
-
     int i;
 
     for (i=0; i<numCurrentDivisions; i++)
@@ -29160,17 +28244,11 @@ void TouchAllPartitions (void)
         }
 
     return;
-    
 }
 
 
-
-
-
 void TouchAllTrees (int chain)
-
 {
-
     int         i, j;
     Tree        *t;
     TreeNode    *p;
@@ -29190,11 +28268,7 @@ void TouchAllTrees (int chain)
         modelSettings[i].upDateAll = YES;
 
     return;
-    
 }
-
-
-
 
 
 /* Touch all update flags so we recalculate likelihood from scratch */
@@ -29227,9 +28301,6 @@ void TouchEverything (int chain)
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   TreeLength: Calculates the tree length as the sum of the lengths
@@ -29239,9 +28310,7 @@ void TouchEverything (int chain)
 |
 -------------------------------------------------------------------*/
 MrBFlt TreeLength (Param *param, int chain)
-
 {
-
     int             i, j;
     MrBFlt          tl;
     Tree            *t;
@@ -29278,15 +28347,11 @@ MrBFlt TreeLength (Param *param, int chain)
         }
                 
     return (tl);
-    
 }
 
 
-
 int UpDateCijk (int whichPart, int whichChain)
-
 {
-
     int         c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
     MrBFlt      **q[100], **eigvecs, **inverseEigvecs;
     MrBFlt      *eigenValues, *eigvalsImag, *cijk;
@@ -29600,9 +28665,5 @@ int UpDateCijk (int whichPart, int whichChain)
         FreeSquareComplexMatrix (CinverseEigvecs);
 
         return ERROR;
-
 }
-
-
-
 

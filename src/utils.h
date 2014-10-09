@@ -52,6 +52,7 @@ void     LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *up
 void     MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var);
 void     MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst );
 int      NextTaxonInPartition (int currentTaxon, BitsLong *partition, int length);
+int      NBits (int x);
 int      NumBits (BitsLong *x, int len);
 char    *MbPrintNum (MrBFlt num);
 void     MrBayesPrint (char *format, ...);
@@ -80,7 +81,6 @@ FILE    *TestOpenTextFileR (char *name);
 void     UpdateGrowthFxn(int *growthFxn);
 int      UpperTriangIndex(int i, int j, int size);
 int      WantTo (const char *msg);
-
 
 /* tree utility functions */
 #define   TREEBUFINCREASE   200
@@ -187,7 +187,6 @@ void      WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int
 void      WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int showBrlens, int isRooted);
 void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
-
 
 /* math utility functions */
 #undef complex

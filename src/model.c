@@ -53,7 +53,6 @@ const char* const svnRevisionModelC = "$Rev$";   /* Revision keyword which is ex
 #undef  DEBUG_COMPRESSDATA
 #undef  DEBUG_CPP
 
-
 /* local prototypes */
 int       AddDummyChars (void);
 void      AllocateCppEvents (Param *p);
@@ -94,8 +93,6 @@ int       SetUpLinkTable (void);
 int       ShowMoves (int used);
 int       ShowParameters (int showStartVals, int showMoves, int showAllAvailable);
 int       UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *evolLength, TreeNode *p, MrBFlt baseRate);
-
-
 
 /* globals */
 int             *activeParams[NUM_LINKED];              /* a table holding the parameter link status        */
@@ -149,7 +146,6 @@ MrBFlt          vtPi[20];                    /* stationary frequencies for VT mo
 MrBFlt          blosPi[20];                  /* stationary frequencies for Blosum62 model    */
 MrBFlt          lgPi[20];                    /* stationary frequencies for LG model          */
 
-
 /* parser flags and variables */
 int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
             foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar,
@@ -171,9 +167,6 @@ int             *stateSize;                  /* # states for each compressed cha
 // char         *plotTokenP;                 /* plotToken[CMD_STRING_LENGTH];*/
 
 
-
-
-
 /*-----------------------------------------------------------------------
 |
 |   AddDummyChars: Add dummy characters to relevant partitions
@@ -181,7 +174,6 @@ int             *stateSize;                  /* # states for each compressed cha
 ------------------------------------------------------------------------*/
 int AddDummyChars (void)
 {
-
     int         i, j, k, d, numIncompatible, numDeleted, numStdChars, oldRowSize,
                 newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
                 isCompat, *tempChar, numIncompatibleChars;
@@ -191,8 +183,6 @@ int AddDummyChars (void)
     ModelParams *mp;
     CharInfo    cinfo;
     Matrix      matrix;
-
-    extern int  NBits(int x);
 
     /* set pointers to NULL */
     tempMatrix = NULL;
@@ -458,9 +448,6 @@ int AddDummyChars (void)
 }
 
 
-
-
-
 /* Allocate space for cpp events */
 void AllocateCppEvents (Param *p)
 {
@@ -482,17 +469,12 @@ void AllocateCppEvents (Param *p)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------------
 |
 |   AllocateMove: Allocate space for and initialize one applicable move
 |
 -----------------------------------------------------------------------------*/
-
 MCMCMove *AllocateMove (MoveType *moveType, Param *param)
-
 {
     int         i, j, nameLength;
     char        *partitionDescriptor = "";
@@ -607,16 +589,12 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   AllocateNormalParams: Allocate space for normal parameters
 |
 -----------------------------------------------------------------------*/
 int AllocateNormalParams (void)
-
 {
     int         i, k, nOfParams, nOfIntParams;
     Param       *p;
@@ -701,16 +679,12 @@ int AllocateNormalParams (void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
 |
 |   AllocateTreeParams: Allocate space for tree parameters
 |
 -----------------------------------------------------------------------*/
 int AllocateTreeParams (void)
-
 {
     int         i, j, k, n, nOfParams, nOfTrees, isRooted, numSubParamPtrs;
     Param       *p, *q;
@@ -1094,26 +1068,16 @@ int AllocateTreeParams (void)
 }
 
 
-
-
-
 int AreDoublesEqual (MrBFlt x, MrBFlt y, MrBFlt tol)
-
 {
-
     if ((x - y) < -tol || (x - y) > tol)
         return (NO);
     else
         return (YES);
-    
 }
 
 
-
-
-
 int ChangeNumChains (int from, int to)
-
 {
     int         i, i1, j, k, m, st, nRuns, fromIndex, toIndex, run, chn, *tempIntVals, nCppEventParams, *toEvents, *fromEvents;
     MCMCMove    **tempMoves, *fromMove, *toMove;
@@ -1401,11 +1365,7 @@ int ChangeNumChains (int from, int to)
 }
 
 
-
-
-
 int ChangeNumRuns (int from, int to)
-
 {
     int         i, i1, j, k, n, nChains;
     Param       *p, *q;
@@ -1685,9 +1645,6 @@ int ChangeNumRuns (int from, int to)
 }
 
 
-
-
-
 /*-----------------------------------------------------------
 |
 |   CheckCharCodingType: check if character is parsimony-
@@ -1695,14 +1652,11 @@ int ChangeNumRuns (int from, int to)
 |
 -----------------------------------------------------------*/
 void CheckCharCodingType (Matrix *m, CharInfo *ci)
-
 {
     int         i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
                 numConsidered, numInformative, lastInformative=0, uniqueBits,
                 newPoss, oldPoss;
     BitsLong    combinations[2048], *tempComb, *newComb, *oldComb, bitsLongOne=1;
-
-    extern int NBits (int x);
 
     /* set up comb pointers */
     oldComb = combinations;
@@ -1853,11 +1807,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
         ci->informative = YES;
 
     return;
-    
 }
-
-
-
 
 
 /*-----------------------------------------------------------
@@ -1981,9 +1931,6 @@ int CheckModel (void)
 }
 
 
-
-
-
 /*-----------------------------------------------------------
 |
 |   CheckExpandedModels: check data partitions that have
@@ -1991,9 +1938,7 @@ int CheckModel (void)
 |
 -------------------------------------------------------------*/
 int CheckExpandedModels (void)
-
 {
-
     int             c, d, i, t, s, s1, s2, s3, whichNuc, uniqueId, numCharsInPart, 
                     firstChar, lastChar, contiguousPart, badBreak, badExclusion,
                     nGone, nuc1, nuc2, nuc3, foundStopCodon, posNucs1[4], posNucs2[4], posNucs3[4],
@@ -2298,13 +2243,10 @@ int CheckExpandedModels (void)
             printf (" %d", charId[c]);
     printf ("\n");
 #   endif
+
     free (tempStr);
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*-----------------------------------------------------------
@@ -2313,9 +2255,7 @@ int CheckExpandedModels (void)
 |
 -------------------------------------------------------------*/
 int CompressData (void)
-
 {
-
     int             a, c, d, i, j, k, t, col[3], isSame, newRow, newColumn,
                     *isTaken, *tempSitesOfPat, *tempChar;
     BitsLong        *tempMatrix;
@@ -2633,11 +2573,7 @@ int CompressData (void)
 }
 
 
-
-
-
 int DataType (int part)
-
 {
     int     i;
 
@@ -2651,13 +2587,8 @@ int DataType (int part)
 }
 
 
-
-
-
 int DoLink (void)
-
 {
-
     int         i, j, newLine;
     
     MrBayesPrint ("%s   Linking\n", spacer);
@@ -2700,17 +2631,11 @@ int DoLink (void)
         return (ERROR);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoLinkParm (char *parmName, char *tkn)
-
 {
-
     int         i, j, tempInt;
 
     if (defMatrix == NO)
@@ -2939,17 +2864,11 @@ int DoLinkParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoLset (void)
-
 {
-
     int         i, nApplied, lastActive=0;
     
     nApplied = NumActiveParts ();
@@ -2999,17 +2918,11 @@ int DoLset (void)
         return (ERROR);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoLsetParm (char *parmName, char *tkn)
-
 {
-
     int         i, j, tempInt, nApplied;
     char        tempStr[100];
 
@@ -3681,18 +3594,11 @@ int DoLsetParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoPlot (void)
-
 {
-    
-    
     int             i, n, nHeaders, burnin, len, longestHeader, whichIsX, whichIsY, numPlotted;
     char            temp[100], **headerNames = NULL;
     SumpFileInfo    fileInfo;
@@ -3816,13 +3722,8 @@ errorExit:
 }
 
 
-
-
-
 int DoPlotParm (char *parmName, char *tkn)
-
 {
-    
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[100];
@@ -3973,31 +3874,19 @@ int DoPlotParm (char *parmName, char *tkn)
         }
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 int DoPropset (void)
-
 {
-
     MrBayesPrint ("%s   Successfully set proposal parameters\n", spacer);
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoPropsetParm (char *parmName, char *tkn)
-
 {
-
     int                 i, j, k, nMatches, tempInt;
     static char         *temp=NULL, *localTkn=NULL; /*freed at the end of the call*/
     MrBFlt              tempFloat;
@@ -4302,13 +4191,8 @@ int DoPropsetParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoPrset (void)
-
 {
-
     int         i, nApplied, lastActive=0;
 
     nApplied = NumActiveParts ();
@@ -4357,17 +4241,11 @@ int DoPrset (void)
         return (ERROR);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoPrsetParm (char *parmName, char *tkn)
-
 {
-    
     int         i, j, k, tempInt, nApplied, index, ns, flag=0;
     MrBFlt      tempD, sum;
     char        tempStr[100];
@@ -9414,17 +9292,11 @@ int DoPrsetParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoQuit (void)
-
 {
-    
     int         i;
     char        tempName[100];
     
@@ -9473,33 +9345,20 @@ int DoQuit (void)
         }
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoReport (void)
-
 {
-
     /* TODO: smart update */
     if (SetUpAnalysis (&globalSeed) == ERROR)
         return (ERROR);
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoReportParm (char *parmName, char *tkn)
-
 {
-    
-
     int         i, tempInt, nApplied;
     char        tempStr[100];
 
@@ -9906,30 +9765,19 @@ int DoReportParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoStartvals (void)
-
 {
-
     MrBayesPrint ("%s   Successfully set starting values\n", spacer);
     /*
     for (i=0; i<numParams; i++)
         assert (IsTreeConsistent(&params[i], 0, 0) == YES);
     */
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoStartvalsParm (char *parmName, char *tkn)
-
 {
-
     int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
     static char         *temp=NULL;
     MrBFlt              tempFloat, *value, *subValue;
@@ -10572,13 +10420,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoUnlink (void)
-
 {
-
     int         i, j;
     
     MrBayesPrint ("%s   Unlinking\n", spacer);
@@ -10615,17 +10458,11 @@ int DoUnlink (void)
         return (ERROR);
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int DoShowMcmcTrees (void)
-
 {
-
     int         run, chain, chainIndex, i;
     Tree        *t;
 
@@ -10650,17 +10487,11 @@ int DoShowMcmcTrees (void)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoShowModel (void)
-
 {
-
     if (defMatrix == NO)
         {
         MrBayesPrint ("%s   A matrix must be specified before the model can be defined\n", spacer);
@@ -10671,17 +10502,11 @@ int DoShowModel (void)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoShowMoves (void)
-
 {
-
     if (defMatrix == NO)
         {
         MrBayesPrint ("%s   A matrix must be specified before moves can be assigned\n", spacer);
@@ -10702,17 +10527,11 @@ int DoShowMoves (void)
         MrBayesPrint ("%s   Use 'Showmoves allavailable=yes' to see a list of all available moves\n", spacer);
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoShowmovesParm (char *parmName, char *tkn)
-
 {
-
     char    tempStr[100];
     
     if (expecting == Expecting(PARAMETER))
@@ -10754,13 +10573,8 @@ int DoShowmovesParm (char *parmName, char *tkn)
 }
 
 
-
-
-
 int DoShowParams (void)
-
 {
-
     if (defMatrix == NO)
         {
         MrBayesPrint ("%s   A matrix must be specified before model parameters can be shown\n", spacer);
@@ -10771,11 +10585,7 @@ int DoShowParams (void)
         return (ERROR);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------------
@@ -10784,9 +10594,7 @@ int DoShowParams (void)
 |
 -------------------------------------------------------------------------*/
 int FillNormalParams (RandLong *seed, int fromChain, int toChain)
-
 {
-
     int         i, j, k, chn, tempInt, *intValue;
     MrBFlt      *bs, *value, *subValue, scaler;
     Tree        *tree;
@@ -11414,14 +11222,9 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
     return NO_ERROR;
 }
 
-
-
-
     
 int FillRelPartsString (Param *p, char **relPartString)
-
 {
-
     int         i, n, filledString;
     char        *tempStr;
     int             tempStrSize=50;
@@ -11461,11 +11264,7 @@ int FillRelPartsString (Param *p, char **relPartString)
         }
     free (tempStr);
     return (filledString);
-
 }
-
-
-
 
 
 /* FillTopologySubParams: Fill subparams (brlens) for a topology */
@@ -11577,12 +11376,8 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
 }
 
 
-
-
-
 /* FillBrlensSubParams: Fill any relaxed clock subparams of a brlens param */
 int FillBrlensSubParams (Param *param, int chn, int state)
-
 {
     int         i, j, *nEvents;
     MrBFlt      *brlen, *branchRate, **position, **rateMult;
@@ -11634,18 +11429,12 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 }
 
 
-
-
-
 /* Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions
    may theoreticly have different clock models, while constraints apply to all partitions/trees */
 int PruneConstraintPartitions()
-
 {
-
     int             i, j, constraintId, nLongsNeeded;
     
-
     nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
 
     for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
@@ -11714,18 +11503,13 @@ int PruneConstraintPartitions()
             assert (j == numLocalTaxa);         
             }
     }
+    
     return NO_ERROR;
-
 }
 
 
-
-
-
 int DoesTreeSatisfyConstraints(Tree *t)
-
 {
-
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
     int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
@@ -11891,12 +11675,9 @@ int DoesTreeSatisfyConstraints(Tree *t)
                 return NO;
             }
         }
+    
     return YES;
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------
@@ -11909,9 +11690,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
 |
 ------------------------------------------------------------------*/
 int FillTreeParams (RandLong *seed, int fromChain, int toChain)
-
 {
-
     int         i, k, chn, nTaxa, tmp;
     Param       *p, *q;
     Tree        *tree;
@@ -12068,9 +11847,6 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
 }
 
 
-
-
-
 void FreeCppEvents (Param *p)
 {
     int i, j;
@@ -12103,13 +11879,8 @@ void FreeCppEvents (Param *p)
 }
 
 
-
-
-
 int FreeModel (void)
-
 {
-
     int     i;
     Param   *p;
     
@@ -12232,15 +12003,10 @@ int FreeModel (void)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 void FreeMove (MCMCMove *mv)
-
 {
     free (mv->tuningParam[0]);
     free (mv->tuningParam);
@@ -12251,14 +12017,9 @@ void FreeMove (MCMCMove *mv)
 }
 
 
-
-
-
 /* Compute empirical state freq are return it in global array empiricalFreqs[] */
 int GetEmpiricalFreqs (int *relParts, int nRelParts)
-
 {
-
     int             i, j, k, m, n, thePartition, nuc[20], ns, temp, isDNA, isProtein, firstRel;
     MrBFlt          freqN[20], sum, sumN[20]/*, rawCounts[20]*/;
 
@@ -12422,17 +12183,11 @@ int GetEmpiricalFreqs (int *relParts, int nRelParts)
         }
         
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int GetNumDivisionChars (void)
-
 {
-
     int         c, d, n;
     ModelInfo   *m;
 
@@ -12459,65 +12214,35 @@ int GetNumDivisionChars (void)
         }
     
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 int *GetParamIntVals (Param *parm, int chain, int state)
-
 {
-
     return parm->intValues + (2 * chain + state) * intValsRowSize;
-    
 }
-
-
-
 
 
 MrBFlt  *GetParamStdStateFreqs (Param *parm, int chain, int state)
-
 {
-    
     return parm->stdStateFreqs + (2 * chain + state) * stdStateFreqsRowSize;
-    
 }
-
-
-
 
 
 MrBFlt  *GetParamSubVals (Param *parm, int chain, int state)
-
 {
-
     return parm->subValues + (2 * chain + state) * paramValsRowSize;
-    
 }
-
-
-
 
 
 MrBFlt  *GetParamVals (Param *parm, int chain, int state)
-
 {
-    
     return parm->values + (2 * chain + state) * paramValsRowSize;
-    
 }
 
 
-
-
-
 void GetPossibleAAs (int aaCode, int aa[])
-
 {
-
     int     m;
     
     for (m=0; m<20; m++)
@@ -12530,23 +12255,18 @@ void GetPossibleAAs (int aaCode, int aa[])
         for (m=0; m<20; m++)
             aa[m] = 1;
         }
+
 #   if 0
     printf ("%2d -- ", aaCode);
     for (m=0; m<20; m++)
         printf ("%d", aa[m]);
     printf ("\n");
 #   endif
-
 }
 
 
-
-
-
 void GetPossibleNucs (int nucCode, int nuc[])
-
 {
-
     if (nucCode == 1)
         {
         nuc[0] = 1;
@@ -12652,16 +12372,11 @@ void GetPossibleNucs (int nucCode, int nuc[])
         nuc[2] = 1;
         nuc[3] = 1;
         }
-
 }
 
 
-
-
 void GetPossibleRestrictionSites (int resSiteCode, int *sites)
-
 {
-
     int     m;
     
     for (m=0; m<2; m++)
@@ -12680,34 +12395,19 @@ void GetPossibleRestrictionSites (int resSiteCode, int *sites)
         printf ("%d", aa[m]);
     printf ("\n");
 #   endif
-
 }
-
-
 
 
 Tree *GetTree (Param *parm, int chain, int state)
-
 {
-
     return mcmcTree[parm->treeIndex + ((2 * chain + state) * numTrees)];
-    
 }
-
-
-
 
 
 Tree *GetTreeFromIndex (int index, int chain, int state)
-
 {
-
     return mcmcTree[index + ((2 * chain + state) * numTrees)];
-    
 }
-
-
-
 
 
 /*-----------------------------------------------------------
@@ -12717,7 +12417,6 @@ Tree *GetTreeFromIndex (int index, int chain, int state)
 |
 ------------------------------------------------------------*/
 int GetUserTreeFromName (int *index, char *treeName)
-
 {
     int     i, j, k, nMatches;
     char    localName[100], temp[100];
@@ -12778,18 +12477,13 @@ int GetUserTreeFromName (int *index, char *treeName)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------
  |
  |   InitializeChainTrees: 'Constructor' for chain trees
  |
  -----------------------------------------------------------------------*/
 int InitializeChainTrees (Param *p, int from, int to, int isRooted)
-
 {
-    
     int     i, st, isCalibrated, isClock, nTaxa, numActiveHardConstraints=0;
     Tree    *tree, **treeHandle;
     Model   *mp;
@@ -12896,13 +12590,8 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 }
 
 
-
-
-
 int InitializeLinks (void)
-
 {
-
     int         i, j;
     
     linkNum = 0;
@@ -12913,16 +12602,11 @@ int InitializeLinks (void)
         }
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /* InitializeTreeCalibrations: Set calibrations for tree nodes */
 int InitializeTreeCalibrations (Tree *t)
-
 {
     int         i;
     TreeNode    *p;
@@ -12956,9 +12640,6 @@ int InitializeTreeCalibrations (Tree *t)
 }
 
 
-
-
-
 int IsApplicable (Param *param)
 {
     if (param == NULL)
@@ -12966,9 +12647,6 @@ int IsApplicable (Param *param)
 
     return YES;
 }
-
-
-
 
 
 int IsApplicable_ThreeTaxaOrMore (Param *param)
@@ -12980,9 +12658,6 @@ int IsApplicable_ThreeTaxaOrMore (Param *param)
 }
 
 
-
-
-
 int IsApplicable_FourTaxaOrMore (Param *param)
 {
     if (LargestMovableSubtree (param) >= 4)
@@ -12992,9 +12667,6 @@ int IsApplicable_FourTaxaOrMore (Param *param)
 }
 
 
-
-
-
 int IsApplicable_FiveTaxaOrMore (Param *param)
 {
     if (LargestMovableSubtree (param) >= 5)
@@ -13002,9 +12674,6 @@ int IsApplicable_FiveTaxaOrMore (Param *param)
     else
         return NO;
 }
-
-
-
 
 
 int IsApplicableTreeAgeMove (Param *param)
@@ -13030,9 +12699,6 @@ int IsApplicableTreeAgeMove (Param *param)
 }
 
 
-
-
-
 int IsApplicable_FossilEdgeMove (Param *param)
 {
     ModelParams *mp = &modelParams[param->relParts[0]];
@@ -13044,13 +12710,8 @@ int IsApplicable_FossilEdgeMove (Param *param)
 }
 
 
-
-
-
 int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2)
-
 {
-
     int         i, isSame, isFirstNucleotide, isSecondNucleotide, isFirstProtein, isSecondProtein, nDiff, temp1, temp2;
 
     isSame = YES;
@@ -14936,11 +14597,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         }
     
     return (isSame);
-    
 }
-
-
-
 
 
 int LargestMovableSubtree(Param *treeParam)
@@ -15035,17 +14692,11 @@ int LargestMovableSubtree(Param *treeParam)
     free(constraintPartition);
    
     return largestSubtree;
-    
 }
 
 
-
-
-
 int Link (void)
-
 {
-
     int         i, j;
     
     for (j=0; j<NUM_LINKED; j++)
@@ -15057,17 +14708,11 @@ int Link (void)
         }
         
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int NumActiveParts (void)
-
 {
-
     int     i, nApplied;
     
     nApplied = 0;
@@ -15076,15 +14721,10 @@ int NumActiveParts (void)
             nApplied++;
 
     return (nApplied);
-    
 }
 
 
-
-
-
 int NumInformativeHardConstraints (ModelParams *mp)
-
 {
     int             i, j, k, a, numInformativeHardConstraints, nLongsNeeded;
     BitsLong        *constraintPartition, *mask;
@@ -15133,17 +14773,11 @@ int NumInformativeHardConstraints (ModelParams *mp)
         }
         
     return numInformativeHardConstraints;
-    
 }
 
 
-
-
-
 int NumNonExcludedChar (void)
-
 {
-
     int     i, n;
     
     /* count number of non-excluded characters */
@@ -15157,17 +14791,11 @@ int NumNonExcludedChar (void)
         }
     
     return n;
-    
 }
 
 
-
-
-
 int NumStates (int part)
-
 {
-
     if (modelParams[part].dataType == DNA || modelParams[part].dataType == RNA)
         {
         if (!strcmp(modelParams[part].nucModel, "4by4"))
@@ -15206,11 +14834,7 @@ int NumStates (int part)
         }
         
     return (-1);
-
 }
-
-
-
 
 
 /*-----------------------------------------------------------------------
@@ -15219,19 +14843,12 @@ int NumStates (int part)
 |
 ------------------------------------------------------------------------*/
 int PrintCompMatrix (void)
-
 {
     int             i, j, k, c, d;
     ModelInfo       *m;
     ModelParams     *mp;
     char            tempName[100];
     char            (*whichChar)(int);
-
-    extern char     WhichAA (int x);
-    extern char     WhichNuc (int x);
-    extern char     WhichRes (int x);
-    extern char     WhichStand (int x);
-
 
     if (!compMatrix)
         return ERROR;
@@ -15358,11 +14975,7 @@ int PrintCompMatrix (void)
         }   /* next division */
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------------
@@ -15372,16 +14985,8 @@ int PrintCompMatrix (void)
 |
 ------------------------------------------------------------------------*/
 int PrintMatrix (void)
-
 {
-
     int             i, j=0, c, printWidth, nextColumn;
-
-    extern char     WhichAA (int x);
-    extern char     WhichNuc (int x);
-    extern char     WhichRes (int x);
-    extern char     WhichStand (int x);
-
 
     if (!matrix)
         return ERROR;
@@ -15423,11 +15028,7 @@ int PrintMatrix (void)
         }
 
     return NO_ERROR;
-
 }
-
-
-
 
 
 /*--------------------------------------------------------------
@@ -15436,9 +15037,7 @@ int PrintMatrix (void)
 |
 ---------------------------------------------------------------*/
 int ProcessStdChars (RandLong *seed)
-
 {
-
     int             c, d, i, j, k, n, ts, index, numStandardChars, origCharPos, *bsIndex;
     char            piHeader[30];
     ModelInfo       *m;
@@ -15824,11 +15423,7 @@ int ProcessStdChars (RandLong *seed)
     FillStdStateFreqs( 0 , numGlobalChains, seed);
 
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*--------------------------------------------------------------
@@ -15838,7 +15433,6 @@ int ProcessStdChars (RandLong *seed)
 ---------------------------------------------------------------*/
 void FillStdStateFreqs(int chfrom, int chto, RandLong *seed)
 {
-
     int     chn, n, i, j, k, b, c, nb, index;
     MrBFlt  *subValue, sum, symDir[10];
     Param   *p;
@@ -15928,13 +15522,8 @@ void FillStdStateFreqs(int chfrom, int chto, RandLong *seed)
 }
 
 
-
-
-
 int SetAARates (void)
-
 {
-
     int         i, j;
     MrBFlt      diff, sum, scaler;
     
@@ -17416,17 +17005,11 @@ int SetAARates (void)
 #   endif
 
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 void SetCode (int part)
-
 {
-    
     int     i, s, s1, s2, s3, ns;
     
     modelParams[part].codon[ 0] = 12; /* AAA Lys */
@@ -17568,17 +17151,11 @@ void SetCode (int part)
                     modelParams[part].codonAAs[s] = modelParams[part].codon[s1*16 + s2*4 + s3];
                     s++;
                     }
-
 }
 
 
-
-
-
 int SetLocalTaxa (void)
-
 {
-
     int         i, j;
     
     /* free memory if allocated */
@@ -17635,11 +17212,7 @@ int SetLocalTaxa (void)
 #   endif
         
     return (NO_ERROR);
-    
 }
-
-
-
 
 
 /*----------------------------------------------------------------------------
@@ -17649,9 +17222,7 @@ int SetLocalTaxa (void)
 |
 -----------------------------------------------------------------------------*/
 int SetModelDefaults (void)
-
 {
-
     int         j;
 
     MrBayesPrint ("%s   Setting model defaults\n", spacer);
@@ -17691,11 +17262,7 @@ int SetModelDefaults (void)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*----------------------------------------------------------------------------
@@ -17705,9 +17272,7 @@ int SetModelDefaults (void)
 |
 -----------------------------------------------------------------------------*/
 int SetModelInfo (void)
-
 {
-
     int             i, j, chn, ts;
     ModelParams     *mp;
     ModelInfo       *m;
@@ -18096,9 +17661,6 @@ int SetModelInfo (void)
 }
 
 
-
-
-
 /*-----------------------------------------------------------------
 |
 |   SetModelParams: Set up parameter structs for all model
@@ -18106,9 +17668,7 @@ int SetModelInfo (void)
 |
 |----------------------------------------------------------------*/
 int SetModelParams (void)
-
 {
-
     int             c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
     char            tempCodon[15], tempMult[15], *tempStr,temp[30];
@@ -19836,9 +19396,6 @@ int SetModelParams (void)
 }
 
 
-
-
-
 /*----------------------------------------------------------------------------
 |
 |   SetMoves: This function will set up the applicable moves that could
@@ -19846,9 +19403,7 @@ int SetModelParams (void)
 |
 -----------------------------------------------------------------------------*/
 int SetMoves (void)
-
 {
-    
     int         i, j, k, moveIndex;
     Param       *param;
     
@@ -19933,16 +19488,11 @@ int SetMoves (void)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /** SetPopSizeParam: Set population size values for a species tree from an input tree */
 int SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt)
-
 {
     int         i, j, k, nLongsNeeded;
     MrBFlt      *values;
@@ -19992,12 +19542,8 @@ int SetPopSizeParam (Param *param, int chn, int state, PolyTree *pt)
 }
 
 
-
-
-
 /* SetRelaxedClockParam: set values for a relaxed clock param from an input tree */
 int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
-
 {
     int         i, j, k, *nEvents=NULL, *nEventsP=NULL, nLongsNeeded, isEventSet;
     MrBFlt       *effectiveBranchLengthP=NULL, *branchRate=NULL,
@@ -20168,18 +19714,13 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
 }
 
 
-
-
-
 /*------------------------------------------------------------------------
 |
 |   SetUpAnalysis: Set parameters and moves
 |
 ------------------------------------------------------------------------*/
 int SetUpAnalysis (RandLong *seed)
-
 {
-
     setUpAnalysisSuccess=NO;
 
     /* calculate number of characters and taxa */
@@ -20257,17 +19798,11 @@ int SetUpAnalysis (RandLong *seed)
     setUpAnalysisSuccess=YES;
     
     return (NO_ERROR);
-    
 }
 
 
-
-
-
 int SetUpLinkTable (void)
-
 {
-
     int         i, j, k, m, paramCount, isApplicable1, isApplicable2,
                 isFirst, isSame;
     int         *check, *modelId;
@@ -20411,11 +19946,7 @@ int SetUpLinkTable (void)
     free (check);
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------------
@@ -20424,9 +19955,7 @@ int SetUpLinkTable (void)
 |
 ------------------------------------------------------------------------*/
 void SetUpMoveTypes (void)
-
 {
-    
     /* Register the move type here when new move functions are added 
        Remember to check that the number of move types does not exceed NUM_MOVE_TYPES
        defined in bayes.h.         */
@@ -22212,18 +21741,12 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     
     numMoveTypes = i;
-    
 }
-
-
-
 
 
 /* ShowModel: Display model on screen */
 int ShowModel (void)
-
 {
-    
     int         i, j, ns;
 
     MrBayesPrint ("%s   Model settings:\n\n", spacer);
@@ -22779,10 +22302,7 @@ int ShowModel (void)
     ShowParameters (NO, NO, NO);
     
     return (NO_ERROR);
-    
 }
-
-
 
 
 /*------------------------------------------------------------------------------
@@ -22791,9 +22311,7 @@ int ShowModel (void)
 |
 ------------------------------------------------------------------------------*/
 int ShowMoves (int used)
-
 {
-
     int             i, k, run, chain, chainIndex, areRunsSame, areChainsSame, numPrintedMoves;
     MCMCMove        *mv;
     
@@ -23042,11 +22560,7 @@ int ShowMoves (int used)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*------------------------------------------------------------------------------
@@ -23055,9 +22569,7 @@ int ShowMoves (int used)
 |
 ------------------------------------------------------------------------------*/
 int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
-
 {
-
     int             a, b, d, i, j, k, m, n, run, chain, shouldPrint, isSame, areRunsSame, areChainsSame, nValues,
                     chainIndex, refIndex, numPrinted, numMovedChains, printedCol, screenWidth=100;
     Param           *p;
@@ -23065,7 +22577,6 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
     ModelInfo       *ms;
     MrBFlt          *value, *refValue, *subValue;
     MCMCMove        *mv;
-    
     
     MrBayesPrint ("%s   Active parameters: \n\n", spacer);
     if (numCurrentDivisions > 1)
@@ -24326,23 +23837,13 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
         }   /* next parameter */
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 int Unlink (void)
-
 {
-    
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /*-------------------------------------------------
@@ -24358,7 +23859,6 @@ int Unlink (void)
 --------------------------------------------------*/
 int UpdateClockRate(MrBFlt clockRate, int chain)
 {
-
     int i, updateTrees;
     MrBFlt      *clockRatep;
     Tree        *t, *t_calibrated=NULL;
@@ -24474,11 +23974,8 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             }
         }
 
-return (NO_ERROR);
+    return (NO_ERROR);
 }
-
-
-
 
 
 /*----------------------------------------------
@@ -24489,7 +23986,6 @@ return (NO_ERROR);
 |
 -----------------------------------------------*/
 int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *evolLength, TreeNode *p, MrBFlt baseRate)
-
 {
     int     i;
     MrBFlt  endRate;
@@ -24555,9 +24051,6 @@ int UpdateCppEvolLength (int *nEvents, MrBFlt **pos, MrBFlt **rateMult, MrBFlt *
 }
 
 
-
-
-
 /*-------------------------------------------------
  |
  |  UpdateCppEvolLengths: Recalculate effective
@@ -24592,9 +24085,6 @@ int UpdateCppEvolLengths (Param *param, TreeNode *p, int chain)
 }
 
 
-
-
-
 /* UpdateTK02EvolLengths: update branch lengths for tk02 model */
 int UpdateTK02EvolLengths (Param *param, Tree *t, int chain)
 {
@@ -24614,9 +24104,6 @@ int UpdateTK02EvolLengths (Param *param, Tree *t, int chain)
 }
 
 
-
-
-
 /* UpdateIgrBranchLengths: update branch lengths for igr model */
 int UpdateIgrBrachLengths (Param *param, Tree *t, int chain)
 {
@@ -24634,7 +24121,4 @@ int UpdateIgrBrachLengths (Param *param, Tree *t, int chain)
 
     return (NO_ERROR);
 }
-
-
-
 

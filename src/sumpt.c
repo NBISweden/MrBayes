@@ -45,7 +45,6 @@
 
 const char* const svnRevisionSumptC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
-
 typedef struct partctr
     {
     struct partctr  *left, *right;
@@ -88,13 +87,11 @@ FILE     *rateMultfp=NULL;
 
 #undef  DEBUG_CONTREE
 
-
 extern int inSumtCommand;
 extern int inComparetreeCommand;
 extern int DoUserTree (void);
 extern int DoUserTreeParm (char *parmName, char *tkn);
 extern int SafeFclose(FILE **);
-
 
 /* local prototypes */
 int      CompareModelProbs (const void *x, const void *y);
@@ -138,16 +135,12 @@ int      TreeProb (void);
 void     WriteConTree (PolyNode *p, FILE *fp, int showSupport);
 void     WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts);
 
-
 /* local (to this file) */
 static int          numUniqueSplitsFound, numUniqueTreesFound, numPackedTrees[2], numAsterices;  /* length of local to this file variables */
 static FILE        *fpParts=NULL, *fpTstat=NULL, *fpVstat, *fpCon=NULL, *fpTrees=NULL, *fpDists=NULL;  /* file pointers */
 static PartCtr     *partCtrRoot = NULL;        /* binary tree for holding splits info      */
 static TreeCtr     *treeCtrRoot = NULL;        /* binary tree for holding unique tree info */
 static PackedTree  *packedTreeList[2];         /* list of trees in packed format           */
-
-
-
 
 
 /* AllocateParameterSamples: Allocate space for parameter samples */
@@ -181,9 +174,6 @@ int AllocateParameterSamples (ParameterSample **parameterSamples, int numRuns, i
 }
 
 
-
-
-
 /** Compare function (ModelProb) for qsort. Note reverse sort order (from larger to smaller probs) */
 int CompareModelProbs (const void *x, const void *y) {
 
@@ -196,13 +186,8 @@ int CompareModelProbs (const void *x, const void *y) {
 }
 
 
-
-
-
 int DoSump (void)
-
 {
-
     int             i, n, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
                     unreliable, oneUnreliable, burnin, longestHeader, len;
     MrBFlt          mean, harm_mean;
@@ -542,11 +527,8 @@ errorExit:
 }
 
 
-
-
 int DoSumSs (void)
 {
-
     int             i, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
                     longestHeader, len;
     char            **headerNames=NULL, temp[120];
@@ -1096,13 +1078,8 @@ errorExit:
 }
 
 
-
-
-
 int DoSumpParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[100];
@@ -1349,17 +1326,11 @@ int DoSumpParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoSumSsParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[100];
@@ -1655,11 +1626,7 @@ int DoSumSsParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
-
-
-
 
 
 /* ExamineSumpFile: Collect info on the parameter samples in the file */
@@ -1943,9 +1910,6 @@ errorExit:
 }
 
 
-
-
-
 /***************************************************
 |
 |   FindHeader: Find token in list
@@ -1974,9 +1938,6 @@ int FindHeader (char *token, char **headerNames, int nHeaders, int *index)
 }
 
 
-
-
-
 /* FreeParameterSamples: Free parameter samples space */
 void FreeParameterSamples (ParameterSample *parameterSamples)
 {
@@ -1987,9 +1948,6 @@ void FreeParameterSamples (ParameterSample *parameterSamples)
         free (parameterSamples);
         }
 }
-
-
-
 
 
 /***************************************************
@@ -2016,9 +1974,6 @@ int GetHeaders (char ***headerNames, char *headerLine, int *nHeaders)
                 
     return (NO_ERROR);  
 }
-
-
-
 
 
 /* PrintMargLikes: Print marginal likelihoods to screen and to .lstat file */
@@ -2155,9 +2110,6 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* PrintModelStats: Print model stats to screen and to .mstat file */
@@ -2361,9 +2313,6 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 }
 
 
-
-
-
 /* PrintOverlayPlot: Print overlay x-y plot of log likelihood vs. generation for several runs */
 int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns,  int startingFrom, int nSamples)
 {
@@ -2530,9 +2479,6 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns,  int startingFr
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /* PrintParamStats: Print parameter table (not model indicator params) to screen and .pstat file */
@@ -2706,9 +2652,6 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 }
 
 
-
-
-
 /* PrintPlot: Print x-y plot of log likelihood vs. generation */
 int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 {
@@ -2817,9 +2760,6 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
 }
 
 
-
-
-
 void PrintPlotHeader (void)
 {
     MrBayesPrint ("\n");
@@ -2858,9 +2798,6 @@ void PrintPlotHeader (void)
         MrBayesPrint ("%s   a total of ngen / samplefreq samples taken during a MCMC analysis.\n", spacer);
         }
 }
-
-
-
 
 
 /* ReadParamSamples: Read parameter samples from .p file */
@@ -2962,11 +2899,7 @@ errorExit:
 }
 
 
-
-
-
 PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
-
 {
     int     i, n, comp, nLongsNeeded = sumtParams.BitsLongsNeeded;
     
@@ -3094,11 +3027,7 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
 }
 
 
-
-
-
 TreeCtr *AddSumtTree (TreeCtr *r, int *order)
-
 {
     int     i, comp;
 
@@ -3152,14 +3081,9 @@ TreeCtr *AddSumtTree (TreeCtr *r, int *order)
 }
 
 
-
-
-
 /* AllocPartCtr: Allocate space for one partition counter node using info in sumtParams */
 PartCtr *AllocPartCtr ()
-
 {
-
     int             i, j;
     PartCtr         *r;
     
@@ -3219,12 +3143,8 @@ PartCtr *AllocPartCtr ()
 }
 
 
-
-
-
 /* AllocTreeCtr: Allocate space for a tree counter node using info in sumtParams struct*/
 TreeCtr *AllocTreeCtr ()
-
 {
     TreeCtr     *r;
 
@@ -3236,9 +3156,6 @@ TreeCtr *AllocTreeCtr ()
 
     return r;
 }
-
-
-
 
 
 void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3)
@@ -3294,11 +3211,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
         printf ("%4d -- %4d (%lf) %4d (%lf)\n", i, list1[i], lengths1[i], list2[i], lengths2[i]);
         }
 #   endif
-
 }
-
-
-
 
 
 /* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
@@ -3696,13 +3609,8 @@ treeConstruction:
 }
 
 
-
-
-
 MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
-
 {
-
     int         i, nEvents;
     MrBFlt      ancRate, branchRate, *rate, *pos;
     PolyNode    *q;
@@ -3763,13 +3671,8 @@ MrBFlt CppEvolRate (PolyTree *t, PolyNode *p, int eSet)
 }
 
 
-
-
-
 int DoCompareTree (void)
-
 {
-
     int             i, j, k, n, longestLineLength, brlensDef[2], numTreesInLastBlock[2],
                     lastTreeBlockBegin[2], lastTreeBlockEnd[2], xaxis, yaxis, starHolder[80],
                     minNumTrees, screenWidth, screenHeigth, numY[60], nSamples;
@@ -4516,18 +4419,12 @@ int DoCompareTree (void)
         expecting = Expecting(COMMAND);
         inComparetreeCommand = NO;
 
-        return (ERROR); 
-    
+        return (ERROR);
 }
 
 
-
-
-
 int DoCompareTreeParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[100];
@@ -4687,9 +4584,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
-
 
 
 #if defined (PRINT_RATEMULTIPLIERS_CPP)
@@ -4713,11 +4608,8 @@ int DELETE_ME_count_taxa(PolyNode *p)
 }
 
 
-
-
 void DELETE_ME_dump_depth(PolyNode *p)
 {
-
     /*print depth of two taxa clade*/
     /*
     if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
@@ -4744,13 +4636,8 @@ void DELETE_ME_dump_depth(PolyNode *p)
 #endif
 
 
-
-
-
 int DoSumt (void)
-
 {
-
     int             i, j=0, k, n, len, longestName, treeNo, numTreePartsToPrint,
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
                     longestHeader;
@@ -5747,13 +5634,8 @@ int DoSumt (void)
 }
 
 
-
-
-
 int DoSumtParm (char *parmName, char *tkn)
-
 {
-
     int         tempI;
     MrBFlt      tempD;
     char        tempStr[100];
@@ -6244,17 +6126,11 @@ int DoSumtParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
-
 }
 
 
-
-
-
 int DoSumtTree (void)
-
 {
-
     int             i, j, z, printEvery, nAstPerPrint, burnin;
     MrBFlt          x, y;
     PolyTree        *t;
@@ -6557,9 +6433,6 @@ int DoSumtTree (void)
 }
 
 
-
-
-
 int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef)
 {
     int     i, foundBegin, lineTerm, inTreeBlock, blockErrors, inSumtComment, lineNum, numTreesInBlock,
@@ -6747,12 +6620,8 @@ errorExit:
 }
 
 
-
-
-
 /* FreePartCtr: Recursively free partition counter nodes */
 void FreePartCtr (PartCtr *r)
-
 {
     int     i, j;
 
@@ -6802,9 +6671,6 @@ void FreePartCtr (PartCtr *r)
 }
 
 
-
-
-
 /* FreeSumtParams: Free parameters allocated in sumtParams struct */
 void FreeSumtParams(void)
 {
@@ -6847,14 +6713,9 @@ void FreeSumtParams(void)
 }
 
 
-
-
-
 /* FreeTreeCtr: Recursively free tree counter nodes */
 void FreeTreeCtr (TreeCtr *r)
-
 {
-
     if (r==NULL)
         return;
     
@@ -6866,9 +6727,6 @@ void FreeTreeCtr (TreeCtr *r)
     numUniqueTreesFound--;
     r = NULL;
 }
-
-
-
 
 
 /* Label: Calculate length of label and fill in char *label if not NULL */
@@ -6944,13 +6802,8 @@ int Label (PolyNode *p, int addIndex, char *label, int maxLength)
 }
 
 
-
-
-
 int OpenComptFiles (void)
-
 {
-
     int         len, previousFiles, oldNoWarn, oldAutoOverwrite;
     char        pFilename[120], dFilename[120];
     FILE        *fpTemp;
@@ -7027,13 +6880,8 @@ int OpenComptFiles (void)
 }
 
 
-
-
-
 int OpenSumtFiles (int treeNo)
-
 {
-
     int         i, len,  oldNoWarn, oldAutoOverwrite, previousFiles;
     char        pFilename[120], sFilename[120], vFilename[120], cFilename[120], tFilename[120];
     FILE        *fpTemp;
@@ -7189,11 +7037,7 @@ int OpenSumtFiles (int treeNo)
 }
 
 
-
-
-
 void PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index)
-
 {
     if (r != NULL)
         {
@@ -7205,12 +7049,8 @@ void PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index)
 }
 
 
-
-
-
 /* PrintBrlensToFile: Print brlens to file */
 int PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo)
-
 {
     int     i, j, runNo, numBrlens;
     char    filename[100];
@@ -7264,9 +7104,6 @@ int PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo)
 }
 
 
-
-
-
 /* PrintConTree: Print consensus tree in standard format readable by TreeView, Paup etc */
 void PrintConTree (FILE *fp, PolyTree *t)
 {
@@ -7294,9 +7131,6 @@ void PrintConTree (FILE *fp, PolyTree *t)
 }
 
 
-
-
-
 /* PrintFigTreeConTree: Print consensus tree in rich format for FigTree */
 void PrintFigTreeConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
 {
@@ -7314,11 +7148,7 @@ void PrintFigTreeConTree (FILE *fp, PolyTree *t, PartCtr **treeParts)
 }
 
 
-
-
-
 void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
-
 {
     int     i, postProbPercent, postProbSdPercent;
     MrBFlt  *support, mean, var, min, max;
@@ -7425,9 +7255,6 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
 }
 
 
-
-
-
 void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numPSRFSamples, MrBFlt *maxPSRF, MrBFlt *sumPSRF)
 {
     int j,k;
@@ -7476,9 +7303,6 @@ void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numP
         MrBayesPrintf (fpVstat, "\n");
         MrBayesPrint ("\n");
 }
-
-
-
 
 
 /* PrintSumtTaxaInfo: Print information on pruned and absent taxa */
@@ -7569,22 +7393,14 @@ void PrintSumtTaxaInfo (void)
 }
 
 
-
-
-
 /* Range: Determine range for a vector of MrBFlt values */
 void Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max)
-
 {    
     SortMrBFlt (vals, 0, nVals-1);
     
     *min  = vals[0];
     *max  = vals[nVals-1];
-
 }
-
-
-
 
 
 /* ResetTaxonSet: Reset included taxa and local outgroup number */
@@ -7604,11 +7420,7 @@ void ResetTaxonSet (void)
             numLocalTaxa++;
             }
         }
-
 }
-
-
-
 
 
 void ResetTranslateTable (void)
@@ -7630,13 +7442,8 @@ void ResetTranslateTable (void)
 }
 
 
-
-
-
 int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
-
 {
-
     int             i, j, k, nLines, from, to, treeWidth=0, barLength, printExponential,
                     precision, width, newPos, curPos, nTimes, numSpaces, maxLabelLength;
     char            *printLine, *markLine, temp[30], *label;
@@ -7867,15 +7674,11 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
     free (printLine);
 
     return NO_ERROR;
-
 }
         
-        
-        
+
 int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
-
 {
-
     int             i, j, k, treeWidth, minBranchLength, maxWidth, isTreeDivided,
                     printWidth, nLines, nodesToBePrinted, from, to, maxLabelLength,
                     maxLength;
@@ -8122,17 +7925,11 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
     free (printLine);
 
     return NO_ERROR;
-    
 }
 
 
-
-
-
 void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
-
 {
-
     int         i;
     BitsLong    x, y, bitsLongOne;
 
@@ -8147,17 +7944,11 @@ void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
         else
             MrBayesPrintf (fp, "*");
         }
-
 }
 
 
-
-
-
 void ShowSomeParts (FILE *fp, BitsLong *p, int offset, int nTaxaToShow)
-
 {
-
     int         i;
     BitsLong    x, y, bitsLongOne;
 
@@ -8175,13 +7966,8 @@ void ShowSomeParts (FILE *fp, BitsLong *p, int offset, int nTaxaToShow)
 }
 
 
-
-
-
 void SortPartCtr (PartCtr **item, int left, int right)
-
 {
-
     register int    i, j;
     PartCtr         *tempPartCtr;
     int             x;
@@ -8215,13 +8001,8 @@ void SortPartCtr (PartCtr **item, int left, int right)
 }
 
 
-
-
-
 void SortTerminalPartCtr (PartCtr **item, int len)
-
 {
-
     register int    i, j, maxCount;
     PartCtr         *temp;
 
@@ -8257,13 +8038,8 @@ void SortTerminalPartCtr (PartCtr **item, int len)
 }
 
 
-
-
-
 void SortTreeCtr (TreeCtr **item, int left, int right)
-
 {
-
     register int    i, j;
     TreeCtr         *tempTreeCtr;
     int             x;
@@ -8292,9 +8068,6 @@ void SortTreeCtr (TreeCtr **item, int left, int right)
     if (i < right)
         SortTreeCtr (item, i, right);
 }
-
-
-
 
 
 /* StoreSumtTree: Store tree in treeList in packed format */
@@ -8328,12 +8101,8 @@ int StoreSumtTree (PackedTree *treeList, int index, PolyTree *t)
 }
 
 
-
-
-
 /* TreeCtrUppass: extract TreeCtr nodes in uppass sequence */
 void TreeCtrUppass (TreeCtr *r, TreeCtr **uppass, int *index)
-
 {
     if (r != NULL)
         {
@@ -8345,13 +8114,8 @@ void TreeCtrUppass (TreeCtr *r, TreeCtr **uppass, int *index)
 }
 
 
-
-
-
 int TreeProb (void)
-
 {
-
     int         i, num, nInSets[5];
     MrBFlt      treeProb, cumTreeProb;
     TreeCtr     **trees;
@@ -8468,13 +8232,8 @@ int TreeProb (void)
 }
 
 
-
-
-
 void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
-
 {
-
     PolyNode        *q;
 
     if (p->anc != NULL)
@@ -8529,14 +8288,9 @@ void WriteConTree (PolyNode *p, FILE *fp, int showSupport)
 }
 
 
-
-
-
 /* WriteFigTreeConTree: Include rich information for each node in a consensus tree */
 void WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
-
 {
-
     PolyNode        *q;
 
     if (p->left == NULL)
@@ -8575,7 +8329,4 @@ void WriteFigTreeConTree (PolyNode *p, FILE *fp, PartCtr **treeParts)
             }
         }
 }
-
-
-
 

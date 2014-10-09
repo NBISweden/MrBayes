@@ -40,11 +40,9 @@ double      LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, d
 void        MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree);
 int         ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed);
 
-
 /* Global BEST variables */
 BitsLong    **speciesPairSets;
 double      *depthMatrix;
-
 
 /* Allocate variables used by best code during mcmc */
 void AllocateBestChainVariables (void)
@@ -80,9 +78,6 @@ void AllocateBestChainVariables (void)
 }
 
 
-
-
-
 /** Compare function (Depth struct) for qsort */
 int CompareDepths (const void *x, const void *y) {
 
@@ -93,9 +88,6 @@ int CompareDepths (const void *x, const void *y) {
     else
         return 0;
 }
-
-
-
 
 
 /** Compare function (doubles) for qsort */
@@ -140,16 +132,12 @@ int CompareNodesByX (const void *x, const void *y) {
 }
 
 
-
-
-
 /**-----------------------------------------------------------------
 |
 |   FillSpeciesTreeParams: Fill in species trees (start value)
 |
 ------------------------------------------------------------------*/
 int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
-
 {
     int         i, k, chn, numGeneTrees, freeBestChainVars;
     Param       *p;
@@ -215,9 +203,6 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
 }
 
 
-
-
-
 /**-----------------------------------------------------------------
 |
 |   FreeBestChainVariables: Free best variables used during an mcmc
@@ -226,7 +211,6 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
 ------------------------------------------------------------------*/
 void FreeBestChainVariables(void)
 {
-
     if (memAllocs[ALLOC_BEST] == YES) {
         free (speciesPairSets[0]);
         free (speciesPairSets);
@@ -238,9 +222,6 @@ void FreeBestChainVariables(void)
 
     memAllocs[ALLOC_BEST] = NO;
 }
-
-
-
 
 
 /**---------------------------------------------------------------------
@@ -304,9 +285,6 @@ int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /**---------------------------------------------------------------------
@@ -377,9 +355,6 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /**---------------------------------------------------------------------
@@ -487,9 +462,6 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /**---------------------------------------------------------------------
@@ -662,16 +634,12 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 }
 
 
-
-
-
 /**---------------------------------------------------------------------------------------
 |
 |   IsSpeciesTreeConsistent: Called when user tries to set a species tree or when
 |      attempting to use a species tree from a check point as starting value.
 |
 -----------------------------------------------------------------------------------------*/
-
 int IsSpeciesTreeConsistent (Tree *speciesTree, int chain)
 {
     int     i, answer, numGeneTrees, numUpperTriang, freeBestVars;
@@ -722,9 +690,6 @@ int IsSpeciesTreeConsistent (Tree *speciesTree, int chain)
 }
 
 
-
-
-
 /**---------------------------------------------------------------------------------------
 |
 |   LineagesIn: Recursive function to get number of gene tree lineages coming into each
@@ -771,9 +736,6 @@ void LineagesIn (TreeNode *geneTreeNode, TreeNode *speciesTreeNode)
 }
 
 
-
-
-
 /**-----------------------------------------------------------------
 |
 |   LnSpeciesTreeProb: Wrapper for LnJointGeneTreeSpeciesTreePr to
@@ -803,9 +765,6 @@ double LnSpeciesTreeProb(int chain)
 
     return lnProb;
 }
-
-
-
 
 
 /**-----------------------------------------------------------------
@@ -863,9 +822,6 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
 
     return lnLike + lnPrior;
 }
-
-
-
 
 
 /**-----------------------------------------------------------------
@@ -981,9 +937,6 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 }
 
 
-
-
-
 /**---------------------------------------------------------------------
 |
 |   LnProposalProbSpeciesTree:
@@ -997,8 +950,8 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 |   @param      expRate         Rate of truncated exponential distribution
 |   @returns    Returns probability of proposing the species tree
 ----------------------------------------------------------------------*/
-double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate) {
-
+double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate)
+{
     int         i, left, right, index, nLongsNeeded, freeBitsets;
     double      dist, normConst, negLambdaX, eNegLambdaX, density, prob,
                 sumDensRatio, prodProb, lnProb;
@@ -1052,9 +1005,6 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
 
     return (NO_ERROR);
 }
-
-
-
 
 
 /**-----------------------------------------------------------------
@@ -1121,9 +1071,6 @@ void MapGeneTreeToSpeciesTree (Tree *geneTree, Tree *speciesTree)
 }
 
 
-
-
-
 /**---------------------------------------------------------------------
 |
 |   ModifyDepthMatrix:
@@ -1155,8 +1102,6 @@ int ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed)
 }
 
 
-
-
 /**-----------------------------------------------------------------
 |
 |   Move_GeneTree1: Propose a new gene tree using ExtSPRClock
@@ -1169,7 +1114,6 @@ int ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed)
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
 int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
@@ -1260,9 +1204,6 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 }
 
 
-
-
-
 /**-----------------------------------------------------------------
 |
 |   Move_GeneTree2: Propose a new gene tree using NNIClock
@@ -1275,7 +1216,6 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
 int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
@@ -1366,9 +1306,6 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 }
 
 
-
-
-
 /**-----------------------------------------------------------------
 |
 |   Move_GeneTree3: Propose a new gene tree using ParsSPRClock
@@ -1381,7 +1318,6 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 |   @param mvp              Pointer to tuning parameter(s)
 ------------------------------------------------------------------*/
 int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int             i, numGeneTrees, numUpperTriang;
     double          newLnProb, oldLnProb, backwardLnProposalProb, forwardLnProposalProb,
@@ -1472,18 +1408,13 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 }
 
 
-
-
-
 /*-----------------------------------------------------------------------------------
 |
 |   Move_NodeSliderGeneTree: Move the position of one (root or nonroot) node in a
 |      gene tree inside a species tree.
 |
 -------------------------------------------------------------------------------------*/
-    
 int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-
 {
     int         i, *nEvents;
     MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth,
@@ -1756,9 +1687,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
 }
 
 
-
-
-
 /*------------------------------------------------------------------
 |
 |   Move_SpeciesTree: Propose a new species tree
@@ -1850,9 +1778,6 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 }
 
 
-
-
-
 /** Show upper triangular matrix */
 void ShowUpperTriangMatrix (double *values, int squareSize)
 {
@@ -1871,7 +1796,4 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
     }
     printf ("\n");
 }
-
-
-
 

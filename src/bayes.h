@@ -52,7 +52,6 @@
 #  endif
 #endif
 
-
 /* Previous problems with bitfield operations may have been caused by several things. One potential
    problem has been that MrBayes has used signed ints or signed longs for the bit operations, and
    not all compilers perform bitfield operations on signed ints and longs in the expected manner
@@ -72,19 +71,17 @@
 
    FR 2013-07-06
  */
-
 typedef unsigned long BitsLong;
 typedef long RandLong;
 
-
-typedef double MrBFlt;      /* double used for parameter values and generally for floating point values, if set to float MPI would not work becouse of use MPI_DOUBLE*/
 #define MRBFLT_MAX DBL_MAX  /* maximum possible value that can be stored in MrBFlt */
-#define MRBFLT_MIN DBL_MIN  /* maximum possible value that can be stored in MrBFlt */
+#define MRBFLT_MIN DBL_MIN  /* minimum possible value that can be stored in MrBFlt */
 #define MRBFLT_NEG_MAX (-DBL_MAX)  /* maximum possible negative value that can be stored in MrBFlt */
+typedef double MrBFlt;      /* double used for parameter values and generally for floating point values, 
+                               if set to float MPI would not work becouse of use MPI_DOUBLE */
 typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
                             /* set CLFlt to double if you want increased precision */
                             /* NOTE: CLFlt = double not compatible with SSE_ENABLED */
-
 
 /* Define a compiler and vector size for the SSE code */
 #if defined (SSE_ENABLED)
@@ -98,7 +95,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #    include <xmmintrin.h>
 #  endif
 #endif
-
 
 /* For comparing floating points: two values are the same if the absolute difference is less then
    this value.
@@ -500,7 +496,6 @@ typedef struct node
     }
     TreeNode;
 
-
 /* typedef for binary tree */
 typedef struct 
     {
@@ -527,7 +522,6 @@ typedef struct
     }
     Tree;
 
-
 /* typedef for node in polytomous tree */
 typedef struct pNode
     {
@@ -548,7 +542,6 @@ typedef struct pNode
     Calibration     *calibration;       /*!< pointer to dating of node                    */
     }
     PolyNode;
-
 
 /* typedef for polytomous tree */
 typedef struct 
@@ -626,7 +619,6 @@ typedef struct param
     LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                         */
     LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function                   */
     } Param;
-
 
 #if defined(THREADS_ENABLED)
 #include <pthread.h>
@@ -796,7 +788,6 @@ typedef struct s_launch_struct
 #endif
 #endif
 
-
 /* typedef for a MoveFxn */
 typedef int (MoveFxn)(Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
@@ -830,10 +821,8 @@ typedef struct
     MrBFlt       targetRate;         /* default target acceptance rate for autotuning */
     } MoveType;
 
-
 /* max number of move types */
 #define NUM_MOVE_TYPES 100
-
 
 /* struct holding info on each move */
 /* Note: This allows several different moves to affect the same parameter */
@@ -866,7 +855,6 @@ typedef int (*LikeUpFxn)(TreeNode *, int, int);
 typedef int (*PrintAncStFxn)(TreeNode *, int, int);
 typedef int (*StateCodeFxn) (int);
 typedef int (*PrintSiteRateFxn) (TreeNode *, int, int);
-
 
 typedef struct cmdtyp           
     {
@@ -1303,7 +1291,6 @@ typedef struct modelinfo
 
     } ModelInfo;
 
-
 typedef struct sumt
     {
     int        *absentTaxa;            /* information on absent taxa                    */
@@ -1387,7 +1374,6 @@ typedef struct sumss
     MrBFlt      discardFraction;       /* Proportion of samples discarded when ploting step plot.*/
     } Sumss;
 
-
 typedef struct plot
     {
     char        plotFileName[120];     /* name of input file                            */
@@ -1469,7 +1455,6 @@ typedef struct
     char    **names;
     }
     NameSet;
-
 
 /* global variables */
 extern int              abortMove;                              /* flag determining whether to abort move        */
