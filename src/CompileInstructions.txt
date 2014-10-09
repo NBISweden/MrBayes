@@ -13,10 +13,10 @@ How to compile MrBayes from source
 ==================================
 
 Pre-requirements:
-* gcc (or other C++ compiler)
+* gcc (or other C compiler)
 * autotools (autoconf, automake, etc)
 * optional: MPI compiler and library
-* optional: Beagle library
+* optional: BEAGLE library
 
 Compilation: 
 To compile MrBayes in UNIX-like environments, first navigate to the folder containing
@@ -47,24 +47,22 @@ Configuration options
 =====================
 
 1) BEAGLE
-MrBayes 3.2 uses the BEAGLE library by default. You should either install the BEAGLE 
-library from "http://beast.bio.ed.ac.uk/BEAGLE" or disable use of the library by 
-invoking the configure script with option "--with-beagle=no", i.e. 
+MrBayes 3.2 uses the BEAGLE library by default. You should install the library from 
+"http://beast.bio.ed.ac.uk/BEAGLE" and checkout the BEAGLE header files into your path:
+
+> svn checkout http://beagle-lib.googlecode.com/svn/trunk/ /usr/local/include/libhmsbeagle
+
+Or disable the use of the library with option "--with-beagle=no", i.e. 
 
 > ./configure --with-beagle=no
 
-Note: without beagle library MrBayes may run slower. And to compile with beagle, checkout 
-the header files using
-
-> svn checkout http://beagle-lib.googlecode.com/svn/trunk/ beagle-lib
-
-and put them in "/usr/local/include/libhmsbeagle-1/libhmsbeagle".
+Note: without BEAGLE library MrBayes may run slower.
 
 2) SSE code
 All main-stream modern processors have support for SSE instructions which are utilized 
 by default by MrBayes 3.2 in order to substantially speed up execution. If you 
-experience problems with the SSE code, you can disable the use of SSE code by invoking
-the configure script with the option "--enable-sse=no", i.e.
+experience problems with the SSE code, you can disable the use of SSE code with option 
+"--enable-sse=no", i.e.
 
 > ./configure --enable-sse=no
 
@@ -75,11 +73,11 @@ SSE code to compile.
 
 3) MPI version
 To make use of MPI code to parallelize MrBayes computations across several processors
-or CPU cores, you should invoke the configure script with the option "--enable-mpi=yes".
-The MPI code can be used both together with the Beagle library and the SSE code. Your 
+or CPU cores, you should invoke the configure script with option "--enable-mpi=yes".
+The MPI code can be used together with the BEAGLE library and the SSE code. Your 
 computer also needs to have an MPI implementation installed, for instance OpenMPI or 
 MPICH, and the environment needs to be set up to run MPI programs. To install an MPI 
-version of MrBayes using BEAGLE and SSE, use:
+version of MrBayes with BEAGLE and SSE, use:
 
 > autoconf
 > ./configure --enable-mpi=yes
@@ -141,10 +139,18 @@ To install the most recent version of openmpi, use:
 
 > brew install openmpi
 
-Simply, you can even install MrBayes using HomeBrew:
+Simply, you can directly install MrBayes using HomeBrew:
 
 > brew tap homebrew/science
 > brew install mrbayes
+
+The dependent formulas will be installed simultaneously. To enable MPI and BEAGLE, use:
+
+> brew install mrbayes --with-beagle --with-mpi
+
+To uninstall mrbayes, use:
+
+> brew uninstall mrbayes
 
 To install an alternative gcc (not recommended), use the following commands:
 
@@ -156,7 +162,7 @@ gcc, you need to specify the version number you want. After installation, you mi
 need to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
 For instance, you can use the following commands:
 
-> sudo mv -i /usr/bin/gcc /usr/bin/gcc-alt
+> sudo mv -i /usr/bin/gcc /usr/bin/gcc-old
 > sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
 
 
