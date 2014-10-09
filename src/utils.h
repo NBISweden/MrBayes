@@ -16,9 +16,10 @@ typedef struct
 
 int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
-void     AlignedSafeFree(void **ptr);
+void    *AlignedMalloc (size_t size, size_t alignment);
+void     AlignedSafeFree (void **ptr);
 #endif
-int      AreBitfieldsEqual(BitsLong *p, BitsLong *q, int length);
+int      AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length);
 int      Bit (int n, BitsLong *p);
 void     ClearBit (int i, BitsLong *bits);
 void     ClearBits (BitsLong *bits, int nLongs);

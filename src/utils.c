@@ -165,12 +165,39 @@ int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 
 
 #if defined (SSE_ENABLED)
-/* Aligned safe free */
+void * AlignedMalloc (size_t size, size_t alignment)
+{
+    void *mem;
+
+    #if defined GCC_SSE     /* gcc compiler */
+    if (posix_memalign (&mem, alignment, size))
+        return 0;
+    #elif defined ICC_SSE   /* icc compiler */
+    mem = _mm_malloc (size, alignment);
+    #elif defined MS_VCPP_SSE  /* ms visual */
+    mem = _aligned_malloc (size, alignment);
+    #else
+    mem = malloc (size);
+    #endif
+
+    return mem;
+}
+
+
+
+
+
 void AlignedSafeFree (void **ptr)
 {
 
-    ALIGNED_FREE (*ptr);
-
+    #if defined ICC_SSE     /* icc compiler */
+    _mm_free (*ptr);
+    #elif defined MS_VCPP_SSE  /* ms visual */
+    _aligned_free (*ptr);
+    #else
+    free (*ptr);
+    #endif
+    
     (*ptr) = NULL;
 }
 #endif

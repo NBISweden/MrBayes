@@ -11400,11 +11400,7 @@ int InitChainCondLikes (void)
                         numReps = m->numGammaCats * m->numOmegaCats;
                     k = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates * numReps;
                     
-#       if defined (MS_VCPP_SSE)
-                    m->condLikes[i] = (CLFlt*) ALIGNED_MALLOC(k * sizeof(CLFlt), 16);
-#       else
-                    ALIGNED_MALLOC((void **)(&m->condLikes[i]), 16, k * sizeof(CLFlt));
-#       endif
+                    m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 16);
                     if (!m->condLikes[i])
                         return (ERROR);
 
@@ -11435,11 +11431,7 @@ int InitChainCondLikes (void)
                 if (m->useSSE == YES)
                     {
                     /* allocate space with padding */
-#       if defined (MS_VCPP_SSE)
-                    m->scalers[i] = (CLFlt*) ALIGNED_MALLOC(m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
-#       else
-                    ALIGNED_MALLOC((void **)(&(m->scalers[i])), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt));
-#       endif
+                    m->scalers[i] = (CLFlt*) AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
                     if (!m->scalers[i])
                         return (ERROR);
                     for (j=0; j<m->numSSEChars*FLOATS_PER_VEC; j++)
@@ -11476,13 +11468,10 @@ int InitChainCondLikes (void)
                     m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
                     if (!m->clP_SSE)
                         return (ERROR);
-#       if defined (MS_VCPP_SSE)
-                    m->lnL_SSE  = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-                    m->lnLI_SSE = ALIGNED_MALLOC (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-#       else
-                    ALIGNED_MALLOC ((void **)(&m->lnL_SSE) , 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
-                    ALIGNED_MALLOC ((void **)(&m->lnLI_SSE), 16, m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*));
-#       endif
+                    m->lnL_SSE  = AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+                    m->lnLI_SSE = AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
+                    if (!m->lnL_SSE || !m->lnLI_SSE)
+                        return (ERROR);
                     }
 #   endif
                 }
@@ -12073,11 +12062,7 @@ int InitInvCondLikes (void)
         usingInvCondLikes = YES;
 #   if defined (SSE_ENABLED)
         c1 = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates;
-#       if defined (MS_VCPP_SSE)
-        m->invCondLikes = (CLFlt *) ALIGNED_MALLOC (c1 * sizeof(CLFlt), 16);
-#       else
-        ALIGNED_MALLOC ((void **)(&m->invCondLikes), 16, c1 * sizeof(CLFlt));
-#       endif
+        m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 16);
         for (i=0; i<c1; i++)
             m->invCondLikes[i] = 0.0f;
 #   else

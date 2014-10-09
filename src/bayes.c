@@ -910,11 +910,7 @@ void PrintHeader (void)
     MrBayesPrint ("                     on the commands that are available.\n\n");
     MrBayesPrint ("                   Type \"about\" for authorship and general\n");
     MrBayesPrint ("                       information about the program.\n\n\n");
-    
-//  #ifndef NDEBUG
-//  MrBayesPrint ("Debugging: assert() enabled\n\n");
-//  #endif
-    
+
 }
 
 
