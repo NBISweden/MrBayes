@@ -8325,8 +8325,6 @@ int DoMcmcParm (char *parmName, char *tkn)
                         chainParams.diagnStat = AVGSTDDEV;
                     else /* if (!strcmp(tempStr, "Maxstddev")) */
                         chainParams.diagnStat = MAXSTDDEV;
-                    MrBayesPrint ("%s   Setting diagnostics statistic to %s\n", spacer, chainParams.diagnStat);
-                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                     }
                 else
                     {
@@ -8334,6 +8332,11 @@ int DoMcmcParm (char *parmName, char *tkn)
                     free(tempStr);
                     return (ERROR);
                     }
+                if (chainParams.diagnStat == AVGSTDDEV)
+                    MrBayesPrint ("%s   Setting diagnostics statistic to Avgstddev\n", spacer);
+                else /* if (chainParams.diagnStat == MAXSTDDEV) */
+                    MrBayesPrint ("%s   Setting diagnostics statistic to Maxstddev\n", spacer);
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
             else
                 {
