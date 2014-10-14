@@ -350,7 +350,7 @@ int CommandLine (int argc, char **argv)
                     MrBayesPrint ("%s   If you want control to be returned to the command line on error,\n", spacer);
                     MrBayesPrint ("%s   use 'mb -i <filename>' (i is for interactive) or use 'set quitonerror=no'\n\n", spacer);
                     return (ERROR);
-                    }           
+                    }
 
 #   if defined (MPI_ENABLED)
                 ierror = MPI_Barrier (MPI_COMM_WORLD);
@@ -430,7 +430,7 @@ void GetTimeSeed (void)
     if (ierror != MPI_SUCCESS)
         {
         MrBayesPrint ("%s   Problem broadcasting run ID seed\n", spacer);
-        }       
+        }
 
 #   else
     curTime = time(NULL);
@@ -820,7 +820,6 @@ int InitializeMrBayes (void)
         modelElementNames[1][i][j] = '\0';
         }
     modelElementNames[1][203]  = "";
-
 
     /* Termination */
     modelElementNames[2]    = (char **) SafeCalloc (1, sizeof(char *));

@@ -196,12 +196,10 @@ int DoSump (void)
     ParameterSample *parameterSamples=NULL;
     FILE            *fpLstat=NULL;
 
-
 #   if defined (MPI_ENABLED)
     if (proc_id != 0)
         return NO_ERROR;
 #   endif
-
 
     /* tell user we are ready to go */
     if (sumpParams.numRuns == 1)
@@ -289,7 +287,6 @@ int DoSump (void)
             longestHeader = len;
         }
 
-
     /* Print header */
     PrintPlotHeader ();
 
@@ -304,7 +301,6 @@ int DoSump (void)
         MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
         return ERROR;
         }
-                    
 
     if (sumpParams.numRuns > 1)
         {
@@ -637,7 +633,6 @@ int DoSumSs (void)
             longestHeader = len;
         }
 
-
     /* Print trace plots */
     if (FindHeader("Gen", headerNames, nHeaders, &whichIsX) == ERROR)
         {
@@ -649,8 +644,6 @@ int DoSumSs (void)
         MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
         goto errorExit;
         }
-                    
-
 
     if(chainParams.burninSS > 0)
         {
@@ -668,7 +661,6 @@ int DoSumSs (void)
         MrBayesPrint ("%s   Error:  Number of samples could not be evenly devided among steps (%d samples among %d steps). \n", spacer,(numRows - stepBeginSS),chainParams.numStepsSS);
         goto errorExit;
         }
-
 
     if( chainParams.relativeBurnin == YES )
         {
@@ -840,7 +832,6 @@ sumssTable:
             MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,(int)(sumssParams.discardFraction*numSamplesInStepSS));
             }
 
-
         if (sumssParams.numRuns > 1)
             {
             if (sumpParams.allRuns == YES)
@@ -893,7 +884,7 @@ sumssTable:
     if( firstPass == NO )
         goto sumssExitOptions;
 
-    sumssJoinedPlot:        
+    sumssJoinedPlot:
 
     MrBayesPrint ("\n\n%s   Joined plot(s).\n",spacer);
     while(1)
@@ -1029,8 +1020,7 @@ sumssExitOptions:
             goto sumssStepPlot;
             }
         else if(j == 3)
-            goto sumssJoinedPlot; 
-
+            goto sumssJoinedPlot;
         }
  
     /* free memory */
@@ -1637,7 +1627,6 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             lastTokenWasDash, nNumbersOnThisLine, tokenType, burnin, nLines, firstNumCols;
     MrBFlt  tempD;
     FILE    *fp = NULL;
-
 
     /* open binary file */
     if ((fp = OpenBinaryFileR(fileName)) == NULL)
@@ -3523,7 +3512,6 @@ treeConstruction:
             }
         }
 
-
     /* get downpass arrays */
     GetPolyDownPass(t);
 
@@ -3692,7 +3680,6 @@ int DoCompareTree (void)
     if (proc_id == 0)
         {
 #   endif
-
 
     /* Make sure we read trees using DoSumtTree() code instead of with the user tree code */
     inComparetreeCommand = YES;
@@ -4660,7 +4647,6 @@ int DoSumt (void)
         {
 #   endif
 
-
     /* Ensure that we read trees with sumt code and not user tree code */
     inSumtCommand = YES;
 
@@ -4676,7 +4662,7 @@ int DoSumt (void)
         goto errorExit;
         }
 
-    SafeStrcpy(&tempStr, " "); 
+    SafeStrcpy(&tempStr, " ");
 
     /* Initialize sumtParams struct */
     sumtParams.numTaxa = 0;
@@ -4848,7 +4834,6 @@ int DoSumt (void)
                     }
                 }
 
-
 #   if defined (PRINT_RATEMULTIPLIERS_CPP)
             sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
             if ( (rateMultfp=OpenNewMBPrintFile (tempName)) == NULL )
@@ -4858,7 +4843,6 @@ int DoSumt (void)
                 }
             fprintf(rateMultfp,"rateMult_CPP\n");
 #   endif
-
 
             /* Set up cheap status bar. */
             if (sumtParams.runId == 0)
@@ -4971,7 +4955,6 @@ int DoSumt (void)
                 i++;
                 }
             }
-
 
         /* Sort taxon partitions (clades, splits) ... */
         SortPartCtr (treeParts, 0, numTreePartsToPrint-1);
@@ -5546,7 +5529,6 @@ int DoSumt (void)
                     MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
                 }
             MrBayesPrint ("\n");
-            
 
         SortPartCtr (treeParts, 0, numUniqueSplitsFound-1); /* We sort again but this time we sort all partitions instead of just first numTreePartsToPrintNow */
         /* make the majority rule consensus tree */
@@ -6582,7 +6564,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
                 
             } while (*sumtToken);
         lineNum++;
-        }       
+        }
 
     /* Now, check some aspects of the tree file, such as the number of tree blocks and whether they are properly terminated. */
     if (inTreeBlock == YES)
@@ -7675,7 +7657,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
 
     return NO_ERROR;
 }
-        
+
 
 int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 {

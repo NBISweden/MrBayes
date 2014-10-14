@@ -355,7 +355,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
                     return ERROR;
                     }
                 tmp = atof(tmpcp);
-                splitfreqSS[i*chainParams.numStepsSS + curStep-1] = tmp;                
+                splitfreqSS[i*chainParams.numStepsSS + curStep-1] = tmp;
                 }
             }
         }
@@ -688,13 +688,13 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
                 reliable = NO;
                 continue;
                 }
-            a /= exp( y - 100.0 ); 
+            a /= exp( y - 100.0 );
             scaler += y - 100.0;
             y = 100.0;
             }
         
         x = (MrBFlt) exp(y);
-            
+         
         if (n < 0.5)
             a = x;
         else
@@ -720,13 +720,13 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
                 reliable = NO;
                 continue;
                 }
-            a /= exp( y - 100.0 ); 
+            a /= exp( y - 100.0 );
             scaler += y - 100.0;
             y = 100.0;
             }
         
         x = (MrBFlt) exp(y);
-            
+        
         if (n < 0.5)
             a = x;
         else
@@ -1213,7 +1213,7 @@ int NextTaxonInPartition(int currentTaxon, BitsLong *partition, int length)
             taxon++;
             x <<= 1;
             }
-        }    
+        }
 
     return taxon;
 }
@@ -2323,7 +2323,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
 
     /* calculate mask (needed to take care of unused bits when flipping partitions) */
     for (i=0; i<numLocalTaxa; i++)
-        SetBit (i, mask); 
+        SetBit (i, mask);
 
     /* reset all nodes */
     for (i=0; i<2*numLocalTaxa; i++)
@@ -2459,7 +2459,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
         do {
             qq = pp;
             pp = pp->anc;       
-        } while (IsPartNested(pp->partition, constraintPartition, nLongsNeeded));   
+        } while (IsPartNested(pp->partition, constraintPartition, nLongsNeeded));
 
         /* check that the node has not yet been included */
         for (i=0; i<nLongsNeeded; i++)
@@ -4180,7 +4180,6 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                 }
             }
         }
-    
 
     /* try to make root node deeper than minimum age */
     p = t->root->left;
@@ -4495,7 +4494,6 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         p = t->allDownPass[i];
         p->nodeDepth = maxHeight - p->nodeDepth;
         }
-        
 
     /* check potentially constraining calibrations */
     /* and find minimum and maximum possible rate */
@@ -4821,7 +4819,6 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 }
             }
         }
-
 
     for (i=0; i<param->nSubParams; i++)
         {
@@ -5518,7 +5515,7 @@ void PrintTranslateBlock (FILE *fp, Tree *t)
 Update relaxed clock parameter of the branch of a node with index "b" after node with index "a" is removed. 
 i.e. make branch of node with index "b" be a concatenation of its original branch and the branch of node with index "a"
 Relaxed clock parameter of node with index "a" become invalid in the process.
-Note: For Non-clock models the routine has no effect. 
+Note: For Non-clock models the routine has no effect.
 
 |       |
 |       |
@@ -5950,7 +5947,6 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
     int             j, k;
     BitsLong        **constraintPartition;
 
-
     for (j=0; j<activeConstraintsSize; j++)
         {
         k=activeConstraints[j];
@@ -6042,7 +6038,7 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 |           RandResolve: Randomly resolve a polytomous tree
 |
 | @param    tt is a tree which contains information about applicable constraints. If it is set to NULL then no constraints will be used. 
-            If t!=NULL then partitions of nodes of polytree should be allocated for example by AllocatePolyTreePartitions (t);
+|           If t!=NULL then partitions of nodes of polytree should be allocated for example by AllocatePolyTreePartitions (t);
 | @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
 int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
@@ -6129,22 +6125,21 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
 
         do
             {
-            /*Pick first node*/
+            /* Pick first node */
             rand1 = (int) (RandomNumber(seed) * nodeArraySize);
             w1 = nodeArray[rand1];
             nodeArray[rand1] = nodeArray[--nodeArraySize];
 
             if( nodeArraySize==0 )
-                return ABORT; /*Potentaily here we could instead revert by removing last added node and try again. */
+                return ABORT; /* Potentaily here we could instead revert by removing last added node and try again. */
 
-            /*Move all nodes in nodeArray which can be paired with w to the begining of array*/
+            /* Move all nodes in nodeArray which can be paired with w to the begining of array */
             nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
-            /*TODO optimization for Maxim(if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
+            /* TODO optimization for Maxim (if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
             }while( nodeArrayAllowedSize==0 );
 
         rand2 = (int) (RandomNumber(seed) *nodeArrayAllowedSize);
         w2 = nodeArray[rand2];
-
 
         /* create a new node */
         u = &t->nodes[nextNode];
@@ -6161,7 +6156,6 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
         u->left = w1;
         t->nNodes++;
         t->nIntNodes++;
-        
 
         /* connect tree together */
         r = u;
@@ -6382,7 +6376,6 @@ void ResetTipIndices(PolyTree *pt)
 {
     int         i, j, k, m;
     PolyNode    *p;
-
 
     for (i=j=0; i<numTaxa; i++)
         {
@@ -7282,7 +7275,6 @@ int SetTreeNodeAges (Param *param, int chain, int state)
     else
         return YES;
 
-
     /* Clock trees */
 
     /* Check that lengths and depths are consistant. That would work for the case when we set up branch length from starting tree  */
@@ -7410,7 +7402,7 @@ int ShowTree (Tree *t)
             x += 2;
             p->y = 0;
             }
-        } 
+        }
 
     /* print tree out, line-by-line */
     levelDepth = SCREENWIDTH / t->root->left->y;
@@ -9710,7 +9702,7 @@ void CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v)
 MrBFlt CdfBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
 {
     return (LBinormal(h1, h2, r) + CdfNormal(h1) + CdfNormal(h2) - 1.0);
-}    
+}
 
 
 /*---------------------------------------------------------------------------------
@@ -12492,7 +12484,7 @@ MrBFlt LBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r)
         Lh = (1.0 - CdfNormal(h1)) * (1.0 - CdfNormal(h2)) + r * Lh;
         }
     return (Lh);
-}    
+}
 
 
 /*---------------------------------------------------------------------------------

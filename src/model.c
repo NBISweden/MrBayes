@@ -231,7 +231,7 @@ int AddDummyChars (void)
 #   if  0
     MrBayesPrint ("Compressed matrix before adding dummy characters...\n");
     PrintCompMatrix();
-#   endif       
+#   endif
 
     /* set row sizes for old and new matrices */
     oldRowSize = compMatrixRowSize;
@@ -414,7 +414,6 @@ int AddDummyChars (void)
         compMatrixRowSize -= numDeleted;
         }
 
-
     /* free old data, set pointers to new data */
     free (compMatrix);
     free (numSitesOfPat);
@@ -432,7 +431,7 @@ int AddDummyChars (void)
 #   if  defined (DEBUG_ADDDUMMYCHARS)
     MrBayesPrint ("After adding dummy characters...\n");
     PrintCompMatrix();
-#   endif       
+#   endif
 
     return NO_ERROR;
 
@@ -1282,7 +1281,6 @@ int ChangeNumChains (int from, int to)
             }
         }
 
-
     /* fix stationary frequencies for standard data */
     if(   stdStateFreqsRowSize > 0 )
         {
@@ -1324,7 +1322,6 @@ int ChangeNumChains (int from, int to)
             }
         free(stdStateFreqsOld);
     }
-    
 
     /* Do the moves */
     /* first allocate space and set up default moves */
@@ -1535,9 +1532,8 @@ int ChangeNumRuns (int from, int to)
 
     FillTreeParams (&globalSeed, from*nChains, to*nChains);
 
-
     /* fix stationary frequencies for standard data */
-    if(   stdStateFreqsRowSize > 0 )
+    if( stdStateFreqsRowSize > 0 )
         {
         assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
         stdStateFreqsOld=stdStateFreqs;
@@ -1558,8 +1554,7 @@ int ChangeNumRuns (int from, int to)
             }
         
         FillStdStateFreqs( from*nChains, to*nChains, &globalSeed);
-    }
-
+        }
 
     /* do the moves */
     for (i=0; i<numApplicableMoves; i++)
@@ -1594,7 +1589,6 @@ int ChangeNumRuns (int from, int to)
             moves[i]->targetRate[j] = mvt->targetRate;
             }
         }
-
 
 #if 0
     for (i=0; i<numParams; i++)
@@ -1881,7 +1875,6 @@ int CheckModel (void)
                 }
             }
         }
-
 
     /* Check consistency of best model. First we guarantee that if one topology has
        a species tree prior, then all topologies have the same prior. Then we make
@@ -4184,7 +4177,6 @@ int DoPropsetParm (char *parmName, char *tkn)
     else
         return (ERROR);
 
-
     SafeFree ((void **)&temp);
     SafeFree ((void **)&localTkn);
     return (NO_ERROR);
@@ -6341,7 +6333,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         MrBayesPrint ("%s   Invalid Statefreqpr argument\n", spacer);
                         return (ERROR);
                         }
-                    // TODO: Here we set flat dirichlet parameters
+                    /* TODO: Here we set flat dirichlet parameters */
                     expecting  = Expecting(LEFTPAR);
                     }
                 else
@@ -10602,8 +10594,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
     ModelInfo   *m;
     ModelParams *mp;
 
-    
-
     /* fill in values for nontree params for state 0 of chains */
     for (chn=fromChain; chn<toChain; chn++)
         {
@@ -11457,7 +11447,6 @@ int PruneConstraintPartitions()
             j++;
             }
         assert (j == numLocalTaxa);
-
 
         if (definedConstraintsType[constraintId] == PARTIAL )
             {
@@ -12777,7 +12766,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if tratio is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if tratio is inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_REVMAT)
         {
@@ -12867,7 +12855,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the GTR rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if GTR rates are inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_OMEGA)
         {
@@ -13027,7 +13014,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if omega is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if omega is inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_PI)
         {
@@ -13194,7 +13180,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the state frequencies are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the state frequencies are inapplicable for either partition, then the parameter cannot be the same */
-        
         }
     else if (whichParam == P_SHAPE)
         {
@@ -13270,7 +13255,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the shape parameter is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the shape parameter is inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_PINVAR)
         {
@@ -13337,7 +13321,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the switching rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the switching rates are inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_CORREL)
         {
@@ -13398,7 +13381,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the switching rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the switching rates are inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_SWITCH)
         {
@@ -13460,7 +13442,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the switching rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the switching rates are inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_RATEMULT)
         {
@@ -13847,8 +13828,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         
         /* Check to see if the speciation rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
-            isSame = NO; 
-
+            isSame = NO;
         }
     else if (whichParam == P_EXTRATE)
         {
@@ -13889,8 +13869,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         
         /* Check to see if the extinction rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
-            isSame = NO; 
-
+            isSame = NO;
         }
     else if (whichParam == P_FOSLRATE)
         {
@@ -13931,7 +13910,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the fossilization rates are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO;
-        
         }
     else if (whichParam == P_POPSIZE)
         {
@@ -13993,8 +13971,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         
         /* Check to see if population size is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
-            isSame = NO; 
-
+            isSame = NO;
         }
     else if (whichParam == P_GROWTH)
         {
@@ -14063,7 +14040,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].aaModelPr,"Fixed"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].aaModelPr,"Fixed"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* We now need to check if the prior is the same for both. */
         if (!strcmp(modelParams[part1].aaModelPr,"Mixed") && !strcmp(modelParams[part2].aaModelPr,"Mixed"))
@@ -14080,7 +14057,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if amino acid model is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if tratio is inapplicable for either partition, then the parameter cannot be the same */
-
         }
     else if (whichParam == P_BRCORR)
         {
@@ -14171,7 +14147,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* Check that the branch length prior is clock for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
@@ -14248,7 +14224,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* Check that the branch length prior is clock for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
@@ -14341,7 +14317,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* Check that the branch length prior is clock for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
@@ -14428,7 +14404,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* Check that the branch length prior is clock for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
@@ -14554,7 +14530,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; 
+            *isApplic2 = NO;
 
         /* Check that the branch length prior is clock for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
@@ -15609,7 +15585,7 @@ int SetAARates (void)
     aaJones[19][ 0] = 298; aaJones[19][ 1] =  17; aaJones[19][ 2] =  16; aaJones[19][ 3] =  31; aaJones[19][ 4] =  62; 
     aaJones[19][ 5] =  20; aaJones[19][ 6] =  45; aaJones[19][ 7] =  47; aaJones[19][ 8] =  11; aaJones[19][ 9] = 961; 
     aaJones[19][10] = 180; aaJones[19][11] =  14; aaJones[19][12] = 323; aaJones[19][13] =  62; aaJones[19][14] =  23; 
-    aaJones[19][15] =  38; aaJones[19][16] = 112; aaJones[19][17] =  25; aaJones[19][18] =  16; aaJones[19][19] =   0; 
+    aaJones[19][15] =  38; aaJones[19][16] = 112; aaJones[19][17] =  25; aaJones[19][18] =  16; aaJones[19][19] =   0;
 
     jonesPi[ 0] = 0.076748;
     jonesPi[ 1] = 0.051691;
@@ -16225,7 +16201,7 @@ int SetAARates (void)
     aacpREV[19][ 0] =  968; aacpREV[19][ 1] =   92; aacpREV[19][ 2] =   83; aacpREV[19][ 3] =   75; aacpREV[19][ 4] =  592; 
     aacpREV[19][ 5] =   54; aacpREV[19][ 6] =  200; aacpREV[19][ 7] =   91; aacpREV[19][ 8] =   25; aacpREV[19][ 9] = 4797; 
     aacpREV[19][10] =  865; aacpREV[19][11] =  249; aacpREV[19][12] =  475; aacpREV[19][13] =  317; aacpREV[19][14] =  122; 
-    aacpREV[19][15] =  167; aacpREV[19][16] =  760; aacpREV[19][17] =   10; aacpREV[19][18] =  119; aacpREV[19][19] =    0; 
+    aacpREV[19][15] =  167; aacpREV[19][16] =  760; aacpREV[19][17] =   10; aacpREV[19][18] =  119; aacpREV[19][19] =    0;
 
     cprevPi[0] = 0.076;
     cprevPi[1] = 0.062;
@@ -16328,7 +16304,7 @@ int SetAARates (void)
     aaVt[19][ 0] = 1.230985; aaVt[19][ 1] = 0.113146; aaVt[19][ 2] = 0.049824; aaVt[19][ 3] = 0.048769; aaVt[19][ 4] = 0.163831; 
     aaVt[19][ 5] = 0.112027; aaVt[19][ 6] = 0.205868; aaVt[19][ 7] = 0.082579; aaVt[19][ 8] = 0.068575; aaVt[19][ 9] = 3.654430; 
     aaVt[19][10] = 1.337571; aaVt[19][11] = 0.144587; aaVt[19][12] = 0.307309; aaVt[19][13] = 0.247329; aaVt[19][14] = 0.129315; 
-    aaVt[19][15] = 0.127700; aaVt[19][16] = 0.740372; aaVt[19][17] = 0.022134; aaVt[19][18] = 0.125733; aaVt[19][19] = 0.000000; 
+    aaVt[19][15] = 0.127700; aaVt[19][16] = 0.740372; aaVt[19][17] = 0.022134; aaVt[19][18] = 0.125733; aaVt[19][19] = 0.000000;
 
     vtPi[ 0] = 0.078837;
     vtPi[ 1] = 0.051238;
@@ -16431,7 +16407,7 @@ int SetAARates (void)
     aaBlosum[19][ 0] = 2.187774522005; aaBlosum[19][ 1] = 0.438388343772; aaBlosum[19][ 2] = 0.312858797993; aaBlosum[19][ 3] = 0.258129289418; aaBlosum[19][ 4] = 1.116352478606; 
     aaBlosum[19][ 5] = 0.530785790125; aaBlosum[19][ 6] = 0.524253846338; aaBlosum[19][ 7] = 0.253340790190; aaBlosum[19][ 8] = 0.201555971750; aaBlosum[19][ 9] = 8.311839405458; 
     aaBlosum[19][10] = 2.231405688913; aaBlosum[19][11] = 0.498138475304; aaBlosum[19][12] = 2.575850755315; aaBlosum[19][13] = 0.838119610178; aaBlosum[19][14] = 0.496908410676; 
-    aaBlosum[19][15] = 0.561925457442; aaBlosum[19][16] = 2.253074051176; aaBlosum[19][17] = 0.266508731426; aaBlosum[19][18] = 1.000000000000; aaBlosum[19][19] = 0.000000000000;  
+    aaBlosum[19][15] = 0.561925457442; aaBlosum[19][16] = 2.253074051176; aaBlosum[19][17] = 0.266508731426; aaBlosum[19][18] = 1.000000000000; aaBlosum[19][19] = 0.000000000000;
 
     blosPi[ 0] = 0.074; 
     blosPi[ 1] = 0.052; 
@@ -17768,7 +17744,7 @@ int SetModelParams (void)
                 }
             if (numRelParts > 0)
                 break;
-            }        
+            }
 
         /* find pointer to modelParams and modelSettings of first relevant partition */
         /* this will be handy later on */
@@ -17849,7 +17825,7 @@ int SetModelParams (void)
     
             p->paramTypeName = "Transition and transversion rates";
             SafeStrcat(&p->name, "Tratio");
-            SafeStrcat(&p->name, partString);           
+            SafeStrcat(&p->name, partString);
 
             /* find the parameter x prior type */
             if (!strcmp(mp->tRatioPr,"Beta"))
@@ -17897,7 +17873,7 @@ int SetModelParams (void)
 
             p->paramTypeName = "Rates of reversible rate matrix";
             SafeStrcat(&p->name, "Revmat");
-            SafeStrcat(&p->name, partString);           
+            SafeStrcat(&p->name, partString);
 
             /* find the parameter x prior type */
             if (m->dataType == PROTEIN)
@@ -19340,7 +19316,7 @@ int SetModelParams (void)
     
             p->paramTypeName = "Base rate of clock";
             SafeStrcat(&p->name, "Clockrate");
-            SafeStrcat(&p->name, partString);           
+            SafeStrcat(&p->name, partString);
 
             /* parameter does affect likelihoods */
             p->affectsLikelihood = YES;
@@ -19793,7 +19769,7 @@ int SetUpAnalysis (RandLong *seed)
     if (SetMoves () == ERROR)
         return (ERROR);
 
-    /* TODO: Clock:Fossilization is not compatible with CPP clock */
+    /* TODO: Clock:Fossilization is not compatible with CPP relaxed clock model */
     
     setUpAnalysisSuccess=YES;
     
@@ -21223,7 +21199,6 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
-
 
     /* Move_Revmat_Slider */
     mt = &moveTypes[i++];
@@ -23862,7 +23837,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
     int i, updateTrees;
     MrBFlt      *clockRatep;
     Tree        *t, *t_calibrated=NULL;
-    MrBFlt      mintmp,maxtmp,minClockRate,maxClockRate;   
+    MrBFlt      mintmp,maxtmp,minClockRate,maxClockRate;
 
     clockRatep=NULL;
     minClockRate = 0.0;
@@ -23899,7 +23874,6 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             *clockRatep=0;
             return (ERROR);
             }
-        
 
         if (!strcmp(modelParams[t_calibrated->relParts[0]].clockRatePr, "Fixed"))
             {

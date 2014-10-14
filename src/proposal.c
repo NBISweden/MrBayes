@@ -596,7 +596,7 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     /* set the update flag for cond likes if p is connected to root in unrooted */
     /* tree, if this is not done, cond likes are not updated in this case       */
     if (t->isRooted == NO && p->anc->anc == NULL)  
-        p->upDateCl = YES;  
+        p->upDateCl = YES;
 
     /* set flags for update of cond likes from p->anc and down to root */
     while (p->anc->anc != NULL)
@@ -967,7 +967,7 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt 
         j += nEvents[p->index];
         if (j > k)
             break;
-        }       
+        }
 
     /* find local index */
     k = nEvents[p->index] - (j - k);
@@ -1052,7 +1052,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
         j += nEvents[p->index];
         if (j > k)
             break;
-        }       
+        }
 
     /* find local index */
     k = nEvents[p->index] - (j - k);
@@ -2179,7 +2179,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -4084,7 +4084,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         {
         c->length = x;
         c->upDateTi = YES;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -5050,7 +5050,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -5597,7 +5597,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -5849,7 +5849,6 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
     Tree        *t;
     ModelParams *mp;
-
 
     brlenNode[2] = NULL;
     brlenNode[6] = NULL;
@@ -6195,7 +6194,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -6340,7 +6339,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* update proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / m);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x); 
+        (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in root, then select randomly, otherwise always the moved branch */
     if (nRootNodes == 0)
@@ -6833,7 +6832,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -9490,7 +9489,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
 
     /* restore old conditional likelihoods */
-    
 
 #   if defined (DEBUG_MLSPR)
     printf ("After:\n");
@@ -10820,7 +10818,7 @@ int Move_OmegaCat (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             newSubVals[i] = newFreqs[0] / mp->numM10BetaCats;
         for (i=mp->numM10BetaCats; i<mp->numM10BetaCats+mp->numM10GammaCats; i++)
             newSubVals[i] = newFreqs[1] / mp->numM10GammaCats;
-        }   
+        }
 
     /* get proposal ratio */
     sum = 0.0;
@@ -11631,7 +11629,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p = t->allDownPass[i];
         if (p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO && p != u)
             p->marked = YES;
-        }       
+        }
 
     /* find number of site patterns and modify randomly */
     globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
@@ -13936,7 +13934,6 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     Tree        *t;
     ModelParams *mp;
 
-
     /* these parameters should be possible to set by user */
     extensionProb = mvp[0]; /* extension probability */
     tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
@@ -14302,7 +14299,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -14865,7 +14862,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -15457,7 +15454,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -16120,7 +16117,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
-        }   
+        }
 
     if (directionUp == YES) 
         {
@@ -17102,7 +17099,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 }
             }
         assert (i < nOldRates && groupSize[i] > 1);
-        index_i = i; 
+        index_i = i;
 
         /* adjust growth function */
         do {
@@ -17324,7 +17321,7 @@ int Move_Revmat_SplitMerge2 (Param *param, int chain, RandLong *seed, MrBFlt *ln
             dirParm[1] = alphaPi * (n_j - 1);
 
             DirichletRandomVariable(dirParm, rateProps, 2, seed);
-            r_j = rateProps[0] * R_j;   
+            r_j = rateProps[0] * R_j;
 
             if(R_j - r_j < RATE_MIN)
                 {
@@ -18405,7 +18402,6 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     Tree        *t;
     int i,branch_counter,  isVPriorExp;
 
-
     tuning = mvp[0]; /* Larget & Simon's tuning parameter lambda */
 
     mp = &modelParams[param->relParts[0]];
@@ -18495,12 +18491,8 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             }
         }
 
-
-
-
     /* calculate proposal ratio */
-    (*lnProposalRatio) = branch_counter * log(treescaler); 
-
+    (*lnProposalRatio) = branch_counter * log(treescaler);
 
     /* update prior if exponential prior on branch lengths */
     if (param->paramId == BRLENS_EXP)

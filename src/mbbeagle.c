@@ -119,8 +119,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
     requiredFlags = 0L;
     
     if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
-        requiredFlags |= BEAGLE_FLAG_SCALERS_LOG; //BEAGLE_FLAG_SCALERS_RAW; 
- 
+        requiredFlags |= BEAGLE_FLAG_SCALERS_LOG; //BEAGLE_FLAG_SCALERS_RAW;
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
     /* create beagle instance */
@@ -958,14 +957,15 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
         bs = covBF;
         }
 
-    if (m->upDateCijk == YES) { /* TODO Really only need to check if state frequencies have changed */
-        
+    /* TODO Really only need to check if state frequencies have changed */
+    if (m->upDateCijk == YES)
+        {
         /* set base frequencies in BEAGLE instance */
         for (i=0; i<m->nCijkParts; i++)
             beagleSetStateFrequencies(m->beagleInstance,
                                       m->cijkIndex[chain] + i,
-                                      bs);                                    
-    }
+                                      bs);
+        }
 
     /* find category frequencies */
     if (hasPInvar == NO)
@@ -1256,5 +1256,5 @@ void BeagleNotLinked()
 void BeagleThreadsNotLinked()
 {
     MrBayesPrint ("%s   Pthreads library is not linked to this executable.\n", spacer);
-} 
+}
 

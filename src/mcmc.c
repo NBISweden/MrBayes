@@ -700,7 +700,6 @@ int AddTreeSamples (int from, int to, int saveToList)
                     SafeSprintf(&tempStr, &tempStrSize, "%s.tree%d.run%d.t", chainParams.chainFileName, i+1, j+1);
                 }
 
-
             if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
                 MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
@@ -826,7 +825,6 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
     MPI_Status      status[2];
     MPI_Request     request[2];
 #   endif
-    
 
 #   if defined (MPI_ENABLED)
 
@@ -1041,7 +1039,6 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
                         }
                     }
                 }
-
 
             if (areWeA == YES)
                 {
@@ -1297,7 +1294,7 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
                         if (usedMoves[i]->moveType->numTuningParams > 0)
                             myStateInfo[6] = usedMoves[i]->tuningParam[tempIdB][0];
                         else
-                            myStateInfo[6] = 0.0; 
+                            myStateInfo[6] = 0.0;
 
                         ierror = MPI_Isend (&myStateInfo, 7, MPI_DOUBLE, procIdForA, 0, MPI_COMM_WORLD, &request[0]);
                         if (ierror != MPI_SUCCESS)
@@ -1382,7 +1379,6 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
                         stepScalerSS    [ run ] = (MrBFlt) partnerStateInfo[3];
                         }
                 }
-
 
             }
         }
@@ -1621,7 +1617,8 @@ int BuildParsTrees (RandLong *seed)
     Param       *p, *q;
     Tree        *tree;
 
-    /* Build starting trees for state 0 TODO: check that numLocalChains is used correctly here(may be numGlobalChains is needed instead)*/
+    /* Build starting trees for state 0 */
+    /* TODO: check that numLocalChains is used correctly here (may be numGlobalChains is needed instead) */
     for (chn=0; chn<numLocalChains; chn++)
         {
         for (k=0; k<numParams; k++)
@@ -2192,7 +2189,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
         tiPL += 4;
         tiPR += 4;
         }
-
 
     return NO_ERROR;
     
@@ -3770,7 +3766,6 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
             }
         }
 
-
     return NO_ERROR;
 }
 
@@ -3971,7 +3966,6 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
     pL = m->tiProbs[m->tiProbsIndex[chain][p->left->index ]];
     pR = m->tiProbs[m->tiProbsIndex[chain][p->right->index]];
     pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
-
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -4210,14 +4204,12 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
     int a, b, catStart;
 #   endif
 
-
     /* find model settings for this division and nStates, nStatesSquared */
     m = &modelSettings[division];
     nObsStates = m->numStates;
     nStates = m->numModelStates;
     nStatesSquared = nStates * nStates;
     preLikeJump = nObsStates * nStates;
-
 
     /* flip state of node so that we are not overwriting old cond likes */
     FlipCondLikeSpace (m, chain, p->index);
@@ -5441,7 +5433,6 @@ int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
     pR = m->tiProbs[m->tiProbsIndex[chain][p->right->index]];
     pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
 
-
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
 #   if !defined (DEBUG_NOSHORTCUTS)
@@ -5649,7 +5640,6 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
 
 #   endif
 
-
     /* find model settings for this division and nStates, nStatesSquared */
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5668,7 +5658,6 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
     pL = m->tiProbs[m->tiProbsIndex[chain][p->left->index ]];
     pR = m->tiProbs[m->tiProbsIndex[chain][p->right->index]];
     pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
-
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -6039,7 +6028,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
                 }
             tiP += 4;
             }
-        }   
+        }
 
     return NO_ERROR;
 }
@@ -6127,7 +6116,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
                 }
             tiP += nStatesSquared;
             }
-        }   
+        }
 
     return NO_ERROR;
 }
@@ -6220,7 +6209,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
                 }
             tiP += 16;
             }
-        }   
+        }
 
     return NO_ERROR;
 }
@@ -6303,7 +6292,6 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
                 tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
                 tiP = pA + m->tiIndex[c] + tmp;
                 tmp = (m->numGammaCats-1)*2*2; /* tmp contains size of block of tpi matrices across all gamma cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
-                
 
                 /* finally multiply with the gamma cats */
                 //nCats *= m->numGammaCats;
@@ -6558,7 +6546,6 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
             index = 1-index;
             scaler = scalerValue[index];
 #   endif
-
 
             for (n=0; n<nStates; n++)
                 clP[j++] /= scaler;
@@ -7371,7 +7358,6 @@ int DoMcmc (void)
     char        *strBuf,*tmpcp;
     double      tmp;
 
-
 #   if defined (BEST_MPI_ENABLED)
     Tree        *tree;
 #   endif
@@ -7451,7 +7437,6 @@ int DoMcmc (void)
     /* Determine the number of local chains and data splits */
     if (SetLocalChainsAndDataSplits() == ERROR )
         goto errorExit;
-
 
     /* Set up the moves to be used */
     if (SetUsedMoves () == ERROR)
@@ -7671,7 +7656,7 @@ int DoMcmc (void)
                     RandPerturb (GetTreeFromIndex(i, j, 0), chainParams.numStartPerts, &seed);
                 }
             }
-        }            
+        }
 
     /* Set clockRate if we have calibration */
     for (j=0; j<numGlobalChains; j++)
@@ -10991,7 +10976,6 @@ int InitChainCondLikes (void)
         else if (useBeagle == NO && m->useSSE == YES)
             MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d (single-precision)\n", spacer, d+1);
 
-
         if (useBeagle == NO)
             {
             /* allocate cond like space */
@@ -11088,7 +11072,6 @@ int InitChainCondLikes (void)
                     }
 #   endif
                 }
-
 
             /* allocate tiprob space */
             m->tiProbs = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
@@ -12570,7 +12553,6 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     __m128          m1, mCatLike, mLike, mFreq;
     ModelInfo       *m;
 
-
     /* find model settings and nStates, pInvar, invar cond likes */
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -12656,7 +12638,6 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
         lnL_SSE += FLOATS_PER_VEC;
         }
 
-
     /* loop over characters */
     if (hasPInvar == NO)
         {
@@ -12694,7 +12675,6 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
             _mm_store_ps (lnL_SSE, mCatLike);
             lnLI_SSE += FLOATS_PER_VEC;
             }
-
 
         for (c=0; c<m->numChars; c++)
             {
@@ -13748,7 +13728,6 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     __m128          m1, mA, mB, mFreq, mLike;
     ModelInfo       *m;
 
-
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
 
@@ -13854,7 +13833,6 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
                     pUnobserved, pObserved;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
     ModelInfo       *m;
-
 
     m = &modelSettings[division];
 
@@ -15200,16 +15178,10 @@ MrBFlt LogPrior (int chain)
             }
         else if (p->paramType == P_BRCORR)
             {
-            
-            
-            
 
             }
         else if (p->paramType == P_BRSIGMA)
             {
-            
-            
-            
 
             }
         else if (p->paramType == P_GROWTH)
@@ -15915,10 +15887,10 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  |   LnFossilizedBDPriorRandom
  |
- |   Stdaler et al. 2013 Birth-death skyline plot reveals temporal changes of
- |           epidemic spread in HIV and hepatitis C virus (HCV). PNAS 110:228-233.
- |   Zhang et al. 2014 ...
- |
+ |   Gavryushkina, A., D. Welch, T. Stadler, and A. Drummond. 2014. 
+ |       Bayesian inference of sampled ancestor trees for epidemiology and fossil calibration. PLoS Comp. Biol.
+ |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
+ |       Total-Evidence Phylogenetic Inference under the Fossilized Birth-Death Process.
  |
  |
  |                                       0  _____________  t3, rho3
@@ -16115,6 +16087,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
 /*---------------------------------------------------------------------------------
  |
  |   LnFossilizedBDPriorDiversity
+ | 
+ |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
+ |       Total-Evidence Phylogenetic Inference under the Fossilized Birth-Death Process.
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
@@ -16609,7 +16584,6 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
         root->x = root->anc->x;
 
         }
-
 
     free (nodeDepths);
     free (nLineages);
@@ -17658,7 +17632,6 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
             }
         }
 
-
     /* print the resulting conditional likelihoods cycling over uncompressed chars */
     if( printedChar )
         for (c=0; c<numChar; c++)
@@ -17731,7 +17704,6 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         clInvar = m->invCondLikes;
         pInvar = (CLFlt) *GetParamVals (m->pInvar, chain, state[chain]); 
         }
-
 
     /* find number of rate categories */
     nGammaCats = m->numGammaCats;
@@ -19818,7 +19790,7 @@ int PrintStates (int curGen, int coldId)
                 m->PrintSiteRates (node, d, coldId);
                 }
             }
-        }           
+        }
 
     /* If the user wants to infer sites that are under positive selection, then we need to print out the posterior
        probability that each site is a positively selected one here. */
@@ -19940,7 +19912,7 @@ int PrintStates (int curGen, int coldId)
                     }
                 }
             }
-        }           
+        }
 
     SafeSprintf (&tempStr, &tempStrSize, "\n");
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -20192,7 +20164,6 @@ int PrintStatesToFiles (int curGen)
             free(printString);
             }
 
-
         /* ****************************************************************************************************/
         /* print trees ****************************************************************************************/
 
@@ -20379,7 +20350,6 @@ int PrintSwapInfo (void)
     if (proc_id != 0)
         return NO_ERROR;
 #   endif
-
 
     tempStrSize = TEMPSTRSIZE;
     tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
@@ -21076,7 +21046,6 @@ int ReassembleMoveInfo (void)
             x[5] = mv->lastAcceptanceRate[n];
             if (mv->moveType->Autotune != NULL)
                 x[6]=mv->tuningParam[n][0];
-            
 
             ierror = MPI_Allreduce (&x, &sum, 7, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             if (ierror != MPI_SUCCESS)
@@ -21858,7 +21827,7 @@ int RedistributeParamVals (void)
                        }
                    }
                 }
-            } 
+            }
 
         /* update evolutionary branch lengths or rates (because node indices have changed) */
         if (proc_id == proc)
@@ -24195,7 +24164,7 @@ int RunChain (RandLong *seed)
                         ERROR_TEST2("Problem removing tree samples",return(ERROR),);
                         }
                     }               
-                } 
+                }
 
             if((n-lastStepEndSS) % numGenInStepSS == 0)      /* prepare sample of next step */
                 {
@@ -24828,7 +24797,6 @@ int setFilePositions (int samplePos)
             fseek (fp, lastBlock, SEEK_SET);
             fseek (fp, FirstTree(fp, lineBuf, longestLine), SEEK_SET);
 
-
             for (k=0; k<samplePos; k++)
                 {
                 if (fgets (lineBuf, longestLine + 5, fp) == NULL) 
@@ -24930,7 +24898,6 @@ int SetLikeFunctions (void)
                             m->TiProbs = &TiProbs_GenCov;
                         m->PrintAncStates = &PrintAncStates_NUC4;
                         m->PrintSiteRates = &PrintSiteRates_Gen;
-
                         }
                     else
                         {
@@ -25011,7 +24978,6 @@ int SetLikeFunctions (void)
                         else
                             m->TiProbs = &TiProbs_Gen;
                         m->StateCode = &StateCode_NUC4;
-
                         }
                     }
                 else if (m->nucModelId == NUCMODEL_DOUBLET)
@@ -25059,7 +25025,6 @@ int SetLikeFunctions (void)
                             m->CondLikeScaler = &CondLikeScaler_Gen;
                             m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
-                            
                             if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
                                 {
                                 MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
@@ -25083,21 +25048,19 @@ int SetLikeFunctions (void)
                         m->CondLikeScaler = &CondLikeScaler_NY98;
                         m->Likelihood     = &Likelihood_NY98;
 #   if defined (SSE_ENABLED)
-
-                         if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
-                                {
-                                MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                                MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
-                                }
-                            else
-                                {
-                                m->useSSE= YES;
-                                m->CondLikeDown   = &CondLikeDown_NY98_SSE;
-                                m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
-                                m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
-                                m->Likelihood     = &Likelihood_NY98_SSE;
-                                }
-
+                        if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                            {
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
+                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                            }
+                        else
+                            {
+                            m->useSSE= YES;
+                            m->CondLikeDown   = &CondLikeDown_NY98_SSE;
+                            m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
+                            m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
+                            m->Likelihood     = &Likelihood_NY98_SSE;
+                            }
 #   endif
                         }
                     m->TiProbs        = &TiProbs_Gen;
@@ -25123,7 +25086,6 @@ int SetLikeFunctions (void)
                         m->CondLikeScaler = &CondLikeScaler_Gen;
                         m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
-                            
                         if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
                             {
                             MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
@@ -25168,10 +25130,10 @@ int SetLikeFunctions (void)
                     }
                 else
                     {
-                        m->CondLikeDown = &CondLikeDown_Gen;
-                        m->CondLikeRoot = &CondLikeRoot_Gen;
-                        m->CondLikeScaler = &CondLikeScaler_Gen;
-                        m->Likelihood = &Likelihood_Gen;
+                    m->CondLikeDown = &CondLikeDown_Gen;
+                    m->CondLikeRoot = &CondLikeRoot_Gen;
+                    m->CondLikeScaler = &CondLikeScaler_Gen;
+                    m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
                     if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
                         {
@@ -25220,7 +25182,6 @@ int SetLikeFunctions (void)
                 m->CondLikeRoot   = &CondLikeRoot_Bin;
                 m->CondLikeScaler = &CondLikeScaler_Gen;
                 m->Likelihood     = &Likelihood_Res;
-
 #   if defined (SSE_ENABLED)
                 if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
                     {
@@ -26658,7 +26619,7 @@ int SetUpTermState (void)
     BitsLong    *p;
     ModelInfo   *m;
     ModelParams *mp;
-    int         numComprChars = 0; 
+    int         numComprChars = 0;
 
     /* allocate space for termState and isPartAmbig */
     if (memAllocs[ALLOC_TERMSTATE] == YES || memAllocs[ALLOC_ISPARTAMBIG] == YES)
@@ -26724,7 +26685,7 @@ int SetUpTermState (void)
         if( m->dataType != STANDARD && m->gibbsGamma == NO )
             numComprChars = m->numSSEChars * FLOATS_PER_VEC;
         else
-            numComprChars = m->numChars;    
+            numComprChars = m->numChars;
 
 #   else
             numComprChars = m->numChars;
@@ -26768,7 +26729,6 @@ int SetUpTermState (void)
                 }
             }
         }
-
 
     /* print the termState matrix */
 #   if  defined (DEBUG_SETUPTERMSTATE)
@@ -28174,7 +28134,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         /* now use general algorithm for the other cases */
         if (m->cijkLength > 0)
             {
-            
             /* first update cijk if necessary */
             //if (m->cijkLength > 0 && m->upDateCijk == YES)
                 //{
@@ -28214,7 +28173,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 
                 /* update eigenValues pointer */
                 eigenValues += (n * n * n) + (2 * n);
-
                 }
             }
         }

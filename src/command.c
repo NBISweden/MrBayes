@@ -2532,13 +2532,10 @@ int DoConstraint (void)
         return ERROR;
     definedConstraintPruned[numDefinedConstraints-1]=NULL;
 
-
     definedConstraintTwoPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
     if ( definedConstraintTwoPruned==NULL )
         return ERROR;
     definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
-
-
 
     /* show taxset (for debugging) */
 #   if 0 
@@ -7061,7 +7058,6 @@ int DoShowMatrix (void)
         MrBayesPrint ("  ");
         MrBayesPrint ("%d\n", start+1);
 
-
         for (i=0; i<numTaxa; i++)
             {
             strcpy (tempStr, taxaNames[i]);
@@ -10012,8 +10008,6 @@ int GetUserHelp (char *helpTkn)
             }
         MrBayesPrint ("                                                                                \n");
         MrBayesPrint ("   --------------------------------------------------------------------------   \n");
-
-
         }
     else if (!strcmp(helpTkn, "Constraint"))
         {
@@ -10977,7 +10971,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    'diversity' and 'cluster' sampling can be used for extant    \n");
         MrBayesPrint ("                    taxa. No extinct sample (fossil) is allowed in this prior.   \n");
         MrBayesPrint ("                    For data with extant and extinct samples, use 'prset brlenspr\n");
-        MrBayesPrint ("                    =clock:fossilization'. (Stadler 2010; Zhang et al.)          \n");
+        MrBayesPrint ("                    =clock:fossilization'. (Stadler 2010; Zhang et al. 2015)     \n");
         MrBayesPrint ("                    For the fossilized birth-death prior, 'fossiltip' assumes    \n");
         MrBayesPrint ("                    extant taxa are sampled randomly, and extinct taxa (fossils) \n");
         MrBayesPrint ("                    are sampled with constant rate and upon sampling the lineage \n");
@@ -11006,7 +11000,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
         MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009; Höhna   \n");
         MrBayesPrint ("                    et al. 2011), and the fossilized birth-death prior (Stadler  \n");
-        MrBayesPrint ("                    2010, Zhang et al. 2014).                                    \n");
+        MrBayesPrint ("                    2010, Zhang et al. 2015).                                    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset sampleprob = <number>                               \n");
         MrBayesPrint ("                                                                                 \n");

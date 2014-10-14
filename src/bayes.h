@@ -112,7 +112,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 /* A patch was sent in by Allen Smith for SafeSprintf, but I could not get
    it compiled  on SGI IRIX 6.5 (too old?) with  _xpg5_vsnprintf undefined.
    The code below is a hack so SafeSprintf never has to reallocate memory.
-   \todo fix
 */
 #ifdef __sgi
 #define TEMPSTRSIZE 1000
