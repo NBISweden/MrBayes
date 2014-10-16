@@ -27773,7 +27773,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 {
     int         b, c, i, j, k, n, s, nStates, index=0, index2;
     MrBFlt      v, eV1, eV2, eV3, eV4, eV5, *catRate,
-                baseRate, theRate, pi, f1, f2, f3, f4, f5, f6, f7, root, EigValexp[10],
+                baseRate, theRate, pi, f1, f2, f3, f4, f5, f6, f7, root,
                 *eigenValues, *cijk, sum, *bs, mu, length;
     CLFlt       pNoChange, pChange, *tiP;
     ModelInfo   *m;
@@ -27787,8 +27787,8 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     
     /* get rate multiplier */
-    theRate =  1.0;
-    baseRate =  GetRate (division, chain);
+    theRate = 1.0;
+    baseRate = GetRate (division, chain);
 
     /* get category rates */
     if (m->shape == NULL)
@@ -28156,8 +28156,8 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                     v =  length * baseRate * catRate[k];
                     cijk = eigenValues + (2 * n);
 
-                    for (s=0; s<n; s++)
-                        EigValexp[s] =  exp(eigenValues[s] * v);
+                    // for (s=0; s<n; s++)
+                    //  EigValexp[s] =  exp(eigenValues[s] * v);
 
                     for (i=0; i<n; i++)
                         {
@@ -28165,7 +28165,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                             {
                             sum = 0.0;
                             for(s=0; s<n; s++)
-                                sum += (*cijk++) * EigValexp[s];
+                                sum += (*cijk++) * exp(eigenValues[s] * v);
                             tiP[index++] = (CLFlt) ((sum <  0.0) ?  0.0 : sum);
                             }
                         }
