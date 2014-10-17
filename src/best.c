@@ -1580,7 +1580,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -1628,7 +1628,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     }
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)

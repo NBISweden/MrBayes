@@ -694,7 +694,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     return (NO_ERROR);
                     }
                 }
-            else if (subParm->paramType == P_TK02BRANCHRATES ||
+            else if ( subParm->paramType == P_TK02BRANCHRATES ||
                      (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
                 {
                 if (subParm->paramType == P_TK02BRANCHRATES)
@@ -725,7 +725,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                         }
                     }
                 }
-            else if (subParm->paramType == P_IGRBRANCHRATES ||
+            else if ( subParm->paramType == P_IGRBRANCHRATES ||
                      (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
                 {
                 if (subParm->paramType == P_IGRBRANCHRATES)
@@ -1264,7 +1264,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
                until we have a better way to implement it !! */
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -1304,7 +1304,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                     }
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
@@ -1518,7 +1518,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
                until we have a better way to implement it !! */
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
            {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -1556,7 +1556,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                     }
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
@@ -2416,7 +2416,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
         }
     while ((p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
+           (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
     
     /* set up pointers for nodes around the picked branch */
@@ -2473,7 +2473,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 position[u->index] = rateMultiplier[u->index] = NULL;
                 }
             }   /* end CPP events parm */
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             /* adjust prior ratio */
@@ -2492,7 +2492,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = ((tk02Rate[a->index] + tk02Rate[b->index])/2.0)*(a->length + u->length);
             }   /* end tk02 branch rate parameter */
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
@@ -2701,7 +2701,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
             }   /* end cpp events parameter */
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             /* get relevant parameters */
@@ -2732,7 +2732,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
             }   /* end tk02 branch rate parameter */
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             /* get relevant parameters */
@@ -3642,7 +3642,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -3662,7 +3662,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             brlens[a->index] = a->length * (tk02Rate[a->index] + tk02Rate[a->anc->index])/2.0;
             brlens[c->index] = c->length * (tk02Rate[c->index] + tk02Rate[c->anc->index])/2.0;
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             /* get relevant parameters */
@@ -8637,7 +8637,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                     }
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -8668,7 +8668,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                 brlens[v->index] = v->length * (tk02Rate[v->index] + tk02Rate[v->anc->index])/2.0;
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             /* to do */
@@ -9735,7 +9735,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -9761,7 +9761,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             /* get relevant parameters */
@@ -10238,7 +10238,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -10286,7 +10286,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                     }
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
@@ -12883,7 +12883,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 1))];
         }
     while ((p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
+           (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
         
     /* set up pointers for nodes around the picked branch */
@@ -12941,7 +12941,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] += brlens[u->index];   /* only change in effective branch lengths so far */
             }   /* end CPP events parm */
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             /* adjust prior ratio */
@@ -12958,7 +12958,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = ((tk02Rate[a->index] + tk02Rate[b->index]) / 2.0)*(a->length + u->length);
             }   /* end tk02 branch rate parameter */
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
@@ -13283,7 +13283,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
                 return (NO_ERROR);
                 }
             }   /* end cpp events parameter */
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             /* adjust prior ratio */
@@ -13303,7 +13303,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens[v->index] = v->length * (tk02Rate[v->index] + tk02Rate[v->anc->index]) / 2.0;
             brlens[u->index] = u->length * (tk02Rate[u->index] + tk02Rate[u->anc->index]) / 2.0;
             }   /* end tk02 branch rate parameter */
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             /* get relevant parameters */
@@ -18663,7 +18663,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
             }
-        else if (subParm->paramType == P_TK02BRANCHRATES ||
+        else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
@@ -18693,7 +18693,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     }
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES ||
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
