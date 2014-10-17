@@ -3683,7 +3683,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             }
         }
     
-    assert(*lnPriorRatio == *lnPriorRatio);
+    assert (*lnPriorRatio == *lnPriorRatio);
 
     return (NO_ERROR);
 }
@@ -9637,7 +9637,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         
     /* set up pointers for nodes around the picked branch */
     /* consider ancestral fossil (brl=0) in fossilized bd tree */
-    assert(p->left->length > TIME_MIN || p->right->length > TIME_MIN);
+    assert (p->left->length > TIME_MIN || p->right->length > TIME_MIN);
     if (p->left->length < TIME_MIN)
         a = p->right;
     else if (p->right->length < TIME_MIN)
@@ -10085,14 +10085,14 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             minL = p->left->nodeDepth + BRLENS_MIN;
         else  // ancestral fossil
             {
-            assert(p->left->calibration != NULL);
+            assert (p->left->calibration != NULL);
             minL = p->left->calibration->min * clockRate;
             }
         if (p->right->length > 0.0)
             minR = p->right->nodeDepth + BRLENS_MIN;
         else  // ancestral fossil
             {
-            assert(p->right->calibration != NULL);
+            assert (p->right->calibration != NULL);
             minR = p->right->calibration->min * clockRate;
             }
         if (minL > minR)
@@ -10107,13 +10107,13 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         maxDepth = p->anc->nodeDepth - BRLENS_MIN;
     if (p->left != NULL && p->left->length < TIME_MIN)
         {
-        assert(p->left->calibration != NULL);
+        assert (p->left->calibration != NULL);
         if (maxDepth > p->left->calibration->max * clockRate)
             maxDepth = p->left->calibration->max * clockRate;
         }
     if (p->right != NULL && p->right->length < TIME_MIN)
         {
-        assert(p->right->calibration != NULL);
+        assert (p->right->calibration != NULL);
         if (maxDepth > p->right->calibration->max * clockRate)
             maxDepth = p->right->calibration->max * clockRate;
         }
@@ -11801,7 +11801,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     u->anc = d;
 
     /* c cannot be a, as a is skiped in the selection for reattachment point */
-    assert(c != a);
+    assert (c != a);
     /* transfer lock if necessary */
     /* if u is locked, then we have moved upwards and need to leave the u lock behind */
     if (u->isLocked == YES)
@@ -12302,7 +12302,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         
         topologyHasChanged = YES;
 
-        assert(c != a);
+        assert (c != a);
         /* transfer lock if necessary */
         /* if u is locked, then we have moved upwards and need to leave the u lock behind */
         if (u->isLocked == YES)
@@ -17170,7 +17170,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
             rateProps[0] = R_i/R;
             rateProps[1] = 1-rateProps[0];
             R_j = rateProps[1] * R;
-            assert(R_j/n_j < RATE_MIN);
+            assert (R_j/n_j < RATE_MIN);
             }
         else if (R_j/n_j < RATE_MIN)
             {
@@ -17178,7 +17178,7 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
             rateProps[1] = R_j/R;
             rateProps[0] = 1-rateProps[1];
             R_i = rateProps[0] * R;
-            assert(R_i/n_i < RATE_MIN);
+            assert (R_i/n_i < RATE_MIN);
             }
 
         /* set the new rates */
@@ -18442,7 +18442,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
-    assert(t->isRooted == NO);
+    assert (t->isRooted == NO);
 
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
@@ -18474,7 +18474,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             branch_counter++;               
             }
         }
-    assert(branch_counter==t->nNodes-1);
+    assert (branch_counter==t->nNodes-1);
     
     /* iterate scaling over all branches */
     for (i=0; i < t->nNodes; i++)
@@ -18574,14 +18574,14 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         /* update brls, be careful with ancestral fossil */
         if (p->left != NULL)
             {
-            assert(p->left->length >= 0.0 && p->right->length >= 0.0);
+            assert (p->left->length >= 0.0 && p->right->length >= 0.0);
             if (p->left->length < TIME_MIN)
                 {
                 p->left->length = 0.0;
                 p->nodeDepth = p->left->nodeDepth;
                 if (calibrationPtr != NULL)
                     {
-                    assert(p->left->calibration != NULL);
+                    assert (p->left->calibration != NULL);
                     p->age = p->left->age;
                     if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
                         {
@@ -18597,7 +18597,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 p->nodeDepth = p->right->nodeDepth;
                 if (calibrationPtr != NULL)
                     {
-                    assert(p->right->calibration != NULL);
+                    assert (p->right->calibration != NULL);
                     p->age = p->right->age;
                     if (p->age < calibrationPtr->min || p->age > calibrationPtr->max)
                         {

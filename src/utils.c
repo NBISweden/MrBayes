@@ -283,7 +283,7 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
-        strncpy(strCpy,strBuf,longestLine);
+        strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," ");
         /* atoi returns 0 when word is not integer number */
         if (atoi(word)>lastGen)
@@ -319,7 +319,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
-        strncpy(strCpy,strBuf,longestLine);
+        strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," \t\n");
         /* atoi returns 0 when word is not integer number */
         if (atoi(word)>lastStep)
@@ -388,7 +388,7 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
-        strncpy(strCpy,strBuf,longestLine);
+        strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," ");
         if (strcmp(word,"tree")==0)
             {
@@ -635,7 +635,7 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     p = theValues;
     for (i=0; i<nRows; i++)
         {
-        memcpy((void *)(p),(void *)(vals[i]),(size_t)(rowCount[i]*sizeof(MrBFlt)));
+        memcpy ((void *)(p),(void *)(vals[i]),(size_t)(rowCount[i]*sizeof(MrBFlt)));
         p += rowCount[i];
         }
     
@@ -2921,9 +2921,9 @@ void CopyPolyNodes (PolyNode *p, PolyNode *q, int nLongsNeeded)
     strcpy (p->label, q->label);
     if (nLongsNeeded!=0)
         {
-        assert(p->partition);
-        assert(q->partition);
-        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
+        assert (p->partition);
+        assert (q->partition);
+        memcpy (p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
         }
     p->support                = q->support;
     p->f                      = q->f;
@@ -3459,9 +3459,9 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
     p->d                      = q->d;
     if (nLongsNeeded!=0)
         {
-        assert(p->partition);
-        assert(q->partition);
-        memcpy(p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
+        assert (p->partition);
+        assert (q->partition);
+        memcpy (p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
         }
     p->label                  = q->label;
 }
@@ -3709,12 +3709,12 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
             if (p->anc->anc != NULL)
                 {
                 tmp = BRLENS_MIN/(p->anc->age - p->age);
-                assert(tmp > 0);
+                assert (tmp > 0);
                 if (tmp > min)
                     min = tmp;
 
                 tmp = BRLENS_MAX/(p->anc->age - p->age);
-                assert(tmp > 0);
+                assert (tmp > 0);
                 if (tmp > max)
                     max = tmp;
                 }
@@ -4452,7 +4452,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         p->nodeDepth = -1.0;
         if (p->isDated == YES)
             {
-            assert(p->calibration->prior != unconstrained);
+            assert (p->calibration->prior != unconstrained);
             x[p->index] = p->calibration->min;
             y[p->index] = p->calibration->max;
             }
@@ -5293,7 +5293,7 @@ int NDatedTips (TreeNode *p)
 {
     int     i=0;
     
-    assert(p!=NULL);
+    assert (p!=NULL);
 
     if (p->left == NULL || p->isDated == YES)
         return 1;
@@ -5762,8 +5762,8 @@ int PrunePolyTree (PolyTree *pt)
     /* get downpass; note that the deletion procedure does not change the root in rooted case */
     i=j=0;
     GetPolyNodeDownPass (pt, pt->root, &i, &j);
-    assert(i==pt->nNodes);
-    assert(j==pt->nIntNodes);
+    assert (i==pt->nNodes);
+    assert (j==pt->nIntNodes);
 
     return (NO_ERROR);
 }
@@ -5875,7 +5875,7 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
             if (FirstEmpty == YES &&  IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES)
                 continue; /* all nodes are compartable becouse w does not contain any constraint taxa*/
 
-            assert(FirstEmpty^IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded));
+            assert (FirstEmpty^IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded));
 
             if (FirstEmpty == YES)
                 {/*w->partition has intersection with definedConstraintTwoPruned[k], thus remove all nodes from nodeArray that intersect with definedConstraintPruned[k]*/
@@ -5948,7 +5948,7 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
     for (j=0; j<activeConstraintsSize; j++)
         {
         k=activeConstraints[j];
-        assert(definedConstraintsType[k] != HARD);
+        assert (definedConstraintsType[k] != HARD);
 
         if (definedConstraintsType[k] == PARTIAL)
             {
@@ -6043,7 +6043,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
     PolyNode    **nodeArray;
     int         *activeConstraints;
 
-    assert(tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
+    assert (tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
     nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
     assert (nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
@@ -6110,7 +6110,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
             {
             nodeArray[nodeArraySize++]=q;
             }
-        assert(nodeArraySize==p->x);
+        assert (nodeArraySize==p->x);
 
         /* identify two descendants randomly */
         /* make sure we do not select outgroup if it is an unrooted tree */

@@ -1361,13 +1361,13 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
                         }
 
                     /*we swap chains from the same run*/
-                    assert(run == (int)partnerStateInfo[0]/chainParams.numChains);
+                    assert (run == (int)partnerStateInfo[0]/chainParams.numChains);
 
                     /*If my chain is the cold chain then send current SS values of corresponding run*/
                     if (tempIdMy % chainParams.numChains == 0)
                         {
                         assert ((int)partnerStateInfo[0] % chainParams.numChains != 0);
-                        assert(partnerStateInfo[1] == 0.0);
+                        assert (partnerStateInfo[1] == 0.0);
                         marginalLnLSS   [ run ] = (MrBFlt) 0.0;
                         stepAcumulatorSS[ run ] = (MrBFlt) 0.0;
                         stepScalerSS    [ run ] = (MrBFlt) 0.0;
@@ -6348,7 +6348,7 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     int             index;
 #   endif
 
-    assert(p->scalerNode == YES);
+    assert (p->scalerNode == YES);
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -6668,7 +6668,7 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
     ModelInfo       *m;
     
     m = &modelSettings[division];
-    assert(p->scalerNode == YES);
+    assert (p->scalerNode == YES);
 
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
@@ -6988,7 +6988,7 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     int             index;
 #   endif
 
-    assert(p->scalerNode == YES);
+    assert (p->scalerNode == YES);
 
     m = &modelSettings[division];
 
@@ -9937,7 +9937,7 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
         }
     else /* if (m->nParsIntsPerSite == 2) */
         {
-        assert(m->nParsIntsPerSite == 2);
+        assert (m->nParsIntsPerSite == 2);
         for (c=i=0; c<m->numChars; c++)
             {
             x[0] = pS1[i]   & pS2[i];
@@ -15731,7 +15731,7 @@ int Slice_i (MrBFlt t, MrBFlt *t_f, int m)
 {
     int i = 0;
     
-    assert(t > 0.0);
+    assert (t > 0.0);
     while (t < t_f[i] + BRLENS_MIN)
         {
         i++;
@@ -17448,13 +17448,13 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
         cL[0] *= (CLFlt) (bs[0] * freq);
         cL[1] *= (CLFlt) (bs[1] * freq);
         sum = cL[0] + cL[1];
-        assert(cL[0]==cL[0]);
-        assert(cL[1]==cL[1]);
-        assert(sum<9999999999999999999999999999999.0);
+        assert (cL[0]==cL[0]);
+        assert (cL[1]==cL[1]);
+        assert (sum<9999999999999999999999999999999.0);
         cL[0] /= sum;
         cL[1] /= sum;
-        assert(cL[0]==cL[0]);
-        assert(cL[1]==cL[1]);
+        assert (cL[0]==cL[0]);
+        assert (cL[1]==cL[1]);
         cL += 2;
         }
 
@@ -17502,7 +17502,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 
     if (!strcmp(modelParams[division].nucModel,"Codon") || !strcmp(modelParams[division].nucModel,"Protein") || !strcmp(modelParams[division].nucModel,"Doublet"))
         {
-        assert(modelParams[division].dataType == DNA || modelParams[division].dataType == RNA);/*Note that we can have matrix with Protein datatype which is not and should not be covered here */
+        assert (modelParams[division].dataType == DNA || modelParams[division].dataType == RNA);/*Note that we can have matrix with Protein datatype which is not and should not be covered here */
         printedChar = (char *) SafeMalloc (numChar*sizeof(char));
         }
     else
@@ -22057,7 +22057,7 @@ int RemoveTreeFromPartitionCounters (Tree *tree, int treeId, int runId)
     for (i=0; i<tree->nIntNodes-1; i++)
         {
         p = tree->intDownPass[i];
-        assert(p->index >= tree->nNodes - tree->nIntNodes - (tree->isRooted == YES ? 1 : 0));
+        assert (p->index >= tree->nNodes - tree->nIntNodes - (tree->isRooted == YES ? 1 : 0));
         for (j=0; j<nLongsNeeded; j++)
             {
             partition[p->index][j] = partition[p->left->index][j] | partition[p->right->index][j];
@@ -28051,8 +28051,8 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 eV1 =  exp (-9 * v);
                 eV2 =  exp (-6 * v);
                 eV3 =  exp (-3 * v);
-                eV4 =  exp (3.0 * (root -  2.0) * v);
-                eV5 =  exp (- (3.0 * (root +  2.0) * v));
+                eV4 =  exp (3.0 * (root - 2.0) * v);
+                eV5 =  exp (-3.0 * (root + 2.0) * v);
 
                 /* pij(0,0) */
                 tiP[index] = (CLFlt) (pi* (1.0 + (0.5*eV1) + eV2 + (1.5*eV3) + (f1*eV4) + (f2*eV5)));

@@ -184,7 +184,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
                 if (j == m->numModelStates)
                     inStates[c] = j;
                 else
-                    assert(j==1);
+                    assert (j==1);
                 charBits += m->nParsIntsPerSite;
                 }
             beagleSetTipStates(m->beagleInstance, i, inStates);
@@ -574,7 +574,7 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain)
             threadError = pthread_create(&threads[d], NULL, 
                                          LaunchThreadLogLikeForDivision, 
                                          (void*) &launchValues[d]);
-            assert(0 == threadError);
+            assert (0 == threadError);
             wait[d] = 1;                    
             }           
         else 
@@ -589,7 +589,7 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain)
         if (wait[d]) 
             {
             threadError = pthread_join(threads[d], NULL);
-            assert(0 == threadError);
+            assert (0 == threadError);
             }               
         m = &modelSettings[d];
         chainLnLike += m->lnLike[2*chain + state[chain]];
@@ -1067,7 +1067,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #   endif
         return beagleReturn;
     }
-    assert(beagleReturn == BEAGLE_SUCCESS);
+    assert (beagleReturn == BEAGLE_SUCCESS);
     m->succesCount[chain]++;
     
     /* accumulate logs across sites */
@@ -1120,7 +1120,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                 }
 
             /* check for numerical errors */
-            assert((*lnL) == (*lnL));
+            assert ((*lnL) == (*lnL));
             }       
         }
         

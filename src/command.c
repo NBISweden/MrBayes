@@ -3547,7 +3547,7 @@ int DoExecute (void)
     cmdLine = 0;
     numOpenExeFiles++;
     s = NULL;
-    strncpy(exeFileName, inputFileName, 98);
+    strncpy (exeFileName, inputFileName, 98);
     
     if (numOpenExeFiles > 1)
         MrBayesPrint ("\n%s   Executing file \"%s\"...\n\n", spacer, inputFileName);
@@ -10108,7 +10108,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("partial   ");
             else
                 {
-                assert(definedConstraintsType[i] == NEGATIVE);
+                assert (definedConstraintsType[i] == NEGATIVE);
                 MrBayesPrint ("negative  ");
                 }
             k = NumBits (definedConstraint[i], numTaxa/nBitsInALong + 1);
@@ -10160,10 +10160,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      exponential distributon: mean    = 1 / rate                                \n");
         MrBayesPrint ("      gamma distributon:       mean    = alpha / beta                            \n");
-        MrBayesPrint ("                               st.dev. = square_root (alpha / beta^2)           \n");
-        MrBayesPrint ("      lognormal distributon:   mean    = exp (mean_log + st.dev._log^2/2)       \n");
-        MrBayesPrint ("                               st.dev. = square_root ((exp (st.dev._log^2) - 1)\n");
-        MrBayesPrint ("                                         * (exp (2*mean_log + st.dev._log^2))  \n");
+        MrBayesPrint ("                               st.dev. = square_root (alpha / beta^2)            \n");
+        MrBayesPrint ("      lognormal distributon:   mean    = exp (mean_log + st.dev._log^2/2)        \n");
+        MrBayesPrint ("                               st.dev. = square_root ((exp (st.dev._log^2) - 1)  \n");
+        MrBayesPrint ("                                         * (exp (2*mean_log + st.dev._log^2))    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The truncated normal distribution is an exception in that the mean_age and    \n");
         MrBayesPrint ("   stdev parameters are the mean and standard deviation of the underlying non-   \n");

@@ -1284,7 +1284,7 @@ int ChangeNumChains (int from, int to)
     /* fix stationary frequencies for standard data */
     if   (stdStateFreqsRowSize > 0)
         {
-        assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
+        assert (memAllocs[ALLOC_STDSTATEFREQS] == YES);
         stdStateFreqsOld=stdStateFreqs;
         stdStateFreqs = (MrBFlt *) SafeMalloc ((size_t)stdStateFreqsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
         if (!stdStateFreqs)
@@ -1535,7 +1535,7 @@ int ChangeNumRuns (int from, int to)
     /* fix stationary frequencies for standard data */
     if (stdStateFreqsRowSize > 0)
         {
-        assert(memAllocs[ALLOC_STDSTATEFREQS] == YES);
+        assert (memAllocs[ALLOC_STDSTATEFREQS] == YES);
         stdStateFreqsOld=stdStateFreqs;
         stdStateFreqs = (MrBFlt *) SafeRealloc ((void *) stdStateFreqs, stdStateFreqsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
         if (!stdStateFreqs)
@@ -11287,7 +11287,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                         {
                         for (j=0; j<(n+2); j++)
                             {
-                            subValue[index++] =  (1.0 / (n + 2));
+                            subValue[index++] = (1.0 / (n + 2));
                             }
                         }
                     }
@@ -11300,7 +11300,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                         {
                         for (j=0; j<(n-6); j++)
                             {
-                            subValue[index++] =  (1.0 / (n - 6));
+                            subValue[index++] = (1.0 / (n - 6));
                             }
                         }
                     }
@@ -11323,7 +11323,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                         }
                     for (i=1; i<b; i+=2)
                         {
-                        subValue[i] =  (1.0 - subValue[i-1]);
+                        subValue[i] = (1.0 - subValue[i-1]);
                         }
                     subValue += (2 * nb);
                     }
@@ -11340,7 +11340,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                     for (i=0; i<p->sympinStates[c]; i++)
                         {
                         if (subValue[i] < 0.0001)
-                            subValue[i] =  0.0001;
+                            subValue[i] = 0.0001;
                         sum += subValue[i];
                         }
                     for (i=0; i<modelParams[p->relParts[0]].nStates; i++)
@@ -11675,7 +11675,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
                 {
                 printf ("DEBUG ERROR: Hard constraint is not satisfied. \n");
                 return ABORT;
-                //assert(0);
+                //assert (0);
                 }
             }
 #   endif
@@ -11731,7 +11731,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
             }
         else
             {
-            assert(definedConstraintsType[k] == NEGATIVE);
+            assert (definedConstraintsType[k] == NEGATIVE);
             if (t->isRooted == YES)
                 {
                 CheckFirst = YES;
@@ -23102,7 +23102,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     }
                 else
                     {
-                    assert(!strcmp(mp->brlensPr, "Fixed"));
+                    assert (!strcmp(mp->brlensPr, "Fixed"));
                     MrBayesPrint ("%s            Prior      = Fixed, branch lengths are fixed to the ones of the user tree '%s'\n", spacer,
                                                     userTree[mp->topologyFix]->name);
                     }
@@ -23853,7 +23853,7 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             {
             clockRatep = GetParamVals(modelSettings[t->relParts[0]].clockRate, chain, 0);
             t_calibrated = t;
-            assert(clockRatep);
+            assert (clockRatep);
             }
 
         findAllowedClockrate (t, &mintmp, &maxtmp);

@@ -303,9 +303,9 @@ int CommandLine (int argc, char **argv)
             cmdStrP = readline("MrBayes > ");
             if (cmdStrP!=NULL) 
                     {
-                    strncpy(cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
+                    strncpy (cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
                     if (*cmdStrP) 
-                        add_history(cmdStrP);
+                        add_history (cmdStrP);
                     free (cmdStrP);
                     }
             else /* fall through to if (feof(stdin))..*/

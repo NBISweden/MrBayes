@@ -3336,7 +3336,7 @@ treeConstruction:
                     if (q->depth <= p->depth)
                         break;
                     }
-                assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
+                assert (p==NULL); /* Root always has 100% freq and it should be older than any other node that has 100% freq. */
                 }
             if (sumtParams.isCalibrated == YES)
                 {
@@ -3347,7 +3347,7 @@ treeConstruction:
                     if (q->age <= p->age)
                         break;
                     }
-                assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
+                assert (p==NULL); /* Root always has 100% freq and it should be older than any other node that has 100% freq. */
                 }
             }
         else if (nBits > 1 && !(nBits == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO))
@@ -3486,7 +3486,7 @@ treeConstruction:
                     {
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
                     /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
-                    assert(0);
+                    assert (0);
                     }
                 }
             if (sumtParams.isCalibrated == YES)
@@ -3497,7 +3497,7 @@ treeConstruction:
                     {
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
                     /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
-                    assert(0);
+                    assert (0);
                     }
                 }
             }
@@ -8058,8 +8058,8 @@ int StoreSumtTree (PackedTree *treeList, int index, PolyTree *t)
 {
     int orderLen, numBrlens;
 
-    assert(treeList[index].brlens == NULL);
-    assert(treeList[index].order == NULL);
+    assert (treeList[index].brlens == NULL);
+    assert (treeList[index].order == NULL);
 
     /* get tree dimensions */
     numBrlens = t->nNodes - 1;

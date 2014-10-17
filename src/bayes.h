@@ -104,7 +104,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #endif
 
 #if defined (DEBUGOUTPUT)
-#define DEBUG(fmt, arg) printf ("%s:%d ",__FILE__,__LINE__); printf (fmt,arg);
+#define DEBUG (fmt, arg) printf ("%s:%d ",__FILE__,__LINE__); printf (fmt,arg);
 // #else #define DEBUG(a,b)
 #endif
 

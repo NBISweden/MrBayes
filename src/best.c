@@ -917,7 +917,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
                 timeInterval = p->anc->nodeDepth - q->nodeDepth;
 
             assert (p->anc->anc != NULL);
-            assert(timeInterval >= 0.0);
+            assert (timeInterval >= 0.0);
 
             k = p->x - p->y;
             lnProb -= (k * (k - 1) * timeInterval) / theta;
