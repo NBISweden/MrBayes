@@ -104,7 +104,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #endif
 
 #if defined (DEBUGOUTPUT)
-#define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__); printf(fmt,arg);
+#define DEBUG(fmt, arg) printf ("%s:%d ",__FILE__,__LINE__); printf (fmt,arg);
 // #else #define DEBUG(a,b)
 #endif
 
@@ -517,7 +517,7 @@ typedef struct
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
     BitsLong        *flags;             /*!< pointer to cond like flags                   */
-    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengthes are set from user tree(as start tree or fix branch length prior ), NO otherwise */       
+    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengthes are set from user tree(as start tree or fix branch length prior), NO otherwise */       
     }
     Tree;
 

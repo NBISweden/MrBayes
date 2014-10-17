@@ -192,7 +192,7 @@ void AlignedSafeFree (void **ptr)
 #endif
 
 
-int AreBitfieldsEqual( BitsLong *p, BitsLong *q, int length)
+int AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length)
 {
     int i;
     
@@ -327,19 +327,19 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
         fprintf (toFile,"%s",strBuf);
         fflush (toFile);
         curStep = atoi(word);
-        if ( curStep > 0 )
+        if (curStep > 0)
             {
             strtok(NULL,"\t\n"); /*skip power*/
             for (run=0; run<chainParams.numRuns; run++)
                 {
                 tmpcp = strtok(NULL,"\t\n");
-                if(tmpcp == NULL )
+                if (tmpcp == NULL)
                     {
                     MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
                     return ERROR;
                     }
                 tmp = atof(tmpcp);
-                if(tmp == 0.0 )
+                if (tmp == 0.0)
                     {
                     MrBayesPrint ("%s   Error: Value of some step contribution is 0.0 or not a number in .ss file. Sting:%s        \n", spacer, strBuf);
                     return ERROR;
@@ -349,7 +349,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
             for (i=0; i<numTopologies; i++)
                 {
                 tmpcp = strtok(NULL,"\t\n");
-                if(tmpcp == NULL )
+                if (tmpcp == NULL)
                     {
                     MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
                     return ERROR;
@@ -629,7 +629,7 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     for (i=0; i<nRows; i++)
         nVals += rowCount[i];
 
-    theValues = (MrBFlt *) SafeMalloc ( (size_t) nVals* sizeof(MrBFlt));
+    theValues = (MrBFlt *) SafeMalloc ((size_t)nVals * sizeof(MrBFlt));
 
     /* extract values */
     p = theValues;
@@ -652,10 +652,10 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
 
     EstimatedSampleSize (vals, nRows, rowCount, ESS);
     theStats->avrESS = theStats->minESS = ESS[0];
-    for(i=1; i<nRows; i++)
+    for (i=1; i<nRows; i++)
         {
         theStats->avrESS += ESS[i];
-        if(theStats->minESS > ESS[i] )
+        if (theStats->minESS > ESS[i])
             {
             theStats->minESS = ESS[i];
             }
@@ -688,7 +688,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
                 reliable = NO;
                 continue;
                 }
-            a /= exp( y - 100.0 );
+            a /= exp(y - 100.0);
             scaler += y - 100.0;
             y = 100.0;
             }
@@ -720,7 +720,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
                 reliable = NO;
                 continue;
                 }
-            a /= exp( y - 100.0 );
+            a /= exp(y - 100.0);
             scaler += y - 100.0;
             y = 100.0;
             }
@@ -843,7 +843,7 @@ int IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField
     int i;
 
     for (i=0; i<length; i++)
-        if ((bitField1[i] | bitField2[i]) != bitField3[i] )
+        if ((bitField1[i] | bitField2[i]) != bitField3[i])
             return NO;
         
     return YES;
@@ -906,9 +906,9 @@ int LongestLine (FILE *fp)
     longest = 0;
     lineLength = 0;
     ch = fgetc(fp);
-    while ( ch != EOF)
+    while (ch != EOF)
         {
-        if((ch != '\n') && (ch != '\r'))
+        if ((ch != '\n') && (ch != '\r'))
             {
             ch = fgetc(fp);
             lineLength++;
@@ -916,7 +916,7 @@ int LongestLine (FILE *fp)
             }
         if (ch == '\r')
             {
-            if( (ch = fgetc(fp)) == '\n' )
+            if ((ch = fgetc(fp)) == '\n')
                 {
                 /* windows \r\n */
                 lineLength++;
@@ -1018,9 +1018,9 @@ char *MbPrintNum (MrBFlt num)
     static char s[40];
 
     if (scientific == YES)
-        sprintf(s,"%.*le", precision, num);
+        sprintf (s,"%.*le", precision, num);
     else
-        sprintf(s,"%.*lf", precision, num);
+        sprintf (s,"%.*lf", precision, num);
 
     return s;
 }
@@ -1059,7 +1059,7 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 @param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
                Could be set to NULL if this value need not to be returened.
 Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
-void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst )
+void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst)
 {
     int             i;
     MrBFlt          a, aOld, s, x, y, scaler;
@@ -1072,8 +1072,8 @@ void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt
         y -= scaler;
         if (y > 200.0)
             {
-            a /= exp( y - 100.0 );
-            s /= exp( 2*(y - 100));
+            a /= exp(y - 100.0);
+            s /= exp(2*(y - 100));
             scaler += y - 100.0;
             y = 100.0;
             }
@@ -1089,21 +1089,21 @@ void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt
     (*mean) = log(a) + scaler;
     
     /* variance */
-    if( var!=NULL )
+    if (var!=NULL)
         {
         if (nVals <= 1)
             (*var) = 0.0;
         else
-            (*var) = log( s / (nVals)) + 2*scaler;
+            (*var) = log(s / nVals) + 2*scaler;
         }
 
     /* variance */
-    if( varEst!=NULL )
+    if (varEst!=NULL)
         {
         if (nVals <= 1)
             (*varEst) = 0.0;
         else
-            (*varEst) = log( s / (nVals+1)) + 2*scaler;
+            (*varEst) = log(s / (nVals+1)) + 2*scaler;
         }
 }
 
@@ -1354,7 +1354,7 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
     nVals = 0;
     for (j=0; j<nRuns; j++)
         {
-        if(count[j]==0)
+        if (count[j]==0)
             {
             return -1.0;
             }
@@ -1401,12 +1401,12 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
     MrBFlt      *values, mean, del1, del2, varStat=0.0;
     MrBFlt      gammaStat[2000];
         
-    for( i=0; i<nRuns; i++)
+    for (i=0; i<nRuns; i++)
         {
         samples=count[i];
         values=vals[i];
         mean=0.0;
-        for(j=0; j<samples; j++ )
+        for (j=0; j<samples; j++)
             {
             mean+=values[j];
             }
@@ -1450,14 +1450,14 @@ void *SafeCalloc(size_t n, size_t s) {
 
     void *ptr;
     
-    if( s*n == 0 )
+    if (s*n == 0)
         {
         //return NULL;
         }
 
     ptr= calloc(n, s);
 
-    if(ptr==NULL)
+    if (ptr==NULL)
         {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
@@ -1476,7 +1476,7 @@ int SafeFclose(FILE **fp) {
 #   if defined MPI_ENABLED
     if (proc_id == 0) {
 #   endif
-    if( fp!=NULL && (*fp)!=NULL ) 
+    if (fp!=NULL && (*fp)!=NULL) 
         retval=fclose(*fp);
     *fp = NULL;
 #   if defined MPI_ENABLED
@@ -1500,14 +1500,14 @@ void *SafeMalloc(size_t s) {
 
     void *ptr;
 
-    if( s==0 )
+    if (s == 0)
         {
         return NULL;
         }
 
     ptr= malloc(s);
 
-    if(ptr==NULL)
+    if (ptr==NULL)
         {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
@@ -1524,7 +1524,7 @@ void *SafeMalloc(size_t s) {
 /* SafeRealloc: Print error if out of memory */
 void *SafeRealloc(void *ptr, size_t s) {
 
-    if( s==0 )
+    if (s == 0)
         {
         free(ptr);
         return NULL;
@@ -1538,7 +1538,7 @@ void *SafeRealloc(void *ptr, size_t s) {
     else
         ptr = realloc (ptr, s);
 
-    if(ptr==NULL)
+    if (ptr==NULL)
         {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
@@ -2383,7 +2383,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
     t->nLocks=0;
     for (constraintId=0; constraintId<numDefinedConstraints; constraintId++)
         {
-        if (t->constraints[constraintId] == NO || definedConstraintsType[constraintId] != HARD )
+        if (t->constraints[constraintId] == NO || definedConstraintsType[constraintId] != HARD)
             continue;
 
         /* initialize bits in partition to add; get rid of deleted taxa in the process */
@@ -2422,7 +2422,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
         /* check if root in rooted tree (we allow this to enable inference of ancestral states) */
         if (k == numLocalTaxa && t->isRooted == YES)
             {
-            if(pt->root->isLocked == YES){
+            if (pt->root->isLocked == YES) {
                 MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
                 MrBayesPrint ("%s            and will be ignored\n", spacer);
                 t->constraints[constraintId] = NO;
@@ -2437,7 +2437,7 @@ int BuildConstraintTree (Tree *t, PolyTree *pt, char **localTaxonNames)
         /* check if interior root in unrooted tree (we allow this to enable inference of ancestral states) */
         if ((k == numLocalTaxa - 1 || k == numLocalTaxa) && t->isRooted == NO)
             {
-            if(pt->root->isLocked == YES){
+            if (pt->root->isLocked == YES) {
                 MrBayesPrint ("%s   WARNING: Constraint '%s' is a duplicate of another constraint\n", spacer, constraintNames[constraintId]);
                 MrBayesPrint ("%s            and will be ignored\n", spacer);
                 t->constraints[constraintId] = NO;
@@ -2812,7 +2812,7 @@ int CheckSetConstraints (Tree *t)
     numLocks = 0;
     for (a=0; a<numDefinedConstraints; a++)
         {
-        if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[a] != HARD )
+        if (modelParams[t->relParts[0]].activeConstraints[a] == NO || definedConstraintsType[a] != HARD)
             continue;
 
         /* set bits in partition to add */
@@ -2870,7 +2870,7 @@ int CheckSetConstraints (Tree *t)
             }
         }
 
-    if( numLocks != t->nLocks )
+    if (numLocks != t->nLocks)
         {
         MrBayesPrint ("%s   Inconsistent lock settings. This is a bug, please report it.\n", spacer);
         FreeTreePartitions (t);
@@ -2919,7 +2919,7 @@ void CopyPolyNodes (PolyNode *p, PolyNode *q, int nLongsNeeded)
     p->isLocked               = q->isLocked;
     p->lockID                 = q->lockID;
     strcpy (p->label, q->label);
-    if( nLongsNeeded!=0 )
+    if (nLongsNeeded!=0)
         {
         assert(p->partition);
         assert(q->partition);
@@ -3014,7 +3014,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
 
     /* check we have enough memory */
     assert (to->memNodes >= from->nNodes);
-    if( from->bitsets==NULL || to->bitsets==NULL )
+    if (from->bitsets==NULL || to->bitsets==NULL)
         {
         nLongsNeeded=0;
         }
@@ -3244,7 +3244,7 @@ int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 
     /* refuse to arbitrarily root an input tree */
     assert (!(from->isRooted == NO && to->isRooted == YES));
-    if ( (from->isRooted == NO) && (to->isRooted == YES) )
+    if ((from->isRooted == NO) && (to->isRooted == YES))
         {
         MrBayesPrint ("%s   Failed to copy trees due to difference in rootedness of source and destination. \n", spacer);
         return (ERROR);
@@ -3374,7 +3374,7 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 
     numTaxa = from->nNodes - from->nIntNodes - (from->isRooted == YES ? 1 : 0);
     nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
-    if( from->bitsets==NULL || to->bitsets==NULL )
+    if (from->bitsets==NULL || to->bitsets==NULL)
         nLongsNeeded=0;
 
     /* check that there is enough memory */
@@ -3457,7 +3457,7 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
     p->isLocked               = q->isLocked;
     p->lockID                 = q->lockID;
     p->d                      = q->d;
-    if( nLongsNeeded!=0 )
+    if (nLongsNeeded!=0)
         {
         assert(p->partition);
         assert(q->partition);
@@ -3645,7 +3645,7 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
     int i;
     TreeNode *p;
 
-    if( t->fromUserTree == NO )
+    if (t->fromUserTree == NO)
         {
         /*Set nodeDepth*/
         for (i=0; i<t->nNodes; i++)
@@ -3689,7 +3689,7 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
 |   @maxClockRate   - adress where maximum allowed clock rate is stored (OUT)
 |
 ----------------------------------------------------------------*/
-void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate )
+void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
 {
     int i;
     TreeNode *p;
@@ -3701,7 +3701,7 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate )
     *minClockRate = 2.0;
     *maxClockRate = 1.0;
 
-    if( t->fromUserTree == NO )
+    if (t->fromUserTree == NO)
         {
         for (i=0; i<t->nNodes-1; i++)
             {
@@ -3710,12 +3710,12 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate )
                 {
                 tmp = BRLENS_MIN/(p->anc->age - p->age);
                 assert(tmp > 0);
-                if( tmp > min)
+                if (tmp > min)
                     min = tmp;
 
                 tmp = BRLENS_MAX/(p->anc->age - p->age);
                 assert(tmp > 0);
-                if( tmp > max)
+                if (tmp > max)
                     max = tmp;
                 }
             }
@@ -3900,7 +3900,7 @@ void GetDownPass (Tree *t)
 /* get the actual down pass sequences */
 void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
 {
-    if (p != NULL )
+    if (p != NULL)
         {
         GetNodeDownPass (t, p->left,  i, j);
         GetNodeDownPass (t, p->right, i, j);
@@ -3969,7 +3969,7 @@ void GetPolyDownPass (PolyTree *t)
 
     i = j = 0;
     GetPolyNodeDownPass (t, t->root, &i, &j);
-    assert( t->nIntNodes==j );
+    assert (t->nIntNodes==j);
 }
 
 
@@ -3985,7 +3985,7 @@ void GetPolyNodeDownPass (PolyTree *t, PolyNode *p, int *i, int *j)
         }
 
     t->allDownPass[(*i)++] = p;
-    if (p->left != NULL )
+    if (p->left != NULL)
         t->intDownPass[(*j)++] = p;
 }
 
@@ -4049,31 +4049,31 @@ int InitBrlens (Tree *t, MrBFlt v)
 @param calibrUp     is the age of the most resent calibrated predecessor
 @return             age of the node 
 */
-MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp )
+MrBFlt SetNodeCalibratedAge(TreeNode *node, unsigned levUp, MrBFlt calibrUp)
 {
     MrBFlt r,l;
 
-    if( node->age != -1.0 )
+    if (node->age != -1.0)
         {
-        if(node->right != NULL)
-            SetNodeCalibratedAge( node->right, 2, node->age );
-        if(node->left != NULL)
-            SetNodeCalibratedAge( node->left, 2, node->age );
+        if (node->right != NULL)
+            SetNodeCalibratedAge (node->right, 2, node->age);
+        if (node->left != NULL)
+            SetNodeCalibratedAge (node->left,  2, node->age);
         return node->age;
         }
 
-    r = SetNodeCalibratedAge( node->right, levUp+1, calibrUp );
-    l = SetNodeCalibratedAge( node->left, levUp+1, calibrUp );
+    r = SetNodeCalibratedAge (node->right, levUp+1, calibrUp);
+    l = SetNodeCalibratedAge (node->left,  levUp+1, calibrUp);
 
-    if( r>l )
+    if (r > l)
         {
-        assert( calibrUp - r > 0.0 );
-        return node->age = r + ( calibrUp - r )/levUp;
+        assert (calibrUp - r > 0.0);
+        return node->age = r + (calibrUp - r)/levUp;
         }
     else
         {
-        assert( calibrUp - l > 0.0 );
-        return node->age = l + ( calibrUp - l )/levUp;
+        assert (calibrUp - l > 0.0);
+        return node->age = l + (calibrUp - l)/levUp;
         }
 }
 
@@ -4111,7 +4111,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     mp = &modelParams[t->relParts[0]];
     treeAgeMin = 0.0;
     treeAgeMax = POS_INFINITY;
-    if ( t->root->left->isDated == YES)
+    if (t->root->left->isDated == YES)
         {
         treeAgeMin = t->root->left->calibration->min;
         treeAgeMax = t->root->left->calibration->max;
@@ -4189,7 +4189,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     else
         p->nodeDepth = p->age = treeAgeMax;
 
-    SetNodeCalibratedAge( p, 1, p->age );
+    SetNodeCalibratedAge (p, 1, p->age);
 
     /* Setup node depths */
     for (i=0; i<t->nNodes; i++)
@@ -4208,12 +4208,12 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
             if (p->anc->anc != NULL)
                 {
                 p->length = p->anc->nodeDepth - p->nodeDepth;
-                if( p->length < BRLENS_MIN )
+                if (p->length < BRLENS_MIN)
                     {
                     //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too small.\n", spacer);
                     //return (ERROR);
                     }
-                if( p->length > BRLENS_MAX )
+                if (p->length > BRLENS_MAX)
                     {
                     //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too long.\n", spacer);
                     //return (ERROR);
@@ -4585,7 +4585,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         }
     
     /* Allow tollerance */
-    if(minRateConstrained == YES && maxRateConstrained == YES && AreDoublesEqual (minRate, maxRate, tol) == YES && minRate > maxRate) 
+    if (minRateConstrained == YES && maxRateConstrained == YES && AreDoublesEqual (minRate, maxRate, tol) == YES && minRate > maxRate) 
         {
         maxRate = minRate;
         }
@@ -4747,7 +4747,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
             p = tree->allDownPass[i];
             if (p->length <= 0.0)
                 {
-                if(p->length == 0.0)
+                if (p->length == 0.0)
                     printf ("Node %d has zero branch length %f\n", p->index, p->length);
                 else
                     printf ("Node %d has negative branch length %f\n", p->index, p->length);
@@ -5218,13 +5218,13 @@ int NrSubTreeLevels(TreeNode *node)
 {
     int r,l;
 
-    if( node == NULL )
+    if (node == NULL)
         {
         return -1;
         }
 
-    r = NrSubTreeLevels( node->right );
-    l = NrSubTreeLevels( node->left );
+    r = NrSubTreeLevels (node->right);
+    l = NrSubTreeLevels (node->left);
 
     return ((r>l)?(r):(l))+1;
 }
@@ -5538,8 +5538,8 @@ void AppendRelaxedBranch (int a,int b,PolyTree *t)
         len=t->nEvents[i][a]+t->nEvents[i][b];
         t->position[i][a] = (MrBFlt *) SafeRealloc ((void *)t->position[i][a], len*sizeof(MrBFlt));
         t->rateMult[i][a] = (MrBFlt *) SafeRealloc ((void *)t->rateMult[i][a], len*sizeof(MrBFlt));
-        memcpy( t->position[i][a]+t->nEvents[i][a], t->position[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
-        memcpy( t->rateMult[i][a]+t->nEvents[i][a], t->rateMult[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
+        memcpy (t->position[i][a]+t->nEvents[i][a], t->position[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
+        memcpy (t->rateMult[i][a]+t->nEvents[i][a], t->rateMult[i][b], t->nEvents[i][b]*sizeof(MrBFlt));
         free(t->position[i][b]);
         free(t->rateMult[i][b]);
         t->position[i][b] = t->position[i][a];
@@ -5648,7 +5648,7 @@ int PrunePolyTree (PolyTree *pt)
             if (q == NULL)
                 {
                 /* p is the left of its ancestor */
-                assert( p->anc->left == p);
+                assert (p->anc->left == p);
                 p->anc->left = p->sib;
                 }
             else
@@ -5668,7 +5668,7 @@ int PrunePolyTree (PolyTree *pt)
                 q = qa->left;
                 if (q->left == NULL)
                     {
-                    AppendRelaxedBranch ( qa->index, q->index, pt );
+                    AppendRelaxedBranch (qa->index, q->index, pt);
                     qa->index = q->index;
                     qa->length += q->length;
                     strcpy(qa->label, q->label);
@@ -5680,12 +5680,12 @@ int PrunePolyTree (PolyTree *pt)
                     {
                     if (qa->anc != NULL)
                         {
-                        AppendRelaxedBranch ( qa->index, q->index, pt );
+                        AppendRelaxedBranch (qa->index, q->index, pt);
                         qa->length += q->length;
                         }
                     qa->index   = q->index;
                     qa->left = q->left;
-                    for(r=q->left; r!= NULL; r=r->sib)
+                    for (r=q->left; r!= NULL; r=r->sib)
                         r->anc = qa;
                     }
                 }
@@ -5694,7 +5694,7 @@ int PrunePolyTree (PolyTree *pt)
                 {
                 numIntPruned++;
                 r=p->anc; /*r is the root with only 2 children*/
-                if ( r->left->left != NULL )
+                if (r->left->left != NULL)
                     {/* Make r->left new root by attaching "right" child of r to children of r->left */
                     for (q=r->left->left; q->sib!=NULL; q=q->sib)
                         ;
@@ -5707,7 +5707,7 @@ int PrunePolyTree (PolyTree *pt)
                     }
                 else
                     {/* Make "right" child of r (r->left->sib) the new root by attaching r->left to children of r->"right" */
-                    for ( q=r->left->sib->left; q->sib!=NULL; q=q->sib )
+                    for (q=r->left->sib->left; q->sib!=NULL; q=q->sib)
                         ;
                     q->sib = r->left;
                     r->left->anc = q->anc;
@@ -5761,7 +5761,7 @@ int PrunePolyTree (PolyTree *pt)
     
     /* get downpass; note that the deletion procedure does not change the root in rooted case */
     i=j=0;
-    GetPolyNodeDownPass ( pt, pt->root, &i, &j );
+    GetPolyNodeDownPass (pt, pt->root, &i, &j);
     assert(i==pt->nNodes);
     assert(j==pt->nIntNodes);
 
@@ -5855,7 +5855,7 @@ int RandPerturb (Tree *t, int nPert, RandLong *seed)
 |
 | @return                       Number of nodes in "nodeArray" that could be paired  with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint
 */
-int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted)
 {
     int             i, j,  k, FirstEmpty;
     BitsLong        **constraintPartition;
@@ -5865,20 +5865,19 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
         {
         k=activeConstraints[j];
 
-        if( definedConstraintsType[k] == PARTIAL )
+        if (definedConstraintsType[k] == PARTIAL)
             {
-            if( ( IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES ) ||
-                ( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES )
-              )
+            if ((IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES) ||
+                (isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES))
                 continue;/* all nodes are compartable because condition of the constraint has to be sutsfied in the subtree rooted at w*/
 
             FirstEmpty = IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded);
-            if( FirstEmpty == YES &&  IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES )
+            if (FirstEmpty == YES &&  IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES)
                 continue; /* all nodes are compartable becouse w does not contain any constraint taxa*/
 
             assert(FirstEmpty^IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded));
 
-            if( FirstEmpty == YES )
+            if (FirstEmpty == YES)
                 {/*w->partition has intersection with definedConstraintTwoPruned[k], thus remove all nodes from nodeArray that intersect with definedConstraintPruned[k]*/
                 constraintPartition=definedConstraintPruned;
                 }
@@ -5887,11 +5886,10 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
                 constraintPartition=definedConstraintTwoPruned;
                 }
 
-            for(i=0;i<nodeArraySize;i++)
+            for (i=0;i<nodeArraySize;i++)
                 {
-                if( IsSectionEmpty(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO &&
-                    ( ( FirstEmpty == NO && isRooted== YES ) ||  IsPartNested(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO  )
-                  )
+                if (IsSectionEmpty(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO &&
+                    ((FirstEmpty == NO && isRooted== YES) ||  IsPartNested(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO))
                   /*second part of if statment is to bail out "nodeArray[i]" when "w" contains nodes for example from definedConstraintPruned and "nodeArray[i]" have definedConstraintTwoPruned fully nested in it
                   This bail out not applicable if t->isRooted== YES Since we should create a rooting node for the first set of taxa in the constraint.
                   Note that such case possible because we may have hard constraint node that fully nest definedConstraintTwoPruned but also having taxa from definedConstraintPruned keeping constraint active.*/
@@ -5905,18 +5903,18 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
             }/*end if PARTIAL*/
         else 
             {
-            assert( definedConstraintsType[k] == NEGATIVE );
-            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+            assert (definedConstraintsType[k] == NEGATIVE);
+            if (isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO)
                 constraintPartition=definedConstraintPruned;
             else
                 constraintPartition=definedConstraintTwoPruned;
             
-            if( IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==YES )
+            if (IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==YES)
                 continue;
 
-            for(i=0;i<nodeArraySize;i++)
+            for (i=0;i<nodeArraySize;i++)
                 {
-                if( IsUnionEqThird (w->partition, nodeArray[i]->partition, constraintPartition[k], nLongsNeeded) == YES )
+                if (IsUnionEqThird (w->partition, nodeArray[i]->partition, constraintPartition[k], nLongsNeeded) == YES)
                     {
                     tmp = nodeArray[i];
                     nodeArray[i]=nodeArray[--nodeArraySize];
@@ -5942,7 +5940,7 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 |
 | @return                       Index of first violated constraint in activeConstraints array, -1 if no constraint is violated.
 */
-int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted)
 {
     int             j, k;
     BitsLong        **constraintPartition;
@@ -5952,27 +5950,24 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
         k=activeConstraints[j];
         assert(definedConstraintsType[k] != HARD);
 
-        if( definedConstraintsType[k] == PARTIAL )
+        if (definedConstraintsType[k] == PARTIAL)
             {
-            if( ( IsSectionEmpty(definedConstraintPruned[k], partition, nLongsNeeded) == NO ) &&
-                ( IsSectionEmpty(definedConstraintTwoPruned[k], partition, nLongsNeeded) == NO ) &&
-                ( IsPartNested(definedConstraintPruned[k], partition, nLongsNeeded) == NO) &&
-                !( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], partition, nLongsNeeded) == YES)
-              )
+            if ((IsSectionEmpty(definedConstraintPruned[k], partition, nLongsNeeded) == NO) &&
+                (IsSectionEmpty(definedConstraintTwoPruned[k], partition, nLongsNeeded) == NO) &&
+                (IsPartNested(definedConstraintPruned[k], partition, nLongsNeeded) == NO) &&
+                !(isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], partition, nLongsNeeded) == YES))
                 return j;
-
             }/*end if PARTIAL*/
         else 
             {
-            assert( definedConstraintsType[k] == NEGATIVE );
-            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+            assert (definedConstraintsType[k] == NEGATIVE);
+            if (isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO)
                 constraintPartition=definedConstraintPruned;
             else
                 constraintPartition=definedConstraintTwoPruned;
 
-            if( IsUnionEqThird (partition, partition, constraintPartition[k], nLongsNeeded) == YES )
+            if (IsUnionEqThird (partition, partition, constraintPartition[k], nLongsNeeded) == YES)
                 return j;
-
             }/*end if NEGATIVE*/
         }
 
@@ -5989,7 +5984,7 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
 |
 | @return                       Size of pruned "activeConstraints" array
 */
-int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted )
+int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted)
 {
     int             j,  k;
     BitsLong        **constraintPartition;
@@ -5999,11 +5994,10 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
         {
         k=activeConstraints[j];
 
-        if( definedConstraintsType[k] == PARTIAL )
+        if (definedConstraintsType[k] == PARTIAL)
             {
-            if( (IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded)) ||
-                ( isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded))
-              )
+            if ((IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded)) ||
+               (isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES && IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded)))
                 {
                 //tmp = activeConstraints[j];
                 activeConstraints[j]=activeConstraints[--activeConstraintsSize];
@@ -6013,13 +6007,13 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
             }/*end if PARTIAL*/
         else 
             {
-            assert( definedConstraintsType[k] == NEGATIVE );
-            if( isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO )
+            assert (definedConstraintsType[k] == NEGATIVE);
+            if (isRooted == YES || IsBitSet(localOutGroup, definedConstraintPruned[k])==NO)
                 constraintPartition=definedConstraintPruned;
             else
                 constraintPartition=definedConstraintTwoPruned;
             
-            if( IsPartNested(constraintPartition[k], w->partition, nLongsNeeded)==NO && IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==NO )
+            if (IsPartNested(constraintPartition[k], w->partition, nLongsNeeded)==NO && IsSectionEmpty(constraintPartition[k], w->partition, nLongsNeeded)==NO)
                 {
                 //tmp = activeConstraints[j];
                 activeConstraints[j]=activeConstraints[--activeConstraintsSize];
@@ -6051,7 +6045,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
 
     assert(tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
     nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
-    assert( nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
+    assert (nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
     nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
@@ -6059,11 +6053,11 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
     activeConstraintsSize = 0;
 
     /* collect constraints to consider if applicable*/
-    if( tt!=NULL && tt->constraints!=NULL )
+    if (tt!=NULL && tt->constraints!=NULL)
         {
         for (k=0; k<numDefinedConstraints; k++)
             {
-            if( tt->constraints[k] == YES && definedConstraintsType[k] != HARD )
+            if (tt->constraints[k] == YES && definedConstraintsType[k] != HARD)
                 activeConstraints[activeConstraintsSize++]=k;
             }
         }
@@ -6074,9 +6068,9 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
         {
         p = t->intDownPass[i];
         tmp=ViolatedConstraint(p->partition, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
-        if ( tmp != -1)
+        if (tmp != -1)
             {
-            assert( p->isLocked == YES );
+            assert (p->isLocked == YES);
             MrBayesPrint ("%s   Could not build a constraint tree since hard constraint \"%s\" and constraint \"%s\" are incompatible\n", spacer, constraintNames[p->lockID], constraintNames[activeConstraints[tmp]]);
             return (ERROR);
             }
@@ -6130,13 +6124,13 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
             w1 = nodeArray[rand1];
             nodeArray[rand1] = nodeArray[--nodeArraySize];
 
-            if( nodeArraySize==0 )
+            if (nodeArraySize==0)
                 return ABORT; /* Potentaily here we could instead revert by removing last added node and try again. */
 
             /* Move all nodes in nodeArray which can be paired with w to the begining of array */
-            nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+            nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
             /* TODO optimization for Maxim (if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
-            }while( nodeArrayAllowedSize==0 );
+            } while (nodeArrayAllowedSize == 0);
 
         rand2 = (int) (RandomNumber(seed) *nodeArrayAllowedSize);
         w2 = nodeArray[rand2];
@@ -6147,10 +6141,10 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
         u->x = 2;
         p->x--;
 
-        if( tt!=NULL ){
+        if (tt != NULL) {
             for (j=0; j<nLongsNeeded; j++)
                 u->partition[j] = w1->partition[j] | w2->partition[j] ;
-            activeConstraintsSize = PruneActiveConstraints (u, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted );
+            activeConstraintsSize = PruneActiveConstraints (u, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
         }
 
         u->left = w1;
@@ -6161,7 +6155,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
         r = u;
         for (q = p->left; q!= NULL; q = q->sib)
             {
-            if ( q != w1 && q!=w2)
+            if (q != w1 && q != w2)
                 {
                 r->sib=q;
                 r = q;
@@ -6388,11 +6382,11 @@ void ResetTipIndices(PolyTree *pt)
         if (k < pt->nNodes)
             {
             assert (p->left == NULL);
-            if(p->index!=j){
-                SwapRelaxedBranchInfo( p->index, j, pt);
-                for(m=0; m<pt->nNodes; m++)
+            if (p->index!=j) {
+                SwapRelaxedBranchInfo (p->index, j, pt);
+                for (m=0; m<pt->nNodes; m++)
                     {
-                    if(pt->allDownPass[m]->index==j)
+                    if (pt->allDownPass[m]->index==j)
                         {
                         pt->allDownPass[m]->index=p->index;
                         break;
@@ -6603,12 +6597,12 @@ void ResetIntNodeIndices (PolyTree *t)
 
     for (i=0; i<t->nIntNodes; i++)
         {
-        if(t->intDownPass[i]->index != index)
+        if (t->intDownPass[i]->index != index)
             {
-            SwapRelaxedBranchInfo( t->intDownPass[i]->index, index, t);
-            for(m=0; m<t->nIntNodes; m++)
+            SwapRelaxedBranchInfo (t->intDownPass[i]->index, index, t);
+            for (m=0; m<t->nIntNodes; m++)
                 {
-                if(t->intDownPass[m]->index==index)
+                if (t->intDownPass[m]->index==index)
                     {
                     t->intDownPass[m]->index=t->intDownPass[i]->index;
                     break;
@@ -8505,7 +8499,7 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                     printf ("[&B %s %s]", param->name, MbPrintNum(brlen));
                     }
                 else
-                    printf(")");
+                    printf (")");
                 }
             }
         }
@@ -8661,7 +8655,7 @@ void WriteEvolTree (TreeNode *p, int chain, Param *param)
                 if (p->anc->anc != NULL)
                     printf ("):%s", MbPrintNum(length[p->index]));
                 else
-                    printf(")");
+                    printf (")");
                 }
             }
         }
@@ -8846,7 +8840,7 @@ complex **AllocateSquareComplexMatrix (int dim)
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
         exit (0);
         }
-    for(i=1;i<dim;i++) 
+    for (i=1;i<dim;i++) 
         {
         m[i] = m[i-1] + dim;
         }
@@ -8879,7 +8873,7 @@ MrBFlt **AllocateSquareDoubleMatrix (int dim)
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of doubles.\n", spacer);
         exit(1);
         }
-    for(i=1; i<dim; i++)
+    for (i=1; i<dim; i++)
         {
         m[i] = m[i-1] + dim;
         }
@@ -8911,7 +8905,7 @@ int **AllocateSquareIntegerMatrix (int dim)
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of integers.\n", spacer);
         exit(1);
         }
-    for(i=1; i<dim; i++)
+    for (i=1; i<dim; i++)
         {
         m[i] = m[i-1] + dim;
         }
@@ -9776,7 +9770,7 @@ MrBFlt ComplexAbsoluteValue (complex a)
     
     x = fabs(a.re);
     y = fabs(a.im);
-    if(AreDoublesEqual(x, 0.0, ETA)==YES)  /* x == 0.0 */
+    if (AreDoublesEqual(x, 0.0, ETA)==YES)  /* x == 0.0 */
         answer = y;
     else if (AreDoublesEqual(y, 0.0, ETA)==YES) /* y == 0.0 */
         answer = x;
@@ -9843,7 +9837,7 @@ complex ComplexDivision (complex a, complex b)
     complex     c;
     MrBFlt      r, den;
     
-    if(fabs(b.re) >= fabs(b.im)) 
+    if (fabs(b.re) >= fabs(b.im)) 
         {
         r = b.im / b.re;
         den = b.re + r * b.im;
@@ -10397,12 +10391,12 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
     MrBFlt  sum;
 
     sum = 0.0;
-    for(i=0; i<n; i++)
+    for (i=0; i<n; i++)
         {
         z[i] = RndGamma (alp[i], seed) / 1.0;
         sum += z[i];
         }
-    for(i=0; i<n; i++)
+    for (i=0; i<n; i++)
         z[i] /= sum;
 }
 
@@ -11079,11 +11073,11 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
         }
     else if (isComplex == YES)
         {
-        for(i=0; i<dim; i++)
+        for (i=0; i<dim; i++)
             {
               if (fabs(eigvalsImag[i])<1E-20) /* == 0.0 */
                 { 
-                for(j=0; j<dim; j++)
+                for (j=0; j<dim; j++)
                     {
                     Ceigvecs[j][i].re = eigvecs[j][i];
                     Ceigvecs[j][i].im = 0.0;
@@ -11207,7 +11201,7 @@ int Hqr2 (int dim, int low, int high, MrBFlt **h, MrBFlt *wr, MrBFlt *wi, MrBFlt
     itn = dim * 30;
 
     /* search for next eigenvalues */
-    while (en >= low) /* changed from an "if(en < lo)" to eliminate a goto statement */
+    while (en >= low) /* changed from an "if (en < lo)" to eliminate a goto statement */
         {
         its = 0;
         na = en - 1;
@@ -12602,8 +12596,8 @@ MrBFlt LnPriorProbLognormal_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
 {
     MrBFlt z, mean_log, sd_log;
 
-    sd_log      = sqrt( log( (params[1]*params[1])/(params[0]*params[0]) + 1 ) );
-    mean_log    = log( params[0] ) - sd_log * sd_log / 2.0;
+    sd_log      = sqrt (log((params[1]*params[1])/(params[0]*params[0]) + 1));
+    mean_log    = log(params[0]) - sd_log * sd_log / 2.0;
 
     z= (log(val) - mean_log) / sd_log;
 
@@ -12693,8 +12687,8 @@ MrBFlt LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *para
     x        = val - params[0];
     mean     = params[1] - params[0];
     sd       = params[2];
-    sd_log      = sqrt( log( (sd*sd)/(mean*mean) + 1 ) );
-    mean_log    = log( mean ) - sd_log * sd_log / 2.0;
+    sd_log   = sqrt (log((sd*sd)/(mean*mean) + 1));
+    mean_log = log(mean) - sd_log * sd_log / 2.0;
 
     z = (log(x) - mean_log) / sd_log;
 
@@ -12820,8 +12814,8 @@ MrBFlt LnProbRatioLognormal_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *par
     if (newX <= 0.0 || oldX <= 0.0)
         return NEG_INFINITY;
 
-    sd_log      = sqrt( log( (params[1]*params[1])/(params[0]*params[0]) + 1 ) );
-    mean_log    = log( params[0] ) - sd_log * sd_log / 2.0;
+    sd_log      = sqrt (log((params[1]*params[1])/(params[0]*params[0]) + 1));
+    mean_log    = log(params[0]) - sd_log * sd_log / 2.0;
 
     newZ = (log(newX) - mean_log) / sd_log;
     oldZ = (log(oldX) - mean_log) / sd_log;
@@ -12922,8 +12916,8 @@ MrBFlt LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX
 
     mean        = params[1] - params[0];
     sd          = params[2];
-    sd_log      = sqrt( log( (sd*sd)/(mean*mean) + 1 ) );
-    mean_log    = log( mean ) - sd_log * sd_log / 2.0;
+    sd_log      = sqrt (log((sd*sd)/(mean*mean) + 1));
+    mean_log    = log(mean) - sd_log * sd_log / 2.0;
 
     newX -= params[0];
     oldX -= params[0];
@@ -13078,7 +13072,7 @@ int LogBase2Plus1 (MrBFlt x)
 {
     int     j = 0;
 
-    while(x > 1.0 - 1.0e-07) 
+    while (x > 1.0 - 1.0e-07) 
         {
         x /= 2.0;
         j++;
@@ -13457,7 +13451,7 @@ void PrintComplexVector (int dim, complex *vec)
     for (i = 0; i < (dim - 1); i++) 
         {
         MrBayesPrint ("%lf + %lfi, ", vec[i].re, vec[i].im);
-        if(i == 1) 
+        if (i == 1) 
             MrBayesPrint("\n    ");
         }
     MrBayesPrint ("%lf + %lfi}\n", vec[dim - 1].re, vec[dim - 1].im);
@@ -13479,10 +13473,10 @@ void PrintSquareComplexMatrix (int dim, complex **m)
     for (row = 0; row < (dim - 1); row++) 
         {
         MrBayesPrint ("{");
-        for(col = 0; col < (dim - 1); col++) 
+        for (col = 0; col < (dim - 1); col++) 
             {
             MrBayesPrint ("%lf + %lfi, ", m[row][col].re, m[row][col].im);
-            if(col == 1) 
+            if (col == 1) 
                 MrBayesPrint ("\n    ");
             }
         MrBayesPrint ("%lf + %lfi},\n", 
@@ -13492,7 +13486,7 @@ void PrintSquareComplexMatrix (int dim, complex **m)
     for (col = 0; col < (dim - 1); col++) 
         {
         MrBayesPrint ("%lf + %lfi, ", m[dim - 1][col].re, m[dim - 1][col].im);
-        if(col == 1) 
+        if (col == 1) 
             MrBayesPrint ("\n    ");
         }
     MrBayesPrint ("%lf + %lfi}}", m[dim - 1][dim - 1].re, m[dim - 1][dim - 1].im);
@@ -13513,7 +13507,7 @@ void PrintSquareDoubleMatrix (int dim, MrBFlt **matrix)
     
     for (i=0; i<dim; i++) 
         {
-        for(j=0; j<dim; j++)
+        for (j=0; j<dim; j++)
             MrBayesPrint ("%1.6lf ", matrix[i][j]);
         MrBayesPrint ("\n");
         }
@@ -13533,7 +13527,7 @@ void PrintSquareIntegerMatrix (int dim, int **matrix)
     
     for (i=0; i<dim; i++) 
         {
-        for(j=0; j<dim; j++)
+        for (j=0; j<dim; j++)
             MrBayesPrint ("%d ", matrix[i][j]);
         MrBayesPrint ("\n");
         }
@@ -13939,7 +13933,7 @@ void TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrB
         for (j=0; j<dim; j++)
             {
             sum = 0.0;
-            for(s=0; s<dim; s++)
+            for (s=0; s<dim; s++)
                 sum += (*ptr++) * EigValexp[s];
             tMat[i][j] = (sum < 0.0) ? 0.0 : sum;
             }
@@ -13968,9 +13962,9 @@ void TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrB
             for (j=0; j<dim; j++)
                 {
                 sumF = sumS = 0.0;
-                for(s=0; s<dim; s++)
+                for (s=0; s<dim; s++)
                     {
-                    sumF += (*ptr  ) * eigenVals[s] *                r *     EigValexp[s];
+                    sumF += (*ptr) * eigenVals[s] * r * EigValexp[s];
                     sumS += (*ptr++) * eigenVals[s] * eigenVals[s] * r * r * EigValexp[s];
                     }
                 fMat[i][j] = sumF;

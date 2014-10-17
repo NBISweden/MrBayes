@@ -645,7 +645,7 @@ int DoSumSs (void)
         goto errorExit;
         }
 
-    if(chainParams.burninSS > 0)
+    if (chainParams.burninSS > 0)
         {
         stepBeginSS = chainParams.burninSS + 1;
         }
@@ -656,22 +656,22 @@ int DoSumSs (void)
         }
 
     numSamplesInStepSS = (numRows - stepBeginSS)/chainParams.numStepsSS;
-    if( (numRows - stepBeginSS)%chainParams.numStepsSS!=0 )
+    if ((numRows - stepBeginSS)%chainParams.numStepsSS!=0)
         {
         MrBayesPrint ("%s   Error:  Number of samples could not be evenly devided among steps (%d samples among %d steps). \n", spacer,(numRows - stepBeginSS),chainParams.numStepsSS);
         goto errorExit;
         }
 
-    if( chainParams.relativeBurnin == YES )
+    if (chainParams.relativeBurnin == YES)
         {
         stepBurnin = (int)(numSamplesInStepSS*chainParams.burninFraction);
         }
     else
         {
         stepBurnin = chainParams.chainBurnIn;
-        if(stepBurnin >= numSamplesInStepSS )
+        if (stepBurnin >= numSamplesInStepSS)
             {
-            MrBayesPrint ("%s   Error:  Burnin in each step(%d) is longer then the step itself(%d). \n", spacer,stepBurnin, numSamplesInStepSS );
+            MrBayesPrint ("%s   Error:  Burnin in each step(%d) is longer then the step itself(%d). \n", spacer,stepBurnin, numSamplesInStepSS);
             goto errorExit;               
             }
         }
@@ -679,23 +679,23 @@ int DoSumSs (void)
     marginalLnLSS = (MrBFlt *) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt));
         /*Preparing and printing joined plot.*/
     plotArrayY = (MrBFlt **) SafeCalloc (sumssParams.numRuns+1, sizeof(MrBFlt*));
-    for(i=0; i<sumssParams.numRuns+1; i++)
+    for (i=0; i<sumssParams.numRuns+1; i++)
         plotArrayY[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
 
     plotArrayX = (MrBFlt **) SafeCalloc (sumssParams.numRuns, sizeof(MrBFlt*));
-    for(i=0; i<sumssParams.numRuns; i++)
+    for (i=0; i<sumssParams.numRuns; i++)
         {
         plotArrayX[i] = (MrBFlt *) SafeCalloc (numSamplesInStepSS, sizeof(MrBFlt));
-        for(j=0; j<numSamplesInStepSS; j++)
+        for (j=0; j<numSamplesInStepSS; j++)
             plotArrayX[i][j]=j+1;
         }
 
-    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows );
+    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows);
     MrBayesPrint ("\n");
-    MrBayesPrint ("%s   Marginal likelihood (in natural log units) is estimated using stepping-stone sampling\n", spacer );
-    MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS );
+    MrBayesPrint ("%s   Marginal likelihood (in natural log units) is estimated using stepping-stone sampling\n", spacer);
+    MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS);
     MrBayesPrint ("%s   First %d samples (including generation 0) are discarded as initial burn-in.\n", spacer, stepBeginSS);
-        if(chainParams.startFromPriorSS==YES)
+        if (chainParams.startFromPriorSS==YES)
             MrBayesPrint ("%s   Sampling is assumed have being done from prior to posterior.\n", spacer);
         else
             {
@@ -710,8 +710,8 @@ sumssTable:
     MrBayesPrint ("   runX -- Contribution to the marginal log likelihood of run X, i.e. marginal \n"); 
     MrBayesPrint ("           log likelihood for run X is the sum across all steps in column runX.\n\n");
 
-    if( firstPass == YES && chainParams.relativeBurnin == YES )
-        MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples  (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction) );
+    if (firstPass == YES && chainParams.relativeBurnin == YES)
+        MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples  (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction));
     else
         MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples      \n", spacer, stepBurnin);
     MrBayesPrint ("%s   discarded at the begining of each step.  \n\n", spacer);
@@ -721,55 +721,55 @@ sumssTable:
     MrBayesPrint ("   Step");
     for (j=0; j<sumssParams.numRuns ; j++)
         {
-        if(j<9)
+        if (j<9)
             MrBayesPrint (" ");
         MrBayesPrint ("      run%d", j+1);
         }
     MrBayesPrint ("\n");
-    for(i=0; i<sumssParams.numRuns; i++)
+    for (i=0; i<sumssParams.numRuns; i++)
         {
         marginalLnLSS[i] = 0.0;  
         }
-    for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>=0; stepIndexSS--)   
+    for (stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>=0; stepIndexSS--)   
         {
-        if(chainParams.startFromPriorSS==YES)
+        if (chainParams.startFromPriorSS==YES)
             {
-            stepLengthSS = BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS)-BetaQuantile( chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
+            stepLengthSS = BetaQuantile(chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-stepIndexSS)/(MrBFlt)chainParams.numStepsSS) - BetaQuantile(chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
             }
         else
             {
-            stepLengthSS = BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS) - BetaQuantile ( chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
+            stepLengthSS = BetaQuantile(chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS) - BetaQuantile(chainParams.alphaSS, 1.0, (MrBFlt)stepIndexSS/(MrBFlt)chainParams.numStepsSS);
             }
         MrBayesPrint ("   %3d   ", chainParams.numStepsSS-stepIndexSS);
-        for(i=0; i<sumssParams.numRuns; i++)
+        for (i=0; i<sumssParams.numRuns; i++)
             {
             lnlp = parameterSamples[whichIsY].values[i] + stepBeginSS + (chainParams.numStepsSS-stepIndexSS-1)*numSamplesInStepSS;
             nextSteplnlp = lnlp+numSamplesInStepSS;
             lnlp+= stepBurnin;
             stepAcumulatorSS = 0.0;
             stepScalerSS = *lnlp*stepLengthSS;
-            while( lnlp<nextSteplnlp )
+            while (lnlp < nextSteplnlp)
                 {
-               if( *lnlp*stepLengthSS > stepScalerSS + 200.0 )
+               if (*lnlp*stepLengthSS > stepScalerSS + 200.0)
                     {
                     // adjust scaler;
-                    stepAcumulatorSS /= exp( *lnlp*stepLengthSS - 100.0 - stepScalerSS ); 
+                    stepAcumulatorSS /= exp(*lnlp*stepLengthSS - 100.0 - stepScalerSS); 
                     stepScalerSS= *lnlp*stepLengthSS - 100.0;
                     }
-                stepAcumulatorSS += exp( *lnlp*stepLengthSS - stepScalerSS );
+                stepAcumulatorSS += exp(*lnlp*stepLengthSS - stepScalerSS);
                 lnlp++;
                 }
-            tmpMfl = (log( stepAcumulatorSS/(numSamplesInStepSS-stepBurnin) ) + stepScalerSS);
+            tmpMfl = (log(stepAcumulatorSS/(numSamplesInStepSS-stepBurnin)) + stepScalerSS);
             MrBayesPrint (" %10.3lf", tmpMfl);
             marginalLnLSS[i] += tmpMfl;
             }
         MrBayesPrint ("\n");
-        //MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, i+1, marginalLnLSS );
+        //MrBayesPrint ("%s       %3d    %9.2f   \n", spacer, i+1, marginalLnLSS);
         }
     MrBayesPrint ("         ");
     for (j=0; j<sumssParams.numRuns ; j++)
         {
-        if(j<9)
+        if (j<9)
             MrBayesPrint ("-");
         MrBayesPrint ("----------");
         }
@@ -803,16 +803,16 @@ sumssTable:
             }
     */
 
-    if( firstPass == NO )
+    if (firstPass == NO)
         goto sumssExitOptions;
 
     sumssStepPlot:
 
     MrBayesPrint ("\n\n%s   Step plot(s).\n",spacer);
-    while(1)
+    while (1)
         {
          MrBayesPrint ("\n");
-        if( sumssParams.stepToPlot == 0 )
+        if (sumssParams.stepToPlot == 0)
             {
             beginPrint=(int)(sumssParams.discardFraction*stepBeginSS);
             countPrint=stepBeginSS-beginPrint;
@@ -821,7 +821,7 @@ sumssTable:
             }
         else
             {
-            if( sumssParams.stepToPlot > chainParams.numStepsSS )
+            if (sumssParams.stepToPlot > chainParams.numStepsSS)
                 {
                 MrBayesPrint ("%s   Chosen index of step to print %d is out of range of step indices[0,...,%d].\n", spacer,sumssParams.stepToPlot,chainParams.numStepsSS);
                 goto errorExit;
@@ -855,7 +855,7 @@ sumssTable:
                 goto errorExit;
             }
 
-        if( sumssParams.askForMorePlots == NO || firstPass == YES )
+        if (sumssParams.askForMorePlots == NO || firstPass == YES)
             break;
 
         MrBayesPrint (" You can choose to print new step plots for different steps or discard fractions.\n");
@@ -865,9 +865,9 @@ sumssTable:
         MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
         MrBayesPrint (" Enter new step number 'Steptoplot':");
         k = scanf("%d",&j);
-        if(j < 0 )
+        if (j < 0)
             break;
-        if(j > chainParams.numStepsSS)
+        if (j > chainParams.numStepsSS)
             {
             do
                 {
@@ -875,49 +875,49 @@ sumssTable:
                 k = scanf("%f",&tmpf);
                 sumssParams.discardFraction =  (MrBFlt)tmpf;
                 }
-            while(sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
+            while (sumssParams.discardFraction < 0.0 || sumssParams.discardFraction > 1.0);
             }
         else
             sumssParams.stepToPlot=j;
     }
 
-    if( firstPass == NO )
+    if (firstPass == NO)
         goto sumssExitOptions;
 
     sumssJoinedPlot:
 
     MrBayesPrint ("\n\n%s   Joined plot(s).\n",spacer);
-    while(1)
+    while (1)
         {
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Joined plot of %d samples of all steps together. 'smoothing' is set to:%d\n", spacer,numSamplesInStepSS,sumssParams.smoothing);
         MrBayesPrint ("%s   According to step burn-in, first %d samples are not ploted.\n", spacer,stepBurnin);
 
-        for(i=0; i<sumssParams.numRuns; i++)
+        for (i=0; i<sumssParams.numRuns; i++)
             {
-            for(j=stepBurnin;j<numSamplesInStepSS;j++)
+            for (j=stepBurnin;j<numSamplesInStepSS;j++)
                 plotArrayY[sumssParams.numRuns][j]=0.0;
             lnlp= parameterSamples[whichIsY].values[i] + stepBeginSS;
             nextSteplnlp=lnlp;
-            for(stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>0; stepIndexSS--)
+            for (stepIndexSS = chainParams.numStepsSS-1; stepIndexSS>0; stepIndexSS--)
                 {
                 firstlnlp=plotArrayY[sumssParams.numRuns] + stepBurnin;
                 lnlp+=stepBurnin;
                 nextSteplnlp += numSamplesInStepSS;
-                while( lnlp<nextSteplnlp )
+                while (lnlp < nextSteplnlp)
                     {
                     *firstlnlp+=*lnlp;
                     firstlnlp++;
                     lnlp++;
                     }
                 }
-            for(j=stepBurnin;j<numSamplesInStepSS;j++)
+            for (j=stepBurnin;j<numSamplesInStepSS;j++)
                 {
                 sum=0.0;
                 count=0;
-                for(k=j-sumssParams.smoothing;k<=j+sumssParams.smoothing;k++)
+                for (k=j-sumssParams.smoothing;k<=j+sumssParams.smoothing;k++)
                     {
-                    if(k>=stepBurnin && k<numSamplesInStepSS)
+                    if (k>=stepBurnin && k<numSamplesInStepSS)
                         {
                         sum += plotArrayY[sumssParams.numRuns][k];
                         count++;
@@ -925,11 +925,11 @@ sumssTable:
                     }
                 plotArrayY[i][j] = sum/count;
                 /*
-                if( max < plotArrayY[i][j])
+                if (max < plotArrayY[i][j])
                     max=plotArrayY[i][j];
                     */
                 }
-        /*  for(j=stepBurnin;j<numSamplesInStepSS;j++)
+        /*  for (j=stepBurnin;j<numSamplesInStepSS;j++)
                 {
                 plotArrayY[i][j] /= max;
                 }*/
@@ -961,7 +961,7 @@ sumssTable:
                 goto errorExit;
             }
 
-        if( sumssParams.askForMorePlots == NO || firstPass == YES )
+        if (sumssParams.askForMorePlots == NO || firstPass == YES)
             break;
 
         MrBayesPrint (" You can choose to print new joined plots with different step burn-in or smoothing.\n");
@@ -971,9 +971,9 @@ sumssTable:
         MrBayesPrint (" to change 'Smoothing'.\n");
         MrBayesPrint (" Enter new step burn-in:");
         k = scanf("%d",&j);
-        if(j < 0 )
+        if (j < 0)
             break;
-        if(j >= numSamplesInStepSS)
+        if (j >= numSamplesInStepSS)
             {
             MrBayesPrint (" Enter new value for 'Smoothing':");
             k = scanf("%d",&j);
@@ -987,7 +987,7 @@ sumssTable:
 
 sumssExitOptions:
 
-    if(sumssParams.askForMorePlots == YES )
+    if (sumssParams.askForMorePlots == YES)
         {
         MrBayesPrint ("\n");
         MrBayesPrint (" Sumss is interactive, because of parameter 'Askmore=YES' setting. \n");
@@ -1000,9 +1000,9 @@ sumssExitOptions:
         do
             {
             k = scanf("%d",&j);
-            }while(j<1 || j>4);
+            }while (j<1 || j>4);
 
-        if(j == 1)
+        if (j == 1)
             {
             MrBayesPrint (" Allowed range of step burn-in values are from 0 to %d\n", numSamplesInStepSS-1);
             MrBayesPrint (" Current step burn-in value is:%d\n", stepBurnin);
@@ -1011,15 +1011,15 @@ sumssExitOptions:
                 {
                 k = scanf("%d",&stepBurnin);
                 }
-            while(stepBurnin < 0 || stepBurnin > numSamplesInStepSS-1);
+            while (stepBurnin < 0 || stepBurnin > numSamplesInStepSS-1);
             MrBayesPrint ("\n"); 
             goto sumssTable;
             }
-        else if(j == 2)
+        else if (j == 2)
             {
             goto sumssStepPlot;
             }
-        else if(j == 3)
+        else if (j == 3)
             goto sumssJoinedPlot;
         }
  
@@ -1032,10 +1032,10 @@ sumssExitOptions:
     expecting = Expecting(COMMAND);
     strcpy (spacer, "");
     chainParams.isSS=NO;
-    for(i=0; i<sumssParams.numRuns+1; i++)
+    for (i=0; i<sumssParams.numRuns+1; i++)
         free(plotArrayY[i]);
     free(plotArrayY);
-    for(i=0; i<sumssParams.numRuns; i++)
+    for (i=0; i<sumssParams.numRuns; i++)
         free(plotArrayX[i]);
     free(plotArrayX);
     free(marginalLnLSS);
@@ -1046,7 +1046,7 @@ errorExit:
 
     /* free memory */
     FreeParameterSamples (parameterSamples);
-    if( headerNames!=NULL )
+    if (headerNames!=NULL)
         for (i=0; i<nHeaders; i++)
             free (headerNames[i]);
     free (headerNames);
@@ -1054,12 +1054,12 @@ errorExit:
     expecting = Expecting(COMMAND);    
     strcpy (spacer, "");
     chainParams.isSS=NO;
-    if( plotArrayY!=NULL )
-        for(i=0; i<sumssParams.numRuns+1; i++)
+    if (plotArrayY!=NULL)
+        for (i=0; i<sumssParams.numRuns+1; i++)
             free(plotArrayY[i]);
     free(plotArrayY);
-    if( plotArrayX!=NULL )
-        for(i=0; i<sumssParams.numRuns; i++)
+    if (plotArrayX!=NULL)
+        for (i=0; i<sumssParams.numRuns; i++)
             free(plotArrayX[i]);
     free(plotArrayX);
     free(marginalLnLSS);
@@ -1095,7 +1095,7 @@ int DoSumpParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                if (strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -1120,7 +1120,7 @@ int DoSumpParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                if (strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -1346,7 +1346,7 @@ int DoSumSsParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                if (strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -1371,7 +1371,7 @@ int DoSumSsParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99 )
+                if (strlen(tkn)>99 && (strchr(tkn,' ')-tkn) > 99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -1533,7 +1533,7 @@ int DoSumSsParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-        /* set Smoothing (sumssParams.smoothing ) *******************************************************/
+        /* set Smoothing (sumssParams.smoothing) *******************************************************/
         else if (!strcmp(parmName, "Smoothing"))
             {
             if (expecting == Expecting(EQUALSIGN))
@@ -1549,7 +1549,7 @@ int DoSumSsParm (char *parmName, char *tkn)
                 else
                     {
                     sumssParams.smoothing  = tempI;
-                    MrBayesPrint ("%s   Setting sumss smoothing to %d\n", spacer, sumssParams.smoothing );
+                    MrBayesPrint ("%s   Setting sumss smoothing to %d\n", spacer, sumssParams.smoothing);
                     expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                     }
                 }
@@ -1685,7 +1685,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
         lastTokenWasDash = NO;
         nNumbersOnThisLine = 0;
         do {
-            if(GetToken (sumpToken, &tokenType, &sumpTokenP))
+            if (GetToken (sumpToken, &tokenType, &sumpTokenP))
                 goto errorExit;
             /* printf ("%s (%d)\n", sumpToken, tokenType); */
             if (IsSame("[", sumpToken) == SAME)
@@ -1741,7 +1741,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
         }
 
     /* calculate burnin */
-    if ( chainParams.isSS == YES )
+    if (chainParams.isSS == YES)
         {
         burnin = 0;
         }
@@ -1769,11 +1769,11 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
     /* Calculate and check the number of columns and rows for the file; get header line at the same time */
     (void)fseek(fp, 0L, 0);
     for (lineNum=0; lineNum<lastNonDigitLine; lineNum++)
-        if(fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
+        if (fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
             goto errorExit;
     strcpy(headerLine, s);
     for (; lineNum < lastNonDigitLine+burnin; lineNum++)
-        if(fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
+        if (fgets (s, fileInfo->longestLineLength + 2, fp)==NULL)
             goto errorExit;
 
     inSumpComment = NO;
@@ -1786,7 +1786,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
         lastTokenWasDash = NO;
         nNumbersOnThisLine = 0;
         do {
-            if(GetToken (sumpToken, &tokenType, &sumpTokenP))
+            if (GetToken (sumpToken, &tokenType, &sumpTokenP))
                 goto errorExit;
             if (IsSame("[", sumpToken) == SAME)
                 inSumpComment = YES;
@@ -2456,9 +2456,9 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns,  int startingFr
         MrBayesPrint (" ");
     MrBayesPrint ("^\n");
     MrBayesPrint ("%s   %1.0lf", spacer, minX);
-    if((int)minX>0)
+    if ((int)minX>0)
         width=(int)(log10(minX));
-    else if((int)minX==0)
+    else if ((int)minX==0)
         width=1;
     else
         width=(int)(log10(-minX))+1;
@@ -2575,7 +2575,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
         MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
 
-        if(theStats.minESS == theStats.minESS)
+        if (theStats.minESS == theStats.minESS)
             {
             MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.minESS));
             MrBayesPrint ("  %8.2lf", theStats.minESS);
@@ -2587,7 +2587,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
             }
         if (nRuns > 1)
             {
-            if(theStats.minESS == theStats.minESS)
+            if (theStats.minESS == theStats.minESS)
                 {
                 MrBayesPrint ("  %8.2lf", theStats.avrESS);
                 MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.avrESS));
@@ -2686,7 +2686,7 @@ int PrintPlot (MrBFlt *xVals, MrBFlt *yVals, int numVals)
     minY = maxY = meanY[0] / numY[0];
     for (i=0; i<screenWidth; i++)
         {
-        if( meanY[i] == 0) /* with some compilers if( NaN < 1 ) is equal true !!! so we realy need this check*/
+        if (meanY[i] == 0) /* with some compilers if (NaN < 1) is equal true !!! so we realy need this check*/
             continue;
         meanY[i] /= numY[i];
         if (meanY[i] < minY)
@@ -2820,7 +2820,7 @@ int ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSample *p
         column = 0;
         p = s;
         do {
-            if(GetToken (sumpToken, &tokenType, &p))
+            if (GetToken (sumpToken, &tokenType, &p))
                 goto errorExit;
             if (IsSame("[", sumpToken) == SAME)
                 inSumpComment = YES;
@@ -2888,6 +2888,7 @@ errorExit:
 }
 
 
+/* the following are moved from sumt.c to combine with sump.c */
 PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
 {
     int     i, n, comp, nLongsNeeded = sumtParams.BitsLongsNeeded;
@@ -3330,9 +3331,9 @@ treeConstruction:
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->depth = theStats.median;
-                for( p = q->left; p!=NULL; p = p->sib )
+                for (p = q->left; p!=NULL; p = p->sib)
                     {
-                    if( q->depth <= p->depth )
+                    if (q->depth <= p->depth)
                         break;
                     }
                 assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
@@ -3341,9 +3342,9 @@ treeConstruction:
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->age = theStats.median;
-                for( p = q->left; p!=NULL; p = p->sib )
+                for (p = q->left; p!=NULL; p = p->sib)
                     {
-                    if( q->age <= p->age )
+                    if (q->age <= p->age)
                         break;
                     }
                 assert(p==NULL);/*  Root always has 100% freq and it should be older than any other node that has 100% freq. */
@@ -3391,14 +3392,14 @@ treeConstruction:
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->depth = theStats.median;
-                if( freq < 1.00 )
+                if (freq < 1.00)
                     {
-                    for( r = p->left; r!=NULL; r = r->sib )
+                    for (r = p->left; r!=NULL; r = r->sib)
                         {
-                        if( IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded) &&  r->depth >= q->depth )
+                        if (IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded) &&  r->depth >= q->depth)
                             break; /* child is older then the node we try to add. Not good.*/
                         }
-                    if( p->depth <= q->depth )
+                    if (p->depth <= q->depth)
                         {      /* New node older than the parent. Not good.*/
                         r = p; /* Just to make r!=NULL*/
                         }
@@ -3408,21 +3409,21 @@ treeConstruction:
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->age = theStats.median;
-                if( freq < 1.00 )
+                if (freq < 1.00)
                     {
-                    for( r = p->left; r!=NULL; r = r->sib )
+                    for (r = p->left; r!=NULL; r = r->sib)
                         {
-                        if( freq < 1.00 && IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded) && r->age >= q->age )
+                        if (freq < 1.00 && IsPartNested(r->partition, partition, sumtParams.BitsLongsNeeded) && r->age >= q->age)
                             break; /* child is older then the node we try to add. Not good.*/
                         }
-                    if( p->age <= q->age )
+                    if (p->age <= q->age)
                         {      /* New node older than the parent. Not good.*/
                         r = p; /* Just to make r!=NULL*/
                         }
                     }
                 }
 
-            if( r!=NULL && isFirstLoop )
+            if (r!=NULL && isFirstLoop)
                 {
                  /* cancel the addition of the new node*/
                 isInterapted =1;
@@ -3481,7 +3482,7 @@ treeConstruction:
                 {
                 GetSummary(part->height, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->depth = theStats.median;
-                if(q->anc->depth < q->depth)
+                if (q->anc->depth < q->depth)
                     {
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
                     /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
@@ -3492,7 +3493,7 @@ treeConstruction:
                 {
                 GetSummary(part->age, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
                 q->age = theStats.median;
-                if(q->anc->age < q->age)
+                if (q->anc->age < q->age)
                     {
                     /* We never should get here because terminals always have 100% freq and they are younger than any other node that has 100% freq. */
                     /* We should be careful with the trees with 0-brl generated under the fossilized birth-death prior! (<= is changed to <) */
@@ -3502,10 +3503,10 @@ treeConstruction:
             }
         }
 
-    if( isFirstLoop )
+    if (isFirstLoop)
         {
         t2 = t;
-        if( isInterapted )
+        if (isInterapted)
             {
             isFirstLoop = 0;
             goto treeConstruction;
@@ -3519,7 +3520,7 @@ treeConstruction:
     if (sumtParams.orderTaxa == YES)
         OrderTips (t);
 
-    if( t!=t2 )
+    if (t!=t2)
         {
         /* get downpass arrays */
         GetPolyDownPass(t2);
@@ -3541,7 +3542,7 @@ treeConstruction:
             MrBayesPrint ("%s   Phylogram (based on median node depths):\n", spacer);
         else
             MrBayesPrint ("%s   Phylogram (based on average branch lengths):\n", spacer);
-        if( isInterapted )
+        if (isInterapted)
             {
             MrBayesPrint ("%s   Warning. Phylogram containing all nodes with credibility values exceeding\n",spacer);
             MrBayesPrint ("%s   the level set by Contype could not be constructed.\n",spacer);
@@ -3586,7 +3587,7 @@ treeConstruction:
         PrintFigTreeConTree(fpCon, t2, treeParts);
     MrBayesPrintf (fpCon, "end;\n");
 
-    if( t!=t2 )
+    if (t!=t2)
         {
         FreePolyTree (t2);
         }
@@ -3793,7 +3794,7 @@ int DoCompareTree (void)
     /* ...and fast forward to beginning of last tree block (skipping begin trees). */
     for (i=0; i<lastTreeBlockBegin[0] + 1; i++)
         {
-        if( fgets (s, longestLineLength, fp) == NULL )
+        if (fgets (s, longestLineLength, fp) == NULL)
             {
             printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
             }
@@ -3831,7 +3832,7 @@ int DoCompareTree (void)
     ResetTranslateTable();
     for (i=0; i<lastTreeBlockEnd[0] - lastTreeBlockBegin[0] - 1; i++)
         {
-        if( fgets (s, longestLineLength, fp) == NULL )
+        if (fgets (s, longestLineLength, fp) == NULL)
             {
             printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
             }
@@ -3859,7 +3860,7 @@ int DoCompareTree (void)
     /* ...and fast forward to beginning of last tree block. */
     for (i=0; i<lastTreeBlockBegin[1] + 1; i++)
         {
-        if( fgets (s, longestLineLength, fp) == NULL )
+        if (fgets (s, longestLineLength, fp) == NULL)
             {
             printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
             }
@@ -3881,7 +3882,7 @@ int DoCompareTree (void)
     ResetTranslateTable();
     for (i=0; i<lastTreeBlockEnd[1] - lastTreeBlockBegin[1] - 1; i++)
         {
-        if( fgets (s, longestLineLength, fp) == NULL )
+        if (fgets (s, longestLineLength, fp) == NULL)
             {
             printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
             }
@@ -4579,15 +4580,15 @@ int DELETE_ME_count_taxa(PolyNode *p)
 {
     int sum=0;
 
-    if(p->left==NULL){
-        if( p->depth > 0.1 )
+    if (p->left==NULL) {
+        if (p->depth > 0.1)
             return 1;
         else
             return 0;
     }
 
     p=p->left;
-    while(p != NULL){
+    while (p != NULL) {
         sum+=DELETE_ME_count_taxa(p);
         p=p->sib;
     }
@@ -4599,23 +4600,23 @@ void DELETE_ME_dump_depth(PolyNode *p)
 {
     /*print depth of two taxa clade*/
     /*
-    if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
-        fprintf(rateMultfp,"%f\n",p->depth);
+    if (p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL){
+        fprintf (rateMultfp,"%f\n",p->depth);
         }
-    if( p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL ){
-        if( p->left->depth > 0.1 && p->left->sib->depth > 0.1 )
-            fprintf(rateMultfp,"%f\n",p->depth);
+    if (p->left != NULL && p->left->left == NULL && p->left->sib != NULL && p->left->sib->left == NULL){
+        if (p->left->depth > 0.1 && p->left->sib->depth > 0.1)
+            fprintf (rateMultfp,"%f\n",p->depth);
         }
     */
     /* print depth of three taxa clade */
-    if( ((p->left != NULL && p->left->left == NULL) && p->left->sib != NULL && p->left->sib->left != NULL &&  p->left->sib->left->left == NULL && p->left->sib->left->sib->left == NULL) ||
-       (p->left != NULL && p->left->left != NULL && p->left->left->left == NULL && p->left->left->sib->left == NULL && (p->left->sib->left == NULL)) ) {
-        if( DELETE_ME_count_taxa(p)==2 )
-            fprintf(rateMultfp,"%f\n",p->depth);
+    if (((p->left != NULL && p->left->left == NULL) && p->left->sib != NULL && p->left->sib->left != NULL &&  p->left->sib->left->left == NULL && p->left->sib->left->sib->left == NULL) ||
+       (p->left != NULL && p->left->left != NULL && p->left->left->left == NULL && p->left->left->sib->left == NULL && (p->left->sib->left == NULL))) {
+        if (DELETE_ME_count_taxa(p)==2)
+            fprintf (rateMultfp,"%f\n",p->depth);
         }
  
     p=p->left;
-    while(p != NULL){
+    while (p != NULL) {
         DELETE_ME_dump_depth(p);
         p=p->sib;
     }
@@ -4828,7 +4829,7 @@ int DoSumt (void)
             /* ...and fast forward to beginning of last tree block. */
             for (i=0; i<sumtFileInfo.lastTreeBlockBegin+1; i++)
                 {
-                if( fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL )
+                if (fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL)
                     {
                     printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
@@ -4836,12 +4837,12 @@ int DoSumt (void)
 
 #   if defined (PRINT_RATEMULTIPLIERS_CPP)
             sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
-            if ( (rateMultfp=OpenNewMBPrintFile (tempName)) == NULL )
+            if ((rateMultfp=OpenNewMBPrintFile (tempName)) == NULL)
                 {
                 printf ("Error oppening file: %s to write", tempName);
                 goto errorExit;
                 }
-            fprintf(rateMultfp,"rateMult_CPP\n");
+            fprintf (rateMultfp,"rateMult_CPP\n");
 #   endif
 
             /* Set up cheap status bar. */
@@ -4865,7 +4866,7 @@ int DoSumt (void)
             ResetTranslateTable();
             for (i=0; i<sumtFileInfo.lastTreeBlockEnd - sumtFileInfo.lastTreeBlockBegin - 1; i++)
                 {
-                if( fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL )
+                if (fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL)
                     {
                     printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
@@ -4940,10 +4941,10 @@ int DoSumt (void)
             {
             for (j=0; j<sumtParams.numRuns;j++)
                 {
-                if(treeParts[i]->count[j]>=min)
+                if (treeParts[i]->count[j]>=min)
                     break;
                 }
-            if( j==sumtParams.numRuns )
+            if (j==sumtParams.numRuns)
                 {
                 numTreePartsToPrint--;
                 tmp=treeParts[numTreePartsToPrint];
@@ -5050,7 +5051,7 @@ int DoSumt (void)
             if (sumtParams.numTrees == 1)
                 MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.parts\"):\n\n", spacer, sumtParams.sumtOutfile);
             else
-                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer,  sumtParams.sumtOutfile, treeNo+1 );
+                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer,  sumtParams.sumtOutfile, treeNo+1);
             }
 
         /* calculate a couple of numbers that are handy to have */
@@ -5522,8 +5523,8 @@ int DoSumt (void)
                 }
             if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
                 {
-                MrBayesPrint ("%s       Average PSRF for parameter values ( excluding NA and >10.0 ) = %1.3lf\n", spacer, avgPSRF);
-                if(maxPSRF == 10 )
+                MrBayesPrint ("%s       Average PSRF for parameter values (excluding NA and >10.0) = %1.3lf\n", spacer, avgPSRF);
+                if (maxPSRF == 10)
                     MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
                 else
                     MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
@@ -5649,7 +5650,7 @@ int DoSumtParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99)
+                if (strlen(tkn)>99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -6123,9 +6124,9 @@ int DoSumtTree (void)
     if (sumtParams.tree->isClock)
         GetPolyDepths (sumtParams.tree);
 
-    if(rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
+    if (rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
         DELETE_ME_dump_depth(sumtParams.tree->root);
-    //fprintf(rateMultfp,"%s\n",tkn);
+    //fprintf (rateMultfp,"%s\n",tkn);
 #   endif
 
     /* increment number of trees read in */
@@ -6241,7 +6242,7 @@ int DoSumtTree (void)
             }
         else
             {
-            /* the following block was conditioned with if(isTranslateDef == NO || isTranslateDiff == NO) 
+            /* the following block was conditioned with if (isTranslateDef == NO || isTranslateDiff == NO) 
             The reason was not clearly stated  but it prevents exclusion of taxa to work in case when the condition does not hold.
             My guess is that before PrunePolyTree() relied on indeses of tips be set as in original matrix.
             Now it is not needed after PrunePolyTree and ResetTipIndices ware modified to use labels istead of indexes to recognize tips.*/
@@ -6281,8 +6282,8 @@ int DoSumtTree (void)
                 for (j=0; j<t->nNodes; j++)
                     {
                     p = t->allDownPass[j];
-                    if (p->index == i){
-                         if ( strlen(p->label)>99 )
+                    if (p->index == i) {
+                         if (strlen(p->label)>99)
                             {
                             MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, p->label);
                             return (ERROR);
@@ -6363,7 +6364,7 @@ int DoSumtTree (void)
                         spacer, t->name, sumtParams.curFileName);
                 return ERROR;
                 }
-            if (inComparetreeCommand == NO && (sumtParams.nESets != t->nESets || sumtParams.nBSets != t->nBSets) )
+            if (inComparetreeCommand == NO && (sumtParams.nESets != t->nESets || sumtParams.nBSets != t->nBSets))
                 {
                 MrBayesPrint ("%s   Tree '%s' in file '%s' does not have the expected relaxed clock parameters\n",
                         spacer, t->name, sumtParams.curFileName);
@@ -6469,7 +6470,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
         sumtTokenP = &s[0];
         do
             {
-            if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+            if (GetToken (sumtToken, &tokenType, &sumtTokenP))
                 goto errorExit;
             if (IsSame("[", sumtToken) == SAME)
                 inSumtComment = YES;
@@ -6481,17 +6482,17 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
                 if (IsSame ("Param", sumtToken) == SAME)
                     {
                     /* extract the tree name */
-                    if(GetToken (sumtToken, &tokenType, &sumtTokenP))   /* get the colon */
+                    if (GetToken (sumtToken, &tokenType, &sumtTokenP))   /* get the colon */
                         goto errorExit;
-                    if(GetToken (sumtToken, &tokenType, &sumtTokenP))   /* get the tree name */
+                    if (GetToken (sumtToken, &tokenType, &sumtTokenP))   /* get the tree name */
                         goto errorExit;
                     strcpy (treeName, sumtToken);
-                    if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+                    if (GetToken (sumtToken, &tokenType, &sumtTokenP))
                         goto errorExit;
                     while (IsSame("]", sumtToken) != SAME)
                         {
                         strcat (treeName, sumtToken);
-                        if(GetToken (sumtToken, &tokenType, &sumtTokenP))
+                        if (GetToken (sumtToken, &tokenType, &sumtTokenP))
                             goto errorExit;
                         }
                     inSumtComment = NO;
@@ -6636,7 +6637,7 @@ void FreePartCtr (PartCtr *r)
             free (r->bLen [i]);
             free (r->bRate[i]);
             }
-        free (r->bLen );
+        free (r->bLen);
         free (r->bRate);
         }
 
@@ -7261,7 +7262,7 @@ void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numP
                 }
             else
                 {
-                if(theStats->PSRF > 10.0)
+                if (theStats->PSRF > 10.0)
                     {
                     MrBayesPrint ("    >10.0  %3d", k);
                     MrBayesPrintf (fpVstat, "\tNA\t%d", k);
@@ -7551,7 +7552,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
                     {
                     /* add label if the branch is terminal */
                     Label(p,YES,label,maxLabelLength);
-                    sprintf(printLine+to+2,"%s", label);
+                    sprintf (printLine+to+2,"%s", label);
                     }
                 }
             }
@@ -7815,10 +7816,10 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
                 if (p->left == NULL)
                     {
                     Label (p,YES,label,maxLength);
-                    sprintf(printLine+treeWidth+1,"%s", label);
+                    sprintf (printLine+treeWidth+1,"%s", label);
                     }
                 else if (p->left->mark == 2)
-                    sprintf(printLine+treeWidth+1,"(%d)", p->index);
+                    sprintf (printLine+treeWidth+1,"(%d)", p->index);
                 
                 /* add branch */
                 if (p->anc == NULL)
@@ -7838,7 +7839,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
                         printLine[k] = '-';
                     printLine[to] = '+';
                     if (showSupport == YES)
-                        sprintf(temp, "%d", (int) (p->support*100.0 + 0.5));
+                        sprintf (temp, "%d", (int) (p->support*100.0 + 0.5));
                     else
                         *temp='\0';
                     from = (int)(from + 1.5 + ((to - from - 1 - strlen(temp)) / 2.0));
@@ -7866,7 +7867,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
                         {
                         printLine[to] = '+';
                         if (showSupport == YES)
-                            sprintf(temp, "%d", (int) (p->support*100.0 + 0.5));
+                            sprintf (temp, "%d", (int) (p->support*100.0 + 0.5));
                         else
                             *temp='\0';
                         from = (int)(from + 1.5 + ((to - from - 1 - strlen(temp)) / 2.0));
@@ -7884,7 +7885,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
                     printLine[j] = '|';
                 }
         
-            MrBayesPrintf(fp, "%s\n",printLine);
+            MrBayesPrintf (fp, "%s\n",printLine);
             }
 
         /* mark printed branches */

@@ -145,17 +145,17 @@ int InitBeagleInstance (ModelInfo *m, int division)
         }
     else
         {
-        MrBayesPrint ( "\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
+        MrBayesPrint ("\n%s   Using BEAGLE resource %i for division %d:", spacer, details.resourceNumber, division+1);
 #   if defined (THREADS_ENABLED)
-        MrBayesPrint ( " (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
+        MrBayesPrint (" (%s)\n", (tryToUseThreads ? "threaded" : "non-threaded"));
 #   else
-        MrBayesPrint ( " (non-threaded)\n");
+        MrBayesPrint (" (non-threaded)\n");
 #   endif
-        MrBayesPrint ( "%s      Rsrc Name : %s\n", spacer, details.resourceName);
-        MrBayesPrint ( "%s      Impl Name : %s\n", spacer, details.implName);
-        MrBayesPrint ( "%s      Flags:", spacer);
+        MrBayesPrint ("%s      Rsrc Name : %s\n", spacer, details.resourceName);
+        MrBayesPrint ("%s      Impl Name : %s\n", spacer, details.implName);
+        MrBayesPrint ("%s      Flags:", spacer);
         BeaglePrintFlags(details.flags);
-        MrBayesPrint ( "\n");
+        MrBayesPrint ("\n");
         beagleInstanceCount++;          
         }
 
@@ -252,7 +252,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         /* This flag is only valid within this block */
         m->rescaleBeagleAll = NO;        
         TreeTiProbs_Beagle(tree, d, chain);
-        if( m->succesCount[chain] > 1000 )
+        if (m->succesCount[chain] > 1000)
             {
             m->succesCount[chain] = 10;
             m->rescaleFreq[chain]++; /* increase rescaleFreq independent of whether we accept or reject new state*/
@@ -260,7 +260,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             for (i=0; i<tree->nIntNodes; i++)
                 {
                 p = tree->intDownPass[i];
-                if ( p->upDateCl == YES ) {
+                if (p->upDateCl == YES) {
                      /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for
                         (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it */
                     FlipCondLikeSpace (m, chain, p->index);
@@ -269,14 +269,14 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             goto rescale_all;
             }
 
-        if( beagleScalingFrequency != 0 && 
-            m->beagleComputeCount[chain] % (beagleScalingFrequency) == 0 )
+        if (beagleScalingFrequency != 0 && 
+            m->beagleComputeCount[chain] % (beagleScalingFrequency) == 0)
             {
             m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
             for (i=0; i<tree->nIntNodes; i++)
                 {
                 p = tree->intDownPass[i];
-                if ( p->upDateCl == YES ) {
+                if (p->upDateCl == YES) {
                      /* flip to the new workspace since TreeCondLikes_Beagle_Rescale_All() does not do it for (p->upDateCl == YES) since it assumes that TreeCondLikes_Beagle_No_Rescale() did it*/
                     FlipCondLikeSpace (m, chain, p->index);
                    }
@@ -287,17 +287,17 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         TreeCondLikes_Beagle_No_Rescale(tree, d, chain);
 
         /* Check if likelihood is valid */      
-        if( TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT ) 
+        if (TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT) 
             {
             m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
-            if(rescaleFreqNew > 1 && m->succesCount[chain] < 40)
+            if (rescaleFreqNew > 1 && m->succesCount[chain] < 40)
                 {
-                if( m->succesCount[chain] < 10 )
+                if (m->succesCount[chain] < 10)
                     {
-                    if( m->succesCount[chain] < 4 )
+                    if (m->succesCount[chain] < 4)
                         {
                         rescaleFreqNew-= rescaleFreqNew >> 3; /* <== we cut up to 12,5% of rescaleFreq */
-                        if( m->succesCount[chain] < 2 )
+                        if (m->succesCount[chain] < 2)
                             {
                             rescaleFreqNew-= rescaleFreqNew >> 3;
                             /* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low liklihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
@@ -307,13 +307,13 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
                             }
                         m->rescaleFreqOld-= m->rescaleFreqOld >> 3;
                         m->rescaleFreqOld--;
-                        m->rescaleFreqOld = ( m->rescaleFreqOld ? m->rescaleFreqOld:1);
+                        m->rescaleFreqOld = (m->rescaleFreqOld ? m->rescaleFreqOld:1);
                         m->recalculateScalers = YES; 
                         recalcScalers = YES;
                         }
                     }
                 rescaleFreqNew--;
-                rescaleFreqNew = ( rescaleFreqNew ? rescaleFreqNew:1);
+                rescaleFreqNew = (rescaleFreqNew ? rescaleFreqNew:1);
                 }
             m->succesCount[chain] = 0;
     rescale_all:
@@ -325,22 +325,22 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             FlipSiteScalerSpace(m, chain);
             isScalerNode = m->isScalerNode[chain];
     while_loop:
-            ResetScalersPartition ( isScalerNode, tree, rescaleFreqNew );
+            ResetScalersPartition (isScalerNode, tree, rescaleFreqNew);
             for (i=0; i<m->nCijkParts; i++) 
                 {           
                 beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
                 }
             
             TreeCondLikes_Beagle_Rescale_All (tree, d, chain);
-            if( TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT )
+            if (TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains)) == BEAGLE_ERROR_FLOATING_POINT)
                 {
-                if( rescaleFreqNew > 1 )
+                if (rescaleFreqNew > 1)
                     {
                     /*Swap back scalers which were  swapped in TreeCondLikes_Beagle_Rescale_All() */
                     for (i=0; i<tree->nIntNodes; i++)
                         {
                         p = tree->intDownPass[i];
-                        if ( isScalerNode[p->index] == YES)
+                        if (isScalerNode[p->index] == YES)
                             FlipNodeScalerSpace (m, chain, p->index);
                         }
                     rescaleFreqNew -= rescaleFreqNew >> 3; /*<== we cut up to 12,5% of rescaleFreq */
@@ -367,7 +367,7 @@ void recalculateScalers(int chain)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        if( m->recalculateScalers == YES)
+        if (m->recalculateScalers == YES)
             {
             m->recalculateScalers = NO;
             tree = GetTree(m->brlens, chain, state[chain]);
@@ -375,7 +375,7 @@ void recalculateScalers(int chain)
             rescaleFreqNew = m->rescaleFreq[chain];
             isScalerNode = m->isScalerNode[chain];
 
-            ResetScalersPartition ( isScalerNode, tree, rescaleFreqNew );
+            ResetScalersPartition (isScalerNode, tree, rescaleFreqNew);
             for (i=0; i<m->nCijkParts; i++) {           
                 beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain] + i);
             }
@@ -520,26 +520,6 @@ void BeaglePrintFlags(long inFlags)
 }
 
 
-int ScheduleLogLikeForAllDivisions()
-{
-    int d;
-    int divisionsToLaunch = 0;
-    ModelInfo       *m;
-        
-    if (numCurrentDivisions < 2) {
-        return 0;
-    }
-
-    for (d=0; d<numCurrentDivisions; d++) {     
-        m = &modelSettings[d];      
-        if (m->upDateCl == YES) {
-            divisionsToLaunch++;
-        }
-    }
-    return (divisionsToLaunch > 1);
-}
-
-
 #if defined(THREADS_ENABLED)
 void *LaunchThreadLogLikeForDivision(void *arguments)
 {
@@ -625,6 +605,27 @@ MrBFlt LaunchLogLikeForAllDivisionsInParallel(int chain)
 #endif
 
 
+int ScheduleLogLikeForAllDivisions()
+{
+    int d;
+    int divisionsToLaunch = 0;
+    ModelInfo       *m;
+    
+    if (numCurrentDivisions < 2) {
+        return 0;
+        }
+    
+    for (d=0; d<numCurrentDivisions; d++) {
+        m = &modelSettings[d];
+        if (m->upDateCl == YES) {
+            divisionsToLaunch++;
+            }
+        }
+    
+    return (divisionsToLaunch > 1);
+}
+
+
 /*----------------------------------------------------------------
  |
  |  TreeCondLikes_Beagle: This routine updates all conditional
@@ -662,19 +663,19 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
             
             /* All partials for tips are the same across omega categories, thus we are doing the following two if statments.*/
-            if(p->left->left== NULL )
+            if (p->left->left== NULL)
                 chil1Step=0;
             else
                 chil1Step=1;
             
-            if(p->right->left== NULL )
+            if (p->right->left== NULL)
                 chil2Step=0;
             else
                 chil2Step=1;
             
             operations.destinationScaleWrite = BEAGLE_OP_NONE;
             cumulativeScaleIndex  = BEAGLE_OP_NONE;
-            if ( isScalerNode[p->index] == YES )
+            if (isScalerNode[p->index] == YES)
                 {
                 operations.destinationScaleRead  = m->nodeScalerIndex[chain][p->index];
                 }
@@ -696,7 +697,7 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
                 operations.child2Partials+=chil2Step;
                 operations.child2TransitionMatrix++;
                 
-                if ( isScalerNode[p->index] == YES )
+                if (isScalerNode[p->index] == YES)
                     operations.destinationScaleRead++;
             }
         }
@@ -729,7 +730,7 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
     {
         p = t->intDownPass[i];
         
-        if (p->upDateCl == NO ) {
+        if (p->upDateCl == NO) {
             //p->upDateCl = YES;
             /* flip to the new workspace */
             FlipCondLikeSpace (m, chain, p->index);
@@ -743,18 +744,18 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
         operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
         
         /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
-        if(p->left->left== NULL)
+        if (p->left->left== NULL)
             chil1Step=0;
         else
             chil1Step=1;
         
-        if(p->right->left== NULL)
+        if (p->right->left== NULL)
             chil2Step=0;
         else
             chil2Step=1;
 
         operations.destinationScaleRead = BEAGLE_OP_NONE;
-        if ( isScalerNode[p->index] == YES )
+        if (isScalerNode[p->index] == YES)
             {
             FlipNodeScalerSpace (m, chain, p->index);
             operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
@@ -781,10 +782,10 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
             operations.child2Partials+=chil2Step;
             operations.child2TransitionMatrix++;
             
-            if ( isScalerNode[p->index] == YES ){
+            if (isScalerNode[p->index] == YES) {
                 operations.destinationScaleWrite++;
                 cumulativeScaleIndex++;
-            }
+                }
 
             }
         }
@@ -845,12 +846,12 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
 
             /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
-            if(p->left->left== NULL && p->left->right== NULL)
+            if (p->left->left== NULL && p->left->right== NULL)
                 chil1Step=0;
             else
                 chil1Step=1;
 
-            if(p->right->left== NULL && p->right->right== NULL)
+            if (p->right->left== NULL && p->right->right== NULL)
                 chil2Step=0;
             else
                 chil2Step=1;
@@ -1058,7 +1059,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
 #   endif
-    if( beagleReturn == BEAGLE_ERROR_FLOATING_POINT )
+    if (beagleReturn == BEAGLE_ERROR_FLOATING_POINT)
     {
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
         countBeagleDynamicFail++;
@@ -1072,7 +1073,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
     /* accumulate logs across sites */
     if (hasPInvar == NO)
         {
-        if( m->dataType == RESTRICTION )
+        if (m->dataType == RESTRICTION)
             {
             beagleGetSiteLogLikelihoods(m->beagleInstance, m->logLikelihoods);
             (*lnL) = 0.0;
@@ -1082,7 +1083,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                 pUnobserved +=  exp((double)m->logLikelihoods[c]);
                 }
             /* correct for absent characters */
-            (*lnL) -= log( 1-pUnobserved ) * (m->numUncompressedChars);
+            (*lnL) -= log (1-pUnobserved) * (m->numUncompressedChars);
             for (; c<m->numChars; c++)
                 {
                 (*lnL) += m->logLikelihoods[c] * nSitesOfPat[c];
@@ -1160,7 +1161,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
     
     /* compensate for invariable sites if appropriate */
     if (m->pInvar != NULL)
-        baseRate /= ( 1.0 - ( *GetParamVals(m->pInvar, chain, state[chain])));
+        baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
         
     /* get category rates for gamma */
     if (m->shape == NULL)

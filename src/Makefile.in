@@ -22,7 +22,7 @@ clean:
 	$(RM) -f *.o *~ mb
 
 distclean: clean
-	$(RM) -f Makefile config.log config.status config.cache config.h 
+	$(RM) -rf Makefile config.log config.status config.h *.cache
 
 showdep:
 	@$(CC) -MM $(SRC)

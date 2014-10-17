@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
         sprintf(poltmp, "\nlastError = %d", lastError);
-        printf(poltmp);
+        printf (poltmp);
         }
 #   endif
 
@@ -235,7 +235,7 @@ int CommandLine (int argc, char **argv)
     int     ierror;
 #   endif
 
-    for(i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
+    for (i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
     
     /* wait for user-input commands */
     nProcessedArgs = 1; /* first argument is program name and needs not be processed */
@@ -301,7 +301,7 @@ int CommandLine (int argc, char **argv)
 #   else
 #       ifdef HAVE_LIBREADLINE
             cmdStrP = readline("MrBayes > ");
-            if(cmdStrP!=NULL) 
+            if (cmdStrP!=NULL) 
                     {
                     strncpy(cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
                     if (*cmdStrP) 
@@ -375,13 +375,33 @@ char **readline_completion (const char *text, int start, int stop)
     char **matches = (char **) NULL;
 
 #   ifdef COMPLETIONMATCHES
-    if(start == 0)
+    if (start == 0)
             matches = rl_completion_matches (text, command_generator);
 #   endif
 
     return (matches);   
 }
 #endif
+
+
+unsigned FindMaxRevision (unsigned amount, ...)
+{
+    const char* cur;
+    char tmp[20];
+    unsigned val,i,max;
+    
+    va_list vl;
+    va_start(vl,amount);
+    max=0;
+    for (i=0;i<amount;i++)
+        {
+        cur=va_arg(vl,const char*);
+        sscanf(cur,"%s %d",tmp,&val);
+        max=(max>val)?max:val;
+        }
+    va_end(vl);
+    return max;
+}
 
 
 void GetTimeSeed (void)
@@ -469,9 +489,9 @@ int InitializeMrBayes (void)
     echoMB               = YES;                      /* flag used by Manual to control printing       */
 
 #   if defined (MPI_ENABLED)
-    sprintf(manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file     */
+    sprintf (manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file     */
 #   else
-    sprintf(manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file     */
+    sprintf (manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file     */
 #   endif
 
     for (i=0; i<NUM_ALLOCS; i++)                     /* set allocated memory to NO                    */
@@ -500,7 +520,7 @@ int InitializeMrBayes (void)
 #       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #       else
-    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Windows (NO untill SSE single prec. works )*/
+    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Windows (NO untill SSE single prec. works)*/
 #       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
@@ -836,26 +856,6 @@ int InitializeMrBayes (void)
     /* finally reset everything dependent on a matrix being defined */
     return (ReinitializeMrBayes ());
     
-}
-
-
-unsigned FindMaxRevision ( unsigned amount, ...)
-{
-    const char* cur;
-    char tmp[20];
-    unsigned val,i,max;
-
-    va_list vl;
-    va_start(vl,amount);
-    max=0;
-    for (i=0;i<amount;i++)
-        {
-        cur=va_arg(vl,const char*);
-        sscanf(cur,"%s %d",tmp,&val);
-        max=(max>val)?max:val;
-        }
-    va_end(vl);
-    return max;
 }
 
 

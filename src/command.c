@@ -788,11 +788,11 @@ int CheckStringValidity (char *s)
     tempNumComments = numComments;
     tempInComment = inComment;
 
-    while(s[i] != '\0')
+    while (s[i] != '\0')
         {
         if (tempInComment == NO)
             {
-            if ( !IsIn(s[i],"=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.;:,#()[]?-*/'\\'!%\"&~+^$@|{}`>< ") )
+            if (!IsIn(s[i],"=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.;:,#()[]?-*/'\\'!%\"&~+^$@|{}`>< "))
                 {
                 if (IsWhite(s[i]) == 1 || IsWhite(s[i]) == 2)
                     {
@@ -800,7 +800,7 @@ int CheckStringValidity (char *s)
                     }
                 else
                     {
-                    if ( commandPtr == NULL) 
+                    if (commandPtr == NULL) 
                         return (ERROR);
                     MrBayesPrint ("%s   Unknown character \"%c\" (ASCII code %d)\n", spacer, s[i], s[i]);
                     if (!strcmp(commandPtr->string,"Matrix"))
@@ -1150,7 +1150,7 @@ int DoCalibrate (void)
     MrBayesPrint ("Constraint ages\n");
     for (i=0; i<numDefinedConstraints; i++)
         {
-        if( definedConstraintsType[i] != HARD )
+        if (definedConstraintsType[i] != HARD)
             continue;
         MrBayesPrint ("%4d  --  %s\n", i+1, nodeCalibration[i].name);
         }
@@ -1200,7 +1200,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
         howMany = 0;
 
         /* first look in constraint names */
-        if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) != ERROR && definedConstraintsType[index] == HARD )
+        if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) != ERROR && definedConstraintsType[index] == HARD)
             {
             calibrationPtr = &nodeCalibration[index];
             howMany++;
@@ -1929,7 +1929,7 @@ int DoCharStat (void)
                 {
                 MrBayesPrint ("%s   Hit return key to continue  ", spacer);
                 fflush (stdin);
-                if( fgets (tempName, 100, stdin) == NULL )
+                if (fgets (tempName, 100, stdin) == NULL)
                     {
                     printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
                     }
@@ -2397,7 +2397,7 @@ int DoConstraint (void)
     int         i, howMany;
     int         *tset;
 
-    if( consrtainType == PARTIAL )
+    if (consrtainType == PARTIAL)
         tset=tempSetNeg;
     else
         tset=tempSet;
@@ -2431,7 +2431,7 @@ int DoConstraint (void)
         return (ERROR);
         }
 
-    if( consrtainType == HARD )
+    if (consrtainType == HARD)
         {
         if (howMany == numTaxa)
             {
@@ -2439,7 +2439,7 @@ int DoConstraint (void)
             }
         
         } /*end consrtainType == HARD */
-    else if( consrtainType == PARTIAL )
+    else if (consrtainType == PARTIAL)
         {
         if (howMany == 1)
             {
@@ -2466,7 +2466,7 @@ int DoConstraint (void)
             return (ERROR);
             }
         }
-    else if( consrtainType == NEGATIVE)
+    else if (consrtainType == NEGATIVE)
         {
         if (howMany == 1)
             {
@@ -2484,14 +2484,14 @@ int DoConstraint (void)
 
     /* store tempSet */
     AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
-    if( consrtainType == PARTIAL)
+    if (consrtainType == PARTIAL)
         {
         AddBitfield (&definedConstraintTwo, numDefinedConstraints, tempSetNeg, numTaxa);
         }
     else
         {
         definedConstraintTwo = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwo), (size_t)((numDefinedConstraints+1)*sizeof(BitsLong *)));
-        if ( definedConstraintTwo==NULL )
+        if (definedConstraintTwo==NULL)
             return ERROR;
         definedConstraintTwo[numDefinedConstraints]=NULL;
         }
@@ -2523,17 +2523,17 @@ int DoConstraint (void)
     tempActiveConstraints[numDefinedConstraints-1] = NO;
 
     definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)(numDefinedConstraints*sizeof(enum ConstraintType)));
-    if ( definedConstraintsType==NULL )
+    if (definedConstraintsType==NULL)
         return ERROR;
     definedConstraintsType[numDefinedConstraints-1] = consrtainType;
 
     definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
-    if ( definedConstraintPruned==NULL )
+    if (definedConstraintPruned==NULL)
         return ERROR;
     definedConstraintPruned[numDefinedConstraints-1]=NULL;
 
     definedConstraintTwoPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
-    if ( definedConstraintTwoPruned==NULL )
+    if (definedConstraintTwoPruned==NULL)
         return ERROR;
     definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
 
@@ -2642,7 +2642,7 @@ int DoConstraintParm (char *parmName, char *tkn)
         if (foundFirst == YES && foundEqual == NO)
             {
             /* We are filling in the probability for the constraint. Specifically, we expect exp(number). */
-            if(IsSame ("Partial", tkn) == SAME)
+            if (IsSame ("Partial", tkn) == SAME)
                 {
                 for (i=0; i<numTaxa; i++)
                     tempSetNeg[i] = 0;
@@ -2651,13 +2651,13 @@ int DoConstraintParm (char *parmName, char *tkn)
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
-            else if(IsSame ("Hard", tkn) == SAME)
+            else if (IsSame ("Hard", tkn) == SAME)
                 {
                 consrtainType=HARD;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
-            else if(IsSame ("Negative", tkn) == SAME)
+            else if (IsSame ("Negative", tkn) == SAME)
                 {
                 consrtainType=NEGATIVE;
                 expecting = Expecting(EQUALSIGN);
@@ -2710,7 +2710,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 
             expecting  = Expecting(ALPHA);
             expecting |= Expecting(NUMBER);
-            if( consrtainType != PARTIAL || foundColon == YES )
+            if (consrtainType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
@@ -2823,7 +2823,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             expecting |= Expecting(NUMBER);
             expecting |= Expecting(DASH);
             expecting |= Expecting(BACKSLASH);
-            if( consrtainType != PARTIAL || foundColon == YES )
+            if (consrtainType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
@@ -2836,7 +2836,7 @@ int DoConstraintParm (char *parmName, char *tkn)
         }
     else if (expecting == Expecting(COLON))
         {
-        if( foundColon == YES )
+        if (foundColon == YES)
             {
             MrBayesPrint ("%s   Improperly formatted constraint: two colon charactors in constraint command.\n", spacer);
             return (ERROR);
@@ -3838,7 +3838,7 @@ int DoExecute (void)
 
 int DoExecuteParm (char *parmName, char *tkn)
 {
-    if(strlen(tkn)>99)
+    if (strlen(tkn)>99)
         {
         MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
         MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -5331,7 +5331,7 @@ int DoMatrixParm (char *parmName, char *tkn)
             {
             /* If this is the first interleaved block, then we need to add the taxon
                to the set of taxon names unless there is already a defined taxon set. */
-            if (strlen(tkn)>99 )
+            if (strlen(tkn)>99)
                 {
                 MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
                 goto errorExit;
@@ -5801,7 +5801,7 @@ int DoPartitionParm (char *parmName, char *tkn)
 
     if (expecting == Expecting(PARAMETER))
         {
-        /* set Partition ( ) ******************************************************************/
+        /* set Partition () ******************************************************************/
         if (!strcmp(parmName, "Xxxxxxxxxx"))
             {
             /* check size of partition name */
@@ -6362,7 +6362,7 @@ int DoSetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for Scientific\n", spacer);
                     return (ERROR);
                     }
-                if ( scientific == YES)
+                if (scientific == YES)
                     MrBayesPrint ("%s   Setting Scientific to Yes\n", spacer);
                 else
                     MrBayesPrint ("%s   Setting Scientific to No\n", spacer);
@@ -6553,7 +6553,7 @@ int DoSetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempI);
-                if( tempI == 0 || tempI == 2147483647 )
+                if (tempI == 0 || tempI == 2147483647)
                     {
                     MrBayesPrint ("%s   Error: Seed can be any natural number except 0 and 2147483647\n", spacer);
                     return (ERROR);
@@ -6573,7 +6573,7 @@ int DoSetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempI);
-                if( tempI == 0 || tempI == 2147483647 )
+                if (tempI == 0 || tempI == 2147483647)
                     {
                     MrBayesPrint ("%s   Error: Swapseed can be any natural number except 0 and 2147483647\n", spacer);
                     return (ERROR);
@@ -6595,7 +6595,7 @@ int DoSetParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(ALPHA))
                 {
-                if(strlen(tkn)>99)
+                if (strlen(tkn)>99)
                     {
                     MrBayesPrint ("%s   Maximum allowed length of working directory name is 99 characters. The given name:\n", spacer);
                     MrBayesPrint ("%s      '%s'\n", spacer,tkn);
@@ -6916,7 +6916,7 @@ int DoSetParm (char *parmName, char *tkn)
                         beagleFlags |= ~BEAGLE_FLAG_VECTOR_AVX;
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
                         }
-                    else if ( !strcmp(tempStr, "None"))
+                    else if (!strcmp(tempStr, "None"))
                         {
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
                         beagleFlags &= ~BEAGLE_FLAG_VECTOR_AVX;
@@ -7881,9 +7881,9 @@ int DoTaxaStat (void)
             strcpy (tempName, constraintNames[j]);
 
             /* for now, ignore the probability */
-            if( definedConstraintsType[j] == HARD )
+            if (definedConstraintsType[j] == HARD)
                 MrBayesPrint ("%s     %2d -- Trees with 'hard' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
-            else if( definedConstraintsType[j] == PARTIAL )
+            else if (definedConstraintsType[j] == PARTIAL)
                 MrBayesPrint ("%s     %2d -- Trees with 'partial' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
             else
                 MrBayesPrint ("%s     %2d -- Trees with 'negative' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
@@ -7937,23 +7937,23 @@ int DoTaxaStat (void)
             
         for (j=0; j<numDefinedConstraints; j++)
             {
-            if( definedConstraintsType[j] == HARD )
+            if (definedConstraintsType[j] == HARD)
                 {
                 if (IsBitSet(i, definedConstraint[j]) == NO)
                     MrBayesPrint ("  .");
                 else
                     MrBayesPrint ("  *");
                 }
-            else if( definedConstraintsType[j] == PARTIAL )
+            else if (definedConstraintsType[j] == PARTIAL)
                 {
                 if (IsBitSet(i, definedConstraint[j]) == YES)
                     MrBayesPrint ("  +");
-                else if(IsBitSet(i, definedConstraintTwo[j]) == YES)
+                else if (IsBitSet(i, definedConstraintTwo[j]) == YES)
                     MrBayesPrint ("  -");
                 else
                     MrBayesPrint ("  .");
                 }
-            else if( definedConstraintsType[j] == NEGATIVE )
+            else if (definedConstraintsType[j] == NEGATIVE)
                 {
                 if (IsBitSet(i, definedConstraint[j]) == NO)
                     MrBayesPrint ("  .");
@@ -8029,7 +8029,7 @@ int DoTranslateParm (char *parmName, char *tkn)
     if (expecting == Expecting(ALPHA) ||
         expecting == Expecting(NUMBER))
         {
-        if( numTaxa == 0 )
+        if (numTaxa == 0)
             {
             MrBayesPrint ("%s   Data matrix should be defined before translation table could be set.\n", spacer);
             return (ERROR);
@@ -8276,7 +8276,7 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         else if (foundName == YES && foundCurly == YES)
             {
-            if( strcmp("all",tkn) == 0 )
+            if (strcmp("all",tkn) == 0)
                 {
                 SafeStrcat (&tempNameString,tkn);
                 expecting = Expecting(RIGHTCURL);
@@ -8425,7 +8425,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
-            if( pp->anc->left == pp )
+            if (pp->anc->left == pp)
                 {
                 MrBayesPrint ("%s   Incorrect tree format: all nodes except tips should have more then one child. Either a single\n", spacer);
                 MrBayesPrint ("%s   taxon is surrounded with brackets or there is a clade surrounded by double brackets.\n", spacer);
@@ -8822,7 +8822,7 @@ int DoTreeParm (char *parmName, char *tkn)
         }
     else if (expecting == Expecting(LEFTCURL))
         {
-        if( foundName == YES)
+        if (foundName == YES)
             {
             foundCurly=YES;
             SafeStrcat (&tempNameString,"{");               
@@ -8833,7 +8833,7 @@ int DoTreeParm (char *parmName, char *tkn)
         }
     else if (expecting == Expecting(RIGHTCURL))
         {
-        if( foundName == YES)
+        if (foundName == YES)
             {
             SafeStrcat (&tempNameString,"}");
             foundCurly=NO;
@@ -8946,7 +8946,7 @@ char *command_generator(const char *text, int state)
     static int list_index, len;
     char *command;
 
-    if(state==0) 
+    if (state==0) 
         {
         list_index=0;
         len= (int) strlen(text);
@@ -9318,12 +9318,12 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             {
             while (isgraph(**sourceH) && **sourceH!=';')
                 {
-                if( temp > tempMax )
+                if (temp > tempMax)
                     {
                     *tokenType = NOTHING;
                     token[20]='\0';
-                    MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
-                    MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                    MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                    MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token);
                     return (ERROR);
                     }
                 *temp++ = *(*sourceH)++;
@@ -9409,14 +9409,14 @@ int GetToken (char *token, int *tokenType, char **sourceH)
     else if (IsIn(**sourceH,"\"") && readWord == YES)
         {
         (*sourceH)++;
-        while(**sourceH != '"' && **sourceH != '\0')
+        while (**sourceH != '"' && **sourceH != '\0')
             {
-            if( temp > tempMax )
+            if (temp > tempMax)
                 {
                 *tokenType = NOTHING;
                 token[20]='\0';
-                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
-                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token);
                 return (ERROR);
                 }
             *temp++ = *((*sourceH)++);
@@ -9434,17 +9434,17 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             allNumbers = FALSE;
         foundExp = foundExpSign = FALSE;
         *temp++ = *(*sourceH)++;
-        while(IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
+        while (IsIn(**sourceH,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.-+"))
             {
-            if( temp > tempMax )
+            if (temp > tempMax)
                 {
                 *tokenType = NOTHING;
                 token[20]='\0';
-                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20 );
-                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token );
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                MrBayesPrint ("%s   Maximum allowed lenght of a token is %d\n", spacer,tempMax-token);
                 return (ERROR);
                 }
-            if(allNumbers == TRUE && !IsIn((*sourceH)[-1],"Ee") && **sourceH=='-')
+            if (allNumbers == TRUE && !IsIn((*sourceH)[-1],"Ee") && **sourceH=='-')
                 break;
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
@@ -10102,18 +10102,18 @@ int GetUserHelp (char *helpTkn)
             {
             strncpy (tempString, constraintNames[i], 22);
             MrBayesPrint ("   %4d    %-22.22s   ",i+1, tempString);
-            if( definedConstraintsType[i] == HARD )
+            if (definedConstraintsType[i] == HARD)
                 MrBayesPrint ("hard      ");
-            else if( definedConstraintsType[i] == PARTIAL )
+            else if (definedConstraintsType[i] == PARTIAL)
                 MrBayesPrint ("partial   ");
             else
                 {
-                assert(definedConstraintsType[i] == NEGATIVE );
+                assert(definedConstraintsType[i] == NEGATIVE);
                 MrBayesPrint ("negative  ");
                 }
             k = NumBits (definedConstraint[i], numTaxa/nBitsInALong + 1);
             MrBayesPrint ("%d", k);
-            if( definedConstraintsType[i] == PARTIAL )
+            if (definedConstraintsType[i] == PARTIAL)
                 {
                 k = NumBits (definedConstraintTwo[i], numTaxa/nBitsInALong + 1);
                 MrBayesPrint (":%d", k);
@@ -10160,10 +10160,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      exponential distributon: mean    = 1 / rate                                \n");
         MrBayesPrint ("      gamma distributon:       mean    = alpha / beta                            \n");
-        MrBayesPrint ("                               st.dev. = square_root( alpha / beta^2 )           \n");
-        MrBayesPrint ("      lognormal distributon:   mean    = exp( mean_log + st.dev._log^2/2 )       \n");
-        MrBayesPrint ("                               st.dev. = square_root(( exp( st.dev._log^2 ) - 1 )\n");
-        MrBayesPrint ("                                         * ( exp( 2*mean_log + st.dev._log^2 ))  \n");
+        MrBayesPrint ("                               st.dev. = square_root (alpha / beta^2)           \n");
+        MrBayesPrint ("      lognormal distributon:   mean    = exp (mean_log + st.dev._log^2/2)       \n");
+        MrBayesPrint ("                               st.dev. = square_root ((exp (st.dev._log^2) - 1)\n");
+        MrBayesPrint ("                                         * (exp (2*mean_log + st.dev._log^2))  \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The truncated normal distribution is an exception in that the mean_age and    \n");
         MrBayesPrint ("   stdev parameters are the mean and standard deviation of the underlying non-   \n");
@@ -12282,7 +12282,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   \"Homo_sapiens\" in the matrix). Only a single taxon can be assigned to       \n");
         MrBayesPrint ("   be the outgroup.                                                              \n");
         MrBayesPrint ("                                                                                 \n");
-        if ( defTaxa == YES )
+        if (defTaxa == YES)
             MrBayesPrint ("   Current outgroup: %s (taxon no. %d)\n", taxaNames[outGroupNum], outGroupNum+1);
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
@@ -13670,7 +13670,7 @@ int ParseCommand (char *s)
     do
         {
         /* Get the next token. A token is a valid word in a line. Token type is defined in "bayes.h". */
-        if( GetToken (token, &tokenType, &tokenP))
+        if (GetToken (token, &tokenType, &tokenP))
             {
             inError = YES; 
             break;
@@ -14266,106 +14266,106 @@ void SetUpParms (void)
 {
     ParmInfoPtr p = paramTable;
 
-    PARAM   (  0, "NEXUS",          DoNexusParm,       "NEXUS|\0");
-    PARAM   (  1, "Data",           DoBeginParm,       "\0");
-    PARAM   (  2, "Mrbayes",        DoBeginParm,       "\0");
-    PARAM   (  3, "Trees",          DoBeginParm,       "\0");
-    PARAM   (  4, "Ntax",           DoDimensionsParm,  "\0");
-    PARAM   (  5, "Nchar",          DoDimensionsParm,  "\0");
-    PARAM   (  6, "Interleave",     DoFormatParm,      "Yes|No|\0");
-    PARAM   (  7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Continuous|Mixed|\0");
-    PARAM   (  8, "Gap",            DoFormatParm,      "\0");
-    PARAM   (  9, "Missing",        DoFormatParm,      "\0");
-    PARAM   ( 10, "Matchchar",      DoFormatParm,      "\0");
-    PARAM   ( 11, "MatrixInfo",     DoMatrixParm,      "\0");
-    PARAM   ( 12, "Filename",       DoExecuteParm,     "\0");
-    PARAM   ( 13, "Autoclose",      DoSetParm,         "Yes|No|\0");
-    PARAM   ( 14, "Partition",      DoSetParm,         "\0");
-    PARAM   ( 15, "Xxxxxxxxxx",     DoCharsetParm,     "\0");
-    PARAM   ( 16, "Xxxxxxxxxx",     DoPartitionParm,   "\0");
-    PARAM   ( 17, "Seed",           DoMcmcParm,        "\0");
-    PARAM   ( 18, "Ngen",           DoMcmcParm,        "\0");
-    PARAM   ( 19, "Samplefreq",     DoMcmcParm,        "\0");
-    PARAM   ( 20, "Printfreq",      DoMcmcParm,        "\0");
-    PARAM   ( 21, "Nchains",        DoMcmcParm,        "\0");
-    PARAM   ( 22, "Temp",           DoMcmcParm,        "\0");
-    PARAM   ( 23, "Filename",       DoMcmcParm,        "\0");
-    PARAM   ( 24, "Burnin",         DoMcmcParm,        "\0");
-    PARAM   ( 25, "Starttree",      DoMcmcParm,        "Random|Current|User|Parsimony|NJ|\0");
-    PARAM   ( 26, "Nperts",         DoMcmcParm,        "\0");
-    PARAM   ( 27, "Savebrlens",     DoMcmcParm,        "Yes|No|\0");
-    PARAM   ( 28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Protein|\0");
-    PARAM   ( 29, "Nst",            DoLsetParm,        "1|2|6|Mixed|\0");
-    PARAM   ( 30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|LG|\0");
-    PARAM   ( 31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
-    PARAM   ( 32, "Omegavar",       DoLsetParm,        "Equal|Ny98|M3|M10|\0");
-    PARAM   ( 33, "Code",           DoLsetParm,        "Universal|Vertmt|Mycoplasma|Yeast|Ciliates|Metmt|\0");
-    PARAM   ( 34, "Coding",         DoLsetParm,        "All|Variable|Noabsencesites|Nopresencesites|Informative|\0");
-    PARAM   ( 35, "Seqerror",       DoPrsetParm,       "\0");
-    PARAM   ( 36, "Tratiopr",       DoPrsetParm,       "Beta|Fixed|\0");
-    PARAM   ( 37, "Revmatpr",       DoPrsetParm,       "Dirichlet|Fixed|\0");
-    PARAM   ( 38, "Omegapr",        DoPrsetParm,       "Dirichlet|Fixed|\0");
-    PARAM   ( 39, "Statefreqpr",    DoPrsetParm,       "Dirichlet|Fixed|\0");
-    PARAM   ( 40, "Ngammacat",      DoLsetParm,        "\0");
-    PARAM   ( 41, "Shapepr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-    PARAM   ( 42, "Ratecorrpr",     DoPrsetParm,       "Uniform|Fixed|\0");
-    PARAM   ( 43, "Pinvarpr",       DoPrsetParm,       "Uniform|Fixed|\0");
-    PARAM   ( 44, "Covswitchpr",    DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-    PARAM   ( 45, "Xxxxxxxxxx",     DoExcludeParm,     "\0");
-    PARAM   ( 46, "Xxxxxxxxxx",     DoIncludeParm,     "\0");
-    PARAM   ( 47, "Xxxxxxxxxx",     DoDeleteParm,      "\0");
-    PARAM   ( 48, "Xxxxxxxxxx",     DoRestoreParm,     "\0");
-    PARAM   ( 49, "Xxxxxxxxxx",     DoTaxasetParm,     "\0");
-    PARAM   ( 50, "Xxxxxxxxxx",     DoHelpParm,        "\0");
-    PARAM   ( 51, "Applyto",        DoLsetParm,        "\0");
-    PARAM   ( 52, "Rates",          DoLsetParm,        "Equal|Gamma|Propinv|Invgamma|Adgamma|\0");
-    PARAM   ( 53, "Covarion",       DoLsetParm,        "Yes|No|\0");
-    PARAM   ( 54, "Applyto",        DoPrsetParm,       "\0");
-    PARAM   ( 55, "Tratio",         DoLinkParm,        "\0");
-    PARAM   ( 56, "Revmat",         DoLinkParm,        "\0");
-    PARAM   ( 57, "Omega",          DoLinkParm,        "\0");
-    PARAM   ( 58, "Statefreq",      DoLinkParm,        "\0");
-    PARAM   ( 59, "Shape",          DoLinkParm,        "\0");
-    PARAM   ( 60, "Pinvar",         DoLinkParm,        "\0");
-    PARAM   ( 61, "Correlation",    DoLinkParm,        "\0");
-    PARAM   ( 62, "Ratemultiplier", DoLinkParm,        "\0");
-    PARAM   ( 63, "Switchrates",    DoLinkParm,        "\0");
-    PARAM   ( 64, "Symdirihyperpr", DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-    PARAM   ( 65, "Xxxxxxxxxx",     DoCtypeParm,       "\0");
-    PARAM   ( 66, "Xxxxxxxxxx",     DoConstraintParm,  "\0");
-    PARAM   ( 67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|Speciestree|\0");
-    PARAM   ( 68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
-    PARAM   ( 69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-    PARAM   ( 70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
-    PARAM   ( 71, "Popsizepr",      DoPrsetParm,       "Lognormal|Uniform|Gamma|Normal|Fixed|\0");
-    PARAM   ( 72, "Topology",       DoLinkParm,        "\0");
-    PARAM   ( 73, "Brlens",         DoLinkParm,        "\0");
-    PARAM   ( 74, "Speciationrate", DoLinkParm,        "\0");
-    PARAM   ( 75, "Extinctionrate", DoLinkParm,        "\0");
-    PARAM   ( 76, "Popsize",        DoLinkParm,        "\0");
-    PARAM   ( 77, "Ratepr",         DoPrsetParm,       "Variable|Dirichlet|Fixed|\0");
-    PARAM   ( 78, "Xxxxxxxxxx",     DoOutgroupParm,    "\0");
-    PARAM   ( 79, "Xxxxxxxxxx",     DoTreeParm,        "\0");
-    PARAM   ( 80, "Filename",       DoSumtParm,        "\0");
-    PARAM   ( 81, "Burnin",         DoSumtParm,        "\0");
-    PARAM   ( 82, "Contype",        DoSumtParm,        "Halfcompat|Allcompat|\0");
-    PARAM   ( 83, "Xxxxxxxxxx",     DoTranslateParm,   "\0");
-    PARAM   ( 84, "Swapfreq",       DoMcmcParm,        "\0");
-    PARAM   ( 85, "Start",          DoLogParm,         "\0");
-    PARAM   ( 86, "Stop",           DoLogParm,         "\0");
-    PARAM   ( 87, "Filename",       DoLogParm,         "\0");
-    PARAM   ( 88, "Append",         DoLogParm,         "\0");
-    PARAM   ( 89, "Replace",        DoLogParm,         "\0");
-    PARAM   ( 90, "Nbetacat",       DoLsetParm,        "\0");
-    PARAM   ( 91, "Augment",        DoLsetParm,        "Yes|No|\0");
-    PARAM   ( 92, "Xxxxxxxxxx",     DoPairsParm,       "\0");
-    PARAM   ( 93, "Xxxxxxxxxx",     DoBreaksParm,      "\0");
-    PARAM   ( 94, "Nowarnings",     DoSetParm,         "Yes|No|\0");
-    PARAM   ( 95, "Showtreeprobs",  DoSumtParm,        "Yes|No|\0");
-    PARAM   ( 96, "Filename",       DoSumpParm,        "\0");
-    PARAM   ( 97, "Burnin",         DoSumpParm,        "\0");
-    PARAM   ( 98, "Reweight",       DoMcmcParm,        "\0");
-    PARAM   ( 99, "Noop",           DoMcmcParm,        "\0");
+    PARAM  (0, "NEXUS",          DoNexusParm,       "NEXUS|\0");
+    PARAM  (1, "Data",           DoBeginParm,       "\0");
+    PARAM  (2, "Mrbayes",        DoBeginParm,       "\0");
+    PARAM  (3, "Trees",          DoBeginParm,       "\0");
+    PARAM  (4, "Ntax",           DoDimensionsParm,  "\0");
+    PARAM  (5, "Nchar",          DoDimensionsParm,  "\0");
+    PARAM  (6, "Interleave",     DoFormatParm,      "Yes|No|\0");
+    PARAM  (7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Continuous|Mixed|\0");
+    PARAM  (8, "Gap",            DoFormatParm,      "\0");
+    PARAM  (9, "Missing",        DoFormatParm,      "\0");
+    PARAM (10, "Matchchar",      DoFormatParm,      "\0");
+    PARAM (11, "MatrixInfo",     DoMatrixParm,      "\0");
+    PARAM (12, "Filename",       DoExecuteParm,     "\0");
+    PARAM (13, "Autoclose",      DoSetParm,         "Yes|No|\0");
+    PARAM (14, "Partition",      DoSetParm,         "\0");
+    PARAM (15, "Xxxxxxxxxx",     DoCharsetParm,     "\0");
+    PARAM (16, "Xxxxxxxxxx",     DoPartitionParm,   "\0");
+    PARAM (17, "Seed",           DoMcmcParm,        "\0");
+    PARAM (18, "Ngen",           DoMcmcParm,        "\0");
+    PARAM (19, "Samplefreq",     DoMcmcParm,        "\0");
+    PARAM (20, "Printfreq",      DoMcmcParm,        "\0");
+    PARAM (21, "Nchains",        DoMcmcParm,        "\0");
+    PARAM (22, "Temp",           DoMcmcParm,        "\0");
+    PARAM (23, "Filename",       DoMcmcParm,        "\0");
+    PARAM (24, "Burnin",         DoMcmcParm,        "\0");
+    PARAM (25, "Starttree",      DoMcmcParm,        "Random|Current|User|Parsimony|NJ|\0");
+    PARAM (26, "Nperts",         DoMcmcParm,        "\0");
+    PARAM (27, "Savebrlens",     DoMcmcParm,        "Yes|No|\0");
+    PARAM (28, "Nucmodel",       DoLsetParm,        "4by4|Doublet|Codon|Protein|\0");
+    PARAM (29, "Nst",            DoLsetParm,        "1|2|6|Mixed|\0");
+    PARAM (30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|LG|\0");
+    PARAM (31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
+    PARAM (32, "Omegavar",       DoLsetParm,        "Equal|Ny98|M3|M10|\0");
+    PARAM (33, "Code",           DoLsetParm,        "Universal|Vertmt|Mycoplasma|Yeast|Ciliates|Metmt|\0");
+    PARAM (34, "Coding",         DoLsetParm,        "All|Variable|Noabsencesites|Nopresencesites|Informative|\0");
+    PARAM (35, "Seqerror",       DoPrsetParm,       "\0");
+    PARAM (36, "Tratiopr",       DoPrsetParm,       "Beta|Fixed|\0");
+    PARAM (37, "Revmatpr",       DoPrsetParm,       "Dirichlet|Fixed|\0");
+    PARAM (38, "Omegapr",        DoPrsetParm,       "Dirichlet|Fixed|\0");
+    PARAM (39, "Statefreqpr",    DoPrsetParm,       "Dirichlet|Fixed|\0");
+    PARAM (40, "Ngammacat",      DoLsetParm,        "\0");
+    PARAM (41, "Shapepr",        DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+    PARAM (42, "Ratecorrpr",     DoPrsetParm,       "Uniform|Fixed|\0");
+    PARAM (43, "Pinvarpr",       DoPrsetParm,       "Uniform|Fixed|\0");
+    PARAM (44, "Covswitchpr",    DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+    PARAM (45, "Xxxxxxxxxx",     DoExcludeParm,     "\0");
+    PARAM (46, "Xxxxxxxxxx",     DoIncludeParm,     "\0");
+    PARAM (47, "Xxxxxxxxxx",     DoDeleteParm,      "\0");
+    PARAM (48, "Xxxxxxxxxx",     DoRestoreParm,     "\0");
+    PARAM (49, "Xxxxxxxxxx",     DoTaxasetParm,     "\0");
+    PARAM (50, "Xxxxxxxxxx",     DoHelpParm,        "\0");
+    PARAM (51, "Applyto",        DoLsetParm,        "\0");
+    PARAM (52, "Rates",          DoLsetParm,        "Equal|Gamma|Propinv|Invgamma|Adgamma|\0");
+    PARAM (53, "Covarion",       DoLsetParm,        "Yes|No|\0");
+    PARAM (54, "Applyto",        DoPrsetParm,       "\0");
+    PARAM (55, "Tratio",         DoLinkParm,        "\0");
+    PARAM (56, "Revmat",         DoLinkParm,        "\0");
+    PARAM (57, "Omega",          DoLinkParm,        "\0");
+    PARAM (58, "Statefreq",      DoLinkParm,        "\0");
+    PARAM (59, "Shape",          DoLinkParm,        "\0");
+    PARAM (60, "Pinvar",         DoLinkParm,        "\0");
+    PARAM (61, "Correlation",    DoLinkParm,        "\0");
+    PARAM (62, "Ratemultiplier", DoLinkParm,        "\0");
+    PARAM (63, "Switchrates",    DoLinkParm,        "\0");
+    PARAM (64, "Symdirihyperpr", DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+    PARAM (65, "Xxxxxxxxxx",     DoCtypeParm,       "\0");
+    PARAM (66, "Xxxxxxxxxx",     DoConstraintParm,  "\0");
+    PARAM (67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|Speciestree|\0");
+    PARAM (68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
+    PARAM (69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
+    PARAM (70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
+    PARAM (71, "Popsizepr",      DoPrsetParm,       "Lognormal|Uniform|Gamma|Normal|Fixed|\0");
+    PARAM (72, "Topology",       DoLinkParm,        "\0");
+    PARAM (73, "Brlens",         DoLinkParm,        "\0");
+    PARAM (74, "Speciationrate", DoLinkParm,        "\0");
+    PARAM (75, "Extinctionrate", DoLinkParm,        "\0");
+    PARAM (76, "Popsize",        DoLinkParm,        "\0");
+    PARAM (77, "Ratepr",         DoPrsetParm,       "Variable|Dirichlet|Fixed|\0");
+    PARAM (78, "Xxxxxxxxxx",     DoOutgroupParm,    "\0");
+    PARAM (79, "Xxxxxxxxxx",     DoTreeParm,        "\0");
+    PARAM (80, "Filename",       DoSumtParm,        "\0");
+    PARAM (81, "Burnin",         DoSumtParm,        "\0");
+    PARAM (82, "Contype",        DoSumtParm,        "Halfcompat|Allcompat|\0");
+    PARAM (83, "Xxxxxxxxxx",     DoTranslateParm,   "\0");
+    PARAM (84, "Swapfreq",       DoMcmcParm,        "\0");
+    PARAM (85, "Start",          DoLogParm,         "\0");
+    PARAM (86, "Stop",           DoLogParm,         "\0");
+    PARAM (87, "Filename",       DoLogParm,         "\0");
+    PARAM (88, "Append",         DoLogParm,         "\0");
+    PARAM (89, "Replace",        DoLogParm,         "\0");
+    PARAM (90, "Nbetacat",       DoLsetParm,        "\0");
+    PARAM (91, "Augment",        DoLsetParm,        "Yes|No|\0");
+    PARAM (92, "Xxxxxxxxxx",     DoPairsParm,       "\0");
+    PARAM (93, "Xxxxxxxxxx",     DoBreaksParm,      "\0");
+    PARAM (94, "Nowarnings",     DoSetParm,         "Yes|No|\0");
+    PARAM (95, "Showtreeprobs",  DoSumtParm,        "Yes|No|\0");
+    PARAM (96, "Filename",       DoSumpParm,        "\0");
+    PARAM (97, "Burnin",         DoSumpParm,        "\0");
+    PARAM (98, "Reweight",       DoMcmcParm,        "\0");
+    PARAM (99, "Noop",           DoMcmcParm,        "\0");
     PARAM   (100, "Ny98omega1pr",   DoPrsetParm,       "Beta|Fixed|\0");
     PARAM   (101, "Ny98omega3pr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
     PARAM   (102, "Codoncatfreqs",  DoPrsetParm,       "Dirichlet|Fixed|\0");
@@ -14827,7 +14827,7 @@ void WhatVariableExp (BitsLong exp, char *st)
             {
             if (n > 0)
                 strcat(st, " or");
-            strcat(st, " )");
+            strcat(st, ")");
             n++;
             }
         if ((exp & Expecting(LEFTCOMMENT)) == Expecting(LEFTCOMMENT))

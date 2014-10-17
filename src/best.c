@@ -445,10 +445,10 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
         {
         index = 0;
         printf ("Mindepth matrix\n");
-        for(i=0;i<numSpecies;i++) {
+        for (i=0;i<numSpecies;i++) {
             for (j=0; j<i; j++)
                 printf ("         ");
-            for(j=i+1;j<numSpecies;j++) {
+            for (j=i+1;j<numSpecies;j++) {
                 printf ("%.6f ",depthMatrix[index]);
                 index++;
                 }
@@ -490,8 +490,8 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 
     // Convert depthMatrix to an array of Depth structs
     index = 0;
-    for(i=0; i<numSpecies; i++) {
-        for(j=i+1; j<numSpecies; j++) {
+    for (i=0; i<numSpecies; i++) {
+        for (j=i+1; j<numSpecies; j++) {
             minDepth[index].depth   = depthMatrix[index];
             minDepth[index].pairSet = speciesPairSets[index];
             index++;
@@ -537,7 +537,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
 
     // Resolve bush using sorted depth structs
     nextNodeIndex = numSpecies;
-    for(i=0; i<numUpperTriang; i++) {
+    for (i=0; i<numUpperTriang; i++) {
             
         // Find tip corresponding to first taxon in pair
         p = &polyTree->nodes[FirstTaxonInPartition(minDepth[i].pairSet, nLongsNeeded)];
@@ -616,7 +616,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             p->length = 0.0;
         else
             p->length = p->anc->depth - p->depth;
-        if (p->length < 0.0 ) {
+        if (p->length < 0.0) {
             FreePolyTree(polyTree);
             free (minDepth);
             return (ERROR); 
@@ -1497,7 +1497,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
         return (NO_ERROR);
         }
 
-    if( maxDepth-minDepth < window )
+    if (maxDepth-minDepth < window)
         {
         window = maxDepth-minDepth;
         }
@@ -1580,8 +1580,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
             }
-        else if ( subParm->paramType == P_TK02BRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02) )
+        else if (subParm->paramType == P_TK02BRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
@@ -1628,8 +1628,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                     }
                 }
             }
-        else if ( subParm->paramType == P_IGRBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR) )
+        else if (subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
@@ -1748,7 +1748,7 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
     /* calculate proposal ratio */
     backwardLnProposalProb = LnProposalProbSpeciesTree (oldSpeciesTree, depthMatrix, backwardLambda);
-    forwardLnProposalProb  = LnProposalProbSpeciesTree (newSpeciesTree, depthMatrix, forwardLambda );
+    forwardLnProposalProb  = LnProposalProbSpeciesTree (newSpeciesTree, depthMatrix, forwardLambda);
     (*lnProposalRatio) = backwardLnProposalProb - forwardLnProposalProb;
 
 #   if defined (BEST_MPI_ENABLED)
@@ -1785,10 +1785,10 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
 
     index = 0;
     printf ("Upper triang matrix:\n");
-    for(i=0; i<squareSize; i++) {
+    for (i=0; i<squareSize; i++) {
         for (j=0; j<i; j++)
             printf ("         ");
-        for(j=i+1; j<squareSize; j++) {
+        for (j=i+1; j<squareSize; j++) {
             printf ("%.6f ", values[index]);
             index++;
         }
