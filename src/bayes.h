@@ -103,14 +103,15 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define ETA (1E-30)
 #endif
 
+/* This defined DEBUG() is not used anywhere
 #if defined (DEBUGOUTPUT)
-#define DEBUG (fmt, arg) printf ("%s:%d ",__FILE__,__LINE__); printf (fmt,arg);
-// #else #define DEBUG(a,b)
+#define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__); printf(fmt,arg);
 #endif
+*/
 
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
 /* A patch was sent in by Allen Smith for SafeSprintf, but I could not get
-   it compiled  on SGI IRIX 6.5 (too old?) with  _xpg5_vsnprintf undefined.
+   it compiled on SGI IRIX 6.5 (too old?) with _xpg5_vsnprintf undefined.
    The code below is a hack so SafeSprintf never has to reallocate memory.
 */
 #ifdef __sgi

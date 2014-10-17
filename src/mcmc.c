@@ -18951,9 +18951,7 @@ int PrintParsMatrix (void)
                     for (k=8 - nChars; k<8; k++)
                         {
                         y = (x >> (4* (7 - k))) & 15;
-#ifdef PAUL
-                        if (y > 16) DEBUG("y is too big %ld\n",y);
-#endif
+                        // if (y > 16) printf ("y is too big %ld\n",y);
                         if (y < 10)
                             ch = (char) y + '0';
                         else

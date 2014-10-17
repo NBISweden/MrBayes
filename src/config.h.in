@@ -38,6 +38,3 @@
 
 /* Define to enable threads in BEAGLE library */
 #undef THREADS_ENABLED
-
-/* Define to 1 if you want to compile the debug version */
-#undef DEBUGOUTPUT
