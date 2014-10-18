@@ -323,6 +323,9 @@ void      NodeToNodeDistances (Tree *t, TreeNode *fromNode);
 int       PickProposal (RandLong *seed, int chainIndex);
 int       NumCppEvents (Param *p, int chain);
 int       PosSelProbs (TreeNode *p, int division, int chain);
+#if defined (SSE_ENABLED)
+int       PosSelProbs_SSE (TreeNode *p, int division, int chain);
+#endif
 int       PreparePrintFiles (void);
 int       PrintAncStates_Bin (TreeNode *p, int division, int chain);
 int       PrintAncStates_Gen (TreeNode *p, int division, int chain);
@@ -383,9 +386,12 @@ int       SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType);
 int       SetUpPartitionCounters (void);
 int       SetUpTermState (void);
 int       SetUsedMoves (void);
-int       SiteOmegas (TreeNode *p, int division, int chain);
 int       ShowMoveSummary (void);
 void      ShowValuesForChain (int chn);
+int       SiteOmegas (TreeNode *p, int division, int chain);
+#if defined (SSE_ENABLED)
+int       SiteOmegas_SSE (TreeNode *p, int division, int chain);
+#endif
 PFNODE   *SmallestNonemptyPFNode (PFNODE *p, int *i, int j);
 PFNODE   *Talloc (void);
 void      Tfree (PFNODE *r);
@@ -3534,7 +3540,7 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
     FlipCondLikeSpace (m, chain, p->index);
     
     /* find conditional likelihood pointers */
-    clL = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->left->index ]];
+    clL = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->left->index ]];
     clR = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->right->index]];
     clP = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->index       ]];
     
@@ -17167,6 +17173,92 @@ int PosSelProbs (TreeNode *p, int division, int chain)
 }
 
 
+#if defined (SSE_ENABLED)
+/* Calculate positive selection probabilities (SSE version) */
+int PosSelProbs_SSE (TreeNode *p, int division, int chain)
+{
+    int             i, c1, c2, j, k, nStates;
+    CLFlt           **catLike, *siteLike;
+    MrBFlt          *bs, *omegaCatFreq, *omega,
+                    posProb, *ps, sum;
+    __m128          m1, m2, *clPtr, **clP, mSiteLike, *mCatLike;
+    ModelInfo       *m;
+    
+    /* find model partition */
+    m = &modelSettings[division];
+    
+    /* number of states */
+    nStates = m->numModelStates;
+    
+    /* find base frequencies */
+    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    
+    /* find category frequencies */
+    omegaCatFreq = GetParamSubVals (m->omega, chain, state[chain]);
+    
+    /* get category omegas */
+    omega = GetParamVals (m->omega, chain, state[chain]);
+    /* allocate space for category likelihood arrays */
+    catLike = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
+    mCatLike = (__m128 *) calloc( m->numOmegaCats, sizeof(__m128));
+    if ( !catLike || !mCatLike )
+    {
+        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer );
+        return (ERROR);
+    }
+
+    /* find conditional likelihood pointers */
+    clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP   = m->clP_SSE;
+    for (k=0; k<m->numOmegaCats; k++)
+    {
+        clP[k] = clPtr;
+        clPtr += m->numSSEChars * nStates;
+        catLike[k] = (CLFlt *) ( &(mCatLike[k]) );
+    }
+    siteLike = (CLFlt *) ( &(mSiteLike) );
+    
+    /* find posSelProbs */
+    ps = posSelProbs + m->compCharStart;
+    for (c1=c2=0; c1<m->numSSEChars; c1++)
+        {
+        mSiteLike = _mm_setzero_ps ();
+        for (k=0; k<m->numOmegaCats; k++)
+        {
+            mCatLike[k] = _mm_setzero_ps();
+            m1 = _mm_setzero_ps ();
+            for (j=0; j<nStates; j++)
+            {
+                m2 = _mm_mul_ps (clP[k][j], _mm_set1_ps ((CLFlt)bs[j]));
+                m1 = _mm_add_ps (m1, m2);
+            }
+            mCatLike[k] = _mm_mul_ps (m1, _mm_set1_ps ((CLFlt)omegaCatFreq[k]));
+            mSiteLike = _mm_add_ps (mSiteLike, mCatLike[k]);
+            clP[k] += nStates;
+        }
+
+        for ( i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+            {
+            posProb = 0.0;
+            for (k=0; k<m->numOmegaCats; k++)
+                {
+                if (omega[k] > 1.0)
+                    {
+                    posProb += catLike[k][i] / siteLike[i];
+                    }
+                }
+            ps[c2] = posProb;
+            }
+        }
+    
+    free (catLike);
+    free (mCatLike);
+    
+    return NO_ERROR;
+}
+#endif
+
+
 /* Calculate omega values for each site */
 int SiteOmegas (TreeNode *p, int division, int chain)
 {
@@ -17205,9 +17297,9 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     /* get category omegas */
     omega = GetParamVals (m->omega, chain, state[chain]);
 
-    /* find posSelProbs */
+    /* find site omegas (using posSelProbs space) */
     ps = posSelProbs + m->compCharStart;
-    for (c=m->numDummyChars; c<m->numChars; c++)
+    for (c=0; c<m->numChars; c++)
         {
         sum = 0.0;
         for (k=0; k<m->numOmegaCats; k++)
@@ -17233,6 +17325,90 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     
     return NO_ERROR;
 }
+
+
+#if defined (SSE_ENABLED)
+/* Calculate omega values for each site (SSE version) */
+int SiteOmegas_SSE (TreeNode *p, int division, int chain)
+{
+    int             i, c1, c2, j, k, nStates;
+    CLFlt           **catLike, *siteLike;
+    MrBFlt          *bs, *omegaCatFreq, *omega,
+                    siteOmega, *ps, sum;
+    __m128          m1, m2, *clPtr, **clP, mSiteLike, *mCatLike;
+    ModelInfo       *m;
+    
+    /* find model partition */
+    m = &modelSettings[division];
+    
+    /* number of states */
+    nStates = m->numModelStates;
+    
+    /* find base frequencies */
+    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    
+    /* find category frequencies */
+    omegaCatFreq = GetParamSubVals (m->omega, chain, state[chain]);
+    
+    /* get category omegas */
+    omega = GetParamVals (m->omega, chain, state[chain]);
+
+    /* allocate space for category likelihood arrays */
+    catLike = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
+    mCatLike = (__m128 *) calloc( m->numOmegaCats, sizeof(__m128));
+    if ( !catLike || !mCatLike )
+    {
+        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer );
+        return (ERROR);
+    }
+    
+    /* find conditional likelihood pointers */
+    clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP   = m->clP_SSE;
+    for (k=0; k<m->numOmegaCats; k++)
+    {
+        clP[k] = clPtr;
+        clPtr += m->numSSEChars * nStates;
+        catLike[k] = (CLFlt *) ( &(mCatLike[k]) );
+    }
+    siteLike = (CLFlt *) ( &(mSiteLike) );
+    
+    /* find site omegas (using posSelProbs space) */
+    ps = posSelProbs + m->compCharStart;
+    for (c1=c2=0; c1<m->numSSEChars; c1++)
+    {
+        mSiteLike = _mm_setzero_ps ();
+        for (k=0; k<m->numOmegaCats; k++)
+        {
+            mCatLike[k] = _mm_setzero_ps();
+            m1 = _mm_setzero_ps ();
+            for (j=0; j<nStates; j++)
+            {
+                m2 = _mm_mul_ps (clP[k][j], _mm_set1_ps ((CLFlt)bs[j]));
+                m1 = _mm_add_ps (m1, m2);
+            }
+            mCatLike[k] = _mm_mul_ps (m1, _mm_set1_ps ((CLFlt)omegaCatFreq[k]));
+            mSiteLike = _mm_add_ps (mSiteLike, mCatLike[k]);
+            clP[k] += nStates;
+        }
+        
+        for ( i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+        {
+            siteOmega = 0.0;
+            for (k=0; k<m->numOmegaCats; k++)
+            {
+                    siteOmega += ( catLike[k][i] / siteLike[i] ) * omega[k];
+            }
+            ps[c2] = siteOmega;
+        }
+    }
+    
+    free (catLike);
+    free (mCatLike);
+    
+    return NO_ERROR;
+}
+#endif
 
 
 /*----------------------------------------------------------------------
@@ -19424,7 +19600,7 @@ int PrintStates (int curGen, int coldId)
                 tree = GetTree(m->brlens, coldId, state[coldId]);
                 if (m->printPosSel == YES)
                     {
-                    if (PosSelProbs (tree->root->left, d, coldId) == ERROR)
+                    if (m->PosSelProbs (tree->root->left, d, coldId) == ERROR)
                         goto errorExit;
                     }
                 }
@@ -19461,7 +19637,7 @@ int PrintStates (int curGen, int coldId)
                 tree = GetTree(m->brlens, coldId, state[coldId]);
                 if (m->printSiteOmegas == YES)
                     {
-                    if (SiteOmegas (tree->root->left, d, coldId) == ERROR)
+                    if (m->SiteOmegas (tree->root->left, d, coldId) == ERROR)
                         goto errorExit;
                     }
                 }
@@ -19832,9 +20008,9 @@ int PrintStates (int curGen, int coldId)
             {
             m = &modelSettings[d];
             tree = GetTree(m->brlens, coldId, state[coldId]);
-            if (m->Likelihood == &Likelihood_NY98)
+            if (m->printPosSel == YES)
                 {
-                if (PosSelProbs (tree->root->left, d, coldId) == ERROR)
+                if (m->PosSelProbs (tree->root->left, d, coldId) == ERROR)
                     {
                     goto errorExit;
                     }
@@ -19863,7 +20039,7 @@ int PrintStates (int curGen, int coldId)
                 }
             }
         }
-     
+    
     /* If the user wants omega values for each site, we print those here. */
     if (inferSiteOmegas == YES)
         {
@@ -19872,9 +20048,9 @@ int PrintStates (int curGen, int coldId)
             {
             m = &modelSettings[d];
             tree = GetTree(m->brlens, coldId, state[coldId]);
-            if (m->Likelihood == &Likelihood_NY98)
+            if (m->printSiteOmegas == YES)
                 {
-                if (SiteOmegas (tree->root->left, d, coldId) == ERROR)
+                if (m->SiteOmegas (tree->root->left, d, coldId) == ERROR)
                     {
                     goto errorExit;
                     }
@@ -25077,11 +25253,13 @@ int SetLikeFunctions (void)
                         m->CondLikeRoot   = &CondLikeRoot_NY98;
                         m->CondLikeScaler = &CondLikeScaler_NY98;
                         m->Likelihood     = &Likelihood_NY98;
+                        m->PosSelProbs    = &PosSelProbs;
+                        m->SiteOmegas     = &SiteOmegas;
 #   if defined (SSE_ENABLED)
-                        if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                        if (m->printAncStates == YES || m->printSiteRates == YES)
                             {
                             MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', or 'site omegas'.\n", spacer);
                             }
                         else
                             {
@@ -25090,6 +25268,8 @@ int SetLikeFunctions (void)
                             m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
                             m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
                             m->Likelihood     = &Likelihood_NY98_SSE;
+                            m->PosSelProbs    = &PosSelProbs_SSE;
+                            m->SiteOmegas     = &SiteOmegas_SSE;
                             }
 #   endif
                         }

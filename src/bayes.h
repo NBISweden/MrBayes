@@ -855,6 +855,8 @@ typedef int (*LikeUpFxn)(TreeNode *, int, int);
 typedef int (*PrintAncStFxn)(TreeNode *, int, int);
 typedef int (*StateCodeFxn) (int);
 typedef int (*PrintSiteRateFxn) (TreeNode *, int, int);
+typedef int (*PosSelProbsFxn) (TreeNode *, int, int);
+typedef int (*SiteOmegasFxn) (TreeNode *, int, int);
 
 typedef struct cmdtyp           
     {
@@ -1254,6 +1256,8 @@ typedef struct modelinfo
     PrintAncStFxn       PrintAncStates;     /* function for sampling ancestral states       */
     StateCodeFxn        StateCode;          /* function for getting states from codes       */
     PrintSiteRateFxn    PrintSiteRates;     /* function for samling site rates              */
+    PosSelProbsFxn      PosSelProbs;        /* function for sampling pos. selection probs   */
+    SiteOmegasFxn       SiteOmegas;         /* function for sampling site omega values      */
 
     /* Report variables */
     int         printAncStates;             /* should ancestral states be printed (YES/NO)  */
