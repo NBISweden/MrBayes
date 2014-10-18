@@ -11298,7 +11298,7 @@ int InitChainCondLikes (void)
 #   if defined (BEAGLE_ENABLED)
             /* Set up nSitesOfPat for Beagle */
             if (m->useBeagle == YES)
-            {
+                {
                 nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
                 for (c=0; c<m->numChars; c++)
                     nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
@@ -11309,29 +11309,29 @@ int InitChainCondLikes (void)
 
                 /* find category frequencies */
                 if (m->pInvar == NO)
-                {
+                    {
                     freq =  1.0 /  m->numGammaCats;
                     
                     /* set category frequencies in beagle instance */
                     if (m->numOmegaCats <= 1)
-                    {
+                        {
                         for (i=0; i<m->numGammaCats; i++)
                             m->inWeights[i] = freq;
                         for (i=0; i< (numLocalChains); i++) {
                             beagleSetCategoryWeights(m->beagleInstance,
                                                      m->cijkIndex[i],
                                                      m->inWeights);
-                        }
+                            }
                         beagleSetCategoryWeights(m->beagleInstance,
                                                  m->cijkScratchIndex,
                                                  m->inWeights);
+                        }
                     }
-                }
                 
                 /* Set up scalers for Beagle */
                 for (i=0; i<m->numScalers*m->nCijkParts; i++)
                     beagleResetScaleFactors(m->beagleInstance, i);
-            }
+                }
 #   endif
 
         /* fill in tip conditional likelihoods */
@@ -25105,10 +25105,10 @@ int SetLikeFunctions (void)
                     else
                         {
 #   if defined (SSE_ENABLED)
-                        if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                        if (m->printAncStates == YES || m->printSiteRates == YES)
                             {
-                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                            MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                             }
 
                         m->CondLikeUp = &CondLikeUp_NUC4;
@@ -25121,7 +25121,7 @@ int SetLikeFunctions (void)
                             m->CondLikeRoot = &CondLikeRoot_NUC4_GibbsGamma;
                             m->CondLikeScaler = &CondLikeScaler_NUC4_GibbsGamma;
                             }
-                        else if (m->correlation != NULL || m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                        else if (m->correlation != NULL || m->printAncStates == YES || m->printSiteRates == YES)
                             {
                             m->CondLikeDown = &CondLikeDown_NUC4;
                             m->CondLikeRoot = &CondLikeRoot_NUC4;
@@ -25134,7 +25134,7 @@ int SetLikeFunctions (void)
                             m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
                             m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
                             /* Should be sse versions if we want to handle m->printAncStates == YES || inferSiteRates == YES.
-                            For now just set to NULL for early error detection if functions anyway got called by mistake*/
+                            For now just set to NULL for early error detection if functions anyway got called by mistake */
                             m->CondLikeUp = NULL;
                             m->PrintAncStates = NULL;
                             m->PrintSiteRates = NULL;
@@ -25173,7 +25173,6 @@ int SetLikeFunctions (void)
                         m->PrintAncStates = &PrintAncStates_NUC4;
                         m->PrintSiteRates = &PrintSiteRates_Gen;
 #   endif
-
                         if (m->nst == 1)
                             m->TiProbs = &TiProbs_Fels;
                         else if (m->nst == 2)
@@ -25228,10 +25227,10 @@ int SetLikeFunctions (void)
                             m->CondLikeScaler = &CondLikeScaler_Gen;
                             m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
-                            if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                            if (m->printAncStates == YES || m->printSiteRates == YES)
                                 {
-                                MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                                MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                                MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                                MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                                 }
                             else
                                 {
@@ -25255,8 +25254,8 @@ int SetLikeFunctions (void)
 #   if defined (SSE_ENABLED)
                         if (m->printAncStates == YES || m->printSiteRates == YES)
                             {
-                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', or 'site omegas'.\n", spacer);
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                            MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                             }
                         else
                             {
@@ -25293,10 +25292,10 @@ int SetLikeFunctions (void)
                         m->CondLikeScaler = &CondLikeScaler_Gen;
                         m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
-                        if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                        if (m->printAncStates == YES || m->printSiteRates == YES)
                             {
-                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                            MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                            MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                            MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                             }
                         else
                             {
@@ -25342,10 +25341,10 @@ int SetLikeFunctions (void)
                     m->CondLikeScaler = &CondLikeScaler_Gen;
                     m->Likelihood = &Likelihood_Gen;
 #   if defined (SSE_ENABLED)
-                    if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                    if (m->printAncStates == YES || m->printSiteRates == YES)
                         {
-                        MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                        MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                        MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                        MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                         }
                     else
                         {
@@ -25390,10 +25389,10 @@ int SetLikeFunctions (void)
                 m->CondLikeScaler = &CondLikeScaler_Gen;
                 m->Likelihood     = &Likelihood_Res;
 #   if defined (SSE_ENABLED)
-                if (m->printAncStates == YES || m->printSiteRates == YES || m->printPosSel ==YES || m->printSiteOmegas==YES)
+                if (m->printAncStates == YES || m->printSiteRates == YES)
                     {
-                    MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d due to\n", spacer, i+1);
-                    MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
+                    MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
+                    MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
                     }
                 else
                     {
