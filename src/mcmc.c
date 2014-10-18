@@ -14654,9 +14654,6 @@ MrBFlt LogLike (int chain)
 }
 
 
-
-
-
 MrBFlt LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3)
 {
 
@@ -17144,7 +17141,7 @@ int PosSelProbs (TreeNode *p, int division, int chain)
 
     /* find posSelProbs */
     ps = posSelProbs + m->compCharStart;
-    for (c=m->numDummyChars; c<m->numChars; c++)
+    for (c=0; c<m->numChars; c++)
         {
         sum = 0.0;
         for (k=0; k<m->numOmegaCats; k++)
@@ -17180,7 +17177,7 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     int             i, c1, c2, j, k, nStates;
     CLFlt           **catLike, *siteLike;
     MrBFlt          *bs, *omegaCatFreq, *omega,
-                    posProb, *ps, sum;
+                    posProb, *ps;
     __m128          m1, m2, *clPtr, **clP, mSiteLike, *mCatLike;
     ModelInfo       *m;
     
@@ -17199,24 +17196,24 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     /* get category omegas */
     omega = GetParamVals (m->omega, chain, state[chain]);
     /* allocate space for category likelihood arrays */
-    catLike = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
-    mCatLike = (__m128 *) calloc( m->numOmegaCats, sizeof(__m128));
-    if ( !catLike || !mCatLike )
-    {
-        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer );
+    catLike = (CLFlt **) calloc (m->numOmegaCats, sizeof(CLFlt *));
+    mCatLike = (__m128 *) calloc (m->numOmegaCats, sizeof(__m128));
+    if (!catLike || !mCatLike)
+        {
+        MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer);
         return (ERROR);
-    }
+        }
 
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP_SSE;
     for (k=0; k<m->numOmegaCats; k++)
-    {
+        {
         clP[k] = clPtr;
         clPtr += m->numSSEChars * nStates;
-        catLike[k] = (CLFlt *) ( &(mCatLike[k]) );
-    }
-    siteLike = (CLFlt *) ( &(mSiteLike) );
+        catLike[k] = (CLFlt *) (&(mCatLike[k]));
+        }
+    siteLike = (CLFlt *) (&mSiteLike);
     
     /* find posSelProbs */
     ps = posSelProbs + m->compCharStart;
@@ -17224,20 +17221,20 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
         {
         mSiteLike = _mm_setzero_ps ();
         for (k=0; k<m->numOmegaCats; k++)
-        {
+            {
             mCatLike[k] = _mm_setzero_ps();
             m1 = _mm_setzero_ps ();
             for (j=0; j<nStates; j++)
-            {
+                {
                 m2 = _mm_mul_ps (clP[k][j], _mm_set1_ps ((CLFlt)bs[j]));
                 m1 = _mm_add_ps (m1, m2);
-            }
+                }
             mCatLike[k] = _mm_mul_ps (m1, _mm_set1_ps ((CLFlt)omegaCatFreq[k]));
             mSiteLike = _mm_add_ps (mSiteLike, mCatLike[k]);
             clP[k] += nStates;
-        }
+            }
 
-        for ( i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+        for (i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
             {
             posProb = 0.0;
             for (k=0; k<m->numOmegaCats; k++)
@@ -17334,7 +17331,7 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     int             i, c1, c2, j, k, nStates;
     CLFlt           **catLike, *siteLike;
     MrBFlt          *bs, *omegaCatFreq, *omega,
-                    siteOmega, *ps, sum;
+                    siteOmega, *ps;
     __m128          m1, m2, *clPtr, **clP, mSiteLike, *mCatLike;
     ModelInfo       *m;
     
@@ -17354,54 +17351,54 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     omega = GetParamVals (m->omega, chain, state[chain]);
 
     /* allocate space for category likelihood arrays */
-    catLike = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
-    mCatLike = (__m128 *) calloc( m->numOmegaCats, sizeof(__m128));
-    if ( !catLike || !mCatLike )
-    {
-        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer );
+    catLike = (CLFlt **) calloc (m->numOmegaCats, sizeof(CLFlt *));
+    mCatLike = (__m128 *) calloc (m->numOmegaCats, sizeof(__m128));
+    if (!catLike || !mCatLike)
+        {
+        MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas_SSE\n", spacer);
         return (ERROR);
-    }
+        }
     
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP_SSE;
     for (k=0; k<m->numOmegaCats; k++)
-    {
+        {
         clP[k] = clPtr;
         clPtr += m->numSSEChars * nStates;
-        catLike[k] = (CLFlt *) ( &(mCatLike[k]) );
-    }
-    siteLike = (CLFlt *) ( &(mSiteLike) );
+        catLike[k] = (CLFlt *) (&(mCatLike[k]));
+        }
+    siteLike = (CLFlt *) (&mSiteLike);
     
     /* find site omegas (using posSelProbs space) */
     ps = posSelProbs + m->compCharStart;
     for (c1=c2=0; c1<m->numSSEChars; c1++)
-    {
+        {
         mSiteLike = _mm_setzero_ps ();
         for (k=0; k<m->numOmegaCats; k++)
-        {
+            {
             mCatLike[k] = _mm_setzero_ps();
             m1 = _mm_setzero_ps ();
             for (j=0; j<nStates; j++)
-            {
+                {
                 m2 = _mm_mul_ps (clP[k][j], _mm_set1_ps ((CLFlt)bs[j]));
                 m1 = _mm_add_ps (m1, m2);
-            }
+                }
             mCatLike[k] = _mm_mul_ps (m1, _mm_set1_ps ((CLFlt)omegaCatFreq[k]));
             mSiteLike = _mm_add_ps (mSiteLike, mCatLike[k]);
             clP[k] += nStates;
-        }
+            }
         
-        for ( i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
-        {
+        for (i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+            {
             siteOmega = 0.0;
             for (k=0; k<m->numOmegaCats; k++)
-            {
-                    siteOmega += ( catLike[k][i] / siteLike[i] ) * omega[k];
-            }
+                {
+                siteOmega += (catLike[k][i] / siteLike[i]) * omega[k];
+                }
             ps[c2] = siteOmega;
+            }
         }
-    }
     
     free (catLike);
     free (mCatLike);
@@ -19361,7 +19358,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     siteRates = m->condLikes[m->condLikeScratchIndex[p->index]];
     
     /* find base frequencies */
-    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 
     /* get rate multiplier */
     baseRate =  GetRate (division, chain);
@@ -25273,7 +25270,7 @@ int SetLikeFunctions (void)
                             }
 #   endif
                         }
-                    m->TiProbs        = &TiProbs_Gen;
+                    m->TiProbs = &TiProbs_Gen;
                     if (m->nCijkParts > 1)
                         m->TiProbs = &TiProbs_GenCov;
                     m->CondLikeUp = &CondLikeUp_Gen;
@@ -25407,7 +25404,7 @@ int SetLikeFunctions (void)
                     m->Likelihood     = &Likelihood_Res_SSE;
                     }
 #   endif
-                m->TiProbs        = &TiProbs_Res;
+                m->TiProbs = &TiProbs_Res;
                 m->CondLikeUp = &CondLikeUp_Bin;
                 m->StateCode = &StateCode_Std;
                 m->PrintAncStates = &PrintAncStates_Bin;

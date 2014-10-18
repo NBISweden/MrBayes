@@ -15,7 +15,7 @@
 
 #ifdef USECONFIG_H
 #   include "config.h"
-#elif !defined (XCODE_VERSION) /*some defaults that would otherwise be guessed by configure */
+#elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "mrbayes"
 #   define PACKAGE_VERSION "3.2"
 #   undef  HAVE_LIBREADLINE
