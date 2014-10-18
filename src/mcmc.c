@@ -28173,12 +28173,11 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         if (m->cijkLength > 0)
             {
             /* first update cijk if necessary */
-            //if (m->cijkLength > 0 && m->upDateCijk == YES)
-                //{
-                /* TODO: (IMPORTANT) This UpDateCijk is probably a bug */
-                //if (UpDateCijk (division, chain) == ERROR)
-                //  return (ERROR);
-                //}
+            if (m->cijkLength > 0 && m->upDateCijk == YES)
+                {
+                if (UpDateCijk (division, chain) == ERROR)
+                  return (ERROR);
+                }
 
             /* then get first set of eigenvalues */
             eigenValues = m->cijks[m->cijkIndex[chain]];
@@ -28193,9 +28192,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                     {
                     v =  length * baseRate * catRate[k];
                     cijk = eigenValues + (2 * n);
-
-                    // for (s=0; s<n; s++)
-                    //  EigValexp[s] =  exp(eigenValues[s] * v);
 
                     for (i=0; i<n; i++)
                         {
