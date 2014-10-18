@@ -1827,7 +1827,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
                     {
                     if (nNumbersOnThisLine != firstNumCols)
                         {
-                        MrBayesPrint ("%s   Number of columns is not even (%d in first line and %d in %d line of file %s)\n", spacer, firstNumCols, nNumbersOnThisLine, lineNum, fileName);
+                        MrBayesPrint ("%s   Number of columns is not even (%d in first line and %d in line %d of file %s)\n", spacer, firstNumCols, nNumbersOnThisLine, lineNum, fileName);
                         goto errorExit;
                         }
                     }
