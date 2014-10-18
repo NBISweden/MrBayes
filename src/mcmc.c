@@ -28176,7 +28176,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             if (m->cijkLength > 0 && m->upDateCijk == YES)
                 {
                 if (UpDateCijk (division, chain) == ERROR)
-                  return (ERROR);
+                    return (ERROR);
                 }
 
             /* then get first set of eigenvalues */
