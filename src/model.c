@@ -11808,8 +11808,7 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                     p->paramId == TOPOLOGY_CCL_FIXED ||
                     p->paramId == TOPOLOGY_RCCL_FIXED||
                     p->paramId == TOPOLOGY_FIXED     ||
-                    p->paramId == TOPOLOGY_PARSIMONY_FIXED
-                    )
+                    p->paramId == TOPOLOGY_PARSIMONY_FIXED)
                     {
                     constraintTree = AllocatePolyTree (numTaxa);
                     CopyToPolyTreeFromPolyTree (constraintTree, userTree[modelParams[p->relParts[0]].topologyFix]);
@@ -17997,41 +17996,41 @@ int SetModelParams (void)
                         modelSettings[i].omega = p;
 
                 /* find the parameter x prior type */
-                if (     !strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
+                if      (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10UUB;
-                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10UUF;
                 else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10UEB;
-                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10UEF;
                 else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10UFB;
-                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Uniform")     && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10UFF;
                 else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10EUB;
-                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10EUF;
                 else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10EEB;
-                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10EEF;
                 else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10EFB;
-                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Exponential") && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10EFF;
                 else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10FUB;
-                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10FUF;
                 else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10FEB;
-                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Exponential") && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10FEF;
                 else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_10FFB;
-                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed")    )
+                else if (!strcmp(mp->m10betapr, "Fixed")       && !strcmp(mp->m10gammapr, "Fixed")       && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_10FFF;
 
                 if (p->paramId != OMEGA_10FFF)
@@ -18067,7 +18066,7 @@ int SetModelParams (void)
                         modelSettings[i].omega = p;
             
                 /* find the parameter x prior type */
-                if (     !strcmp(mp->ny98omega1pr, "Beta")  && !strcmp(mp->ny98omega3pr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
+                if      (!strcmp(mp->ny98omega1pr, "Beta")  && !strcmp(mp->ny98omega3pr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Dirichlet"))
                     p->paramId = OMEGA_BUD;
                 else if (!strcmp(mp->ny98omega1pr, "Beta")  && !strcmp(mp->ny98omega3pr, "Uniform")     && !strcmp(mp->codonCatFreqPr, "Fixed"))
                     p->paramId = OMEGA_BUF;

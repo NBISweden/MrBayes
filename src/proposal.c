@@ -8937,9 +8937,9 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
             divFactor = warpFactor + log(nStates-1) - log (3) - log(rateMult);
 
             /* find downpass parsimony sets for the node and its environment */
-            pP   = parsPtr[chain][p->index]      + m->parsMatrixStart + Bit(division, p->clSpace     ) * parsMatrixRowSize;
+            pP   = parsPtr[chain][p->index]      + m->parsMatrixStart + Bit(division, p->clSpace)      * parsMatrixRowSize;
             pA   = parsPtr[chain][p->anc->index] + m->parsMatrixStart + Bit(division, p->anc->clSpace) * parsMatrixRowSize;
-            pV   = parsPtr[chain][v->index]      + m->parsMatrixStart + Bit(division, v->clSpace     ) * parsMatrixRowSize;
+            pV   = parsPtr[chain][v->index]      + m->parsMatrixStart + Bit(division, v->clSpace)      * parsMatrixRowSize;
         
             length = 0.0;
             for (j=0; j<m->numChars; j++)

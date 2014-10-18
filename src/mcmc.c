@@ -17098,9 +17098,6 @@ int PickProposal (RandLong *seed, int chainIndex)
 }
 
 
-
-
-
 /* Calculate positive selection probabilities */
 int PosSelProbs (TreeNode *p, int division, int chain)
 {
@@ -17114,13 +17111,13 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     m = &modelSettings[division];
 
     /* allocate space for conditional likelihood pointer array and site likelihood array */
-    clP = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
-    like = (MrBFlt *) calloc( m->numOmegaCats, sizeof(MrBFlt));
-    if ( !clP || !like )
-    {
-        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs\n", spacer );
+    clP  = (CLFlt **) calloc (m->numOmegaCats, sizeof(CLFlt *));
+    like = (MrBFlt *) calloc (m->numOmegaCats, sizeof(MrBFlt));
+    if (!clP || !like)
+        {
+        MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs\n", spacer);
         return (ERROR);
-    }
+        }
     
     /* number of states */
     nStates = m->numModelStates;
@@ -17128,7 +17125,7 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     /* find conditional likelihoods */
     clP[0] = m->condLikes[m->condLikeIndex[chain][p->index]];
     for (k=1; k<m->numOmegaCats; k++)
-            clP[k] = clP[0] + k*m->numModelStates*m->numChars;
+        clP[k] = clP[0] + k*m->numModelStates*m->numChars;
     
     /* find base frequencies */
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
@@ -17141,7 +17138,7 @@ int PosSelProbs (TreeNode *p, int division, int chain)
 
     /* find posSelProbs */
     ps = posSelProbs + m->compCharStart;
-    for (c=0; c<m->numChars; c++)
+    for (c=m->numDummyChars; c<m->numChars; c++)
         {
         sum = 0.0;
         for (k=0; k<m->numOmegaCats; k++)
@@ -17158,9 +17155,7 @@ int PosSelProbs (TreeNode *p, int division, int chain)
         for (k=0; k<m->numOmegaCats; k++)
             {
             if (omega[k] > 1.0)
-                {
                 posProb += like[k] / sum;
-                }
             }
         ps[c] = posProb;
         }
@@ -17170,9 +17165,6 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     
     return NO_ERROR;
 }
-
-
-
 
 
 /* Calculate omega values for each site */
@@ -17188,13 +17180,13 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     m = &modelSettings[division];
     
     /* allocate space for conditional likelihood pointer array and site likelihood array */
-    clP = (CLFlt **) calloc( m->numOmegaCats, sizeof(CLFlt *));
-    like = (MrBFlt *) calloc( m->numOmegaCats, sizeof(MrBFlt));
-    if ( !clP || !like )
-    {
-        MrBayesPrint( "%s   ERROR: Out of memory in PosSelProbs\n", spacer );
+    clP  = (CLFlt **) calloc (m->numOmegaCats, sizeof(CLFlt *));
+    like = (MrBFlt *) calloc (m->numOmegaCats, sizeof(MrBFlt));
+    if (!clP || !like)
+        {
+        MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas\n", spacer);
         return (ERROR);
-    }
+        }
     
     /* number of states */
     nStates = m->numModelStates;
@@ -19441,7 +19433,7 @@ int PrintStates (int curGen, int coldId)
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
-                if ( !(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
+                if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                     {
                     for (j=k=0; j<numChar; j++)
                         {
@@ -19855,7 +19847,7 @@ int PrintStates (int curGen, int coldId)
         for (i=0; i<numChar; i++)
             {
             compressedCharPosition = compCharPos[i];
-            if ( !(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
+            if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                 {
                 for (j=k=0; j<numChar; j++)
                     {
