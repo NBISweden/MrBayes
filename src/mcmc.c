@@ -314,10 +314,8 @@ MrBFlt    LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt    LnP1Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, MrBFlt c2);
 MrBFlt    LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2);
-MrBFlt    hatP0_tip (MrBFlt t, MrBFlt sR, MrBFlt lambda, MrBFlt rho);
-MrBFlt    hatP0 (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt rho);
-MrBFlt    LnQi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2);
-MrBFlt    LnPi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi);
+MrBFlt    LnQi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2);
+MrBFlt    LnPi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi);
 int       NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain);
 void      NodeToNodeDistances (Tree *t, TreeNode *fromNode);
 int       PickProposal (RandLong *seed, int chainIndex);
@@ -15716,43 +15714,30 @@ MrBFlt LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
     return log(4.0) + log(rho) - c1 *t - log(other);
 }
 
-MrBFlt hatP0_tip (MrBFlt t, MrBFlt sR, MrBFlt lambda, MrBFlt rho)  // p0(t|psi=0,mu->mu+psi)
-{
-    return 1.0 - rho *sR / (rho *lambda + (sR -lambda *rho) *exp(-sR*t));
-}
-
-/* probability that an individual alive at time t before today has
-   0 sampled extant descendants and an arbitrary number of sampled extinct individuals
- */
-MrBFlt hatP0 (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt rho)  // p0(t|psi=0)
-{
-    return 1.0 - rho *(lambda -mu) / (rho *lambda + (lambda -lambda *rho -mu) *exp((mu -lambda)*t));
-}
 
 /* return which time interval t is in */
-int Slice_i (MrBFlt t, MrBFlt *t_f, int m)
+int Slice_i (MrBFlt t, MrBFlt *t_f, int sl)
 {
     int i = 0;
-    
-    assert (t > 0.0);
-    while (t < t_f[i] + BRLENS_MIN)
+    assert (t > 0.0 && sl >= 0);
+
+    /* we need some tolerance here, for t[i] < t <= t[i-1] to return i */
+    while (t < t_f[i] + BRLENS_MIN/5)
         {
         i++;
-        if (i > m)
-            return m;
+        if (i > sl)
+            return sl;
         }
-    
     return i;
 }
-
 
 /* probability density of an individual at time t giving rise to an edge
    between time t and t_i with q_i(t_i) = 1
  */
-MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2)
+MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2)
 {
     MrBFlt lnq;
-    int i = Slice_i (t, t_f, m);
+    int i = Slice_i (t, t_f, sl);
     
     lnq = log(4.0) +c1[i] *(t_f[i] -t);
     lnq -= 2.0 * log(1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -t)));
@@ -15761,12 +15746,12 @@ MrBFlt  LnQi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2)
 }
 
 /* an individual at time t has no sampled descendants when the process is stopped
-   (i.e., at time t_s), with t_i < t <= t_i-1 (i = 1,..,s)
+   (i.e., at time t_s), with t_i < t <= t_{i-1} (i = 1,..,s)
  */
-MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int m, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi)
+MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi)
 {
     MrBFlt other;
-    int i = Slice_i (t, t_f, m);
+    int i = Slice_i (t, t_f, sl);
     
     other = lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -t)))
                                             / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -t)));
@@ -15834,7 +15819,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
     int         i, n, m;
-    MrBFlt      x, lambda, rho, psi, tmrca, c1, c2;
+    MrBFlt      x, lambda, rho, psi, tmrca, c1, c2, hatP0;
     TreeNode    *p;
     Model       *mp;
     
@@ -15872,8 +15857,11 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             }
         }
 
-    (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0_tip(tmrca, sR, lambda, rho)));
-
+    /* p_0 (t |psi=0, mu->mu+psi) */
+    hatP0 = 1.0 - rho*sR / (rho*lambda + (sR - rho*lambda) * exp(-sR*tmrca));
+    
+    (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0));
+    
     /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
     if (t->root->left->isDated == NO)
@@ -15911,7 +15899,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |                \      /                     |
  |                 \    /                      |
  |                  \  /                       |
- |                   \/                 x1  ___|
+ |                   \/                 x1  ___|_________  t_mrca
  |
  |
  |    sl = 2, t1 > t2 > t3 = 0
