@@ -14314,7 +14314,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         {
         if (UpDateCijk(d, chain)== ERROR)
             {
-            (*lnL) = MRBFLT_NEG_MAX; /*effectively abort the move*/
+            (*lnL) = MRBFLT_NEG_MAX; /* effectively abort the move */
             return;
             }
         m->upDateAll = YES;
@@ -28659,7 +28659,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     beagleInverseEigvecs = beagleEigvecs + n*n;
                     for (i=k=0; i<n; i++)
                         {
-                            //eigenValues[i] =0.1;
+                        // eigenValues[i] = 0.1;
                         for (j=0; j<n; j++)
                             {
                             beagleEigvecs[k] = eigvecs[i][j];

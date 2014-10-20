@@ -6967,6 +6967,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 else
                                     MrBayesPrint ("%s   Setting Brlenspr to Clock:Fossilization for partition %d\n", spacer, i+1);
                                 }
+                            /* TODO: clock:fossilization is not compatible with clockvarpr=cpp */
                             expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         else if (IsSame ("Fixed", tkn) == SAME || IsSame ("Fixed", tkn) == CONSISTENT_WITH)
@@ -19767,8 +19768,6 @@ int SetUpAnalysis (RandLong *seed)
     /* Set the applicable moves that could be used by the chain. */
     if (SetMoves () == ERROR)
         return (ERROR);
-
-    /* TODO: Clock:Fossilization is not compatible with CPP relaxed clock model */
     
     setUpAnalysisSuccess=YES;
     

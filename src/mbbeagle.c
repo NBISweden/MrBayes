@@ -436,6 +436,7 @@ void BeaglePrintResources()
         BeaglePrintFlags(beagleResources->list[i].supportFlags);
         MrBayesPrint ("\n\n");
         }
+    MrBayesPrint ("%s   BEAGLE vesion: %s\n", spacer, beagleGetVersion());
 }
 
 

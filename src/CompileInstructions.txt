@@ -48,15 +48,13 @@ Configuration options
 
 1) BEAGLE
 MrBayes 3.2 uses the BEAGLE library by default. You should install the library from 
-"http://beast.bio.ed.ac.uk/BEAGLE" and checkout the BEAGLE header files into your path:
-
-> svn checkout http://beagle-lib.googlecode.com/svn/trunk/ /usr/local/include/libhmsbeagle
-
-Or disable the use of the library with option "--with-beagle=no", i.e. 
+"https://code.google.com/p/beagle-lib", or disable the use of the library with option
+"--with-beagle=no", i.e. 
 
 > ./configure --with-beagle=no
 
-Note: without BEAGLE library MrBayes may run slower.
+Note: without BEAGLE library MrBayes may run slower. For more instructions, please see
+https://code.google.com/p/beagle-lib/
 
 2) SSE code
 All main-stream modern processors have support for SSE instructions which are utilized 
