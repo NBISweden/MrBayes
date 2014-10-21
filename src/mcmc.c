@@ -1615,15 +1615,14 @@ void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tI
 |   BuildParsTrees: Fill in trees using random add seq with parsimony
 |
 ------------------------------------------------------------------*/
-int BuildParsTrees (RandLong *seed)
+int BuildParsTrees (RandLong *seed, int fromChain, int toChain)
 {
     int         k, chn;
     Param       *p, *q;
     Tree        *tree;
 
     /* Build starting trees for state 0 */
-    /* TODO: check that numLocalChains is used correctly here (may be numGlobalChains is needed instead) */
-    for (chn=0; chn<numLocalChains; chn++)
+    for (chn=fromChain; chn<toChain; chn++)
         {
         for (k=0; k<numParams; k++)
             {
@@ -7635,19 +7634,19 @@ int DoMcmc (void)
         if (!strcmp(chainParams.startParams,"Reset"))
             {
             MrBayesPrint ("%s   Resetting starting values for substitution model parameters\n", spacer);
-            FillNormalParams(&seed, 0, numLocalChains);
+            FillNormalParams (&seed, 0, numLocalChains);
             }
 
         /* deal with starting treeparam values */
         if (!strcmp(chainParams.startTree,"Random"))
             {
             MrBayesPrint ("%s   Resetting starting trees and tree parameters\n", spacer);
-            FillTreeParams(&seed, 0, numLocalChains);
+            FillTreeParams (&seed, 0, numLocalChains);
             }
         else if (!strcmp(chainParams.startTree,"Parsimony"))
             {
             MrBayesPrint ("%s   Rebuilding starting trees using random addition sequences and parsimony\n", spacer);
-            BuildParsTrees(&seed);
+            BuildParsTrees (&seed, 0, numLocalChains);
             }
 
         /* Perturb start trees if requested */

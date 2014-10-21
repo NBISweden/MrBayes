@@ -23,7 +23,7 @@
 #   undef  SSE_ENABLED
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
-// #undef  FAST_LOG
+#   undef  FAST_LOG
 #endif
 
 #if defined (MPI_ENABLED)
