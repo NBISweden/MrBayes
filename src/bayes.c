@@ -911,7 +911,7 @@ int ReinitializeMrBayes (void)
     chainParams.numSwaps = 1;                        /* number of swaps to try each time              */
     chainParams.isSS = NO;
     chainParams.startFromPriorSS = NO;
-    chainParams.numStepsSS = 49;
+    chainParams.numStepsSS = 50;
     chainParams.burninSS = -1;
     chainParams.alphaSS = 0.4;
     chainParams.backupCheckSS = 0;
