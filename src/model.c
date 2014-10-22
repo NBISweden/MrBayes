@@ -1813,7 +1813,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 int CheckModel (void)
 {
     int         i, j, k, answer;
-    Tree        *t;
+    Tree        *t = NULL;
     TreeNode    *p;
     
     /* there should only be one calibrated tree */

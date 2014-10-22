@@ -3152,7 +3152,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 {
     int         i, j, k;
     MrBFlt      treeLen1=0.0, treeLen2=0.0;
-    TreeNode    *p, *q;
+    TreeNode    *p, *q=NULL;
     
     (*d1) = (*d2) = (*d3) = 0.0;
 

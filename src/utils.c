@@ -6369,7 +6369,7 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 void ResetTipIndices(PolyTree *pt)
 {
     int         i, j, k, m;
-    PolyNode    *p;
+    PolyNode    *p = NULL;
 
     for (i=j=0; i<numTaxa; i++)
         {

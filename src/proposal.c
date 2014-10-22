@@ -1113,7 +1113,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, newLength, clockRate, x, oldQLength, oldRLength,
            *brlens=NULL, nu=0.0, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
-    TreeNode    *p, *q, *r;
+    TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m;
@@ -1368,7 +1368,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, clockRate, x, oldPLength, oldQLength, oldRLength,
            *brlens=NULL, nu=0.0, *tk02Rate=NULL, igrvar=0.0, *igrRate=NULL;
-    TreeNode    *p, *q, *r;
+    TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m;
