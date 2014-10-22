@@ -45,8 +45,8 @@
 #include "utils.h"
 #if defined(__MWERKS__)
 #include "SIOUX.h"
-#include <signal.h>
 #endif
+#include <signal.h>
 
 const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
@@ -7266,7 +7266,7 @@ void CopyTrees (int chain)
 
 
 #ifdef VISUAL
-BOOL WINAPI CatchInterrupt2(DWORD signum) 
+BOOL WINAPI CatchInterrupt2 (DWORD signum)
 {
     /* set up signal handler to do the same */
 
@@ -7275,10 +7275,10 @@ BOOL WINAPI CatchInterrupt2(DWORD signum)
     return TRUE;
 }
 #else
-void CatchInterrupt(int signum)
+void CatchInterrupt (int signum)
 {
     /* set up signal handler to do the same */
-    signal(signum, CatchInterrupt);
+    signal (signum, CatchInterrupt);
 
     requestAbortRun = YES;
     
