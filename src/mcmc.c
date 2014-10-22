@@ -45,24 +45,15 @@
 #include "utils.h"
 #if defined(__MWERKS__)
 #include "SIOUX.h"
+#include <signal.h>
 #endif
 
 const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
-#if defined(WIN_VERSION) && !defined(__GNUC__)
+#if defined (WIN_VERSION) && !defined (__GNUC__)
 #define VISUAL
-#endif
-
-#ifdef VISUAL
-//#undef NO_ERROR
-//#undef ERROR
-//#include <windows.h>
-//#undef ERROR
-//#define ERROR 1
-#include <signal.h>
 #else
-#include <signal.h>
-typedef void (*sighandler_t)(int);
+typedef void (*sighandler_t) (int);
 #endif
 
 #define A                           0

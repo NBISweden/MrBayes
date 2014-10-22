@@ -13711,14 +13711,14 @@ MrBFlt RndGamma (MrBFlt s, RandLong *seed)
 ---------------------------------------------------------------------------------*/
 MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
 {
-    MrBFlt          r, x=0.0, small=1e-37, w;
+    MrBFlt          r, x=0.0, tiny=1e-37, w;
     static MrBFlt   a, p, uf, ss=10.0, d;
     
     if (fabs(s-ss)>ETA) /* s != ss */ 
         {
         a  = 1.0 - s;
         p  = a / (a + s * exp(-a));
-        uf = p * pow(small / a, s);
+        uf = p * pow(tiny / a, s);
         d  = a * log(a);
         ss = s;
         }

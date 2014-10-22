@@ -56,17 +56,6 @@ extern const char* const svnRevisionUtilsC;
 static char **readline_completion(const char *, int, int);
 #endif
 
-/* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L)
-      ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
-#if defined (WIN_VERSION)
-#   include <windows.h>
-#   include <winbase.h>
-#   undef NO_ERROR
-#   undef ERROR
-#   define NO_ERROR     0
-#   define ERROR        1
-#endif
-
 /* local prototypes */
 int  CommandLine (int argc, char **argv);
 void GetTimeSeed (void);

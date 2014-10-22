@@ -2165,7 +2165,7 @@ int DoCitations (void)
     MrBayesPrint ("      LG --                                                                      \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Le, Si Q. & Gascuel, O. 2008 An improved general amino- acid replacement   \n");
-    MrBayesPrint ("         matrix. Mol. Biol. Evol. 25, 1307–1320.                                 \n");
+    MrBayesPrint ("         matrix. Mol. Biol. Evol. 25, 1307-1320.                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   MrBayes implements a simple Jukes-Cantor-like model for restriction sites     \n");
     MrBayesPrint ("   and other binary data. A problem with some of these data is that there is a   \n");
@@ -10967,7 +10967,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");
         MrBayesPrint ("   SampleStrat   -- This parameter sets the strategy under which species were    \n");
         MrBayesPrint ("                    sampled in the analysis. For the birth-death prior, 'birth-  \n");
-        MrBayesPrint ("                    death' (Höhna et al. 2011), three strategies: 'random',      \n");
+        MrBayesPrint ("                    death' (Hohna et al. 2011), three strategies: 'random',      \n");
         MrBayesPrint ("                    'diversity' and 'cluster' sampling can be used for extant    \n");
         MrBayesPrint ("                    taxa. No extinct sample (fossil) is allowed in this prior.   \n");
         MrBayesPrint ("                    For data with extant and extinct samples, use 'prset brlenspr\n");
@@ -10998,7 +10998,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Sampleprob    -- This parameter sets the fraction of extant species that are  \n");
         MrBayesPrint ("                    sampled in the analysis. This is used with the birth-death   \n");
-        MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009; Höhna   \n");
+        MrBayesPrint ("                    prior on trees (Yang and Rannala 1997; Stadler 2009; Hohna   \n");
         MrBayesPrint ("                    et al. 2011), and the fossilized birth-death prior (Stadler  \n");
         MrBayesPrint ("                    2010, Zhang et al. 2015).                                    \n");
         MrBayesPrint ("                                                                                 \n");

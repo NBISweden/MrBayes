@@ -52,6 +52,11 @@
 #  endif
 #endif
 
+#if defined (WIN_VERSION)
+#   include <windows.h>
+#   include <winbase.h>
+#endif
+
 /* Previous problems with bitfield operations may have been caused by several things. One potential
    problem has been that MrBayes has used signed ints or signed longs for the bit operations, and
    not all compilers perform bitfield operations on signed ints and longs in the expected manner
@@ -120,6 +125,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define TEMPSTRSIZE 200
 #endif
 
+/* NO_ERROR is defined in bayes.h (as 0) and also in WinError.h (as 0L)
+ ERROR is defined in bayes.h (as 1) and also in WinGDI.h (as 0). we use the bayes.h value */
 #undef  NO_ERROR
 #undef  ERROR
 #define NO_ERROR                0
