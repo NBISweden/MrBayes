@@ -42,7 +42,7 @@
 #define VERSION_NUMBER          "3.2.3-svn"
 #endif
 
-#if !defined(UNIX_VERSION) && !defined(WIN_VERSION) && !defined(MAC_VERSION)
+#if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
 #  ifdef __MWERKS__
 #    define MAC_VERSION
 #  elif defined __APPLE__

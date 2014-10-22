@@ -11680,7 +11680,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   moves that are currently switched on for the model, use 'showmoves'. You can  \n");
         MrBayesPrint ("   also see other available moves by using 'showmoves allavailable=yes'. A list  \n");
         MrBayesPrint ("   of the moves for each parameter in the model is available by using the command\n");
-        MrBayesPrint ("   'Showparams'. If you change proposal probabilities, make sure that all    \n");
+        MrBayesPrint ("   'Showparams'. If you change proposal probabilities, make sure that all        \n");
         MrBayesPrint ("   parameters that are not fixed in your model have at least one move switched   \n");
         MrBayesPrint ("   on.                                                                           \n");
         MrBayesPrint ("                                                                                 \n");
@@ -13290,7 +13290,7 @@ else if (!strcmp(helpTkn, "Set"))
     else if (!strcmp(helpTkn, "Manual"))
         {
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
-        MrBayesPrint ("   Manual                                                                          \n");
+        MrBayesPrint ("   Manual                                                                        \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   This command allows you to generate a text file containing help information   \n");
         MrBayesPrint ("   on all the available commands. This text file can be used as an up-to-date    \n");
