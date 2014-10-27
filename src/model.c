@@ -11821,8 +11821,11 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                         {
                         if (tree->isRooted != constraintTree->isRooted)
                             {
-                            MrBayesPrint ("%s   Could not fix topology because user tree '%s' differs in rootedness with the model tree.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
-                            MrBayesPrint ("%s   The user tree %s is%srooted, while expected model tree is%srooted.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name, (constraintTree->isRooted?" ":" not "), (tree->isRooted?" ":" not "));
+                            MrBayesPrint ("%s   Could not fix topology because user tree '%s' differs in rootedness with the model tree.\n", spacer,
+                                          userTree[modelParams[p->relParts[0]].topologyFix]->name);
+                            MrBayesPrint ("%s   The user tree %s is%srooted, while expected model tree is%srooted.\n", spacer,
+                                          userTree[modelParams[p->relParts[0]].topologyFix]->name, (constraintTree->isRooted?" ":" not "), (tree->isRooted?" ":" not "));
+                            MrBayesPrint ("%s   Check brlenspr is set correctly before fixing topology.\n", spacer);
                             }
                         else
                             MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);

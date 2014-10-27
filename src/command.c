@@ -11394,7 +11394,7 @@ int GetUserHelp (char *helpTkn)
                     MrBayesPrint ("(%1.1lf)\n", mp->symBetaFix);
                 }
             
-            MrBayesPrint ("   Topologypr       Uniform/Constraints/Fixed    %s", mp->topologyPr);
+            MrBayesPrint ("   Topologypr       Uniform/Constraints/Fixed/   %s", mp->topologyPr);
             if (!strcmp(mp->topologyPr, "Constraints"))
                 {
                 MrBayesPrint ("(");
@@ -11419,7 +11419,8 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint("(%s)\n", userTree[mp->topologyFix]->name);
             else
                 MrBayesPrint ("\n");
-                
+            MrBayesPrint ("                    Speciestree                  \n");
+            
             MrBayesPrint ("   Brlenspr         Unconstrained/Clock/Fixed    %s", mp->brlensPr);
             if (!strcmp(mp->brlensPr, "Unconstrained"))
                 {
