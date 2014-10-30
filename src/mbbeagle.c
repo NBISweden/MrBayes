@@ -417,7 +417,7 @@ void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCou
 | BeaglePrintResources: outputs the available BEAGLE resources
 |
 ----------*/
-void BeaglePrintResources() 
+void BeaglePrintResources()
 {
     int i;
     BeagleResourceList* beagleResources;

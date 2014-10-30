@@ -5168,7 +5168,7 @@ int DoMatrix (void)
 
     MrBayesPrint ("%s   Successfully read matrix\n", spacer);
     if (matrixHasPoly == YES)
-        MrBayesPrint ("%s   Matrix  contains polymorphisms, interpreted as ambiguity\n", spacer);
+        MrBayesPrint ("%s   Matrix contains polymorphisms, interpreted as ambiguity\n", spacer);
     defMatrix = YES;
     isTaxsetDef = YES;
 

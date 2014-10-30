@@ -12087,7 +12087,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         moveInRoot = NO;
  
     if (moveInRoot == YES)
-    {
+        {
         /* set up pointers for nodes around the picked branch */
         v = p;
         u = p->anc;
@@ -12448,10 +12448,10 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         getchar();
 #   endif
 
-    }
+        }
 
     else  // moveInRoot == NO
-    {
+        {
         /* set up pointers for nodes around the picked branch */
         v = p;
         u = p->anc;
@@ -12680,7 +12680,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         // nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
         //??? nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
         CopyTreeNodes (old, r, 0);
-        do {
+        do  {
             p = q->anc; /* get next node before we rotate!! */
 
             /* rotate pointers of q */
@@ -12698,7 +12698,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             /* make sure we get q and r initialized for next round */
             r = q;
             q = p;
-        }   while (r != c && r != d);
+            } while (r != c && r != d);
 
         /* now reattach crown to v */
         newB = newA->anc;
@@ -12709,13 +12709,13 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         
         /* and reattach root to u (u pointers are unchanged) */
         if (u->anc != NULL)
-        {
+            {
             a->anc = u;
             if (b->left == a)
                 b->left = u;
             else
                 b->right = u;
-        }
+            }
         
         topologyHasChanged = YES;
 
@@ -12752,12 +12752,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* hit newB length with multiplier */
         x = newB->length * exp(tuning * (RandomNumber(seed) - 0.5));
         while (x < minV || x > maxV)
-        {
+            {
             if (x < minV)
                 x = minV * minV / x;
             else if (x > maxV)
                 x = maxV * maxV / x;
-        }
+            }
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newB->length);
         if (isVPriorExp == YES)
@@ -12811,7 +12811,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         getchar();
 #   endif
 
-    }
+        }
  
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
