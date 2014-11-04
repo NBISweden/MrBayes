@@ -7835,7 +7835,7 @@ int DoSsParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid argument for FromPrior paramiter\n", spacer);
+                    MrBayesPrint ("%s   Invalid argument for FromPrior parameter\n", spacer);
                     return (ERROR);
                     }
                 MrBayesPrint ("%s   Setting FromPrior=%s\n", spacer, (chainParams.startFromPriorSS==YES)?"Yes":"No");

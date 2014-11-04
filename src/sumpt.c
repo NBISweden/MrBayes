@@ -862,7 +862,7 @@ sumssTable:
         MrBayesPrint (" Allowed range of 'Steptoplot' are from 0 to %d.\n", chainParams.numStepsSS);
         MrBayesPrint (" If the next entered value is negative, 'sumss' will stop printing step plots.\n");
         MrBayesPrint (" If the next entered value is positive, but out of range, you will be offered\n");
-        MrBayesPrint (" to change paramiter 'Discardfrac' of 'sumss'.\n");
+        MrBayesPrint (" to change parameter 'Discardfrac' of 'sumss'.\n");
         MrBayesPrint (" Enter new step number 'Steptoplot':");
         k = scanf("%d",&j);
         if (j < 0)
@@ -1869,8 +1869,8 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             if (strcmp(t,(*headerNames)[i])!=0)
                 {
                 MrBayesPrint ("%s   Expected header '%s' for column %d but the header for this column was '%s' in file '%s'\n", spacer, (*headerNames)[i], i+1, t, fileName);
-                MrBayesPrint ("%s   It could be that some paramiter values are not numbers and the whole string containing \n",spacer); 
-                MrBayesPrint ("%s   this wrongly formated paramiter is treated as a header.\n",spacer);
+                MrBayesPrint ("%s   It could be that some parameter values are not numbers and the whole string containing \n",spacer); 
+                MrBayesPrint ("%s   this wrongly formated parameter is treated as a header.\n",spacer);
                 goto errorExit;
                 }
             }
@@ -3688,7 +3688,7 @@ int DoCompareTree (void)
     /* set file pointer to NULL */
     fp = NULL;
 
-    strcpy(treeName[0],"tree"); //in case if paramiter is not specified in a .t file
+    strcpy(treeName[0],"tree"); //in case if parameter is not specified in a .t file
     strcpy(treeName[1],"tree");
 
     /* Check that a data set has been read in. We check taxon names against
@@ -4997,7 +4997,7 @@ int DoSumt (void)
                 MrBayesPrint ("%s   taxa that are not included are denoted using the '.' symbol.                  \n", spacer);
                 MrBayesPrint ("                                                                                   \n");
                 MrBayesPrint ("%s   The output first includes a key to all the bipartitions with frequency larger \n", spacer);
-                MrBayesPrint ("%s   or equual to (Minpartfreq) in at least one run. Minpartfreq is a paramiter to \n", spacer);
+                MrBayesPrint ("%s   or equual to (Minpartfreq) in at least one run. Minpartfreq is a parameter to \n", spacer);
                 MrBayesPrint ("%s   sumt command and currently it is set to %1.2lf.  This is followed by a table  \n", spacer, sumtParams.minPartFreq);
                 MrBayesPrint ("%s   with statistics for the informative bipartitions (those including at least    \n", spacer);
                 MrBayesPrint ("%s   two taxa), sorted from highest to lowest probability. For each bipartition,   \n", spacer);

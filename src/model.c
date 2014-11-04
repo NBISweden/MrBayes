@@ -9991,7 +9991,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         theTree->fromUserTree=YES;
                         
                         FillBrlensSubParams (param, chainId, 0);
-                        //MrBayesPrint ("%s   Rrelaxed clock subparamiters of a paramiter '%s' are reset.\n", spacer, param->name);
+                        //MrBayesPrint ("%s   Rrelaxed clock subparamiters of a parameter '%s' are reset.\n", spacer, param->name);
                         //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         if (param->paramId == BRLENS_CLOCK_SPCOAL)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
