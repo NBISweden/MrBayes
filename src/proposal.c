@@ -9982,6 +9982,16 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     q->length = newMin + RandomNumber(seed) * (newMax - newMin);
     p->length = newM - q->length;
 
+    /* the proposal ratio for two sliding windows */
+    (*lnProposalRatio) = log ((newMax - newMin) / (oldMax - oldMin));
+    
+    /* The proposal ratio for shrinking/expanding two variables (x1 = p->length, x2 = q->length)
+       by the same factor c = newM/oldM is c^2. This can be derived by variable transformation:
+       y1 = x1, y2 = x2/x1. The proposal ratio in the transformed variables is c, the Jacobian is y1,
+       so the proposal ratio in the original variables is c*c = c^2.
+       (see Move_TreeLen for m variables and Yang 2006 CME P171 S5.4.4 for details) */
+    (*lnProposalRatio) += 2.0 * log(newM / oldM);
+
     /* set flags for update of transition probabilities at p and q */
     p->upDateTi = YES;
     q->upDateTi = YES;
@@ -9993,9 +10003,6 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         p = p->anc;
         p->upDateCl = YES;
         }
-
-    /* calculate proposal ratio */
-    (*lnProposalRatio) = log(newM / oldM) + log ((newMax - newMin) / (oldMax - oldMin));
 
     /* update prior if exponential prior on branch lengths */
     if (param->paramId == BRLENS_EXP)
