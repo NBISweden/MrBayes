@@ -521,6 +521,7 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
     MrBFlt aT, bT, a, c;
     TreeNode  *p;
     
+    /* Not safe, should define Marcos. YES or NO should never be defined to 2 or 3 or 4! */
     /* PV is 2 or 3: Dirichlet priors */    
     if (PV == 2 || PV == 3)
         {
@@ -17685,7 +17686,8 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
 
     if (!strcmp(modelParams[division].nucModel,"Codon") || !strcmp(modelParams[division].nucModel,"Protein") || !strcmp(modelParams[division].nucModel,"Doublet"))
         {
-        assert (modelParams[division].dataType == DNA || modelParams[division].dataType == RNA);/*Note that we can have matrix with Protein datatype which is not and should not be covered here */
+        assert (modelParams[division].dataType == DNA || modelParams[division].dataType == RNA);
+        /* Note that we can have matrix with Protein datatype which is not and should not be covered here */
         printedChar = (char *) SafeMalloc (numChar*sizeof(char));
         }
     else
@@ -17783,7 +17785,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
             for (i=0; i<nStates; i++)
                 cL[i] *= bs[i];
 
-            if (hasPInvar == YES)
+            if (hasPInvar == YES && pInvar > 0)
                 {
                 sum = 0.0;
                 for (i=0; i<nStates; i++)
@@ -17809,6 +17811,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
             sum = 0.0;
             for (i=0; i<nStates; i++)
                 sum += cL[i];
+            assert (sum > 0.0);
             for (i=0; i<nStates; i++)
                 cL[i] /= sum;
             cL += nStates;

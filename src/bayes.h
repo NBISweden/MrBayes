@@ -20,7 +20,7 @@
 #   define PACKAGE_VERSION "3.2"
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
-#   undef  SSE_ENABLED
+#   define SSE_ENABLED  1
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
 #   undef  FAST_LOG
