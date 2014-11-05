@@ -3067,13 +3067,23 @@ int DoLsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA))
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
-                            strcpy(modelParams[i].nst, tempStr);
-                            if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Nst to %s\n", spacer, modelParams[i].nst);
-                            else
-                                MrBayesPrint ("%s   Setting Nst to %s for partition %d\n", spacer, modelParams[i].nst, i+1);
+                            if (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA)
+                                {
+                                strcpy(modelParams[i].nst, tempStr);
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Setting Nst to %s\n", spacer, modelParams[i].nst);
+                                else
+                                    MrBayesPrint ("%s   Setting Nst to %s for partition %d\n", spacer, modelParams[i].nst, i+1);
+                                }
+                            else {
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Nst =%s unchanged ", spacer, modelParams[i].nst);
+                                else
+                                    MrBayesPrint ("%s   Nst =%s unchanged for partition %d ", spacer, modelParams[i].nst, i+1);
+                                MrBayesPrint ("because dataType is not DNA or RNA\n");
+                                }
                             }
                         }
                     }
