@@ -489,16 +489,16 @@ typedef struct node
     int             index;                  /*!< index to node (0 to numLocalTaxa for tips) */
     int             upDateCl;               /*!< cond likes need update?                    */
     int             upDateTi;               /*!< transition probs need update?              */
-    int             marked, x, y;           /*!< scratch variables                          */
     int             scalerNode;             /*!< is node scaling cond likes?                */
     int             isLocked;               /*!< is node locked?                            */
     int             lockID;                 /*!< id of lock                                 */
     int             isDated;                /*!< is node dated (calibrated)?                */
+    int             marked, x, y;           /*!< scratch variables                          */
+    MrBFlt          d;                      /*!< scratch variable                           */
     BitsLong        *partition;             /*!< pointer to bitfield describing splits      */
     MrBFlt          length;                 /*!< length of pending branch                   */
     MrBFlt          nodeDepth;              /*!< node depth (height)                        */
     MrBFlt          age;                    /*!< age of node                                */
-    MrBFlt          d;                      /*!< scratch variable                           */
     Calibration     *calibration;           /*!< pointer to calibration data                */
     }
     TreeNode;

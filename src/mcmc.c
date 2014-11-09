@@ -1735,7 +1735,7 @@ int BuildStepwiseTree (Tree *t, int chain, RandLong *seed) {
         r->anc = p;
         t->root = q;
     }
-    GetDownPass(t);
+    GetDownPass (t);
 
     return (NO_ERROR);
 }
@@ -23550,54 +23550,42 @@ int RunChain (RandLong *seed)
             /* Add tree samples to partition counters */
             if (chainParams.relativeBurnin == YES)
                 {
+                if (numPreviousGen/(i-1) != chainParams.sampleFreq)
+                    {
+                    MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to append\n", spacer);
+                    /* What if the old number of generations was not divisible by the sampling frequency? */
+                    nErrors++;
+                    }
                 if (chainParams.isSS == NO)
                     {
-                    if (numPreviousGen/(i-1) != chainParams.sampleFreq)
+                    if (noWarn == YES)
                         {
-                        MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to use relative burnin\n", spacer);
-                        nErrors++;
+                        /* We definitely know the final number of generations */
+                        j = (chainParams.numGen/chainParams.sampleFreq)+1;
+                        j = (int) (j*chainParams.burninFraction);
+                        }
+                    else /* User may extend chain so save all trees if saving trees */
+                        j = i;
+                    if (j < i)
+                        {
+                        if (AddTreeSamples(1,j,chainParams.saveTrees) == ERROR) nErrors++;
+                        if (AddTreeSamples(j+1,i,NO) == ERROR) nErrors++;
+                        /* Since we never need to remove trees from partition counter after total burnin we put NO in the last argument */
                         }
                     else
                         {
-                        if (noWarn == YES)
-                            {
-                            /* We definitely know the final number of generations */
-                            j = (chainParams.numGen/chainParams.sampleFreq)+1;
-                            j = (int) (j*chainParams.burninFraction);
-                            }
-                        else /* User may extend chain so save all trees if saving trees */
-                            j = i;
-                        if (j < i)
-                            {
-                            if (AddTreeSamples(1,j,chainParams.saveTrees) == ERROR) nErrors++;
-                            if (AddTreeSamples(j+1,i,NO) == ERROR) nErrors++;
-                            /* Since we never need to remove trees from partition counter after total burnin we put NO in the last argument */
-                            }
-                        else
-                            {
-                            if (AddTreeSamples(1,i,chainParams.saveTrees) == ERROR) nErrors++;
-                            }
+                        if (AddTreeSamples(1,i,chainParams.saveTrees) == ERROR) nErrors++;
                         }
                     }
                 else
                     {
-                    if (numPreviousGen/(i-1) != chainParams.sampleFreq)
-                        {
-                        MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to append to the SS run\n", spacer);
-                        nErrors++;
-                        }
-                    else
-                        {
-                        if (setFilePositions(removeTo) == ERROR) nErrors++;
-                        if (AddTreeSamples(removeTo+1,i,chainParams.saveTrees) == ERROR) nErrors++;
-                        }
+                    if (setFilePositions(removeTo) == ERROR) nErrors++;
+                    if (AddTreeSamples(removeTo+1,i,chainParams.saveTrees) == ERROR) nErrors++;
                     }
                 }
             else if (chainParams.chainBurnIn < i)
                 {
-                // if ((chainParams.dtree = AllocateTree(numLocalTaxa)) == NULL) nErrors++;  else
                 if (AddTreeSamples(chainParams.chainBurnIn,i-1,chainParams.saveTrees) == ERROR) nErrors++;
-                // else FreeTree (chainParams.dtree);
                 }
             }
         if (nErrors == 0)

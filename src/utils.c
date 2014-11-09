@@ -64,7 +64,6 @@ char    noLabel[] = "";
 /* local prototypes */
 void    DatedNodeDepths (TreeNode *p, MrBFlt *nodeDepths, int *index);
 void    DatedNodes (TreeNode *p, TreeNode **datedTips, int *index);
-void    MarkDatedSubtreeNodes (TreeNode *p);
 int     NConstrainedTips (TreeNode *p);
 int     NDatedTips (TreeNode *p);
 void    PrintNode (char **s, int *len, TreeNode *p, int isRooted);
@@ -2591,7 +2590,7 @@ int BuildRandomRTopology (Tree *t, RandLong *seed)
 
     /* set root and get downpass */
     t->root = &t->nodes[2*nTips-1];
-    GetDownPass(t);
+    GetDownPass (t);
 
     /* relabel interior nodes */
     for (i=0; i<t->nIntNodes; i++)
@@ -2659,7 +2658,7 @@ int BuildRandomUTopology (Tree *t, RandLong *seed)
     t->root = &t->nodes[0];
     
     /* get downpass */
-    GetDownPass(t);
+    GetDownPass (t);
 
     /* relabel interior nodes */
     for (i=0; i<t->nIntNodes; i++)
@@ -3411,7 +3410,7 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
     /* create new node arrays */
     to->nNodes = from->nNodes;
     to->nIntNodes = from->nIntNodes;
-    GetDownPass(to);
+    GetDownPass (to);
 
     /* copy tree properties (these should be constant most of them) */
     strcpy (to->name, from->name);
@@ -4938,28 +4937,19 @@ void MarkDistance (Tree *t, TreeNode *p)
     int         i, dist;
     TreeNode    *q;
     
-    assert (t->isRooted == NO);
+    if (p == NULL) return;
     
-    for (i=0; i<t->nNodes; i++)
-    {
-        q = t->allDownPass[i];
-        q->marked = NO;
-        q->x = 0;
-    }
-    
-    q = p;
-    q->marked = YES;
-    q->x = 0;
+    p->x = 0;
     
     /* Take care of the path to the root */
     dist = 0;
     q = p->anc;
     while (q->anc != NULL)
-    {
+        {
         q->marked = YES;
         q->x = dist--;
         q = q->anc;
-    }
+        }
 }
 
 
@@ -4975,40 +4965,8 @@ void MarkUnconstrained (TreeNode *p)
         p->marked = YES;
         if (p->isLocked == NO)
             {
-            Mark (p->left);
-            Mark (p->right);
-            }
-        }
-}
-
-
-/*-------------------------------------------------------------------------------------------
-|
-|   MarkDatedSubtree: This routine will mark up a subtree rooted at p with dated tips, whether
-|       internal or external
-|
----------------------------------------------------------------------------------------------*/
-void MarkDatedSubtree (TreeNode *p)
-{
-    if (p != NULL)
-        {
-        p->marked = YES;
-        MarkDatedSubtreeNodes (p->left);
-        MarkDatedSubtreeNodes (p->right);
-        }
-}
-
-
-/* MarkDatedSubtreeNodes: Recursive function to mark parts of a dated subtree */
-void MarkDatedSubtreeNodes (TreeNode *p)
-{
-    if (p != NULL)
-        {
-        p->marked = YES;
-        if (p->isDated == NO && p->left != NULL)
-            {
-            MarkDatedSubtreeNodes (p->left);
-            MarkDatedSubtreeNodes (p->right);
+            MarkUnconstrained (p->left);
+            MarkUnconstrained (p->right);
             }
         }
 }
@@ -6678,7 +6636,7 @@ int ResetTopologyFromTree (Tree *tree, Tree *top)
     p->right = p->anc = NULL;
     tree->root = p;
 
-    GetDownPass(tree);
+    GetDownPass (tree);
 
     return (NO_ERROR);
 }
@@ -6778,7 +6736,7 @@ int ResetTopologyFromPolyTree (Tree *tree, PolyTree *top)
         q->left = p;
     }
 
-    GetDownPass(tree);
+    GetDownPass (tree);
 
     return (NO_ERROR);
 }
