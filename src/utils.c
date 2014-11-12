@@ -3441,28 +3441,28 @@ int CopyToTreeFromTree (Tree *to, Tree *from)
 void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
 {
     /* copies everything except pointers and memoryIndex */
+    p->label                  = q->label;
     p->index                  = q->index;
-    p->scalerNode             = q->scalerNode;          
     p->upDateCl               = q->upDateCl;
     p->upDateTi               = q->upDateTi;
-    p->marked                 = q->marked;
-    p->length                 = q->length;
-    p->nodeDepth              = q->nodeDepth;
-    p->x                      = q->x;
-    p->y                      = q->y;
-    p->isDated                = q->isDated;
-    p->calibration            = q->calibration;
-    p->age                    = q->age;
+    p->scalerNode             = q->scalerNode;
     p->isLocked               = q->isLocked;
     p->lockID                 = q->lockID;
+    p->isDated                = q->isDated;
+    p->marked                 = q->marked;
+    p->x                      = q->x;
+    p->y                      = q->y;
     p->d                      = q->d;
+    p->length                 = q->length;
+    p->nodeDepth              = q->nodeDepth;
+    p->calibration            = q->calibration;
+    p->age                    = q->age;
     if (nLongsNeeded!=0)
         {
         assert (p->partition);
         assert (q->partition);
         memcpy (p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
         }
-    p->label                  = q->label;
 }
 
 
@@ -4928,27 +4928,26 @@ void Mark (TreeNode *p)
 
 /*-------------------------------------------------------------------------------------------
  |
- |   MarkDistance: This recursive function will mark distance from an interior branch. The
- |      distance will be positive in the crown part and negative in the root part.
+ |   MarkDistance: This routine will mark up an unconstrained subtree rooted at p within dist
+ |      The distance will be positive in the crown part and negative in the root part.
  |
  ---------------------------------------------------------------------------------------------*/
-void MarkDistance (Tree *t, TreeNode *p)
+void MarkDistance (TreeNode *p, int YESorNO, int dist, int *n)
 {
-    int         i, dist;
-    TreeNode    *q;
+    if (p == NULL || p->anc == NULL)
+        return;
     
-    if (p == NULL) return;
-    
-    p->x = 0;
-    
-    /* Take care of the path to the root */
-    dist = 0;
-    q = p->anc;
-    while (q->anc != NULL)
+    p->marked = YES;
+    if (YESorNO == YES) // in root part
+        p->x = p->anc->x -1;
+    else               // in crown part
+        p->x = p->anc->x +1;
+    (*n)++;
+        
+    if (p->isLocked == NO && abs(p->x) < dist)
         {
-        q->marked = YES;
-        q->x = dist--;
-        q = q->anc;
+        MarkDistance (p->left, YESorNO, dist, n);
+        MarkDistance (p->right,YESorNO, dist, n);
         }
 }
 

@@ -135,7 +135,7 @@ int       IsClockSatisfied (Tree *t, MrBFlt tol);
 int       IsTreeConsistent (Param *param, int chain, int state);
 int       LabelTree (Tree *t, char **taxonNames);
 void      Mark (TreeNode *p);
-void      MarkDistance (Tree *t, TreeNode *p);
+void      MarkDistance (TreeNode *p, int YESorNO, int dist, int *n);
 void      MarkUnconstrained (TreeNode *p);
 int       MoveCalculationRoot (Tree *t, int outgroup);
 int       MovePolyCalculationRoot (PolyTree *t, int outgroup);

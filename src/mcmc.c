@@ -9977,7 +9977,6 @@ MrBFlt GetParsDP (Tree *t, TreeNode *p, int chain)
                                        p->left->index,
                                        p->right->index,
                                        p->index);
-        
             }
         }
 
@@ -10014,11 +10013,17 @@ void GetParsFP (Tree *t, TreeNode *p, int chain)
                     x[0] = pP[c] & pA[c];
 
                     if (x[0] != pA[c])
-                        {/*means that we allow change of state from p to a*/
+                        {   /* means that we allow change of state from p to a */
                         if ((pL[c] & pR[c]) != 0)
-                            x[0] = ((pL[c] | pR[c]) & pA[c]) | pP[c] ;/*we still allow only one change from both children of p through p to a. So state from a  that belong to one of the children of p can be added to pP[c], if p assume the state then the only change would be on the other child. */
+                            x[0] = ((pL[c] | pR[c]) & pA[c]) | pP[c] ;
+                            /* We still allow only one change from both children of p through p to a.
+                               So state from a that belong to one of the children of p can be added to pP[c],
+                               if p assume the state then the only change would be on the other child. */
                         else
-                            x[0] = pP[c] | pA[c]; /*Here we allow two change from both children of p through p to a *//*adding pA[c] to pP[c] means that if p assume state exclusive in a theneven if both children will be in different state from p we still get optimal parsimony*/
+                            x[0] = pP[c] | pA[c];
+                            /* Here we allow two change from both children of p through p to a.
+                               Adding pA[c] to pP[c] means that if p assume state exclusive in a then even if
+                               both children will be in different state from p we still get optimal parsimony */
                         }
                     pP[c] = x[0];
                     }
