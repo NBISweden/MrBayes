@@ -10878,8 +10878,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    specifies a compound Dirichlet prior on branch lengths, where\n");
         MrBayesPrint ("                    tree length is associated with a gamma distribution with mean\n");
         MrBayesPrint ("                    10, and branch length proportions are associated with a uni- \n");
-        MrBayesPrint ("                    form Dirichlet distribution. The default prior for uncon-    \n");
-        MrBayesPrint ("                    strained branch lengths is 'exp(10)'.                        \n");
+        MrBayesPrint ("                    form Dirichlet distribution (default).                       \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For clock trees with calibrated external nodes (fossils),    \n");
         MrBayesPrint ("                    MrBayes also offers the fossilized birth-death prior:        \n");
