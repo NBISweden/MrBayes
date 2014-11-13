@@ -68,8 +68,8 @@ void AllocateBestChainVariables (void)
             SetBit(i, speciesPairSets[index]);
             SetBit(j, speciesPairSets[index]);
             index++;
+            }
         }
-    }
 
     /* allocate species for depthMatrix */
     depthMatrix = SafeCalloc (numUpperTriang, sizeof(double));
@@ -128,7 +128,7 @@ int CompareNodesByX (const void *x, const void *y) {
             return 1;
         else
             return 0;
-    }
+        }
 }
 
 
@@ -543,9 +543,10 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
         p = &polyTree->nodes[FirstTaxonInPartition(minDepth[i].pairSet, nLongsNeeded)];
         
         // Descend tree until we find a node within which the pair set is nested
-        do {
+        do  {
             p = p->anc;
-        } while (!IsPartNested(minDepth[i].pairSet, p->partition, nLongsNeeded));
+            }
+        while (!IsPartNested(minDepth[i].pairSet, p->partition, nLongsNeeded));
 
         if (p->left->sib->sib != NULL) {
             // This node is still a polytomy
@@ -953,7 +954,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate)
 {
     int         i, left, right, index, nLongsNeeded, freeBitsets;
-    double      dist, normConst, negLambdaX, eNegLambdaX, density, prob,
+    double      dist, normConst=1.0, negLambdaX, eNegLambdaX, density, prob,
                 sumDensRatio, prodProb, lnProb;
     TreeNode    *p;
 
@@ -981,8 +982,7 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
             for (right = FirstTaxonInPartition(p->right->partition, nLongsNeeded); right < numSpecies; right = NextTaxonInPartition(right, p->right->partition, nLongsNeeded))
                 {
                 p->x++;
-                index         = UpperTriangIndex(left, right, numSpecies);
-                assert (index < numSpecies*(numSpecies - 1) / 2);
+                index         = UpperTriangIndex(left, right, numSpecies);  assert (index < numSpecies*(numSpecies - 1) / 2);
                 dist          = depthMatrix[index] - p->nodeDepth;          // distance between depth matrix entry and actual species-tree node
                 normConst     = 1.0 - exp(-expRate * depthMatrix[index]);   // normalization constant because of truncation of exp distribution
                 negLambdaX    = - expRate * dist;
@@ -1339,7 +1339,7 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     geneTrees = (Tree **) SafeCalloc (2*numGeneTrees, sizeof(Tree *));
     for (i=0; i<m->speciesTree->nSubParams; i++) {
         geneTrees[i] = GetTree(m->speciesTree->subParams[i], chain, state[chain]);
-    }
+        }
 
     // Allocate space for depth matrix copy
     numUpperTriang = numSpecies * (numSpecies - 1) / 2;
@@ -1379,7 +1379,7 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         free (geneTrees);
         free (oldMinDepths);
         return (NO_ERROR);
-    }
+        }
    
     // Calculate joint probability of new gene trees and new species tree
     newLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, newSpeciesTree, chain);
@@ -1740,7 +1740,7 @@ int Move_SpeciesTree (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         free (modMinDepths);
         free (geneTrees);
         return (NO_ERROR);
-    }
+        }
 
     /* get lambda for back move */
     GetMeanDist(newSpeciesTree, depthMatrix, &mean);
@@ -1791,9 +1791,9 @@ void ShowUpperTriangMatrix (double *values, int squareSize)
         for (j=i+1; j<squareSize; j++) {
             printf ("%.6f ", values[index]);
             index++;
-        }
+            }
         printf ("\n");
-    }
+        }
     printf ("\n");
 }
 

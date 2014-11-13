@@ -10814,7 +10814,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       clock:birthdeath                                          \n");
         MrBayesPrint ("                       clock:coalescence                                         \n");
         MrBayesPrint ("                       clock:fossilization                                       \n");
-        MrBayesPrint ("                       clock:speciestreecoalescence                              \n");
+        MrBayesPrint ("                       clock:speciestree                                         \n");
         MrBayesPrint ("                       fixed(<treename>)                                         \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    Trees with unconstrained branch lengths are unrooted         \n");
@@ -10827,9 +10827,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    prior; population size and clock rate parameter for the      \n");
         MrBayesPrint ("                    coalescence prior). When gene trees are constrained to fold  \n");
         MrBayesPrint ("                    inside species trees, the appropriate branch length prior is \n");
-        MrBayesPrint ("                    'clock:speciestreecoalescence'. Under this model, it is poss-\n");
-        MrBayesPrint ("                    ible to control whether the population size is constant or   \n");
-        MrBayesPrint ("                    varies across the species tree using the 'popvarpr' setting. \n");
+        MrBayesPrint ("                    'clock:speciestree'. Under this model, it is possible to     \n");
+        MrBayesPrint ("                    control whether the population size is constant or variable  \n");
+        MrBayesPrint ("                    across the species tree using the 'popvarpr' setting.        \n");
         MrBayesPrint ("                    Branch lengths can also be fixed but only if the topology is \n");
         MrBayesPrint ("                    fixed.                                                       \n");
         MrBayesPrint ("                                                                                 \n");
