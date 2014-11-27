@@ -90,7 +90,7 @@ typedef void (*sighandler_t) (int);
 #define CALFILE                     2
 #define MCMCFILE                    3
 #define MAXLOGTUNINGPARAM           100000      /* limit to ensure convergence for autotuning */
-#define SAMPLE_ALL_SS               /*if defined makes ss sample every generation instead of every sample frequency*/
+#define SAMPLE_ALL_SS                           /* if defined makes ss sample every generation instead of every sample frequency */
 
 /* debugging compiler statements */
 #undef  DEBUG_SETUPTERMSTATE
@@ -159,9 +159,9 @@ int       CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL);
 void      CalcPartFreqStats (PFNODE *p, STATS *stat);
 void      CalculateTopConvDiagn (int numSamples);
 #ifdef    VISUAL
-BOOL      WINAPI CatchInterrupt(DWORD signum);
+BOOL      WINAPI CatchInterrupt (DWORD signum);
 #else  
-void      CatchInterrupt(int signum);
+void      CatchInterrupt (int signum);
 #endif  
 int       CheckTemperature (void);
 void      CloseMBPrintFiles (void);
@@ -287,7 +287,6 @@ int       Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, in
 int       Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_NY98 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
-int       Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
@@ -7267,10 +7266,9 @@ void CopyTrees (int chain)
 
 
 #ifdef VISUAL
-BOOL WINAPI CatchInterrupt2 (DWORD signum)
+BOOL WINAPI CatchInterrupt (DWORD signum)
 {
     /* set up signal handler to do the same */
-
     MrBayesPrint ("\n   Ctrl-C detected\n");
     requestAbortRun = YES;
     return TRUE;
@@ -7280,9 +7278,7 @@ void CatchInterrupt (int signum)
 {
     /* set up signal handler to do the same */
     signal (signum, CatchInterrupt);
-
     requestAbortRun = YES;
-    
     MrBayesPrint ("\n   Ctrl-C detected\n");
 }
 #endif
@@ -7672,7 +7668,7 @@ int DoMcmc (void)
     
     /*! setup a signal handler to catch interrupts, ignore failure */
 #   ifdef VISUAL
-    SetConsoleCtrlHandler(CatchInterrupt2, TRUE);
+    SetConsoleCtrlHandler (CatchInterrupt, TRUE);
 #   else
 #       if !defined (MPI_ENABLED)
     /* we do not want to mess with the signal handling in MPI version */
@@ -7687,7 +7683,7 @@ int DoMcmc (void)
     if (rc == ERROR)
         {
 #   ifdef VISUAL
-        SetConsoleCtrlHandler(CatchInterrupt2, FALSE);
+        SetConsoleCtrlHandler (CatchInterrupt, FALSE);
 #   else
 #       if !defined (MPI_ENABLED)
         signal(SIGINT, sigint_oldhandler);
@@ -7701,7 +7697,7 @@ int DoMcmc (void)
         ResetChainIds();
         FreeChainMemory();
 #   ifdef VISUAL
-        SetConsoleCtrlHandler(CatchInterrupt2, FALSE);
+        SetConsoleCtrlHandler (CatchInterrupt, FALSE);
 #   else
 #       if !defined (MPI_ENABLED)
         signal(SIGINT, sigint_oldhandler);
@@ -7713,7 +7709,7 @@ int DoMcmc (void)
         
     /*! restore the default signal handler */
 #   ifdef VISUAL
-    SetConsoleCtrlHandler(CatchInterrupt2, FALSE);
+    SetConsoleCtrlHandler (CatchInterrupt, FALSE);
 #   else
 #       if !defined (MPI_ENABLED)
     signal(SIGINT, sigint_oldhandler);
@@ -9949,6 +9945,7 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
         }
 
     return length;
+    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -10256,6 +10253,9 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
                 break;
             }
         }
+
+    return;
+    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -14156,9 +14156,9 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 }
 
 
+#if 0
 int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-#   if 0
     int             x, y;
     TreeNode        *q;
     
@@ -14168,12 +14168,12 @@ int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int
     y = chain;
     *lnL = 0.0;
     x = whichSitePats;
-#   endif
 
     MrBayesPrint ("%s   Parsimony calculator for codons not yet implemented\n", spacer);
     
     return ERROR;
 }
+#   endif
 
 
 /*------------------------------------------------------------------
@@ -14332,37 +14332,37 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         CopySiteScalers(m, chain);
     
     if (m->parsModelId == NO)
-    {
-        for (i=0; i<tree->nIntNodes; i++)
         {
+        for (i=0; i<tree->nIntNodes; i++)
+            {
             p = tree->intDownPass[i];
             
             if (p->left->upDateTi == YES)
-            {
+                {
                 /* shift state of ti probs for node */
                 FlipTiProbsSpace (m, chain, p->left->index);
                 m->TiProbs (p->left, d, chain);
-            }
+                }
             
             if (p->right->upDateTi == YES)
-            {
+                {
                 /* shift state of ti probs for node */
                 FlipTiProbsSpace (m, chain, p->right->index);
                 m->TiProbs (p->right, d, chain);
-            }
+                }
             
             if (tree->isRooted == NO)
-            {
-                if (p->anc->anc == NULL /* && p->upDateTi == YES */)
                 {
+                if (p->anc->anc == NULL /* && p->upDateTi == YES */)
+                    {
                     /* shift state of ti probs for node */
                     FlipTiProbsSpace (m, chain, p->index);
                     m->TiProbs (p, d, chain);
+                    }
                 }
-            }
             
             if (p->upDateCl == YES)
-            {
+                {
                 if (tree->isRooted == NO)
                     {
                     if (p->anc->anc == NULL)
@@ -14391,7 +14391,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                         TIME(RemoveNodeScalers (p, d, chain),CPUScalersRemove);
                         }
 #   else
-                TIME(RemoveNodeScalers (p, d, chain),CPUScalersRemove);
+                    TIME(RemoveNodeScalers (p, d, chain),CPUScalersRemove);
 #   endif
                     }
                 FlipNodeScalerSpace (m, chain, p->index);
@@ -14401,9 +14401,9 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                     {
                     TIME(m->CondLikeScaler (p, d, chain),CPUScalers);
                     }
+                }
             }
         }
-    }
     TIME(m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains)),CPULilklihood);
     return;
 }
@@ -24305,7 +24305,7 @@ int RunChain (RandLong *seed)
 #   endif
                 {
                 if (n > chainParams.burninSS*chainParams.sampleFreq && (n-lastStepEndSS > numGenInStepBurninSS))
-                    { /* do sampling*/
+                    { /* do sampling */
                     for (chn=0; chn<numLocalChains; chn++)
                         {
                         if (chainId[chn] % chainParams.numChains == 0)
@@ -24427,40 +24427,39 @@ int RunChain (RandLong *seed)
                     MrBayesPrint("\n%s   Sampling step 1 out of %d steps...\n\n",spacer, chainParams.numStepsSS);
                     }
 
-                    if (chainParams.backupCheckSS !=0 && (chainParams.numStepsSS-stepIndexSS-1)% chainParams.backupCheckSS == 0)
+                if (chainParams.backupCheckSS !=0 && (chainParams.numStepsSS-stepIndexSS-1)% chainParams.backupCheckSS == 0)
+                    {
+                    /* print check-point file. Blocking for MPI */
+                    ERROR_TEST2("Error before printing checkpoint",return(ERROR),);
+                    if (PrintCheckPoint (n) == ERROR)
                         {
-                        /* print check-point file. Blocking for MPI*/
-
-                        ERROR_TEST2("Error before printing checkpoint",return(ERROR),);
-                        if (PrintCheckPoint (n) == ERROR)
-                            {
-                            nErrors++;
-                            }
-                        ERROR_TEST2("Error in printing checkpoint",return(ERROR),);
+                        nErrors++;
+                        }
+                    ERROR_TEST2("Error in printing checkpoint",return(ERROR),);
                        
 #   if defined (MPI_ENABLED)
                 if (proc_id == 0)
+                    {
+#   endif
+                    /* figure out check-point file names */
+                    sprintf (ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
+                    sprintf (bkupFileName,"%s.ss%d", ckpFileName,chainParams.numStepsSS-stepIndexSS);
+                    if (rename (ckpFileName, bkupFileName)!=0)
                         {
-#   endif
-                        /* figure out check-point file names */
-                        sprintf (ckpFileName, "%s%s.ckp", workingDir, chainParams.chainFileName);
-                        sprintf (bkupFileName,"%s.ss%d", ckpFileName,chainParams.numStepsSS-stepIndexSS);                   
-                        if (rename (ckpFileName, bkupFileName)!=0)
-                            {
-                            MrBayesPrint ("%s   Could not rename file %s to %s\n", spacer, ckpFileName, bkupFileName);
-                            return ERROR;
-                            }
-                        strcpy (bkupFileName, ckpFileName);
-                        strcat (bkupFileName, "~");
-                        rename (bkupFileName,ckpFileName);
-#   if defined (MPI_ENABLED)
-                        } /* end of if (proc_id == 0)*/
-#   endif
+                        MrBayesPrint ("%s   Could not rename file %s to %s\n", spacer, ckpFileName, bkupFileName);
+                        return ERROR;
                         }
+                    strcpy (bkupFileName, ckpFileName);
+                    strcat (bkupFileName, "~");
+                    rename (bkupFileName,ckpFileName);
+#   if defined (MPI_ENABLED)
+                    } /* end of if (proc_id == 0)*/
+#   endif
+                    }
                 }             
             }
 
-        /* print check-point file. Blocking for MPI*/
+        /* print check-point file. Blocking for MPI */
         if (chainParams.checkPoint == YES && (n % chainParams.checkFreq == 0))
             {
             ERROR_TEST2("Error before printing checkpoint",return(ERROR),);
@@ -28368,6 +28367,7 @@ void TouchAllCijks (int chain)
         }
 
     return;
+    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

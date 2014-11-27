@@ -146,7 +146,7 @@ int      IsAmbig (int charCode, int dType);
 int      IsMissing (int charCode, int dType);
 int      MBResID (char nuc);
 int      NucID (char nuc);
-void     PrintSettings (char *command, ModelInfo *mp);
+void     PrintSettings (char *command);
 void     PrintYesNo (int yn, char s[4]);
 int      ProtID (char aa);
 int      SetPartition (int part);
@@ -8914,6 +8914,8 @@ int DoUserTreeParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
+    MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
+    MrBayesPrint ("%s", tkn);
 }
 
 
@@ -11960,7 +11962,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   parameter is adjusted to reach the target acceptance rate     \n");
         MrBayesPrint ("                   if 'Autotune' is set to 'Yes'.                                \n");
         MrBayesPrint ("                                                                                 \n");
-        PrintSettings ("Mcmc", NULL);
+        PrintSettings ("Mcmc");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Mcmcp"))
@@ -11975,7 +11977,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   this command is issued. For more details on the options, check the help       \n");
         MrBayesPrint ("   menu for Mcmc.\n");
         MrBayesPrint ("                                                                                 \n");
-        PrintSettings ("Mcmc", NULL);
+        PrintSettings ("Mcmc");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Ss"))
@@ -13875,7 +13877,7 @@ int ParseCommand (char *s)
 }
 
 
-void PrintSettings (char *command, ModelInfo *mp)
+void PrintSettings (char *command)
 {
     char yesNoStr[20];
 

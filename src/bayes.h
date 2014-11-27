@@ -815,13 +815,13 @@ typedef struct
     char         *shortName;         /* abbreviated name of the move type            */
     char         *paramName;         /* name of subparameter if complex parameter    */
     int          subParams;          /* are we changing subparams (brlens of topol.) */
-    char         *tuningName[3];     /* name of tuning params                        */
-    char         *shortTuningName[3];/* short name of tuning params                  */
+    char         *tuningName[5];     /* name of tuning params                        */
+    char         *shortTuningName[5];/* short name of tuning params                  */
     MrBFlt       relProposalProb;    /* default relative proposal probability        */
     int          numTuningParams;    /* number of tuning parameters                  */
-    MrBFlt       tuningParam[3];     /* default tuning parameters for the proposal   */
-    MrBFlt       minimum[3];         /* minimum values for tuning params             */
-    MrBFlt       maximum[3];         /* maximum values for tuning params             */
+    MrBFlt       tuningParam[5];     /* default tuning parameters for the proposal   */
+    MrBFlt       minimum[5];         /* minimum values for tuning params             */
+    MrBFlt       maximum[5];         /* maximum values for tuning params             */
     int          parsimonyBased;     /* this move is based on parsimony (YES/NO)     */
     int          level;              /* user level of this move                      */
     AutotuneFxn  *Autotune;          /* pointer to the autotuning function           */

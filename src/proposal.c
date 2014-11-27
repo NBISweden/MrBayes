@@ -170,6 +170,7 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -319,6 +320,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         }
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -849,6 +851,7 @@ int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
         }
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1092,6 +1095,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
         }
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1347,6 +1351,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
     
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1596,6 +1601,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -2347,7 +2353,6 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -4181,7 +4186,6 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -4669,7 +4673,6 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-    
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
     
@@ -5214,7 +5217,6 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -5810,7 +5812,6 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -6449,7 +6450,6 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -6992,7 +6992,6 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -7856,6 +7855,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     TouchAllTreeNodes(m, chain);
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -8708,6 +8708,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 #endif
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -8726,7 +8727,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     
     int         i, j, n, division, topologyHasChanged, isVPriorExp, nNodes;
     BitsLong    *pA, *pV, *pP;
-    MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, curLength=0.0, length = 0.0,
+    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, curLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, sum, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, temp;
     CLFlt       *nSitesOfPat, *globalNSitesOfPat, *tempCondLikes, **tempCondLikePtr;
@@ -8749,7 +8750,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     t = GetTree (param, chain, state[chain]);
 
     /* max and min brlen */
-    brlensExp = 0.0;
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
         minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
@@ -9119,7 +9119,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nRootNodes;
 #   endif
 
@@ -9141,7 +9140,7 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
     int         i, j, n, division, topologyHasChanged, isVPriorExp, nNodes;
     BitsLong    *pA, *pV, *pP;
-    MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, curLength=0.0, length = 0.0,
+    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, curLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, sum, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, temp;
     CLFlt       *nSitesOfPat, *globalNSitesOfPat, *tempCondLikes, **tempCondLikePtr;
@@ -9164,7 +9163,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     t = GetTree (param, chain, state[chain]);
 
     /* max and min brlen */
-    brlensExp = 0.0;
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
         minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
@@ -9505,7 +9503,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nRootNodes;
 #   endif
 
@@ -9524,6 +9521,8 @@ int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrB
     TreeNode    *p, *u, *v, *a, *b, *c;
     Tree        *t;
     
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
+
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
@@ -9577,6 +9576,7 @@ int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrB
     GetDownPass (t);
     
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -9798,6 +9798,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 #   endif
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -9889,6 +9890,7 @@ int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
     
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -11496,7 +11498,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     int         i, j, n, division, topologyHasChanged, isVPriorExp;
     BitsLong    *pA, *pV, *pP, y[2];
-    MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
+    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
@@ -11505,10 +11507,10 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     ModelParams *mp;
     ModelInfo   *m = NULL;
 
-    warpFactor = mvp[0];                    /* tuning parameter determining how heavily to weight according to parsimony scores */
-    tuning = mvp[1];                        /* multiplier tuning parameter */
-    increaseProb = decreaseProb = mvp[2];   /* reweighting probabilities */
-    v_typical = 0.05;                       /* typical branch length for conversion of parsimony score to log prob ratio */
+    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
+    tuning = mvp[1];                      /* multiplier tuning parameter */
+    increaseProb = decreaseProb = mvp[2]; /* reweighting probabilities */
+    v_typical = mvp[3];                   /* typical branch length for conversion of parsimony score to log prob ratio */
 
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
 
@@ -11520,7 +11522,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     t = GetTree (param, chain, state[chain]);
 
     /* max and min brlen */
-    brlensExp = 0.0;
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
         minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
@@ -11638,7 +11639,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)
         {
@@ -11683,7 +11684,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             nSites = nSitesOfPat + m->compCharStart;
 
             /* get division warp factor */
-            divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
+            divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
 
             /* find downpass parsimony sets for the node and its environment */
             pP   = m->parsSets[p->index     ];
@@ -11942,8 +11943,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         gTopologyHasChanged = NO;
 
-    free (nSitesOfPat);
-
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -11965,7 +11964,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nRootNodes;
 #   endif
 
@@ -11973,6 +11971,8 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     CheckConstraints (t);
 #endif
     
+    free (nSitesOfPat);
+
     return (NO_ERROR);
 }
 
@@ -11985,19 +11985,19 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot;
     BitsLong    *pA, *pV, *pP, *pU, y[2];
-    MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
+    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c=NULL, *d, *newA=NULL, *newB, *old, *tmp;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newA=NULL, *newB, *newC=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m = NULL;
     
-    warpFactor = mvp[0];                    /* tuning parameter determining how heavily to weight according to parsimony scores */
-    tuning = mvp[1];                        /* multiplier tuning parameter */
-    increaseProb = decreaseProb = mvp[2];   /* reweighting probabilities */
-    v_typical = 0.05;                       /* typical branch length for conversion of parsimony score to log prob ratio */
+    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
+    tuning = mvp[1];                      /* multiplier tuning parameter */
+    increaseProb = decreaseProb = mvp[2]; /* reweighting probabilities */
+    v_typical = mvp[3];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
@@ -12009,7 +12009,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     t = GetTree (param, chain, state[chain]);
     
     /* max and min brlen */
-    brlensExp = 0.0;
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
         minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
@@ -12092,6 +12091,27 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     else
         moveInRoot = NO;
  
+    /* find number of site patterns and modify randomly */
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
+    if (!nSitesOfPat)
+        {
+        MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPR\n", spacer);
+        return (ERROR);
+        }
+    for (i=0; i<numCompressedChars; i++)
+        {
+        nSitesOfPat[i] = globalNSitesOfPat[i];
+        for (j=0; j<globalNSitesOfPat[i]; j++)
+            {
+            ran = RandomNumber (seed);
+            if (ran < decreaseProb)
+                nSitesOfPat[i]--;
+            else if (ran > 1.0 - increaseProb)
+                nSitesOfPat[i]++;
+            }
+        }
+
     if (moveInRoot == YES)
         {
         /* set up pointers for nodes around the picked branch */
@@ -12136,28 +12156,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             if (p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO && p != u)
                 p->marked = YES;
             }
-        
-        /* find number of site patterns and modify randomly */
-        globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-        nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
-        if (!nSitesOfPat)
-            {
-            MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPR\n", spacer);
-            return (ERROR);
-            }
-        for (i=0; i<numCompressedChars; i++)
-            {
-            nSitesOfPat[i] = globalNSitesOfPat[i];
-            for (j=0; j<globalNSitesOfPat[i]; j++)
-                {
-                ran = RandomNumber (seed);
-                if (ran < decreaseProb)
-                    nSitesOfPat[i]--;
-                else if (ran > 1.0 - increaseProb)
-                    nSitesOfPat[i]++;
-                }
-            }
-        
+            
         /* cycle through the possibilities and record the parsimony length */
         for (i=0; i<t->nNodes; i++)
             {
@@ -12183,7 +12182,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 nSites = nSitesOfPat + m->compCharStart;
                 
                 /* get division warp factor */
-                divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
+                divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
                 
                 /* find downpass parsimony sets for the node and its environment */
                 pP   = m->parsSets[p->index     ];
@@ -12250,7 +12249,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             p = t->allDownPass[i];
             if (p->marked == YES && p != a)
                 {
-                c = p;
+                newA = p;
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
                 tempsum = cumulativeProb + tempy;
@@ -12262,14 +12261,14 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             }
         
         /* calculate the proposal ratio */
-        (*lnProposalRatio) = c->d - minLength + log(sum1);
+        (*lnProposalRatio) = newA->d - minLength + log(sum1);
         
         /* find the min length and the sum for the backward move */
         minLength = -1.0;
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == NO || p == c)
+            if (p->marked == NO || p == newA)
                 continue;
             if (minLength < 0.0)
                 minLength = p->d;
@@ -12280,7 +12279,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p != c)
+            if (p->marked == YES && p != newA)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -12294,13 +12293,13 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnProposalRatio) += minLength - a->d - log(sum2);
         
         /* reattach */
-        d = c->anc;
-        c->anc = u;
+        d = newA->anc;
+        newA->anc = u;
         if (u->left == v)
-            u->right = c;
+            u->right = newA;
         else
-            u->left = c;
-        if (d->left == c)
+            u->left = newA;
+        if (d->left == newA)
             d->left = u;
         else
             d->right = u;
@@ -12308,7 +12307,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         
         topologyHasChanged = YES;
 
-        assert (c != a);
+        assert (newA != a);
         /* transfer lock if necessary */
         /* if u is locked, then we have moved upwards and need to leave the u lock behind */
         if (u->isLocked == YES)
@@ -12318,25 +12317,25 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             a->lockID = u->lockID;
             u->lockID = -1;
             }
-        /* if c is on root path and locked, we need to transfer lock to u */
+        /* if newA is on root path and locked, we need to transfer lock to u */
         p = b;
         while (p != NULL)
             {
-            if (p == c)
+            if (p == newA)
                 break;
             p = p->anc;
             }
-        if (p == c && c->isLocked == YES)
+        if (p == newA && newA->isLocked == YES)
             {
             u->isLocked = YES;
-            u->lockID = c->lockID;
-            c->isLocked = NO;
-            c->lockID = -1;
+            u->lockID = newA->lockID;
+            newA->isLocked = NO;
+            newA->lockID = -1;
             }
         
         /* reassign branch lengths */
-        p = c;
-        while (p->anc->anc != NULL)
+        p = newA;
+        while (p->anc != NULL)
             {
             if (p == a)
                 break;
@@ -12344,28 +12343,28 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             }
         if (p == a)
             {
-            /* c is descendant to a so move a->length and not u->length */
+            /* newA is descendant to a so move a->length and not u->length */
             x = u->length;
             u->length = a->length;
             a->length = x;
             }
         p = a;
-        while (p->anc->anc != NULL)
+        while (p->anc != NULL)
             {
-            if (p == c)
+            if (p == newA)
                 break;
             p = p->anc;
             }
-        if (p == c)
+        if (p == newA)
             {
-            /* c is ancestor to a so insert above instead of below */
-            x = c->length;
-            c->length = u->length;
+            /* newA is ancestor to a so insert above instead of below */
+            x = newA->length;
+            newA->length = u->length;
             u->length = x;
             }
 
-        /* hit c length with multiplier (a and u dealt with below) */
-        x = c->length * exp(tuning * (RandomNumber(seed) - 0.5));
+        /* hit newA length with multiplier (a and u dealt with below) */
+        x = newA->length * exp(tuning * (RandomNumber(seed) - 0.5));
         while (x < minV || x > maxV)
             {
             if (x < minV)
@@ -12374,10 +12373,10 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 x = maxV * maxV / x;
             }
         /* calculate proposal and prior ratio based on length modification */
-        (*lnProposalRatio) += log (x / c->length);
+        (*lnProposalRatio) += log (x / newA->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (c->length - x);
-        c->length = x;
+            (*lnPriorRatio) += brlensExp * (newA->length - x);
+        newA->length = x;
     
         /* hit a length with multiplier (even if no topology change was made) */
         x = a->length * exp(tuning * (RandomNumber(seed) - 0.5));
@@ -12412,7 +12411,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* set tiprobs update flags */
         a->upDateTi = YES;
         u->upDateTi = YES;
-        c->upDateTi = YES;  /* could be same as a but that does not matter */
+        newA->upDateTi = YES;
         
         /* set flags for update of cond likes from u and down to root */
         p = u;
@@ -12441,9 +12440,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             gTopologyHasChanged = YES;
         else
             gTopologyHasChanged = NO;
-        
-        free (nSitesOfPat);
-        
+            
 #   if defined (DEBUG_ParsSPR)
         printf ("After:\n");
         ShowNodes (t->root, 2, YES);
@@ -12453,7 +12450,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         printf ("Has topology changed? %d\n",topologyHasChanged);
         getchar();
 #   endif
-
         }
 
     else  // moveInRoot == NO
@@ -12513,27 +12509,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* skip d (same as c) */
         d->marked = NO;
 
-        /* find number of site patterns and modify randomly */
-        globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-        nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
-        if (!nSitesOfPat)
-            {
-            MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPR\n", spacer);
-            return (ERROR);
-            }
-        for (i=0; i<numCompressedChars; i++)
-            {
-            nSitesOfPat[i] = globalNSitesOfPat[i];
-            for (j=0; j<globalNSitesOfPat[i]; j++)
-                {
-                ran = RandomNumber (seed);
-                if (ran < decreaseProb)
-                    nSitesOfPat[i]--;
-                else if (ran > 1.0 - increaseProb)
-                    nSitesOfPat[i]++;
-                }
-            }
-
         /* cycle through the possibilities and record the parsimony length */
         for (i=0; i<t->nNodes; i++)
             {
@@ -12559,7 +12534,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 nSites = nSitesOfPat + m->compCharStart;
                 
                 /* get division warp factor (prop. to prob. of change) */
-                divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
+                divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
                 
                 /* find downpass parsimony sets for the node and its environment */
                 pP   = m->parsSets[p->index     ];
@@ -12626,7 +12601,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             p = t->allDownPass[i];
             if (p->marked == YES && p != c)
                 {
-                newA = p;
+                newC = p;
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
                 tempsum = cumulativeProb + tempy;
@@ -12638,14 +12613,14 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             }
         
         /* calculate the proposal ratio */
-        (*lnProposalRatio) = newA->d - minLength + log(sum1);
+        (*lnProposalRatio) = newC->d - minLength + log(sum1);
         
         /* find the min length and the sum for the backward move */
         minLength = -1.0;
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == NO || p == newA)
+            if (p->marked == NO || p == newC)
                 continue;
             if (minLength < 0.0)
                 minLength = p->d;
@@ -12656,7 +12631,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         for (i=0; i<t->nNodes; i++)
             {
             p = t->allDownPass[i];
-            if (p->marked == YES && p != newA)
+            if (p->marked == YES && p != newC)
                 {
                 /* Kahan summation to reduce numerical error */
                 tempy = exp (minLength - p->d) - tempc;
@@ -12679,38 +12654,36 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             return (ERROR);
             }
         
-        /* rotate nodes from newA to c or d (whichever is closest)         */
+        /* rotate nodes from newC to c or d (whichever is closest)         */
         /* label node we come from as r, node we rotate q, and next node p */
-        r = newA;
-        q = r->anc;
-        // nTaxa = t->nNodes - t->nIntNodes;    /* we know it is an unrooted tree */
+        r = newC; q = r->anc;
+        // nTaxa = t->nNodes - t->nIntNodes;  /* we know the tree is unrooted */
         //??? nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
         CopyTreeNodes (old, r, 0);
-        do  {
-            p = q->anc; /* get next node before we rotate!! */
 
+        do  {
+            p = q->anc;
             /* rotate pointers of q */
             if (q->left == r)
                 q->left = p;
             else
                 q->right = p;
             q->anc = r;
-            
             /* swap q and old */            
             CopyTreeNodes (tmp, q, 0);
             CopyTreeNodes (q, old, 0);
             CopyTreeNodes (old, tmp, 0);
-
             /* make sure we get q and r initialized for next round */
             r = q;
             q = p;
-            } while (r != c && r != d);
+            }
+        while (r != c && r != d);
 
         /* now reattach crown to v */
-        newB = newA->anc;
-        v->left = newA;
+        newB = newC->anc;
+        v->left = newC;
         v->right = newB;
-        newA->anc = newB->anc = v;
+        newC->anc = newB->anc = v;
         CopyTreeNodes (newB, old, 0);
         
         /* and reattach root to u (u pointers are unchanged) */
@@ -12740,8 +12713,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             (*lnPriorRatio) += brlensExp * (q->length - x);
         q->length = x;
         
-        /* hit newA length with multiplier */
-        x = newA->length * exp(tuning * (RandomNumber(seed) - 0.5));
+        /* hit newC length with multiplier */
+        x = newC->length * exp(tuning * (RandomNumber(seed) - 0.5));
         while (x < minV || x > maxV)
             {
             if (x < minV)
@@ -12750,10 +12723,10 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 x = maxV * maxV / x;
             }
         /* calculate proposal and prior ratio based on length modification */
-        (*lnProposalRatio) += log (x / newA->length);
+        (*lnProposalRatio) += log (x / newC->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newA->length - x);
-        newA->length = x;
+            (*lnPriorRatio) += brlensExp * (newC->length - x);
+        newC->length = x;
         
         /* hit newB length with multiplier */
         x = newB->length * exp(tuning * (RandomNumber(seed) - 0.5));
@@ -12772,11 +12745,11 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
         /* set tiprobs update flags */
         q   ->upDateTi = YES;
-        newA->upDateTi = YES;
+        newC->upDateTi = YES;
         newB->upDateTi = YES;
         
-        /* set flags for update of cond likes from newA and down to root */
-        p = newA;
+        /* set flags for update of cond likes from newC and down to root */
+        p = newC;
         while (p->anc != NULL)
             {
             p->upDateCl = YES;
@@ -12804,8 +12777,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             gTopologyHasChanged = NO;
 
         /* free memory */
-        free (old); free(tmp);
-        free (nSitesOfPat);
+        free (old); free (tmp);
         
 #   if defined (DEBUG_ParsSPR)
         printf ("After:\n");
@@ -12816,7 +12788,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         printf ("Has topology changed? %d\n",topologyHasChanged);
         getchar();
 #   endif
-
         }
  
     /* Dirichlet or twoExp prior */
@@ -12828,7 +12799,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-    
     gNodeMoves = nRootNodes;
 #   endif
     
@@ -12836,6 +12806,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     CheckConstraints (t);
 #endif
     
+    free (nSitesOfPat);
+
     return (NO_ERROR);
 }
 
@@ -12863,9 +12835,9 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     ModelInfo   *m = NULL;
     Param       *subParm;
 
-    warpFactor = mvp[0];    /* tuning parameter determining how heavily to weight according to parsimony scores */
-    increaseProb = decreaseProb = mvp[1];   /* reweighting probabilities */
-    v_typical = 0.05;       /* typical branch length for converting parsimony scores to log prob ratios */
+    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
+    increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
+    v_typical = mvp[2];                   /* typical branch length for converting parsimony scores to log prob ratios */
 
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
 
@@ -13082,7 +13054,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             nSites = nSitesOfPat + m->compCharStart;
 
             /* get division warp factor */
-            divFactor = - (warpFactor * log((1.0/nStates) - exp(-(nStates/(nStates-1)*v_typical*rateMult))/nStates));
+            divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
 
             /* find downpass parsimony sets for the node and its environment */
             pP   = m->parsSets[p->index     ];
@@ -13382,29 +13354,31 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 }
 
 
-#if 0
 /* Move_ParsTBR */
 int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Change branch lengths and topology (potentially) using TBR-type move
-     biased according to parsimony scores. */
+       biased according to parsimony scores. */
     
-    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot, nTaxa, nLongsNeeded;
-    BitsLong    *pA, *pV, *pP, *pU, y[2];
-    MrBFlt      x, minV, maxV, brlensExp, minLength=0.0, length = 0.0,
-    cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
-    divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
-    CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c=NULL, *d, *newA=NULL, *newB, *old, *tmp;
+    int         i, j, n, division, topologyHasChanged, isVPriorExp,
+                nNeighbor, nRoot, nCrown, iA, jC;
+    BitsLong    *pV, *pU, *pP, *pQ;
+    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL,
+                prob, ran, warpFactor, tuning, increaseProb, decreaseProb, v_typical,
+                divFactor, nStates, rateMult, sum1, sum2;
+    CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC,
+                **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
     ModelParams *mp;
-    ModelInfo   *m = NULL;
+    ModelInfo   *m=NULL;
     
-    warpFactor = mvp[0];                    /* tuning parameter determining how heavily to weight according to parsimony scores */
-    tuning = mvp[1];                        /* multiplier tuning parameter */
-    increaseProb = decreaseProb = mvp[2];   /* reweighting probabilities */
-    v_typical = 0.05;                       /* typical branch length for conversion of parsimony score to log prob ratio */
-    
+    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
+    tuning = mvp[1];                      /* multiplier tuning parameter */
+    increaseProb = decreaseProb = mvp[2]; /* reweighting probabilities */
+    v_typical = mvp[3];                   /* typical branch length for conversion of parsimony score to log prob ratio */
+    nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
+
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
     /* get model params and model info */
@@ -13415,38 +13389,37 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     t = GetTree (param, chain, state[chain]);
     
     /* max and min brlen */
-    brlensExp = 0.0;
     if (param->subParams[0]->paramId == BRLENS_UNI)
-    {
+        {
         minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
         maxV = mp->brlensUni[1];
         isVPriorExp = NO;
-    }
+        }
     else if (param->subParams[0]->paramId == BRLENS_GamDir)
-    {
+        {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
         isVPriorExp = 2;
-    }
+        }
     else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-    {
+        {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
         isVPriorExp = 3;
-    }
+        }
     else if (param->subParams[0]->paramId == BRLENS_twoExp)
-    {
+        {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
         isVPriorExp = 4;
-    }
+        }
     else
-    {
+        {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
         brlensExp = mp->brlensExp;
         isVPriorExp = YES;
-    }
+        }
     
     /* Dirichlet or twoExp prior for brls */
     if (isVPriorExp > 1)
@@ -13467,20 +13440,17 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
-    {
+        {
         p = t->allDownPass[i];
+        p->x = 0;
         p->marked = NO;
-        p->d = 0;
-    }
-    
+        }
+
     /* pick an internal branch */
-    do
-    {
+    do  {
         p = t->intDownPass[(int)(RandomNumber(seed)*(t->nIntNodes-1))];
-        if (p->anc->left == p)
-            q = p->anc->right;
-        else
-            q = p->anc->left;
+        q = p->anc->left;
+        if (q == p)  q = p->anc->right;
         i = j = 0;
         if (q->isLocked == YES || q->left == NULL)
             i++;
@@ -13490,107 +13460,415 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             j++;
         if (p->right->isLocked == YES || p->right->left == NULL)
             j++;
-    } while (i == 2 && j == 2);
+        } while (i == 2 && j == 2);
     
     /* set up pointers for nodes around the picked branch */
-    v = p;
-    u = p->anc;
-    c = p->left;
-    d = p->right;
-    if (u->left == v)
-        a = u->right;
-    else
-        a = u->left;
+    v = p;            u = p->anc;
+    c = p->left;      d = p->right;
+    if (u->left == v) a = u->right;
+    else              a = u->left;
     b = u->anc;
     /* clip root part of tree */
     a->anc = b;
-    if (b->left == u)
-        b->left = a;
-    else
-        b->right = a;
+    if (b->left == u) b->left = a;
+    else              b->right = a;
     /* clip crown part of tree */
     c->anc = d;
     d->anc = c;
-    
-    /* get final parsimony states for the root part */
+    /* should never change u, v, a, b, c, d */
+
+    /* mark nodes nNeighbor away in root (negative) and crown (positive) respecting constraints */
+    /* first move down towards root */
+    nRoot = nCrown = 0;
+    if (u->isLocked == NO)
+        {
+        p = a; q = b; n = 0;
+        while (q->anc != NULL)
+            {
+            q->marked = YES;
+            q->x = n;    // temporary, for MarkDistance below
+            if (q->left == p)
+                MarkDistance(q->right, YES, nNeighbor, &nRoot);
+            else
+                MarkDistance(q->left,  YES, nNeighbor, &nRoot);
+            q->x = --n;
+            nRoot++;
+            if (q->isLocked == YES || abs(q->x) >= nNeighbor)
+                break;
+            p = q; q = q->anc;
+            }
+        }
+    /* then move up in root part */
+    a->marked = YES; nRoot++;
+    if (a->isLocked == NO)
+        {
+        MarkDistance(a->left,  YES, nNeighbor, &nRoot);
+        MarkDistance(a->right, YES, nNeighbor, &nRoot);
+        }
+    /* finally in crown part */
+    c->marked = YES; nCrown++;
+    if (c->isLocked == NO)
+        {
+        MarkDistance(c->left,  NO, nNeighbor, &nCrown);
+        MarkDistance(c->right, NO, nNeighbor, &nCrown);
+        }
+    if (d->isLocked == NO)
+        {
+        MarkDistance(d->left,  NO, nNeighbor, &nCrown);
+        MarkDistance(d->right, NO, nNeighbor, &nCrown);
+        }
+
+    /* need to malloc a matrix for parsimony lengths, an array of pointers to crown part,
+       and an array of pointers to root part? */
+    parLength = (MrBFlt *) SafeCalloc (nRoot*nCrown, sizeof(MrBFlt));
+    pRoot  = (TreeNode **) SafeCalloc(nRoot,  sizeof(TreeNode *));
+    pCrown = (TreeNode **) SafeCalloc(nCrown, sizeof(TreeNode *));
+    if (!parLength || !pRoot || !pCrown)  goto errorExit;
+    /* starting position */
+    pRoot[0] = a; pCrown[0] = c;
+    for (i=j=1, n=t->nNodes-2; n>=0; n--)
+        {  /* and the rest */
+        p = t->allDownPass[n];
+        if (p->marked == YES && p->x < 0)
+            pRoot[i++] = p;
+        if (p->marked == YES && p->x > 0)
+            pCrown[j++] = p;
+        }
+
+    /* get parsimony states for the root part */
     GetParsDP (t, t->root->left, chain);
     GetParsFP (t, t->root->left, chain);
-    /* get final parsimony states for the crown part */
+    /* get parsimony states for the crown part */
     GetParsDP (t, c, chain);
     GetParsFP (t, c, chain);
     GetParsDP (t, d, chain);
     GetParsFP (t, d, chain);
-    
+
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
-    if (!nSitesOfPat)
-    {
-        MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPR\n", spacer);
-        return (ERROR);
-    }
+    if (!nSitesOfPat)  goto errorExit;
     for (i=0; i<numCompressedChars; i++)
-    {
+        {
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
-        {
+            {
             ran = RandomNumber (seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
                 nSitesOfPat[i]++;
+            }
         }
-    }
-    
-    /* mark nodes nNeighbor away, respecting constraints */
-    
-    /* cycle through the possibilities and record the parsimony length (hard core) */
-    
+
+    /* cycle through the possibilities and record the parsimony length */
+    for (j=0; j<nCrown; j++)
+        {
+        for (i=0; i<nRoot; i++)
+            {
+            parLength[i+j*nRoot] = 0.0;
+            for (n=0; n<t->nRelParts; n++)
+                {
+                division = t->relParts[n];
+                
+                /* Find model settings */
+                m = &modelSettings[division];
+                
+                /* find nStates and ratemult */
+                nStates = m->numModelStates;
+                if (m->dataType == STANDARD)
+                    nStates = 2;
+                rateMult = GetRate(division, chain);
+                
+                /* find nSitesOfPat */
+                nSites = nSitesOfPat + m->compCharStart;
+                
+                /* get division warp factor (prop. to prob. of change) */
+                divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
+                
+                /* find downpass parsimony sets for the node and its environment */
+                pU = m->parsSets[u->index];
+                pV = m->parsSets[v->index];
+                pP = m->parsSets[pRoot[i]->index];
+                pQ = m->parsSets[pCrown[j]->index];
+                    
+                length = 0.0;
+                /* ????? */
+                if (m->nParsIntsPerSite == 1)
+                    {
+                    }
+                else /* if (m->nParsIntsPerSite == 2) */
+                    {
+                    }
+                parLength[i+j*nRoot] += divFactor * length;
+                }
+            }
+        }
+
     /* find the min length and the sum for the forward move */
-    
+    minLength = -1.0;
+    for (j=0; j<nCrown; j++)
+        for (i=0; i<nRoot; i++)
+            {
+            if (i == 0 && j == 0)  // exclude original position
+                continue;
+            if (minLength > parLength[i+j*nRoot] || minLength < 0.0)
+                minLength = parLength[i+j*nRoot];
+            }
+    sum1 = 0.0;
+    for (j=0; j<nCrown; j++)
+        for (i=0; i<nRoot; i++)
+            {
+            if (i == 0 && j == 0)  // exclude original position
+                continue;
+            sum1 += exp(minLength - parLength[i+j*nRoot]);
+            }
+
     /* generate a random uniform */
     ran = RandomNumber(seed) * sum1;
-    
+
     /* select the appropriate reattachment point */
-    
+    prob = 0.0;  newA = a; newC = c;
+    for (j=0; j<nCrown; j++)
+        for (i=0; i<nRoot; i++)
+            {
+            if (i == 0 && j == 0)  // exclude original position
+                continue;
+            prob += exp (minLength - parLength[i+j*nRoot]);
+            if (prob > ran) {
+                /* proposed new attaching position */
+                newA = pRoot[i];
+                newC = pCrown[j];
+                goto outLoop;
+                }
+            }
+    outLoop:;
+    iA = i; jC = j;
+
     /* calculate the proposal ratio */
-    
+    (*lnProposalRatio) = parLength[i+j*nRoot] - minLength + log(sum1);
+
     /* find the min length and the sum for the backward move */
-    
+    minLength = -1.0;
+    for (j=0; j<nCrown; j++)
+        for (i=0; i<nRoot; i++)
+            {
+            if (i == iA && j == jC)  // exclude new position
+                continue;
+            if (minLength > parLength[i+j*nRoot] || minLength < 0.0)
+                minLength = parLength[i+j*nRoot];
+            }
+    sum2 = 0.0;
+    for (j=0; j<nCrown; j++)
+        for (i=0; i<nRoot; i++)
+            {
+            if (i == iA && j == jC)  // exclude new position
+                continue;
+            sum2 += exp (minLength - parLength[i+j*nRoot]);
+            }
+
     /* calculate the proposal ratio */
+    (*lnProposalRatio) += minLength - parLength[0] - log(sum2);
+
+    /* reattach the root part */
+    e = newA->anc;
+    newA->anc = u;
+    if (u->left == v)
+        u->right = newA;
+    else
+        u->left = newA;
+    u->anc = e;
+    if (e->left == newA)
+        e->left = u;
+    else
+        e->right = u;
+
+    /* transfer lock and reassign branch lengths, if necessary */
+    if (newA != a)
+        {
+        /* if u is locked, then we have moved upwards and need to leave the u lock behind */
+        if (u->isLocked == YES)
+            {
+            u->isLocked = NO;
+            a->isLocked = YES;
+            a->lockID = u->lockID;
+            u->lockID = -1;
+            }
+
+        p = b;
+        while (p->anc != NULL)
+            {
+            if (p == newA) break;
+            p = p->anc;
+            }
+        if (p == newA)
+            {
+            /* newA is ancestor to a so insert above instead of below */
+            x = newA->length;
+            newA->length = u->length;
+            u->length = x;
+            /* newA is on root path and locked, we need to transfer lock to u */
+            if (newA->isLocked == YES) {
+                u->isLocked = YES;
+                u->lockID = newA->lockID;
+                newA->isLocked = NO;
+                newA->lockID = -1;
+                }
+            }
+            
+        p = newA;
+        while (p->anc != NULL)
+            {
+            if (p == a) break;
+            p = p->anc;
+            }
+        if (p == a)
+            {
+            /* newA is descendant to a so move a->length not u->length */
+            x = u->length;
+            u->length = a->length;
+            a->length = x;
+            }
+
+        /* set tiprobs update flags */
+        a->upDateTi = YES;
+        u->upDateTi = YES;
+        }
     
+    /* alloc temp tree nodes */
+    old = (TreeNode *) SafeCalloc (1, sizeof (TreeNode));
+    tmp = (TreeNode *) SafeCalloc (1, sizeof (TreeNode));
+    if (old == NULL || tmp == NULL)  goto errorExit;
+        
+    r = newC; q = r->anc;
+    if (newC != c)  // crown part has changed
+        {
+        /* rotate nodes from newC to c or d (whichever is closest) */
+        CopyTreeNodes (old, r, 0);
+        
+        while (r != c && r != d)
+            {
+            p = q->anc;
+            /* rotate pointers of q */
+            if (q->left == r)
+                q->left = p;
+            else
+                q->right = p;
+            q->anc = r;
+            /* swap q and old */
+            CopyTreeNodes (tmp, q, 0);
+            CopyTreeNodes (q, old, 0);
+            CopyTreeNodes (old, tmp, 0);
+            /* make sure we get q and r initialized for next round */
+            r = q;
+            q = p;
+            }
+        CopyTreeNodes (newC->anc, old, 0);
+            
+        /* set tiprobs update flags */
+        q->upDateTi = YES;
+        newC->anc->upDateTi = YES;
+        }
+    
+    /* reattach the crown part */
+    e = newC->anc;
+    v->left = newC;
+    v->right = e;
+    newC->anc = e->anc = v;
     
     topologyHasChanged = YES;
-    
-    /* hit ? length with multiplier */
+
+    /* hit newA length with multiplier (even if no topology change was made) */
+    x = newA->length * exp(tuning * (RandomNumber(seed) - 0.5));
+    while (x < minV || x > maxV)
+        {
+        if (x < minV)       x = minV * minV / x;
+        else if (x > maxV)  x = maxV * maxV / x;
+        }
     /* calculate proposal and prior ratio based on length modification */
+    (*lnProposalRatio) += log (x / newA->length);
+    if (isVPriorExp == YES)
+        (*lnPriorRatio) += brlensExp * (newA->length - x);
+    newA->length = x;
+    
+    /* hit v length with multiplier (even if no topology change was made) */
+    x = v->length * exp(tuning * (RandomNumber(seed) - 0.5));
+    while (x < minV || x > maxV)
+        {
+        if (x < minV)       x = minV * minV / x;
+        else if (x > maxV)  x = maxV * maxV / x;
+        }
+    /* calculate proposal and prior ratio based on length modification */
+    (*lnProposalRatio) += log (x / v->length);
+    if (isVPriorExp == YES)
+        (*lnPriorRatio) += brlensExp * (v->length - x);
+    v->length = x;
+
+    /* hit newC length with multiplier (even if no topology change was made) */
+    x = newC->length * exp(tuning * (RandomNumber(seed) - 0.5));
+    while (x < minV || x > maxV)
+        {
+        if (x < minV)       x = minV * minV / x;
+        else if (x > maxV)  x = maxV * maxV / x;
+        }
+    /* calculate proposal and prior ratio based on length modification */
+    (*lnProposalRatio) += log (x / newC->length);
+    if (isVPriorExp == YES)
+        (*lnPriorRatio) += brlensExp * (newC->length - x);
+    newC->length = x;
     
     /* set tiprobs update flags */
+    newA->upDateTi = YES;
+    v->upDateTi = YES;
+    newC->upDateTi = YES;
+ 
     /* set flags for update of cond likes */
+    p = u;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    p = b;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    p = newC;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    p = r;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
     
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
-    {
+        {
         GetDownPass (t);
-    }
-    
+        }
+
     /* flag whether topology change was proposed */
     if (topologyHasChanged == YES)
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-    
-    
+
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
+
 #   if defined (DEBUG_ParsTBR)
     printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    //  printf ("v: %d  u: %d  c: %d  d: %d\n",v->index, u->index, c->index, d->index);
     printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
@@ -13600,17 +13878,26 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-    
     gNodeMoves = nRootNodes;
 #   endif
     
 #if defined DEBUG_CONSTRAINTS
     CheckConstraints (t);
 #endif
-    
+
+    /* free up local memory */
+    free (parLength); free (pRoot); free (pCrown);
+    free (nSitesOfPat); free (old); free (tmp);
+
     return (NO_ERROR);
+
+errorExit:
+    MrBayesPrint ("%s   Problem allocating memory in Move_ParsTBR\n", spacer);
+    free (parLength); free (pRoot); free (pCrown);
+    free (nSitesOfPat); free (old); free (tmp);
+
+    return (ERROR);
 }
-#endif
 
 
 int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
@@ -14462,7 +14749,6 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -15025,7 +15311,6 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -15656,7 +15941,6 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
@@ -16334,7 +16618,6 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = YES;
     else
         gTopologyHasChanged = NO;
-
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 

@@ -4230,6 +4230,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 #   endif
 
     return (NO_ERROR);
+    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -12685,6 +12686,7 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
 MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
     return - log(params[1] - params[0]);
+    MrBayesPrint ("%lf", val); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -12923,6 +12925,9 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     return 0.0;
+    MrBayesPrint ("%lf", newX); /* just because I am tired of seeing the unused parameter error msg */
+    MrBayesPrint ("%lf", oldX);
+    MrBayesPrint ("%lf", *params);
 }
 
 

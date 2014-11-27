@@ -946,7 +946,7 @@ int ReinitializeMrBayes (void)
     chainParams.autotune = YES;                      /* autotune?                                     */
     chainParams.tuneFreq = 100;                      /* autotuning frequency                          */
     chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
-    chainParams.checkFreq = 100000;                  /* check-pointing frequency                      */
+    chainParams.checkFreq = 2000;                    /* check-pointing frequency                      */
     chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */
 
     /* sumt parameters */
