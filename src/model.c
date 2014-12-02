@@ -20832,7 +20832,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-    /* Move_OmegaPur : Let it be here so that omega moves are listed in logical order!*/
+    /* Move_OmegaPur : Let it be here so that omega moves are listed in logical order! */
     mt = &moveTypes[i++];
     mt->name = "Sliding window";
     mt->shortName = "Slider";
@@ -21778,6 +21778,8 @@ void SetUpMoveTypes (void)
     mt->tuningParam[1] = 10.0;  /* window size */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 10000.0;
+    mt->minimum[1] = 0.0001;
+    mt->maximum[1] = 1000.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     

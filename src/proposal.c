@@ -10453,8 +10453,8 @@ int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     mp = &modelParams[param->relParts[0]];
     
     /* get minimum and maximum values for omega */
-    minO = KAPPA_MIN;
-    maxO = KAPPA_MAX;
+    minO = OMEGA_MIN;
+    maxO = OMEGA_MAX;
 
     /* get old value of omega */
     oldO = *GetParamVals(param, chain, state[chain]);
@@ -10464,7 +10464,7 @@ int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 
     /* change value for omega */
     ran = RandomNumber(seed);
-    if (maxO-minO > window)
+    if (maxO-minO < window)
         {
         window = maxO-minO;
         }
@@ -10472,15 +10472,15 @@ int Move_Omega (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
     /* check that new value is valid */
     isValidO = NO;
-    do
-        {
+    do  {
         if (newO < minO)
             newO = 2.0 * minO - newO;
         else if (newO > maxO)
             newO = 2.0 * maxO - newO;
         else
             isValidO = YES;
-        } while (isValidO == NO);
+        }
+    while (isValidO == NO);
 
     /* get proposal ratio */
     *lnProposalRatio = 0.0;
@@ -10533,8 +10533,8 @@ int Move_Omega_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     tuning = mvp[0];
 
     /* get minimum and maximum values for omega */
-    minO = KAPPA_MIN;
-    maxO = KAPPA_MAX;
+    minO = OMEGA_MIN;
+    maxO = OMEGA_MAX;
 
     /* get old value of omega */
     oldO = *GetParamVals(param, chain, state[chain]);

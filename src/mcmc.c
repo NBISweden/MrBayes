@@ -23834,7 +23834,7 @@ int RunChain (RandLong *seed)
             ResetScalers();
 #   endif
 
-        // RandLong oldSeed = *seed; *seed = 12345; /* record the old seed for debugging */
+        // RandLong oldSeed = *seed;  /* record the old seed for debugging */
         for (chn=0; chn<numLocalChains; chn++)
             {
             /* Do Gibbs resampling of rate categories for current state if time to do so */
@@ -23960,6 +23960,7 @@ int RunChain (RandLong *seed)
                 if (lnLike != lnLike)
                     {
                     printf ("DEBUG ERROR: Log likelihood nan after move '%s'\n", theMove->name);
+                    // printf ("Seed: %ld\n", oldSeed);  state[chn] ^= 1;  PrintCheckPoint (n);
                     return ERROR;
                     }
 #       if defined (DEBUG_LNLIKELIHOOD) /* slow */

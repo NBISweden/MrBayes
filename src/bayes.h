@@ -255,7 +255,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define RELBRLENS_MIN           0.00000001f  // 1E-8f
 #define RELBRLENS_MAX           100.0f
 #define KAPPA_MIN               0.001f
-#define KAPPA_MAX               10000.0f
+#define KAPPA_MAX               1000.0f
 #define GROWTH_MIN              0.000001f
 #define GROWTH_MAX              1000000.0f
 #define RATE_MIN                0.000001f
@@ -282,7 +282,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define IGRVAR_MAX              10000.0f
 #define MIXEDVAR_MIN            0.000001f
 #define MIXEDVAR_MAX            10000.0f
-#define OMEGA_MAX               1000000.0f
+#define OMEGA_MIN               0.001f
+#define OMEGA_MAX               1000.0f
 
 #define POS_MIN                 1E-25f
 #define POS_MAX                 1E25f
