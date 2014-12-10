@@ -18505,7 +18505,7 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
         }
     while (p->length < TIME_MIN);  // not ancestral fossil
     
-    /* find new rateMultiplier */
+    /* find new rate */
     oldRate = tk02Rate[p->index];
     newRate = oldRate * exp ((0.5 - RandomNumber(seed)) * tuning);
     

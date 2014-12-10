@@ -18493,7 +18493,7 @@ int SetModelParams (void)
                 p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
                 p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
                 }                                        /* also keep Dirichlet prior parameters here                  */
-            p->min = 0.0;
+            p->min = POS_MIN;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -18540,7 +18540,7 @@ int SetModelParams (void)
                 p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
                 p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
                 }                                        /* also keep Dirichlet prior parameters here                  */
-            p->min = 0.0;
+            p->min = POS_MIN;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
