@@ -12657,10 +12657,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* rotate nodes from newC to c or d (whichever is closest)         */
         /* label node we come from as r, node we rotate q, and next node p */
         r = newC; q = r->anc;
-        // nTaxa = t->nNodes - t->nIntNodes;  /* we know the tree is unrooted */
-        //??? nLongsNeeded = (int)((nTaxa - 1) / nBitsInALong) + 1;
+        assert (t->bitsets == NULL);
         CopyTreeNodes (old, r, 0);
-
         do  {
             p = q->anc;
             /* rotate pointers of q */
@@ -13360,9 +13358,9 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* Change branch lengths and topology (potentially) using TBR-type move
        biased according to parsimony scores. */
     
-    int         i, j, n, division, topologyHasChanged, isVPriorExp,
+    int         i, j, k, n, division, topologyHasChanged, isVPriorExp,
                 nNeighbor, nRoot, nCrown, iA, jC;
-    BitsLong    *pV, *pU, *pP, *pQ;
+    BitsLong    *pA, *pB, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL,
                 prob, ran, warpFactor, tuning, increaseProb, decreaseProb, v_typical,
                 divFactor, nStates, rateMult, sum1, sum2;
@@ -13460,7 +13458,8 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             j++;
         if (p->right->isLocked == YES || p->right->left == NULL)
             j++;
-        } while (i == 2 && j == 2);
+        }
+    while (i == 2 && j == 2);
     
     /* set up pointers for nodes around the picked branch */
     v = p;            u = p->anc;
@@ -13491,7 +13490,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 MarkDistance(q->right, YES, nNeighbor, &nRoot);
             else
                 MarkDistance(q->left,  YES, nNeighbor, &nRoot);
-            q->x = --n;
+            q->x = --n;  // final
             nRoot++;
             if (q->isLocked == YES || abs(q->x) >= nNeighbor)
                 break;
@@ -13518,8 +13517,8 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         MarkDistance(d->right, NO, nNeighbor, &nCrown);
         }
 
-    /* need to malloc a matrix for parsimony lengths, an array of pointers to crown part,
-       and an array of pointers to root part? */
+    /* need to alloc a matrix for parsimony lengths, an array of pointers to crown part,
+       and an array of pointers to root part. */
     parLength = (MrBFlt *) SafeCalloc (nRoot*nCrown, sizeof(MrBFlt));
     pRoot  = (TreeNode **) SafeCalloc(nRoot,  sizeof(TreeNode *));
     pCrown = (TreeNode **) SafeCalloc(nCrown, sizeof(TreeNode *));
@@ -13535,13 +13534,13 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             pCrown[j++] = p;
         }
 
-    /* get parsimony states for the root part */
+    /* get final parsimony state sets for the root part */
     GetParsDP (t, t->root->left, chain);
     GetParsFP (t, t->root->left, chain);
-    /* get parsimony states for the crown part */
+    /* get final parsimony state sets for the crown part */
     GetParsDP (t, c, chain);
-    GetParsFP (t, c, chain);
     GetParsDP (t, d, chain);
+    GetParsFP (t, c, chain);
     GetParsFP (t, d, chain);
 
     /* find number of site patterns and modify randomly */
@@ -13586,19 +13585,31 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 /* get division warp factor (prop. to prob. of change) */
                 divFactor = - warpFactor * log((1.0/nStates) - exp(-nStates/(nStates-1)*v_typical*rateMult)/nStates);
                 
-                /* find downpass parsimony sets for the node and its environment */
-                pU = m->parsSets[u->index];
-                pV = m->parsSets[v->index];
-                pP = m->parsSets[pRoot[i]->index];
-                pQ = m->parsSets[pCrown[j]->index];
+                /* find downpass parsimony sets for the potential new connection nodes and their environment */
+                pA = m->parsSets[pRoot[i]->index];
+                pB = m->parsSets[pRoot[i]->anc->index];
+                pC = m->parsSets[pCrown[j]->index];
+                pD = m->parsSets[pCrown[j]->anc->index];
                     
                 length = 0.0;
-                /* ????? */
                 if (m->nParsIntsPerSite == 1)
                     {
+                    for (k=0; k<m->numChars; k++)
+                        {
+                        y[0] = (pC[k] | pD[k]) & (pA[k] | pB[k]);
+                        if (y[0] == 0)
+                            length += nSites[k];
+                        }
                     }
                 else /* if (m->nParsIntsPerSite == 2) */
                     {
+                    for (k=0; k<2*m->numChars; k+=2)
+                        {
+                        y[0] = (pC[k] | pD[k]) & (pA[k] | pB[k]);
+                        y[1] = (pC[k+1] | pD[k+1]) & (pA[k+1] | pB[k+1]);;
+                        if ((y[0] | y[1]) == 0)
+                            length += nSites[k/2];
+                        }
                     }
                 parLength[i+j*nRoot] += divFactor * length;
                 }
