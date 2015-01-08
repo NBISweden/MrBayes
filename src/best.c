@@ -990,22 +990,22 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
                 negLambdaX    = - expRate * dist;
                 eNegLambdaX   = exp(negLambdaX);
                 density       = expRate * eNegLambdaX / normConst;      // density for x == dist, f(dist)
-                prob          = 1.0 - eNegLambdaX / normConst;          // cumulative prob for x <= dist, F(dist)
-                sumDensRatio += density / prob;
+                prob          = (1.0 - eNegLambdaX) / normConst;        // cumulative prob for x <= dist, F(dist)
+                sumDensRatio += density / prob;                         // warning: if dist==0, prob is ZERO!
                 prodProb     *= prob;
                 }
             }
         if (p->x == 1)
             lnProb += log(expRate) + negLambdaX - log(normConst);
         else
-            lnProb += log (sumDensRatio * prodProb);
+            lnProb += log(sumDensRatio * prodProb);
         }
 
     // Free partitions if appropriate
     if (freeBitsets == YES)
         FreeTreePartitions(speciesTree);
 
-    return (NO_ERROR);
+    return (lnProb);
 }
 
 
@@ -1153,6 +1153,7 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get forward lambda
     GetMeanDist(oldSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     forwardLambda = 1.0 / mean;
 
     // Calculate joint probability of old gene trees and old species tree
@@ -1184,6 +1185,7 @@ int Move_GeneTree1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get backward lambda
     GetMeanDist(newSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     backwardLambda = 1.0 / mean;
 
     // Get proposal probability of old species tree
@@ -1255,6 +1257,7 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get forward lambda
     GetMeanDist(oldSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     forwardLambda = 1.0 / mean;
 
     // Calculate joint probability of old gene trees and old species tree
@@ -1286,6 +1289,7 @@ int Move_GeneTree2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get backward lambda
     GetMeanDist(newSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     backwardLambda = 1.0 / mean;
 
     // Get proposal probability of old species tree
@@ -1357,12 +1361,13 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get forward lambda
     GetMeanDist(oldSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     forwardLambda = 1.0 / mean;
 
     // Calculate joint probability of old gene trees and old species tree
     oldLnProb = LnJointGeneTreeSpeciesTreePr(geneTrees, numGeneTrees, oldSpeciesTree, chain);
 
-    // Modify the picked gene tree using code from a regular MrBayes move (no tuning parameter here, so passing on mvp is OK)
+    // Modify the picked gene tree using code from a regular MrBayes move
     Move_ParsSPRClock(param, chain, seed, lnPriorRatio, lnProposalRatio, mvp);
 
     // Update the min depth matrix
@@ -1388,6 +1393,7 @@ int Move_GeneTree3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
 
     // Get backward lambda
     GetMeanDist(newSpeciesTree, depthMatrix, &mean);
+    // if (mean < 1E-6) mean = 1E-6;
     backwardLambda = 1.0 / mean;
 
     // Get proposal probability of old species tree
