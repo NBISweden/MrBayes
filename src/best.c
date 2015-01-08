@@ -598,7 +598,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
         else if (p == polyTree->root && p->depth < 0.0) {
             // This is the first time we hit the root of the tree && it is resolved
             p->depth = minDepth[i].depth;
-            // assert (p->depth > 0.0);
+            assert (p->depth > 0.0);
             }
         // other cases should not be added to tree
         }

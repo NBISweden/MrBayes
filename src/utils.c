@@ -3238,7 +3238,7 @@ int CopyToSpeciesTreeFromPolyTree (Tree *to, PolyTree *from)
 int CopyToTreeFromPolyTree (Tree *to, PolyTree *from)
 {
     int         i, j;
-    PolyNode    *p;
+    PolyNode    *p=NULL;
     TreeNode    *q, *q1;
 
     /* refuse to arbitrarily root an input tree */

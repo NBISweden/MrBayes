@@ -8150,14 +8150,14 @@ int DoPrsetParm (char *parmName, char *tkn)
                     for (i=0; i<numCurrentDivisions; i++)
                         {
                         if (activeParts[i] == YES || nApplied == 0)
+                            {
                             strcpy(modelParams[i].popVarPr, tempStr);
-                        }
-                    if (nApplied == 0 && numCurrentDivisions == 1)
-                        MrBayesPrint ("%s   Setting Popvarpr to %s\n", spacer, modelParams[i].popVarPr);
-                    else for (i=0; i<numCurrentDivisions; i++)
-                        {
-                        if (activeParts[i] == YES)
-                            MrBayesPrint ("%s   Setting Popvarpr to %s for partition %d\n", spacer, modelParams[i].popVarPr, i+1);
+                        
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Popvarpr to %s\n", spacer, modelParams[i].popVarPr);
+                            else
+                                MrBayesPrint ("%s   Setting Popvarpr to %s for partition %d\n", spacer, modelParams[i].popVarPr, i+1);
+                            }
                         }
                     expecting  = Expecting(PARAMETER) | Expecting(SEMICOLON);
                     }
@@ -10992,15 +10992,12 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     {
                     value[j] = 1.0;
                     /* Dirichlet parameters fixed to 1.0 for now; ignored if the rate is fixed */
-                    if (p->nSubValues > 0)
-                        {
-                        subValue[p->nValues + j] = 1.0;
-                        /* Get number of uncompressed chars from tree */
-                        tree = GetTreeFromIndex(j, 0, 0);
-                        subValue[j] = 0.0;
-                        for (i=0; i<tree->nRelParts; i++)  /* num uncompressed chars */
-                            subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
-                        }
+                    subValue[p->nValues + j] = 1.0;
+                    /* Get number of uncompressed chars from tree */
+                    tree = GetTreeFromIndex(j, 0, 0);
+                    subValue[j] = 0.0;
+                    for (i=0; i<tree->nRelParts; i++)  /* num uncompressed chars */
+                        subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
                     }
                 }
             else if (p->paramType == P_SPECRATE)
@@ -18528,18 +18525,11 @@ int SetModelParams (void)
             }
         else if (j == P_GENETREERATE)
             {
-            /* Set up rateMult for partition specific rates ***********************************************************/
+            /* Set up rateMult for gene specific rates ****************************************************************/
             p->paramType = P_GENETREERATE;
-            if (!strcmp(mp->generatePr,"Fixed"))
-                {
-                p->nValues = 1;
-                p->nSubValues = 0;
-                }
-            else
-                {
-                p->nValues = p->nRelParts = numRelParts; /* keep scaled division rates in value                        */
-                p->nSubValues = p->nValues * 2;          /* keep number of uncompressed chars for scaling in subValue  */
-                }                                        /* also keep Dirichlet prior parameters here                  */
+            p->nValues = p->nRelParts = numRelParts;    /* keep scaled division rates in value                        */
+            p->nSubValues = p->nValues * 2;             /* keep number of uncompressed chars for scaling in subValue  */
+                                                        /* also keep Dirichlet prior parameters here                  */
             p->min = POS_MIN;
             p->max = POS_INFINITY;
             for (i=0; i<numCurrentDivisions; i++)
@@ -23028,7 +23018,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_RATEMULT)
             {
-            if (p->nValues == 1)
+            if (!strcmp(mp->ratePr,"Fixed"))
                 MrBayesPrint ("%s            Prior      = Fixed(1.0)\n", spacer);
             else
                 {
@@ -23053,7 +23043,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_GENETREERATE)
             {
-            if (p->nValues == 1)
+            if (!strcmp(mp->generatePr,"Fixed"))
                 MrBayesPrint ("%s            Prior      = Fixed(1.0)\n", spacer);
             else
                 {
