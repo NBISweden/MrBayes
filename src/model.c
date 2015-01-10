@@ -18974,10 +18974,19 @@ int SetModelParams (void)
                 p->LnPriorProb  = &LnPriorProbFix;
                 }
 
-            if (p->paramId != POPSIZE_FIX && p->nValues == 1)
+            if (p->paramId != POPSIZE_FIX)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "popsize");
-            SafeStrcat (&p->paramHeader, partString);
+            if (p->nValues == 1)
+                {
+                SafeStrcat (&p->paramHeader, "popsize");
+                SafeStrcat (&p->paramHeader, partString);
+                }
+            else for (i = 0; i < p->nValues; i++)
+                {
+                sprintf (tempStr, "\tpopsize_%d", i+1);
+                SafeStrcat (&p->paramHeader, tempStr);
+                SafeStrcat (&p->paramHeader, partString);
+                }
             }
         else if (j == P_GROWTH)
             {
@@ -20433,7 +20442,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.5;       /* Tuning parameter value */
     mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
-    mt->maximum[0] = 100.0;    /* Maximum value of tuning param */
+    mt->maximum[0] = 0.99999;       /* Maximum value of tuning param */
     mt->parsimonyBased = NO;        /* It does not use parsimony scores */
     mt->level = STANDARD_USER;
 
@@ -20458,17 +20467,22 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[0] = "warp";
     mt->tuningName[1] = "reweighting probability";
     mt->shortTuningName[1] = "r";
+    mt->tuningName[2] = "typical branch length";
+    mt->shortTuningName[2] = "v_t";
     mt->applicableTo[0] = TOPOLOGY_SPECIESTREE;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_GeneTree3;
     mt->relProposalProb = 5.0;
-    mt->numTuningParams = 2;
+    mt->numTuningParams = 3;
     mt->tuningParam[0] = 0.1; /* warp */
     mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
+    mt->tuningParam[2] = 0.05; /* typical branch length */
     mt->minimum[0] = 0.01;
     mt->maximum[0] = 10.0;
     mt->minimum[1] = 0.0;
-    mt->maximum[1] = 0.30;
+    mt->maximum[1] = 0.3;
+    mt->minimum[2] = 0.0001;
+    mt->maximum[2] = 0.5;
     mt->parsimonyBased = YES;
     mt->level = STANDARD_USER;
 

@@ -1001,6 +1001,9 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
             lnProb += log(sumDensRatio * prodProb);
         }
 
+    // to avoid lnProposalProb is NaN
+    if (lnProb != lnProb)  lnProb = 0.0;
+    
     // Free partitions if appropriate
     if (freeBitsets == YES)
         FreeTreePartitions(speciesTree);
