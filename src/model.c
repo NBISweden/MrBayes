@@ -18974,19 +18974,10 @@ int SetModelParams (void)
                 p->LnPriorProb  = &LnPriorProbFix;
                 }
 
-            if (p->paramId != POPSIZE_FIX)
+            if (p->paramId != POPSIZE_FIX && p->nValues == 1)
                 p->printParam = YES;
-            if (p->nValues == 1)
-                {
-                SafeStrcat (&p->paramHeader, "popsize");
-                SafeStrcat (&p->paramHeader, partString);
-                }
-            else for (i = 0; i < p->nValues; i++)
-                {
-                sprintf (tempStr, "\tpopsize_%d", i+1);
-                SafeStrcat (&p->paramHeader, tempStr);
-                SafeStrcat (&p->paramHeader, partString);
-                }
+            SafeStrcat (&p->paramHeader, "popsize");
+            SafeStrcat (&p->paramHeader, partString);
             }
         else if (j == P_GROWTH)
             {

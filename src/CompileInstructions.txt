@@ -186,8 +186,7 @@ Open Command Prompt (cmd.exe), "cd" to the src folder you just downloaded, e.g.,
 
 and use the following command to compile:
 
-> gcc -O3 -ffast-math -DNDEBUG -o mb 
-       bayes.c best.c command.c mbbeagle.c mcmc.c model.c proposal.c sumpt.c utils.c -lm
+> gcc -O3 -DNDEBUG -o mb bayes.c best.c command.c mbbeagle.c mcmc.c model.c proposal.c sumpt.c utils.c -lm
 
 An executable named "mb.exe" will be generated in the same folder, if everything
 goes smoothly. You may want to edit the fist few lines in bayes.h to define/undef
