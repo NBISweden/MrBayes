@@ -956,7 +956,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
 double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double expRate)
 {
     int         i, left, right, index, nLongsNeeded, freeBitsets;
-    double      dist, normConst=1.0, negLambdaX, eNegLambdaX, density, prob,
+    double      dist, normConst=1.0, negLambdaX=0.0, eNegLambdaX, density, prob,
                 sumDensRatio, prodProb, lnProb;
     TreeNode    *p;
 

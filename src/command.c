@@ -158,20 +158,20 @@ MrBFlt   WhichCont (int x);
 
 /* globals */
 int             autoClose;             /* autoclose                                     */
-int             autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes   */
+int             autoOverwrite;         /* Overwrite or append outputfiles when nowarnings=yes */
 Calibration     *calibrationPtr;       /* ptr to calibration being set                  */
 CharInformation *charInfo;             /* holds critical information about characters   */
 BitsLong        **charSet;             /* holds information about defined charsets      */
 char            **charSetNames;        /* holds names of character sets                 */
 Comptree        comptreeParams;        /* holds parameters for comparetree command      */
-char            **constraintNames;     /* holds names of constraints               */
+char            **constraintNames;     /* holds names of constraints                    */
 int             dataType;              /* type of data                                  */
 Calibration     defaultCalibration;    /* default calibration                           */
-BitsLong        **definedConstraint;   /* bitfields representing taxa sets of defined constraints                                                   */
-BitsLong        **definedConstraintTwo;/* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)             */
-BitsLong        **definedConstraintPruned;   /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
-BitsLong        **definedConstraintTwoPruned;/* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
-                                             /* taxa are removed and for NEGATIVE constraint it contains complements of definedConstraintPruned     */
+BitsLong        **definedConstraint;          /* bitfields representing taxa sets of defined constraints                                             */
+BitsLong        **definedConstraintTwo;       /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)       */
+BitsLong        **definedConstraintPruned;    /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
+BitsLong        **definedConstraintTwoPruned; /* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
+                                              /* taxa are removed and for NEGATIVE constraint it contains complements of definedConstraintPruned     */
 int             echoMB;                /* flag used by Manual to prevent echoing        */
 BitsLong        expecting;             /* variable denoting expected token type         */
 int             foundNewLine;          /* whether a new line has been found             */
@@ -202,7 +202,7 @@ int             noWarn;                /* no warnings on overwriting files      
 int             numChar;               /* number of characters in character matrix      */
 int             numCharSets;           /* number of character sets                      */
 int             numComments;           /* counts how deeply nested a comment is         */
-int             numDefinedConstraints; /* number of constraints defined           */
+int             numDefinedConstraints; /* number of constraints defined                 */
 int             numDefinedPartitions;  /* number of partitions defined                  */
 int             numDefinedSpeciespartitions;  /* number of speciespartitions defined    */
 int             numNamedTaxa;          /* number of named taxa during parsing of cmd    */
@@ -233,8 +233,8 @@ TaxaInformation *taxaInfo;             /* holds critical information about taxa 
 char            **taxaNames;           /* holds name of taxa                            */
 BitsLong        **taxaSet;             /* holds information about defined taxasets      */
 char            **taxaSetNames;        /* holds names of taxa sets                      */
-int             *tempActiveConstraints;/* temporarily holds active constraints size allcated          */
-enum ConstraintType  *definedConstraintsType;/* Store type of constraint                     */
+int             *tempActiveConstraints;/* temporarily holds active constraints size allcated        */
+enum ConstraintType  *definedConstraintsType;  /* Store type of constraint              */
 int             *tempSet;              /* temporarily holds defined set                 */
 int             *tempSetNeg;           /* holds bitset of negative set of taxa for partial constraint*/
 int             theAmbigChar;          /* int containing ambiguous character            */

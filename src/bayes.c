@@ -139,7 +139,7 @@ int main (int argc, char *argv[])
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
         sprintf(poltmp, "\nlastError = %d", lastError);
-        printf (poltmp);
+        // printf (poltmp);
         }
 #   endif
 
@@ -478,9 +478,9 @@ int InitializeMrBayes (void)
     echoMB               = YES;                      /* flag used by Manual to control printing       */
 
 #   if defined (MPI_ENABLED)
-    sprintf (manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file     */
+    sprintf (manFileName, "commref_mb%sp.txt", VERSION_NUMBER);  /* name of command reference file    */
 #   else
-    sprintf (manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file     */
+    sprintf (manFileName, "commref_mb%s.txt", VERSION_NUMBER);   /* name of command reference file    */
 #   endif
 
     for (i=0; i<NUM_ALLOCS; i++)                     /* set allocated memory to NO                    */
@@ -509,9 +509,9 @@ int InitializeMrBayes (void)
 #       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #       else
-    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Windows (NO untill SSE single prec. works)*/
+    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
 #       endif
-    beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE dynamic scaling                    */
+    beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE always scaling                     */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment

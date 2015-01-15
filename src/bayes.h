@@ -1026,19 +1026,19 @@ typedef struct model
     MrBFlt      clockRateGamma[2];
     MrBFlt      clockRateExp;
     MrBFlt      clockRateFix;
-    char        popSizePr[100];        /* prior on population size                     */
+    char        popSizePr[100];        /* prior on population size                      */
     MrBFlt      popSizeFix;
     MrBFlt      popSizeUni[2];
     MrBFlt      popSizeLognormal[2];
     MrBFlt      popSizeGamma[2];
     MrBFlt      popSizeNormal[2];
-    char        popVarPr[100];         /* prior on pop. size variation across tree     */
-    char        growthPr[100];         /* prior on coalescence growth rate             */
+    char        popVarPr[100];         /* prior on pop. size variation across tree      */
+    char        growthPr[100];         /* prior on coalescence growth rate              */
     MrBFlt      growthFix;
     MrBFlt      growthUni[2];
     MrBFlt      growthExp;
     MrBFlt      growthNorm[2];
-    char        cppRatePr[100];        /* prior on CPP rate                            */
+    char        cppRatePr[100];        /* prior on CPP rate                             */
     MrBFlt      cppRateFix;
     MrBFlt      cppRateExp;
     char        cppMultDevPr[100];     /* prior on CPP rate multiplier Lognormal variance */
@@ -1201,8 +1201,8 @@ typedef struct modelinfo
     int         isTiNeeded[20];             /* marks whether a trans prob matrix is needed  */
 
     /* Gibbs sampling of gamma site rate parameters */
-    CLFlt       ***catLike;                 /* likelihood for Gibbs sampling of gamma */
-    CLFlt       ***catLnScaler;             /* scaler for Gibbs sampling of gamma */
+    CLFlt       ***catLike;                 /* likelihood for Gibbs sampling of gamma       */
+    CLFlt       ***catLnScaler;             /* scaler for Gibbs sampling of gamma           */
     int         gibbsGamma;                 /* flags whether Gibbs sampling of discrete gamma is used */
     int         gibbsFreq;                  /* frequency of Gibbs resampling of discrete gamma */
     
@@ -1293,7 +1293,7 @@ typedef struct modelinfo
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
     int*        rescaleFreq;                /* rescale frequency for each chain's tree      */
-    int         rescaleFreqOld;             /* holds rescale frequency of current state  */
+    int         rescaleFreqOld;             /* holds rescale frequency of current state     */
     int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
     int*        succesCount;                /* count number of succesful computation since last reset of scalers */
     int**       isScalerNode;               /* for each node and chain set to YES if scaled node */
@@ -1355,18 +1355,18 @@ typedef struct sumt
 
 typedef struct comptree
     {
-    char        comptFileName1[120];    /* name of first input file                      */
-    char        comptFileName2[120];    /* name of second input file                     */
-    char        comptOutfile[120];      /* name of output file                           */
-    int         burnin;                 /* actual burnin used when parsing tree files    */
-    MrBFlt      minPartFreq;            /* use partitions with frequency >= minPartFreq  */
+    char        comptFileName1[120];   /* name of first input file                      */
+    char        comptFileName2[120];   /* name of second input file                     */
+    char        comptOutfile[120];     /* name of output file                           */
+    int         burnin;                /* actual burnin used when parsing tree files    */
+    MrBFlt      minPartFreq;           /* use partitions with frequency >= minPartFreq  */
     } Comptree;
 
 typedef struct sump
     {
     char        sumpFileName[100];     /* name of input file                            */
-    char        sumpOutfile[120];      /* name of output file                            */
-    //int           plot;                  /* output plot (y/n)?                            */
+    char        sumpOutfile[120];      /* name of output file                           */
+    //int       plot;                  /* output plot (y/n)?                            */
     int         table;                 /* output table (y/n)?                           */
     int         margLike;              /* output marginal likelihood (y/n)?             */
     int         numRuns;               /* number of independent analyses to summarize   */
@@ -1377,7 +1377,7 @@ typedef struct sump
 
 typedef struct sumss
     {
-    //int           plot;                  /* output plot (y/n)?                            */
+    //int       plot;                  /* output plot (y/n)?                            */
     int         numRuns;               /* number of independent analyses to summarize   */
     int         allRuns;               /* should data for all runs be printed (yes/no)? */
     int         stepToPlot;            /* Which step to plot in the step plot           */
