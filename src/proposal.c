@@ -13363,7 +13363,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     BitsLong    *pA, *pB, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL,
                 prob, ran, warpFactor, tuning, increaseProb, decreaseProb, v_typical,
-                divFactor, nStates, rateMult, sum1, sum2;
+                divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC,
                 **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
@@ -13533,6 +13533,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         if (p->marked == YES && p->x > 0)
             pCrown[j++] = p;
         }
+    assert(i==nRoot && j==nCrown);
 
     /* get final parsimony state sets for the root part */
     GetParsDP (t, t->root->left, chain);
@@ -13626,26 +13627,35 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             if (minLength > parLength[i+j*nRoot] || minLength < 0.0)
                 minLength = parLength[i+j*nRoot];
             }
-    sum1 = 0.0;
+    sum1 = 0.0; tempc = 0.0;
     for (j=0; j<nCrown; j++)
         for (i=0; i<nRoot; i++)
             {
             if (i == 0 && j == 0)  // exclude original position
                 continue;
-            sum1 += exp(minLength - parLength[i+j*nRoot]);
+            // sum1 += exp(minLength - parLength[i+j*nRoot]);
+            /* Kahan summation to reduce numerical error */
+            tempy = exp(minLength - parLength[i+j*nRoot]) - tempc;
+            tempsum = sum1 + tempy;  tempc = (tempsum - sum1) - tempy;
+            sum1 = tempsum;
             }
 
     /* generate a random uniform */
     ran = RandomNumber(seed) * sum1;
 
     /* select the appropriate reattachment point */
-    prob = 0.0;  newA = a; newC = c;
+    newA = a; newC = c;
+    prob = 0.0; tempc = 0.0;
     for (j=0; j<nCrown; j++)
         for (i=0; i<nRoot; i++)
             {
             if (i == 0 && j == 0)  // exclude original position
                 continue;
-            prob += exp (minLength - parLength[i+j*nRoot]);
+            // prob += exp (minLength - parLength[i+j*nRoot]);
+            /* Kahan summation to reduce numerical error */
+            tempy = exp(minLength - parLength[i+j*nRoot]) - tempc;
+            tempsum = prob + tempy;  tempc = (tempsum - prob) - tempy;
+            prob = tempsum;
             if (prob > ran) {
                 /* proposed new attaching position */
                 newA = pRoot[i];
@@ -13669,13 +13679,17 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             if (minLength > parLength[i+j*nRoot] || minLength < 0.0)
                 minLength = parLength[i+j*nRoot];
             }
-    sum2 = 0.0;
+    sum2 = 0.0; tempc = 0.0;
     for (j=0; j<nCrown; j++)
         for (i=0; i<nRoot; i++)
             {
             if (i == iA && j == jC)  // exclude new position
                 continue;
-            sum2 += exp (minLength - parLength[i+j*nRoot]);
+            // sum2 += exp (minLength - parLength[i+j*nRoot]);
+            /* Kahan summation to reduce numerical error */
+            tempy = exp(minLength - parLength[i+j*nRoot]) - tempc;
+            tempsum = sum2 + tempy;  tempc = (tempsum - sum2) - tempy;
+            sum2 = tempsum;
             }
 
     /* calculate the proposal ratio */
@@ -13756,7 +13770,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         /* rotate nodes from newC to c or d (whichever is closest) */
         CopyTreeNodes (old, r, 0);
-        
         while (r != c && r != d)
             {
             p = q->anc;
@@ -13775,7 +13788,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             q = p;
             }
         CopyTreeNodes (newC->anc, old, 0);
-            
+        
         /* set tiprobs update flags */
         q->upDateTi = YES;
         newC->anc->upDateTi = YES;

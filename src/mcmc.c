@@ -23965,7 +23965,7 @@ int RunChain (RandLong *seed)
                     }
 #       if defined (DEBUG_LNLIKELIHOOD) /* slow */
                 ResetFlips(chn); /* needed to return flags so they point to old state */
-                TouchEverything();
+                TouchEverything(chn);
                 if (fabs((lnLike-LogLike(chn))/lnLike) > 0.0001)
                     {
                     printf ("DEBUG ERROR: Log likelihood incorrect after move '%s'\n", theMove->name);

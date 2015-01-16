@@ -12244,7 +12244,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Beagleopenmp       Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
 #   endif
 #   if defined (THREADS_ENABLED)
-        MrBayesPrint ("   Beaglethreads   Yes/No                   %s                                   \n", tryToUseThreads == YES ? "Yes" : "No");
+        MrBayesPrint ("   Beaglethreads      Yes/No                %s                                   \n", tryToUseThreads == YES ? "Yes" : "No");
 #   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
