@@ -16785,7 +16785,7 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int         i, indexI, indexJ, nRates;
-    MrBFlt      delta, *value, *subValue, sum, *alphaDir, x,
+    MrBFlt      delta, *value, *subValue, sum, sumRate, *alphaDir, x, y,
                 oldRate[2], newRate[2], min, max;
 
     /* get number of rates */
@@ -16805,9 +16805,12 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         indexJ = nRates - 1;
 
     /* calculate old ratesum proportions */
-    sum = value[indexI] + value[indexJ];
-    oldRate[0] = value[indexI] / sum;
-    oldRate[1] = value[indexJ] / sum;
+    sumRate = 0.0;
+    for (i=0; i<nRates; i++)
+        sumRate += value[i];
+    oldRate[0] = value[indexI] / sumRate;
+    oldRate[1] = value[indexJ] / sumRate;
+    sum = oldRate[0] + oldRate[1];
     
     /* get delta tuning parameter */
     delta = mvp[0];
@@ -16818,27 +16821,28 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     if (delta > max-min) /* we do it to avoid following long while loop in case if delta is high */
         delta = max-min;
 
-    x = oldRate[0] + delta * (RandomNumber(seed) - 0.5);
-    while (x < min || x > max)
+    x = oldRate[0] / sum;
+    y = x + delta * (RandomNumber(seed) - 0.5);
+    while (y < min || y > max)
         {
-        if (x < min)
-            x = 2.0 * min - x;
-        if (x > max)
-            x = 2.0 * max - x;
+        if (y < min)
+            y = 2.0 * min - y;
+        if (y > max)
+            y = 2.0 * max - y;
         }
     
     /* set the new values */
-    newRate[0] = x;
-    newRate[1] = 1.0 - x;
-    value[indexI] = newRate[0] * sum;
-    value[indexJ] = newRate[1] * sum;
+    newRate[0] = y * sum;
+    newRate[1] = sum - newRate[0];
+    value[indexI] = newRate[0] * sumRate;
+    value[indexJ] = newRate[1] * sumRate;
 
     /* get proposal ratio */
     (*lnProposalRatio) = 0.0;
 
     /* get prior ratio */
-    (*lnPriorRatio)  = (alphaDir[indexI]-1.0)*(log(newRate[0]) - log(oldRate[0]));
-    (*lnPriorRatio) += (alphaDir[indexJ]-1.0)*(log(newRate[1]) - log(oldRate[1]));
+    (*lnPriorRatio)  = (alphaDir[indexI]-1.0) * (log(newRate[0]) - log(oldRate[0]));
+    (*lnPriorRatio) += (alphaDir[indexJ]-1.0) * (log(newRate[1]) - log(oldRate[1]));
 
     /* Set update flags for all partitions that share the rate multiplier. Note that the conditional
        likelihood update flags have been set before we even call this function. */
@@ -16927,9 +16931,7 @@ int Move_Revmat_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* copy new rate ratio values back */
     for (i=0; i<nRates; i++)
-        {
         value[i] = newRate[i];
-        }
     
     /* get proposal ratio */
     sum = 0.0;
@@ -17143,9 +17145,6 @@ int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     newRate = GetParamVals (param, chain, state[chain]);
     oldRate = GetParamVals (param, chain, state[chain] ^ 1);
 
-    /* get window size */
-    delta = mvp[0];
-
     /* choose a pair to change */
     i = (int) (RandomNumber(seed) * nRates);
     j = (int) (RandomNumber(seed) * (nRates-1));
@@ -17155,15 +17154,16 @@ int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     /* find new proportion */
     sum = oldRate[i] + oldRate[j];
 
+    /* get window size */
+    delta = mvp[0];
+
     /* reflect */
     min = RATE_MIN / sum;
     max = 1.0 - min;
+    if (delta > max-min) /* we do it to avoid following long while loop in case if delta is high */
+        delta = max-min;
 
     x = oldRate[i] / sum;
-    if (delta > max-min) /* we do it to avoid following long while loop in case if delta is high */
-        {
-        delta = max-min;
-        }
     y = x + delta * (RandomNumber(seed) - 0.5);
     while (y < min || y > max)
         {
@@ -17178,15 +17178,11 @@ int Move_Revmat_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     newRate[j] = sum - newRate[i];
 
     /* get proposal ratio */
-    *lnProposalRatio = 0.0;
+    (*lnProposalRatio) = 0.0;
 
     /* get prior ratio */
-    /* (the Gamma part of the prior is the same) */
-    x = (priorAlpha[i]-1.0)*log(newRate[i]);
-    x += (priorAlpha[j]-1.0)*log(newRate[j]);
-    y = (priorAlpha[i]-1.0)*log(oldRate[i]);
-    y += (priorAlpha[j]-1.0)*log(oldRate[j]);
-    (*lnPriorRatio) = x - y;
+    (*lnPriorRatio)  = (priorAlpha[i]-1.0) * (log(newRate[i]) - log(oldRate[i]));
+    (*lnPriorRatio) += (priorAlpha[j]-1.0) * (log(newRate[j]) - log(oldRate[j]));
 
     /* Set update for entire tree */
     for (i=0; i<param->nRelParts; i++)
