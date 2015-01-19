@@ -10794,12 +10794,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                             return (ERROR);
                         for (i=0; i<mp->numM10GammaCats; i++)
                             value[mp->numM10BetaCats + i] += 1.0;
-
-                            
-                        }
-                    else
-                        {
-                        
                         }
                     }
                 }
@@ -10834,7 +10828,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 
                     /* now fill in subvalues */
                     for (i=0; i<m->numStates; i++)
-                        subValue[i] =  (1.0 / mp->nStates);
+                        subValue[i] = 1.0 / mp->nStates;
                     }
 
                 else if (p->paramId == PI_USER)
@@ -10911,7 +10905,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 else if (p->paramId == PI_EQUAL)
                     {
                     for (i=0; i<mp->nStates; i++)
-                        subValue[i] =  (1.0 / mp->nStates);
+                        subValue[i] = 1.0 / mp->nStates;
                     }
                 }
             else if (p->paramType == P_SHAPE)
@@ -10997,7 +10991,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     tree = GetTreeFromIndex(j, 0, 0);
                     subValue[j] = 0.0;
                     for (i=0; i<tree->nRelParts; i++)  /* num uncompressed chars */
-                        subValue[j] +=  (modelSettings[tree->relParts[i]].numUncompressedChars);
+                        subValue[j] += (modelSettings[tree->relParts[i]].numUncompressedChars);
                     }
                 }
             else if (p->paramType == P_SPECRATE)

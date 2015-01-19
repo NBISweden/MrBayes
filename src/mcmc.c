@@ -14662,9 +14662,9 @@ MrBFlt LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3)
        order statistics. The w1, w2, and w3, then, are
        all scaled to the same dS r.v. */
        
-    MrBFlt      lnProb;
+    MrBFlt  lnProb;
     
-    lnProb =  (log(36.0) - 4.0 * log(1.0 + w1 + w2 + w3));
+    lnProb = log(36.0) - 4.0 * log(1.0 + w1 + w2 + w3);
      
     return (lnProb);
 }
@@ -14684,6 +14684,9 @@ MrBFlt LogPrior (int chain)
     Tree            *t;
     TreeNode        *branch, *q;
     
+    /* In the stepping-stone method, constants that appear in prior probability density functions must be fully specified.
+       It is not necessary for Bayesian MCMC analyses because such constants cancel out. */
+
     lnPrior = 0.0;
     for (n=0; n<numParams; n++)
         {
@@ -14712,14 +14715,10 @@ MrBFlt LogPrior (int chain)
                    struct to the simplex parameterization used for the prior */
                 newProp[0] =  st[0] / (st[0] + 1.0);
                 newProp[1] =  (1.0 - newProp[0]);
-                x = 0.0;
+                x = LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
                 for (i=0; i<2; i++)
                     x += (alphaDir[i]-1.0)*log(newProp[i]);
                 lnPrior += x;
-                }
-            else
-                {
-                
                 }
             }
         else if (p->paramType == P_REVMAT)
@@ -14783,12 +14782,7 @@ MrBFlt LogPrior (int chain)
                 /* convert from ratio parameterization to simplex representation */
                 newProp[0] = st[0] / (st[0] + 1.0);
                 newProp[1] = 1.0 - newProp[0];
-                sum = 0.0;
-                for (i=0; i<2; i++)
-                    sum += alphaDir[i];
-                x = LnGamma(sum);
-                for (i=0; i<2; i++)
-                    x -= LnGamma(alphaDir[i]);
+                x = LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
                 for (i=0; i<2; i++)
                     x += (alphaDir[i]-1.0)*log(newProp[i]);
                 lnPrior += x;
@@ -14797,7 +14791,7 @@ MrBFlt LogPrior (int chain)
             if (p->paramId == OMEGA_BUD || p->paramId == OMEGA_BED ||
                 p->paramId == OMEGA_BFD || p->paramId == OMEGA_FUD ||
                 p->paramId == OMEGA_FED || p->paramId == OMEGA_FFD ||
-                p->paramId == OMEGA_ED || p->paramId == OMEGA_FD)
+                p->paramId == OMEGA_ED  || p->paramId == OMEGA_FD)
                 {
                 alphaDir = mp->codonCatDir;             
                 x = 0.0;
@@ -14941,8 +14935,11 @@ MrBFlt LogPrior (int chain)
             x = LnGamma(sum);
             for (i=0; i<nStates; i++)
                 x -= LnGamma(sst[i+nStates]);
+            sum = 0.0;
             for (i=0; i<nStates; i++)
-                x += (sst[i+nStates] - 1.0)*log(st[i]);
+                sum += st[i];
+            for (i=0; i<nStates; i++)
+                x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
             lnPrior += x;
             }
         else if (p->paramType == P_GENETREERATE && p->nValues > 1)
@@ -14954,8 +14951,11 @@ MrBFlt LogPrior (int chain)
             x = LnGamma(sum);
             for (i=0; i<nStates; i++)
                 x -= LnGamma(sst[i+nStates]);
+            sum = 0.0;
             for (i=0; i<nStates; i++)
-                x += (sst[i+nStates] - 1.0)*log(st[i]);
+                sum += st[i];
+            for (i=0; i<nStates; i++)
+                x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
             lnPrior += x;
             }
         else if (p->paramType == P_TOPOLOGY)
@@ -15114,7 +15114,7 @@ MrBFlt LogPrior (int chain)
                                 + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3))
                                 - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     }
-                /* twoExp priors */
+                /* twoExp prior */
                 else if (p->paramId == BRLENS_twoExp)
                     lnPrior += LogDirPrior(t, mp, 4);
                 }
@@ -15143,6 +15143,7 @@ MrBFlt LogPrior (int chain)
                     alphaDir = mp->extinctionBeta;
                     newProp[0] =  st[i];
                     newProp[1] =  (1.0 - newProp[0]);
+                    lnPrior += LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
                     lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
                     }
                 }
@@ -15157,6 +15158,7 @@ MrBFlt LogPrior (int chain)
                     alphaDir = mp->fossilizationBeta;
                     newProp[0] =  st[i];
                     newProp[1] =  (1.0 - newProp[0]);
+                    lnPrior += LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
                     lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
                     }
                 }
@@ -19896,7 +19898,7 @@ int PrintStates (int curGen, int coldId)
                 {
                 for (j=0; j<p->nValues; j++)
                     {
-                    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j + p->nValues]));
+                    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / st[0]));
                     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 }
@@ -19904,10 +19906,10 @@ int PrintStates (int curGen, int coldId)
                 {
                 sum = 0.0;
                 for (j=0; j<p->nValues; j++)
-                    sum += sst[j + p->nValues];
+                    sum += st[j];
                 for (j=0; j<p->nValues; j++)
                     {
-                    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j + p->nValues] / sum));
+                    SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[j] / sum));
                     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 }
