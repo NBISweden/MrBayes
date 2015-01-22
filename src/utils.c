@@ -1495,8 +1495,8 @@ void SafeFree (void **ptr)
 
 
 /* SafeMalloc: Print error if out of memory; clear memory */
-void *SafeMalloc(size_t s) {
-
+void *SafeMalloc (size_t s)
+{
     void *ptr;
 
     if (s == 0)
@@ -1521,8 +1521,8 @@ void *SafeMalloc(size_t s) {
 
 
 /* SafeRealloc: Print error if out of memory */
-void *SafeRealloc(void *ptr, size_t s) {
-
+void *SafeRealloc (void *ptr, size_t s)
+{
     if (s == 0)
         {
         free(ptr);

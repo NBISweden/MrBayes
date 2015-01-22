@@ -15158,8 +15158,11 @@ MrBFlt LogPrior (int chain)
                     alphaDir = mp->fossilizationBeta;
                     newProp[0] =  st[i];
                     newProp[1] =  (1.0 - newProp[0]);
-                    lnPrior += LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
-                    lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
+                    if (newProp[0] > 0.0 && newProp[1] > 0.0) {
+                        /* to avoid psi=0 in [0, x_cut] under diversified sampling */
+                        lnPrior += LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
+                        lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);
+                        }
                     }
                 }
             }
@@ -15908,7 +15911,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
        also in several time slices each with a seperate probability.
-       Extant taxa are sampled randomly at the present (the last slice at time 0). */
+       Extant taxa are sampled uniformly at randomly at time 0 (present). */
     
     int         i, j, sl, K, M, E;
     MrBFlt      x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
@@ -15948,19 +15951,17 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i]  = lambda[i] * eR[i];
+        mu[i] = lambda[i] * eR[i];
         psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         if (i < sl) {
             rho[i] = mp->sampleFSProb[i];
             t_f[i] = mp->sampleFSTime[i];
             }
-        else {
-            rho[i] = sF;
-            t_f[i] = 0.0;
-            }
         }
+    rho[sl] = sF;
+    t_f[sl] = 0.0;
+
     if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
-    
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -16085,7 +16086,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
        also in several time slices each with a seperate probability. 
-       Extant taxa are sampled at the present to maximize diversity. */
+       Extant taxa are sampled with prop sF to maximize diversity. */
     
     int         i, j, sl, K, M, E;
     MrBFlt      x, x_min, t_min, M_x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
@@ -16099,8 +16100,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
     /* get the number of fossil slice sampling events, s >= 0 */
     sl = mp->sampleFSNum;
-    /* plus 1 extra slice (x_cut) to shift psi to 0 */
-    sl += 1;
     
     /* alloc memory for time of each slice */
     t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
@@ -16142,19 +16141,15 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (sl > 1 && mp->sampleFSTime[sl-2] < x_min)
         x_min = mp->sampleFSTime[sl-2];
     
-    if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
-    
     /* initialization (sl >= 1) */
-    for (i = 0; i < sl; i++)
+    for (i = 0; i <= sl; i++)
         {
         /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
         lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i]  = lambda[i] * eR[i];
+        mu[i] = lambda[i] * eR[i];
         psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         }
-    lambda[sl] = lambda[sl-1];
-    mu[sl]     = mu[sl-1];
-    psi[sl]    = 0.0;  // psi = 0 for t < t_f[sl-1]
+    psi[sl] = 0.0;  // psi = 0 in [0, x_cut]
     for (i = 0; i < sl-1; i++)
         {
         rho[i] = mp->sampleFSProb[i];
@@ -16165,6 +16160,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     rho[sl]   = 1.0;          // not sF
     t_f[sl]   = 0.0;
     
+    if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
