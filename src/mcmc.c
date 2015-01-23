@@ -23555,8 +23555,12 @@ int RunChain (RandLong *seed)
                 {
                 if (numPreviousGen/(i-1) != chainParams.sampleFreq)
                     {
-                    MrBayesPrint ("%s   You have to use the same sampling frequency as in the old run to append\n", spacer);
-                    /* What if the old number of generations was not divisible by the sampling frequency? */
+                    MrBayesPrint ("%s   1. Use the same sampling frequency as in the previous run to use relative burnin.\n", spacer);
+                    MrBayesPrint ("%s   2. Check (and modify) the number in [generation: number] at line 3 of the .ckp file\n", spacer);
+                    MrBayesPrint ("%s      to match the previous number of generations in all the .p and .t files. This may\n", spacer);
+                    MrBayesPrint ("%s      happen if checkfreq was smaller than samplefreq.\n", spacer);
+                    MrBayesPrint ("%s   3. Rarely, delete the last sample/line in the .p and .t files to achieve 2. above.\n", spacer);
+                    MrBayesPrint ("%s      This may happen if ngen was not divisible by samplefreq.\n", spacer);
                     nErrors++;
                     }
                 if (chainParams.isSS == NO)
