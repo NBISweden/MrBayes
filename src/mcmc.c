@@ -14940,6 +14940,7 @@ MrBFlt LogPrior (int chain)
                 sum += st[i];
             for (i=0; i<nStates; i++)
                 x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
+            x -= (nStates-1) * log(sum);
             lnPrior += x;
             }
         else if (p->paramType == P_GENETREERATE && p->nValues > 1)
@@ -14956,6 +14957,7 @@ MrBFlt LogPrior (int chain)
                 sum += st[i];
             for (i=0; i<nStates; i++)
                 x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
+            x -= (nStates-1) * log(sum);
             lnPrior += x;
             }
         else if (p->paramType == P_TOPOLOGY)
