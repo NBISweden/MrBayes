@@ -13286,7 +13286,6 @@ else if (!strcmp(helpTkn, "Set"))
             MrBayesPrint ("   Siteomega       Yes/No                   %s                                   \n", mp->inferSiteOmegas);
             MrBayesPrint ("                                                                                 \n");
             MrBayesPrint ("   ------------------------------------------------------------------            \n");       
-            MrBayesPrint ("                                                                                 \n");
             }
         }
     else if (!strcmp(helpTkn, "Manual"))

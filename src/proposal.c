@@ -7023,8 +7023,8 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int         i, nRates, isValid;
-    MrBFlt      alphaPi, *value, *subValue, sumRate, *alphaDir, x, y, sum, rate_pot,
-                *dirParm, *oldRate, *newRate;
+    MrBFlt      alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum,
+                rate_pot, *dirParm, *oldRate, *newRate;
 
     /* allocate memory */
     dirParm = (MrBFlt *) SafeCalloc (3*(numTopologies-1), sizeof(MrBFlt));
@@ -7042,14 +7042,14 @@ int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     alphaDir = subValue + nRates;
 
     /* calculate old ratesum proportions */
-    sumRate = 0.0;
+    numSites = 0.0;
     for (i=0; i<nRates; i++)
-        sumRate += value[i];
+        numSites += subValue[i];  /* numSites should be equal to the number of sites */
     for (i=0; i<nRates; i++)
-        oldRate[i] = value[i] / sumRate;
+        oldRate[i] = value[i] * subValue[i] / numSites;
     
     /* get so called alphaPi parameter */
-    alphaPi = mvp[0] * sumRate;
+    alphaPi = mvp[0] * nRates;
     
     /* multiply old ratesum proportions with some large number to get new values close to the old ones */
     for (i=0; i<nRates; i++)
@@ -7088,7 +7088,7 @@ int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* calculate and copy new rate ratio values back */
     for (i=0; i<nRates; i++)
-        value[i] = newRate[i] * sumRate;
+        value[i] = newRate[i] * (numSites / subValue[i]);
     
     /* get proposal ratio */
     sum = 0.0;
@@ -16673,8 +16673,8 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int         i, nRates, isValid;
-    MrBFlt      alphaPi, *value, *subValue, sumRate, *alphaDir, x, y, sum, rate_pot,
-                *dirParm, *oldRate, *newRate;
+    MrBFlt      alphaPi, *value, *subValue, numSites, *alphaDir, x, y, sum,
+                rate_pot, *dirParm, *oldRate, *newRate;
 
     /* allocate memory */
     dirParm = (MrBFlt *) SafeCalloc (3*numCurrentDivisions, sizeof(MrBFlt));
@@ -16692,14 +16692,14 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     alphaDir = subValue + nRates;
 
     /* calculate old ratesum proportions */
-    sumRate = 0.0;
+    numSites = 0.0;
     for (i=0; i<nRates; i++)
-        sumRate += value[i];
+        numSites += subValue[i];  /* numSites should be equal to the number of sites */
     for (i=0; i<nRates; i++)
-        oldRate[i] = value[i] / sumRate;
+        oldRate[i] = value[i] * subValue[i] / numSites;
     
     /* get alphaPi tuning parameter */
-    alphaPi = mvp[0] * sumRate;
+    alphaPi = mvp[0] * nRates;
 
     /* multiply old ratesum proportions with some large number to get new values close to the old ones */
     for (i=0; i<nRates; i++)
@@ -16738,7 +16738,7 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* calculate and copy new rate ratio values back */
     for (i=0; i<nRates; i++)
-        value[i] = newRate[i] * sumRate;
+        value[i] = newRate[i] * (numSites / subValue[i]);
     
     /* get proposal ratio */
     sum = 0.0;
@@ -16792,7 +16792,7 @@ int Move_RateMult_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int         i, indexI, indexJ, nRates;
-    MrBFlt      delta, *value, *subValue, sum, sumRate, *alphaDir, x, y,
+    MrBFlt      delta, *value, *subValue, sum, numSites, *alphaDir, x, y,
                 oldRate[2], newRate[2], min, max;
 
     /* get number of rates */
@@ -16812,11 +16812,11 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         indexJ = nRates - 1;
 
     /* calculate old ratesum proportions */
-    sumRate = 0.0;
+    numSites = 0.0;
     for (i=0; i<nRates; i++)
-        sumRate += value[i];
-    oldRate[0] = value[indexI] / sumRate;
-    oldRate[1] = value[indexJ] / sumRate;
+        numSites += subValue[i];  /* numSites should be equal to the number of sites */
+    oldRate[0] = value[indexI] * subValue[indexI] / numSites;
+    oldRate[1] = value[indexJ] * subValue[indexJ] / numSites;
     sum = oldRate[0] + oldRate[1];
     
     /* get delta tuning parameter */
@@ -16841,8 +16841,8 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     /* set the new values */
     newRate[0] = y * sum;
     newRate[1] = sum - newRate[0];
-    value[indexI] = newRate[0] * sumRate;
-    value[indexJ] = newRate[1] * sumRate;
+    value[indexI] = newRate[0] * numSites / subValue[indexI];
+    value[indexJ] = newRate[1] * numSites / subValue[indexJ];
 
     /* get proposal ratio */
     (*lnProposalRatio) = 0.0;

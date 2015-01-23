@@ -14935,12 +14935,17 @@ MrBFlt LogPrior (int chain)
             x = LnGamma(sum);
             for (i=0; i<nStates; i++)
                 x -= LnGamma(sst[i+nStates]);
-            sum = 0.0;
             for (i=0; i<nStates; i++)
-                sum += st[i];
+                x += (sst[i+nStates] - 1.0) * log(st[i]);
+            sum = 0.0;  // the constant
             for (i=0; i<nStates; i++)
-                x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
-            x -= (nStates-1) * log(sum);
+                sum += sst[i];
+            for (i=0; i<nStates; i++) {
+                if (i < nStates-1)
+                    x += (sst[i+nStates]) * log(sst[i]/sum);
+                else
+                    x += (sst[i+nStates] - 1.0) * log(sst[i]/sum);
+                }
             lnPrior += x;
             }
         else if (p->paramType == P_GENETREERATE && p->nValues > 1)
@@ -14952,12 +14957,17 @@ MrBFlt LogPrior (int chain)
             x = LnGamma(sum);
             for (i=0; i<nStates; i++)
                 x -= LnGamma(sst[i+nStates]);
-            sum = 0.0;
             for (i=0; i<nStates; i++)
-                sum += st[i];
+                x += (sst[i+nStates] - 1.0) * log(st[i]);
+            sum = 0.0;  // the constant
             for (i=0; i<nStates; i++)
-                x += (sst[i+nStates] - 1.0) * log(st[i]/sum);
-            x -= (nStates-1) * log(sum);
+                sum += sst[i];
+            for (i=0; i<nStates; i++) {
+                if (i < nStates-1)
+                    x += (sst[i+nStates]) * log(sst[i]/sum);
+                else
+                    x += (sst[i+nStates] - 1.0) * log(sst[i]/sum);
+                }
             lnPrior += x;
             }
         else if (p->paramType == P_TOPOLOGY)
