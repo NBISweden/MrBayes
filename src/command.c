@@ -11472,18 +11472,12 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
-                
-            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
-            MrBayesPrint ("                    FossilTip                    ");
-            if ((!strcmp(mp->sampleStrat, "Random")||!strcmp(mp->sampleStrat, "Diversity")) && (mp->sampleFSNum > 0))
-                {
-                MrBayesPrint ("%d:%1.1lf %1.1lf", mp->sampleFSNum, mp->sampleFSTime[0], mp->sampleFSProb[0]);
-                if (mp->sampleFSNum > 1)  MrBayesPrint (",...\n");
-                else                      MrBayesPrint ("\n");
-                }
-            else  MrBayesPrint ("\n");
             
-            MrBayesPrint ("   Sampleprob       <number>                     %1.2lf\n", mp->sampleProb);
+            MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
+            MrBayesPrint ("                    FossilTip                    \n");
+            // if (!strcmp(mp->sampleStrat, "Random") || !strcmp(mp->sampleStrat, "Diversity"))
+            
+            MrBayesPrint ("   Sampleprob       <number>                     %1.5lf\n", mp->sampleProb);
             
             MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
             if (!strcmp(mp->popSizePr, "Uniform"))

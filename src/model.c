@@ -7603,9 +7603,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         modelParams[i].sampleProb = tempD;
                         if (nApplied == 0 && numCurrentDivisions == 1)
-                            MrBayesPrint ("%s   Setting Sampleprob to %1.5lf\n", spacer, modelParams[i].sampleProb);
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.6lf\n", spacer, modelParams[i].sampleProb);
                         else
-                            MrBayesPrint ("%s   Setting Sampleprob to %1.5lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.6lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
                         }
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
