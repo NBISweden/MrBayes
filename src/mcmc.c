@@ -15170,7 +15170,7 @@ MrBFlt LogPrior (int chain)
                     alphaDir = mp->fossilizationBeta;
                     newProp[0] =  st[i];
                     newProp[1] =  (1.0 - newProp[0]);
-                    if (newProp[0] > 0.0 && newProp[1] > 0.0) {
+                    if (newProp[0] > 0.0) {
                         /* to avoid psi=0 in [0, x_cut] under diversified sampling */
                         lnPrior += LnGamma(alphaDir[0]+alphaDir[1]) - LnGamma(alphaDir[0]) - LnGamma(alphaDir[1]);
                         lnPrior += (alphaDir[0]-1.0)*log(newProp[0]) + (alphaDir[1]-1.0)*log(newProp[1]);

@@ -152,16 +152,13 @@ To uninstall mrbayes, use:
 
 To install an alternative gcc (not recommended), use the following commands:
 
-> brew tap homebrew/versions
-> brew install gcc48
+> brew install gcc
 
-Check the web for the latest version of gcc. HomeBrew does not allow you to just say
-gcc, you need to specify the version number you want. After installation, you might 
-need to redirect the symbolic gcc link in /usr/bin/ to the new version of gcc.
-For instance, you can use the following commands:
+After installation, you might need to redirect the symbolic gcc link in /usr/bin/ to the
+new version of gcc. For instance, you can use the following commands:
 
 > sudo mv -i /usr/bin/gcc /usr/bin/gcc-old
-> sudo ln -s /usr/local/bin/gcc-4.8 /usr/bin/gcc
+> sudo ln -s /usr/local/bin/gcc-4.9 /usr/bin/gcc
 
 
 Tips for Windows
