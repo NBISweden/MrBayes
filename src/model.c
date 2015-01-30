@@ -7467,28 +7467,11 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s\n", spacer, modelParams[i].sampleStrat);
                             else
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
-                            if (!strcmp(modelParams[i].sampleStrat,"Random"))
+                            if (!strcmp(modelParams[i].sampleStrat,"Random")   || !strcmp(modelParams[i].sampleStrat,"Diversity"))
                                 {
                                 foundFSNum[i] = foundFSTime[i] = NO;
                                 modelParams[i].sampleFSNum = 0;
                                 numVars[i] = 0;
-                                expecting  = Expecting(NUMBER);
-                                expecting |= Expecting(PARAMETER);
-                                expecting |= Expecting(SEMICOLON);
-                                }
-                            else if (!strcmp(modelParams[i].sampleStrat,"Diversity"))
-                                {
-                                foundFSNum[i] = foundFSTime[i] = NO;
-                                modelParams[i].sampleFSNum = 1;  // for x_cut
-                                numVars[i] = 0;
-                                if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
-                                    {
-                                    free(modelParams[i].sampleFSProb);
-                                    free(modelParams[i].sampleFSTime);
-                                    }
-                                modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(sizeof(MrBFlt)));
-                                modelParams[i].sampleFSProb = (MrBFlt *)SafeMalloc((size_t)(sizeof(MrBFlt)));
-                                memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
                                 expecting  = Expecting(NUMBER);
                                 expecting |= Expecting(PARAMETER);
                                 expecting |= Expecting(SEMICOLON);
@@ -7519,8 +7502,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Number of fossil slice sampling events must be > 0\n", spacer);
                                 return (ERROR);
                                 }
-                            if (!strcmp(modelParams[i].sampleStrat,"Diversity"))
-                                tempInt += 1;  // one more slice for x_cut
                             modelParams[i].sampleFSNum = tempInt;
                             if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
                                 {
@@ -7568,7 +7549,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
                             numVars[i]++;
-                            if (numVars[i] == modelParams[i].sampleFSNum || (numVars[i] == modelParams[i].sampleFSNum -1 && !strcmp(modelParams[i].sampleStrat,"Diversity")))
+                            if (numVars[i] == modelParams[i].sampleFSNum)
                                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         }
@@ -11010,7 +10991,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     tree = GetTreeFromIndex(j, 0, 0);
                     subValue[j] = 0.0;
                     for (i=0; i<tree->nRelParts; i++)  /* num uncompressed chars */
-                        subValue[j] += (modelSettings[tree->relParts[i]].numUncompressedChars);
+                        subValue[j] += modelSettings[tree->relParts[i]].numUncompressedChars;
                     }
                 }
             else if (p->paramType == P_SPECRATE)
@@ -11045,8 +11026,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     else
                         value[j] = 0.5;
                     }
-                if (!strcmp(mp->sampleStrat, "Diversity"))
-                    value[p->nValues-1] = 0.0;  // psi=0 in [0, x_cut] under diversified sampling
                 }
             else if (p->paramType == P_GROWTH)
                 {

@@ -1746,13 +1746,6 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     valIndex = (int)(RandomNumber(seed) * param->nValues);
     valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
 
-    /* psi=0 in [0, x_cut] under diversified sampling, we don't change it */
-    if (!strcmp(mp->sampleStrat, "Diversity") && valIndex == param->nValues - 1)
-        {
-        abortMove = YES;
-        return (NO_ERROR);
-        }
-    
     /* get old value */
     oldM = *valPtr;
     
