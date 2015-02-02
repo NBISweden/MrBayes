@@ -8122,10 +8122,9 @@ int DoTreeParm (char *parmName, char *tkn)
     
           tree <name> = [&R] <newick-description>;
           tree <name> = [&U] <newick-description>;
-          tree <name> [&E CppEvents] = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents 2: (0.10 1.11,0.83 3.17)],...
+          tree <name> [&E CppEvents]  = [&R] [&clockrate = 1.23] ((1:0.021[&E CppEvents 2: (0.10 1.11,0.83 3.17)],...
           tree <name> [&B TK02Brlens] = [&R] [&clockrate = 1.23] ((1:0.021[&B TK02Brlens 0.019],...
-          tree <name> [&B IgrBrlens] = [&R] [&clockrate = 1.23] ((1:0.021[&B IgrBrlens 0.019],...
-          tree <name> [&B MixedBrlens 0] = [&R] [&clockrate = 1.23] ((1:0.021[&B MixedBrlens 0.019],...
+          tree <name> [&B IgrBrlens]  = [&R] [&clockrate = 1.23] ((1:0.021[&B IgrBrlens 0.019],...
      
        Values will be stored in event sets that go with the tree and that are used to initialize the relaxed clock
        parameters before a run is started. Note that several sets of events can be stored with each tree.
@@ -8459,7 +8458,7 @@ int DoTreeParm (char *parmName, char *tkn)
                         MrBayesPrint ("%s   the given tree has unrooted structure.\n", spacer);
                         }
                     else
-                        MrBayesPrint ("%s   Taxa missing in tree\n", spacer);
+                        MrBayesPrint ("%s   Taxa missing in tree, or NOT a binary tree\n", spacer);
 
                     return (ERROR);
                     }
