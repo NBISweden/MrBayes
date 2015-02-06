@@ -3367,7 +3367,7 @@ int DoDeleteParm (char *parmName, char *tkn)
         return (ERROR);
 
     return (NO_ERROR);
-    MrBayesPrint ("%s", parmName);  /* just because I am tired of seeing the unused parameter error msg */
+    MrBayesPrint ("%s", parmName); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

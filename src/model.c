@@ -23880,7 +23880,8 @@ int Unlink (void)
 
 /*-------------------------------------------------
 |
-|   UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set. Error will be returned if fixed clockrate prior may not be respected.  
+|   UpdateClockRate:    Update clockRate of the given chain. Above all it will enforce fixed clockrate prior if it is set.
+|                       Error will be returned if fixed clockrate prior may not be respected.
 |   @param clockRate    is the new clockRate to setup. Clock rate value could be set as positive, 0.0 or negative value. 
 |                       The function does the fallowing depending on one of this three values:
 |                        positive    - check that this 'positive' value is suitable rate. At the end re-enforce (update) the 'positive' value as clock rate on all trees. 
@@ -23889,9 +23890,9 @@ int Unlink (void)
 |   @return             ERROR if clockRate can not be set up, NO_ERROR otherwise. 
 |
 --------------------------------------------------*/
-int UpdateClockRate(MrBFlt clockRate, int chain)
+int UpdateClockRate (MrBFlt clockRate, int chain)
 {
-    int i, updateTrees;
+    int         i, updateTrees;
     MrBFlt      *clockRatep;
     Tree        *t, *t_calibrated=NULL;
     MrBFlt      mintmp,maxtmp,minClockRate,maxClockRate;
@@ -23922,12 +23923,13 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
             maxClockRate = maxtmp;
 
         }
-        /* clock rate is the same for all trees of a given chain*/
+    /* clock rate is the same for all trees of a given chain */
     if (clockRatep != NULL)
         {
         if (minClockRate > maxClockRate)
             {
-            MrBayesPrint ("%s   ERROR: Calibrated trees require uncomatable clockrates for run:%d chain:%d.\n", spacer, chain/chainParams.numChains, chain%chainParams.numChains);
+            MrBayesPrint ("%s   ERROR: Calibrated trees require uncomatable clockrates for run:%d chain:%d.\n",
+                          spacer, chain/chainParams.numChains, chain%chainParams.numChains);
             *clockRatep=0;
             return (ERROR);
             }
@@ -23943,9 +23945,11 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
                 updateTrees = YES;
                 }
             *clockRatep = modelParams[t_calibrated->relParts[0]].clockRateFix;
-            if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
+            if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
+                (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                 {
-                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n", spacer, minClockRate, maxClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
+                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n",
+                              spacer, minClockRate, maxClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
                 *clockRatep=0;
                 return (ERROR);
                 }
@@ -23959,29 +23963,33 @@ int UpdateClockRate(MrBFlt clockRate, int chain)
                     }
                 }
             }
-        else
-            {/*clock prior is not fixed*/
+        else {
+            /* clock prior is not fixed */
             updateTrees = YES;
             if (clockRate > 0.0)
                 {
                 *clockRatep = clockRate;
-                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
+                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
+                    (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                     {
-                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n", spacer, minClockRate, maxClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
+                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n",
+                                  spacer, minClockRate, maxClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
                     *clockRatep=0;
                     return (ERROR);
                     }
                 }
             else if (clockRate == 0.0) 
                 {
-                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
+                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
+                    (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                     {
                     *clockRatep = minClockRate;
                     }
                 }
-            else// if (clockRate < 0.0) 
+            else // if (clockRate < 0.0)
                 {
-                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) || (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
+                if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
+                    (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                     {
                     *clockRatep = minClockRate;
                     }

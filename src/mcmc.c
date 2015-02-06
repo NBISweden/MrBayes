@@ -16367,7 +16367,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
         {
         p = t->intDownPass[i];
         if (p->anc != NULL)
-            ct[j++] = p->nodeDepth / clockRate;
+            ct[j++] = p->nodeDepth;  // Don't divide clockRate here, as mu is already in theta
         }
     nNodes = j;
 
@@ -16416,6 +16416,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
     free (ct);
     
     return (NO_ERROR);
+    MrBayesPrint ("%lf", clockRate); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

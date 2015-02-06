@@ -7258,7 +7258,7 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     *lnProposalRatio = log (newG / oldG);
     
     /* get prior ratio */
-    t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
     clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
     if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, curTheta, oldG) == ERROR)
         {
@@ -14039,17 +14039,16 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     else
         {
-        minN = 0.0001;
+        minN = 0.00001;
         maxN = 10000000;
         }
 
     /* get pointer to value to be changed */
     valIndex = (int)(RandomNumber(seed) * param->nValues);
-    valPtr   = GetParamVals(param, chain, state[chain]);
-    valPtr += valIndex;
+    valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
 
     /* get old value of population size */
-    newN = oldN = *valPtr;
+    oldN = *valPtr;
 
     /* get old prior for species tree coalescence */
     if (m->brlens->paramId == BRLENS_CLOCK_SPCOAL)
@@ -14063,15 +14062,15 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* check that new value is valid */
     isValidN = NO;
-    do
-        {
+    do {
         if (newN < minN)
             newN = 2* minN - newN;
         else if (newN > maxN)
             newN = 2 * maxN - newN;
         else
             isValidN = YES;
-        } while (isValidN == NO);
+        }
+    while (isValidN == NO);
 
     /* copy new population size value back */
     (*valPtr) = newN;
@@ -14086,8 +14085,8 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     else
         {
-        t         = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-        m         = &modelSettings[param->relParts[0]];
+        t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+        m = &modelSettings[param->relParts[0]];
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
         if (!strcmp(mp->growthPr, "Fixed"))
             growth = mp->growthFix;
@@ -14110,7 +14109,6 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             newT *= 2.0;
             oldT *= 2.0;
             }
-        clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
         newT *= clockRate;
         oldT *= clockRate;
         if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, oldT, growth) == ERROR)
