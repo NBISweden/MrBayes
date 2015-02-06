@@ -12598,42 +12598,41 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
         isCalibrated = NO;
     
     if (p->checkConstraints == YES)
-    {
-        
-        for (i=0; i<numDefinedConstraints; i++)
         {
+        for (i=0; i<numDefinedConstraints; i++)
+            {
             if (mp->activeConstraints[i] == YES && definedConstraintsType[i] == HARD)
                 numActiveHardConstraints++;
+            }
         }
-    }
     
     /* allocate space for and construct the trees */
     /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
     for (i=from; i<to; i++)
-    {
+        {
         treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
         if (*treeHandle)
             free(*treeHandle);
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
-        {
+            {
             MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
             return (ERROR);
-        }
+            }
         treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
         if (*treeHandle)
             free(*treeHandle);
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
-        {
+            {
             MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
             return (ERROR);
+            }
         }
-    }
     
     /* initialize the trees */
     for (i=from; i<to; i++)
-    {
-        for (st=0; st<2; st++)
         {
+        for (st=0; st<2; st++)
+            {
             tree = GetTree (p, i, st);
             if (numTrees > 1)
                 sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+1);
@@ -12645,35 +12644,35 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
             tree->isClock = isClock;
             tree->isCalibrated = isCalibrated;
             if (p->paramType == P_SPECIESTREE)
-            {
+                {
                 tree->nNodes = 2*numSpecies;
                 tree->nIntNodes = numSpecies - 1;
-            }
+                }
             else if (tree->isRooted == YES)
-            {
+                {
                 tree->nNodes = 2*numLocalTaxa;
                 tree->nIntNodes = numLocalTaxa - 1;
-            }
+                }
             else /* if (tree->isRooted == NO) */
-            {
+                {
                 tree->nNodes = 2*numLocalTaxa - 2;
                 tree->nIntNodes = numLocalTaxa - 2;
-            }
+                }
             if (p->checkConstraints == YES)
-            {
+                {
                 tree->checkConstraints = YES;
                 tree->nLocks = NumInformativeHardConstraints(mp);
                 tree->nConstraints = mp->numActiveConstraints;  /* nConstraints is number of constraints to check */
                 tree->constraints = mp->activeConstraints;
-            }
+                }
             else
-            {
+                {
                 tree->checkConstraints = NO;
                 tree->nConstraints = tree->nLocks = 0;
                 tree->constraints = NULL;
+                }
             }
         }
-    }
     
     return (NO_ERROR);
 }

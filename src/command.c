@@ -11029,7 +11029,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset growthpr = fixed(<number>)                          \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    This parameter is only relevant if the coalescence           \n");
-        MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n");  */
+        MrBayesPrint ("                    process is selected as the prior on branch lengths.          \n"); */
         MrBayesPrint ("   Nodeagepr     -- This parameter specifies the assumptions concerning the age  \n");
         MrBayesPrint ("                    of the terminal and interior nodes in the tree. The default  \n");
         MrBayesPrint ("                    model ('nodeagepr = unconstrained') assumes that all terminal\n");
@@ -11043,14 +11043,12 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    base substitution rate of the tree, measured in expected num-\n");
         MrBayesPrint ("                    ber of substitutions per site per time unit. The default set-\n");
         MrBayesPrint ("                    ting is 'Fixed(1.0)', which effectively means that the time  \n");
-        MrBayesPrint ("                    unit is the number of expected substitutions per site. If you\n");
-        MrBayesPrint ("                    apply age constraints to the tree, the default setting chan- \n");
-        MrBayesPrint ("                    ges automatically to 'Exponential(<x>)', where '<x>' is set  \n");
-        MrBayesPrint ("                    such that the expectation of the exponential is ten times the\n");
-        MrBayesPrint ("                    age of the maximum age constraint. This will give you a very \n");
-        MrBayesPrint ("                    vague prior, which may or may not be adequate for your parti-\n");
-        MrBayesPrint ("                    cular problem.                                               \n");
-        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                    unit is the number of expected substitutions per site.       \n");
+/*      MrBayesPrint ("                    If you apply age constraints to the tree, the default setting\n");
+        MrBayesPrint ("                    changes automatically to 'Exponential(<x>)', where '<x>' (the\n");
+        MrBayesPrint ("                    rate of exponential) is ten times the age of the maximum age \n");
+        MrBayesPrint ("                    constraint. This will give you a very vague prior, which may \n");
+        MrBayesPrint ("                    or may not be adequate for your particular problem.          \n"); */
         MrBayesPrint ("                    If you do not have any age calibrations in the tree, you can \n");
         MrBayesPrint ("                    still calibrate the tree using 'Clockratepr'. For instance,  \n");
         MrBayesPrint ("                    if you know that your sequence data evolve at a rate of 0.20 \n");
@@ -11063,10 +11061,11 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    years as the unit.                                           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    You can also assign a prior probability distribution to the  \n");
-        MrBayesPrint ("                    substitution rate, accommodating the uncertainty about its   \n");
-        MrBayesPrint ("                    value. You can choose between normal, lognormal, exponential \n");
-        MrBayesPrint ("                    and gamma distributions for this purpose. For instance, if   \n");
-        MrBayesPrint ("                    you would like to associate the substitution rate with a     \n");
+        MrBayesPrint ("                    substitution rate, accommodating the uncertainty of it.      \n");
+        MrBayesPrint ("                    When you calibrate the nodes, you should properly set this   \n");
+        MrBayesPrint ("                    prior to match the time unit of the calibrations.            \n");
+        MrBayesPrint ("                    You can choose among normal, lognormal, exponential and gamma\n");
+        MrBayesPrint ("                    distributions for this purpose. For instance, to assign a    \n");
         MrBayesPrint ("                    normal distribution truncated at 0, so that only positive    \n");
         MrBayesPrint ("                    values are allowed, and with mean 0.20 and standard deviation\n");
         MrBayesPrint ("                    of 0.02, you would use                                       \n");
