@@ -2335,13 +2335,13 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
-#   if defined (DEBUG_FTBR)
+#   if defined (DEBUG_ExtSPR)
     printf ("After:\n");
     ShowNodes (t->root, 2, NO);
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -4157,12 +4157,6 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         {
         GetDownPass (t);
         }
-
-    /* flag whether topology has changed */
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
     
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
@@ -4174,7 +4168,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -4644,12 +4638,6 @@ int Move_ExtTBR0 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         GetDownPass (t);
         }
-
-    /* flag whether topology has changed */
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
     
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
@@ -5205,7 +5193,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -5800,7 +5788,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -6438,7 +6426,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -6980,7 +6968,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -8174,7 +8162,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index);
+            c->index, d->index, a->index, b->index);
     printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
 #   endif
@@ -9103,7 +9091,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
 
     free (nSitesOfPat);
 
-#   if defined (DEBUG_ParsSPR)
+#   if defined (DEBUG_MLSPR)
     printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     getchar();
@@ -11937,12 +11925,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         GetDownPass (t);
         }
 
-    /* flag whether topology change was proposed */
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -12112,17 +12094,19 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             }
         }
 
+    /* set up pointers for nodes around the picked branch */
+    v = p;
+    u = p->anc;
+    if (u->left == v)
+        a = u->right;
+    else
+        a = u->left;
+    b = u->anc;
+    c = p->left;
+    d = p->right;
+
     if (moveInRoot == YES)
         {
-        /* set up pointers for nodes around the picked branch */
-        v = p;
-        u = p->anc;
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
-        
         /* clip tree */
         a->anc = b;
         if (b->left == u)
@@ -12293,17 +12277,17 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnProposalRatio) += minLength - a->d - log(sum2);
         
         /* reattach */
-        d = newA->anc;
+        newB = newA->anc;
         newA->anc = u;
         if (u->left == v)
             u->right = newA;
         else
             u->left = newA;
-        if (d->left == newA)
-            d->left = u;
+        if (newB->left == newA)
+            newB->left = u;
         else
-            d->right = u;
-        u->anc = d;
+            newB->right = u;
+        u->anc = newB;
         
         topologyHasChanged = YES;
 
@@ -12428,18 +12412,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             p->upDateCl = YES;
             p = p->anc;
             }
-        
-        /* get down pass sequence if tree topology has changed */
-        if (topologyHasChanged == YES)
-            {
-            GetDownPass (t);
-            }
-        
-        /* flag whether topology change was proposed */
-        if (topologyHasChanged == YES)
-            gTopologyHasChanged = YES;
-        else
-            gTopologyHasChanged = NO;
             
 #   if defined (DEBUG_ParsSPR)
         printf ("After:\n");
@@ -12454,17 +12426,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     else  // moveInRoot == NO
         {
-        /* set up pointers for nodes around the picked branch */
-        v = p;
-        u = p->anc;
-        c = p->left;
-        d = p->right;
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
-        
         if (u->anc != NULL)  // so that a and b != NULL
             {
             /* clip root part of tree */
@@ -12742,7 +12703,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         newB->length = x;
 
         /* set tiprobs update flags */
-        q   ->upDateTi = YES;
+        q ->upDateTi = YES;
         newC->upDateTi = YES;
         newB->upDateTi = YES;
         
@@ -12762,18 +12723,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             p = p->anc;
             }
 
-        /* get down pass sequence if tree topology has changed */
-        if (topologyHasChanged == YES)
-            {
-            GetDownPass (t);
-            }
-        
-        /* flag whether topology change was proposed */
-        if (topologyHasChanged == YES)
-            gTopologyHasChanged = YES;
-        else
-            gTopologyHasChanged = NO;
-
         /* free memory */
         free (old); free (tmp);
         
@@ -12787,7 +12736,13 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         getchar();
 #   endif
         }
- 
+    
+    /* get down pass sequence if tree topology has changed */
+    if (topologyHasChanged == YES)
+        {
+        GetDownPass (t);
+        }
+    
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -13878,12 +13833,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         GetDownPass (t);
         }
 
-    /* flag whether topology change was proposed */
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -14759,7 +14708,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index, q->index);
+            c->index, d->index, a->index, b->index, q->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -15321,7 +15270,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index, q->index);
+            c->index, d->index, a->index, b->index, q->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -15951,7 +15900,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index, q->index);
+            c->index, d->index, a->index, b->index, q->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -16628,7 +16577,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
     printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d q: %d\n",v->index, u->index, 
-        c->index, d->index, a->index, b->index, q->index);
+            c->index, d->index, a->index, b->index, q->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);

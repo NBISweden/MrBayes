@@ -21026,7 +21026,7 @@ void SetUpMoveTypes (void)
     mt->tuningParam[1] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
     mt->tuningParam[2] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[3] = 0.05;             /* typical branch length */
-    mt->tuningParam[4] = 10.0;             /* distance to move picked branch */
+    mt->tuningParam[4] = 6.0;              /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
     mt->minimum[1] = 2.0 * log (0.001);
