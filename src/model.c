@@ -12764,7 +12764,7 @@ int IsApplicable_FiveTaxaOrMore (Param *param)
 }
 
 
-int IsApplicableTreeAgeMove (Param *param)
+int IsApplicable_TreeAgeMove (Param *param)
 {
     Tree        *t;
     TreeNode    *p;
@@ -12787,7 +12787,7 @@ int IsApplicableTreeAgeMove (Param *param)
 }
 
 
-int IsApplicable_FossilEdgeMove (Param *param)
+int IsApplicable_AncestralFossil (Param *param)
 {
     ModelParams *mp = &modelParams[param->relParts[0]];
 
@@ -20102,11 +20102,11 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_AddBranch;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FossilEdgeMove;
+    mt->isApplicable = &IsApplicable_AncestralFossil;
 
     /* Move_DelBranch, for fossilization prior */
     mt = &moveTypes[i++];
@@ -20116,11 +20116,11 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_DelBranch;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FossilEdgeMove;
+    mt->isApplicable = &IsApplicable_AncestralFossil;
 
     /* Move_ExtSPR */
     mt = &moveTypes[i++];
@@ -20164,7 +20164,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_ExtSPRClock;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.5; /* extension probability */
     mt->minimum[0] = 0.00001;
@@ -20562,7 +20562,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_NNIClock;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -21501,7 +21501,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[3] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 4;
     mt->moveFxn = &Move_TreeStretch;
-    mt->relProposalProb = 1.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log(1.01); /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21524,7 +21524,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[4] = BRLENS_twoExp;
     mt->nApplicable = 5;  // was 2
     mt->moveFxn = &Move_TreeLen;
-    mt->relProposalProb = 2.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
     mt->minimum[0] = 0.0001;
