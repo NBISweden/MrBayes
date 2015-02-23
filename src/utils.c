@@ -4391,7 +4391,7 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         pL = nSubTrees + p->left->index*nTerminals;
         pR = nSubTrees + p->right->index*nTerminals;
         pP = nSubTrees + p->index*nTerminals;
-        ran = (int) (RandomNumber (seed) * pP[p->y]);
+        ran = (int) (RandomNumber(seed) * pP[p->y]);
         k = 0;
         for (j=1; j<p->y; j++)
             {
@@ -13686,14 +13686,14 @@ MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
         }
     for (;;) 
         {
-        r = RandomNumber (seed);
+        r = RandomNumber(seed);
         if (r > p)        
             x = a - log((1.0 - r) / (1.0 - p)), w = a * log(x) - d;
         else if (r>uf)  
             x = a * pow(r / p, 1.0 / s), w = x;
         else            
             return (0.0);
-        r = RandomNumber (seed);
+        r = RandomNumber(seed);
         if (1.0 - r <= w && r > 0.0)
         if (r*(w + 1.0) >= 1.0 || -log(r) <= w)  
             continue;
@@ -13722,13 +13722,13 @@ MrBFlt RndGamma2 (MrBFlt s, RandLong *seed)
         }
     for (;;) 
         {
-        r = RandomNumber (seed);
+        r = RandomNumber(seed);
         g = r - r * r;
         f = (r - 0.5) * h / sqrt(g);
         x = b + f;
         if (x <= 0.0) 
             continue;
-        r = RandomNumber (seed);
+        r = RandomNumber(seed);
         d = 64 * r * r * g * g * g;
         if (d * x < x - 2.0 * f * f || log(d) < 2.0 * (b * log(x / b) - f))  
             break;

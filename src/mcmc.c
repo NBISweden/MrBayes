@@ -10489,7 +10489,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
         for (k=1; k<nRateCats; k++)
             catLike[k][c] += catLike[k-1][c];
         /* randomly sample a category; multiply by total to avoid scaling probs */
-        ran = RandomNumber (seed) * catLike[nRateCats-1][c];
+        ran = RandomNumber(seed) * catLike[nRateCats-1][c];
         for (k=0; k<nRateCats; k++)
             {
             if (ran < catLike[k][c])
@@ -17090,7 +17090,7 @@ int PickProposal (RandLong *seed, int chainIndex)
     MrBFlt      ran;
     int         i;
 
-    ran = RandomNumber (seed);
+    ran = RandomNumber(seed);
     
     for (i=0; usedMoves[i]->cumProposalProb[chainIndex] <= ran; i++);
         

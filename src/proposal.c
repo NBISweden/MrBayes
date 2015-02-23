@@ -214,7 +214,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     addEvent = NO;
     if (numEvents == 0)
         addEvent = YES;
-    else if (RandomNumber (seed) < 0.5)
+    else if (RandomNumber(seed) < 0.5)
         addEvent = YES;
     
     if (addEvent == NO)
@@ -222,7 +222,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* delete event */
 
         /* choose random event */
-        k = (int) (RandomNumber (seed) * numEvents);
+        k = (int) (RandomNumber(seed) * numEvents);
         
         /* save multiplier to be deleted */
         m = rateMultiplier[p->index][k];
@@ -256,7 +256,7 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         m = LogNormalRandomVariable (0.0, sigma, seed);
 
         /* generate new position */
-        pos = RandomNumber (seed);
+        pos = RandomNumber(seed);
 
         /* find place in current array */
         for (k=0; k<numEvents; k++)
@@ -791,7 +791,7 @@ int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
         abortMove = YES;
         return (NO_ERROR);
         }
-    k = (int) (RandomNumber (seed) * j);
+    k = (int) (RandomNumber(seed) * j);
     for (i=j=0; i<t->nNodes - 2; i++)
         {
         p = t->allDownPass[i];
@@ -806,7 +806,7 @@ int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
     k = k - (j - nEvents[p->index]);
 
     /* find new position */
-    pos = RandomNumber (seed);
+    pos = RandomNumber(seed);
     if (pos < POS_MIN || 1.0 - pos < POS_MIN)
         {
         abortMove = YES;
@@ -963,7 +963,7 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt 
         abortMove = YES;
         return (NO_ERROR);
         }
-    k = (int) (RandomNumber (seed) * j);
+    k = (int) (RandomNumber(seed) * j);
     for (i=j=0; i<t->nNodes - 2; i++)
         {
         p = t->allDownPass[i];
@@ -977,7 +977,7 @@ int Move_CPPRateMultiplierMult (Param *param, int chain, RandLong *seed, MrBFlt 
 
     /* find new rateMultiplier */
     oldRateMultiplier = rateMultiplier[p->index][k];
-    newRateMultiplier = oldRateMultiplier * (exp (0.5 - RandomNumber (seed) * tuning));
+    newRateMultiplier = oldRateMultiplier * (exp (0.5 - RandomNumber(seed) * tuning));
 
     /* reflect if necessary */
     while (newRateMultiplier < minM || newRateMultiplier > maxM)
@@ -1048,7 +1048,7 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
         abortMove = YES;
         return (NO_ERROR);
         }
-    k = (int) (RandomNumber (seed) * j);
+    k = (int) (RandomNumber(seed) * j);
     for (i=j=0; i<t->nNodes - 2; i++)
         {
         p = t->allDownPass[i];
@@ -1213,7 +1213,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     // oldDepth = q->nodeDepth;
     
     /* propose the branch length leading to the fossil */
-    newLength = (RandomNumber (seed)) * (maxDepth - minDepth);
+    newLength = (RandomNumber(seed)) * (maxDepth - minDepth);
     
     /* adjust brls and depths, set flags for update of trans probs */
     p->length   = newLength;
@@ -1920,7 +1920,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         moveInRoot = YES;
     else if (i == 2)
         moveInRoot = NO;
-    else if (RandomNumber (seed) < 0.5)
+    else if (RandomNumber(seed) < 0.5)
         moveInRoot = YES;
     else
         moveInRoot = NO;
@@ -2263,7 +2263,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     if (moveInRoot == NO)
         {
         /* if no move in crown, then select randomly, otherwise always the moved branch */
-        if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+        if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
             p = brlenNode[0];
         else
             p = brlenNode[1];
@@ -2418,9 +2418,9 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     
     /* pick a branch */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
         }
-    while ((p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
+    while ((p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
     
@@ -2444,7 +2444,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     v2 = u->length;
     v3 = v->length;
 
-    /* reassign events for CPP */
+    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
     for (i=0; i<param->subParams[0]->nSubParams; i++)
         {
         subParm = param->subParams[0]->subParams[i];
@@ -2916,7 +2916,7 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
 
     /* select one of them randomly */
-    i = (int) (RandomNumber (seed) * numFree) + 1;
+    i = (int) (RandomNumber(seed) * numFree) + 1;
     numFree = 0;
     a = b = c = d = p;
     directionLeft = directionUp = moveInRoot = NO;
@@ -5116,7 +5116,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
         p = brlenNode[0];
     else
         p = brlenNode[1];
@@ -5664,7 +5664,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* if no move in crown, then select randomly, otherwise always the moved branch */
     if (nCrownNodes == 0)
         {
-        if (RandomNumber (seed) < 0.5)
+        if (RandomNumber(seed) < 0.5)
             p = brlenNode[0];
         else
             p = brlenNode[1];
@@ -5672,7 +5672,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         /* swap starting branches */
-        if (RandomNumber (seed) < 0.5)
+        if (RandomNumber(seed) < 0.5)
             {
             x = brlenNode[0]->length;
             brlenNode[0]->length = brlenNode[1]->length;
@@ -5680,7 +5680,7 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             brlenNode[0]->upDateTi = YES;
             }
         /* swap ending branches */
-        if (RandomNumber (seed) < 0.5)
+        if (RandomNumber(seed) < 0.5)
             {
             x = brlenNode[1]->length;
             brlenNode[1]->length = brlenNode[2]->length;
@@ -6262,7 +6262,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
        one random brlen */
     if (nCrownNodes == 0)
         {
-        if (RandomNumber (seed) < 0.5)
+        if (RandomNumber(seed) < 0.5)
             p = brlenNode[0];
         else
             p = brlenNode[1];
@@ -6272,7 +6272,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         /* select branches randomly */
         for (i=0; i<3; i++)
             brlen[i] = brlenNode[i]->length;
-        x = RandomNumber (seed);
+        x = RandomNumber(seed);
         if (x < 1.0 / 3.0)
             brlenNode[0]->length = brlen[0];
         else if (x < 2.0 / 3.0)
@@ -6342,7 +6342,7 @@ int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         /* select branches randomly */
         for (i=0; i<3; i++)
             brlen[i] = brlenNode[i+4]->length;
-        x = RandomNumber (seed);
+        x = RandomNumber(seed);
         if (x < 1.0 / 3.0)
             brlenNode[4]->length = brlen[0];
         else if (x < 2.0 / 3.0)
@@ -6901,7 +6901,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* shuffle all lengths */
     for (i=0; i<numNodes; i++)
         {
-        j = i + (int) (RandomNumber (seed) * (numNodes - i));
+        j = i + (int) (RandomNumber(seed) * (numNodes - i));
         x = brlen[j];
         brlen[j] = brlen[i];
         brlen[i] = x;
@@ -6914,7 +6914,7 @@ int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     for (i=0; i<3; i++)
         {
         do {
-            j = (int) (RandomNumber (seed) * numNodes);
+            j = (int) (RandomNumber(seed) * numNodes);
         } while (mark[j] == 1);
 
         mark[j] = 1;
@@ -7542,7 +7542,7 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     
     /* find new rate using multiplier */
     oldRate = mxRate[p->index];
-    newRate = oldRate * exp ((0.5 - RandomNumber (seed)) * tuning);
+    newRate = oldRate * exp ((0.5 - RandomNumber(seed)) * tuning);
     
     /* reflect if necessary */
     while (newRate < minR || newRate > maxR)
@@ -8892,7 +8892,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
             {
-            ran = RandomNumber (seed);
+            ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
@@ -8958,7 +8958,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         }
 
     /* generate a random uniform */
-    ran = RandomNumber (seed);
+    ran = RandomNumber(seed);
 
     /* select the appropriate reattachment point */
     cumulativeProb = 0.0;
@@ -9365,7 +9365,7 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
 
     /* generate a random uniform */
-    ran = RandomNumber (seed);
+    ran = RandomNumber(seed);
 
     /* select the appropriate reattachment point */
     cumulativeProb = 0.0;
@@ -10143,7 +10143,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
     /* pick the new node depth */
     oldDepth = p->nodeDepth;
-    newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
+    newDepth = oldDepth + (RandomNumber(seed) - 0.5) * window;
  
     /* reflect the new node depth */
     while (newDepth < minDepth || newDepth > maxDepth)
@@ -11239,7 +11239,7 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                   4 => 5      => 6         => 14             => 24 = 4!            => 105 = 1*3*5*7
                   5 => 6      => 7         => 42             => 120 = 5!           => 945 = 1*3*5*7*9
                   etc               */  
-    nSubTerminals = (int) (RandomNumber (seed) * 4) + 4;
+    nSubTerminals = (int) (RandomNumber(seed) * 4) + 4;
     nSubTerminals = 7;
 
     /* initialize log prior and log proposal probabilities */
@@ -11639,7 +11639,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
             {
-            ran = RandomNumber (seed);
+            ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
@@ -12068,7 +12068,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     else if ((p->left->isLocked == YES || p->left->left == NULL) && (p->right->isLocked == YES || p->right->left == NULL))
         moveInRoot = YES;
-    else if (RandomNumber (seed) < 0.5)
+    else if (RandomNumber(seed) < 0.5)
         moveInRoot = YES;
     else
         moveInRoot = NO;
@@ -12086,7 +12086,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
             {
-            ran = RandomNumber (seed);
+            ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
@@ -12811,9 +12811,9 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     
     /* pick a branch */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
         }
-    while ((p->anc->anc == NULL || p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
+    while ((p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
            (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
             /* consider ancestral fossil (brl=0) in fossilized bd tree */
         
@@ -12836,7 +12836,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     v2 = u->length;
     v3 = v->length;
 
-    /* reassign events for CPP */
+    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
     for (i=0; i<param->subParams[0]->nSubParams; i++)
         {
         subParm = param->subParams[0]->subParams[i];
@@ -12974,7 +12974,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
             {
-            ran = RandomNumber (seed);
+            ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
@@ -13508,7 +13508,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         nSitesOfPat[i] = globalNSitesOfPat[i];
         for (j=0; j<globalNSitesOfPat[i]; j++)
             {
-            ran = RandomNumber (seed);
+            ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
@@ -14244,7 +14244,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         } while (p->anc->anc == NULL);
 
     /* select another random branch */
-    if (RandomNumber (seed) > extensionProb)
+    if (RandomNumber(seed) > extensionProb)
         q = p->left;
     else
         {
@@ -14638,7 +14638,7 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
         p = brlenNode[0];
     else
         p = brlenNode[1];
@@ -14834,7 +14834,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         moveInRoot = YES;
 
     /* find the attachment point */
-    if (RandomNumber (seed) > extensionProb)
+    if (RandomNumber(seed) > extensionProb)
         {
         q = v->left;
         moveInRoot = NO;
@@ -15200,7 +15200,7 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
         p = brlenNode[0];
     else
         p = brlenNode[1];
@@ -15408,7 +15408,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* find the attachment point */
-    if (RandomNumber (seed) > moveProb)
+    if (RandomNumber(seed) > moveProb)
         {
         q = v->left;
         moveInRoot = NO;
@@ -15791,7 +15791,7 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
         p = brlenNode[0];
     else
         p = brlenNode[1];
@@ -16052,7 +16052,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         moveInRoot = YES;
     else if (nRootNodes == 0)
         moveInRoot = NO;
-    else if (RandomNumber (seed) < 0.5)
+    else if (RandomNumber(seed) < 0.5)
         moveInRoot = YES;
     else
         moveInRoot = NO;
@@ -16076,7 +16076,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* find the attachment point */
-    if (RandomNumber (seed) > moveProb)
+    if (RandomNumber(seed) > moveProb)
         {
         q = v->left;
         moveInRoot = NO;
@@ -16453,7 +16453,7 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber (seed) < 0.5)
+    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
         p = brlenNode[0];
     else
         p = brlenNode[1];
@@ -18191,7 +18191,7 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, Mr
     mp = &modelParams[param->relParts[0]];
 
     /* select one character at random */
-    charIndex = (int) (RandomNumber (seed) * param->nSympi);
+    charIndex = (int) (RandomNumber(seed) * param->nSympi);
     
     /* get the values we need */
     symDirAlphai = *GetParamVals(param, chain, state[chain]);

@@ -1097,7 +1097,7 @@ int ModifyDepthMatrix (double expRate, double *depthMatrix, RandLong *seed)
     for (i=0; i<numUpperTriang; i++)
         {
         interval = depthMatrix[i];
-        u = RandomNumber (seed);
+        u = RandomNumber(seed);
         delta = log (1.0 - u*(1.0 - exp(-expRate*interval))) / (-expRate);
         assert (delta <= interval);
         depthMatrix[i] -= delta;
@@ -1515,7 +1515,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
 
     /* pick the new node depth */
     oldDepth = p->nodeDepth;
-    newDepth = oldDepth + (RandomNumber (seed) - 0.5) * window;
+    newDepth = oldDepth + (RandomNumber(seed) - 0.5) * window;
     
     /* reflect the new node depth */
     while (newDepth < minDepth || newDepth > maxDepth)
