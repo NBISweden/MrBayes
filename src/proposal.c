@@ -2419,10 +2419,12 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* pick a branch */
     do  {
         p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
+        a = p->anc->left;
+        b = p->anc->right;
         }
-    while ((p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-           (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
-            /* consider ancestral fossil (brl=0) in fossilized bd tree */
+    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL ||
+           p->length < TIME_MIN || a->length < TIME_MIN || b->length < TIME_MIN);
+    /* skip constrain, sibling of root (and root), and ancestral fossil (brl=0) in fbd tree */
     
     /* set up pointers for nodes around the picked branch */
     v = p;
@@ -2495,7 +2497,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = ((tk02Rate[a->index] + tk02Rate[b->index])/2.0)*(a->length + u->length);
+            brlens[a->index] = (tk02Rate[a->index] + tk02Rate[u->index]) / 2.0 * (a->length + u->length);
             }   /* end tk02 branch rate parameter */
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
@@ -2551,7 +2553,11 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 break;      /* can't go farther */
             topologyHasChanged = YES;
             b = a;
-            if (RandomNumber(seed) < 0.5)
+            if (a->left->length < TIME_MIN)
+                a = a->right;
+            else if (a->right->length < TIME_MIN)
+                a = a->left;
+            else if (RandomNumber(seed) < 0.5)
                 a = a->left;
             else
                 a = a->right;
@@ -2563,14 +2569,10 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 {
                 directionUp = YES; /* switch direction */
                 /* find sister of a */
-                if (b->left == a) 
-                    {
+                if (b->left == a)
                     a = b->right;
-                    }
-                else 
-                    {  
+                else
                     a = b->left;
-                    }
                 /* as long as we are moving upwards
                 the cond likes to update will be
                 flagged by the last pass from u to the root */
@@ -2625,7 +2627,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         }
 
     /* adjust lengths */
-    u->nodeDepth = b->nodeDepth - minV - y*(x-2.0*minV);
+    u->nodeDepth = b->nodeDepth - minV - y * (x - 2.0*minV);
     u->length = b->nodeDepth - u->nodeDepth;
     a->length = u->nodeDepth - a->nodeDepth;
     v->length = u->nodeDepth - v->nodeDepth;
@@ -12812,11 +12814,13 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* pick a branch */
     do  {
         p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
+        a = p->anc->left;
+        b = p->anc->right;
         }
-    while ((p->anc->isLocked == YES || p->anc->anc->anc == NULL) ||
-           (p->length < TIME_MIN || p->anc->left->length < TIME_MIN || p->anc->right->length < TIME_MIN));
-            /* consider ancestral fossil (brl=0) in fossilized bd tree */
-        
+    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL ||
+           p->length < TIME_MIN || a->length < TIME_MIN || b->length < TIME_MIN);
+    /* skip constrain, sibling of root (and root), and ancestral fossil (brl=0) in fbd tree */
+
     /* set up pointers for nodes around the picked branch */
     v = p;
     u = p->anc;
@@ -12887,7 +12891,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             (*lnPriorRatio) += LnProbTK02LogNormal(tk02Rate[u->anc->index], nu*(a->length+u->length), tk02Rate[a->index]);
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = ((tk02Rate[a->index] + tk02Rate[b->index]) / 2.0)*(a->length + u->length);
+            brlens[a->index] = (tk02Rate[a->index] + tk02Rate[u->index]) / 2.0 * (a->length + u->length);
             }   /* end tk02 branch rate parameter */
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
@@ -12938,7 +12942,6 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* mark all nodes in the root part of the tree, taking constraints into account */
     /* first mark a */
     a->marked = YES;
-    
     /* then move down towards root taking constraints into account */
     p = b;
     while (p->isLocked == NO && p->anc->anc != NULL)
@@ -12956,8 +12959,8 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     for (i=t->nNodes-2; i>=0; i--)
         {
         p = t->allDownPass[i];
-        if (p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO && p != u &&
-            p->anc->nodeDepth > v->nodeDepth + minV)
+        if (p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO &&
+            p != u && p->anc->nodeDepth > v->nodeDepth + minV)
             p->marked = YES;
         }       
     
@@ -13045,9 +13048,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         p = t->allDownPass[i];
         if (p->marked == NO || p == a)
             continue;
-        if (minLength < 0.0)
-            minLength = p->d;
-        else if (p->d < minLength)
+        if (minLength < 0.0 || p->d < minLength)
             minLength = p->d;
         }
     sum1 = 0.0;
@@ -13055,9 +13056,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         {
         p = t->allDownPass[i];
         if (p->marked == YES && p != a)
-            {
             sum1 += exp (minLength - p->d);
-            }
         }
 
     /* generate a random uniform */
@@ -13087,9 +13086,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         p = t->allDownPass[i];
         if (p->marked == NO || p == c)
             continue;
-        if (minLength < 0.0)
-            minLength = p->d;
-        else if (p->d < minLength)
+        if (minLength < 0.0 || p->d < minLength)
             minLength = p->d;
         }
     sum2 = 0.0;
@@ -13097,9 +13094,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         {
         p = t->allDownPass[i];
         if (p->marked == YES && p != c)
-            {
             sum2 += exp (minLength - p->d);
-            }
         }
     
     /* calculate the proposal ratio */
