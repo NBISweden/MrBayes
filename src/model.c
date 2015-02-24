@@ -20102,7 +20102,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_AddBranch;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
@@ -20116,7 +20116,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_DelBranch;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 10.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
@@ -20562,7 +20562,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_NNIClock;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 12.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -20986,7 +20986,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_ParsSPRClock;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 8.0;
     mt->numTuningParams = 3;
     mt->tuningParam[0] = 0.1;  /* warp */
     mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
