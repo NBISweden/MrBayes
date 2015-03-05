@@ -20249,31 +20249,6 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_ExtTBR in v3.1.2 */
-    mt = &moveTypes[i++];
-    mt->name = "Extending TBR variant 0";
-    mt->shortName = "ExtTBR0";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ExtTBR0;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.7;  /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.5);  /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00001;
-    mt->maximum[1] = 100.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
-
     /* Move_ExtTBR1 */
     mt = &moveTypes[i++];
     mt->name = "Extending TBR variant 1";
@@ -20964,6 +20939,46 @@ void SetUpMoveTypes (void)
     mt->parsimonyBased = YES;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
+
+    /* Move_ParsSPR2 */
+    mt = &moveTypes[i++];
+    mt->name = "Parsimony-biased SPR version 2";
+    mt->shortName = "ParsSPR2";
+    mt->subParams = YES;
+    mt->tuningName[0] = "parsimony warp factor";
+    mt->shortTuningName[0] = "warp";
+    mt->tuningName[1] = "multiplier tuning parameter";
+    mt->shortTuningName[1] = "lambda";
+    mt->tuningName[2] = "reweighting probability";
+    mt->shortTuningName[2] = "r";
+    mt->tuningName[3] = "typical branch length";
+    mt->shortTuningName[3] = "v_t";
+    mt->tuningName[4] = "moving distance";
+    mt->shortTuningName[4] = "d";
+    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+    mt->nApplicable = 2;
+    mt->moveFxn = &Move_ParsSPR2;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 5;
+    mt->tuningParam[0] = 0.1;              /* warp */
+    mt->tuningParam[1] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[2] = 0.05;             /* upweight and downweight probability */
+    mt->tuningParam[3] = 0.05;             /* typical branch length */
+    mt->tuningParam[4] = 10.0;             /* distance to move picked branch */
+    mt->minimum[0] = 0.0;
+    mt->maximum[0] = 1.0;
+    mt->minimum[1] = 2.0 * log (0.001);
+    mt->maximum[1] = 2.0 * log (1000.);
+    mt->minimum[2] = 0.0;
+    mt->maximum[2] = 0.3;
+    mt->minimum[3] = 0.0001;
+    mt->maximum[3] = 0.5;
+    mt->minimum[4] = 2.0;
+    mt->maximum[4] = 1000.0;
+    mt->parsimonyBased = YES;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
     /* Move_ParsSPRClock */
     mt = &moveTypes[i++];
