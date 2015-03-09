@@ -48,7 +48,6 @@ const char* const svnRevisionProposalC = "$Rev$";   /* Revision keyword which is
 #undef  DEBUG_LOCAL
 #undef  DEBUG_UNROOTED_SLIDER
 #undef  DEBUG_ParsSPR
-#undef  DEBUG_CONSTRAINTS
 #undef  DEBUG_ExtSS
 #undef  DEBUG_CSLIDER
 #undef  DEBUG_ExtSPRClock
@@ -560,13 +559,6 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
-#if defined (DEBUG_CONSTRAINTS)
-    if (CheckConstraints(t) == ERROR) {
-        printf ("Constraint error in input tree to brlen multiplier\n");
-        getchar();
-        }
-#endif
 
     /* pick a branch */
     do  {
@@ -1996,8 +1988,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
 
     /* cut root part*/
-    /* store branch to move in u->length */
-    if (directionUp == NO) 
+    if (directionUp == NO)
         {
         b->anc = a;
         if (a->left == u)
@@ -2243,7 +2234,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     /* modify branch lengths */
     /* first modify length of middle branch */
     m = brlenNode[3]->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));       /* save the modified dangling branch for later use */
+    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
     while (x < minV || x > maxV)
         {
         if (x < minV)
@@ -2355,15 +2346,411 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to eSPR2\n");
-        getchar();
-        }
-#endif
-
     assert (nCrownNodes > 0 || nRootNodes > 0);
+    
+    return (NO_ERROR);
+}
+
+
+int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* Change topology using SPR (unrooted) with extension probability. Map branch lengths without modification */
+
+    int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
+                moveInRoot, isStartConstrained, isStopConstrained;
+    MrBFlt      x, y, extensionProb;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
+    Tree        *t;
+    ModelParams *mp;
+    
+    extensionProb = mvp[0]; /* extension probability */
+
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
+
+    /* get tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* get model params */
+    mp = &modelParams[param->relParts[0]];
+    
+    topologyHasChanged = NO;
+
+    /* pick an internal branch that is free to move in either end */
+    do  {
+        p = t->intDownPass[(int)(RandomNumber(seed) * (t->nIntNodes-1))];
+        if (p->anc->left == p)
+            a = p->anc->right;
+        else
+            a = p->anc->left;
+        i = j = 0;
+        if (a->isLocked == YES || a->left == NULL)
+            i++;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL)
+            i++;
+        if (p->left->isLocked == YES || p->left->left == NULL)
+            j++;
+        if (p->right->isLocked == YES || p->right->left == NULL)
+            j++;
+        }
+    while (i == 2 && j == 2);
+        
+    /* set up pointers for nodes around the picked branch */
+    /* cut the tree into crown, root and attachment part */
+    /* change the relevant lengths in the attachment part */
+    /* the lengths of a and v are automatically contained in the */
+    /* "attachment" part but the length of c has to be stored in x */
+    v = p;
+    u = p->anc;
+
+    /* store brlen node */
+    brlenNode[3] = v;
+
+    /* change in root tree ? */
+    if (j == 2)
+        moveInRoot = YES;
+    else if (i == 2)
+        moveInRoot = NO;
+    else if (RandomNumber(seed) < 0.5)
+        moveInRoot = YES;
+    else
+        moveInRoot = NO;
+
+    /* determine whether start is constrained on backward move */
+    isStartConstrained = isStopConstrained = NO;
+    if (moveInRoot == YES && i == 1)
+        isStartConstrained = YES;
+    else if (moveInRoot == NO && j == 1)
+        isStartConstrained = YES;
+
+    /* set up pointers for crown part */
+    /* also determine direction of move in crown part */
+    if (v->right->left == NULL || v->right->isLocked == YES)
+        directionLeft = YES;
+    else if (v->left->left == NULL || v->left->isLocked == YES)
+        directionLeft = NO;
+    else if (RandomNumber(seed) < 0.5)
+        directionLeft = YES;
+    else
+        directionLeft = NO;
+    if (directionLeft == YES)
+        {
+        c = v->left;
+        d = v->right;
+        }
+    else
+        {
+        c = v->right;
+        d = v->left;
+        }
+
+    /* store brlen nodes and brlen to move */
+    brlenNode[0] = d;
+    brlenNode[1] = c;
+    x = c->length;
+
+    /* cut and reconnect crown part */
+    c->anc = d;
+    d->anc = c;
+    
+    /* mark nodes in root part */
+    /* also determine direction of move in root part */
+    if (u->left == v)
+        a = u->right;
+    else
+        a = u->left;
+    b = u->anc;
+    if (u->anc->anc == NULL || u->isLocked == YES)
+        directionUp = YES;
+    else if (a->left == NULL || a->isLocked == YES)
+        directionUp = NO;
+    else if (RandomNumber(seed) < 0.5)
+        directionUp = YES;
+    else
+        directionUp = NO;
+    if (directionUp == NO)
+        {
+        /* switch a and b */
+        b = a;
+        a = u->anc;
+        }
+
+    /* store brlen nodes */
+    if (directionUp == YES)
+        {
+        brlenNode[4] = u;
+        brlenNode[5] = a;
+        }
+    else
+        {
+        brlenNode[4] = b;
+        brlenNode[5] = u;
+        }
+
+    /* cut root part*/
+    if (directionUp == NO)
+        {
+        b->anc = a;
+        if (a->left == u)
+            a->left = b;
+        else
+            a->right = b;
+        }
+    else 
+        {
+        a->anc = b;
+        if (b->left == u)
+            b->left = a;
+        else
+            b->right = a;
+        y = a->length;
+        a->length = u->length;
+        u->length = y;
+        a->upDateTi = YES;
+        u->upDateTi = YES;
+        }
+
+    /* move around in root subtree */
+    nRootNodes = 0;
+    if (moveInRoot == YES)
+        {
+        for (nRootNodes=0; RandomNumber(seed)<extensionProb || nRootNodes==0; nRootNodes++) 
+            {
+            if (directionUp == YES) 
+                {   /* going up tree */
+                if (a->left == NULL || a->isLocked == YES)
+                    break;      /* can't go further */
+                topologyHasChanged = YES;
+                b = a;
+                if (RandomNumber(seed) < 0.5)
+                    a = a->left;
+                else
+                    a = a->right;
+                if (u->isLocked == YES)
+                    {
+                    b->isLocked = YES;
+                    u->isLocked = NO;
+                    b->lockID = u->lockID;
+                    u->lockID = 0;
+                    }
+                }
+            else 
+                {   /* going down tree */
+                if (a->anc == NULL || u->isLocked == YES)
+                    break;      /* can't go further */
+                topologyHasChanged = YES;
+                if (RandomNumber(seed)<0.5) 
+                    {
+                    directionUp = YES; /* switch direction */
+                    /* find sister of a */
+                    if (a->left == b) 
+                        {
+                        b = a;
+                        a = a->right;
+                        }
+                    else 
+                        {  
+                        b = a;
+                        a = a->left;
+                        }
+                    /* as long as we are moving upwards
+                    the cond likes to update will be
+                    flagged by the last pass from u to the root */
+                    }   
+                else 
+                    {   /* continue down */
+                    b = a;
+                    a = a->anc;
+                    b->upDateCl = YES; 
+                    if (b->isLocked == YES)
+                        {
+                        u->isLocked = YES;
+                        b->isLocked = NO;
+                        u->lockID = b->lockID;
+                        b->lockID = 0;
+                        }
+                    }
+                }
+            }
+        /* check whether stop is constrained */
+        if (directionUp == YES) 
+            {
+            if (a->left == NULL || a->isLocked == YES) 
+                isStopConstrained = YES;
+            }
+        else 
+            {
+            if (a->anc  == NULL || u->isLocked == YES)
+                isStopConstrained = YES;
+            }
+        }
+
+    /* store brlen nodes */
+    if (nRootNodes > 0)
+        {
+        if (directionUp == YES)
+            {
+            brlenNode[6] = a;
+            brlenNode[5] = u;
+            }
+        else
+            {
+            brlenNode[6] = u;
+            brlenNode[5] = b;
+            }
+        }
+
+    /* move around in crown subtree */
+    nCrownNodes = 0;
+    if (moveInRoot == NO)       
+        {
+        for (nCrownNodes=0; RandomNumber(seed)<extensionProb || nCrownNodes==0; nCrownNodes++) 
+            {
+            if (c->left == NULL || c->isLocked == YES)
+                break;  /* can't go further */
+            topologyHasChanged = YES;
+            if (RandomNumber(seed) < 0.5) 
+                {
+                /* rotate c anticlockwise - prepare pointers for move left */
+                c->anc = c->left;  /* the root will be in the direction we are heading */
+                c->left = c->right;
+                c->right = d;
+                }
+            else 
+                {
+                /* rotate c clockwise - prepare pointers for move right */
+                c->anc = c->right;  /* the root will be in the direction we are heading */
+                c->right = c->left;
+                c->left = d;  
+                }
+            /* OK - let's move!; c->anc points in the right direction
+            don't forget to move the branch lengths as well */
+            d = c;
+            c = c->anc;
+            d->length = c->length;
+            d->upDateCl = YES; 
+            d->upDateTi = YES;
+            }
+        /* check if stop constrained */
+        if (c->left == NULL || c->isLocked == YES)
+            isStopConstrained = YES;
+        }
+
+    /* store brlen nodes */
+    if (nCrownNodes > 0)
+        {
+        brlenNode[2] = c;
+        brlenNode[1] = d;
+        }
+
+    /* adjust proposal ratio for constraints */
+    if (isStartConstrained == NO && isStopConstrained == YES)
+        (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
+    else if (isStartConstrained == YES && isStopConstrained == NO)
+        (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
+
+    /* combine the subtrees */
+    c->anc = v;
+    d->anc = v;
+    if (directionLeft == YES) 
+        {
+        v->left = c;
+        v->right = d;
+        }
+    else 
+        {
+        v->left = d;
+        v->right = c;
+        }
+
+    /* the dangling branch is inserted in reverted position
+       such that the back move will be possible
+       if we have moved around in crown subtree
+       otherwise it is left in its original position */
+    if (nCrownNodes > 0)
+        {
+        d->length = x;
+        d->upDateTi = YES;
+        }
+    else
+        {
+        c->length = x;
+        }
+
+    if (directionUp == YES) 
+        {
+        u->anc = b;
+        if (u->left == v)
+            u->right = a;
+        else 
+            u->left = a;
+        a->anc = u;
+        if (b->left == a)
+            b->left = u;
+        else
+            b->right = u;
+        /* the dangling branch is contained in u->length
+           and will automatically be inserted in the right position
+           to enable the back move regardless of whether it was
+           initially directed upwards or downwards
+           BUT if we haven't moved in root subtree, it is advantageous (necessary
+           for rooted trees) to avoid switching branches, which occurs otherwise
+           if directionUp == YES */
+        if (nRootNodes == 0) 
+            {
+            x = u->length;
+            u->length = a->length;
+            a->length = x;
+            a->upDateTi = NO;
+            u->upDateTi = NO;
+            }
+        }
+    else 
+        {
+        u->anc = a;
+        if (u->left == v)
+            u->right = b;
+        else 
+            u->left = b;
+        b->anc = u;
+        if (a->left == b)
+            a->left = u;
+        else
+            a->right = u;
+        /* the modified branch contained in u->length will have
+           to be moved to b->length to enable back move
+           BUT if we haven't moved, it is better to keep it in place
+           (necessary for rooted trees) */
+        if (nRootNodes > 0) 
+            {
+            x = u->length;
+            u->length = b->length;
+            b->length = x;
+            b->upDateTi = YES;
+            u->upDateTi = YES;
+            }
+        }
+
+    /* set flags for update of cond likes from v and down to root */
+    p = v;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+
+    /* get down pass sequence if tree topology has changed */
+    if (topologyHasChanged == YES)
+        {
+        GetDownPass (t);
+        }
+
+#   if defined (TOPOLOGY_MOVE_STATS)
+    if (topologyHasChanged == YES)
+        gTopologyHasChanged = YES;
+    else
+        gTopologyHasChanged = NO;
+    gNodeMoves = nCrownNodes + nRootNodes;
+#   endif
     
     return (NO_ERROR);
 }
@@ -3712,8 +4099,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
        constrained and unconstrained trees */
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained,
-                isStopConstrained;
+                isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
     TreeNode    *p, *a, *b, *c, *d, *u, *v;
     Tree        *t;
@@ -3898,8 +4284,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
 
     /* cut root part */
-    /* store branch to be modified in u->length */
-    if (directionUp == NO) 
+    if (directionUp == NO)
         {
         b->anc = a;
         if (a->left == u)
@@ -4183,14 +4568,6 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to eTBR\n");
-        getchar();
-        }
-#endif
-
     assert (nCrownNodes > 0 || nRootNodes > 0);
 
     return (NO_ERROR);
@@ -4199,95 +4576,63 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 
 int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* Change branch lengths and topology (potentially) using TBR (unrooted) 
-       with extension probability (rather than window). */
-
-    /* this move type picks a branch and two "danglies", modifies their length
-       independently according to the method of Larget & Simon (1999: MBE); it then
-       moves the danglies away from their original position one node at a time with
-       a probability determined by the extensionProb parameter
-
-       when the danglies are moved, their direction is changed
-       this "reflection" is necessary to enable the back move
-
-       This move type has been tested on all combinations of rooted and unrooted,
-       constrained and unconstrained trees */
+    /* Change topology using TBR (unrooted) with extension probability. Map branch lengths without modification */
     
-    int         topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
+    int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
+                alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained;
+    MrBFlt      x, y, extensionProb;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v;
     Tree        *t;
     ModelParams *mp;
 
-    /* these parameters should be possible to set by user */
     extensionProb = mvp[0]; /* extension probability */
-    tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
     
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
+
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to eTBR1\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
     
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1];
-        isVPriorExp = NO;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 2;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 3;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 4;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
-        isVPriorExp = YES;
-        }
-
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
     topologyHasChanged = NO;
-
-#   if defined (DEBUG_ExtTBR)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-#   endif
     
     /* pick an internal branch */
-    do
-        {
-        p = t->intDownPass[(int)(RandomNumber(seed)*t->nIntNodes)];
-        } while (p->anc->anc == NULL);
-        
+    do  {
+        p = t->intDownPass[(int)(RandomNumber(seed) * (t->nIntNodes-1))];
+        if (p->anc->left == p)
+            a = p->anc->right;
+        else
+            a = p->anc->left;
+        i = j = 0;
+        if (a->isLocked == YES || a->left == NULL)
+            i++;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL)
+            i++;
+        if (p->left->isLocked == YES || p->left->left == NULL)
+            j++;
+        if (p->right->isLocked == YES || p->right->left == NULL)
+            j++;
+        }
+    while (i == 2 && j == 2);
+
+    /* determine whether to move first step unconditionally in root or in crown */
+    if (j == 2)
+        alwaysMoveRoot = YES;
+    else if (i == 2)
+        alwaysMoveRoot = NO;
+    else if (RandomNumber(seed) < 0.5)
+        alwaysMoveRoot = YES;
+    else
+        alwaysMoveRoot = NO;
+
+    /* determine any starting constraints */
+    isCrownStartConstrained = isRootStartConstrained = NO;
+    if (i >= 1)
+        isRootStartConstrained = YES;
+    if (j >= 1)
+        isCrownStartConstrained = YES;
+
     /* set up pointers for nodes around the picked branch */
     /* cut the tree into crown, root and attachment part */
     /* change the relevant lengths in the attachment part */
@@ -4296,69 +4641,58 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     v = p;
     u = p->anc;
 
-    /* store brlen node */
-    brlenNode[3] = v;
-
     /* set up pointers for crown part */
-    /* this also determines direction of move in crown part */
-    if (RandomNumber(seed) < 0.5)
+    /* also determine direction of move in crown part */
+    if (v->right->left == NULL || v->right->isLocked == YES)
+        directionLeft = YES;
+    else if (v->left->left == NULL || v->left->isLocked == YES)
+        directionLeft = NO;
+    else if (RandomNumber(seed) < 0.5)
+        directionLeft = YES;
+    else
+        directionLeft = NO;
+    if (directionLeft == YES)
         {
         c = v->left;
         d = v->right;
-        directionLeft = YES;
         }
     else
         {
         c = v->right;
         d = v->left;
-        directionLeft = NO;
         }
-
-    /* store brlen nodes and brlen to move */
-    brlenNode[0] = d;
-    brlenNode[1] = c;
-    x = c->length;
 
     /* cut and reconnect crown part */
     c->anc = d;
     d->anc = c;
     
+    /* record c length */
+    x = c->length;
+
     /* mark nodes in root part */
-    /* also determines direction of move in root part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
+    /* also determine direction of move in root part */
+    if (u->left == v)
+        a = u->right;
+    else
+        a = u->left;
+    b = u->anc;
+    if (u->anc->anc == NULL || u->isLocked == YES)
         directionUp = YES;
-        }
-    else
-        {
-        if (u->left == v)
-            b = u->right;
-        else
-            b = u->left;
-        a = u->anc;
+    else if (a->left == NULL || a->isLocked == YES)
         directionUp = NO;
-        }
-
-    /* store brlen nodes */
-    if (directionUp == YES)
-        {
-        brlenNode[4] = u;
-        brlenNode[5] = a;
-        }
+    else if (RandomNumber(seed) < 0.5)
+        directionUp = YES;
     else
+        directionUp = NO;
+    if (directionUp == NO)
         {
-        brlenNode[4] = b;
-        brlenNode[5] = u;
+        /* switch a and b */
+        b = a;
+        a = u->anc;
         }
 
-    /* cut root part*/
-    /* store branch to move in u->length */
-    if (directionUp == NO) 
+    /* cut root part */
+    if (directionUp == NO)
         {
         b->anc = a;
         if (a->left == u)
@@ -4377,34 +4711,11 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         a->length = u->length;
         u->length = y;
         a->upDateTi = YES;
-        u->upDateTi = YES;
         }
-
-    /* adjust proposal ratio for backward move in root subtree
-       if starting from interior, unconstrained branch
-       double test needed to capture the case of no move */
-    if (directionUp == NO)
-        {
-        if (b->left != NULL && b->isLocked == NO &&
-            a->anc  != NULL && u->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-    else
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-
-    /* adjust proposal ratio for backward move in crown subtree
-       if starting from interior, unconstrained branch
-       double test is needed to capture the case of no move */
-    if (c->left != NULL && c->isLocked == NO && 
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) += log(1.0 - extensionProb);
+    u->upDateTi = YES;
 
     /* move around in root subtree */
-    for (nRootNodes=0; RandomNumber(seed)<extensionProb; nRootNodes++) 
+    for (nRootNodes=0; (alwaysMoveRoot == YES && nRootNodes == 0) || RandomNumber(seed) < extensionProb; nRootNodes++)
         {
         if (directionUp == YES) 
             {   /* going up tree */
@@ -4463,38 +4774,28 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             }
         }
 
-    /* store brlen nodes */
-    if (nRootNodes > 0)
-        {
-        if (directionUp == YES)
-            {
-            brlenNode[6] = a;
-            brlenNode[5] = u;
-            }
-        else
-            {
-            brlenNode[6] = u;
-            brlenNode[5] = b;
-            }
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       test of both ends makes sure that no adjustment is made if no move was made */
+    /* adjust proposal ratio for root move if unbalanced */
+    isStopConstrained = NO;
     if (directionUp == YES) 
         {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO) 
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
+        if (a->left == NULL || a->isLocked == YES)
+            isStopConstrained = YES;
         }
     else 
         {
-        if (a->anc  != NULL && u->isLocked == NO &&
-            b->left != NULL && b->isLocked == NO)
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
+        if (a->anc  == NULL || u->isLocked == YES)
+            isStopConstrained = YES;
+        }
+    if (nRootNodes > 0)
+        {
+        if (isRootStartConstrained == YES && isStopConstrained == NO)
+            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
+        else if (isRootStartConstrained == NO && isStopConstrained == YES)
+            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
         }
 
     /* move around in crown subtree */
-    for (nCrownNodes=0; RandomNumber(seed)<extensionProb; nCrownNodes++) 
+    for (nCrownNodes=0; (alwaysMoveRoot == NO && nCrownNodes == 0) || RandomNumber(seed) < extensionProb; nCrownNodes++)
         {
         if (c->left == NULL || c->isLocked == YES)
             break;  /* can't go further */
@@ -4522,18 +4823,17 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         d->upDateTi = YES;
         }
 
-    /* store brlen nodes */
+    /* adjust proposal ratio for crown move if unbalanced */
+    isStopConstrained = NO;
+    if (c->left == NULL || c->isLocked == YES)
+        isStopConstrained = YES;
     if (nCrownNodes > 0)
         {
-        brlenNode[2] = c;
-        brlenNode[1] = d;
+        if (isCrownStartConstrained == YES && isStopConstrained == NO)
+            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
+        else if (isCrownStartConstrained == NO && isStopConstrained == YES)
+            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
         }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       double test makes sure that no adjustment is made if no move was made */
-    if (c->left != NULL && c->isLocked == NO &&
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) -= log(1.0 - extensionProb);
 
     /* combine the subtrees */
     c->anc = v;
@@ -4561,6 +4861,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     else
         {
         c->length = x;
+        c->upDateTi = YES;
         }
 
     if (directionUp == YES) 
@@ -4587,8 +4888,8 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             x = u->length;
             u->length = a->length;
             a->length = x;
-            a->upDateTi = NO;
-            u->upDateTi = NO;
+            a->upDateTi = YES;
+            u->upDateTi = NO;   /* u retains its old length */
             }
         }
     else 
@@ -4596,7 +4897,7 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         u->anc = a;
         if (u->left == v)
             u->right = b;
-        else 
+        else
             u->left = b;
         b->anc = u;
         if (a->left == b)
@@ -4613,678 +4914,9 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             u->length = b->length;
             b->length = x;
             b->upDateTi = YES;
-            u->upDateTi = YES;
             }
         }
-    
-    /* modify branch lengths */
-    /* first modify length of middle branch */
-    m = brlenNode[3]->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));       /* save the modified dangling branch for later use */
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    brlenNode[3]->length = x;
-    brlenNode[3]->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
-
-    /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0 && RandomNumber(seed) < 0.5)
-        p = brlenNode[0];
-    else
-        p = brlenNode[1];
-
-    /* modify branch length */
-    m = p->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    p->length = x;
-    p->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x); 
         
-    /* if no move in root, then select randomly, otherwise always the moved branch;
-       note that the code above does not give reliable brlenNode[4] pointer when initial
-       direction of move in root tree is UP and there has been some move in the root tree
-       -- this is unimportant for this move but IS important for other TBR moves */
-    if (nRootNodes == 0 && RandomNumber(seed) < 0.5)
-        p = brlenNode[4];
-    else
-        p = brlenNode[5];
-
-    /* modify branch length but not if 'root' branch in rooted tree */
-    if (t->isRooted == NO || p->anc->anc != NULL)
-        {
-        m = p->length;
-        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-        while (x < minV || x > maxV)
-            {
-            if (x < minV)
-                x = minV * minV / x;
-            else if (x > maxV)
-                x = maxV * maxV / x;
-            }
-        p->length = x;
-        p->upDateTi = YES;
-
-        /* update proposal and prior ratio based on length modification */
-        (*lnProposalRatio) += log (x / m);
-        if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x); 
-        }
-
-    /* set flags for update of cond likes from v and down to root */
-    p = v;
-    while (p->anc != NULL)
-        {
-        p->upDateCl = YES;
-        p = p->anc;
-        }
-
-    /* get down pass sequence if tree topology has changed */
-    if (topologyHasChanged == YES)
-        {
-        GetDownPass (t);
-        }
-    
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (DEBUG_ExtTBR)
-    printf ("After:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-            c->index, d->index, a->index, b->index);
-    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-    getchar();
-#   endif
-
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to eTBR1\n");
-        getchar();
-        }
-#endif
-
-    return (NO_ERROR);
-}
-
-
-int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* Change branch lengths and topology (potentially) using TBR (unrooted) 
-       with extension probability (rather than window). */
-
-    /* this move type picks a branch and two "danglies", modifies their length
-       independently according to the method of Larget & Simon (1999: MBE); it then
-       moves the danglies away from their original position one node at a time with
-       a probability determined by the extensionProb parameter
-
-       when the danglies are moved, their direction is changed
-       this "reflection" is necessary to enable the back move
-
-       This move type has been tested on all combinations of rooted and unrooted,
-       constrained and unconstrained trees */
-    
-    int         topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
-    Tree        *t;
-    ModelParams *mp;
-
-    memset(brlenNode, 0, sizeof(TreeNode *)*7);
-
-    /* these parameters should be possible to set by user */
-    extensionProb = mvp[0]; /* extension probability */
-    tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
-    
-    /* get tree */
-    t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to eTBR2\n");
-        getchar();
-        }
-#endif
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
-    
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1];
-        isVPriorExp = NO;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 2;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 3;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 4;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
-        isVPriorExp = YES;
-        }
-    
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
-    topologyHasChanged = NO;
-
-#   if defined (DEBUG_ExtTBR)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-#   endif
-    
-    /* pick an internal branch */
-    do
-        {
-        p = t->intDownPass[(int)(RandomNumber(seed)*t->nIntNodes)];
-        } while (p->anc->anc == NULL);
-        
-    /* set up pointers for nodes around the picked branch */
-    /* cut the tree into crown, root and attachment part */
-    /* change the relevant lengths in the attachment part */
-    /* the lengths of a and v are automatically contained in the */
-    /* "attachment" part but the length of c has to be stored in x */
-    v = p;
-    u = p->anc;
-
-    /* store brlen node */
-    brlenNode[3] = v;
-
-    /* set up pointers for crown part */
-    /* this also determines direction of move in crown part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        c = v->left;
-        d = v->right;
-        directionLeft = YES;
-        }
-    else
-        {
-        c = v->right;
-        d = v->left;
-        directionLeft = NO;
-        }
-
-    /* store brlen nodes and brlen to move */
-    brlenNode[0] = d;
-    brlenNode[1] = c;
-    x = c->length;
-
-    /* cut and reconnect crown part */
-    c->anc = d;
-    d->anc = c;
-    
-    /* mark nodes in root part */
-    /* also determines direction of move in root part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
-        directionUp = YES;
-        }
-    else
-        {
-        if (u->left == v)
-            b = u->right;
-        else
-            b = u->left;
-        a = u->anc;
-        directionUp = NO;
-        }
-
-    /* store brlen nodes */
-    if (directionUp == YES)
-        {
-        brlenNode[4] = u;
-        brlenNode[5] = a;
-        }
-    else
-        {
-        brlenNode[4] = b;
-        brlenNode[5] = u;
-        }
-
-    /* cut root part*/
-    /* store branch to be move in u->length */
-    if (directionUp == NO) 
-        {
-        b->anc = a;
-        if (a->left == u)
-            a->left = b;
-        else
-            a->right = b;
-        }
-    else 
-        {
-        a->anc = b;
-        if (b->left == u)
-            b->left = a;
-        else
-            b->right = a;
-        y = a->length;
-        a->length = u->length;
-        u->length = y;
-        a->upDateTi = YES;
-        u->upDateTi = YES;
-        }
-
-    /* adjust proposal ratio for backward move in root subtree
-       if starting from interior, unconstrained branch
-       double test needed to capture the case of no move */
-    if (directionUp == NO)
-        {
-        if (b->left != NULL && b->isLocked == NO &&
-            a->anc  != NULL && u->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-    else
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-
-    /* adjust proposal ratio for backward move in crown subtree
-       if starting from interior, unconstrained branch
-       double test is needed to capture the case of no move */
-    if (c->left != NULL && c->isLocked == NO && 
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) += log(1.0 - extensionProb);
-
-    /* move around in root subtree */
-    for (nRootNodes=0; RandomNumber(seed)<extensionProb; nRootNodes++) 
-        {
-        if (directionUp == YES) 
-            {   /* going up tree */
-            if (a->left == NULL || a->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            b = a;
-            if (RandomNumber(seed) < 0.5)
-                a = a->left;
-            else
-                a = a->right;
-            if (u->isLocked == YES)
-                {
-                b->isLocked = YES;
-                u->isLocked = NO;
-                b->lockID = u->lockID;
-                u->lockID = 0;
-                }
-            }
-        else 
-            {   /* going down tree */
-            if (a->anc == NULL || u->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            if (RandomNumber(seed)<0.5) 
-                {
-                directionUp = YES; /* switch direction */
-                /* find sister of a */
-                if (a->left == b) 
-                    {
-                    b = a;
-                    a = a->right;
-                    }
-                else 
-                    {  
-                    b = a;
-                    a = a->left;
-                    }
-                /* as long as we are moving upwards
-                the cond likes to update will be
-                flagged by the last pass from u to the root */
-                }   
-            else 
-                {   /* continue down */
-                b = a;
-                a = a->anc;
-                b->upDateCl = YES; 
-                if (b->isLocked == YES)
-                    {
-                    u->isLocked = YES;
-                    b->isLocked = NO;
-                    u->lockID = b->lockID;
-                    b->lockID = 0;
-                    }
-                }
-            }
-        }
-
-    /* store brlen nodes */
-    if (nRootNodes > 0)
-        {
-        if (directionUp == YES)
-            {
-            brlenNode[6] = a;
-            brlenNode[5] = u;
-            }
-        else
-            {
-            brlenNode[6] = u;
-            brlenNode[5] = b;
-            }
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       test of both ends makes sure that no adjustment is made if no move was made */
-    if (directionUp == YES) 
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO) 
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-    else 
-        {
-        if (a->anc  != NULL && u->isLocked == NO &&
-            b->left != NULL && b->isLocked == NO)
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-
-    /* move around in crown subtree */
-    for (nCrownNodes=0; RandomNumber(seed)<extensionProb; nCrownNodes++) 
-        {
-        if (c->left == NULL || c->isLocked == YES)
-            break;  /* can't go further */
-        topologyHasChanged = YES;
-        if (RandomNumber(seed) < 0.5) 
-            {
-            /* rotate c anticlockwise - prepare pointers for move left */
-            c->anc = c->left;  /* the root will be in the direction we are heading */
-            c->left = c->right;
-            c->right = d;
-            }
-        else 
-            {
-            /* rotate c clockwise - prepare pointers for move right */
-            c->anc = c->right;  /* the root will be in the direction we are heading */
-            c->right = c->left;
-            c->left = d;  
-            }
-        /* OK - let's move!; c->anc points in the right direction
-        don't forget to move the branch lengths as well */
-        d = c;
-        c = c->anc;
-        d->length = c->length;
-        d->upDateCl = YES; 
-        d->upDateTi = YES;
-        }
-
-    /* store brlen nodes */
-    if (nCrownNodes > 0)
-        {
-        brlenNode[2] = c;
-        brlenNode[1] = d;
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       double test makes sure that no adjustment is made if no move was made */
-    if (c->left != NULL && c->isLocked == NO &&
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) -= log(1.0 - extensionProb);
-
-    /* combine the subtrees */
-    c->anc = v;
-    d->anc = v;
-    if (directionLeft == YES) 
-        {
-        v->left = c;
-        v->right = d;
-        }
-    else 
-        {
-        v->left = d;
-        v->right = c;
-        }
-
-    /* the dangling branch is inserted in reverted position
-       such that the back move will be possible
-       if we have moved around in crown subtree
-       otherwise it is left in its original position */
-    if (nCrownNodes > 0)
-        {
-        d->length = x;
-        d->upDateTi = YES;
-        }
-    else
-        {
-        c->length = x;
-        }
-
-    if (directionUp == YES) 
-        {
-        u->anc = b;
-        if (u->left == v)
-            u->right = a;
-        else 
-            u->left = a;
-        a->anc = u;
-        if (b->left == a)
-            b->left = u;
-        else
-            b->right = u;
-        /* the dangling branch is contained in u->length
-           and will automatically be inserted in the right position
-           to enable the back move regardless of whether it was
-           initially directed upwards or downwards
-           BUT if we haven't moved in root subtree, it is advantageous (necessary
-           for rooted trees) to avoid switching branches, which occurs otherwise
-           if directionUp == YES */
-        if (nRootNodes == 0) 
-            {
-            x = u->length;
-            u->length = a->length;
-            a->length = x;
-            a->upDateTi = NO;
-            u->upDateTi = NO;
-            }
-        }
-    else 
-        {
-        u->anc = a;
-        if (u->left == v)
-            u->right = b;
-        else 
-            u->left = b;
-        b->anc = u;
-        if (a->left == b)
-            a->left = u;
-        else
-            a->right = u;
-        /* the modified branch contained in u->length will have
-           to be moved to b->length to enable back move
-           BUT if we haven't moved, it is better to keep it in place
-           (necessary for rooted trees) */
-        if (nRootNodes > 0) 
-            {
-            x = u->length;
-            u->length = b->length;
-            b->length = x;
-            b->upDateTi = YES;
-            u->upDateTi = YES;
-            }
-        }
-    
-    /* modify branch lengths */
-    /* first modify length of middle branch */
-    m = brlenNode[3]->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));       /* save the modified dangling branch for later use */
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    brlenNode[3]->length = x;
-    brlenNode[3]->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
-
-    /* if no move in crown, then select randomly, otherwise always the moved branch */
-    if (nCrownNodes == 0)
-        {
-        if (RandomNumber(seed) < 0.5)
-            p = brlenNode[0];
-        else
-            p = brlenNode[1];
-        }
-    else
-        {
-        /* swap starting branches */
-        if (RandomNumber(seed) < 0.5)
-            {
-            x = brlenNode[0]->length;
-            brlenNode[0]->length = brlenNode[1]->length;
-            brlenNode[1]->length = x;
-            brlenNode[0]->upDateTi = YES;
-            }
-        /* swap ending branches */
-        if (RandomNumber(seed) < 0.5)
-            {
-            x = brlenNode[1]->length;
-            brlenNode[1]->length = brlenNode[2]->length;
-            brlenNode[2]->length = x;
-            brlenNode[2]->upDateTi = YES;
-            brlenNode[1]->upDateTi = YES;
-            p = brlenNode[2];
-            }
-        else
-            p = brlenNode[1];
-        }
-
-    /* modify branch length */
-    m = p->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    p->length = x;
-    p->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x); 
-        
-    /* if no move in root, then select randomly, otherwise always the moved branch */
-    if (nRootNodes == 0)
-        {
-        if (RandomNumber(seed) < 0.5)
-            p = brlenNode[4];
-        else
-            p = brlenNode[5];
-        }
-    else
-        {
-        /* swap starting branches */
-        if (RandomNumber(seed) < 0.5 && (t->isRooted == NO || brlenNode[4]->anc->anc != NULL))
-            {
-            x = brlenNode[4]->length;
-            brlenNode[4]->length = brlenNode[5]->length;
-            brlenNode[5]->length = x;
-            brlenNode[4]->upDateTi = YES;           
-            }
-        /* swap ending branches */
-        if (RandomNumber(seed) < 0.5 && (t->isRooted == NO || brlenNode[6]->anc->anc != NULL))
-            {
-            x = brlenNode[5]->length;
-            brlenNode[5]->length = brlenNode[6]->length;
-            brlenNode[5]->length = x;
-            brlenNode[5]->upDateTi = YES;
-            brlenNode[6]->upDateTi = YES;
-            p = brlenNode[6];
-            }
-        else
-            p = brlenNode[5];
-        }
-    
-    /* modify branch length but not if 'root' branch in rooted tree */
-    if (t->isRooted == NO || p->anc->anc != NULL)
-        {
-        m = p->length;
-        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-        while (x < minV || x > maxV)
-            {
-            if (x < minV)
-                x = minV * minV / x;
-            else if (x > maxV)
-                x = maxV * maxV / x;
-            }
-        p->length = x;
-        p->upDateTi = YES;
-
-        /* update proposal and prior ratio based on length modification */
-        (*lnProposalRatio) += log (x / m);
-        if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x); 
-        }
-
     /* set flags for update of cond likes from v and down to root */
     p = v;
     while (p->anc != NULL)
@@ -5299,23 +4931,6 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         GetDownPass (t);
         }
 
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (DEBUG_ExtTBR)
-    printf ("After:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-            c->index, d->index, a->index, b->index);
-    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-    getchar();
-#   endif
-
 #   if defined (TOPOLOGY_MOVE_STATS)
     if (topologyHasChanged == YES)
         gTopologyHasChanged = YES;
@@ -5323,1194 +4938,6 @@ int Move_ExtTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = NO;
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to eTBR2\n");
-        getchar();
-        }
-#endif
-
-    return (NO_ERROR);
-}
-
-
-int Move_ExtTBR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* Change branch lengths and topology (potentially) using TBR (unrooted) 
-       with extension probability (rather than window). */
-
-    /* this move type picks a branch and two "danglies", modifies their length
-       independently according to the method of Larget & Simon (1999: MBE); it then
-       moves the danglies away from their original position one node at a time with
-       a probability determined by the extensionProb parameter
-
-       when the danglies are moved, their direction is changed
-       this "reflection" is necessary to enable the back move
-
-       This move type has been tested on all combinations of rooted and unrooted,
-       constrained and unconstrained trees */
-    
-    int         topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, i;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0, brlen[3];
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
-    Tree        *t;
-    ModelParams *mp;
-
-    brlenNode[2] = NULL;
-    brlenNode[6] = NULL;
-
-    /* these parameters should be possible to set by user */
-    extensionProb = mvp[0]; /* extension probability */
-    tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
-    
-    /* get tree */
-    t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to eTBR3\n");
-        getchar();
-        }
-#endif
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
-    
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1];
-        isVPriorExp = NO;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 2;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 3;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 4;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
-        isVPriorExp = YES;
-        }
-
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
-    topologyHasChanged = NO;
-
-#   if defined (DEBUG_ExtTBR)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-#   endif
-    
-    /* pick an internal branch */
-    do
-        {
-        p = t->intDownPass[(int)(RandomNumber(seed)*t->nIntNodes)];
-        } while (p->anc->anc == NULL);
-        
-    /* set up pointers for nodes around the picked branch */
-    /* cut the tree into crown, root and attachment part */
-    /* change the relevant lengths in the attachment part */
-    /* the lengths of a and v are automatically contained in the */
-    /* "attachment" part but the length of c has to be stored in x */
-    v = p;
-    u = p->anc;
-
-    /* store brlen node */
-    brlenNode[3] = v;
-
-    /* set up pointers for crown part */
-    /* this also determines direction of move in crown part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        c = v->left;
-        d = v->right;
-        directionLeft = YES;
-        }
-    else
-        {
-        c = v->right;
-        d = v->left;
-        directionLeft = NO;
-        }
-
-    /* store brlen nodes and brlen to move */
-    brlenNode[0] = d;
-    brlenNode[1] = c;
-    x = c->length;
-
-    /* cut and reconnect crown part */
-    c->anc = d;
-    d->anc = c;
-    
-    /* mark nodes in root part */
-    /* also determines direction of move in root part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
-        directionUp = YES;
-        }
-    else
-        {
-        if (u->left == v)
-            b = u->right;
-        else
-            b = u->left;
-        a = u->anc;
-        directionUp = NO;
-        }
-
-    /* store brlen nodes */
-    if (directionUp == YES)
-        {
-        brlenNode[4] = u;
-        brlenNode[5] = a;
-        }
-    else
-        {
-        brlenNode[4] = b;
-        brlenNode[5] = u;
-        }
-
-    /* cut root part*/
-    /* store branch to be move in u->length */
-    if (directionUp == NO) 
-        {
-        b->anc = a;
-        if (a->left == u)
-            a->left = b;
-        else
-            a->right = b;
-        }
-    else 
-        {
-        a->anc = b;
-        if (b->left == u)
-            b->left = a;
-        else
-            b->right = a;
-        y = a->length;
-        a->length = u->length;
-        u->length = y;
-        a->upDateTi = YES;
-        u->upDateTi = YES;
-        }
-
-    /* adjust proposal ratio for backward move in root subtree
-       if starting from interior, unconstrained branch
-       double test needed to capture the case of no move */
-    if (directionUp == NO)
-        {
-        if (b->left != NULL && b->isLocked == NO &&
-            a->anc  != NULL && u->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-    else
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-
-    /* adjust proposal ratio for backward move in crown subtree
-       if starting from interior, unconstrained branch
-       double test is needed to capture the case of no move */
-    if (c->left != NULL && c->isLocked == NO && 
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) += log(1.0 - extensionProb);
-
-    /* move around in root subtree */
-    for (nRootNodes=0; RandomNumber(seed)<extensionProb; nRootNodes++) 
-        {
-        if (directionUp == YES) 
-            {   /* going up tree */
-            if (a->left == NULL || a->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            b = a;
-            if (RandomNumber(seed) < 0.5)
-                a = a->left;
-            else
-                a = a->right;
-            if (u->isLocked == YES)
-                {
-                b->isLocked = YES;
-                u->isLocked = NO;
-                b->lockID = u->lockID;
-                u->lockID = 0;
-                }
-            }
-        else 
-            {   /* going down tree */
-            if (a->anc == NULL || u->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            if (RandomNumber(seed)<0.5) 
-                {
-                directionUp = YES; /* switch direction */
-                /* find sister of a */
-                if (a->left == b) 
-                    {
-                    b = a;
-                    a = a->right;
-                    }
-                else 
-                    {  
-                    b = a;
-                    a = a->left;
-                    }
-                /* as long as we are moving upwards
-                the cond likes to update will be
-                flagged by the last pass from u to the root */
-                }   
-            else 
-                {   /* continue down */
-                b = a;
-                a = a->anc;
-                b->upDateCl = YES; 
-                if (b->isLocked == YES)
-                    {
-                    u->isLocked = YES;
-                    b->isLocked = NO;
-                    u->lockID = b->lockID;
-                    b->lockID = 0;
-                    }
-                }
-            }
-        }
-
-    /* store brlen nodes */
-    if (nRootNodes > 0)
-        {
-        if (directionUp == YES)
-            {
-            brlenNode[6] = a;
-            brlenNode[5] = u;
-            }
-        else
-            {
-            brlenNode[6] = u;
-            brlenNode[5] = b;
-            }
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       test of both ends makes sure that no adjustment is made if no move was made */
-    if (directionUp == YES) 
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO) 
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-    else 
-        {
-        if (a->anc  != NULL && u->isLocked == NO &&
-            b->left != NULL && b->isLocked == NO)
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-
-    /* move around in crown subtree */
-    for (nCrownNodes=0; RandomNumber(seed)<extensionProb; nCrownNodes++) 
-        {
-        if (c->left == NULL || c->isLocked == YES)
-            break;  /* can't go further */
-        topologyHasChanged = YES;
-        if (RandomNumber(seed) < 0.5) 
-            {
-            /* rotate c anticlockwise - prepare pointers for move left */
-            c->anc = c->left;  /* the root will be in the direction we are heading */
-            c->left = c->right;
-            c->right = d;
-            }
-        else 
-            {
-            /* rotate c clockwise - prepare pointers for move right */
-            c->anc = c->right;  /* the root will be in the direction we are heading */
-            c->right = c->left;
-            c->left = d;  
-            }
-        /* OK - let's move!; c->anc points in the right direction
-        don't forget to move the branch lengths as well */
-        d = c;
-        c = c->anc;
-        d->length = c->length;
-        d->upDateCl = YES; 
-        d->upDateTi = YES;
-        }
-
-    /* store brlen nodes */
-    if (nCrownNodes > 0)
-        {
-        brlenNode[2] = c;
-        brlenNode[1] = d;
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       double test makes sure that no adjustment is made if no move was made */
-    if (c->left != NULL && c->isLocked == NO &&
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) -= log(1.0 - extensionProb);
-
-    /* combine the subtrees */
-    c->anc = v;
-    d->anc = v;
-    if (directionLeft == YES) 
-        {
-        v->left = c;
-        v->right = d;
-        }
-    else 
-        {
-        v->left = d;
-        v->right = c;
-        }
-
-    /* the dangling branch is inserted in reverted position
-       such that the back move will be possible
-       if we have moved around in crown subtree
-       otherwise it is left in its original position */
-    if (nCrownNodes > 0)
-        {
-        d->length = x;
-        d->upDateTi = YES;
-        }
-    else
-        {
-        c->length = x;
-        }
-
-    if (directionUp == YES) 
-        {
-        u->anc = b;
-        if (u->left == v)
-            u->right = a;
-        else 
-            u->left = a;
-        a->anc = u;
-        if (b->left == a)
-            b->left = u;
-        else
-            b->right = u;
-        /* the dangling branch is contained in u->length
-           and will automatically be inserted in the right position
-           to enable the back move regardless of whether it was
-           initially directed upwards or downwards
-           BUT if we haven't moved in root subtree, it is advantageous (necessary
-           for rooted trees) to avoid switching branches, which occurs otherwise
-           if directionUp == YES */
-        if (nRootNodes == 0) 
-            {
-            x = u->length;
-            u->length = a->length;
-            a->length = x;
-            a->upDateTi = NO;
-            u->upDateTi = NO;
-            }
-        }
-    else 
-        {
-        u->anc = a;
-        if (u->left == v)
-            u->right = b;
-        else 
-            u->left = b;
-        b->anc = u;
-        if (a->left == b)
-            a->left = u;
-        else
-            a->right = u;
-        /* the modified branch contained in u->length will have
-           to be moved to b->length to enable back move
-           BUT if we haven't moved, it is better to keep it in place
-           (necessary for rooted trees) */
-        if (nRootNodes > 0) 
-            {
-            x = u->length;
-            u->length = b->length;
-            b->length = x;
-            b->upDateTi = YES;
-            u->upDateTi = YES;
-            }
-        }
-    
-    /* modify branch lengths */
-    /* first modify length of middle branch */
-    m = brlenNode[3]->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));       /* save the modified dangling branch for later use */
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    brlenNode[3]->length = x;
-    brlenNode[3]->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
-
-    /* if no move then just change a random brlen
-       otherwise shuffle brlens randomly and change
-       one random brlen */
-    if (nCrownNodes == 0)
-        {
-        if (RandomNumber(seed) < 0.5)
-            p = brlenNode[0];
-        else
-            p = brlenNode[1];
-        }
-    else
-        {
-        /* select branches randomly */
-        for (i=0; i<3; i++)
-            brlen[i] = brlenNode[i]->length;
-        x = RandomNumber(seed);
-        if (x < 1.0 / 3.0)
-            brlenNode[0]->length = brlen[0];
-        else if (x < 2.0 / 3.0)
-            {
-            brlenNode[0]->length = brlen[1];
-            brlen[1] = brlen[0];
-            }
-        else
-            {
-            brlenNode[0]->length = brlen[2];
-            brlen[2] = brlen[0];
-            }
-        x = RandomNumber(seed);
-        if (x < 0.5)
-            {
-            brlenNode[1]->length = brlen[1];
-            brlenNode[2]->length = brlen[2];
-            }
-        else
-            {
-            brlenNode[1]->length = brlen[2];
-            brlenNode[2]->length = brlen[1];
-            }
-        x = RandomNumber(seed);
-        if (x < 1.0 / 3.0)
-            p = brlenNode[0];
-        else if (x < 2.0 / 3.0)
-            p = brlenNode[1];
-        else
-            p = brlenNode[2];
-        brlenNode[0]->upDateTi = YES;
-        brlenNode[1]->upDateTi = YES;
-        brlenNode[2]->upDateTi = YES;
-        brlenNode[0]->anc->upDateCl = YES;
-        brlenNode[1]->anc->upDateCl = YES;
-        brlenNode[2]->anc->upDateCl = YES;
-        }
-
-    /* modify branch length */
-    m = p->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)
-            x = minV * minV / x;
-        else if (x > maxV)
-            x = maxV * maxV / x;
-        }
-    p->length = x;
-    p->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
-
-    /* if no move in root, then select randomly, otherwise always the moved branch */
-    if (nRootNodes == 0)
-        {
-        if (RandomNumber(seed) < 0.5)
-            p = brlenNode[4];
-        else
-            p = brlenNode[5];
-        }
-    else
-        {
-        /* select branches randomly */
-        for (i=0; i<3; i++)
-            brlen[i] = brlenNode[i+4]->length;
-        x = RandomNumber(seed);
-        if (x < 1.0 / 3.0)
-            brlenNode[4]->length = brlen[0];
-        else if (x < 2.0 / 3.0)
-            {
-            brlenNode[4]->length = brlen[1];
-            brlen[1] = brlen[0];
-            }
-        else
-            {
-            brlenNode[4]->length = brlen[2];
-            brlen[2] = brlen[0];
-            }
-        x = RandomNumber(seed);
-        if (x < 0.5)
-            {
-            brlenNode[5]->length = brlen[1];
-            brlenNode[6]->length = brlen[2];
-            }
-        else
-            {
-            brlenNode[5]->length = brlen[2];
-            brlenNode[6]->length = brlen[1];
-            }
-        x = RandomNumber(seed);
-        if (x < 1.0 / 3.0)
-            p = brlenNode[4];
-        else if (x < 2.0 / 3.0)
-            p = brlenNode[5];
-        else
-            p = brlenNode[6];
-        brlenNode[4]->upDateTi = YES;
-        brlenNode[5]->upDateTi = YES;
-        brlenNode[6]->upDateTi = YES;
-        brlenNode[4]->anc->upDateCl = YES;
-        brlenNode[5]->anc->upDateCl = YES;
-        brlenNode[6]->anc->upDateCl = YES;
-        }
-    
-    /* modify branch length but not if 'root' branch in rooted tree */
-    if (t->isRooted == NO || p->anc->anc != NULL)
-        {
-        m = p->length;
-        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-        while (x < minV || x > maxV)
-            {
-            if (x < minV)
-                x = minV * minV / x;
-            else if (x > maxV)
-                x = maxV * maxV / x;
-            }
-        p->length = x;
-        p->upDateTi = YES;
-
-        /* update proposal and prior ratio based on length modification */ 
-        (*lnProposalRatio) += log (x / m);
-        if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x); 
-        }
-
-    /* set flags for update of cond likes from v and down to root */
-    p = v;
-    while (p->anc != NULL)
-        {
-        p->upDateCl = YES;
-        p = p->anc;
-        }
-
-    /* get down pass sequence if tree topology has changed */
-    if (topologyHasChanged == YES)
-        {
-        GetDownPass (t);
-        }
-    
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (DEBUG_ExtTBR)
-    printf ("After:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-            c->index, d->index, a->index, b->index);
-    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-    getchar();
-#   endif
-
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to eTBR3\n");
-        getchar();
-        }
-#endif
-    
-    return (NO_ERROR);
-}
-
-
-int Move_ExtTBR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* Change branch lengths and topology (potentially) using TBR (unrooted) 
-       with extension probability (rather than window). */
-
-    /* this move type picks a branch and two "danglies", modifies their length
-       independently according to the method of Larget & Simon (1999: MBE); it then
-       moves the danglies away from their original position one node at a time with
-       a probability determined by the extensionProb parameter
-
-       when the danglies are moved, their direction is changed
-       this "reflection" is necessary to enable the back move
-
-       This move type has been tested on all combinations of rooted and unrooted,
-       constrained and unconstrained trees */
-    
-    int         topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, i, mark[7], j, numNodes;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0, brlen[7];
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *node[7];
-    Tree        *t;
-    ModelParams *mp;
-
-    memset(brlenNode, 0, sizeof(TreeNode *)*7);
-
-    /* these parameters should be possible to set by user */
-    extensionProb = mvp[0]; /* extension probability */
-    tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
-    
-    /* get tree */
-    t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to eTBR4\n");
-        getchar();
-        }
-#endif
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
-    
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1];
-        isVPriorExp = NO;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 2;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 3;
-        }
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        isVPriorExp = 4;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
-        isVPriorExp = YES;
-        }
-    
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
-    topologyHasChanged = NO;
-
-#   if defined (DEBUG_ExtTBR)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-#   endif
-    
-    /* pick an internal branch */
-    do
-        {
-        p = t->intDownPass[(int)(RandomNumber(seed)*t->nIntNodes)];
-        } while (p->anc->anc == NULL);
-        
-    /* set up pointers for nodes around the picked branch */
-    /* cut the tree into crown, root and attachment part */
-    /* change the relevant lengths in the attachment part */
-    /* the lengths of a and v are automatically contained in the */
-    /* "attachment" part but the length of c has to be stored in x */
-    v = p;
-    u = p->anc;
-
-    /* store brlen node */
-    brlenNode[3] = v;
-
-    /* set up pointers for crown part */
-    /* this also determines direction of move in crown part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        c = v->left;
-        d = v->right;
-        directionLeft = YES;
-        }
-    else
-        {
-        c = v->right;
-        d = v->left;
-        directionLeft = NO;
-        }
-
-    /* store brlen nodes and brlen to move */
-    brlenNode[0] = d;
-    brlenNode[1] = c;
-    x = c->length;
-
-    /* cut and reconnect crown part */
-    c->anc = d;
-    d->anc = c;
-    
-    /* mark nodes in root part */
-    /* also determines direction of move in root part */
-    if (RandomNumber(seed) < 0.5)
-        {
-        if (u->left == v)
-            a = u->right;
-        else
-            a = u->left;
-        b = u->anc;
-        directionUp = YES;
-        }
-    else
-        {
-        if (u->left == v)
-            b = u->right;
-        else
-            b = u->left;
-        a = u->anc;
-        directionUp = NO;
-        }
-
-    /* store brlen nodes */
-    if (directionUp == YES)
-        {
-        brlenNode[4] = u;
-        brlenNode[5] = a;
-        }
-    else
-        {
-        brlenNode[4] = b;
-        brlenNode[5] = u;
-        }
-
-    /* cut root part*/
-    /* store branch to be move in u->length */
-    if (directionUp == NO) 
-        {
-        b->anc = a;
-        if (a->left == u)
-            a->left = b;
-        else
-            a->right = b;
-        }
-    else 
-        {
-        a->anc = b;
-        if (b->left == u)
-            b->left = a;
-        else
-            b->right = a;
-        y = a->length;
-        a->length = u->length;
-        u->length = y;
-        a->upDateTi = YES;
-        u->upDateTi = YES;
-        }
-
-    /* adjust proposal ratio for backward move in root subtree
-       if starting from interior, unconstrained branch
-       double test needed to capture the case of no move */
-    if (directionUp == NO)
-        {
-        if (b->left != NULL && b->isLocked == NO &&
-            a->anc  != NULL && u->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-    else
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO)
-            (*lnProposalRatio) += log(1.0 - extensionProb);
-        }
-
-    /* adjust proposal ratio for backward move in crown subtree
-       if starting from interior, unconstrained branch
-       double test is needed to capture the case of no move */
-    if (c->left != NULL && c->isLocked == NO && 
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) += log(1.0 - extensionProb);
-
-    /* move around in root subtree */
-    for (nRootNodes=0; RandomNumber(seed)<extensionProb; nRootNodes++) 
-        {
-        if (directionUp == YES) 
-            {   /* going up tree */
-            if (a->left == NULL || a->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            b = a;
-            if (RandomNumber(seed) < 0.5)
-                a = a->left;
-            else
-                a = a->right;
-            if (u->isLocked == YES)
-                {
-                b->isLocked = YES;
-                u->isLocked = NO;
-                b->lockID = u->lockID;
-                u->lockID = 0;
-                }
-            }
-        else 
-            {   /* going down tree */
-            if (a->anc == NULL || u->isLocked == YES)
-                break;      /* can't go further */
-            topologyHasChanged = YES;
-            if (RandomNumber(seed)<0.5) 
-                {
-                directionUp = YES; /* switch direction */
-                /* find sister of a */
-                if (a->left == b) 
-                    {
-                    b = a;
-                    a = a->right;
-                    }
-                else 
-                    {  
-                    b = a;
-                    a = a->left;
-                    }
-                /* as long as we are moving upwards
-                the cond likes to update will be
-                flagged by the last pass from u to the root */
-                }   
-            else 
-                {   /* continue down */
-                b = a;
-                a = a->anc;
-                b->upDateCl = YES; 
-                if (b->isLocked == YES)
-                    {
-                    u->isLocked = YES;
-                    b->isLocked = NO;
-                    u->lockID = b->lockID;
-                    b->lockID = 0;
-                    }
-                }
-            }
-        }
-
-    /* store brlen nodes */
-    if (nRootNodes > 0)
-        {
-        if (directionUp == YES)
-            {
-            brlenNode[6] = a;
-            brlenNode[5] = u;
-            }
-        else
-            {
-            brlenNode[6] = u;
-            brlenNode[5] = b;
-            }
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       test of both ends makes sure that no adjustment is made if no move was made */
-    if (directionUp == YES) 
-        {
-        if (a->left != NULL && a->isLocked == NO &&
-            b->anc  != NULL && b->isLocked == NO) 
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-    else 
-        {
-        if (a->anc  != NULL && u->isLocked == NO &&
-            b->left != NULL && b->isLocked == NO)
-            (*lnProposalRatio) -= log(1.0 - extensionProb);
-        }
-
-    /* move around in crown subtree */
-    for (nCrownNodes=0; RandomNumber(seed)<extensionProb; nCrownNodes++) 
-        {
-        if (c->left == NULL || c->isLocked == YES)
-            break;  /* can't go further */
-        topologyHasChanged = YES;
-        if (RandomNumber(seed) < 0.5) 
-            {
-            /* rotate c anticlockwise - prepare pointers for move left */
-            c->anc = c->left;  /* the root will be in the direction we are heading */
-            c->left = c->right;
-            c->right = d;
-            }
-        else 
-            {
-            /* rotate c clockwise - prepare pointers for move right */
-            c->anc = c->right;  /* the root will be in the direction we are heading */
-            c->right = c->left;
-            c->left = d;  
-            }
-        /* OK - let's move!; c->anc points in the right direction
-        don't forget to move the branch lengths as well */
-        d = c;
-        c = c->anc;
-        d->length = c->length;
-        d->upDateCl = YES; 
-        d->upDateTi = YES;
-        }
-
-    /* store brlen nodes */
-    if (nCrownNodes > 0)
-        {
-        brlenNode[2] = c;
-        brlenNode[1] = d;
-        }
-
-    /* adjust proposal ratio for forward move if stop branch is interior & unconstrained
-       double test makes sure that no adjustment is made if no move was made */
-    if (c->left != NULL && c->isLocked == NO &&
-        d->left != NULL && d->isLocked == NO)
-        (*lnProposalRatio) -= log(1.0 - extensionProb);
-
-    /* combine the subtrees */
-    c->anc = v;
-    d->anc = v;
-    if (directionLeft == YES) 
-        {
-        v->left = c;
-        v->right = d;
-        }
-    else 
-        {
-        v->left = d;
-        v->right = c;
-        }
-
-    /* the dangling branch is inserted in reverted position
-       such that the back move will be possible
-       if we have moved around in crown subtree
-       otherwise it is left in its original position */
-    if (nCrownNodes > 0)
-        {
-        d->length = x;
-        d->upDateTi = YES;
-        }
-    else
-        {
-        c->length = x;
-        }
-
-    if (directionUp == YES) 
-        {
-        u->anc = b;
-        if (u->left == v)
-            u->right = a;
-        else 
-            u->left = a;
-        a->anc = u;
-        if (b->left == a)
-            b->left = u;
-        else
-            b->right = u;
-        /* the dangling branch is contained in u->length
-           and will automatically be inserted in the right position
-           to enable the back move regardless of whether it was
-           initially directed upwards or downwards
-           BUT if we haven't moved in root subtree, it is advantageous (necessary
-           for rooted trees) to avoid switching branches, which occurs otherwise
-           if directionUp == YES */
-        if (nRootNodes == 0) 
-            {
-            x = u->length;
-            u->length = a->length;
-            a->length = x;
-            a->upDateTi = NO;
-            u->upDateTi = NO;
-            }
-        }
-    else 
-        {
-        u->anc = a;
-        if (u->left == v)
-            u->right = b;
-        else 
-            u->left = b;
-        b->anc = u;
-        if (a->left == b)
-            a->left = u;
-        else
-            a->right = u;
-        /* the modified branch contained in u->length will have
-           to be moved to b->length to enable back move
-           BUT if we haven't moved, it is better to keep it in place
-           (necessary for rooted trees) */
-        if (nRootNodes > 0) 
-            {
-            x = u->length;
-            u->length = b->length;
-            b->length = x;
-            b->upDateTi = YES;
-            u->upDateTi = YES;
-            }
-        }
-    
-    /* modify branch lengths */
-    /* first collect branches and branch lengths */
-    node[0] = brlenNode[0];
-    node[1] = brlenNode[1];
-    node[2] = brlenNode[3];
-    
-    numNodes = 3;
-    if (t->isRooted == NO || brlenNode[4]->anc->anc != NULL)
-        node[numNodes++] = brlenNode[4];
-    if (t->isRooted == NO || brlenNode[5]->anc->anc != NULL)
-        node[numNodes++] = brlenNode[5];
-
-    if (nCrownNodes > 0)
-        node[numNodes++] = brlenNode[2];
-
-    if (nRootNodes > 0 && (t->isRooted == NO || brlenNode[6]->anc->anc != NULL))
-        node[numNodes++] = brlenNode[6];
-    
-    for (i=0; i<numNodes; i++)
-        {
-        brlen[i] = node[i]->length;
-        }
-
-    /* shuffle all lengths */
-    for (i=0; i<numNodes; i++)
-        {
-        j = i + (int) (RandomNumber(seed) * (numNodes - i));
-        x = brlen[j];
-        brlen[j] = brlen[i];
-        brlen[i] = x;
-        }
-
-    /*  randomly modify some of them */
-    for (i=0; i<numNodes; i++)
-        mark[i] = 0;
-
-    for (i=0; i<3; i++)
-        {
-        do {
-            j = (int) (RandomNumber(seed) * numNodes);
-        } while (mark[j] == 1);
-
-        mark[j] = 1;
-
-        m = brlen[j];
-        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-        while (x < minV || x > maxV)
-            {
-            if (x < minV)
-                x = minV * minV / x;
-            else if (x > maxV)
-                x = maxV * maxV / x;
-            }
-        brlen[j] = x;
-
-        /* update proposal and prior ratio based on length modification */
-        (*lnProposalRatio) += log (x / m);
-        if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
-        }
-        
-    /* put branch lengths back */
-    for (i=0; i<numNodes; i++)
-        {
-        node[i]->length = brlen[i];
-        node[i]->upDateTi = YES;
-        node[i]->upDateCl = YES;
-        }
-
-    /* set flags for update of cond likes from v and down to root */
-    p = v;
-    while (p->anc != NULL)
-        {
-        p->upDateCl = YES;
-        p = p->anc;
-        }
-
-    /* get down pass sequence if tree topology has changed */
-    if (topologyHasChanged == YES)
-        {
-        GetDownPass (t);
-        }
-    
-    /* Dirichlet or twoExp prior */
-    if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (DEBUG_ExtTBR)
-    printf ("After:\n");
-    ShowNodes (t->root, 2, NO);
-    getchar();
-    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index, 
-            c->index, d->index, a->index, b->index);
-    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-    getchar();
-#   endif
-
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to eTBR4\n");
-        getchar();
-        }
-#endif
 
     return (NO_ERROR);
 }
@@ -7402,13 +5829,6 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to LOCAL\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -7694,14 +6114,6 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     else
         gTopologyHasChanged = NO;
 #   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree of LOCAL\n");
-        getchar();
-        }
-#endif
     
     return (NO_ERROR);
 }
@@ -8273,10 +6685,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         isVPriorExp = YES;
         }
 
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
-
 #   if defined (DEBUG_MLSPR)
     printf ("Before:\n");
     ShowNodes (t->root, 2, YES);
@@ -8631,10 +7039,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     gNodeMoves = nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
-
     return (NO_ERROR);
 }
 
@@ -8685,10 +7089,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
-
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
 
 #   if defined (DEBUG_MLSPR)
     printf ("Before:\n");
@@ -9014,10 +7414,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         gTopologyHasChanged = NO;
     gNodeMoves = nRootNodes;
 #   endif
-
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
 
     return (NO_ERROR);
 }
@@ -11066,10 +9462,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     if (isVPriorExp > 1)
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
 
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
-
 #   if defined (DEBUG_ParsSPR)
     // WriteTopologyToFile (stdout, t->root->left, t->isRooted);  fprintf (stdout, ";\t");
     printf ("Before:\n");
@@ -11464,10 +9856,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = NO;
     gNodeMoves = nRootNodes;
 #   endif
-
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
     
     free (nSitesOfPat);
 
@@ -11477,9 +9865,9 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
 int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* Change topology and map branch lengths using SPR-type move biased according to parsimony scores. */
+    /* Change topology using SPR-type move biased according to parsimony scores. Map branch lengths without modification */
     
-    int         i, j, n, division, topologyHasChanged, isVPriorExp,  moveInRoot;
+    int         i, j, n, division, topologyHasChanged,  moveInRoot;
     BitsLong    *pA, *pV, *pP, *pU, y[2];
     MrBFlt      x, minLength=0.0, length=0.0, cumulativeProb, warpFactor, ran, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
@@ -11503,25 +9891,9 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* get tree */
     t = GetTree (param, chain, state[chain]);
     
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        isVPriorExp = NO;
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        isVPriorExp = 2;
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        isVPriorExp = 3;
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        isVPriorExp = 4;
-    else /* (param->subParams[0]->paramId == BRLENS_EXP) */
-        isVPriorExp = YES;
-    
-    /* Dirichlet or twoExp prior for brls */
+    /* Dirichlet or twoExp prior for brls
     if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-    
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
+        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp); */
     
     /* set topologyHasChanged to NO */
     topologyHasChanged = NO;
@@ -11771,7 +10143,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             newB->right = u;
         u->anc = newB;
         
-        assert (newA != a);
         /* transfer lock if necessary */
         /* if u is locked, then we have moved upwards and need to leave the u lock behind */
         if (u->isLocked == YES)
@@ -12076,11 +10447,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 b->right = u;
             }
         
-        /* set tiprobs update flags */
-        q ->upDateTi = YES;
-        newC->upDateTi = YES;
-        newB->upDateTi = YES;
-        
         /* set flags for update of cond likes from newC and down to root */
         p = newC;
         while (p->anc != NULL)
@@ -12109,9 +10475,9 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         GetDownPass (t);
         }
     
-    /* Dirichlet or twoExp prior */
+    /* Dirichlet or twoExp prior
     if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
+        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp); */
     
 #   if defined (TOPOLOGY_MOVE_STATS)
     if (topologyHasChanged == YES)
@@ -12121,10 +10487,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     gNodeMoves = nRootNodes;
 #   endif
     
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
-    
     free (nSitesOfPat);
 
     return (NO_ERROR);
@@ -12133,7 +10495,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
 int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* Change topology and map branch lengths using SPR-type move biased according to parsimony scores. */
+    /* Change topology and map branch lengths using SPR-type move biased according to parsimony scores,
+       controlled by a window defined by a certain node distance radius */
     
     int         i, j, k, n, division, topologyHasChanged, isVPriorExp, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
@@ -12188,10 +10551,6 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     if (isVPriorExp > 1)
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
-    
     /* set topologyHasChanged to NO */
     topologyHasChanged = NO;
     
@@ -12234,7 +10593,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* clip crown part of tree */
     c->anc = d;
     d->anc = c;
-    /* should never change u, v, a, b, c, d */
+    /* should never change u, v, a, b, c, d pointers */
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -12567,7 +10926,7 @@ outLoop:;
     
     topologyHasChanged = YES;
  
-    /* hit v length with multiplier */
+    /* hit v length with multiplier (no need?) */
     x = v->length * exp(tuning * (RandomNumber(seed) - 0.5));
     while (x < minV || x > maxV)
         {
@@ -12631,10 +10990,6 @@ outLoop:;
         gTopologyHasChanged = NO;
     gNodeMoves = nRootNodes;
 #   endif
-    
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
     
     /* free up local memory */
     free (parLength); free (pRoot); free (pCrown);
@@ -13207,15 +11562,14 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 }
 
 
-/* Move_ParsTBR */
 int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* Change topology and map branch lengths using TBR-type move biased according to parsimony scores. */
+    /* Change topology using TBR-type move biased according to parsimony scores. Map branch lengths without modification */
     
-    int         i, j, k, n, division, topologyHasChanged, isVPriorExp, nNeighbor, nRoot, nCrown, iA, jC;
+    int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, warpFactor, tuning,
-                increaseProb, decreaseProb, v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
+    MrBFlt      x, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, warpFactor, increaseProb, decreaseProb,
+                v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
@@ -13223,7 +11577,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     ModelInfo   *m=NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
-    tuning = mvp[1];                      /* multiplier tuning parameter */
+    //  tuning = mvp[1];                  /* multiplier tuning parameter */
     increaseProb = decreaseProb = mvp[2]; /* reweighting probabilities */
     v_typical = mvp[3];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
@@ -13237,43 +11591,9 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* get tree */
     t = GetTree (param, chain, state[chain]);
     
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1] < BRLENS_MAX ? mp->brlensUni[1] : BRLENS_MAX;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        }
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        isVPriorExp = NO;
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        isVPriorExp = 2;
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        isVPriorExp = 3;
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        isVPriorExp = 4;
-    else {  /* (param->subParams[0]->paramId == BRLENS_EXP) */
-        isVPriorExp = YES;
-        brlensExp = mp->brlensExp;
-        }
-    
-    /* Dirichlet or twoExp prior for brls */
+    /* Dirichlet or twoExp prior for brls
     if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-    
-#if defined (DEBUG_CONSTRAINTS)
-    CheckConstraints (t);
-#endif
-    
-#   if defined (DEBUG_ParsTBR)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, YES);
-    getchar();
-#   endif
+        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp); */
     
     /* set topologyHasChanged to NO */
     topologyHasChanged = NO;
@@ -13316,7 +11636,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* clip crown part of tree */
     c->anc = d;
     d->anc = c;
-    /* should never change u, v, a, b, c, d */
+    /* should never change u, v, a, b, c, d pointers */
 
     /* mark nodes nNeighbor away in root (negative) and crown (positive) respecting constraints */
     /* first move down towards root */
@@ -13642,21 +11962,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     topologyHasChanged = YES;
  
-    /* hit v length with multiplier */
-    x = v->length * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)       x = minV * minV / x;
-        else if (x > maxV)  x = maxV * maxV / x;
-        }
-    /* calculate proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / v->length);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (v->length - x);
-    v->length = x;
-    /* set tiprobs update flags */
-    v->upDateTi = YES;
-
     /* set flags for update of cond likes */
     p = u;
     while (p->anc != NULL)
@@ -13689,18 +11994,9 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         GetDownPass (t);
         }
 
-    /* Dirichlet or twoExp prior */
+    /* Dirichlet or twoExp prior
     if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-
-#   if defined (DEBUG_ParsTBR)
-    printf ("After:\n");
-    ShowNodes (t->root, 2, YES);
-    getchar();
-    printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-    getchar();
-#   endif
+        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp); */
     
 #   if defined (TOPOLOGY_MOVE_STATS)
     if (topologyHasChanged == YES)
@@ -13710,10 +12006,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     gNodeMoves = nRootNodes;
 #   endif
     
-#if defined DEBUG_CONSTRAINTS
-    CheckConstraints (t);
-#endif
-
     /* free up local memory */
     free (parLength); free (pRoot); free (pCrown);
     free (nSitesOfPat); free (old); free (tmp);
@@ -14059,13 +12351,6 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to rSPR1\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -14579,14 +12864,6 @@ int Move_RanSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to rSPR1\n");
-        getchar();
-        }
-#endif
-
     return (NO_ERROR);
 }
 
@@ -14609,13 +12886,6 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to rSPR2\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -15141,14 +13411,6 @@ int Move_RanSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to rSPR2\n");
-        getchar();
-        }
-#endif
-
     return (NO_ERROR);
 }
 
@@ -15172,13 +13434,6 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                             /* set it to a value between 1 and 4 (above 4 requires more space in windowNode) */
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to rSPR3\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -15771,14 +14026,6 @@ int Move_RanSPR3 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
 
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to rSPR3\n");
-        getchar();
-        }
-#endif
-
     return (NO_ERROR);
 }
 
@@ -15801,13 +14048,6 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                             /* set it to a value between 1 and 4 (above 4 requires more space in windowNode) */
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in input tree to rSPR4\n");
-        getchar();
-        }
-#endif
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -16447,14 +14687,6 @@ int Move_RanSPR4 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         gTopologyHasChanged = NO;
     gNodeMoves = nCrownNodes + nRootNodes;
 #   endif
-
-#if defined DEBUG_CONSTRAINTS
-    if (CheckConstraints (t) == ERROR)
-        {
-        printf ("Constraint error in output tree to rSPR4\n");
-        getchar();
-        }
-#endif
 
     return (NO_ERROR);
 }
@@ -18553,13 +16785,6 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
-
-#if defined (DEBUG_CONSTRAINTS)
-    if (CheckConstraints(t) == ERROR) {
-        printf ("Constraint error in input tree to treelen multiplier\n");
-        getchar();
-        }
-#endif
 
     treescaler = exp(tuning * (RandomNumber(seed) - 0.5));
     

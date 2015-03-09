@@ -20147,6 +20147,26 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
+    /* Move_ExtSPR1 */
+    mt = &moveTypes[i++];
+    mt->name = "Extending SPR variant 1";
+    mt->shortName = "ExtSPR1";
+    mt->subParams = YES;
+    mt->tuningName[0] = "Extension probability";
+    mt->shortTuningName[0] = "p_ext";
+    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+    mt->nApplicable = 2;
+    mt->moveFxn = &Move_ExtSPR1;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 0.99999;
+    mt->parsimonyBased = NO;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
+
     /* Move_ExtSPRClock */
     mt = &moveTypes[i++];
     mt->name = "Extending SPR for clock trees";
@@ -20252,99 +20272,19 @@ void SetUpMoveTypes (void)
     /* Move_ExtTBR1 */
     mt = &moveTypes[i++];
     mt->name = "Extending TBR variant 1";
-    mt->shortName = "eTBR1";
+    mt->shortName = "ExtTBR1";
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtTBR1;
     mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.5; /* extension probability */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
-
-    /* Move_ExtTBR2 */
-    mt = &moveTypes[i++];
-    mt->name = "Extending TBR variant 2";
-    mt->shortName = "eTBR2";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ExtTBR2;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
-
-    /* Move_ExtTBR3 */
-    mt = &moveTypes[i++];
-    mt->name = "Extending TBR variant 3";
-    mt->shortName = "eTBR3";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ExtTBR3;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
-
-    /* Move_ExtTBR4 */
-    mt = &moveTypes[i++];
-    mt->name = "Extending TBR variant 4";
-    mt->shortName = "eTBR4";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ExtTBR4;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
     mt->parsimonyBased = NO;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -20907,7 +20847,7 @@ void SetUpMoveTypes (void)
 
     /* Move_ParsSPR1 */
     mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased SPR version 1";
+    mt->name = "Parsimony-biased SPR variant 1";
     mt->shortName = "ParsSPR1";
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
@@ -20942,7 +20882,7 @@ void SetUpMoveTypes (void)
 
     /* Move_ParsSPR2 */
     mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased SPR version 2";
+    mt->name = "Parsimony-biased SPR variant 2";
     mt->shortName = "ParsSPR2";
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
