@@ -10498,10 +10498,10 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change topology and map branch lengths using SPR-type move biased according to parsimony scores,
        controlled by a window defined by a certain node distance radius */
     
-    int         i, j, k, n, division, topologyHasChanged, isVPriorExp, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC;
+    int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, warpFactor, tuning,
-                increaseProb, decreaseProb, v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
+    MrBFlt      x, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, warpFactor, tuning, increaseProb, decreaseProb,
+                v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
@@ -10523,33 +10523,9 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* get tree */
     t = GetTree (param, chain, state[chain]);
     
-    /* max and min brlen */
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        {
-        minV = mp->brlensUni[0] > BRLENS_MIN ? mp->brlensUni[0] : BRLENS_MIN;
-        maxV = mp->brlensUni[1] < BRLENS_MAX ? mp->brlensUni[1] : BRLENS_MAX;
-        }
-    else
-        {
-        minV = BRLENS_MIN;
-        maxV = BRLENS_MAX;
-        }
-    if (param->subParams[0]->paramId == BRLENS_UNI)
-        isVPriorExp = NO;
-    else if (param->subParams[0]->paramId == BRLENS_GamDir)
-        isVPriorExp = 2;
-    else if (param->subParams[0]->paramId == BRLENS_iGmDir)
-        isVPriorExp = 3;
-    else if (param->subParams[0]->paramId == BRLENS_twoExp)
-        isVPriorExp = 4;
-    else {  /* (param->subParams[0]->paramId == BRLENS_EXP) */
-        isVPriorExp = YES;
-        brlensExp = mp->brlensExp;
-        }
-    
-    /* Dirichlet or twoExp prior for brls */
+    /* Dirichlet or twoExp prior for brls
     if (isVPriorExp > 1)
-        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
+        (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp); */
     
     /* set topologyHasChanged to NO */
     topologyHasChanged = NO;
@@ -10925,21 +10901,6 @@ outLoop:;
     newC->anc = e->anc = v;
     
     topologyHasChanged = YES;
- 
-    /* hit v length with multiplier (no need?) */
-    x = v->length * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
-        {
-        if (x < minV)       x = minV * minV / x;
-        else if (x > maxV)  x = maxV * maxV / x;
-        }
-    /* calculate proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / v->length);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (v->length - x);
-    v->length = x;
-    /* set tiprobs update flags */
-    v->upDateTi = YES;
 
     /* set flags for update of cond likes */
     if (moveInRoot == YES)
@@ -10979,9 +10940,9 @@ outLoop:;
         GetDownPass (t);
         }
     
-    /* Dirichlet or twoExp prior */
+    /* Dirichlet or twoExp prior
     if (isVPriorExp > 1)
-        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
+        (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp); */
     
 #   if defined (TOPOLOGY_MOVE_STATS)
     if (topologyHasChanged == YES)
