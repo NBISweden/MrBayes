@@ -20373,7 +20373,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_GeneTree3;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 3;
-    mt->tuningParam[0] = 0.01; /* warp */
+    mt->tuningParam[0] = 0.1;  /* warp */
     mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05; /* typical branch length */
     mt->minimum[0] = 0.0;
@@ -20829,9 +20829,9 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_ParsSPR;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 4;
-    mt->tuningParam[0] = 0.01;             /* warp */
+    mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
-    mt->tuningParam[2] = 0.05;              /* typical branch length */
+    mt->tuningParam[2] = 0.05;             /* typical branch length */
     mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
@@ -20864,7 +20864,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_ParsSPR1;
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 4;
-    mt->tuningParam[0] = 0.01;             /* warp */
+    mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
     mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
@@ -20901,7 +20901,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_ParsSPR2;
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 5;
-    mt->tuningParam[0] = 0.01;             /* warp */
+    mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
     mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
@@ -20943,7 +20943,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_ParsSPRClock;
     mt->relProposalProb = 8.0;
     mt->numTuningParams = 3;
-    mt->tuningParam[0] = 0.01; /* warp */
+    mt->tuningParam[0] = 0.1;  /* warp */
     mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05; /* typical branch length */
     mt->minimum[0] = 0.0;
@@ -20977,7 +20977,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_ParsTBR;
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 5;
-    mt->tuningParam[0] = 0.01;             /* warp */
+    mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
     mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
