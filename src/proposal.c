@@ -711,11 +711,6 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                         (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
                         
                         brlens[p->index] = p->length * (tk02Rate[p->anc->index]+tk02Rate[p->index])/2.0;
-                        if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                            {
-                            abortMove = YES;
-                            return (NO_ERROR);
-                            }
                         }
                     }
                 }
@@ -740,11 +735,6 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                         (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, igrRate[p->index]);
 
                         brlens[p->index] = igrRate[p->index] * p->length;
-                        if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                            {
-                            abortMove = YES;
-                            return (NO_ERROR);
-                            }
                         }
                     }
                 }
@@ -1284,20 +1274,9 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* update effective evolutionary lengths */
             brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[q->index])/2.0;
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
-            if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
-                brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             if (q->anc->anc != NULL)
                 {
                 brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
-                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
@@ -1324,20 +1303,9 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* update effective evolutionary lengths */
             brlens[p->index] = igrRate[p->index] * p->length;
             brlens[r->index] = igrRate[r->index] * r->length;
-            if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX ||
-                brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             if (q->anc->anc != NULL)
                 {
                 brlens[q->index] = igrRate[q->index] * q->length;
-                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         }
@@ -1538,19 +1506,9 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // tk02Rate[p->index] = tk02Rate[q->index];
             brlens[r->index] = r->length * (tk02Rate[r->index]+tk02Rate[q->index])/2.0;
-            if (brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             if (q->anc->anc != NULL)
                 {
                 brlens[q->index] = q->length * (tk02Rate[q->index]+tk02Rate[q->anc->index])/2.0;
-                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
@@ -1575,19 +1533,9 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // igrRate[p->index] = igrRate[q->index];
             brlens[r->index] = igrRate[r->index] * r->length;
-            if (brlens[r->index] < RELBRLENS_MIN || brlens[r->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             if (q->anc->anc != NULL)
                 {
                 brlens[q->index] = igrRate[q->index] * q->length;
-                if (brlens[q->index] < RELBRLENS_MIN || brlens[q->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         }
@@ -5278,11 +5226,6 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     
     /* update branch evolution lengths */
     brlens[p->index] = newRate * p->length;
-    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-        {
-        abortMove = YES;
-        return (NO_ERROR);
-        }
 
     /* set update of transition probability */
     p->upDateTi = YES;
@@ -5359,11 +5302,6 @@ int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* update branch evolution lengths */
     brlens[p->index] = newRate * p->length;
-    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-        {
-        abortMove = YES;
-        return (NO_ERROR);
-        }
     
     /* set update of transition probability */
     p->upDateTi = YES;
@@ -5528,11 +5466,6 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         
         /* update branch evolution lengths */
         brlens[p->index] = p->length * (newRate + mxRate[p->anc->index]) / 2.0;
-        if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-            {
-            abortMove = YES;
-            return (NO_ERROR);
-            }
         if (p->left != NULL)
             {
             brlens[p->left->index ] = p->left->length  * (mxRate[p->left->index ] + newRate) / 2.0;
@@ -5553,11 +5486,6 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         (*lnPriorRatio) += LnProbGamma (p->length/mxvar, p->length/mxvar, newRate);
         
         brlens[p->index] = newRate * p->length;
-        if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-            {
-            abortMove = YES;
-            return (NO_ERROR);
-            }
 
         /* set update of transition probability */
         p->upDateTi = YES;
@@ -5730,11 +5658,6 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                 (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, mxRate[p->index]);
 
                 brlens[p->index] = mxRate[p->index] * p->length;
-                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         
@@ -5773,11 +5696,6 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
                 (*lnPriorRatio) += LnProbTK02LogNormal (mxRate[p->anc->index], tk02var*p->length, mxRate[p->index]);
 
                 brlens[p->index] = p->length * (mxRate[p->index] + mxRate[p->anc->index]) /2.0;
-                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
             
@@ -16497,30 +16415,15 @@ int Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* update branch evolution lengths */
     brlens[p->index] = p->length * (newRate + tk02Rate[p->anc->index]) / 2.0;
-    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-        {
-        abortMove = YES;
-        return (NO_ERROR);
-        }
     if (p->left != NULL)
         {
         if (p->left->length > 0.0)
             {
             brlens[p->left->index] = p->left->length  * (tk02Rate[p->left->index] + newRate) / 2.0;
-            if (brlens[p->left->index] < RELBRLENS_MIN || brlens[p->left->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             }
         if (p->right->length > 0.0)
             {
             brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index] + newRate) / 2.0;
-            if (brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
-                {
-                abortMove = YES;
-                return (NO_ERROR);
-                }
             }
         }
     

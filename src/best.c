@@ -1622,21 +1622,10 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 {
                 brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
                 brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
-                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
-                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             if (p->anc->anc != NULL)
                 {
                 brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[p->anc->index])/2.0;
-                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
@@ -1666,21 +1655,10 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 {
                 brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
-                if (brlens[p->left->index]  < RELBRLENS_MIN || brlens[p->left->index]  > RELBRLENS_MAX ||
-                    brlens[p->right->index] < RELBRLENS_MIN || brlens[p->right->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             if (p->anc->anc != NULL)
                 {
                 brlens[p->index] = igrRate[p->index] * p->length;
-                if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
-                    {
-                    abortMove = YES;
-                    return (NO_ERROR);
-                    }
                 }
             }
         }
