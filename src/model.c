@@ -3891,12 +3891,12 @@ int DoPropset (void)
 int DoPropsetParm (char *parmName, char *tkn)
 {
     int                 i, j, k, nMatches, tempInt;
-    static char         *temp=NULL, *localTkn=NULL; /*freed at the end of the call*/
     MrBFlt              tempFloat;
     static MCMCMove     *mv = NULL;
     static MrBFlt       *theValue, theValueMin, theValueMax;
     static int          jump, runIndex, chainIndex;
-    static char         *tempName=NULL; /*not freed at the end of the call*/
+    static char         *temp=NULL, *localTkn=NULL; /*freed at the end of the call*/
+    static char         *tempName=NULL;         /*not freed at the end of the call*/
 
     if (defMatrix == NO)
         {
@@ -9782,7 +9782,6 @@ int DoStartvals (void)
 int DoStartvalsParm (char *parmName, char *tkn)
 {
     int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
-    static char         *temp=NULL;
     MrBFlt              tempFloat, *value, *subValue;
     Tree                *theTree, *usrTree;
     PolyTree            *thePolyTree;
@@ -9790,7 +9789,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
     static Param        *param = NULL;
     static MrBFlt       *theValue, theValueMin, theValueMax;
     static int          useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
-    static char         *tempName=NULL;
+    static char         *temp=NULL, *tempName=NULL;
 
     if (defMatrix == NO)
         {
@@ -9805,7 +9804,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
             /* we expect a parameter name with possible run and chain specification as follows:
                <param_name>(<run>,<chain>)=(<number>,...)   -- apply to run <run> and chain <chain>
                <param_name>(,<chain>)=(<number>,...)        -- apply to chain <chain> for all runs
-               <param_name>(<run>,)=(<number>,...)          -- apply to all chains of run <run>
+               <param_name>(<run>,)=(<number>,...)          -- apply to run <run> for all chains
 
                topology and branch length parameters are specified like
                <param_name>(<run>,<chain>)=<tree_name>|<Newick_tree_spec>
@@ -9942,29 +9941,15 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             MrBayesPrint ("%s   User tree '%s' does not have branch lengths so it cannot be used in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
                             return (ERROR);
                             }
-                        /* if (theTree->isClock == YES && IsClockSatisfied (usrTree,0.001) == NO)
-                            {
-                            MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
-                            ShowNodes(usrTree->root,0,YES);
-                            return (ERROR);
-                            }
-                         */
-                        /* if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO) //no calibration is set up in usertree so do not do this check
-                            {
-                            MrBayesPrint ("%s   Branch lengths of the user tree '%s' does not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
-                            return (ERROR);
-                            }
-                         */
                         if (AreTopologiesSame (theTree, usrTree) == NO)
                             {
                             MrBayesPrint ("%s   Topology of user tree '%s' wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
                             return (ERROR);
                             }
                         //assert (IsTreeConsistent(param, chainId, 0) == YES);
-                            /* reset node depths to ensure that non-dated tips have node depth 0.0 */
+                        /* reset node depths to ensure that non-dated tips have node depth 0.0 */
                         /* if (usrTree->isClock == YES)
-                            SetNodeDepths(usrTree);
-                         */
+                            SetNodeDepths(usrTree);  */
                         if (ResetBrlensFromTree (theTree, usrTree) == ERROR)
                             {
                             MrBayesPrint ("%s   Could not set parameter '%s' from user tree '%s'\n", spacer, param->name, userTree[treeIndex]->name);
@@ -10011,8 +9996,9 @@ int DoStartvalsParm (char *parmName, char *tkn)
                              param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES)
                         {
                         if (theTree->isCalibrated == YES && theTree->fromUserTree == NO)
-                            {/*if theTree is not set from user tree then we can not garanty that branch lenghts will stay the same by the time we start mcmc run because of clockrate adjustment.*/
-                            MrBayesPrint ("%s    Set starting values for branch lenghtes first! Starting value of relaxed paramiters could be set up only for trees where branch lengths are already set up from user tree.\n", spacer, param->name);
+                            { /* if theTree is not set from user tree then we can not garanty that branch lenghts will stay the same
+                                 by the time we start mcmc run because of clockrate adjustment. */
+                            MrBayesPrint ("%s    Set starting values for branch lengthes first before setting starting values of relaxed parameters!\n", spacer);
                             return (ERROR);
                             }
                         if (theTree->isCalibrated == NO && IsClockSatisfied (usrTree, 0.001) == NO) // user tree is not calibrated so do not check it if calibration is in place
@@ -10021,13 +10007,6 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             ShowNodes(usrTree->root,0,YES);
                             return (ERROR);
                             }
-                        /*   
-                        if (theTree->isCalibrated == YES && IsCalibratedClockSatisfied (usrTree,0.001) == NO)
-                            {
-                            MrBayesPrint ("%s   Branch lengths of the user tree '%s' do not satisfy clock calibrations in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
-                            return (ERROR);
-                            }
-                        */
                         if (AreTopologiesSame (theTree, usrTree) == NO)
                             {
                             MrBayesPrint ("%s   Topology of user tree '%s' is wrong in setting parameter '%s'\n", spacer, userTree[treeIndex]->name, param->name);
@@ -10068,10 +10047,6 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         }
                     }
-                    /*
-                for (j=0; j<numParams; j++)
-                    assert (IsTreeConsistent(&params[j],0,0) == YES);
-                    */
                 }
             expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
             }
@@ -10297,13 +10272,21 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             continue;
                         value = GetParamVals(param,i*chainParams.numChains+j,0);
                         subValue = GetParamSubVals(param,i*chainParams.numChains+j,0);
-                        if (param->paramType == P_SHAPE)
+                        if (param->paramType == P_SHAPE && !strncmp(param->name, "Alpha", 5))
                             {
                             if (DiscreteGamma (subValue, value[0], value[0], param->nSubValues, 0) == ERROR)
                                 return (ERROR);
                             }
+                        else if (param->paramType == P_SHAPE && !strncmp(param->name, "Sigma", 5))
+                            {
+                            if( DiscreteLogNormal(subValue, value[0], param->nSubValues, 1) == ERROR)
+                                return (ERROR);
+                            }
                         else if (param->paramType == P_CORREL)
-                            AutodGamma (subValue, value[0], (int)(sqrt(param->nSubValues) + 0.5));
+                            {
+                            if (AutodGamma (subValue, value[0], (int)(sqrt(param->nSubValues) + 0.5)) == ERROR)
+                                return (ERROR);
+                            }
                         }
                     }
                 }
@@ -10910,21 +10893,29 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 }
             else if (p->paramType == P_SHAPE)
                 {
-                /* Fill in gamma values ********************************************************************************/
+                /* Fill in shape values ********************************************************************************/
                 /* first get hyperprior */
                 if (p->paramId == SHAPE_UNI)
                     {
-                    value[0] = 10.0;
+                    value[0] = 1.0;
                     if (value[0] < mp->shapeUni[0] || value[0] > mp->shapeUni[1])
                         value[0] = mp->shapeUni[0] + (mp->shapeUni[1] - mp->shapeUni[0]) *  0.5;
                     }
                 else if (p->paramId == SHAPE_EXP)
-                    value[0] = 10.0;  // was 100.0
+                    value[0] = 1.0;  // was 100.0
                 else if (p->paramId == SHAPE_FIX)
                     value[0] = mp->shapeFix;
                 /* now fill in rates */
-                if (DiscreteGamma (subValue, value[0], value[0], mp->numGammaCats, 0) == ERROR)
-                    return (ERROR);
+                if (!strcmp(mp->ratesModel, "LNorm"))
+                    {
+                    if (DiscreteLogNormal (subValue, value[0], mp->numGammaCats, 1) == ERROR)
+                        return (ERROR);
+                    }
+                else  /* gamma rate */
+                    {
+                    if (DiscreteGamma (subValue, value[0], value[0], mp->numGammaCats, 0) == ERROR)
+                        return (ERROR);
+                    }
                 }
             else if (p->paramType == P_PINVAR)
                 {
@@ -13282,19 +13273,19 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         }
     else if (whichParam == P_SHAPE)
         {
-        /* Check the gamma shape parameter for partitions 1 and 2. */
+        /* Check the shape parameter for partitions 1 and 2. */
         
         /* Check if the model is parsimony for either partition */
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
-            *isApplic1 = NO; /* part1 has a parsimony model and gamma shape parameter does not apply */
+            *isApplic1 = NO; /* part1 has a parsimony model and shape parameter does not apply */
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
-            *isApplic2 = NO; /* part2 has a parsimony model and gamma shape parameter does not apply */
+            *isApplic2 = NO; /* part2 has a parsimony model and shape parameter does not apply */
 
         /* Check that the data are not CONTINUOUS for partitions 1 and 2 */
         if (modelParams[part1].dataType == CONTINUOUS)
-            *isApplic1 = NO; /* the gamma shape parameter does not make sense for part1 */
+            *isApplic1 = NO; /* the shape parameter does not make sense for part1 */
         if (modelParams[part2].dataType == CONTINUOUS)
-            *isApplic2 = NO; /* the gamma shape parameter does not make sense for part2 */
+            *isApplic2 = NO; /* the shape parameter does not make sense for part2 */
 
         /* Now, check that the data are the same (i.e., both nucleotide or both amino acid, or whatever). */
         if (isFirstNucleotide != isSecondNucleotide)
@@ -13302,29 +13293,27 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         else if (modelParams[part1].dataType != modelParams[part2].dataType && isFirstNucleotide == NO)
             isSame = NO; /* data are not the same */
 
-        /* Let's check that the gamma shape parameter is even relevant for the two partitions */
+        /* Let's check that the shape parameter is even relevant for the two partitions */
         if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Propinv"))
-            *isApplic1 = NO; /* the gamma shape parameter does not make sense for part1 */
+            *isApplic1 = NO; /* the shape parameter does not make sense for part1 */
         if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Propinv"))
-            *isApplic2 = NO; /* the gamma shape parameter does not make sense for part2 */
+            *isApplic2 = NO; /* the shape parameter does not make sense for part2 */
         
         /* We may have a nucleotide model. Make certain the models are not of type codon. */
         if (!strcmp(modelParams[part1].nucModel, "Codon"))
-            *isApplic1 = NO; /* we have a codon model for part1, and a gamma shape parameter does not apply */
+            *isApplic1 = NO; /* we have a codon model for part1, and a shape parameter does not apply */
         if (!strcmp(modelParams[part2].nucModel, "Codon"))
-            *isApplic2 = NO;/* we have a codon model for part2, and a gamma shape parameter does not apply */
+            *isApplic2 = NO;/* we have a codon model for part2, and a shape parameter does not apply */
 
         /* Check that the model structure is the same for both partitions */
         if ((!strcmp(modelParams[part1].nucModel, "4by4") || !strcmp(modelParams[part1].nucModel, "Doublet")) && !strcmp(modelParams[part2].nucModel, "Codon"))
             isSame = NO; /* the nucleotide models are incompatible with the same shape parameter */
         if ((!strcmp(modelParams[part2].nucModel, "4by4") || !strcmp(modelParams[part2].nucModel, "Doublet")) && !strcmp(modelParams[part1].nucModel, "Codon"))
             isSame = NO; /* the nucleotide models are incompatible with the same shape parameter */
-        /*if (strcmp(modelParams[part1].covarionModel, modelParams[part2].covarionModel))
-            isSame = NO;*/ /* the models have different covarion struture */  /* NOTE: Perhaps we should allow the possiblity that
-                                                                                     the gamma shape parameter is the same for the
-                                                                                     case where one partition has a covarion model
-                                                                                     but the other does not and both datatypes are
-                                                                                     the same. */
+        /* if (strcmp(modelParams[part1].covarionModel, modelParams[part2].covarionModel))
+            isSame = NO; */ /* the models have different covarion struture */
+        /* NOTE: Perhaps we should allow the possiblity that the shape parameter is the same for the case
+                 where one partition has a covarion model but the other does not and both datatypes are the same. */
         
         /* Check that the number of rate categories is the same */
         if (modelParams[part1].numGammaCats != modelParams[part2].numGammaCats)
@@ -13378,9 +13367,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             isSame = NO; /* data are not the same */
 
         /* Let's check that proportion of invariable sites parameter is even relevant for the two partitions */
-        if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Gamma") || !strcmp(modelParams[part1].ratesModel, "Adgamma"))
+        if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Gamma") ||
+            !strcmp(modelParams[part1].ratesModel, "LNorm") || !strcmp(modelParams[part1].ratesModel, "Adgamma"))
             *isApplic1 = NO; /* the proportion of invariable sites parameter does not make sense for part1 */
-        if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Gamma") || !strcmp(modelParams[part2].ratesModel, "Adgamma"))
+        if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Gamma") ||
+            !strcmp(modelParams[part2].ratesModel, "LNorm") || !strcmp(modelParams[part2].ratesModel, "Adgamma"))
             *isApplic2 = NO; /* the proportion of invariable sites parameter does not make sense for part2 */
             
         /* It is not sensible to have a covarion model and a proportion of invariable sites */
@@ -14448,10 +14439,10 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         }
     else if (whichParam == P_IGRVAR)
         {
-        /* Check prior for igr gamma shape for partitions 1 and 2. */
+        /* Check prior for igr shape for partitions 1 and 2. */
         
         /* Check if the model is parsimony for either partition. If so, then the branch lengths cannot apply (as parsimony is very
-        silly and doesn't take this information into account) and igr gamma shape is inapplicable. */
+        silly and doesn't take this information into account) and igr shape is inapplicable. */
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
             *isApplic1 = NO; 
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
@@ -14469,7 +14460,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (strcmp(modelParams[part2].clockVarPr, "Igr"))
             *isApplic2 = NO;
         
-        /* Now, check that the prior on igr gamma shape is the same. */
+        /* Now, check that the prior on igr shape is the same. */
         if (!strcmp(modelParams[part1].igrvarPr,"Uniform") && !strcmp(modelParams[part2].igrvarPr,"Uniform"))
             {
             if (AreDoublesEqual (modelParams[part1].igrvarUni[0], modelParams[part2].igrvarUni[0], (MrBFlt) 0.00001) == NO)
@@ -14517,7 +14508,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (strcmp(modelParams[part2].clockVarPr, "Igr"))
             *isApplic2 = NO;
         
-        /* Now, check that the igr gamma shape parameter is the same */
+        /* Now, check that the igr shape parameter is the same */
         if (IsModelSame (P_IGRVAR, part1, part2, &temp1, &temp2) == NO)
             isSame = NO;
         if (linkTable[P_IGRVAR][part1] != linkTable[P_IGRVAR][part2])
@@ -17623,7 +17614,7 @@ int SetModelInfo (void)
                 }
             }
         /* check if we should use gibbs sampling of gamma (don't use it with pinvar or invgamma) */
-        if (!strcmp(mp->useGibbs,"Yes") && m->numGammaCats > 1)
+        if (!strcmp(mp->useGibbs,"Yes") && (m->numGammaCats > 1))
             {
             if (m->dataType == DNA || m->dataType == RNA || m->dataType == PROTEIN)
                 {
@@ -18354,19 +18345,29 @@ int SetModelParams (void)
             }
         else if (j == P_SHAPE)
             {
-            /* Set up shape parameter of gamma **********************************************************************/
+            /* Set up shape parameter of gamma/lnorm *****************************************************************/
             p->paramType = P_SHAPE;
             p->nValues = 1;
             p->nSubValues = mp->numGammaCats;
-            p->min = 1E-6;
-            p->max = 200;
+            p->min = 1E-5;
+            p->max = 100;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].shape = p;
-
-            p->paramTypeName = "Shape of scaled gamma distribution of site rates";
-            SafeStrcat(&p->name, "Alpha");
+            if(!strcmp(mp->ratesModel, "LNorm"))
+                {
+                p->paramTypeName = "SD of scaled lognormal distribution of site rates";
+                SafeStrcat(&p->name, "Sigma");
+                SafeStrcat (&p->paramHeader, "sigma");
+                }
+            else
+                {
+                p->paramTypeName = "Shape of scaled gamma distribution of site rates";
+                SafeStrcat(&p->name, "Alpha");
+                SafeStrcat (&p->paramHeader, "alpha");
+                }
             SafeStrcat(&p->name, partString);
+            SafeStrcat (&p->paramHeader, partString);
 
             /* find the parameter x prior type */
             mp = &modelParams[p->relParts[0]];
@@ -18379,8 +18380,6 @@ int SetModelParams (void)
                 
             if (p->paramId != SHAPE_FIX)
                 p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "alpha");
-            SafeStrcat (&p->paramHeader, partString);
             }
         else if (j == P_PINVAR)
             {
@@ -20289,7 +20288,7 @@ void SetUpMoveTypes (void)
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_GammaShape_M */
+    /* Move_RateShape_M */
     mt = &moveTypes[i++];
     mt->name = "Multiplier";
     mt->shortName = "Multiplier";
@@ -20298,12 +20297,12 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = SHAPE_UNI;
     mt->applicableTo[1] = SHAPE_EXP;
     mt->nApplicable = 2;
-    mt->moveFxn = &Move_GammaShape_M;
+    mt->moveFxn = &Move_RateShape_M;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 20.0;                 /* smaller */
+    mt->maximum[0] = 10.0;                 /* smaller */
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
@@ -22218,22 +22217,29 @@ int ShowModel (void)
                             }
                         else
                             {
-                            if ((!strcmp(modelParams[i].ratesModel, "Invgamma") || !strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Adgamma")))
+                            if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Invgamma") ||
+                                !strcmp(modelParams[i].ratesModel, "LNorm") || !strcmp(modelParams[i].ratesModel, "Adgamma"))
                                 {
+                                /* how many categories is the continuous gamma approximated by? */
+                                MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
+                                if (!strcmp(modelParams[i].useGibbs,"Yes"))
+                                    MrBayesPrint ("%s                     Rate categories sampled using Gibbs sampling.\n", spacer, modelParams[i].numGammaCats);
+                                else
+                                    MrBayesPrint ("%s                     Likelihood summarized over all rate categories in each generation.\n", spacer, modelParams[i].numGammaCats);
                                 /* distribution on shape parameter, if appropriate */
                                 if (!strcmp(modelParams[i].shapePr,"Uniform"))
                                     {
-                                    MrBayesPrint ("%s                     Gamma shape parameter is uniformly dist-\n", spacer);
-                                    MrBayesPrint ("%s                     ributed on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].shapeUni[0], modelParams[i].shapeUni[1]);
+                                    MrBayesPrint ("%s                     Shape parameter is uniformly distributed\n", spacer);
+                                    MrBayesPrint ("%s                     on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].shapeUni[0], modelParams[i].shapeUni[1]);
                                     }
                                 else if (!strcmp(modelParams[i].shapePr,"Exponential"))
                                     {
-                                    MrBayesPrint ("%s                     Gamma shape parameter is exponentially\n", spacer);
+                                    MrBayesPrint ("%s                     Shape parameter is exponentially\n", spacer);
                                     MrBayesPrint ("%s                     distributed with parameter (%1.2lf).\n", spacer, modelParams[i].shapeExp);
                                     }
                                 else
                                     {
-                                    MrBayesPrint ("%s                     Gamma shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
+                                    MrBayesPrint ("%s                     Shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
                                     }
                                 }
                             if ((!strcmp(modelParams[i].ratesModel, "Propinv") || !strcmp(modelParams[i].ratesModel, "Invgamma")) && !strcmp(modelParams[i].covarionModel, "No"))
@@ -22262,17 +22268,7 @@ int ShowModel (void)
                                     MrBayesPrint ("%s                     Rate correlation parameter is fixed to %1.2lf.\n", spacer, modelParams[i].corrFix);
                                     }
                                 }
-                            
-                            if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Invgamma") || !strcmp(modelParams[i].ratesModel, "Adgamma"))
-                                {
-                                /* how many categories is the continuous gamma approximated by? */
-                                MrBayesPrint ("%s                     Gamma distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
-                                if (!strcmp(modelParams[i].useGibbs,"Yes"))
-                                    MrBayesPrint ("%s                     Rate categories sampled using Gibbs sampling.\n", spacer, modelParams[i].numGammaCats);
-                                else
-                                    MrBayesPrint ("%s                     Likelihood summarized over all rate categories in each generation.\n", spacer, modelParams[i].numGammaCats);
-                                }
-                            }                       
+                            }
                         }
                     }
                 }

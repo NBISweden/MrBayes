@@ -267,5 +267,8 @@ MrBFlt    PsiGammaLnRatio (MrBFlt alpha, MrBFlt numerator, MrBFlt denominator);
 MrBFlt    PsiGammaRandomVariable (MrBFlt alpha, RandLong *seed);
 MrBFlt    QuantileGamma (MrBFlt x, MrBFlt alfa, MrBFlt beta);
 MrBFlt    RandomNumber (RandLong *seed);
+MrBFlt    QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
+int       DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
+MrBFlt    LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
 #endif  /* __UTILS_H__ */

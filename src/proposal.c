@@ -5013,12 +5013,12 @@ int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 }
 
 
-int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    /* change gamma shape parameter using multiplier */
+    /* change gamma/lnorm shape parameter using multiplier */
     
     int         i, isAPriorExp, isValidA;
-    MrBFlt      oldA, newA, minA, maxA, alphaExp=0.0, ran, factor, tuning, *gammaRates;
+    MrBFlt      oldA, newA, minA, maxA, alphaExp=0.0, ran, factor, tuning, *rates;
     ModelParams *mp;
 
     /* get tuning parameter */
@@ -5056,8 +5056,7 @@ int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* check validity */
     isValidA = NO;
-    do
-        {
+    do  {
         if (newA < minA)
             newA = minA * minA / newA;
         else if (newA > maxA)
@@ -5078,12 +5077,21 @@ int Move_GammaShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* copy new alpha value back */
     *GetParamVals(param, chain, state[chain]) = newA;
     
-    /* now, update gamma category information */
-    gammaRates = GetParamSubVals (param, chain, state[chain]);
-    if (DiscreteGamma (gammaRates, newA, newA, mp->numGammaCats, 0) == ERROR)
-        return (ERROR);
+    /* now, update rate category information */
+    rates = GetParamSubVals (param, chain, state[chain]);
+    
+    if(!strcmp(mp->ratesModel, "LNorm"))
+        {
+        if (DiscreteLogNormal (rates, newA, mp->numGammaCats, 1) == ERROR)
+            return (ERROR);
+        }
+    else  /* gamma rate */
+        {
+        if (DiscreteGamma (rates, newA, newA, mp->numGammaCats, 0) == ERROR)
+            return (ERROR);
+        }
 
-    /* Set update flags for all partitions that share this alpha. Note that the conditional 
+    /* Set update flags for all partitions that share this alpha. Note that the conditional
        likelihood update flags have been set before we even call this function. */
     for (i=0; i<param->nRelParts; i++)
         TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);

@@ -14630,12 +14630,10 @@ MrBFlt LogLike (int chain)
                 chainLnLike += lnL;
                 
                 /* set mark for other divisions in the HMM
-                   (i.e., those with the same correlation parameter
-                   AND the same gamma shape parameter) */
+                   (i.e., those with the same correlation parameter AND the same shape parameter) */
                 for (i=0; i<m->correlation->nRelParts; i++)
                     {
-                    if (modelSettings[m->correlation->relParts[i]].shape ==
-                        modelSettings[d].shape)
+                    if (modelSettings[m->correlation->relParts[i]].shape == modelSettings[d].shape)
                         {
                         modelSettings[m->correlation->relParts[i]].mark = YES;
                         }
@@ -14871,7 +14869,7 @@ MrBFlt LogPrior (int chain)
             }
         else if (p->paramType == P_SHAPE)
             {
-            /* gamma shape parameter */
+            /* gamma/lnorm shape parameter */
             if (p->paramId == SHAPE_UNI)
                 {
                 lnPrior += log(1.0) - log(mp->shapeUni[1] - mp->shapeUni[0]);

@@ -650,7 +650,7 @@ int InitializeMrBayes (void)
         defaultModel.stateFreqsDir[i] = 1.0;
         }    
     defaultModel.numDirParams = 0;
-    strcpy(defaultModel.shapePr, "Exponential");        /* prior for gamma shape parameter              */
+    strcpy(defaultModel.shapePr, "Exponential");        /* prior for gamma/lnorm shape parameter        */
     defaultModel.shapeFix = 0.5;
     defaultModel.shapeUni[0] = MIN_SHAPE_PARAM;
     defaultModel.shapeUni[1] = MAX_SHAPE_PARAM;

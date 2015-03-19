@@ -130,6 +130,9 @@ MrBFlt  Tha (MrBFlt h1, MrBFlt h2, MrBFlt a1, MrBFlt a2);
 void    TiProbsUsingEigens (int dim, MrBFlt *cijk, MrBFlt *eigenVals, MrBFlt v, MrBFlt r, MrBFlt **tMat, MrBFlt **fMat, MrBFlt **sMat);
 void    TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBFlt **tMat, MrBFlt **fMat, MrBFlt **sMat);
 
+MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
+int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
+MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
 /* AddBitfield: Add bitfield to list of bitfields. The function uses global variable nLongsNeeded. */
 int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
@@ -8927,16 +8930,14 @@ int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
         for (j=0; j<K; j++)
             M[i*K+j] /= sum;
         }
-        
-#   if 0
-    MrBayesPrint ("rho = %lf\n", rho);
-    for (i=0; i<K; i++)
-        {
-        for (j=0; j<K; j++)
-            MrBayesPrint ("%lf ", M[i*K + j]);
-        MrBayesPrint ("\n");
-        }
-#   endif
+    
+//    MrBayesPrint ("rho = %lf\n", rho);
+//    for (i=0; i<K; i++)
+//        {
+//        for (j=0; j<K; j++)
+//            MrBayesPrint ("%lf ", M[i*K + j]);
+//        MrBayesPrint ("\n");
+//        }
     
     return (NO_ERROR);
 }
@@ -10401,6 +10402,83 @@ int DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median)
         }
 
     return (NO_ERROR);
+}
+
+
+/*---------------------------------------------------------------------------------
+ |
+ |   DiscreteLogNormal
+ |
+ |   Discretization of lognormal distribution with equal proportions in each
+ |   category.
+ |
+ |   LBH Notes:     K = # of rate classes
+ |                *rK = pointer to output rate class matrix
+ |               alfa = alpha param
+ |               beta = beta param
+ |             median = flag to use media or not (1 = use median, 0 = mean?)
+ |
+ ---------------------------------------------------------------------------------*/
+int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
+{
+    int i;
+    MrBFlt t, factor;
+    MrBFlt sigmaL = sqrt(sigma);
+    MrBFlt mu = -1.0*((0.5*pow(sigmaL,2.0)));
+    if (median)
+        {
+        for (i=0; i<K; i++) {
+            rK[i] = QuantileLogNormal( ((2.0*i + 1) / (2.0 * K)), mu, sigmaL);
+            }
+        for (i=0,t=0.0; i<K; i++) {
+            t = t+rK[i];
+            }
+        t /= K;
+        for (i=0; i<K; i++)
+            rK[i] /= t;
+        }
+    else
+        {
+        mu = -1.0*((0.5*pow(sigmaL,2.0)));
+        /* Mean set to 1.0 so factor = K */
+        factor = 1.0*K;
+        for (i=0; i<K-1; i++) {
+            rK[i] = QuantileLogNormal(((i + 1.0) / (K)), mu, sigmaL);
+            }
+        for (i=0; i<K-1; i++) {
+            //rK[i] = LogNormalPoint(rK[i], mu, sigma);
+            //rK[i] = QuantileLogNormal(rK[i], mu, sigma);
+            //rK[i] = CdfNormal((log(rK[i])-mu)/sigma);
+            rK[i] = 1 - (1.0 * CdfNormal((mu + pow(sigmaL,2.0) - log(rK[i]))/sigmaL));
+            }
+        rK[K-1] = 1.0;
+        for (i=K-1; i>0; i--) {
+            rK[i] -= rK[i-1];
+            rK[i] *= factor;
+            }
+        rK[0] *= factor;
+        }
+
+    return (NO_ERROR);
+}
+
+
+/* LogNormal Quantile Function */
+MrBFlt QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma)
+{
+    MrBFlt a = 0.0, b = 0.0;
+    a = PointNormal((0.5*(2.0*prob-1.0))+0.5) / sqrt(2.0);
+    b = mu+(sqrt(2.0)* sigma * a);
+    return exp(b);
+}
+
+
+/* LogNormal Point Function */
+MrBFlt LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma)
+{
+    if(x <= 0.0) return(0.0);
+    MrBFlt a = LnProbLogNormal(mu, sigma, x);
+    return exp(a);
 }
 
 

@@ -366,8 +366,8 @@ int                 inDataBlock, inForeignBlock, isInterleaved, isFirstMatrixRea
                     isNegative, numDivisions, charOrdering, foundExp, foundColon, isFirstNode, nextAvailableNode,
                     pairId, firstPair, inTaxaBlock, inCharactersBlock, foundEqual;
 char                gapId, missingId, matchId, tempSetName[100], **tempNames;
-CmdType             *commandPtr; /*Points to the commands array entery which corresponds to currently processed command*/
-ParmInfoPtr         paramPtr;    /*Points to paramTable table array entery which corresponds to currently processed parameter of current command*/
+CmdType             *commandPtr; /* Points to the commands array entry which corresponds to currently processed command */
+ParmInfoPtr         paramPtr;    /* Points to paramTable table array entry which corresponds to currently processed parameter of current command */
 TreeNode            *pPtr, *qPtr;
 
 enum ConstraintType     consrtainType; /* Used only in processing of constraine command to indicate what is the type of constrain */
@@ -10350,6 +10350,11 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                              at a site is drawn from a gamma distribution.      \n");
         MrBayesPrint ("                              The gamma distribution has a single parameter      \n");
         MrBayesPrint ("                              that describes how much rates vary.                \n");
+        MrBayesPrint ("                * lnorm    -- Log Normal-distributed rates across sites. The     \n");
+        MrBayesPrint ("                              rate at a site is drawn from a lognormal           \n");
+        MrBayesPrint ("                              distribution. the lognormal distribiton has a      \n");
+        MrBayesPrint ("                              single parameter, sigma (SD) that describes how    \n");
+        MrBayesPrint ("                              much rates vary (mean fixed to log(1.0) == 0.0.    \n");
         MrBayesPrint ("                * adgamma  -- Autocorrelated rates across sites. The marg-       \n");
         MrBayesPrint ("                              inal rate distribution is gamma, but adjacent      \n");
         MrBayesPrint ("                              sites have correlated rates.                       \n");
@@ -10372,6 +10377,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
         MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
         MrBayesPrint ("                approximating the continuous gamma.                              \n");
+        MrBayesPrint ("                It is also used to set the number of rate categories for the     \n");
+        MrBayesPrint ("                lognormal distribution to avoid changing too much of the code,   \n");
+        MrBayesPrint ("                although the name is bad (should add Nlnormcat in future).       \n");
 #if 0
         /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
         MrBayesPrint ("   Usegibbs  -- Specifies whether site probabilities under the discrete gamma    \n");
@@ -10405,10 +10413,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                speed difference is not quite as large as this.                  \n");
 #endif
         MrBayesPrint ("   Nbetacat  -- Sets the number of rate categories for the beta distribution.    \n");
-        MrBayesPrint ("                A symmetric beta distribution is used to model the station-      \n");
-        MrBayesPrint ("                ary frequencies when morphological data are used. This option    \n");
-        MrBayesPrint ("                specifies how well the beta distribution will be approx-         \n");
-        MrBayesPrint ("                imated.                                                          \n");
+        MrBayesPrint ("                A symmetric beta distribution is used to model the stationary    \n");
+        MrBayesPrint ("                frequencies when morphological data are used. This option        \n");
+        MrBayesPrint ("                specifies how well the beta distribution will be approximated.   \n");
         MrBayesPrint ("   Omegavar  -- Allows the nonsynonymous/synonymous rate ratio (omega) to vary   \n");
         MrBayesPrint ("                across codons. Ny98 assumes that there are three classes, with   \n");
         MrBayesPrint ("                potentially different omega values (omega1, omega2, omega3):     \n");
@@ -10424,24 +10431,24 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                ible. When the process is on, substitutions occur according to   \n");
         MrBayesPrint ("                a specified substitution model (specified using the other        \n");
         MrBayesPrint ("                lset options).                                                   \n");
-        MrBayesPrint ("   Coding    -- This specifies how characters were sampled. If all site pat-     \n");
-        MrBayesPrint ("                terns had the possibility of being sampled, then \"all\" should  \n");
-        MrBayesPrint ("                be specified (the default). Otherwise \"variable\" (only var-    \n");
-        MrBayesPrint ("                iable characters had the possibility of being sampled),          \n");
-        MrBayesPrint ("                \"noabsence\" (characters for which all taxa were coded as       \n");
-        MrBayesPrint ("                absent were not sampled), and \"nopresence\" (characters for     \n");
-        MrBayesPrint ("                which all taxa were coded as present were not sampled. \"All\"   \n");
-        MrBayesPrint ("                works for all data types. However, the others only work for      \n");
-        MrBayesPrint ("                morphological (all/variable) or restriction site (all/variable/  \n");
-        MrBayesPrint ("                noabsence/nopresence) data.                                      \n");
+        MrBayesPrint ("   Coding    -- This specifies how characters were sampled. If all site patterns \n");
+        MrBayesPrint ("                had the possibility of being sampled, then \"all\" should be     \n");
+        MrBayesPrint ("                specified (the default). Otherwise \"variable\" (only variable   \n");
+        MrBayesPrint ("                characters had the possibility of being sampled), \"noabsence\"  \n");
+        MrBayesPrint ("                (characters for which all taxa were coded as absent were not     \n");
+        MrBayesPrint ("                sampled), and \"nopresence\" (characters for which all taxa were \n");
+        MrBayesPrint ("                coded as present were not sampled. \"All\" works for all data    \n");
+        MrBayesPrint ("                types. However, the others only work for morphological (all/     \n");
+        MrBayesPrint ("                variable) or restriction site (all/variable/noabsence/nopresence)\n");
+        MrBayesPrint ("                data.                                                            \n");
         MrBayesPrint ("   Parsmodel -- This forces calculation under the so-called parsimony model      \n");
         MrBayesPrint ("                described by Tuffley and Steel (1998). The options are \"yes\"   \n");
         MrBayesPrint ("                or \"no\". Note that the biological assumptions of this model    \n");
         MrBayesPrint ("                are anything but parsimonious. In fact, this model assumes many  \n");
-        MrBayesPrint ("                more parameters than the next most complicated model imple-      \n");
-        MrBayesPrint ("                mented in this program. If you really believe that the pars-     \n");
-        MrBayesPrint ("                imony model makes the biological assumptions described by        \n");
-        MrBayesPrint ("                Tuffley and Steel, then the parsimony method is miss-named.      \n");
+        MrBayesPrint ("                more parameters than the next most complicated model implemented \n");
+        MrBayesPrint ("                in this program. If you really believe that the parsimony model  \n");
+        MrBayesPrint ("                makes the biological assumptions described by Tuffley and Steel, \n");
+        MrBayesPrint ("                then the parsimony method is miss-named.                         \n");
     /*  MrBayesPrint ("   Augment   -- This allows the chain to consider the missing entries of         \n");
         MrBayesPrint ("                the data matrix as random variables. A Gibbs sampler is          \n");
         MrBayesPrint ("                used to sample states.                                           \n"); */
@@ -10470,7 +10477,8 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
             MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
             MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked               %s                         \n", mp->ploidy);
-            MrBayesPrint ("   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  %s                         \n", mp->ratesModel);
+            MrBayesPrint ("   Rates        Equal/Gamma/LNorm/Propinv/                                       \n");
+            MrBayesPrint ("                Invgamma/Adgamma                      %s                         \n", mp->ratesModel);
             MrBayesPrint ("   Ngammacat    <number>                              %d                         \n", mp->numGammaCats);
 #if 0
 /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
@@ -10714,7 +10722,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    single number, then the prior has all states equally         \n");
         MrBayesPrint ("                    probable with a variance related to the single parameter     \n");
         MrBayesPrint ("                    passed in.                                                   \n");
-        MrBayesPrint ("   Shapepr       -- This parameter specifies the prior for the gamma shape       \n");
+        MrBayesPrint ("   Shapepr       -- This parameter specifies the prior for the gamma/lnorm shape \n");
         MrBayesPrint ("                    parameter for among-site rate variation. The options are:    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset shapepr = uniform(<number>,<number>)                \n");
@@ -12573,7 +12581,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Revmat          -- Substitution rates of GTR model                         \n");
         MrBayesPrint ("      Omega           -- Nonsynonymous/synonymous rate ratio                     \n");
         MrBayesPrint ("      Statefreq       -- Character state frequencies                             \n");
-        MrBayesPrint ("      Shape           -- Gamma shape parameter                                   \n");
+        MrBayesPrint ("      Shape           -- Gamma/LNorm shape parameter                             \n");
         MrBayesPrint ("      Pinvar          -- Proportion of invariable sites                          \n");
         MrBayesPrint ("      Correlation     -- Correlation parameter of autodiscrete gamma             \n");
         MrBayesPrint ("      Ratemultiplier  -- Rate multiplier for partitions                          \n");
@@ -12600,7 +12608,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      unlink shape=(all)                                                         \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   unlinks the gamma shape parameter across all partitions of the data.          \n");
+        MrBayesPrint ("   unlinks the gamma/lnorm shape parameter across all partitions of the data.    \n");
         MrBayesPrint ("   You can use \"showmodel\" to see the current linking status of the            \n");
         MrBayesPrint ("   characters.                                                                   \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -12621,7 +12629,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Revmat          -- Substitution rates of GTR model                         \n");
         MrBayesPrint ("      Omega           -- Nonsynonymous/synonymous rate ratio                     \n");
         MrBayesPrint ("      Statefreq       -- Character state frequencies                             \n");
-        MrBayesPrint ("      Shape           -- Gamma shape parameter                                   \n");
+        MrBayesPrint ("      Shape           -- Gamma/LNorm shape parameter                             \n");
         MrBayesPrint ("      Pinvar          -- Proportion of invariable sites                          \n");
         MrBayesPrint ("      Correlation     -- Correlation parameter of autodiscrete gamma             \n");
         MrBayesPrint ("      Ratemultiplier  -- Rate multiplier for partitions                          \n");
@@ -12648,7 +12656,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      link shape=(all)                                                           \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   links the gamma shape parameter across all partitions of the data.            \n");
+        MrBayesPrint ("   links the gamma/lnorm shape parameter across all partitions of the data.      \n");
         MrBayesPrint ("   You can use \"showmodel\" to see the current linking status of the            \n");
         MrBayesPrint ("   characters. For more information on this command, see the help menu           \n");
         MrBayesPrint ("   for link's converse, unlink (\"help unlink\");                                \n");
@@ -13382,8 +13390,7 @@ else if (!strcmp(helpTkn, "Set"))
    NO if character is unambiguous, missing or gapped */ 
 int IsAmbig (int charCode, int dType)
 {
-    if (dType == DNA || dType == RNA || dType == STANDARD
-        || dType == RESTRICTION || dType == PROTEIN)
+    if (dType == DNA || dType == RNA || dType == STANDARD || dType == RESTRICTION || dType == PROTEIN)
         {
         if (charCode != MISSING && charCode != GAP)
             if (NBits(charCode) > 1)
@@ -13392,7 +13399,6 @@ int IsAmbig (int charCode, int dType)
     else if (dType == CONTINUOUS)
         {
         /* do nothing, these cannot be partly ambiguous */
-
         }
     else
         {
@@ -14311,7 +14317,7 @@ void SetUpParms (void)
     PARAM  (49, "Xxxxxxxxxx",     DoTaxasetParm,     "\0");
     PARAM  (50, "Xxxxxxxxxx",     DoHelpParm,        "\0");
     PARAM  (51, "Applyto",        DoLsetParm,        "\0");
-    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|Propinv|Invgamma|Adgamma|\0");
+    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|LNorm|Propinv|Invgamma|Adgamma|\0");
     PARAM  (53, "Covarion",       DoLsetParm,        "Yes|No|\0");
     PARAM  (54, "Applyto",        DoPrsetParm,       "\0");
     PARAM  (55, "Tratio",         DoLinkParm,        "\0");

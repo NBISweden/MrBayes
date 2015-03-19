@@ -242,8 +242,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define AMPERSAND               28
 
 #define MAX_Q_RATE              100.0f
-#define MIN_SHAPE_PARAM         0.0001f
-#define MAX_SHAPE_PARAM         200.0f
+#define MIN_SHAPE_PARAM         0.00001f
+#define MAX_SHAPE_PARAM         100.0f
 #define MAX_SITE_RATE           10.0f
 #define MAX_GAMMA_CATS          20
 #define MAX_GAMMA_CATS_SQUARED  400
@@ -956,7 +956,7 @@ typedef struct model
     MrBFlt      stateFreqsDir[200];
     char        stateFreqsFixType[100];
     int         numDirParams;
-    char        shapePr[100];      /* prior for gamma shape parameter              */
+    char        shapePr[100];      /* prior for gamma/lnorm shape parameter        */
     MrBFlt      shapeFix;
     MrBFlt      shapeUni[2];
     MrBFlt      shapeExp;
