@@ -10773,7 +10773,8 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                             }
                             
                         BetaBreaks (subValue[mp->numM10BetaCats + mp->numM10GammaCats + 4], subValue[mp->numM10BetaCats + mp->numM10GammaCats + 5], &value[0], mp->numM10BetaCats);
-                        if (DiscreteGamma (&value[mp->numM10BetaCats], subValue[mp->numM10BetaCats + mp->numM10GammaCats + 6], subValue[mp->numM10BetaCats + mp->numM10GammaCats + 7], mp->numM10GammaCats, 0) == ERROR)
+                        if (DiscreteGamma (&value[mp->numM10BetaCats], subValue[mp->numM10BetaCats + mp->numM10GammaCats + 6],
+                                           subValue[mp->numM10BetaCats + mp->numM10GammaCats + 7], mp->numM10GammaCats, 0) == ERROR)
                             return (ERROR);
                         for (i=0; i<mp->numM10GammaCats; i++)
                             value[mp->numM10BetaCats + i] += 1.0;

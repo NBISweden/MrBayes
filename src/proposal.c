@@ -8527,7 +8527,8 @@ int Move_OmegaGamma_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     subVals[mp->numM10BetaCats + mp->numM10GammaCats + 6 + whichParam] = newVal;
     
     /* update the omega values */
-    if (DiscreteGamma (&vals[mp->numM10BetaCats], subVals[mp->numM10BetaCats + mp->numM10GammaCats + 6], subVals[mp->numM10BetaCats + mp->numM10GammaCats + 7], mp->numM10GammaCats, 0) == ERROR)
+    if (DiscreteGamma (&vals[mp->numM10BetaCats], subVals[mp->numM10BetaCats + mp->numM10GammaCats + 6],
+                       subVals[mp->numM10BetaCats + mp->numM10GammaCats + 7], mp->numM10GammaCats, 0) == ERROR)
         return (ERROR);
     for (i=0; i<mp->numM10GammaCats; i++)
         vals[mp->numM10BetaCats + i] += 1.0;
