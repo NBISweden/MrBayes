@@ -1550,7 +1550,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change relative extinction rate using sliding window */
     
     int         i, isValidM, valIndex;
-    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 oldProp[2], newProp[2], x, y, *alphaDir, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -1566,7 +1566,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     
     /* get minimum and maximum values */
     minM = 0.0;
-    maxM = 1.0;
+    maxM = 0.999999;
 
     /* get pointer to value to be changed */
     valIndex = (int)(RandomNumber(seed) * param->nValues);
@@ -1576,17 +1576,13 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     oldM = *valPtr;
 
     /* change value */
-    ran = RandomNumber(seed);
     if (window > maxM-minM)
-        {
         window = maxM-minM;
-        }
-    newM = oldM + window * (ran - 0.5);
+    newM = oldM + window * (RandomNumber(seed) - 0.5);
     
     /* check that new value is valid */
     isValidM = NO;
-    do
-        {
+    do  {
         if (newM < minM)
             newM = 2 * minM - newM;
         else if (newM > maxM)
@@ -1664,7 +1660,7 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     /* change fossilization rate using sliding window */
     
     int         i, isValidM, valIndex;
-    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+    MrBFlt      *valPtr, oldM, newM, window, minM, maxM, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 oldProp[2], newProp[2], x, y, *alphaDir, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -1690,17 +1686,13 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     oldM = *valPtr;
     
     /* change value */
-    ran = RandomNumber(seed);
     if (window > maxM-minM)
-        {
         window = maxM-minM;
-        }
-    newM = oldM + window * (ran - 0.5);
+    newM = oldM + window * (RandomNumber(seed) - 0.5);
     
     /* check that new value is valid */
     isValidM = NO;
-    do
-        {
+    do  {
         if (newM < minM)
             newM = 2 * minM - newM;
         else if (newM > maxM)
@@ -1713,12 +1705,12 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
-    t   = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
     sR = GetParamVals (m->speciationRates, chain, state[chain]);
     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     fR = GetParamVals (param, chain, state[chain]);
-    sF  = mp->sampleProb;
-    sS  = mp->sampleStrat;
+    sF = mp->sampleProb;
+    sS = mp->sampleStrat;
     clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
     if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
@@ -5118,8 +5110,7 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* get model params */
     m = &modelSettings[param->relParts[0]];
     mp = &modelParams[param->relParts[0]];
-    curTheta = *(GetParamVals (m->popSize, chain, state[chain]));
-    curTheta *= *(GetParamVals (m->clockRate, chain, state[chain]));
+    curTheta = (*GetParamVals(m->popSize, chain, state[chain])) * (*GetParamVals(m->clockRate, chain, state[chain]));
     if (!strcmp(mp->ploidy, "Diploid"))
         curTheta *= 4.0;
     else if (!strcmp(mp->ploidy, "Zlinked"))
@@ -15712,8 +15703,8 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change speciation rate using sliding window */
     
     int         isLPriorExp, isValidL, valIndex;
-    MrBFlt      *valPtr, oldL, newL, window, minL, maxL, lambdaExp=0.0, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
-                clockRate;
+    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+                window, clockRate;
     char        *sS;
     ModelParams *mp;
     ModelInfo   *m;
@@ -15735,8 +15726,8 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
     else
         {
-        minL = 0.0;
-        maxL = KAPPA_MAX;
+        minL = 0.000001;
+        maxL = 1000.0;
         lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
@@ -15749,17 +15740,13 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     oldL = *valPtr;
 
     /* change value */
-    ran = RandomNumber(seed);
     if (maxL-minL < window)
-        {
         window = maxL-minL;
-        }
-    newL = oldL + window * (ran - 0.5);
+    newL = oldL + window * (RandomNumber(seed) - 0.5);
     
     /* check that new value is valid */
     isValidL = NO;
-    do
-        {
+    do  {
         if (newL < minL)
             newL = 2 * minL - newL;
         else if (newL > maxL)
@@ -15827,8 +15814,8 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* change speciation rate using multiplier */
     
     int         isLPriorExp, isValidL, valIndex;
-    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, ran, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
-                tuning, factor, clockRate;
+    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+                tuning, clockRate;
     char        *sS;
     ModelParams *mp;
     ModelInfo   *m;
@@ -15850,8 +15837,8 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         }
     else
         {
-        minL = 0.0;
-        maxL = KAPPA_MAX;
+        minL = 0.000001;
+        maxL = 1000.0;
         lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
@@ -15864,14 +15851,11 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     oldL = *valPtr;
 
     /* change value */
-    ran = RandomNumber(seed);
-    factor = exp(tuning * (ran - 0.5));
-    newL = oldL * factor;
+    newL = oldL * exp(tuning * (RandomNumber(seed) - 0.5));
     
     /* check that new value is valid */
     isValidL = NO;
-    do
-        {
+    do  {
         if (newL < minL)
             newL = minL * minL / newL;
         else if (newL > maxL)
@@ -15884,12 +15868,12 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     *lnProposalRatio = log (newL / oldL);
     
     /* calculate prior ratio */
-    t   = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
     sR = GetParamVals (param, chain, state[chain]);
     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     sF = mp->sampleProb;
     sS = mp->sampleStrat;
-    clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
+    clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
     
     if (!strcmp(mp->clockPr,"Birthdeath"))
         {
@@ -15924,6 +15908,7 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         MrBayesPrint ("%s   Move_Speciation_M not applicable\n", spacer);
         return (ERROR);
         }
+
     if (isLPriorExp == NO)
         *lnPriorRatio = newLnPrior - oldLnPrior;
     else

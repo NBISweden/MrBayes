@@ -21190,25 +21190,6 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
 
-    /* Move_Revmat_DirMix */
-    mt = &moveTypes[i++];
-    mt->name = "Dirichlet proposal";
-    mt->shortName = "Dirichlet";
-    mt->tuningName[0] = "Dirichlet parameter";
-    mt->shortTuningName[0] = "alpha";
-    mt->applicableTo[0] = REVMAT_MIX;
-    mt->nApplicable = 1;
-    mt->moveFxn = &Move_Revmat_DirMix;
-    mt->relProposalProb = 1.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
-    mt->minimum[0] = 0.01;
-    mt->maximum[0] = 10000.0;
-    mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneDirichlet;
-    mt->targetRate = 0.25;
-
     /* Move_Revmat_Slider */
     mt = &moveTypes[i++];
     mt->name = "Sliding window";
@@ -21228,6 +21209,25 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
+    /* Move_Revmat_DirMix */
+    mt = &moveTypes[i++];
+    mt->name = "Dirichlet proposal";
+    mt->shortName = "Dirichlet";
+    mt->tuningName[0] = "Dirichlet parameter";
+    mt->shortTuningName[0] = "alpha";
+    mt->applicableTo[0] = REVMAT_MIX;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_Revmat_DirMix;
+    mt->relProposalProb = 1.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 100.0;  /* alphaPi per rate */
+    mt->minimum[0] = 0.01;
+    mt->maximum[0] = 10000.0;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneDirichlet;
+    mt->targetRate = 0.25;
+    
     /* Move_Revmat_SplitMerge1 */
     mt = &moveTypes[i++];
     mt->name = "Split-merge move 1";
@@ -21276,7 +21276,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation;
-    mt->relProposalProb = 3.0;
+    mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.0;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -21296,10 +21296,10 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation_M;
-    mt->relProposalProb = 0.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-    mt->minimum[0] = 0.0001;
+    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->minimum[0] = 0.00001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
