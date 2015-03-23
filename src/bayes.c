@@ -43,6 +43,7 @@
        const char* const svnRevisionBayesC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 extern const char* const svnRevisionBestC;
 extern const char* const svnRevisionCommandC;
+extern const char* const svnRevisionLikeliC;
 extern const char* const svnRevisionMbbeagleC;
 extern const char* const svnRevisionMcmcC;
 extern const char* const svnRevisionModelC;
@@ -852,8 +853,8 @@ void PrintHeader (void)
 {
     char arch[4];
 #   ifndef RELEASE
-    unsigned rev = FindMaxRevision (9, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionMbbeagleC,
-                                       svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
+    unsigned rev = FindMaxRevision (10, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionLikeliC,svnRevisionMbbeagleC,
+                                        svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
 #   endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");

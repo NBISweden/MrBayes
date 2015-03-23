@@ -83,6 +83,5 @@ int     Move_TK02BranchRate (Param *param, int chain, RandLong *seed, MrBFlt *ln
 int     Move_Tratio_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
-int     Move_UnrootedSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
 #endif  /* __PROPOSAL_H__ */

@@ -43,17 +43,12 @@ void    LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL);
 void    FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
 void    FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
 void    FlipSiteScalerSpace (ModelInfo *m, int chain);
+void    FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 void    ResetSiteScalers (ModelInfo *m, int chain);
 void    CopySiteScalers (ModelInfo *m, int chain);
 
-int     TreeCondLikes_Beagle (Tree *t, int division, int chain);
-int     TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
-int     TreeTiProbs_Beagle (Tree *t, int division, int chain);
-
 int     TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain);
 int     TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain);
-
-void    FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 
 extern int *chainId;
 extern int numLocalChains;

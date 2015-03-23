@@ -19953,7 +19953,7 @@ void SetUpMoveTypes (void)
         }
 
     /* Moves are in alphabetic order after parameter name, which matches the name of a move function if
-       there is a separate move function for the parameter. See mcmc.h for declaration of move functions.
+       there is a separate move function for the parameter. See proposal.h for declaration of move functions.
        Since 2010-10-04, some parameters use generalized move functions and do not have their own. */
     
     i = 0;
@@ -21488,30 +21488,6 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
-
-    /* Move_UnrootedSlider */
-    /* Non-clock version of the SPRclock; this move is not correctly balanced yet */
-    mt = &moveTypes[i++];
-    mt->name = "Branch slider";
-    mt->shortName = "Bslider";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Multiplier tuning parameter";
-    mt->shortTuningName[0] = "lambda_m";
-    mt->tuningName[1] = "Exponential parameter";
-    mt->shortTuningName[1] = "lambda_e";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->nApplicable = 1;
-    mt->moveFxn = &Move_UnrootedSlider;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda multiplier*/
-    mt->tuningParam[1] = 10.0;  /* lambda exponential */
-    mt->minimum[0] = 0.00000001;
-    mt->maximum[0] = 10000000.0;
-    mt->minimum[1] = 0.00001;
-    mt->maximum[1] = 10000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
 
     /* Move_AddDeleteCPPEvent */
     mt = &moveTypes[i++];
