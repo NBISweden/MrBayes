@@ -71,6 +71,7 @@ typedef void (*sighandler_t) (int);
 #define SAMPLE_ALL_SS                           /* if defined makes ss sample every generation instead of every sample frequency */
 #define BEAGLE_RESCALE_FREQ         160
 #define BEAGLE_RESCALE_FREQ_DOUBLE  10          /* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
+#define TARGETLENDELTA              100
 
 /* debugging compiler statements */
 #undef  DEBUG_SETUPTERMSTATE
@@ -118,9 +119,9 @@ int       AddTreeToPartitionCounters (Tree *tree, int treeId, int runId);
 int       AttemptSwap (int swapA, int swapB, RandLong *seed);
 void      BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo);
 int       BuildStepwiseTree (Tree *t, int chain, RandLong *seed);
-int       CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL);
+int       CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL);
 void      CalcPartFreqStats (PFNODE *p, STATS *stat);
-void      CalculateTopConvDiagn (int numSamples);
+void      CalcTopoConvDiagn (int numSamples);
 #ifdef    VISUAL
 BOOL      WINAPI CatchInterrupt (DWORD signum);
 #else  
@@ -339,77 +340,6 @@ int             numPreviousGen;              /* number of generations in run to 
 int             lowestLocalRunId;            /* lowest local run Id                          */
 int             highestLocalRunId;           /* highest local run Id                         */
 #endif
-
-
-/* ------------------------------------------------------------------------------------------------------------- */
-/* Joint distribution of branch lengths t under gamma-Dirichlet prior:                                           */
-/* (Zhang et al. 2012, Eq. 4; Rannala et al. 2012, Eq. 36):                                                      */
-/* ln[f(t|aT,bT,a,c)] =  (aT - a*s - a*c*(s-3)) * ln(T) - bT * T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
-/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
-/*                                                                                                               */
-/* Joint distribution of branch lengths t under invgamma-Dirichlet prior:                                        */
-/* (Zhang et al. 2012, Eq. 6; Rannala et al. 2012, Eq. 39):                                                      */
-/* ln[f(t|aT,bT,a,c)] = (-aT - a*s - a*c*(s-3)) * ln(T) - bT / T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
-/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
-/* also see DoCitations()                                                                                        */
-/* ------------------------------------------------------------------------------------------------------------- */
-
-/* external (tip): 1, internal: 0 */
-#define IsTip(Node) (Node->index < numTaxa || (Node->anc)->index < numTaxa)
-
-MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
-{
-    /* ln prior prob. under Dirichlet priors and twoExp prior
-     //chi */
-
-    int    i, nb[2] = {0,0};
-    MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
-    MrBFlt aT, bT, a, c;
-    TreeNode  *p;
-    
-    /* Not safe, should define Marcos. YES or NO should never be defined to 2 or 3 or 4! */
-    /* PV is 2 or 3: Dirichlet priors */    
-    if (PV == 2 || PV == 3)
-        {
-        /* partially for calculating lnPriorRatio, full part is in LogPrior() */
-        aT = mp->brlensDir[0];
-        bT = mp->brlensDir[1];
-        a  = mp->brlensDir[2];
-        c  = mp->brlensDir[3];
-    
-        for (i = 0; i < t->nNodes; i++)
-            {
-            p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                treeL += p->length;
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += log(p->length);
-                }
-            }
-        lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
-        if (PV == 2)
-            lnprior += (aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT*treeL;
-        else
-            lnprior += (-aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT/treeL;
-        }
-    /* or 4: twoExp prior */
-    else if (PV == 4)
-        {
-        for (i = 0; i < t->nNodes; i++) {
-            p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += p->length;
-                }
-            }
-        for (i = 0; i < 2; i++)
-            lnprior += nb[i] * log(mp->brlens2Exp[i]) - tb[i] * (mp->brlens2Exp[i]);
-        }
-    
-    return lnprior;
-}
 
 
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
@@ -1589,10 +1519,10 @@ int BuildStepwiseTree (Tree *t, int chain, RandLong *seed) {
 
 /*------------------------------------------------------------------
 |
-|   CalcLike_Adgamma: calc likelihood for one adgamma correlation HMM
+|   CalcLikeAdgamma: calc likelihood for one adgamma correlation HMM
 |
 -------------------------------------------------------------------*/
-int CalcLike_Adgamma (int d, Param *param, int chain, MrBFlt *lnL)
+int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
 {
     int             c, i, j, nRates, posit, lastCharId;
     MrBFlt          logScaler, max, prob, *F,
@@ -1852,11 +1782,11 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 
 /*----------------------------------------------------------------
 |
-|   CalculateTopConvDiagn: Calculate average and max standard
-|      deviation in clade credibility (partition frequency) values
+|   CalcTopoConvDiagn: Calculate average and max standard deviation
+|                 in clade credibility (partition frequency) values
 |
 ----------------------------------------------------------------*/
-void CalculateTopConvDiagn (int numSamples)
+void CalcTopoConvDiagn (int numSamples)
 {
     int     i, j, n;
     STATS   *stat;
@@ -7377,7 +7307,7 @@ MrBFlt LogLike (int chain)
             if (m->upDateCl == YES && m->correlation != NULL && m->mark != YES)
                 {
                 lnL = 0.0;
-                CalcLike_Adgamma(d, m->correlation, chain, &lnL);
+                CalcLikeAdgamma(d, m->correlation, chain, &lnL);
 
                 /* store the value for the cases where the HMM is not touched */
                 m->lnLike[2*chain + state[chain]] =  lnL;
@@ -7425,6 +7355,77 @@ MrBFlt LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3)
 }
 
  
+/* ------------------------------------------------------------------------------------------------------------- */
+/* Joint distribution of branch lengths t under gamma-Dirichlet prior:                                           */
+/* (Zhang et al. 2012, Eq. 4; Rannala et al. 2012, Eq. 36):                                                      */
+/* ln[f(t|aT,bT,a,c)] =  (aT - a*s - a*c*(s-3)) * ln(T) - bT * T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
+/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
+/*                                                                                                               */
+/* Joint distribution of branch lengths t under invgamma-Dirichlet prior:                                        */
+/* (Zhang et al. 2012, Eq. 6; Rannala et al. 2012, Eq. 39):                                                      */
+/* ln[f(t|aT,bT,a,c)] = (-aT - a*s - a*c*(s-3)) * ln(T) - bT / T + (a-1) * sum[ln(t_j)] + (a*c-1) * sum[ln(t_k)] */
+/*                      + aT * ln(bT) - lnG(aT) - lnB(a,c)                                                       */
+/* also see DoCitations()                                                                                        */
+/* ------------------------------------------------------------------------------------------------------------- */
+
+/* external (tip): 1, internal: 0 */
+#define IsTip(Node) (Node->index < numTaxa || (Node->anc)->index < numTaxa)
+
+MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
+{
+    /* ln prior prob. under Dirichlet priors and twoExp prior
+     //chi */
+
+    int    i, nb[2] = {0,0};
+    MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
+    MrBFlt aT, bT, a, c;
+    TreeNode  *p;
+    
+    /* Not safe, should define Marcos. YES or NO should never be defined to 2 or 3 or 4! */
+    /* PV is 2 or 3: Dirichlet priors */    
+    if (PV == 2 || PV == 3)
+        {
+        /* partially for calculating lnPriorRatio, full part is in LogPrior() */
+        aT = mp->brlensDir[0];
+        bT = mp->brlensDir[1];
+        a  = mp->brlensDir[2];
+        c  = mp->brlensDir[3];
+    
+        for (i = 0; i < t->nNodes; i++)
+            {
+            p = t->allDownPass[i];
+            if (p->anc != NULL)
+                {
+                treeL += p->length;
+                nb[IsTip(p)]++;
+                tb[IsTip(p)] += log(p->length);
+                }
+            }
+        lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
+        if (PV == 2)
+            lnprior += (aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT*treeL;
+        else
+            lnprior += (-aT - a*nb[1] - a*c*nb[0]) * log(treeL) - bT/treeL;
+        }
+    /* or 4: twoExp prior */
+    else if (PV == 4)
+        {
+        for (i = 0; i < t->nNodes; i++) {
+            p = t->allDownPass[i];
+            if (p->anc != NULL)
+                {
+                nb[IsTip(p)]++;
+                tb[IsTip(p)] += p->length;
+                }
+            }
+        for (i = 0; i < 2; i++)
+            lnprior += nb[i] * log(mp->brlens2Exp[i]) - tb[i] * (mp->brlens2Exp[i]);
+        }
+    
+    return lnprior;
+}
+
+
 MrBFlt LogPrior (int chain)
 {
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
@@ -16877,7 +16878,7 @@ int RunChain (RandLong *seed)
                     {
 #   endif
                 /* calculate statistics */
-                CalculateTopConvDiagn (i);
+                CalcTopoConvDiagn (i);
                 /* output statistics */
                 if (numTopologies == 1)
                     {
@@ -17497,8 +17498,6 @@ int RunChain (RandLong *seed)
     return (NO_ERROR);
 }
 
-
-#define TARGETLENDELTA (100)
 
 int SafeSprintf (char **target, int *targetLen, char *fmt, ...)
 {
