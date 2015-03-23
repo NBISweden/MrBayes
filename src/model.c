@@ -23879,7 +23879,7 @@ int UpdateClockRate (MrBFlt clockRate, int chain)
         {
         if (minClockRate > maxClockRate)
             {
-            MrBayesPrint ("%s   ERROR: Calibrated trees require uncomatable clockrates for run:%d chain:%d.\n",
+            MrBayesPrint ("%s   ERROR: Calibrated trees require compatible clockrates for run:%d chain:%d.\n",
                           spacer, chain/chainParams.numChains, chain%chainParams.numChains);
             *clockRatep=0;
             return (ERROR);
