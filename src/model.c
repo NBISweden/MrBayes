@@ -7577,7 +7577,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if ((activeParts[i] == YES || nApplied == 0))
                         {
                         sscanf (tkn, "%lf", &tempD);
-                        if (tempD <= 0.0 && tempD > 1.0)
+                        if (tempD <= 0.0 || tempD > 1.0)
                             {
                             MrBayesPrint ("%s   Sampleprob should be in range (0,1]\n", spacer);
                             return (ERROR);
@@ -7680,7 +7680,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             else if ((modelParams[i].treeAgePr.prior == offsetExponential ||
                                       modelParams[i].treeAgePr.prior == offsetGamma ||
-                                      modelParams[i].treeAgePr.prior == offsetLogNormal)  && tempD <= modelParams[i].treeAgePr.priorParams[0])
+                                      modelParams[i].treeAgePr.prior == offsetLogNormal) && tempD <= modelParams[i].treeAgePr.priorParams[0])
                                 {
                                 MrBayesPrint("%s   Mean must be larger than offset\n", spacer);
                                 break;
