@@ -1485,9 +1485,9 @@ extern int              compMatrixRowSize;                      /* row size of c
 extern Comptree         comptreeParams;                         /* holds parameters for comparetree command      */
 extern char             **constraintNames;                      /* holds names of constraints                    */
 extern BitsLong         **definedConstraint;                    /* holds information about defined constraints   */
-extern BitsLong        **definedConstraintTwo;                  /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)                                  */
-extern BitsLong        **definedConstraintPruned;               /* bitfields representing taxa sets of defined constraints after delited taxa are removed                                         */
-extern BitsLong        **definedConstraintTwoPruned;            /* bitfields representing second taxa sets of defined constraints  after delited taxa are removed(used for PARTIAL constraints)   */
+extern BitsLong         **definedConstraintTwo;                 /* bitfields representing second taxa sets of defined constraints (for PARTIAL constraints) */
+extern BitsLong         **definedConstraintPruned;              /* bitfields representing taxa sets of defined constraints after delited taxa are removed */
+extern BitsLong         **definedConstraintTwoPruned;           /* bitfields representing second taxa sets of defined constraints after delited taxa are removed (for PARTIAL constraints) */
 extern int              dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */

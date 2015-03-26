@@ -1326,45 +1326,42 @@ int DoCalibrateParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 }
-            else
+            else if (tempD < 0.0)
                 {
-                if (tempD < 0.0)
+                if (calPrior == fixed)
+                    MrBayesPrint ("%s   Fixed age must be nonnegative\n", spacer);
+                else if (calPrior == uniform)
                     {
-                    if (calPrior == fixed)
-                        MrBayesPrint ("%s   Fixed age must be nonnegative\n", spacer);
-                    else if (calPrior == uniform)
-                        {
-                        MrBayesPrint ("%s   Minimum age must be nonnegative\n", spacer);
-                        MrBayesPrint ("%s   Parameters of the uniform are minimum age and maximum age.\n", spacer);
-                        }
-                    else if (calPrior == truncatedNormal)
-                        {
-                        MrBayesPrint ("%s   Offset (minimum or truncation) age must be nonnegative.\n", spacer);
-                        MrBayesPrint ("%s   Parameters of the truncated normal distribution are offset (minimum\n", spacer);
-                        MrBayesPrint ("%s   or truncation) age, mean age and standard deviation.\n", spacer);
-                        }
-                    else if (calPrior == offsetGamma)
-                        {
-                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
-                        MrBayesPrint ("%s   Parameters of the offset gamma distribution used for dating are offset age,\n", spacer);
-                        MrBayesPrint ("%s   mean age, and standard deviation. In terms of the common shape (alpha) and\n", spacer);
-                        MrBayesPrint ("%s   rate (beta) parameterization, the expected mean is alpha/beta and the standard\n", spacer);
-                        MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
-                        }
-                    else if (calPrior == offsetExponential)
-                        {
-                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
-                        MrBayesPrint ("%s   Parameters of the offset exponential are offset age and mean age.\n", spacer);
-                        }
-                    else if (calPrior == offsetLogNormal)
-                        {
-                        MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
-                        MrBayesPrint ("%s   Parameters of the offset lognormal distribution are offset age, mean age,\n", spacer);
-                        MrBayesPrint ("%s   and standard deviation. All values are specified on the linear scale, not\n", spacer);
-                        MrBayesPrint ("%s   as log values.\n", spacer);
-                        }
-                    return (ERROR);
+                    MrBayesPrint ("%s   Minimum age must be nonnegative\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the uniform are minimum age and maximum age.\n", spacer);
                     }
+                else if (calPrior == truncatedNormal)
+                    {
+                    MrBayesPrint ("%s   Offset (minimum or truncation) age must be nonnegative.\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the truncated normal distribution are offset (minimum\n", spacer);
+                    MrBayesPrint ("%s   or truncation) age, mean age and standard deviation.\n", spacer);
+                    }
+                else if (calPrior == offsetGamma)
+                    {
+                    MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset gamma distribution used for dating are offset age,\n", spacer);
+                    MrBayesPrint ("%s   mean age, and standard deviation. In terms of the common shape (alpha) and\n", spacer);
+                    MrBayesPrint ("%s   rate (beta) parameterization, the expected mean is alpha/beta and the standard\n", spacer);
+                    MrBayesPrint ("%s   deviation is the square root of (alpha / beta^2).\n", spacer);
+                    }
+                else if (calPrior == offsetExponential)
+                    {
+                    MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset exponential are offset age and mean age.\n", spacer);
+                    }
+                else if (calPrior == offsetLogNormal)
+                    {
+                    MrBayesPrint ("%s   Offset age must be nonnegative\n", spacer);
+                    MrBayesPrint ("%s   Parameters of the offset lognormal distribution are offset age, mean age,\n", spacer);
+                    MrBayesPrint ("%s   and standard deviation. All values are specified on the linear scale, not\n", spacer);
+                    MrBayesPrint ("%s   as log values.\n", spacer);
+                    }
+                return (ERROR);
                 }
             priorParams[0] = tempD;
             if (calPrior == fixed)
@@ -2475,7 +2472,7 @@ int DoConstraint (void)
             }
         }
 
-   /* add name to constraintNames */
+    /* add name to constraintNames */
     if (AddString (&constraintNames, numDefinedConstraints, tempSetName) == ERROR)
         {
         MrBayesPrint ("%s   Problem adding constraint %s to list\n", spacer, tempSetName);
@@ -2538,10 +2535,8 @@ int DoConstraint (void)
     definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
 
     /* show taxset (for debugging) */
-#   if 0 
-    for (i=0; i<numTaxa; i++)
-        MrBayesPrint ("%4d  %4d\n", i+1, taxaInfo[i].constraints[numDefinedConstraints-1]);
-#   endif
+    // for (i=0; i<numTaxa; i++)
+    //     MrBayesPrint ("%4d  %4d\n", i+1, taxaInfo[i].constraints[numDefinedConstraints-1]);
 
     return (NO_ERROR);
 }
@@ -2549,9 +2544,9 @@ int DoConstraint (void)
 
 int DoConstraintParm (char *parmName, char *tkn)
 {
-    int     i, index, tempInt;
-    MrBFlt  tempD;
-    static int      *tempSetCurrent;
+    int         i, index, tempInt;
+    MrBFlt      tempD;
+    static int  *tempSetCurrent;
     
     if (defMatrix == NO)
         {
@@ -2575,8 +2570,7 @@ int DoConstraintParm (char *parmName, char *tkn)
                 {
                 if (CheckString (constraintNames, numDefinedConstraints, tkn, &index) == ERROR)
                     {
-                    /* if the constraint name has not been used, then we should have an ERROR returned */
-                    /* we _want_ to be here */
+                    /* an ERROR returned if the constraint name has not been used. we _want_ to be here */
                     }
                 else
                     {
@@ -2592,7 +2586,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             for (i=0; i<numTaxa; i++)
                 tempSet[i] = 0;
 
-            consrtainType=HARD; /*set default constrain type*/
+            consrtainType = HARD; /* set default constrain type */
             tempSetCurrent=tempSet;
             fromI = toJ = everyK = -1;
             foundDash = foundSlash = NO;
@@ -2610,7 +2604,6 @@ int DoConstraintParm (char *parmName, char *tkn)
         else
             return (ERROR);
         }
-
     else if (expecting == Expecting(EQUALSIGN))
         {
         foundEqual = YES;
@@ -2647,19 +2640,19 @@ int DoConstraintParm (char *parmName, char *tkn)
                 for (i=0; i<numTaxa; i++)
                     tempSetNeg[i] = 0;
 
-                consrtainType=PARTIAL;
+                consrtainType = PARTIAL;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Hard", tkn) == SAME)
                 {
-                consrtainType=HARD;
+                consrtainType = HARD;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Negative", tkn) == SAME)
                 {
-                consrtainType=NEGATIVE;
+                consrtainType = NEGATIVE;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
@@ -2842,7 +2835,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             return (ERROR);
             }
 
-            /* add set to tempSet */
+        /* add set to tempSet */
         if (fromI >= 0 && toJ < 0)
             {
             if (AddToSet (fromI, toJ, everyK, 1) == ERROR)
@@ -7888,7 +7881,6 @@ int DoTaxaStat (void)
             else
                 MrBayesPrint ("%s     %2d -- Trees with 'negative' constraint \"%s\" are infinitely\n", spacer, j+1, tempName);
             MrBayesPrint ("%s           more probable than those without \n", spacer);
-
             }
         MrBayesPrint ("\n");
         for (j=0; j<maxLen; j++)
@@ -10030,8 +10022,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   taxa in the list from other taxa is forced to be present. The interpretation  \n");
         MrBayesPrint ("   of this depends on whether the tree is rooted on a taxon outside the list or  \n");
         MrBayesPrint ("   a taxon in the list. If the outgroup is excluded , the taxa in the list are   \n");
-        MrBayesPrint ("   assumed to form a monophyletic group, but if the outgroup is included, it is  \n");
-        MrBayesPrint ("   the taxa that are not in the list that are forced together.                   \n");
+        MrBayesPrint ("   assumed to form a monophyletic group, but if the outgroup is included, the    \n");
+        MrBayesPrint ("   taxa that are not in the list are forced together.                            \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   A 'negative' constraint bans all the trees that have the listed taxa in the   \n");
         MrBayesPrint ("   same subtree. In other words, it is the opposite of a hard constraint.        \n");

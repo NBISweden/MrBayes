@@ -8648,7 +8648,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |   Gavryushkina, A., D. Welch, T. Stadler, and A. Drummond. 2014. 
  |       Bayesian inference of sampled ancestor trees for epidemiology and fossil calibration. PLoS Comp. Biol.
  |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
- |       Total-Evidence Phylogenetic Inference under the Fossilized Birth-Death Process.
+ |       Total-Evidence Dating under the Fossilized Birth-Death Process.
  |
  |
  |                                       0  _____________  t3, rho3
@@ -8845,7 +8845,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
  |   LnFossilizedBDPriorDiversity
  | 
  |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
- |       Total-Evidence Phylogenetic Inference under the Fossilized Birth-Death Process.
+ |       Total-Evidence Dating under the Fossilized Birth-Death Process.
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
