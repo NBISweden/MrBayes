@@ -220,7 +220,6 @@ int AddDummyChars (void)
 
         numDummyChars += m->numDummyChars;
         m->numChars += m->numDummyChars;
-
         }
 
     /* exit if dummy characters not needed */
@@ -228,7 +227,7 @@ int AddDummyChars (void)
         return NO_ERROR;
 
     /* print original compressed matrix */
-#   if  0
+#   if  defined (DEBUG_ADDDUMMYCHARS)
     MrBayesPrint ("Compressed matrix before adding dummy characters...\n");
     PrintCompMatrix();
 #   endif
@@ -266,8 +265,8 @@ int AddDummyChars (void)
         /* insert the dummy characters first for each division */
         if (m->numDummyChars > 0)
             {
-            MrBayesPrint("%s   Adding dummy characters (unobserved site patterns) for division %d\n", spacer, d+1);
-
+            // MrBayesPrint("%s   Adding dummy characters (unobserved site patterns) for division %d\n", spacer, d+1);
+            // do not print this every time
             if (!strcmp(mp->coding, "Variable") || !strcmp(mp->coding, "Informative"))
                 {
                 for (k=0; k<2; k++)
@@ -7543,10 +7542,10 @@ int DoPrsetParm (char *parmName, char *tkn)
                             foundFSTime[i] = NO;
                             expecting  = Expecting(COMMA);
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.6lf\n", spacer, numVars[i]+1,
                                               modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
                             else
-                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.5lf for partition %d\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.6lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
                             numVars[i]++;
                             if (numVars[i] == modelParams[i].sampleFSNum)
@@ -7584,9 +7583,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         modelParams[i].sampleProb = tempD;
                         if (nApplied == 0 && numCurrentDivisions == 1)
-                            MrBayesPrint ("%s   Setting Sampleprob to %1.6lf\n", spacer, modelParams[i].sampleProb);
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.8lf\n", spacer, modelParams[i].sampleProb);
                         else
-                            MrBayesPrint ("%s   Setting Sampleprob to %1.6lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
+                            MrBayesPrint ("%s   Setting Sampleprob to %1.8lf for partition %d\n", spacer, modelParams[i].sampleProb, i+1);
                         }
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -7876,9 +7875,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else
                                 {
                                 if (nApplied == 0 || numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -7891,9 +7890,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else
                                 {
                                 if (nApplied == 0 || numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1]);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1], i+1);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Lognormal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateLognormal[0], modelParams[i].clockRateLognormal[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -7907,9 +7906,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             modelParams[i].clockRateExp = tempD;
                             numVars[i]++;
                             if (nApplied == 0 || numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.6lf)\n", spacer, modelParams[i].clockRateExp);
+                                MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].clockRateExp);
                             else
-                                MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateExp, i+1);
+                                MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateExp, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         else if (!strcmp(modelParams[i].clockRatePr,"Gamma"))
@@ -7929,9 +7928,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else
                                 {
                                 if (nApplied == 0 || numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1]);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1], i+1);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateGamma[0], modelParams[i].clockRateGamma[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -8118,9 +8117,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             modelParams[i].popSizeFix = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.2lf)\n", spacer, modelParams[i].popSizeFix);
+                                MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.5lf)\n", spacer, modelParams[i].popSizeFix);
                             else
-                                MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].popSizeFix, i+1);
+                                MrBayesPrint ("%s   Setting Popsizepr to Fixed(%1.5lf) for partition %d\n", spacer, modelParams[i].popSizeFix, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         }
@@ -23018,7 +23017,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     else if (!strcmp(mp->unconstrainedPr, "twoExp"))
                         MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->brlens2Exp[0], mp->brlens2Exp[1]);
                     else
-                        MrBayesPrint ("(%1.1lf,%1.3lf,%1.1lf,%1.1lf)\n", mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
+                        MrBayesPrint ("(%1.1lf,%1.4lf,%1.1lf,%1.1lf)\n", mp->brlensDir[0], mp->brlensDir[1], mp->brlensDir[2], mp->brlensDir[3]);
                     }
                 else if (!strcmp(mp->brlensPr, "Clock"))
                     {
@@ -23126,7 +23125,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->popSizePr,"Gamma"))
                 MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->popSizeGamma[0], mp->popSizeGamma[1]);
             else
-                MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->popSizeFix);
+                MrBayesPrint ("%s            Prior      = Fixed(%1.5lf)\n", spacer, mp->popSizeFix);
             if (!strcmp(mp->topologyPr,"Speciestree"))
                 {
                 if (!strcmp(mp->popVarPr,"Equal") || !strcmp(mp->popSizePr,"Fixed"))
@@ -23247,13 +23246,13 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
         else if (j == P_CLOCKRATE)
             {
             if (!strcmp(mp->clockRatePr,"Normal"))
-                MrBayesPrint ("%s            Prior      = Normal(%1.6lf,%1.6lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
+                MrBayesPrint ("%s            Prior      = Normal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
             else if (!strcmp(mp->clockRatePr,"Lognormal"))
-                MrBayesPrint ("%s            Prior      = Lognormal(%1.6lf,%1.6lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
+                MrBayesPrint ("%s            Prior      = Lognormal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
             else if (!strcmp(mp->clockRatePr,"Gamma"))
-                MrBayesPrint ("%s            Prior      = Gamma(%1.6lf,%1.6lf)\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
+                MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->clockRateGamma[0], mp->clockRateGamma[1]);
             else if (!strcmp(mp->clockRatePr,"Exponential"))
-                MrBayesPrint ("%s            Prior      = Exponential(%1.6lf)\n", spacer, mp->clockRateExp);
+                MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->clockRateExp);
             else
                 MrBayesPrint ("%s            Prior      = Fixed(%1.6lf)\n", spacer, mp->clockRateFix);
             if (!strcmp(mp->clockVarPr,"Strict"))

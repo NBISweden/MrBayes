@@ -1534,28 +1534,28 @@ int DoCalibrateParm (char *parmName, char *tkn)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbLognormal_Param_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioLognormal_Param_Mean_Sd;
-            calibrationPtr->min             = 0.0;
+            calibrationPtr->min             = BRLENS_MIN;
             calibrationPtr->max             = POS_INFINITY;
             }
         else if (calPrior == offsetLogNormal)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd;
-            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->min             = BRLENS_MIN + priorParams[0];
             calibrationPtr->max             = POS_INFINITY;
             }
         else if (calPrior == standardGamma)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbGamma_Param_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioGamma_Param_Mean_Sd;
-            calibrationPtr->min             = 0.0;
+            calibrationPtr->min             = BRLENS_MIN;
             calibrationPtr->max             = POS_INFINITY;
             }
         else if (calPrior == offsetGamma)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbOffsetGamma_Param_Offset_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetGamma_Param_Offset_Mean_Sd;
-            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->min             = BRLENS_MIN + priorParams[0];
             calibrationPtr->max             = POS_INFINITY;
             }
 
@@ -3138,7 +3138,6 @@ int DoCtypeParm (char *parmName, char *tkn)
                 
             }
 
-        
         expecting  = Expecting(ALPHA);
         expecting |= Expecting(NUMBER);
         expecting |= Expecting(SEMICOLON);
@@ -10893,8 +10892,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    'Fossilizationpr' for more information.                      \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Treeagepr     -- This parameter specifies the prior probability distribution  \n");
-        MrBayesPrint ("                    on the tree age when a uniform prior is used on the branch   \n");
-        MrBayesPrint ("                    lengths of a clock tree.                                     \n");
+        MrBayesPrint ("                    on the tree age when a uniform or fossilization prior is used\n");
+        MrBayesPrint ("                    on the branch lengths of a clock tree.                       \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    The options are:                                             \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11475,7 +11474,7 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("                    FossilTip                    \n");
             // if (!strcmp(mp->sampleStrat, "Random") || !strcmp(mp->sampleStrat, "Diversity"))
             
-            MrBayesPrint ("   Sampleprob       <number>                     %1.5lf\n", mp->sampleProb);
+            MrBayesPrint ("   Sampleprob       <number>                     %1.8lf\n", mp->sampleProb);
             
             MrBayesPrint ("   Popsizepr        Lognormal/Gamma/Uniform/     %s", mp->popSizePr);
             if (!strcmp(mp->popSizePr, "Uniform"))

@@ -12973,7 +12973,7 @@ MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
     if (newX <= 0.0)
         return NEG_INFINITY;
     else if (oldX <= 0.0)
-        return (POS_INFINITY);
+        return POS_INFINITY;
 
     newZ = (newX - params[0]) / params[1];
     oldZ = (oldX - params[0]) / params[1];
@@ -12987,10 +12987,10 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 {
     MrBFlt  newZ, oldZ;
 
-    if (newX <= params[0])
+    if (newX <= 0.0)
         return NEG_INFINITY;
-    else if (oldX <= params[0])
-        return (POS_INFINITY);
+    else if (oldX <= 0.0)
+        return POS_INFINITY;
 
     newZ = (newX - params[1]) / params[2];
     oldZ = (oldX - params[1]) / params[2];
