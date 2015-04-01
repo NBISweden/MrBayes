@@ -12788,6 +12788,8 @@ int IsApplicable_AncestralFossil (Param *param)
 
     if (!strcmp(mp->sampleStrat, "FossilTip"))
         return NO;
+    else if (mp->fossilizationFix == 0.0)
+        return NO;
     else  /* fossils may be ancestors of other fossils or extant species */
         return YES;
 }
