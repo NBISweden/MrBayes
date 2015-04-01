@@ -1853,7 +1853,7 @@ int CheckModel (void)
         {
         t = GetTreeFromIndex(i, 0, 0);
         if ((!strcmp(modelParams[t->relParts[0]].clockPr,"Coalescence") || !strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence"))
-            && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
+            && !strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
             {
             MrBayesPrint("%s   WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.\n", spacer);
             MrBayesPrint("%s      This is likely to be incorrect unless you have set the population size prior\n", spacer);
@@ -11411,7 +11411,8 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 if (tree->isCalibrated == YES && !strcmp(modelParams[tree->relParts[0]].clockRatePr, "Fixed"))
                     {
                     clockRate = modelParams[tree->relParts[0]].clockRateFix;
-                    if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO) || (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO))
+                    if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO) ||
+                        (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO))
                         {
                         MrBayesPrint("%s   Fixed branch lengths do not satisfy fixed clockrate", spacer);
                         return (ERROR);
@@ -11427,7 +11428,8 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 return (ERROR);
                 }
             }
-        else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") || !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
+        else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
+                                                                        !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
             {
             assert (tree->isClock == YES);
             clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state);
@@ -11820,7 +11822,8 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                             MrBayesPrint ("%s   Check brlenspr is set correctly before fixing topology.\n", spacer);
                             }
                         else
-                            MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved.\n", spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
+                            MrBayesPrint ("%s   Could not fix topology because user tree '%s' is not fully resolved.\n",
+                                                spacer, userTree[modelParams[p->relParts[0]].topologyFix]->name);
                         FreePolyTree (constraintTree);
                         return (ERROR);
                         }
@@ -11905,6 +11908,7 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                             return (ERROR);
                         }
                     }
+                
                 if (LabelTree (tree, localTaxonNames) == ERROR)
                     return (ERROR);
                 if (q == p)

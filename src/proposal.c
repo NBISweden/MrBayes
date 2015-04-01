@@ -1247,8 +1247,9 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         subParm = param->subParams[i];
         if (subParm->paramType == P_CPPEVENTS)
             {
-            /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
-               until we have a better way to implement it !! */
+            /* CPP is not compatible with FBD ancestral fossils until we have a good way to implement it !! */
+            MrBayesPrint ("%s   CPP clock is not compatible with Fossilization prior currently\n", spacer);
+            return (ERROR);
             }
         else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
@@ -1480,8 +1481,9 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         subParm = param->subParams[i];
         if (subParm->paramType == P_CPPEVENTS)
             {
-            /* the CPP model is not compatible with fossilized birth-death model with ancestral fossils
-               until we have a better way to implement it !! */
+            /* CPP is not compatible with FBD ancestral fossils until we have a good way to implement it !! */
+            MrBayesPrint ("%s   CPP clock is not compatible with Fossilization prior currently\n", spacer);
+            return (ERROR);
             }
         else if ( subParm->paramType == P_TK02BRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))

@@ -8258,7 +8258,7 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
     int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu;
+    MrBFlt          *nt, lambda, mu, nt_min;
     TreeNode        *p;
     
     /* allocate space for the speciation times */
@@ -8283,6 +8283,14 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         nt[i] = p->nodeDepth / clockRate;
         }
     nTaxa = t->nIntNodes + 1;
+
+    /* find the youngest interal node */
+    nt_min = nt[0];
+    for (i=0; i<t->nIntNodes-1; i++)
+        {
+        if (nt_min > nt[i])
+            nt_min = nt[i];
+        }
     
     /* calculate probability of tree using standard variables */
     if (AreDoublesEqual(lambda,mu,ETA)==NO)
@@ -8291,7 +8299,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         MrBFlt p0_t1;
         p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
         (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt[0], lambda, mu) - p0_t1);
+        (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - p0_t1);
         for (i=0; i<t->nIntNodes-1; i++)
             (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
@@ -8317,7 +8325,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
     int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu;
+    MrBFlt          *nt, lambda, mu, nt_max;
     TreeNode        *p;
     
     /* allocate space for the speciation times */
@@ -8343,6 +8351,14 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
         }
     nTaxa = t->nIntNodes + 1;
     
+    /* find the second oldest interal node */
+    nt_max = nt[0];
+    for (i=0; i<t->nIntNodes-1; i++)
+        {
+        if (nt_max < nt[i])
+            nt_max = nt[i];
+        }
+
     /* calculate probability of tree using standard variables */
     if (AreDoublesEqual(lambda,mu,ETA)==NO)
         {
@@ -8350,7 +8366,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
         MrBFlt p0_t1;
         p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
         (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt[t->nIntNodes-2], lambda, mu) - p0_t1);
+        (*prob) += (m-n) * (LnP0(nt_max, lambda, mu) - p0_t1);
         for (i=0; i<t->nIntNodes-1; i++)
             (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
         (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
