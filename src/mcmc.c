@@ -8254,6 +8254,8 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |
  |   LnBirthDeathPriorPrDiversity
  |
+ |   Eq.5 in Hohna et al. 2011 MBE
+ |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
@@ -8309,7 +8311,9 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         MrBayesPrint ("\n   ERROR: Critical branchin process for diversity sampling not implemented\n");
         return (ERROR);
         }
-    
+
+    /* condition on tmrca ??? */
+
     /* free memory */
     free (nt);
     
@@ -8320,6 +8324,8 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 /*---------------------------------------------------------------------------------
  |
  |   LnBirthDeathPriorPrCluster
+ |
+ |   Eq.7 in Hohna et al. 2011 MBE
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
@@ -8376,7 +8382,9 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
         MrBayesPrint ("\n   ERROR: Critical branchin process for cluster sampling not implemented\n");
         return (ERROR);
         }
-    
+
+    /* condition on tmrca ??? */
+
     /* free memory */
     free (nt);
     
