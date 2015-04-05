@@ -1,6 +1,15 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#undef complex
+struct complex
+{
+    MrBFlt re;
+    MrBFlt im;
+};
+
+typedef struct complex complex;
+
 typedef struct
     {
     MrBFlt     mean;
@@ -83,8 +92,6 @@ int      UpperTriangIndex (int i, int j, int size);
 int      WantTo (const char *msg);
 
 /* tree utility functions */
-#define   TREEBUFINCREASE   200
-
 int       AddToTreeList (TreeList *treeList, Tree *tree);
 Tree     *AllocateTree (int numTaxa);
 Tree     *AllocateFixedTree (int numTaxa, int isRooted);
@@ -189,15 +196,6 @@ void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
 
 /* math utility functions */
-#undef complex
-struct complex
-{
-    MrBFlt re;
-    MrBFlt im;
-};
-
-typedef struct complex complex;
-
 complex **AllocateSquareComplexMatrix (int dim);
 MrBFlt  **AllocateSquareDoubleMatrix (int dim);
 int     **AllocateSquareIntegerMatrix (int dim);
@@ -252,10 +250,9 @@ MrBFlt    LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt    LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt    LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max);
 MrBFlt    LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x);
-MrBFlt    LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x);
-MrBFlt    LnProbScaledGamma (MrBFlt alpha, MrBFlt x);
-MrBFlt    LnRatioTK02LogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
+MrBFlt    LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x);
+MrBFlt    LnRatioTK02LogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
 MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt    MinimumValue (MrBFlt x, MrBFlt y);

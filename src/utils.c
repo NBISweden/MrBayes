@@ -12568,8 +12568,7 @@ MrBFlt LnGamma (MrBFlt alp)
         }
     z = 1.0 / (x*x);
     return  (f + (x-0.5)*log(x) - x + 0.918938533204673 + 
-            (((-0.000595238095238*z+0.000793650793651)*z-0.002777777777778)*z +
-            0.083333333333333)/x);
+            (((-0.000595238095238*z+0.000793650793651)*z-0.002777777777778)*z +0.083333333333333)/x);
 }
 
 
@@ -12583,14 +12582,14 @@ MrBFlt LnPriorProbExponential (MrBFlt val, MrBFlt *params)
 /* Calculate probability of a realization for exponential random variable; parameter mean and not rate */
 MrBFlt LnPriorProbExponential_Param_Mean (MrBFlt val, MrBFlt *params)
 {
-    return -log(params[0]) - val / params[0];
+    return - log(params[0]) - val / params[0];
 }
 
 
 /* Calculate probability of a realization for a fixed variable */
 MrBFlt LnPriorProbFix (MrBFlt val, MrBFlt *params)
 {
-    if (fabs((val - params[0])/val) < 1E-4)
+    if (fabs((val - params[0])/val) < 1E-5)
         return 0.0;
     else
         return NEG_INFINITY;
@@ -12763,7 +12762,7 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
 /* Calculate probability of a realization for uniform random variable */
 MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
-    return - log(params[1] - params[0]);
+    return -log(params[1] - params[0]);
     MrBayesPrint ("%lf", val); /* just because I am tired of seeing the unused parameter error msg */
 }
 
@@ -12771,9 +12770,6 @@ MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 /* Calculate probability ratio of realizations for exponential random variable */
 MrBFlt LnProbRatioExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    if (newX < 0.0 || oldX < 0.0)
-        return NEG_INFINITY;
-
     return params[0] * (oldX - newX);
 }
 
@@ -12781,9 +12777,6 @@ MrBFlt LnProbRatioExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 /* Calculate probability ratio of realizations for exponential random variable; parameter mean and not rate */
 MrBFlt LnProbRatioExponential_Param_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    if (newX < 0.0 || oldX < 0.0)
-        return NEG_INFINITY;
-
     return (oldX - newX) / params[0];
 }
 
@@ -12791,7 +12784,7 @@ MrBFlt LnProbRatioExponential_Param_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *para
 /* Calculate probability of a realization for a fixed variable */
 MrBFlt LnProbRatioFix (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    if (fabs((newX - params[0])/newX) < 1E-6 && fabs((oldX - params[0])/oldX) < 1E-6)
+    if (fabs((newX - params[0])/newX) < 1E-5 && fabs((oldX - params[0])/oldX) < 1E-5)
         return 0.0;
     else
         return NEG_INFINITY;
@@ -12806,9 +12799,6 @@ MrBFlt LnProbRatioGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
     alpha   = params[0];
     beta    = params[1];
 
-    if (newX < 0.0 || oldX < 0.0)
-        return NEG_INFINITY;
-
     return (alpha - 1.0) * (log(newX) - log(oldX)) - beta * (newX - oldX);
 }
 
@@ -12817,9 +12807,6 @@ MrBFlt LnProbRatioGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 MrBFlt LnProbRatioGamma_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  alpha, beta;
-
-    if (newX < 0.0 || oldX < 0.0)
-        return NEG_INFINITY;
 
     beta  = params[0] / (params[1]*params[1]);
     alpha = params[0] * beta;
@@ -12833,9 +12820,6 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  newZ, oldZ;
 
-    if (newX <= 0.0 || oldX <= 0.0)
-        return NEG_INFINITY;
-
     newZ = (log(newX) - params[0]) / params[1];
     oldZ = (log(oldX) - params[0]) / params[1];
 
@@ -12847,9 +12831,6 @@ MrBFlt LnProbRatioLognormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 MrBFlt LnProbRatioLognormal_Param_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {    
     MrBFlt newZ, oldZ, mean_log, sd_log;
-
-    if (newX <= 0.0 || oldX <= 0.0)
-        return NEG_INFINITY;
 
     sd_log      = sqrt (log((params[1]*params[1])/(params[0]*params[0]) + 1));
     mean_log    = log(params[0]) - sd_log * sd_log / 2.0;
@@ -12876,9 +12857,6 @@ MrBFlt LnProbRatioNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 /* Calculate probability ratio of realizations for offset exponential random variable */
 MrBFlt LnProbRatioOffsetExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    if (newX < params[0] || oldX < params[0])
-        return NEG_INFINITY;
-
     return params[1] * (oldX - newX);
 }
 
@@ -12886,9 +12864,6 @@ MrBFlt LnProbRatioOffsetExponential (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 /* Calculate probability ratio of realizations for offset exponential random variable; parameters offset and mean */
 MrBFlt LnProbRatioOffsetExponential_Param_Offset_Mean (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
-    if (newX < params[0] || oldX < params[0])
-        return NEG_INFINITY;
-
     return (oldX - newX) / (params[1] - params[0]);
 }
 
@@ -12897,9 +12872,6 @@ MrBFlt LnProbRatioOffsetExponential_Param_Offset_Mean (MrBFlt newX, MrBFlt oldX,
 MrBFlt LnProbRatioOffsetGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  alpha, beta, newZ, oldZ;
-   
-    if (newX <= params[0] || oldX <= params[0])
-        return NEG_INFINITY;
 
     alpha = params[1];
     beta  = params[2];
@@ -12914,9 +12886,6 @@ MrBFlt LnProbRatioOffsetGamma (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 MrBFlt LnProbRatioOffsetGamma_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  mean, sd, alpha, beta;
-
-    if (newX <= params[0] || oldX <= params[0])
-        return NEG_INFINITY;
 
     mean  = params[1] - params[0];
     sd    = params[2];
@@ -12961,7 +12930,7 @@ MrBFlt LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX
     newZ = (log(newX) - mean_log) / sd_log;
     oldZ = (log(oldX) - mean_log) / sd_log;
 
-    return (oldZ * oldZ - newZ * newZ) / 2.0 - log(newX/oldX);
+    return (oldZ * oldZ - newZ * newZ) / 2.0 - log(newX / oldX);
 }
 
 
@@ -12969,11 +12938,6 @@ MrBFlt LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt newX, MrBFlt oldX
 MrBFlt LnProbRatioTruncatedNormal (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     MrBFlt  newZ, oldZ;
-
-    if (newX <= 0.0)
-        return NEG_INFINITY;
-    else if (oldX <= 0.0)
-        return POS_INFINITY;
 
     newZ = (newX - params[0]) / params[1];
     oldZ = (oldX - params[0]) / params[1];
@@ -12987,11 +12951,6 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 {
     MrBFlt  newZ, oldZ;
 
-    if (newX <= 0.0)
-        return NEG_INFINITY;
-    else if (oldX <= 0.0)
-        return POS_INFINITY;
-
     newZ = (newX - params[1]) / params[2];
     oldZ = (oldX - params[1]) / params[2];
 
@@ -13003,26 +12962,8 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     return 0.0;
-    MrBayesPrint ("%lf", newX); /* just because I am tired of seeing the unused parameter error msg */
-    MrBayesPrint ("%lf", oldX);
+    MrBayesPrint ("%lf %lf", newX, oldX); /* just because I am tired of seeing the unused parameter error msg */
     MrBayesPrint ("%lf", *params);
-}
-
-
-/* Log probability for a value drawn from a lognormal distribution; parameters are
-   mean and variance of value (not of log value) */
-MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
-{
-    MrBFlt      z, lnProb, mu, sigma;
-
-    sigma = sqrt(log(1.0 + (var / (mean*mean))));
-    mu    = log(mean) - sigma * sigma / 2.0;
-
-    z = (log(x) - mu) / sigma;
-
-    lnProb = - log (x * sigma * sqrt (2.0 * PI)) - (z*z / 2.0);
-
-    return lnProb;
 }
 
 
@@ -13032,30 +12973,6 @@ MrBFlt LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x)
     MrBFlt lnProb;
 
     lnProb = (alpha-1.0)*log(x) + alpha*log(beta) - x*beta - LnGamma(alpha);
-
-    return lnProb;
-}
-
-
-/* Log probability for a value drawn from a lognormal distribution */
-MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
-{
-    MrBFlt      z, lnProb;
-
-    z = (log(x) - exp) / sd;
-
-    lnProb = - log (x * sd * sqrt (2.0 * PI)) - (z*z / 2.0);
-
-    return lnProb;
-}
-
-
-/* Log probability for a value drawn from a scaled gamma distribution */
-MrBFlt LnProbScaledGamma (MrBFlt alpha, MrBFlt x)
-{
-    MrBFlt lnProb;
-
-    lnProb = (alpha - 1.0) * log(x) - LnGamma(alpha) + alpha*log(alpha) - x*alpha;
 
     return lnProb;
 }
@@ -13074,6 +12991,48 @@ MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt
 }
 
 
+/* Log probability for a value drawn from a lognormal distribution */
+MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
+{
+    MrBFlt lnProb, z;
+    
+    z = (log(x) - exp) / sd;
+    
+    lnProb = - log (x * sd * sqrt (2.0 * PI)) - (z * z / 2.0);
+    
+    return lnProb;
+}
+
+
+/* Log ratio for two values drawn from a lognormal distribution */
+MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
+{
+    MrBFlt  newZ, oldZ;
+    
+    newZ = (log(xNew) - exp) / sd;
+    oldZ = (log(xOld) - exp) / sd;
+    
+    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
+}
+
+
+/* Log probability for a value drawn from a lognormal distribution;
+   parameters are mean and variance of value (not of log value) */
+MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
+{
+    MrBFlt  z, lnProb, mu, sigma;
+    
+    sigma = sqrt(log(1.0 + (var / (mean*mean))));
+    mu    = log(mean) - sigma * sigma / 2.0;
+    
+    z = (log(x) - mu) / sigma;
+    
+    lnProb = - log (x * sigma * sqrt (2.0 * PI)) - (z * z / 2.0);
+    
+    return lnProb;
+}
+
+
 /* Log ratio for two values drawn from a lognormal distribution */
 MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
 {
@@ -13084,18 +13043,6 @@ MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
 
     newZ = (log(xNew) - mu) / sigma;
     oldZ = (log(xOld) - mu) / sigma;
-
-    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
-}
-
-
-/* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
-{
-    MrBFlt  newZ, oldZ;
-
-    newZ = (log(xNew) - exp) / sd;
-    oldZ = (log(xOld) - exp) / sd;
 
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
 }
