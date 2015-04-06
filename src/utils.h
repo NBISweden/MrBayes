@@ -7,7 +7,6 @@ struct complex
     MrBFlt re;
     MrBFlt im;
 };
-
 typedef struct complex complex;
 
 typedef struct
