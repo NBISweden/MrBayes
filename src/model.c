@@ -116,7 +116,7 @@ ShowmovesParams showmovesParams;                        /* holds parameters for 
 Param           *treePrintparams;                       /* vector of tree parameters to print               */
 int             setUpAnalysisSuccess;                   /* Set to YES if analysis is set without error      */
 
-/* globals used to describe and change the current model; allocated in AllocCharacters and SetPartition */
+/* globals used to describe and change the current model; allocated in AllocCharacters and SetPartition  */
 int         *numVars;                                   /* number of variables in setting arrays         */
 int         *activeParts;                               /* partitions changes should apply to            */
 int         *linkTable[NUM_LINKED];                     /* how parameters are linked across parts        */
@@ -5833,12 +5833,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             }
                         }
-                    /* if (flag == 0)
-                        {
-                        MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
-                            Currently there is no active partition with such data.\n", spacer, parmName);
-                        return (ERROR);
-                        } */
                     }
                 else
                     {
