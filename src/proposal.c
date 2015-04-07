@@ -2301,9 +2301,8 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 moveInRoot, isStartConstrained, isStopConstrained;
     MrBFlt      x, y, extensionProb;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
+    TreeNode    *p, *a, *b, *c, *d, *u, *v;
     Tree        *t;
-    ModelParams *mp;
     
     extensionProb = mvp[0]; /* extension probability */
 
@@ -2311,9 +2310,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
     
     topologyHasChanged = NO;
 
@@ -2343,9 +2339,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* "attachment" part but the length of c has to be stored in x */
     v = p;
     u = p->anc;
-
-    /* store brlen node */
-    brlenNode[3] = v;
 
     /* change in root tree ? */
     if (j == 2)
@@ -2386,8 +2379,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* store brlen nodes and brlen to move */
-    brlenNode[0] = d;
-    brlenNode[1] = c;
     x = c->length;
 
     /* cut and reconnect crown part */
@@ -2414,18 +2405,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         /* switch a and b */
         b = a;
         a = u->anc;
-        }
-
-    /* store brlen nodes */
-    if (directionUp == YES)
-        {
-        brlenNode[4] = u;
-        brlenNode[5] = a;
-        }
-    else
-        {
-        brlenNode[4] = b;
-        brlenNode[5] = u;
         }
 
     /* cut root part*/
@@ -2526,21 +2505,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             }
         }
 
-    /* store brlen nodes */
-    if (nRootNodes > 0)
-        {
-        if (directionUp == YES)
-            {
-            brlenNode[6] = a;
-            brlenNode[5] = u;
-            }
-        else
-            {
-            brlenNode[6] = u;
-            brlenNode[5] = b;
-            }
-        }
-
     /* move around in crown subtree */
     nCrownNodes = 0;
     if (moveInRoot == NO)       
@@ -2575,13 +2539,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         /* check if stop constrained */
         if (c->left == NULL || c->isLocked == YES)
             isStopConstrained = YES;
-        }
-
-    /* store brlen nodes */
-    if (nCrownNodes > 0)
-        {
-        brlenNode[2] = c;
-        brlenNode[1] = d;
         }
 
     /* adjust proposal ratio for constraints */
@@ -4528,7 +4485,6 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     MrBFlt      x, y, extensionProb;
     TreeNode    *p, *a, *b, *c, *d, *u, *v;
     Tree        *t;
-    ModelParams *mp;
 
     extensionProb = mvp[0]; /* extension probability */
     
@@ -4536,9 +4492,6 @@ int Move_ExtTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
     
     topologyHasChanged = NO;
     
@@ -9748,7 +9701,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newA=NULL, *newB, *newC=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
-    ModelParams *mp;
     ModelInfo   *m = NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
@@ -9759,7 +9711,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
     /* get model params and model info */
-    mp = &modelParams[param->relParts[0]];
     m = &modelSettings[param->relParts[0]];
     
     /* get tree */
@@ -10379,7 +10330,6 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
-    ModelParams *mp;
     ModelInfo   *m=NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
@@ -10391,7 +10341,6 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
     /* get model params and model info */
-    mp = &modelParams[param->relParts[0]];
     m = &modelSettings[param->relParts[0]];
     
     /* get tree */
@@ -11399,7 +11348,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *e, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *old=NULL, *tmp=NULL;
     Tree        *t;
-    ModelParams *mp;
     ModelInfo   *m=NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
@@ -11411,7 +11359,6 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
     /* get model params and model info */
-    mp = &modelParams[param->relParts[0]];
     m = &modelSettings[param->relParts[0]];
     
     /* get tree */
