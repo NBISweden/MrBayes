@@ -7138,12 +7138,12 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
             growth = mp->growthFix;
         else
             growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-        if (LnCoalescencePriorPr (oldTree, clockRate, &oldLnPrior, theta, growth) == ERROR)
+        if (LnCoalescencePriorPr (oldTree, &oldLnPrior, theta, growth) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
             return (ERROR);
             }
-        if (LnCoalescencePriorPr (newTree, clockRate, &newLnPrior, theta, growth) == ERROR)
+        if (LnCoalescencePriorPr (newTree, &newLnPrior, theta, growth) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
             return (ERROR);
@@ -7789,7 +7789,7 @@ MrBFlt LogPrior (int chain)
                         growth = mp->growthFix;
                     else
                         growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-                    if (LnCoalescencePriorPr (t, clockRate, &x, theta, growth) == ERROR)
+                    if (LnCoalescencePriorPr (t, &x, theta, growth) == ERROR)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
                         }
@@ -9128,7 +9128,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 |   (2004; Inferring Phylogenies). -- Fredrik.
 |
 ---------------------------------------------------------------------------------*/
-int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
+int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 {
     int             i, j, k, nNodes;
     MrBFlt          *ct, tempD, lastCoalescenceTime, coalescenceTime, intervalLength;
@@ -9196,7 +9196,6 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta,
     free (ct);
     
     return (NO_ERROR);
-    MrBayesPrint ("%lf", clockRate); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

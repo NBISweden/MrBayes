@@ -19,7 +19,7 @@ MrBFlt  GetParsimonyLength (Tree *t, int chain);
 void    GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain);
 MrBFlt  GetRate (int division, int chain);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF);
-int     LnCoalescencePriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
+int     LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t, MrBFlt clockRate);
 int     LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS);
 int     LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio);

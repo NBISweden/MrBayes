@@ -614,14 +614,17 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 {
     /* change clock rate using multiplier */
     
-    int         i, j, k, *nEvents;
-    MrBFlt      oldR, newR, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate;
-    Tree        *t, *oldT;
-    TreeNode    *p, *q;
-    Param       *treeParam, *subParm;
-
+    int             i, j, k, *nEvents;
+    MrBFlt          oldRate, newRate, factor, lambda, nu, igrvar, *brlens, *igrRate, *tk02Rate,
+                    N, newTheta, oldTheta, growth, newLnPrior, oldLnPrior;
+    Tree            *t, *oldT;
+    TreeNode        *p, *q;
+    Param           *treeParam, *subParm;
+    ModelParams     *mp;
+    ModelInfo       *m;
+    
     /* get old value of clock rate */
-    oldR = *GetParamVals(param, chain, state[chain]);
+    oldRate = *GetParamVals(param, chain, state[chain]);
 
     /* Rely on general algorithm to change the value */
     Move_PosRealMultiplier(param, chain, seed, lnPriorRatio, lnProposalRatio, mvp);
@@ -629,10 +632,10 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         return NO_ERROR;
 
     /* get new value of clock rate */
-    newR = *GetParamVals(param, chain, state[chain]);
+    newRate = *GetParamVals(param, chain, state[chain]);
 
     /* calculate factor */
-    factor = newR / oldR;
+    factor = newRate / oldRate;
 
     /* clock rate applies to all clock trees */
     for (i = 0; i < numTrees; i++)
@@ -645,8 +648,6 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
         oldT = GetTreeFromIndex(i, chain, 1^state[chain]);
         treeParam = modelSettings[t->relParts[0]].brlens;
-
-        /* no proposal ratio effect or prior ratio effect on clock model since the time tree remains the same */
         
         /* adjust the node depths and lengths */
         for (j = 0; j < t->nNodes-1; j++)
@@ -663,7 +664,39 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 return (NO_ERROR);
                 }
             }
-        
+
+        /* prior ratio for coalecent tree, as theta is changed */
+        mp = &modelParams[t->relParts[0]];
+        if (!strcmp(mp->clockPr,"Coalescence"))
+            {
+            m = &modelSettings[t->relParts[0]];
+            N = *GetParamVals(m->popSize, chain, state[chain]);
+            if (!strcmp(mp->ploidy, "Diploid"))
+                N *= 4.0;
+            else if (!strcmp(mp->ploidy, "Zlinked"))
+                N *= 3.0;
+            else
+                N *= 2.0;
+            oldTheta = N * oldRate;
+            newTheta = N * newRate;
+            if (!strcmp(mp->growthPr, "Fixed"))
+                growth = mp->growthFix;
+            else
+                growth = *GetParamVals(m->growthRate, chain, state[chain]);
+
+            if (LnCoalescencePriorPr (oldT, &oldLnPrior, oldTheta, growth) == ERROR)
+                {
+                MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
+                return (ERROR);
+                }
+            if (LnCoalescencePriorPr (t, &newLnPrior, newTheta, growth) == ERROR)
+                {
+                MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
+                return (ERROR);
+                }
+            (*lnPriorRatio) += newLnPrior - oldLnPrior;
+            }
+            
         /* adjust proposal and prior ratio for relaxed clock models */
         for (k = 0; k < treeParam->nSubParams; k++)
             {
@@ -5054,7 +5087,7 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
 int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    MrBFlt          oldG, newG, lambda, minG, maxG, ran, oldLnPrior, newLnPrior, curTheta, clockRate;
+    MrBFlt          oldG, newG, lambda, minG, maxG, ran, oldLnPrior, newLnPrior, curTheta;
     ModelParams     *mp;
     ModelInfo       *m;
     Tree            *t;
@@ -5096,19 +5129,18 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     /* get proposal ratio */
-    *lnProposalRatio = log (newG / oldG);
+    (*lnProposalRatio) = log (newG / oldG);
     
     /* get prior ratio */
     t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-    clockRate = *(GetParamVals(m->clockRate, chain, state[chain]));
-    if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, curTheta, oldG) == ERROR)
+    if (LnCoalescencePriorPr (t, &oldLnPrior, curTheta, oldG) == ERROR)
         {
-        MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+        MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
         return (ERROR);
         }
-    if (LnCoalescencePriorPr (t, clockRate, &newLnPrior, curTheta, newG) == ERROR)
+    if (LnCoalescencePriorPr (t, &newLnPrior, curTheta, newG) == ERROR)
         {
-        MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+        MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
         return (ERROR);
         }
     (*lnPriorRatio) = newLnPrior - oldLnPrior + param->LnPriorRatio(newG, oldG, param->priorParams);
@@ -11958,37 +11990,26 @@ int Move_PopSizeM (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
         m = &modelSettings[param->relParts[0]];
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
+        if (!strcmp(mp->ploidy, "Diploid"))
+            clockRate *= 4.0;
+        else if (!strcmp(mp->ploidy, "Zlinked"))
+            clockRate *= 3.0;
+        else
+            clockRate *= 2.0;
+        newT = oldN * clockRate;
+        oldT = newN * clockRate;
         if (!strcmp(mp->growthPr, "Fixed"))
             growth = mp->growthFix;
         else
             growth = *(GetParamVals (m->growthRate, chain, state[chain]));
-        oldT = oldN;
-        newT = newN;
-        if (!strcmp(mp->ploidy, "Diploid"))
+        if (LnCoalescencePriorPr (t, &oldLnPrior, oldT, growth) == ERROR)
             {
-            newT *= 4.0;
-            oldT *= 4.0;
-            }
-        else if (!strcmp(mp->ploidy, "Zlinked"))
-            {
-            newT *= 3.0;
-            oldT *= 3.0;
-            }
-        else
-            {
-            newT *= 2.0;
-            oldT *= 2.0;
-            }
-        newT *= clockRate;
-        oldT *= clockRate;
-        if (LnCoalescencePriorPr (t, clockRate, &oldLnPrior, oldT, growth) == ERROR)
-            {
-            MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+            MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
             return (ERROR);
             }
-        if (LnCoalescencePriorPr (t, clockRate, &newLnPrior, newT, growth) == ERROR)
+        if (LnCoalescencePriorPr (t, &newLnPrior, newT, growth) == ERROR)
             {
-            MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
+            MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
             return (ERROR);
             }
         }
