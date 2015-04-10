@@ -81,7 +81,7 @@ typedef struct
 
 #define ALLOC_LEN               100     /* number of values to allocate each time in partition counter nodes */
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
+#if defined (PRINT_RATEMUL_CPP)
 FILE     *rateMultfp=NULL;
 #endif
 
@@ -4576,7 +4576,7 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 }
 
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
+#if defined (PRINT_RATEMUL_CPP)
 int DELETE_ME_count_taxa(PolyNode *p)
 {
     int sum=0;
@@ -4836,7 +4836,7 @@ int DoSumt (void)
                     }
                 }
 
-#   if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMUL_CPP)
             sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
             if ((rateMultfp=OpenNewMBPrintFile (tempName)) == NULL)
                 {
@@ -5552,7 +5552,7 @@ int DoSumt (void)
         SafeFclose (&fpCon);
         SafeFclose (&fpTrees);
 
-#   if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMUL_CPP)
         SafeFclose (&rateMultfp);
 #   endif
 
@@ -5596,7 +5596,7 @@ int DoSumt (void)
         SafeFclose (&fpCon);
         SafeFclose (&fpTrees);
 
-#   if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMUL_CPP)
         SafeFclose (&rateMultfp);
 #   endif
 
@@ -6120,14 +6120,12 @@ int DoSumtTree (void)
     PolyTree        *t;
     PolyNode        *p;
 
-#   if defined (PRINT_RATEMULTIPLIERS_CPP)
+#   if defined (PRINT_RATEMUL_CPP)
     /* get depths if relevant */
     if (sumtParams.tree->isClock)
         GetPolyDepths (sumtParams.tree);
-
-    if (rateMultfp!=NULL  && sumtParams.tree->root!=NULL)
+    if (rateMultfp !=NULL && sumtParams.tree->root !=NULL)
         DELETE_ME_dump_depth(sumtParams.tree->root);
-    //fprintf (rateMultfp,"%s\n",tkn);
 #   endif
 
     /* increment number of trees read in */

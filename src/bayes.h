@@ -1666,8 +1666,8 @@ extern MrBFlt           vtPi[20];                    /* stationary frequencies f
 extern MrBFlt           blosPi[20];                  /* stationary frequencies for Blosum62 model    */
 extern MrBFlt           lgPi[20];                    /* stationary frequencies for LG model          */
 
-#if defined (PRINT_RATEMULTIPLIERS_CPP)
-extern FILE             *rateMultfp;
+#if defined (PRINT_DUMP)
+FILE                    *dumpFile;                   /* for debugging logs */
 #endif
 
 #if defined (MPI_ENABLED)

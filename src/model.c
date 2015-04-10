@@ -10343,10 +10343,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
             
         param = &params[j];
         if (param->printParam == NO && !(param->paramType == P_TOPOLOGY && strcmp(modelParams[param->relParts[0]].topologyPr,"Fixed")!=0)
-                                    && !param->paramType == P_CPPEVENTS
-                                    && !param->paramType == P_TK02BRANCHRATES
-                                    && !param->paramType == P_IGRBRANCHRATES
-                                    && !param->paramType == P_MIXEDBRCHRATES
+                                    && !(param->paramType == P_CPPEVENTS)
+                                    && !(param->paramType == P_TK02BRANCHRATES)
+                                    && !(param->paramType == P_IGRBRANCHRATES)
+                                    && !(param->paramType == P_MIXEDBRCHRATES)
                                     && !(param->paramType == P_POPSIZE && param->nValues > 1))
             {
             MrBayesPrint ("%s   The parameter '%s' is fixed so the starting value cannot be set\n", spacer, param->name);
@@ -20023,7 +20023,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[4] = BRLENS_twoExp;
     mt->nApplicable = 5;  // was 2
     mt->moveFxn = &Move_BrLen;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -20128,40 +20128,40 @@ void SetUpMoveTypes (void)
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtSPR;
     mt->relProposalProb = 5.0;
-    mt->numTuningParams = 2;
+    mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.5; /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.05); /* lambda */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00001;
-    mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_ExtSPR1 */
+    /* Move_ExtSPR1, used before v3.2.6 */
     mt = &moveTypes[i++];
     mt->name = "Extending SPR variant 1";
     mt->shortName = "ExtSPR1";
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
+    mt->tuningName[1] = "Multiplier tuning parameter";
+    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtSPR1;
     mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
+    mt->numTuningParams = 2;
     mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->tuningParam[1] = 2.0 * log (1.05);   /* lambda */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
+    mt->minimum[1] = 0.00001;
+    mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -20250,40 +20250,40 @@ void SetUpMoveTypes (void)
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtTBR;
     mt->relProposalProb = 5.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.5;  /* extension probability */
-    mt->tuningParam[1] = 2.0 * log (1.05);  /* lambda */
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.5; /* extension probability */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00001;
-    mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_ExtTBR1 */
+    /* Move_ExtTBR1, used before v3.2.6 */
     mt = &moveTypes[i++];
     mt->name = "Extending TBR variant 1";
     mt->shortName = "ExtTBR1";
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
+    mt->tuningName[1] = "Multiplier tuning parameter";
+    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtTBR1;
     mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
+    mt->numTuningParams = 2;
     mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->tuningParam[1] = 2.0 * log (1.05);   /* lambda */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
+    mt->minimum[1] = 0.00001;
+    mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -20529,7 +20529,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[4] = BRLENS_twoExp;
     mt->nApplicable = 5;  // was 2
     mt->moveFxn = &Move_NodeSlider;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 7.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.00001;
@@ -20820,26 +20820,21 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[1] = "r";
     mt->tuningName[2] = "typical branch length";
     mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsSPR;
     mt->relProposalProb = 5.0;
-    mt->numTuningParams = 4;
+    mt->numTuningParams = 3;
     mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
     mt->parsimonyBased = YES;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -20855,8 +20850,8 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[1] = "r";
     mt->tuningName[2] = "typical branch length";
     mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
+    mt->tuningName[3] = "moving distance";
+    mt->shortTuningName[3] = "d";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
@@ -20866,55 +20861,15 @@ void SetUpMoveTypes (void)
     mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[3] = 8.0;              /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
-    mt->parsimonyBased = YES;
-    mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
-
-    /* Move_ParsSPR2 */
-    mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased SPR variant 2";
-    mt->shortName = "ParsSPR2";
-    mt->subParams = YES;
-    mt->tuningName[0] = "parsimony warp factor";
-    mt->shortTuningName[0] = "warp";
-    mt->tuningName[1] = "reweighting probability";
-    mt->shortTuningName[1] = "r";
-    mt->tuningName[2] = "typical branch length";
-    mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
-    mt->tuningName[4] = "moving distance";
-    mt->shortTuningName[4] = "d";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ParsSPR2;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 5;
-    mt->tuningParam[0] = 0.1;              /* warp */
-    mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
-    mt->tuningParam[2] = 0.05;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
-    mt->tuningParam[4] = 8.0;              /* distance to move picked branch */
-    mt->minimum[0] = 0.0;
-    mt->maximum[0] = 1.0;
-    mt->minimum[1] = 0.0;
-    mt->maximum[1] = 0.3;
-    mt->minimum[2] = 0.0001;
-    mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
-    mt->minimum[4] = 2.0;
-    mt->maximum[4] = 1000.0;
+    mt->minimum[3] = 2.0;
+    mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -20966,31 +20921,26 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[1] = "r";
     mt->tuningName[2] = "typical branch length";
     mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
-    mt->tuningName[4] = "moving distance";
-    mt->shortTuningName[4] = "d";
+    mt->tuningName[3] = "moving distance";
+    mt->shortTuningName[3] = "d";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsTBR;
     mt->relProposalProb = 0.0;
-    mt->numTuningParams = 5;
+    mt->numTuningParams = 4;
     mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
     mt->tuningParam[2] = 0.05;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
-    mt->tuningParam[4] = 5.0;              /* distance to move picked branch */
+    mt->tuningParam[3] = 5.0;              /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
-    mt->minimum[4] = 2.0;
-    mt->maximum[4] = 1000.0;
+    mt->minimum[3] = 2.0;
+    mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -21014,7 +20964,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-    /* Move_PopsizeM */
+    /* Move_Popsize_M */
     mt = &moveTypes[i++];
     mt->name = "Multiplier";
     mt->shortName = "Multiplier";
@@ -21025,7 +20975,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[2] = POPSIZE_NORMAL;
     mt->applicableTo[3] = POPSIZE_GAMMA;
     mt->nApplicable = 4;
-    mt->moveFxn = &Move_PopSizeM;
+    mt->moveFxn = &Move_PopSize_M;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log(1.5);  /* lambda */
@@ -21531,7 +21481,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-    /* Move_CPPRateMultiplierMult */
+    /* Move_CPPRateMultiplier_M */
     mt = &moveTypes[i++];
     mt->name = "Random CPP rate multiplier hit with multiplier";
     mt->shortName = "Multiplier";
@@ -21539,7 +21489,7 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[0] = "lambda";
     mt->applicableTo[0] = CPPEVENTS;
     mt->nApplicable = 1;
-    mt->moveFxn = &Move_CPPRateMultiplierMult;
+    mt->moveFxn = &Move_CPPRateMultiplier_M;
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */

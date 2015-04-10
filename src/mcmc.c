@@ -15844,6 +15844,12 @@ int RunChain (RandLong *seed)
     ModelInfo   *m;
 #   endif
 
+#   if defined (PRINT_DUMP)
+    char tempName[150];
+    sprintf (tempName, "%s.dump.txt", chainParams.chainFileName);
+    dumpFile = OpenNewMBPrintFile (tempName);
+#   endif
+    
     /* set nErrors to 0 */
     nErrors = 0;
     if (numLocalTaxa < 4)
@@ -17518,6 +17524,10 @@ int RunChain (RandLong *seed)
             }
         }
 
+#   if defined (PRINT_DUMP)
+    SafeFclose (&dumpFile);
+#   endif
+    
     return (NO_ERROR);
 }
 
