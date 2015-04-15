@@ -7157,6 +7157,7 @@ int RemoveNodeScalers (TreeNode *p, int division, int chain)
 }
 
 
+#if defined (SSE_ENABLED)
 /*----------------------------------------------------------------
 |
 |   RemoveNodeScalers_SSE: Remove node scalers, SSE code
@@ -7186,6 +7187,7 @@ int RemoveNodeScalers_SSE (TreeNode *p, int division, int chain)
     return NO_ERROR;
     
 }
+#endif
 
 
 int SetBinaryQMatrix (MrBFlt **a, int whichChain, int division)
