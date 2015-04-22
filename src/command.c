@@ -1667,7 +1667,7 @@ int DoCharsetParm (char *parmName, char *tkn)
             
             fromI = toJ = everyK = -1;
             foundDash = foundSlash = NO;
-            MrBayesPrint ("%s   Defining charset called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Defining charset called '%s'\n", spacer, tkn);
             expecting = Expecting(EQUALSIGN);
             }
         else
@@ -1685,12 +1685,12 @@ int DoCharsetParm (char *parmName, char *tkn)
            return an error. */
         if (numCharSets < 1)
             {
-            MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
             return (ERROR);
             }
         if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
             {
-            MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
             return (ERROR);
             }
         /* add characters from charset "tkn" to new tempset */
@@ -2678,12 +2678,12 @@ int DoConstraintParm (char *parmName, char *tkn)
                 {
                 if (numTaxaSets < 1)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 /* add taxa from taxset tkn to new tempSet */
@@ -3041,12 +3041,12 @@ int DoCtypeParm (char *parmName, char *tkn)
             {
             if (numCharSets < 1)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
                 
@@ -3247,12 +3247,12 @@ int DoDeleteParm (char *parmName, char *tkn)
                 /* we are using a pre-defined taxa set */
                 if (numTaxaSets < 1)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 /* add taxa from taxset tkn to new tempSet */
@@ -3934,12 +3934,12 @@ int DoExcludeParm (char *parmName, char *tkn)
             /* we are using a pre-defined character set */
             if (numCharSets < 1)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             /* add characters from charset tkn to new tempSet */
@@ -4758,12 +4758,12 @@ int DoIncludeParm (char *parmName, char *tkn)
             /* we are using a pre-defined character set */
             if (numCharSets < 1)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             /* add characters from charset tkn to new tempSet */
@@ -5831,7 +5831,7 @@ int DoPartitionParm (char *parmName, char *tkn)
             whichPartition = 0;
             foundFirst = NO;
             numDivisions = 0;
-            MrBayesPrint ("%s   Defining partition called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Defining partition called '%s'\n", spacer, tkn);
             expecting = Expecting(EQUALSIGN);
             }
         else
@@ -5848,12 +5848,12 @@ int DoPartitionParm (char *parmName, char *tkn)
            return an error. */
         if (numCharSets < 1)
             {
-            MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
             return (ERROR);
             }
         if (CheckString (charSetNames, numCharSets, tkn, &index) == ERROR)
             {
-            MrBayesPrint ("%s   Could not find a character set called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Could not find a character set called '%s'\n", spacer, tkn);
             return (ERROR);
             }
         /* add characters from charset tkn to new tempSet */
@@ -6087,12 +6087,12 @@ int DoRestoreParm (char *parmName, char *tkn)
                 /* we are using a pre-defined taxa set */
                 if (numTaxaSets < 1)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
                     {
-                    MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                    MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                     return (ERROR);
                     }
                 /* add taxa from taxset tkn to new tempSet */
@@ -7397,7 +7397,7 @@ int DoSpeciespartitionParm (char *parmName, char *tkn)
             whichPartition = 0;
             foundFirst = NO;
             numDivisions = 0;
-            MrBayesPrint ("%s   Defining speciespartition called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Defining speciespartition called '%s'\n", spacer, tkn);
             expecting = Expecting(EQUALSIGN);
             }
         else
@@ -7422,7 +7422,7 @@ int DoSpeciespartitionParm (char *parmName, char *tkn)
                return an error. */
             if (CheckString (taxaNames, numTaxa, tkn, &index) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find a tip called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a tip called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             /* add index of the tip named tkn to new tempSet */
@@ -7690,7 +7690,7 @@ int DoTaxasetParm (char *parmName, char *tkn)
             
             fromI = toJ = everyK = -1;
             foundDash = foundSlash = NO;
-            MrBayesPrint ("%s   Defining taxset called %s\n", spacer, tkn);
+            MrBayesPrint ("%s   Defining taxset called '%s'\n", spacer, tkn);
             expecting = Expecting(EQUALSIGN);
             }
         else
@@ -7710,12 +7710,12 @@ int DoTaxasetParm (char *parmName, char *tkn)
             {
             if (numTaxaSets < 1)
                 {
-                MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             if (CheckString (taxaSetNames, numTaxaSets, tkn, &index) == ERROR)
                 {
-                MrBayesPrint ("%s   Could not find a taxset called %s\n", spacer, tkn);
+                MrBayesPrint ("%s   Could not find a taxset called '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             /* add taxa from taxset tkn to new tempSet */
