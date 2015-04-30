@@ -3460,11 +3460,11 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
     p->nodeDepth              = q->nodeDepth;
     p->calibration            = q->calibration;
     p->age                    = q->age;
-    if (nLongsNeeded!=0)
+    if (nLongsNeeded != 0)
         {
         assert (p->partition);
         assert (q->partition);
-        memcpy (p->partition,q->partition, nLongsNeeded*sizeof(BitsLong));
+        memcpy (p->partition, q->partition, nLongsNeeded*sizeof(BitsLong));
         }
 }
 

@@ -6970,7 +6970,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 else
                                     MrBayesPrint ("%s   Setting Brlenspr to Clock:Fossilization for partition %d\n", spacer, i+1);
                                 }
-                            /* TODO: clock:fossilization is not compatible with clockvarpr=cpp */
                             expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         else if (IsSame ("Fixed", tkn) == SAME || IsSame ("Fixed", tkn) == CONSISTENT_WITH)
@@ -20145,7 +20144,7 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ExtSPR1 */
     mt = &moveTypes[i++];
@@ -20154,15 +20153,20 @@ void SetUpMoveTypes (void)
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
+    mt->tuningName[1] = "Multiplier tuning parameter";
+    mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ExtSPR1;
     mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
+    mt->numTuningParams = 2;
     mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->tuningParam[1] = 2.0 * log (1.05);   /* lambda */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
+    mt->minimum[1] = 0.00001;
+    mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
@@ -20267,26 +20271,6 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
-
-    /* Move_ExtTBR1 */
-    mt = &moveTypes[i++];
-    mt->name = "Extending TBR variant 1";
-    mt->shortName = "ExtTBR1";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_ExtTBR1;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.5; /* extension probability */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
     /* Move_RateShape_M */
@@ -20883,7 +20867,7 @@ void SetUpMoveTypes (void)
     mt->maximum[4] = 1000.0;
     mt->parsimonyBased = YES;
     mt->level = DEVELOPER;
-    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ParsSPRClock */
     mt = &moveTypes[i++];
@@ -21001,102 +20985,6 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
-
-    /* Move_RanSPR1 */
-    mt = &moveTypes[i++];
-    mt->name = "Random SPR version 1";
-    mt->shortName = "rSPR1";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Move probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_RanSPR1;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* move probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-
-    /* Move_RanSPR2 */
-    mt = &moveTypes[i++];
-    mt->name = "Random SPR version 2";
-    mt->shortName = "rSPR2";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Move probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_RanSPR2;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* move probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-
-    /* Move_RanSPR3 */
-    mt = &moveTypes[i++];
-    mt->name = "Random SPR version 3";
-    mt->shortName = "rSPR3";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Move probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_RanSPR3;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* move probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
-
-    /* Move_RanSPR4 */
-    mt = &moveTypes[i++];
-    mt->name = "Random SPR version 4";
-    mt->shortName = "rSPR4";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Move probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->tuningName[1] = "Multiplier tuning parameter";
-    mt->shortTuningName[1] = "lambda";
-    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
-    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_RanSPR4;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 2;
-    mt->tuningParam[0] = 0.8; /* move probability */
-    mt->tuningParam[1] = 2.0 * log (1.6); /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->minimum[1] = 0.00000001;
-    mt->maximum[1] = 10000000.0;
-    mt->parsimonyBased = NO;
-    mt->level = DEVELOPER;
 
     /* Move_RateMult_Dir */
     mt = &moveTypes[i++];
