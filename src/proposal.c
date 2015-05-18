@@ -9617,14 +9617,14 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     for (i=0; i<numCompressedChars; i++)
         {
         nSitesOfPat[i] = globalNSitesOfPat[i];
-        for (j=0; j<globalNSitesOfPat[i]; j++)
+    /*  for (j=0; j<globalNSitesOfPat[i]; j++)
             {
             ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
                 nSitesOfPat[i]++;
-            }
+            } */ /* disable this at the moment */
         }
 
     /* need to alloc a matrix for parsimony lengths, an array of pointers to crown part,
@@ -10641,7 +10641,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
     increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
     v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
-    tuning = mvp[3];                   /* multiplier tuning parameter */
+    tuning = mvp[3];                      /* multiplier tuning parameter */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
 
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
@@ -10808,14 +10808,14 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     for (i=0; i<numCompressedChars; i++)
         {
         nSitesOfPat[i] = globalNSitesOfPat[i];
-        for (j=0; j<globalNSitesOfPat[i]; j++)
+    /*  for (j=0; j<globalNSitesOfPat[i]; j++)
             {
             ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
                 nSitesOfPat[i]++;
-            }
+            } */ /* disable this at the moment */
         }
 
     /* cycle through the possibilities and record the parsimony length */

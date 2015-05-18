@@ -12226,6 +12226,11 @@ int GetEmpiricalFreqs (int *relParts, int nRelParts)
                 for (i=0; i<60; i++)
                     empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
                 }
+            else if (!strcmp(modelParams[firstRel].geneticCode, "Invermt"))
+                {
+                for (i=0; i<62; i++)
+                    empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
+                }
             else if (!strcmp(modelParams[firstRel].geneticCode, "Mycoplasma"))
                 {
                 for (i=0; i<62; i++)
@@ -12236,9 +12241,19 @@ int GetEmpiricalFreqs (int *relParts, int nRelParts)
                 for (i=0; i<62; i++)
                     empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
                 }
-            else if (!strcmp(modelParams[firstRel].geneticCode, "Ciliates"))
+            else if (!strcmp(modelParams[firstRel].geneticCode, "Ciliate"))
                 {
                 for (i=0; i<63; i++)
+                    empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
+                }
+            else if (!strcmp(modelParams[firstRel].geneticCode, "Echinoderm"))
+                {
+                for (i=0; i<62; i++)
+                    empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
+                }
+            else if (!strcmp(modelParams[firstRel].geneticCode, "Euplotid"))
+                {
+                for (i=0; i<62; i++)
                     empiricalFreqs[i] = freqN[modelParams[firstRel].codonNucs[i][0]] * freqN[modelParams[firstRel].codonNucs[i][1]] * freqN[modelParams[firstRel].codonNucs[i][2]];
                 }
             else if (!strcmp(modelParams[firstRel].geneticCode, "Metmt"))
@@ -13136,7 +13151,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* If both partitions have nucmodel=codon, then we also have to make certain that the same genetic code is used. */
         if (!strcmp(modelParams[part1].nucModel, "Codon") && !strcmp(modelParams[part2].nucModel, "Codon"))
             {
-            if (strcmp(modelParams[part1].geneticCode,modelParams[part2].geneticCode))
+            if (strcmp(modelParams[part1].geneticCode, modelParams[part2].geneticCode))
                 isSame = NO; /* the models have different genetic codes */
             }
         
@@ -14876,12 +14891,18 @@ int NumStates (int part)
                 return (61);
             else if (!strcmp(modelParams[part].geneticCode, "Vertmt"))
                 return (60);
+            else if (!strcmp(modelParams[part].geneticCode, "Invermt"))
+                return (62);
             else if (!strcmp(modelParams[part].geneticCode, "Mycoplasma"))
                 return (62);
             else if (!strcmp(modelParams[part].geneticCode, "Yeast"))
                 return (62);
-            else if (!strcmp(modelParams[part].geneticCode, "Ciliates"))
+            else if (!strcmp(modelParams[part].geneticCode, "Ciliate"))
                 return (63);
+            else if (!strcmp(modelParams[part].geneticCode, "Echinoderm"))
+                return (62);
+            else if (!strcmp(modelParams[part].geneticCode, "Euplotid"))
+                return (62);
             else if (!strcmp(modelParams[part].geneticCode, "Metmt"))
                 return (62);
             }
@@ -17058,6 +17079,17 @@ void SetCode (int part)
         modelParams[part].codon[12] = 13; /* ATA Met  */
         modelParams[part].codon[56] = 18; /* TGA Trp  */
         }
+    if (!strcmp(modelParams[part].geneticCode, "Invermt"))
+        {
+        /* UGA: Ter -> Trp
+           AUA: Ile -> Met
+           AGA: Arg -> Ser
+           AGG: Arg -> Ser */
+        modelParams[part].codon[ 8] = 16; /* AGA Ser */
+        modelParams[part].codon[10] = 16; /* AGG Ser */
+        modelParams[part].codon[12] = 13; /* ATA Met */
+        modelParams[part].codon[56] = 18; /* TGA Trp */
+        }
     else if (!strcmp(modelParams[part].geneticCode, "Mycoplasma"))
         {
         /* UGA: Ter -> Trp */
@@ -17078,12 +17110,28 @@ void SetCode (int part)
         modelParams[part].codon[31] = 17; /* CTT Thr */
         modelParams[part].codon[56] = 18; /* TGA Trp */
         }
-    else if (!strcmp(modelParams[part].geneticCode, "Ciliates"))
+    else if (!strcmp(modelParams[part].geneticCode, "Ciliate"))
         {
         /* UAA: Ter -> Gln
            UAG: Ter -> Gln */
         modelParams[part].codon[48] =  6; /* TAA Gln */
         modelParams[part].codon[50] =  6; /* TAG Gln */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Echinoderm"))
+        {
+        /* AAA: Lys -> Asn
+           AGA: Arg -> Ser
+           AGG: Arg -> Ser
+           UGA: Ter -> Trp */
+        modelParams[part].codon[ 0] = 3;  /* AAA Asn */
+        modelParams[part].codon[ 8] = 16; /* AGA Ser */
+        modelParams[part].codon[10] = 16; /* AGG Ser */
+        modelParams[part].codon[56] = 18; /* TGA Trp */
+        }
+    else if (!strcmp(modelParams[part].geneticCode, "Euplotid"))
+        {
+        /* UGA: Ter -> Cys */
+        modelParams[part].codon[56] = 5;  /* TGA Cys */
         }
     else if (!strcmp(modelParams[part].geneticCode, "Metmt"))
         {
@@ -17098,7 +17146,6 @@ void SetCode (int part)
         }
     else
         {
-        
         }
     
     ns = 0;
@@ -21750,9 +21797,7 @@ int ShowModel (void)
                             
                         /* genetic code that is used (if nucmodel=codon) */
                         MrBayesPrint ("%s         Code      = %s\n", spacer, modelParams[i].geneticCode);
-                        
                         }
-                        
                     }
                 /* amino acid characters in this partition */
                 else if (modelSettings[i].dataType == PROTEIN)
@@ -21871,12 +21916,18 @@ int ShowModel (void)
                         ns = 61;
                     else if (!strcmp(modelParams[i].geneticCode, "Vertmt"))
                         ns = 60;
+                    else if (!strcmp(modelParams[i].geneticCode, "Invermt"))
+                        ns = 62;
                     else if (!strcmp(modelParams[i].geneticCode, "Mycoplasma"))
                         ns = 62;
                     else if (!strcmp(modelParams[i].geneticCode, "Yeast"))
                         ns = 62;
-                    else if (!strcmp(modelParams[i].geneticCode, "Ciliates"))
+                    else if (!strcmp(modelParams[i].geneticCode, "Ciliate"))
                         ns = 63;
+                    else if (!strcmp(modelParams[i].geneticCode, "Echinoderm"))
+                        ns = 62;
+                    else if (!strcmp(modelParams[i].geneticCode, "Euplotid"))
+                        ns = 62;
                     else if (!strcmp(modelParams[i].geneticCode, "Metmt"))
                         ns = 62;
                     }

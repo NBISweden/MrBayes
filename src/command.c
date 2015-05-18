@@ -10327,9 +10327,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                above and a large number of others, with or without name.        \n");
         MrBayesPrint ("   Code      -- Enforces the use of a particular genetic code. The default       \n");
         MrBayesPrint ("                is the universal code. Other options include \"vertmt\" for      \n");
-        MrBayesPrint ("                vertebrate mitocondrial DNA, \"mycoplasma\", \"yeast\",          \n");
-        MrBayesPrint ("                \"ciliates\", and \"metmt\" (for metazoan mitochondrial DNA      \n");
-        MrBayesPrint ("                except vertebrates).                                             \n");
+        MrBayesPrint ("                vertebrate mitocondrial, \"invermt\", \"mycoplasma\", \"yeast\", \n");
+        MrBayesPrint ("                \"ciliate\", \"echinoderm\", \"euplotid\", and \"metmt\" (for    \n");
+        MrBayesPrint ("                metazoan mitochondrial except vertebrates).                      \n");
         MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\",   \n");
         MrBayesPrint ("                \"Diploid\" or \"Zlinked\". This option is used when a coalescent\n");
         MrBayesPrint ("                prior is used on trees.                                          \n");
@@ -10465,8 +10465,8 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   ------------------------------------------------------------------            \n");       
             MrBayesPrint ("   Nucmodel     4by4/Doublet/Codon/Protein            %s                         \n", mp->nucModel);
             MrBayesPrint ("   Nst          1/2/6/Mixed                           %s                         \n", mp->nst);
-            MrBayesPrint ("   Code         Universal/Vertmt/Mycoplasma/                                     \n");
-            MrBayesPrint ("                Yeast/Ciliates/Metmt                  %s                         \n", mp->geneticCode);
+            MrBayesPrint ("   Code         Universal/Vertmt/Invermt/Yeast/Mycoplasma/                       \n");
+            MrBayesPrint ("                Ciliate/Echinoderm/Euplotid/Metmt     %s                         \n", mp->geneticCode);
             MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked               %s                         \n", mp->ploidy);
             MrBayesPrint ("   Rates        Equal/Gamma/LNorm/Propinv/                                       \n");
             MrBayesPrint ("                Invgamma/Adgamma                      %s                         \n", mp->ratesModel);
@@ -14289,7 +14289,7 @@ void SetUpParms (void)
     PARAM  (30, "Aamodel",        DoLsetParm,        "Poisson|Equalin|Jones|Dayhoff|Mtrev|Mtmam|Wag|Rtrev|Cprev|Vt|Blosum|Blossum|LG|\0");
     PARAM  (31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
     PARAM  (32, "Omegavar",       DoLsetParm,        "Equal|Ny98|M3|M10|\0");
-    PARAM  (33, "Code",           DoLsetParm,        "Universal|Vertmt|Mycoplasma|Yeast|Ciliates|Metmt|\0");
+    PARAM  (33, "Code",           DoLsetParm,        "Universal|Vertmt|Invermt|Mycoplasma|Yeast|Ciliate|Echinoderm|Euplotid|Metmt|\0");
     PARAM  (34, "Coding",         DoLsetParm,        "All|Variable|Noabsencesites|Nopresencesites|Informative|\0");
     PARAM  (35, "Seqerror",       DoPrsetParm,       "\0");
     PARAM  (36, "Tratiopr",       DoPrsetParm,       "Beta|Fixed|\0");
