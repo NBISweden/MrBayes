@@ -13605,7 +13605,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* determine multiplication factor */
     factor = exp(tuning * (RandomNumber(seed) - 0.5));
 
-    /* multiply all branch lengths and node depths by this factor  */
+    /* multiply all changeable ages and node depths by this factor */
     numChangedNodes = 0;
     for (i=0; i<t->nNodes-1; i++)
         {
@@ -13636,10 +13636,9 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         p->nodeDepth *= factor;
         numChangedNodes++;
         
-        /* update brls, be careful with ancestral fossil */
+        /* deal with ancestral fossils */
         if (p->left != NULL)
             {
-            assert (p->left->length >= 0.0 && p->right->length >= 0.0);
             if (p->left->length < TIME_MIN)
                 {
                 p->left->length = 0.0;
@@ -13656,7 +13655,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     }
                 numChangedNodes--;
                 }
-            else if (p->right->length < TIME_MIN)
+            if (p->right->length < TIME_MIN)
                 {
                 p->right->length = 0.0;
                 p->nodeDepth = p->right->nodeDepth;
@@ -13672,17 +13671,22 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     }
                 numChangedNodes--;
                 }
+            assert (!(p->left->length == 0.0 && p->right->length == 0.0));
+            }
+        }
+    
+    /* update brls */
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->left != NULL)
+            {
             if (p->left->length > 0.0)
                 p->left->length = p->nodeDepth - p->left->nodeDepth;
             if (p->right->length > 0.0)
                 p->right->length = p->nodeDepth - p->right->nodeDepth;
             }
         }
-    
-    /* in case the ancestor cannot be moved */
-    p = t->root->left;
-    p->left->length = p->nodeDepth - p->left->nodeDepth;
-    p->right->length = p->nodeDepth - p->right->nodeDepth;
 
     /* check that all branch lengths are proper, which need not be the case */
     for (i = 0; i < t->nNodes -2; i++)
