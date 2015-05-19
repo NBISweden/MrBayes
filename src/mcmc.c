@@ -444,7 +444,7 @@ int AddTreeSamples (int from, int to, int saveToList)
         return (NO_ERROR);
 #   endif
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -2045,7 +2045,7 @@ void CopySiteScalers (ModelInfo *m, int chain)
 #   endif
     from = m->scalers[m->siteScalerScratchIndex];
     to   = m->scalers[m->siteScalerIndex[chain]];
-    memcpy ((void*) to, (void*) from, (size_t)(m->numChars*sizeof(CLFlt)));
+    memcpy ((void*) to, (void*) from, (size_t)(m->numChars) * sizeof(CLFlt));
 }
 
 
@@ -2736,7 +2736,7 @@ int DoMcmcParm (char *parmName, char *tkn)
     char        *tempStr;
     int         tempStrSize = TEMPSTRSIZE;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -4162,7 +4162,7 @@ int FillNumSitesOfPat (void)
             }
         
         /* allocate memory */
-        increased = (int *)SafeMalloc((size_t) (2 * numCompressedChars * sizeof(int)));
+        increased = (int *)SafeMalloc(2 * (size_t)numCompressedChars * sizeof(int));
         if (!increased)
             {
             MrBayesPrint ("%s   Problem reallocating increased (%d)\n", spacer, numCompressedChars * chainParams.numChains * sizeof(int));
@@ -8204,7 +8204,7 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
     TreeNode        *p;
 
     /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
     if (!nt)
         {
         MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
@@ -8264,7 +8264,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     TreeNode        *p;
     
     /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
     if (!nt)
         {
         MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
@@ -8335,7 +8335,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     TreeNode        *p;
     
     /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
     if (!nt)
         {
         MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
@@ -8717,17 +8717,17 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     sl = mp->sampleFSNum;
     
     /* alloc memory for time of each slice, t_f[sl] = 0 */
-    t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     
     if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
         {
@@ -8894,17 +8894,17 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     sl += 1;
     
     /* alloc memory for time of each slice */
-    t_f    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t) (sl+1) * sizeof(MrBFlt));
+    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
     
     if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
         {
@@ -9135,7 +9135,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
     TreeNode        *p;
 
     /* allocate space for the coalescence times */
-    ct = (MrBFlt *)SafeMalloc((size_t) (t->nIntNodes) * sizeof(MrBFlt));
+    ct = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
     if (!ct)
         {
         MrBayesPrint ("\n   ERROR: Problem allocating ct\n");
@@ -10387,7 +10387,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -10474,7 +10474,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -10661,7 +10661,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -10832,7 +10832,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -11803,7 +11803,7 @@ int PrintMPISlaves (FILE *fp)
         /* reallocate string s on processor 0 if necessary */
         if (nErrors == 0 && proc_id == 0 && len+5 > strlen(s))
             {
-            if ((s = (char *) SafeRealloc ((void *)s, (size_t)((len+5)*sizeof(char)))) == NULL)
+            if ((s = (char *) SafeRealloc ((void *)s, ((size_t)len+5)*sizeof(char))) == NULL)
                 {
                 MrBayesPrint ("%s   Problem reallocating %d chars to string 's' on proc 0 in PrintMPISlaves()\n", spacer, len+5);
                 nErrors++;
@@ -11976,7 +11976,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -12119,7 +12119,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -12191,8 +12191,8 @@ int PrintStates (int curGen, int coldId)
 
     /* allocate the print string */
     printStringSize = tempStrSize = TEMPSTRSIZE;
-    printString = (char *)SafeMalloc((size_t) (printStringSize * sizeof(char)));
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    printString = (char *)SafeMalloc((size_t)printStringSize * sizeof(char));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
 
     if (!printString)
         {
@@ -12216,7 +12216,7 @@ int PrintStates (int curGen, int coldId)
             MrBayesPrint ("%s   posSelProbs not free in PrintStates\n", spacer);
             goto errorExit;
             }
-        posSelProbs = (MrBFlt *)SafeMalloc((size_t) (numCompressedChars * sizeof(MrBFlt)));
+        posSelProbs = (MrBFlt *)SafeMalloc((size_t)numCompressedChars * sizeof(MrBFlt));
         if (!posSelProbs)
             {
             MrBayesPrint ("%s   Problem allocating posSelProbs (%d)\n", spacer, numCompressedChars * sizeof(MrBFlt));
@@ -12228,7 +12228,7 @@ int PrintStates (int curGen, int coldId)
         }
     if (inferPosSel == YES || inferSiteOmegas == YES || inferSiteRates == YES || inferAncStates == YES)
         {
-        printedChar = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
+        printedChar = (int *)SafeMalloc((size_t)numChar * sizeof(int));
         if (!printedChar)
             {
             MrBayesPrint ("%s   Problem allocating printedChar (%d)\n", spacer, numChar * sizeof(int));
@@ -13087,7 +13087,7 @@ int PrintStatesToFiles (int curGen)
                         MrBayesPrint ("%s   Problem receiving printStringSize from proc_id = %d\n", spacer, procWithChain);
                         nErrors++;
                         }
-                    printString = (char *)SafeMalloc((size_t) (printStringSize * sizeof(char)));
+                    printString = (char *)SafeMalloc((size_t)printStringSize * sizeof(char));
                     if (!printString)
                         {
                         MrBayesPrint ("%s   Problem allocating printString (%d)\n", spacer, printStringSize * sizeof(char));
@@ -13206,7 +13206,7 @@ int PrintStatesToFiles (int curGen)
                             MrBayesPrint ("%s   Problem receiving printStringSize from proc_id = %d\n", spacer, procWithChain);
                             nErrors++;
                             }
-                        printString = (char *)SafeMalloc((size_t) (printStringSize * sizeof(char)));
+                        printString = (char *)SafeMalloc((size_t)printStringSize * sizeof(char));
                         if (!printString)
                             {
                             MrBayesPrint ("%s   Problem allocating printString (%d)\n", spacer, printStringSize * sizeof(char));
@@ -13333,7 +13333,7 @@ int PrintSwapInfo (void)
 #   endif
 
     tempStrSize = TEMPSTRSIZE;
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -13591,7 +13591,7 @@ int PrintTopConvInfo (void)
 #   endif
 
     tempStrSize = TEMPSTRSIZE;
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -13850,7 +13850,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
 
     /* allocate the print string */
     printStringSize = 200;
-    printString = (char *)SafeMalloc((size_t) (printStringSize * sizeof(char)));
+    printString = (char *)SafeMalloc((size_t)printStringSize * sizeof(char));
     if (!printString)
         {
         MrBayesPrint ("%s   Problem allocating printString (%d)\n", spacer, printStringSize * sizeof(char));
@@ -13859,7 +13859,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
     *printString = '\0';
 
     tempStrSize = TEMPSTRSIZE;
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -15011,7 +15011,7 @@ int RemoveTreeSamples (int from, int to)
         return (NO_ERROR);
 #   endif
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -15886,12 +15886,12 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   curLnL is already allocated\n", spacer);
         nErrors++;
         }
-    else if ((curLnL = (MrBFlt *)SafeMalloc((size_t) (numLocalChains * sizeof(MrBFlt)))) == NULL)
+    else if ((curLnL = (MrBFlt *)SafeMalloc((size_t)numLocalChains * sizeof(MrBFlt))) == NULL)
         {
         MrBayesPrint ("%s   Problem allocating curLnL (%d)\n", spacer, numLocalChains * sizeof(MrBFlt));
         nErrors++;
         }
-    else if ((maxLnL0 = (MrBFlt *) SafeCalloc (chainParams.numRuns * chainParams.numChains, sizeof(MrBFlt))) == NULL)
+    else if ((maxLnL0 = (MrBFlt *) SafeCalloc ((size_t)(chainParams.numRuns) * (size_t)(chainParams.numChains), sizeof(MrBFlt))) == NULL)
         {
         MrBayesPrint ("%s   Problem allocating maxLnL0\n", spacer, numLocalChains * sizeof(MrBFlt));
         free (curLnL);
@@ -15916,7 +15916,7 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   curLnPr is already allocated\n", spacer);
         nErrors++;
         }
-    else if ((curLnPr = (MrBFlt *)SafeMalloc((size_t) (numLocalChains * sizeof(MrBFlt)))) == NULL)
+    else if ((curLnPr = (MrBFlt *)SafeMalloc((size_t)numLocalChains * sizeof(MrBFlt))) == NULL)
         {
         MrBayesPrint ("%s   Problem allocating curLnPr (%d)\n", spacer, numLocalChains * sizeof(MrBFlt));
         nErrors++;
@@ -15940,7 +15940,7 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   chainId is already allocated\n", spacer);
         nErrors++;
         }
-    else if ((chainId = (int *)SafeMalloc((size_t) (numLocalChains * sizeof(int)))) == NULL)
+    else if ((chainId = (int *)SafeMalloc((size_t)numLocalChains * sizeof(int))) == NULL)
         {
         MrBayesPrint ("%s   Problem allocating chainId (%d)\n", spacer, numLocalChains * sizeof(int));
         nErrors++;
@@ -17663,7 +17663,7 @@ int setFilePositions (int samplePos)
         return (NO_ERROR);
 #   endif
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));

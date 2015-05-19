@@ -452,7 +452,7 @@ int AddNameSet (NameSet **nameSetList, int numNameSets, char **nameSet, int numN
 {
     int     i;
 
-    (*nameSetList) = (NameSet*) SafeRealloc ((void*)(*nameSetList), (size_t)(((numNameSets+1)*sizeof(NameSet))));
+    (*nameSetList) = (NameSet*) SafeRealloc ((void*)(*nameSetList), ((size_t)numNameSets+1)*sizeof(NameSet));
 
     (*nameSetList)[numNameSets].names    = NULL;
     (*nameSetList)[numNameSets].numNames = numNames;
@@ -469,11 +469,11 @@ int AddNameSet (NameSet **nameSetList, int numNameSets, char **nameSet, int numN
       the counter holding the length of the list. */
 int AddString (char ***list, int len, char *token)
 {
-    (*list) = (char **) SafeRealloc ((void *)(*list), (size_t)((len+1)*sizeof(char*)));
+    (*list) = (char **) SafeRealloc ((void *)(*list), ((size_t)len+1)*sizeof(char*));
     if (!(*list))
         return ERROR;
 
-    (*list)[len] = (char *) SafeCalloc ((size_t)(strlen(token)+1), sizeof(char));
+    (*list)[len] = (char *) SafeCalloc ((strlen(token)+1), sizeof(char));
     if (!(*list)[len])
         return ERROR;
 
@@ -489,7 +489,7 @@ int AllocCharacters (void)
 
     if (memAllocs[ALLOC_MATRIX] == YES)
         goto errorExit;
-    matrix = (int *)SafeMalloc((size_t) (numTaxa * numChar * sizeof(int)));
+    matrix = (int *) SafeMalloc((size_t)numTaxa * (size_t)numChar * sizeof(int));
     if (!matrix)
         {
         MrBayesPrint ("%s   Problem allocating matrix (%d)\n", spacer, numTaxa * numChar * sizeof(int));
@@ -501,7 +501,7 @@ int AllocCharacters (void)
 
     if (memAllocs[ALLOC_CHARINFO] == YES)
         goto errorExit;
-    charInfo = (CharInformation *)SafeMalloc((size_t) (numChar * sizeof(CharInformation)));
+    charInfo = (CharInformation *) SafeMalloc ((size_t)numChar * sizeof(CharInformation));
     if (!charInfo)
         {
         MrBayesPrint ("%s   Problem allocating charInfo (%d)\n", spacer, numChar * sizeof(CharInformation));
@@ -530,9 +530,9 @@ int AllocCharacters (void)
     if (memAllocs[ALLOC_PARTITIONS] == YES)
         goto errorExit;
     partitionNames = NULL;
-    partitionId = (int**) SafeMalloc ((size_t)(numChar*sizeof(int*)));
+    partitionId = (int**) SafeMalloc ((size_t)numChar * sizeof(int*));
     for (i=0; i<numChar; i++)
-        partitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
+        partitionId[i] = (int *) SafeMalloc (sizeof(int));
     numDefinedPartitions = 0;   /* number of defined partitions */
     memAllocs[ALLOC_PARTITIONS] = YES;  /* safe to do free */
 
@@ -559,8 +559,8 @@ int AllocCharacters (void)
         tempSetSize = numChar;
     else
         tempSetSize = numTaxa;
-    tempSet = (int *)SafeRealloc((void *)tempSet, (size_t) (tempSetSize * sizeof(int)));
-    tempSetNeg = (int *)SafeRealloc((void *)tempSetNeg, (size_t) (tempSetSize * sizeof(int)));
+    tempSet = (int *) SafeRealloc ((void *)tempSet, (size_t)tempSetSize * sizeof(int));
+    tempSetNeg = (int *) SafeRealloc ((void *)tempSetNeg, (size_t)tempSetSize * sizeof(int));
     if (!tempSet || !tempSetNeg)
         {
         MrBayesPrint ("%s   Problem reallocating tempSet (%d)\n", spacer, tempSetSize * sizeof(int));
@@ -605,12 +605,12 @@ int AllocTaxa (void)
     if (memAllocs[ALLOC_TAXA] == YES)
         goto errorExit;
     taxaNames = NULL;   /* This variable is allocated in AddString */
-    taxaInfo = (TaxaInformation *)SafeMalloc((size_t) (numTaxa * sizeof(TaxaInformation)));
+    taxaInfo = (TaxaInformation *) SafeMalloc ((size_t)numTaxa * sizeof(TaxaInformation));
     if (!taxaInfo)
         {
         goto errorExit;
         }
-    tipCalibration = (Calibration *)SafeMalloc((size_t) (numTaxa * sizeof(Calibration)));
+    tipCalibration = (Calibration *) SafeMalloc ((size_t)numTaxa * sizeof(Calibration));
     if (!tipCalibration)
         {
         free (taxaInfo);
@@ -637,10 +637,10 @@ int AllocTaxa (void)
         goto errorExit;
     speciespartitionNames = NULL;
     speciesNameSets = NULL;
-    speciespartitionId = (int**) SafeMalloc ((size_t)(numTaxa*sizeof(int*)));
+    speciespartitionId = (int**) SafeMalloc ((size_t)numTaxa * sizeof(int*));
     for (i=0; i<numTaxa; i++)
         {
-        speciespartitionId[i] = (int *) SafeMalloc ((size_t)(1 * sizeof(int)));
+        speciespartitionId[i] = (int *) SafeMalloc (sizeof(int));
         speciespartitionId[i][0] = i + 1;   /* 1-based taxon index, do not ask me why */
         }
     numDefinedSpeciespartitions = 0;   /* number of defined species partitions */
@@ -667,8 +667,8 @@ int AllocTaxa (void)
     /* tempSet */
     if (memAllocs[ALLOC_TMPSET] == YES)
         goto errorExit;
-    tempSet = (int *) SafeMalloc ((size_t)(numTaxa*sizeof(int)));
-    tempSetNeg = (int *) SafeMalloc ((size_t)(numTaxa*sizeof(int)));
+    tempSet = (int *) SafeMalloc ((size_t)numTaxa * sizeof(int));
+    tempSetNeg = (int *) SafeMalloc ((size_t)numTaxa * sizeof(int));
     if (!tempSet || !tempSetNeg)
         goto errorExit;
     memAllocs[ALLOC_TMPSET] = YES;
@@ -2487,14 +2487,14 @@ int DoConstraint (void)
         }
     else
         {
-        definedConstraintTwo = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwo), (size_t)((numDefinedConstraints+1)*sizeof(BitsLong *)));
+        definedConstraintTwo = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwo), ((size_t)numDefinedConstraints+1)*sizeof(BitsLong *));
         if (definedConstraintTwo==NULL)
             return ERROR;
         definedConstraintTwo[numDefinedConstraints]=NULL;
         }
     
     /* add a default node calibration */
-    nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, (size_t)((numDefinedConstraints+1)*sizeof(Calibration)));
+    nodeCalibration = (Calibration *) SafeRealloc ((void *)nodeCalibration, ((size_t)numDefinedConstraints+1)*sizeof(Calibration));
     nodeCalibration[numDefinedConstraints].prior            = defaultCalibration.prior;
     nodeCalibration[numDefinedConstraints].priorParams[0]   = defaultCalibration.priorParams[0];
     nodeCalibration[numDefinedConstraints].priorParams[1]   = defaultCalibration.priorParams[1];
@@ -2511,25 +2511,25 @@ int DoConstraint (void)
     /* reallocate and initialize space for activeConstraints */
     for (i=0; i<numCurrentDivisions; i++)
         {
-        modelParams[i].activeConstraints = (int *) SafeRealloc((void *)(modelParams[i].activeConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+        modelParams[i].activeConstraints = (int *) SafeRealloc((void *)(modelParams[i].activeConstraints), (size_t)numDefinedConstraints*sizeof(int));
         modelParams[i].activeConstraints[numDefinedConstraints-1] = NO;
         }
 
     /* reallocate and initialize space for tempActiveConstraints */
-    tempActiveConstraints = (int *) SafeRealloc((void *)(tempActiveConstraints), (size_t)(numDefinedConstraints*sizeof(int)));
+    tempActiveConstraints = (int *) SafeRealloc((void *)(tempActiveConstraints), (size_t)numDefinedConstraints*sizeof(int));
     tempActiveConstraints[numDefinedConstraints-1] = NO;
 
-    definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)(numDefinedConstraints*sizeof(enum ConstraintType)));
+    definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)numDefinedConstraints*sizeof(enum ConstraintType));
     if (definedConstraintsType==NULL)
         return ERROR;
     definedConstraintsType[numDefinedConstraints-1] = consrtainType;
 
-    definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
+    definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)numDefinedConstraints*sizeof(BitsLong *));
     if (definedConstraintPruned==NULL)
         return ERROR;
     definedConstraintPruned[numDefinedConstraints-1]=NULL;
 
-    definedConstraintTwoPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)((numDefinedConstraints)*sizeof(BitsLong *)));
+    definedConstraintTwoPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintTwoPruned), (size_t)numDefinedConstraints*sizeof(BitsLong *));
     if (definedConstraintTwoPruned==NULL)
         return ERROR;
     definedConstraintTwoPruned[numDefinedConstraints-1]=NULL;
@@ -3620,7 +3620,7 @@ int DoExecute (void)
     */
 
     /* allocate a string long enough to hold a line */
-    s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
+    s = (char *)SafeMalloc((size_t)longestLineLength * sizeof(char));
     if (!s)
         {
         MrBayesPrint ("%s   Problem allocating string for reading file\n", spacer);
@@ -5765,7 +5765,7 @@ int DoPartition (void)
         
     /* add new partition */
     for (i=0; i<numChar; i++) {
-        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), (size_t)((numDefinedPartitions + 1) * sizeof(int)));
+        partitionId[i] = (int *) SafeRealloc ((void *)(partitionId[i]), ((size_t)numDefinedPartitions + 1) * sizeof(int));
         if (!partitionId[i])
             return ERROR;
     }
@@ -7313,7 +7313,7 @@ int DoSpeciespartition (void)
     /* add new partition */
     for (i=0; i<numTaxa; i++)
         {
-        speciespartitionId[i] = (int *) SafeRealloc ((void *)(speciespartitionId[i]), (size_t)((numDefinedSpeciespartitions + 1) * sizeof(int)));
+        speciespartitionId[i] = (int *) SafeRealloc ((void *)(speciespartitionId[i]), ((size_t)numDefinedSpeciespartitions + 1) * sizeof(int));
         if (!speciespartitionId[i])
             {
             for (i=0; i<numDivisions; i++)
@@ -8286,9 +8286,9 @@ int DoTreeParm (char *parmName, char *tkn)
                 t->nEvents  = (int **) SafeRealloc ((void *)t->nEvents, t->nESets*sizeof(int *));
                 t->position = (MrBFlt ***) SafeRealloc ((void *)t->position, t->nESets*sizeof(MrBFlt **));
                 t->rateMult = (MrBFlt ***) SafeRealloc ((void *)t->rateMult, t->nESets*sizeof(MrBFlt **));
-                t->nEvents[t->nESets-1]  = (int *) SafeCalloc ((size_t)(2*numTaxa), sizeof(int));
-                t->position[t->nESets-1] = (MrBFlt **) SafeCalloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
-                t->rateMult[t->nESets-1] = (MrBFlt **) SafeCalloc ((size_t)(2*numTaxa), sizeof(MrBFlt *));
+                t->nEvents[t->nESets-1]  = (int *) SafeCalloc (2*(size_t)numTaxa, sizeof(int));
+                t->position[t->nESets-1] = (MrBFlt **) SafeCalloc (2*(size_t)numTaxa, sizeof(MrBFlt *));
+                t->rateMult[t->nESets-1] = (MrBFlt **) SafeCalloc (2*(size_t)numTaxa, sizeof(MrBFlt *));
                 t->eSetName = (char **) SafeRealloc ((void *)t->eSetName, t->nESets*sizeof(char **));
                 }
             SafeStrcpy (&tempNameString,tkn);
@@ -8305,12 +8305,12 @@ int DoTreeParm (char *parmName, char *tkn)
                 {
                 t->nBSets++;
                 t->isRelaxed = YES;
-                t->effectiveBrLen = (MrBFlt **) SafeRealloc ((void *)t->effectiveBrLen, (size_t)(t->nBSets*sizeof(MrBFlt *)));
-                t->effectiveBrLen[t->nBSets-1] = (MrBFlt *) SafeCalloc ((size_t)(2*numTaxa),sizeof(MrBFlt));
+                t->effectiveBrLen = (MrBFlt **) SafeRealloc ((void *)t->effectiveBrLen, (size_t)(t->nBSets)*sizeof(MrBFlt *));
+                t->effectiveBrLen[t->nBSets-1] = (MrBFlt *) SafeCalloc (2*(size_t)numTaxa, sizeof(MrBFlt));
                 for (i=0; i<2*numTaxa; i++)
                     t->effectiveBrLen[t->nBSets-1][i] = 1.0;
-                t->bSetName = (char **) SafeRealloc ((void *)t->bSetName, t->nBSets*sizeof(char **));
-                t->bSetName[t->nBSets-1] = (char *) SafeCalloc (strlen(tkn)+1,sizeof(char));
+                t->bSetName = (char **) SafeRealloc ((void *)t->bSetName, (size_t)(t->nBSets)*sizeof(char *));
+                t->bSetName[t->nBSets-1] = (char *) SafeCalloc (strlen(tkn)+1, sizeof(char));
                 }
             SafeStrcpy (&tempNameString,tkn);
             foundName = YES;
@@ -9055,8 +9055,8 @@ int FreeCharacters (void)
     if (memAllocs[ALLOC_TMPSET] == YES)
         {
         if (numChar > numTaxa)
-            tempSet = (int *) SafeRealloc ((void *) tempSet, (size_t)(numTaxa*sizeof(int)));
-            tempSetNeg = (int *) SafeRealloc ((void *) tempSetNeg, (size_t)(numTaxa*sizeof(int)));
+            tempSet = (int *) SafeRealloc ((void *)tempSet, (size_t)numTaxa*sizeof(int));
+            tempSetNeg = (int *) SafeRealloc ((void *)tempSetNeg, (size_t)numTaxa*sizeof(int));
         }
     if (memAllocs[ALLOC_MATRIX] == YES)
         {
@@ -14187,17 +14187,17 @@ int SetPartition (int part)
         }
     memAllocs[ALLOC_MODEL] = YES;
 
-    numVars = (int *) SafeRealloc ((void *) numVars, (size_t)(3 * numCurrentDivisions * sizeof(int)));
+    numVars = (int *) SafeRealloc ((void *) numVars, 3 * (size_t)numCurrentDivisions * sizeof(int));
     tempLinkUnlinkVec = numVars + numCurrentDivisions;
     activeParts       = numVars + 2*numCurrentDivisions;
 
-    tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, (size_t)(6 * sizeof(MrBFlt)));
+    tempNum = (MrBFlt *) SafeRealloc ((void *) tempNum, 6 * sizeof(MrBFlt));
 
-    activeParams[0] = (int *) SafeRealloc ((void *) (activeParams[0]), (size_t)(NUM_LINKED * numCurrentDivisions * sizeof(int)));
+    activeParams[0] = (int *) SafeRealloc ((void *) (activeParams[0]), (size_t)NUM_LINKED * (size_t)numCurrentDivisions * sizeof(int));
     for (i=1; i<NUM_LINKED; i++)
         activeParams[i] = activeParams[0] + i*numCurrentDivisions;
  
-    linkTable[0] = (int *) SafeRealloc ((void *) (linkTable[0]), (size_t)(3 * NUM_LINKED * numCurrentDivisions * sizeof(int)));
+    linkTable[0] = (int *) SafeRealloc ((void *) (linkTable[0]), 3 * (size_t)NUM_LINKED * (size_t)numCurrentDivisions * sizeof(int));
     tempLinkUnlink[0] = linkTable[0] + NUM_LINKED*numCurrentDivisions;
     for (i=1; i<NUM_LINKED; i++)
         {

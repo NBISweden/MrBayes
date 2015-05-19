@@ -1659,7 +1659,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
     fileInfo->longestLineLength += 10;      /* better safe than sorry; if you fgets with raw longestLineLength, you run into problems */
 
     /* allocate string long enough to hold a line */
-    s = (char *)SafeMalloc((size_t) (2*(fileInfo->longestLineLength + 10) * sizeof(char)));
+    s = (char *)SafeMalloc(2 * ((size_t)(fileInfo->longestLineLength) +10) * sizeof(char));
     if (!s)
         {
         MrBayesPrint ("%s   Problem allocating string for reading sump file\n", spacer);
@@ -2245,7 +2245,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
             }
 
         /* sort in terms of decreasing probabilities */
-        qsort((void *) elem, (size_t) nElements, (size_t) sizeof(ModelProb), CompareModelProbs);
+        qsort((void *)elem, (size_t)nElements, sizeof(ModelProb), CompareModelProbs);
 
         for (j1=0; j1<nElements; j1++)
             {
@@ -2948,26 +2948,26 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                 {
                 /* allocate more space */
                 if (sumtParams.brlensDef == YES)
-                    r->length[runId] = (MrBFlt *) SafeRealloc ((void *)r->length[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->length[runId] = (MrBFlt *) SafeRealloc ((void *)r->length[runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
                 if (sumtParams.isClock == YES)
-                    r->height[runId] = (MrBFlt *) SafeRealloc ((void *)r->height[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->height[runId] = (MrBFlt *) SafeRealloc ((void *)r->height[runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
                 if (sumtParams.isCalibrated == YES)
-                    r->age[runId] = (MrBFlt *) SafeRealloc ((void *)r->age[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->age[runId] = (MrBFlt *) SafeRealloc ((void *)r->age[runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
                 if (sumtParams.nESets > 0)
                     {
                     for (i=0; i<sumtParams.nESets; i++)
-                        r->nEvents[i][runId] = (int *) SafeRealloc ((void *)r->nEvents[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(int));
+                        r->nEvents[i][runId] = (int *) SafeRealloc ((void *)r->nEvents[i][runId], ((size_t)n+ALLOC_LEN)*sizeof(int));
                     }
                 if (sumtParams.nBSets > 0)
                     {
                     for (i=0; i<sumtParams.nBSets; i++)
                         {
-                        r->bRate[i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bRate[i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
-                        r->bLen [i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bLen [i][runId], (size_t)(n+ALLOC_LEN)*sizeof(MrBFlt));
+                        r->bRate[i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bRate[i][runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
+                        r->bLen [i][runId]   = (MrBFlt *) SafeRealloc ((void *)r->bLen [i][runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
                         }
                     }
                 if (sumtParams.popSizeSet == YES)
-                    r->popSize[runId] = (MrBFlt *) SafeRealloc ((void *)r->popSize[runId],(size_t)((n+ALLOC_LEN)*sizeof(MrBFlt)));
+                    r->popSize[runId] = (MrBFlt *) SafeRealloc ((void *)r->popSize[runId], ((size_t)n+ALLOC_LEN)*sizeof(MrBFlt));
                 }
             /* record values */
             r->count[runId]++;
@@ -3078,55 +3078,55 @@ PartCtr *AllocPartCtr ()
     PartCtr         *r;
     
     /* allocate basic stuff */
-    r = (PartCtr *) SafeCalloc ((size_t) 1, sizeof(PartCtr));
+    r = (PartCtr *) SafeCalloc (1, sizeof(PartCtr));
     r->left = r->right = NULL;
-    r->partition = (BitsLong *) SafeCalloc ((size_t) sumtParams.BitsLongsNeeded, sizeof(BitsLong));
-    r->count = (int *) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (int));
+    r->partition = (BitsLong *) SafeCalloc ((size_t)(sumtParams.BitsLongsNeeded), sizeof(BitsLong));
+    r->count = (int *) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof (int));
     if (sumtParams.brlensDef)
         {
-        r->length = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->length = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->length[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->length[i] = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
         }
     if (sumtParams.isClock)
         {
-        r->height = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->height = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->height[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
-        r->age = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+            r->height[i] = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
+        r->age = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->age[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->age[i] = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
         }
 
     /* allocate relaxed clock parameters: eRate, nEvents, bRate */
     if (sumtParams.nESets > 0)
-        r->nEvents = (int    ***) SafeCalloc ((size_t) sumtParams.nESets, sizeof(int **));
+        r->nEvents = (int    ***) SafeCalloc ((size_t)(sumtParams.nESets), sizeof(int **));
     for (i=0; i<sumtParams.nESets; i++)
         {
-        r->nEvents[i] = (int    **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(int *));
+        r->nEvents[i] = (int    **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof(int *));
         for (j=0; j<sumtParams.numRuns; j++)
             r->nEvents[i][j] = (int    *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(int));
         }
     if (sumtParams.nBSets > 0)
         {
-        r->bLen  = (MrBFlt ***) SafeCalloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
-        r->bRate = (MrBFlt ***) SafeCalloc ((size_t) sumtParams.nBSets, sizeof(MrBFlt **));
+        r->bLen  = (MrBFlt ***) SafeCalloc ((size_t)(sumtParams.nBSets), sizeof(MrBFlt **));
+        r->bRate = (MrBFlt ***) SafeCalloc ((size_t)(sumtParams.nBSets), sizeof(MrBFlt **));
         }
     for (i=0; i<sumtParams.nBSets; i++)
         {
-        r->bLen[i]    = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
-        r->bRate[i]   = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof(MrBFlt *));
+        r->bLen[i]    = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof(MrBFlt *));
+        r->bRate[i]   = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof(MrBFlt *));
         for (j=0; j<sumtParams.numRuns; j++)
             {
-            r->bLen[i][j]    = (MrBFlt *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
-            r->bRate[i][j]   = (MrBFlt *) SafeCalloc ((size_t) ALLOC_LEN, sizeof(MrBFlt));
+            r->bLen[i][j]    = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
+            r->bRate[i][j]   = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
             }
         }
     if (sumtParams.popSizeSet == YES)
         {
-        r->popSize = (MrBFlt **) SafeCalloc ((size_t) sumtParams.numRuns, sizeof (MrBFlt *));
+        r->popSize = (MrBFlt **) SafeCalloc ((size_t)(sumtParams.numRuns), sizeof (MrBFlt *));
         for (i=0; i<sumtParams.numRuns; i++)
-            r->popSize[i] = (MrBFlt *) SafeCalloc (ALLOC_LEN, sizeof(MrBFlt));
+            r->popSize[i] = (MrBFlt *) SafeCalloc ((size_t)ALLOC_LEN, sizeof(MrBFlt));
         }
 
     return r;
@@ -3138,11 +3138,11 @@ TreeCtr *AllocTreeCtr ()
 {
     TreeCtr     *r;
 
-    r = (TreeCtr *) SafeCalloc ((size_t) 1, sizeof(TreeCtr));
+    r = (TreeCtr *) SafeCalloc (1, sizeof(TreeCtr));
     
     r->left = r->right = NULL;
     
-    r->order = (int *) SafeCalloc ((size_t) sumtParams.orderLen, sizeof(int));
+    r->order = (int *) SafeCalloc ((size_t)(sumtParams.orderLen), sizeof(int));
 
     return r;
 }
@@ -3735,7 +3735,7 @@ int DoCompareTree (void)
     
     /* Allocate space for command string */
     longestLineLength += 10;
-    s = (char *)SafeMalloc((size_t) (longestLineLength * sizeof(char)));
+    s = (char *)SafeMalloc((size_t)longestLineLength * sizeof(char));
     if (!s)
         {
         MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
@@ -4068,7 +4068,7 @@ int DoCompareTree (void)
     minNumTrees = sumtParams.numFileTreesSampled[0];
     if (sumtParams.numFileTreesSampled[1] < minNumTrees)
         minNumTrees = sumtParams.numFileTreesSampled[1];
-    dT1 = (MrBFlt *)SafeMalloc((size_t) (3 * minNumTrees * sizeof(MrBFlt)));
+    dT1 = (MrBFlt *) SafeMalloc (3 * (size_t)minNumTrees * sizeof(MrBFlt));
     tree1 = AllocateFixedTree (sumtParams.numTaxa, sumtParams.isRooted);
     tree2 = AllocateFixedTree (sumtParams.numTaxa, sumtParams.isRooted);
     if (!dT1 || !tree1 || !tree2)
@@ -4805,7 +4805,7 @@ int DoSumt (void)
             /* Now we read the file for real. First, allocate a string for reading the file... */
             if (sumtParams.runId == 0 && treeNo == 0)
                 {
-                s = (char *)SafeMalloc((size_t) (sumtFileInfo.longestLineLength * sizeof(char)));
+                s = (char *) SafeMalloc ((size_t)(sumtFileInfo.longestLineLength) * sizeof(char));
                 if (!s)
                     {
                     MrBayesPrint ("%s   Problem allocating string for reading sumt file\n", spacer);
@@ -4815,7 +4815,7 @@ int DoSumt (void)
             else
                 {
                 free (s);
-                s = (char *) SafeMalloc (sizeof (char) * sumtFileInfo.longestLineLength);
+                s = (char *) SafeMalloc ((size_t)(sumtFileInfo.longestLineLength) * sizeof (char));
                 if (!s)
                     {
                     MrBayesPrint ("%s   Problem reallocating string for reading sumt file\n", spacer);
@@ -4932,7 +4932,7 @@ int DoSumt (void)
             }   /* next run for this tree */
                 
         /* Extract partition counter pointers */
-        treeParts = (PartCtr **) SafeCalloc ((size_t)(numUniqueSplitsFound), sizeof(PartCtr *));
+        treeParts = (PartCtr **) SafeCalloc ((size_t)numUniqueSplitsFound, sizeof(PartCtr *));
         i = 0;
         PartCtrUppass(partCtrRoot, treeParts, &i);
 
@@ -6439,7 +6439,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
     sumtFileInfo->longestLineLength += 10;
     
     /* allocate a string long enough to hold a line */
-    s = (char *)SafeMalloc((size_t) (sumtFileInfo->longestLineLength * sizeof(char)));
+    s = (char *)SafeMalloc((size_t)(sumtFileInfo->longestLineLength) * sizeof(char));
     if (!s)
         {
         MrBayesPrint ("%s   Problem allocating string for examining file \"%s\"\n", spacer, fileName);

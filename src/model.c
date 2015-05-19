@@ -1201,7 +1201,7 @@ int ChangeNumChains (int from, int to)
     for (i=0; i<2*nRuns*from*numTrees; i++)
         tempTrees[i] = mcmcTree[i];
     oldMcmcTree = mcmcTree;
-    mcmcTree = (Tree **) SafeRealloc ((void *)(mcmcTree), (size_t)(2*numGlobalChains*numTrees*sizeof(Tree*)));
+    mcmcTree = (Tree **) SafeRealloc ((void *)(mcmcTree), 2 * (size_t)numGlobalChains * (size_t)numTrees * sizeof(Tree*));
     for (i=0; i<2*nRuns*to*numTrees; i++)
         mcmcTree[i] = NULL;
 
@@ -1285,7 +1285,7 @@ int ChangeNumChains (int from, int to)
         {
         assert (memAllocs[ALLOC_STDSTATEFREQS] == YES);
         stdStateFreqsOld=stdStateFreqs;
-        stdStateFreqs = (MrBFlt *) SafeMalloc ((size_t)stdStateFreqsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
+        stdStateFreqs = (MrBFlt *) SafeMalloc (2 * (size_t)stdStateFreqsRowSize * (size_t)numGlobalChains * sizeof (MrBFlt));
         if (!stdStateFreqs)
             {
             MrBayesPrint ("%s   Problem reallocating stdStateFreqs\n", spacer);
@@ -1559,15 +1559,15 @@ int ChangeNumRuns (int from, int to)
     for (i=0; i<numApplicableMoves; i++)
         {
         mvt = moves[i]->moveType;
-        moves[i]->tuningParam = (MrBFlt **) SafeRealloc ((void *) moves[i]->tuningParam, (size_t) (numGlobalChains * sizeof (MrBFlt *)));
-        moves[i]->tuningParam[0] = (MrBFlt *) SafeRealloc ((void *) moves[i]->tuningParam[0], (size_t) (numGlobalChains * mvt->numTuningParams * sizeof (MrBFlt)));
+        moves[i]->tuningParam = (MrBFlt **) SafeRealloc ((void *) moves[i]->tuningParam, (size_t)numGlobalChains * sizeof (MrBFlt *));
+        moves[i]->tuningParam[0] = (MrBFlt *) SafeRealloc ((void *) moves[i]->tuningParam[0], (size_t)numGlobalChains * (size_t)(mvt->numTuningParams) * sizeof (MrBFlt));
         for (j=1; j<numGlobalChains; j++)
             moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
-        moves[i]->relProposalProb = (MrBFlt *) SafeRealloc ((void *) moves[i]->relProposalProb, (size_t) (4 * numGlobalChains * sizeof (MrBFlt)));
+        moves[i]->relProposalProb = (MrBFlt *) SafeRealloc ((void *) moves[i]->relProposalProb, 4 * (size_t)numGlobalChains * sizeof (MrBFlt));
         moves[i]->cumProposalProb = moves[i]->relProposalProb + numGlobalChains;
         moves[i]->targetRate = moves[i]->relProposalProb + 2*numGlobalChains;
         moves[i]->lastAcceptanceRate = moves[i]->relProposalProb + 3*numGlobalChains;
-        moves[i]->nAccepted = (int *) SafeRealloc ((void *) moves[i]->nAccepted, (size_t) (5 * numGlobalChains * sizeof (int)));
+        moves[i]->nAccepted = (int *) SafeRealloc ((void *) moves[i]->nAccepted, 5* (size_t)numGlobalChains * sizeof (int));
         moves[i]->nTried = moves[i]->nAccepted + numGlobalChains;
         moves[i]->nBatches = moves[i]->nAccepted + 2*numGlobalChains;
         moves[i]->nTotAccepted = moves[i]->nAccepted + 3*numGlobalChains;
@@ -1939,7 +1939,7 @@ int CheckExpandedModels (void)
     int             tempStrSize=100;
     ModelParams     *mp;
     
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -2273,7 +2273,7 @@ int CompressData (void)
         compColPos = NULL;
         memAllocs[ALLOC_COMPCOLPOS] = NO;
         }
-    compColPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
+    compColPos = (int *)SafeMalloc((size_t)numChar * sizeof(int));
     if (!compColPos)
         {
         MrBayesPrint ("%s   Problem allocating compColPos (%d)\n", spacer, numChar * sizeof(int));
@@ -2289,7 +2289,7 @@ int CompressData (void)
         compCharPos = NULL;
         memAllocs[ALLOC_COMPCHARPOS] = NO;
         }
-    compCharPos = (int *)SafeMalloc((size_t) (numChar * sizeof(int)));
+    compCharPos = (int *)SafeMalloc((size_t)numChar * sizeof(int));
     if (!compCharPos)
         {
         MrBayesPrint ("%s   Problem allocating compCharPos (%d)\n", spacer, numChar * sizeof(int));
@@ -2518,7 +2518,7 @@ int CompressData (void)
         origChar = NULL;
         memAllocs[ALLOC_ORIGCHAR] = NO;
         }
-    origChar = (int *)SafeMalloc((size_t) (compMatrixRowSize * sizeof(int)));
+    origChar = (int *)SafeMalloc((size_t)compMatrixRowSize * sizeof(int));
     if (!origChar)
         {
         MrBayesPrint ("%s   Problem allocating origChar (%d)\n", spacer, numCompressedChars * sizeof(int));
@@ -7500,8 +7500,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 free(modelParams[i].sampleFSProb);
                                 free(modelParams[i].sampleFSTime);
                                 }
-                            modelParams[i].sampleFSTime = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
-                            modelParams[i].sampleFSProb = (MrBFlt *)SafeMalloc((size_t)(tempInt*sizeof(MrBFlt)));
+                            modelParams[i].sampleFSTime = (MrBFlt *) SafeMalloc ((size_t)tempInt * sizeof(MrBFlt));
+                            modelParams[i].sampleFSProb = (MrBFlt *) SafeMalloc ((size_t)tempInt * sizeof(MrBFlt));
                             memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
                             foundFSNum[i] = YES;
                             expecting  = Expecting(COLON);
@@ -11205,7 +11205,7 @@ int FillRelPartsString (Param *p, char **relPartString)
     char        *tempStr;
     int             tempStrSize=50;
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
@@ -15158,7 +15158,7 @@ int ProcessStdChars (RandLong *seed)
         stdType = NULL;
         memAllocs[ALLOC_STDTYPE] = NO;
         }
-    stdType = (int *)SafeCalloc((size_t) (4 * numStandardChars), sizeof(int));
+    stdType = (int *)SafeCalloc(4 * (size_t)numStandardChars, sizeof(int));
     if (!stdType)
         {
         MrBayesPrint ("%s   Problem allocating stdType (%d ints)\n", 4 * numStandardChars);
@@ -17198,12 +17198,12 @@ int SetLocalTaxa (void)
         }
         
     /* allocate memory */
-    localTaxonNames = (char **)SafeCalloc((size_t) numLocalTaxa, sizeof(char *));
+    localTaxonNames = (char **)SafeCalloc((size_t)numLocalTaxa, sizeof(char *));
     if (!localTaxonNames)
         return (ERROR);
     memAllocs[ALLOC_LOCTAXANAMES] = YES;
 
-    localTaxonCalibration = (Calibration **)SafeCalloc((size_t) numLocalTaxa, sizeof(Calibration *));
+    localTaxonCalibration = (Calibration **)SafeCalloc((size_t)numLocalTaxa, sizeof(Calibration *));
     if (!localTaxonCalibration)
         return (ERROR);
     memAllocs[ALLOC_LOCALTAXONCALIBRATION] = YES;
@@ -17695,8 +17695,8 @@ int SetModelParams (void)
     ModelInfo       *m;
     int             tempStrSize = 300;
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
-    isPartTouched = (int *) SafeMalloc ((size_t) (numCurrentDivisions * sizeof (int)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
+    isPartTouched = (int *) SafeMalloc ((size_t)numCurrentDivisions * sizeof (int));
     if (!tempStr || !isPartTouched)
         {
         MrBayesPrint ("%s   Problem allocating tempString (%d) or isPartTouched (%d)\n", spacer,
@@ -19823,11 +19823,10 @@ int SetUpLinkTable (void)
                 isFirst, isSame;
     int         *check, *modelId;
 
-    check = (int *) SafeMalloc ((size_t) (2*numCurrentDivisions * sizeof (int)));
+    check = (int *) SafeMalloc (2 * (size_t)numCurrentDivisions * sizeof (int));
     if (!check)
         {
-        MrBayesPrint ("%s   Problem allocating check (%d)\n", spacer,
-            2*numCurrentDivisions * sizeof(int));
+        MrBayesPrint ("%s   Problem allocating check (%d)\n", spacer, 2 * numCurrentDivisions * sizeof(int));
         return (ERROR);
         }
     modelId = check + numCurrentDivisions;

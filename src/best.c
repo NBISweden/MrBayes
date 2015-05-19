@@ -385,8 +385,8 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
     // Allocate space for species partitions
     nLongsNeeded   = ((numSpecies -1) / nBitsInALong) + 1;   // number of longs needed in a bitfield representing a species set
-    speciesSets    = (BitsLong **) SafeCalloc (2*numLocalTaxa-1, sizeof(BitsLong *));
-    speciesSets[0] = (BitsLong *)  SafeCalloc ((2*numLocalTaxa-1)*nLongsNeeded, sizeof(BitsLong));
+    speciesSets    = (BitsLong **) SafeCalloc ((2*(size_t)numLocalTaxa-1), sizeof(BitsLong *));
+    speciesSets[0] = (BitsLong *)  SafeCalloc ((2*(size_t)numLocalTaxa-1)*nLongsNeeded, sizeof(BitsLong));
     for (i=1; i<2*numLocalTaxa-1; i++)
         speciesSets[i] = speciesSets[0] + i*nLongsNeeded;
 
@@ -417,7 +417,7 @@ int GetMinDepthMatrix (Tree **geneTrees, int numGeneTrees, double *depthMatrix) 
 
         // Now order the interior nodes in terms of node depth. We rely on the fact that the
         // ordered sequence is a valid downpass sequence. O(log n).
-        qsort((void *)(geneTrees[w]->intDownPass), (size_t) geneTrees[w]->nIntNodes, sizeof(TreeNode *), CompareNodes);
+        qsort((void *)(geneTrees[w]->intDownPass), (size_t)(geneTrees[w]->nIntNodes), sizeof(TreeNode *), CompareNodes);
 
         // Finally find the minimum for each cell in the upper triangular matrix
         // This is the time critical step with complexity O(n^3) in the simplest
@@ -865,7 +865,7 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
     MapGeneTreeToSpeciesTree(geneTree, speciesTree);
 
     // Sort gene tree interior nodes first by speciestree branch on which they coalesce, then in time order
-    qsort((void *)(geneTree->intDownPass), (size_t) geneTree->nIntNodes, sizeof(TreeNode *), CompareNodesByX);
+    qsort((void *)(geneTree->intDownPass), (size_t)(geneTree->nIntNodes), sizeof(TreeNode *), CompareNodesByX);
 
     // Debug output of qsort result
     if (trace) {

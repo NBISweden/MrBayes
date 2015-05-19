@@ -141,11 +141,11 @@ int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 
     nLongsNeeded = (setLen - 1) / nBitsInALong + 1;
 
-    (*list) = (BitsLong **) SafeRealloc ((void *)(*list), (size_t)((listLen+1)*sizeof(BitsLong *)));
+    (*list) = (BitsLong **) SafeRealloc ((void *)(*list), ((size_t)listLen+1)*sizeof(BitsLong *));
     if (!(*list))
         return ERROR;
     
-    (*list)[listLen] = (BitsLong *) SafeMalloc ((size_t)(nLongsNeeded*sizeof(BitsLong)));
+    (*list)[listLen] = (BitsLong *) SafeMalloc ((size_t)nLongsNeeded*sizeof(BitsLong));
     if (!(*list)[listLen])
         return ERROR;
 
@@ -637,7 +637,7 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     p = theValues;
     for (i=0; i<nRows; i++)
         {
-        memcpy ((void *)(p),(void *)(vals[i]),(size_t)(rowCount[i]*sizeof(MrBFlt)));
+        memcpy ((void *)(p), (void *)(vals[i]), (size_t)rowCount[i] * sizeof(MrBFlt));
         p += rowCount[i];
         }
     
@@ -650,7 +650,7 @@ void GetSummary (MrBFlt **vals, int nRows, int *rowCount, Stat *theStats, int HP
     if (nRows > 1)
         theStats->PSRF = PotentialScaleReduction (vals, nRows, rowCount);
 
-    ESS =   (MrBFlt *) SafeMalloc ((size_t) nRows * sizeof(MrBFlt));
+    ESS = (MrBFlt *) SafeMalloc ((size_t)nRows * sizeof(MrBFlt));
 
     EstimatedSampleSize (vals, nRows, rowCount, ESS);
     theStats->avrESS = theStats->minESS = ESS[0];
@@ -1560,10 +1560,10 @@ char *SafeStrcat (char **target, const char *source)
     if (*target == NULL)
         *target = (char *) SafeCalloc (strlen(source)+1, sizeof(char));
     else
-        *target = (char *) SafeRealloc ((void *)*target, (size_t)(strlen(source)+strlen(*target)+1)*sizeof(char));
+        *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+strlen(*target)+1)*sizeof(char));
 
     if (*target)
-        strcat(*target,source);
+        strcat(*target, source);
 
     return (*target);
 }
@@ -1572,7 +1572,7 @@ char *SafeStrcat (char **target, const char *source)
 /* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcpy (char **target, const char *source)
 {
-    *target = (char *) SafeRealloc ((void *)*target, (size_t)(strlen(source)+1)*sizeof(char));
+    *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+1)*sizeof(char));
 
     if (*target)
         strcpy(*target,source);
@@ -2144,7 +2144,7 @@ int AllocateTreePartitions (Tree *t)
     nLongsNeeded = (numTaxa - 1) / nBitsInALong + 1;
 
     /* reallocate space */
-    t->bitsets = (BitsLong *) SafeRealloc ((void *) t->bitsets, (size_t)(t->nNodes*nLongsNeeded*sizeof(BitsLong)));
+    t->bitsets = (BitsLong *) SafeRealloc ((void *)(t->bitsets), (size_t)(t->nNodes) * (size_t)nLongsNeeded * sizeof(BitsLong));
     if (!t->bitsets)
         return (ERROR);
     
@@ -8473,7 +8473,7 @@ void WriteEventTreeToPrintString (TreeNode *p, int chain, Param *param, int prin
     int             i, j, nEvents, tempStrSize = TEMPSTRSIZE;
     MrBFlt          brlen, *position, *rateMult;
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
 
@@ -8629,7 +8629,7 @@ void WriteNoEvtTreeToPrintString (TreeNode *p, int chain, Param *param, int show
     int             i, tempStrSize = TEMPSTRSIZE, nEvents;
     MrBFlt          brlen, N;
 
-    tempStr = (char *) SafeMalloc((size_t) (tempStrSize * sizeof(char)));
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
         MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
 
@@ -8789,13 +8789,13 @@ complex **AllocateSquareComplexMatrix (int dim)
     int         i;
     complex     **m;
 
-    m = (complex **) SafeMalloc((size_t)((dim)*sizeof(complex*)));
+    m = (complex **) SafeMalloc ((size_t)dim * sizeof(complex*));
     if (!m) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
         exit (0);
         }
-    m[0]=(complex *) SafeMalloc((size_t)((dim*dim)*sizeof(complex)));
+    m[0]=(complex *) SafeMalloc ((size_t)dim * (size_t)dim *sizeof(complex));
     if (!m[0]) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
@@ -8822,13 +8822,13 @@ MrBFlt **AllocateSquareDoubleMatrix (int dim)
     int         i;
     MrBFlt      **m;
     
-    m = (MrBFlt **)SafeMalloc((size_t)((dim)*sizeof(MrBFlt*)));
+    m = (MrBFlt **) SafeMalloc ((size_t)dim * sizeof(MrBFlt*));
     if (!m)
         {
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of doubles.\n", spacer);
         exit(1);
         }
-    m[0] = (MrBFlt *)SafeMalloc((size_t)((dim*dim)*sizeof(MrBFlt)));
+    m[0] = (MrBFlt *) SafeMalloc ((size_t)dim * (size_t)dim * sizeof(MrBFlt));
     if (!m[0])
         {
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of doubles.\n", spacer);
@@ -8854,13 +8854,13 @@ int **AllocateSquareIntegerMatrix (int dim)
 {
     int     i, **m;
     
-    m = (int **)SafeMalloc((size_t)((dim)*sizeof(int*)));
+    m = (int **) SafeMalloc ((size_t)dim * sizeof(int*));
     if (!m)
         {
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of integers.\n", spacer);
         exit(1);
         }
-    m[0] = (int *)SafeMalloc((size_t)((dim*dim)*sizeof(int)));
+    m[0] = (int *) SafeMalloc ((size_t)dim * (size_t)dim * sizeof(int));
     if (!m[0])
         {
         MrBayesPrint ("%s   Error: Problem allocating a square matrix of integers.\n", spacer);
@@ -11033,7 +11033,7 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 
     lMat = AllocateSquareDoubleMatrix (dim);
     uMat = AllocateSquareDoubleMatrix (dim);
-    bVec = (MrBFlt *)SafeMalloc((size_t) ((dim) * sizeof(MrBFlt)));
+    bVec = (MrBFlt *) SafeMalloc ((size_t)dim * sizeof(MrBFlt));
     if (!bVec)
         {
         MrBayesPrint ("%s   Error: Problem allocating bVec\n", spacer);
@@ -11080,8 +11080,8 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
     complex     **cWork, *Ccol;
 
     /* allocate memory */
-    dWork = (MrBFlt *)SafeMalloc((size_t) (dim * sizeof(MrBFlt)));
-    iWork = (int *)SafeMalloc((size_t) (dim * sizeof(int)));
+    dWork = (MrBFlt *) SafeMalloc ((size_t)dim * sizeof(MrBFlt));
+    iWork = (int *) SafeMalloc ((size_t)dim * sizeof(int));
     if (!dWork || !iWork)
         {
         MrBayesPrint ("%s   Error: Problem in GetEigens\n", spacer);
@@ -11136,7 +11136,7 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
                     }
                 }
             }
-        Ccol = (complex *)SafeMalloc((size_t) (dim * sizeof(complex)));
+        Ccol = (complex *) SafeMalloc ((size_t)dim * sizeof(complex));
         if (!Ccol)
             {
             MrBayesPrint ("%s   Error: Problem in GetEigens\n", spacer);
