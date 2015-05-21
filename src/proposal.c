@@ -9420,7 +9420,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
     BitsLong    *pA, *pB, *pP, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
-                v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
+                increaseProb, decreaseProb, v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
     Tree        *t;
@@ -9428,7 +9428,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     ModelInfo   *m=NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
-//  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
+    increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
     v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     tuning = mvp[3];                      /* multiplier tuning parameter */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
@@ -9617,14 +9617,14 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     for (i=0; i<numCompressedChars; i++)
         {
         nSitesOfPat[i] = globalNSitesOfPat[i];
-    /*  for (j=0; j<globalNSitesOfPat[i]; j++)
+        for (j=0; j<globalNSitesOfPat[i]; j++)
             {
             ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
                 nSitesOfPat[i]++;
-            } */ /* disable this at the moment */
+            }  /* this is slow at the moment */
         }
 
     /* need to alloc a matrix for parsimony lengths, an array of pointers to crown part,
@@ -10631,7 +10631,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
-                v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
+                increaseProb, decreaseProb, v_typical, divFactor, nStates, rateMult, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
     Tree        *t;
@@ -10639,7 +10639,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     ModelInfo   *m=NULL;
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
-//  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
+    increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
     v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     tuning = mvp[3];                      /* multiplier tuning parameter */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
@@ -10808,14 +10808,14 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     for (i=0; i<numCompressedChars; i++)
         {
         nSitesOfPat[i] = globalNSitesOfPat[i];
-    /*  for (j=0; j<globalNSitesOfPat[i]; j++)
+        for (j=0; j<globalNSitesOfPat[i]; j++)
             {
             ran = RandomNumber(seed);
             if (ran < decreaseProb)
                 nSitesOfPat[i]--;
             else if (ran > 1.0 - increaseProb)
                 nSitesOfPat[i]++;
-            } */ /* disable this at the moment */
+            }  /* this is slow at the moment */
         }
 
     /* cycle through the possibilities and record the parsimony length */

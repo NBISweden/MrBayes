@@ -1984,11 +1984,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (!strcmp (temp, "Gen"))
-            continue;
-        if (!strcmp (temp, "LnL") == SAME)
-            continue;
-        if (!strcmp (temp, "LnPr") == SAME)
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
             continue;
         if (len > longestHeader)
             longestHeader = len;
@@ -2048,11 +2044,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
-        if (IsSame (temp, "Gen") == SAME)
-            continue;
-        if (IsSame (temp, "LnL") == SAME)
-            continue;
-        if (!strcmp (temp, "LnPr") == SAME)
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
             continue;
 
         GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
@@ -2490,11 +2482,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (!strcmp (temp, "Gen"))
-            continue;
-        if (!strcmp (temp, "LnL") == SAME)
-            continue;
-        if (!strcmp (temp, "LnPr") == SAME)
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
             continue;
         if (len > longestHeader)
             longestHeader = len;
@@ -2557,11 +2545,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (IsSame (temp, "Gen") == SAME)
-            continue;
-        if (IsSame (temp, "LnL") == SAME)
-            continue;
-        if (!strcmp (temp, "LnPr") == SAME)
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
             continue;
 
         GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
