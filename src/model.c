@@ -2864,7 +2864,7 @@ int DoLset (void)
     int         i, nApplied, lastActive=0;
     
     nApplied = NumActiveParts ();
-    for (i=numCurrentDivisions; i>=0; i--)
+    for (i=numCurrentDivisions-1; i>=0; i--)
         {
         if (activeParts[i] == YES)
             {
@@ -4197,7 +4197,7 @@ int DoPrset (void)
     int         i, nApplied, lastActive=0;
 
     nApplied = NumActiveParts ();
-    for (i=numCurrentDivisions; i>=0; i--)
+    for (i=numCurrentDivisions-1; i>=0; i--)
         {
         if (activeParts[i] == YES)
             {
