@@ -59,7 +59,6 @@ const char* const svnRevisionProposalC = "$Rev$";   /* Revision keyword which is
 
 
 extern int *chainId;
-int  gTopologyHasChanged;  /* flag whether topology has changed */
 
 void TouchAllTreeNodes (ModelInfo *m, int chain);
 
@@ -2201,14 +2200,6 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-    
     return (NO_ERROR);
 }
 
@@ -2744,14 +2735,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-    
     return (NO_ERROR);
 }
 
@@ -4555,14 +4538,6 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nCrownNodes + nRootNodes;
-#   endif
-
     return (NO_ERROR);
 }
 
@@ -5708,13 +5683,6 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-#   endif
-    
     return (NO_ERROR);
 }
 
@@ -6203,16 +6171,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     printf ("After:\n");
     ShowNodes (t->root, 2, YES);
     printf ("Has topology changed? %d\n",topologyHasChanged);
-#   endif
-    
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-#   endif
 
-#if defined (DEBUG_LOCAL)
     /* check branch lengths and node depths */
     for (i=0; i<t->nNodes-2; i++) {
         p = t->allDownPass[i];
@@ -6628,14 +6587,6 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nRootNodes;
-#   endif
-
     return (NO_ERROR);
 }
 
@@ -7004,14 +6955,6 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
     getchar();
-#   endif
-
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-    gNodeMoves = nRootNodes;
 #   endif
 
     return (NO_ERROR);
@@ -9399,13 +9342,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     getchar();
 #   endif
 
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-#   endif
-    
     free (nSitesOfPat);
 
     return (NO_ERROR);
@@ -9629,7 +9565,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* need to alloc a matrix for parsimony lengths, an array of pointers to crown part,
        and an array of pointers to root part. */
-    parLength = (MrBFlt *) SafeCalloc (nRoot*nCrown, sizeof(MrBFlt));
+    parLength = (MrBFlt *) SafeCalloc ((size_t)nRoot * (size_t)nCrown, sizeof(MrBFlt));
     pRoot  = (TreeNode **) SafeCalloc(nRoot,  sizeof(TreeNode *));
     pCrown = (TreeNode **) SafeCalloc(nCrown, sizeof(TreeNode *));
     if (!parLength || !pRoot || !pCrown)  goto errorExit;
@@ -10055,13 +9991,6 @@ outLoop:;
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-#   endif
     
     /* free up local memory */
     free (parLength); free (pRoot); free (pCrown); free (nSitesOfPat);
@@ -10776,7 +10705,7 @@ int Move_ParsTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* need to alloc a matrix for parsimony lengths, an array of pointers to crown part,
        and an array of pointers to root part. */
-    parLength = (MrBFlt *) SafeCalloc (nRoot*nCrown, sizeof(MrBFlt));
+    parLength = (MrBFlt *) SafeCalloc ((size_t)nRoot * (size_t)nCrown, sizeof(MrBFlt));
     pRoot  = (TreeNode **) SafeCalloc(nRoot,  sizeof(TreeNode *));
     pCrown = (TreeNode **) SafeCalloc(nCrown, sizeof(TreeNode *));
     if (!parLength || !pRoot || !pCrown)  goto errorExit;
@@ -11130,13 +11059,6 @@ outLoop:;
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
-    
-#   if defined (TOPOLOGY_MOVE_STATS)
-    if (topologyHasChanged == YES)
-        gTopologyHasChanged = YES;
-    else
-        gTopologyHasChanged = NO;
-#   endif
     
     /* free up local memory */
     free (parLength); free (pRoot); free (pCrown); free (nSitesOfPat);
