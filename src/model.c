@@ -20839,8 +20839,9 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 0.99999;
     mt->parsimonyBased = YES;
     mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_ParsSPR */
+    /* Move_ParsSPR asym */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased SPR";
     mt->shortName = "ParsSPR";
@@ -20875,7 +20876,7 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
-    /* Move_ParsSPR1 */
+    /* Move_ParsSPR1 symm */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased SPR variant 1";
     mt->shortName = "ParsSPR1";
@@ -20903,6 +20904,86 @@ void SetUpMoveTypes (void)
     mt->tuningParam[4] = 8.0;              /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
+    mt->minimum[1] = 0.0;
+    mt->maximum[1] = 0.3;
+    mt->minimum[2] = 0.0001;
+    mt->maximum[2] = 0.5;
+    mt->minimum[3] = 2.0 * log (0.001);
+    mt->maximum[3] = 2.0 * log (1000.);
+    mt->minimum[4] = 2.0;
+    mt->maximum[4] = 1000.0;
+    mt->parsimonyBased = YES;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
+
+    /* Move_ParsSPR2 S/N */
+    mt = &moveTypes[i++];
+    mt->name = "Parsimony-biased SPR variant 2";
+    mt->shortName = "ParsSPR2";
+    mt->subParams = YES;
+    mt->tuningName[0] = "parsimony warp factor";
+    mt->shortTuningName[0] = "warp";
+    mt->tuningName[1] = "reweighting probability";
+    mt->shortTuningName[1] = "r";
+    mt->tuningName[2] = "typical branch length";
+    mt->shortTuningName[2] = "v_t";
+    mt->tuningName[3] = "multiplier tuning parameter";
+    mt->shortTuningName[3] = "lambda";
+    mt->tuningName[4] = "moving distance";
+    mt->shortTuningName[4] = "d";
+    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+    mt->nApplicable = 2;
+    mt->moveFxn = &Move_ParsSPR2;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 5;
+    mt->tuningParam[0] = 0.1;              /* warp */
+    mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
+    mt->tuningParam[2] = 0.05;             /* typical branch length */
+    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[4] = 8.0;              /* distance to move picked branch */
+    mt->minimum[0] = 0.0;
+    mt->maximum[0] = 1.0;
+    mt->minimum[1] = 0.0;
+    mt->maximum[1] = 0.3;
+    mt->minimum[2] = 0.0001;
+    mt->maximum[2] = 0.5;
+    mt->minimum[3] = 2.0 * log (0.001);
+    mt->maximum[3] = 2.0 * log (1000.);
+    mt->minimum[4] = 2.0;
+    mt->maximum[4] = 1000.0;
+    mt->parsimonyBased = YES;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_FourTaxaOrMore;
+
+    /* Move_ParsSPR3 e^{-S} */
+    mt = &moveTypes[i++];
+    mt->name = "Parsimony-biased SPR variant 3";
+    mt->shortName = "ParsSPR3";
+    mt->subParams = YES;
+    mt->tuningName[0] = "parsimony warp factor";
+    mt->shortTuningName[0] = "warp";
+    mt->tuningName[1] = "reweighting probability";
+    mt->shortTuningName[1] = "r";
+    mt->tuningName[2] = "typical branch length";
+    mt->shortTuningName[2] = "v_t";
+    mt->tuningName[3] = "multiplier tuning parameter";
+    mt->shortTuningName[3] = "lambda";
+    mt->tuningName[4] = "moving distance";
+    mt->shortTuningName[4] = "d";
+    mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
+    mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
+    mt->nApplicable = 2;
+    mt->moveFxn = &Move_ParsSPR3;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 5;
+    mt->tuningParam[0] = 1.0;              /* warp */
+    mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
+    mt->tuningParam[2] = 0.05;             /* typical branch length */
+    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[4] = 8.0;              /* distance to move picked branch */
+    mt->minimum[0] = 0.0;
+    mt->maximum[0] = 5.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
