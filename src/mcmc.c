@@ -8826,7 +8826,10 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                 }
             else
                 {
-                (*prob) += log(rho[sl]);
+                if (rho[sl] > 0.0 && rho[sl] < 1.0)
+                    {
+                    (*prob) += log(rho[sl]) + log(1 - rho[sl]);
+                    }
                 E++;              /* number of extant taxa */
                 }
             }
@@ -8849,7 +8852,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0) - LnFactorial(E) - LnFactorial(M + K);
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
@@ -9029,7 +9032,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                 }
             else
                 {
-                (*prob) += log(rho[sl]);
+                //  (*prob) += log(rho[sl]);  // as rho[sl] is 1
                 E++;              /* number of extant taxa */
                 }
             }
@@ -9058,7 +9061,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0) - LnFactorial(E) - LnFactorial(M + K);
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
