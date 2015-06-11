@@ -8672,7 +8672,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |   Gavryushkina, A., D. Welch, T. Stadler, and A. Drummond. 2014. 
  |       Bayesian inference of sampled ancestor trees for epidemiology and fossil calibration. PLoS Comp. Biol.
  |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
- |       Total-Evidence Dating under the Fossilized Birth-Death Process.
+ |       Total-Evidence Dating under the Fossilized Birth-Death Process. Syst. Biol.
  |
  |
  |                                       0  _____________  t3, rho3
@@ -8872,13 +8872,13 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
  |   LnFossilizedBDPriorDiversity
  | 
  |   Zhang C., T. Stadler, S. Klopfstein, T. A. Heath, and F. Ronquist. 2015.
- |       Total-Evidence Dating under the Fossilized Birth-Death Process.
+ |       Total-Evidence Dating under the Fossilized Birth-Death Process. Syst. Biol.
  |
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 {
     /* Fossils in the past are sampled with piecewise constant rates, 
-       also in several time slices each with a seperate probability. 
+       also in several time slices each with a seperate probability.
        Extant taxa are sampled with prop sF to maximize diversity. */
     
     int         i, j, sl, K, M, E;
@@ -8891,10 +8891,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* time of most recent common ancestor */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    /* get the number of fossil slice sampling events, s >= 0 */
-    sl = mp->sampleFSNum;
-    /* plus 1 extra slice (x_cut) to shift psi to 0 */
-    sl += 1;
+    /* get the number of fossil slice sampling events, plus 1 extra slice (x_cut) to shift psi to 0 */
+    sl = mp->sampleFSNum + 1;
     
     /* alloc memory for time of each slice */
     t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
@@ -9032,7 +9030,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                 }
             else
                 {
-                //  (*prob) += log(rho[sl]);  // as rho[sl] is 1
                 E++;              /* number of extant taxa */
                 }
             }
