@@ -1271,7 +1271,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     //   (*lnProposalRatio) += log(2.0);
     
     /* add the Jacobian term */
-    (*lnProposalRatio) += log(maxDepth - minDepth);
+    (*lnProposalRatio) += log((maxDepth - minDepth)/clockRate);
             
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)
@@ -1505,7 +1505,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     //  (*lnProposalRatio) += log(0.5);
 
     /* add the Jacobian term */
-    (*lnProposalRatio) -= log(maxDepth - minDepth);
+    (*lnProposalRatio) -= log((maxDepth - minDepth)/clockRate);
 
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)

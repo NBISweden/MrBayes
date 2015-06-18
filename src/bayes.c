@@ -724,10 +724,10 @@ int InitializeMrBayes (void)
     defaultModel.clockRateExp = 1.0;
     defaultModel.clockRateFix = 1.0;
     strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate (net diversification) */
-    defaultModel.speciationFix = 1.0;
+    defaultModel.speciationFix = 0.01;
     defaultModel.speciationUni[0] = 0.0;
     defaultModel.speciationUni[1] = 10.0;
-    defaultModel.speciationExp = 1.0;
+    defaultModel.speciationExp = 100.0;
     strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover)          */
     defaultModel.extinctionFix = 0.5;
     defaultModel.extinctionBeta[0] = 1;

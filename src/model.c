@@ -10986,7 +10986,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == SPECRATE_FIX)
                         value[j] = mp->speciationFix;
                     else
-                        value[j] = 1.0;
+                        value[j] = 0.01;
                     }
                 }
             else if (p->paramType == P_EXTRATE)
