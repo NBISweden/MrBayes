@@ -10986,7 +10986,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == SPECRATE_FIX)
                         value[j] = mp->speciationFix;
                     else
-                        value[j] = 0.01;
+                        value[j] = 0.1;
                     }
                 }
             else if (p->paramType == P_EXTRATE)
@@ -10997,7 +10997,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == EXTRATE_FIX)
                         value[j] = mp->extinctionFix;
                     else
-                        value[j] = 0.5;
+                        value[j] = 0.8;
                     }
                 }
             else if (p->paramType == P_FOSLRATE)
@@ -11008,7 +11008,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == FOSLRATE_FIX)
                         value[j] = mp->fossilizationFix;
                     else
-                        value[j] = 0.5;
+                        value[j] = 0.2;
                     }
                 }
             else if (p->paramType == P_GROWTH)
