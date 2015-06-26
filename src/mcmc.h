@@ -28,7 +28,7 @@ MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
 FILE    *OpenNewMBPrintFile (char *fileName);
 int     ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq);
 int     SafeSprintf (char **target, int *targetLen, char *fmt, ...);
-int     setFilePositions (int samplePos);
+int     SetFilePositions (int samplePos);
 MrBFlt  TreeLength (Param *param, int chain);
 
 #endif  /* __MCMC_H__ */

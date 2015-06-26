@@ -205,6 +205,7 @@ void      PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates);
 int       PrintTopConvInfo (void);
 void      PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT);
 int       PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate);
+MrBFlt    PropAncFossil (Param *param, int chain);
 #if defined (MPI_ENABLED)
 int       ReassembleMoveInfo (void);
 int       ReassembleParamVals (int *curId);
@@ -12250,11 +12251,10 @@ int PrintStates (int curGen, int coldId)
         SafeSprintf (&tempStr, &tempStrSize, "\tLnPr");
         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
-        /* print tree lengths or heights for all trees */
         for (i=0; i<numParams; i++)
             {
             p = &params[i];
-
+            /* print tree lengths or heights for all trees */
             if (p->paramType == P_BRLENS)
                 {
                 tree = GetTree (p, coldId, state[coldId]);
@@ -12272,12 +12272,19 @@ int PrintStates (int curGen, int coldId)
                     else
                         SafeSprintf (&tempStr, &tempStrSize, "\tTL");
                     }
-
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }
+            /* print proportion of ancestral fossils */
+            if (p->paramType == P_FOSLRATE)
+                {
+                if (FillRelPartsString(p, &partString) == YES)
+                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil%s", partString);
+                else
+                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil");
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
             }
 
-        /* print # events for cpp model, or relaxed clock model indicator */
         for (i=0; i<numPrintTreeParams; i++)
             {
             p = printTreeParam[i];
@@ -12285,22 +12292,23 @@ int PrintStates (int curGen, int coldId)
                 {
                 for (j=0; j<p->nSubParams; j++)
                     {
+                    /* print # events for cpp model */
                     if (p->subParams[j]->paramType == P_CPPEVENTS)
                         {
                         if (FillRelPartsString(p->subParams[j], &partString) == YES)
                             SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP%s", partString);
                         else
                             SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP");
-                        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         }
+                    /* print relaxed clock model indicator */
                     else if (p->subParams[j]->paramType == P_MIXEDBRCHRATES)
                         {
                         if (FillRelPartsString(p->subParams[j], &partString) == YES)
                             SafeSprintf (&tempStr, &tempStrSize, "\tm_RCl%s", partString);
                         else
                             SafeSprintf (&tempStr, &tempStrSize, "\tm_RCl");
-                        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         }
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 }
             }
@@ -12560,15 +12568,14 @@ int PrintStates (int curGen, int coldId)
     SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnPr[coldId]));
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
-    /* print tree lengths or heights for all trees */
     for (i=0; i<numParams; i++)
         {
         p = &params[i];
-
+        /* print tree lengths or heights for all trees */
         if (p->paramType == P_BRLENS)
             {
             tree = GetTree (p, coldId, state[coldId]);
-            if (tree->isClock == NO)
+            if (tree->isRooted == NO)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -12580,6 +12587,12 @@ int PrintStates (int curGen, int coldId)
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
+            }
+        /* print proportion of ancestral fossils */
+        if (p->paramType == P_FOSLRATE)
+            {
+            SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(PropAncFossil(p, coldId)));
+            if (AddToPrintString (tempStr) == ERROR) goto errorExit;
             }
         }
 
@@ -12594,13 +12607,12 @@ int PrintStates (int curGen, int coldId)
                 if (p->subParams[j]->paramType == P_CPPEVENTS)
                     {
                     SafeSprintf (&tempStr, &tempStrSize, "\t%d", NumCppEvents(p->subParams[j],coldId));
-                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 else if (p->subParams[j]->paramType == P_MIXEDBRCHRATES)
                     {
                     SafeSprintf (&tempStr, &tempStrSize, "\t%d", *GetParamIntVals(p->subParams[j],coldId,state[coldId]));
-                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
             }
         }
@@ -12810,7 +12822,8 @@ int PrintStates (int curGen, int coldId)
                     }
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
+                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1,
+                                                                origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
                 }
             }
         }
@@ -12851,7 +12864,8 @@ int PrintStates (int curGen, int coldId)
                     }
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(posSelProbs[compressedCharPosition]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1, origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
+                /* printf ("%4d -> (%3d,%3d,%3d) %1.25le\n", i, origAlignmentChars[0]+1, origAlignmentChars[1]+1,
+                                                                origAlignmentChars[2]+1, posSelProbs[compressedCharPosition]); */
                 }
             }
         }
@@ -16325,7 +16339,7 @@ int RunChain (RandLong *seed)
                     }
                 else
                     {
-                    if (setFilePositions(removeTo) == ERROR) nErrors++;
+                    if (SetFilePositions(removeTo) == ERROR) nErrors++;
                     if (AddTreeSamples(removeTo+1,i,chainParams.saveTrees) == ERROR) nErrors++;
                     }
                 }
@@ -17648,8 +17662,8 @@ void SetChainIds (void)
 }
 
 
-/* setFilePositions sets chainParams.tFilePos[] to point immidiatly after sampled tree in position "samplePos" for all .t files.  */
-int setFilePositions (int samplePos)
+/* It sets chainParams.tFilePos[] to point immidiatly after sampled tree in position "samplePos" for all .t files. */
+int SetFilePositions (int samplePos)
 {
     int i, j, k, longestLine;
     BitsLong    lastBlock;
@@ -18972,5 +18986,35 @@ MrBFlt TreeLength (Param *param, int chain)
         }
                 
     return (tl);
+}
+
+
+/* proportion of ancestral fossils in a FBD tree */
+MrBFlt PropAncFossil (Param *param, int chain)
+{
+    int             i, m, k;
+    Tree            *t;
+    TreeNode        *p;
+ 
+    t = GetTree (param, chain, state[chain]);
+    
+    if (t->isRooted == NO)
+        return 0.0;
+    
+    /* count # of tip and ancestral fossils */
+    m = k = 0;
+    for (i = 0; i < t->nNodes -2; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL && p->right == NULL && p->nodeDepth > 0.0)
+            {
+            if (p->length > 0.0)
+                m++;
+            else
+                k++;
+            }
+        }
+
+    return (MrBFlt)k / (m+k);
 }
 
