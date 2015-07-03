@@ -12254,9 +12254,9 @@ int PrintStates (int curGen, int coldId)
         for (i=0; i<numParams; i++)
             {
             p = &params[i];
-            /* print tree lengths or heights for all trees */
             if (p->paramType == P_BRLENS)
                 {
+                /* print tree lengths or heights for all trees */
                 tree = GetTree (p, coldId, state[coldId]);
                 if (tree->isRooted == YES)
                     {
@@ -12264,6 +12264,7 @@ int PrintStates (int curGen, int coldId)
                         SafeSprintf (&tempStr, &tempStrSize, "\tTH%s\tTL%s", partString, partString);
                     else
                         SafeSprintf (&tempStr, &tempStrSize, "\tTH\tTL");
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 else
                     {
@@ -12271,43 +12272,40 @@ int PrintStates (int curGen, int coldId)
                         SafeSprintf (&tempStr, &tempStrSize, "\tTL%s", partString);
                     else
                         SafeSprintf (&tempStr, &tempStrSize, "\tTL");
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
-                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                }
-            /* print proportion of ancestral fossils */
-            if (p->paramType == P_FOSLRATE)
-                {
-                if (FillRelPartsString(p, &partString) == YES)
-                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil%s", partString);
-                else
-                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil");
-                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                }
-            }
-
-        for (i=0; i<numPrintTreeParams; i++)
-            {
-            p = printTreeParam[i];
-            if (p->paramType == P_BRLENS)
-                {
+                /* print # cpp events, or relaxed clock model indicator */
                 for (j=0; j<p->nSubParams; j++)
                     {
-                    /* print # events for cpp model */
                     if (p->subParams[j]->paramType == P_CPPEVENTS)
                         {
                         if (FillRelPartsString(p->subParams[j], &partString) == YES)
                             SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP%s", partString);
                         else
                             SafeSprintf (&tempStr, &tempStrSize, "\tn_CPP");
+                        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         }
-                    /* print relaxed clock model indicator */
                     else if (p->subParams[j]->paramType == P_MIXEDBRCHRATES)
                         {
                         if (FillRelPartsString(p->subParams[j], &partString) == YES)
                             SafeSprintf (&tempStr, &tempStrSize, "\tm_RCl%s", partString);
                         else
                             SafeSprintf (&tempStr, &tempStrSize, "\tm_RCl");
+                        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         }
+                    }
+                }
+            /* print proportion of ancestral fossils */
+            else if (p->paramType == P_FOSLRATE)
+                {
+                if (FillRelPartsString(p, &partString) == YES)
+                    {
+                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil%s", partString);
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                    }
+                else
+                    {
+                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil");
                     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 }
@@ -12571,9 +12569,9 @@ int PrintStates (int curGen, int coldId)
     for (i=0; i<numParams; i++)
         {
         p = &params[i];
-        /* print tree lengths or heights for all trees */
         if (p->paramType == P_BRLENS)
             {
+            /* print tree lengths or heights for all trees */
             tree = GetTree (p, coldId, state[coldId]);
             if (tree->isRooted == NO)
                 {
@@ -12587,33 +12585,26 @@ int PrintStates (int curGen, int coldId)
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
-            }
-        /* print proportion of ancestral fossils */
-        if (p->paramType == P_FOSLRATE)
-            {
-            SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(PropAncFossil(p, coldId)));
-            if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-            }
-        }
-
-    /* print # cpp events, or relaxed clock model indicator */
-    for (i=0; i<numParams; i++)
-        {
-        p = &params[i];
-        if (p->paramType == P_BRLENS)
-            {   
+            /* print # cpp events, or relaxed clock model indicator */
             for (j=0; j<p->nSubParams; j++)
                 {
                 if (p->subParams[j]->paramType == P_CPPEVENTS)
                     {
                     SafeSprintf (&tempStr, &tempStrSize, "\t%d", NumCppEvents(p->subParams[j],coldId));
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 else if (p->subParams[j]->paramType == P_MIXEDBRCHRATES)
                     {
                     SafeSprintf (&tempStr, &tempStrSize, "\t%d", *GetParamIntVals(p->subParams[j],coldId,state[coldId]));
+                    if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
-                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
+            }
+        else if (p->paramType == P_FOSLRATE)
+            {
+            /* print proportion of ancestral fossils */
+            SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(PropAncFossil(p, coldId)));
+            if (AddToPrintString (tempStr) == ERROR) goto errorExit;
             }
         }
 
@@ -19014,7 +19005,10 @@ MrBFlt PropAncFossil (Param *param, int chain)
                 k++;
             }
         }
-
-    return (MrBFlt)k / (m+k);
+    
+    if (k == 0)
+        return 0.0;
+    else
+        return (MrBFlt)k / (m+k);
 }
 
