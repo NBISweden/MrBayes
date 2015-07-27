@@ -10767,7 +10767,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    state frequencies. MrBayes gets around this problem by       \n");
         MrBayesPrint ("                    assuming that the states have a dirichlet prior, with all    \n");
         MrBayesPrint ("                    states having equal frequency. The variation in the diri-    \n");
-        MrBayesPrint ("                    chlet can be controlled by this parameter--symdirihyperpr.   \n");
+        MrBayesPrint ("                    chlet can be controlled by this parameter -- symdirihyperpr. \n");
         MrBayesPrint ("                    Symdirihyperpr specifies the distribution on the variance    \n");
         MrBayesPrint ("                    parameter of the dirichlet. The valid options are:           \n");
         MrBayesPrint ("                                                                                 \n");
