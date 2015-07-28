@@ -6191,8 +6191,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         if (flag == 0)
                             {
-                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of the following type: STANDARD, RESTRICTION.\
-                            Currently there is no active partition with such data. ", spacer, parmName);
+                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing data", spacer, parmName);
+                            MrBayesPrint ("  of at least one of the following type: STANDARD, RESTRICTION.");
+                            MrBayesPrint ("Currently there is no active partition with such data. ");
                             return (ERROR);
                             }
                         }
@@ -22028,15 +22029,15 @@ int ShowModel (void)
                             if (AreDoublesEqual(modelParams[i].symBetaFix, -1.0, ETA)==YES)
                                 MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
                             else
-                                MrBayesPrint ("%s                     Symmetric Dirichlet is fixed to %1.2lf\n", spacer, modelParams[i].symBetaFix);
+                                MrBayesPrint ("%s                     Symmetric Dirichlet alpha is fixed to %1.2lf\n", spacer, modelParams[i].symBetaFix);
                             }
                         else if (!strcmp(modelParams[i].symPiPr,"Uniform"))
                             {
-                            MrBayesPrint ("%s                     Symmetric Dirichlet has a Uniform(%1.2lf,%1.2lf) prior\n", spacer, modelParams[i].symBetaUni[0], modelParams[i].symBetaUni[1]);
+                            MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Uniform(%1.2lf,%1.2lf) prior\n", spacer, modelParams[i].symBetaUni[0], modelParams[i].symBetaUni[1]);
                             }
                         else
                             {
-                            MrBayesPrint ("%s                     Symmetric Dirichlet has a Exponential(%1.2lf) prior\n", spacer, modelParams[i].symBetaExp);
+                            MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Exponential(%1.2lf) prior\n", spacer, modelParams[i].symBetaExp);
                             }
                         }
                     else if (modelSettings[i].dataType == RESTRICTION)
@@ -22846,10 +22847,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     MrBayesPrint ("%s            Prior      = Symmetric dirichlet with exponential(%1.2lf) variance parameter\n", spacer, mp->symBetaExp);
                 else
                     { /* mp->symBetaFix == -1 */
-                    if (AreDoublesEqual(mp->symBetaFix, 1.0, ETA)==YES)
-                        MrBayesPrint ("%s            Prior      = State frequencies are equal\n", spacer);
+                    if (AreDoublesEqual(mp->symBetaFix, -1.0, ETA)==YES)
+                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters equal to infinity\n", spacer);
                     else
-                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with fixed(%1.2lf) variance parameter\n", spacer, mp->symBetaFix);
+                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters equal to %1.2lf\n", spacer, mp->symBetaFix);
                     }
                 }
             else if (ms->dataType == PROTEIN)
@@ -23859,8 +23860,8 @@ int UpdateClockRate (MrBFlt clockRate, int chain)
             if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
                 (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                 {
-                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to:%f for run:%d chain:%d.\n",
-                              spacer, minClockRate, maxClockRate, *clockRatep, chain/chainParams.numChains, chain%chainParams.numChains);
+                MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while clockrate prior is fixed to %f for run %d chain %d.\n",
+                              spacer, minClockRate, maxClockRate, *clockRatep, chain/chainParams.numChains + 1, chain%chainParams.numChains + 1);
                 *clockRatep=0;
                 return (ERROR);
                 }
@@ -23868,7 +23869,7 @@ int UpdateClockRate (MrBFlt clockRate, int chain)
                 {
                 if (AreDoublesEqual (*clockRatep, clockRate, 0.0001) == NO)
                     {
-                    MrBayesPrint ("%s   ERROR: Requested clockrate:%f does not match fixed clockrate prior :%f.\n", spacer, clockRate, *clockRatep);
+                    MrBayesPrint ("%s   ERROR: Requested clockrate:%f does not match fixed clockrate prior:%f.\n", spacer, clockRate, *clockRatep);
                     *clockRatep=0;
                     return (ERROR);
                     }
@@ -23883,8 +23884,8 @@ int UpdateClockRate (MrBFlt clockRate, int chain)
                 if ((*clockRatep < minClockRate && AreDoublesEqual (*clockRatep, minClockRate, 0.0001) == NO) ||
                     (*clockRatep > maxClockRate && AreDoublesEqual (*clockRatep, maxClockRate, 0.0001) == NO))
                     {
-                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is:%f for run:%d chain:%d.\n",
-                                  spacer, minClockRate, maxClockRate, clockRate, chain/chainParams.numChains, chain%chainParams.numChains);
+                    MrBayesPrint ("%s   ERROR: Calibrated trees require clockrate in range from %f to %f, while requested clockrate is %f for run %d chain %d.\n",
+                                  spacer, minClockRate, maxClockRate, clockRate, chain/chainParams.numChains + 1, chain%chainParams.numChains + 1);
                     *clockRatep=0;
                     return (ERROR);
                     }

@@ -1659,6 +1659,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             return (ERROR);
             }
         *valPtr = newM;  // update with new value
+        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newM;
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -13820,6 +13821,7 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             return (ERROR);
             }
         *valPtr = newL;  // update with new value
+        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newL;
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -13929,6 +13931,7 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             return (ERROR);
             }
         *valPtr = newL;  // update with new value
+        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newL;
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
