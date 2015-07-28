@@ -4915,9 +4915,9 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     for (c=0; c<m->numChars; c++)
         {
         if (m->nStates[c] == 2)
-                numReps += m->numBetaCats * 2;
-            else
-                numReps += m->nStates[c];
+            numReps += m->numBetaCats * 2;
+        else
+            numReps += m->nStates[c];
         }
 
     /* find conditional likelihood pointers */
@@ -6560,9 +6560,9 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     for (c=0; c<m->numChars; c++)
         {
         if (m->nStates[c] == 2)
-                numReps += m->numBetaCats * 2;
-            else
-                numReps += m->nStates[c];
+            numReps += m->numBetaCats * 2;
+        else
+            numReps += m->nStates[c];
         }
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
@@ -6578,7 +6578,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
     /* find gamma category number and frequencies */
     nGammaCats = m->numGammaCats;
-    gammaFreq = 1.0 /  nGammaCats;
+    gammaFreq = 1.0 / nGammaCats;
 
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -6653,7 +6653,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             if (nStates == 2)
                 {
                 nBetaCats = m->numBetaCats;
-                catFreq = gammaFreq /  nBetaCats;
+                catFreq = gammaFreq / nBetaCats;
                 }
             else
                 {
@@ -6687,7 +6687,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             if (nStates == 2)
                 {
                 nBetaCats = m->numBetaCats;
-                catFreq = gammaFreq /  nBetaCats;
+                catFreq = gammaFreq / nBetaCats;
                 }
             else
                 {
