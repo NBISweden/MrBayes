@@ -7869,9 +7869,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                             else
                                 {
                                 if (nApplied == 0 || numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf)\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
+                                    MrBayesPrint ("%s   Setting Clockratepr to Normal(%1.6lf,%1.6lf) for partition %d\n", spacer, modelParams[i].clockRateNormal[0], modelParams[i].clockRateNormal[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -23232,7 +23232,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
         else if (j == P_CLOCKRATE)
             {
             if (!strcmp(mp->clockRatePr,"Normal"))
-                MrBayesPrint ("%s            Prior      = Normal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
+                MrBayesPrint ("%s            Prior      = Normal(%1.6lf,%1.6lf)\n", spacer, mp->clockRateNormal[0], mp->clockRateNormal[1]);
             else if (!strcmp(mp->clockRatePr,"Lognormal"))
                 MrBayesPrint ("%s            Prior      = Lognormal(%1.2lf,%1.2lf)\n", spacer, mp->clockRateLognormal[0], mp->clockRateLognormal[1]);
             else if (!strcmp(mp->clockRatePr,"Gamma"))

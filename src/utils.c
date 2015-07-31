@@ -12740,8 +12740,11 @@ MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
 
     z_0 = (0.0 - params[0]) / params[1];
     normConst = CdfNormal(z_0);
-
-    return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
+    
+    if (normConst == 0.0)
+        return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0;
+    else
+        return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
 }
 
 
@@ -12755,7 +12758,10 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
     z_trunc = (params[0] - params[1]) / params[2];
     normConst = CdfNormal(z_trunc);
 
-    return - log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
+    if (normConst == 0.0)
+        return - log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0;
+    else
+        return - log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0 - log(normConst);
 }
 
 
