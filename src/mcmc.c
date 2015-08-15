@@ -8827,9 +8827,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                 }
             else
                 {
-                if (rho[sl] > 0.0 && rho[sl] < 1.0)
+                if (rho[sl] > 0.0)
                     {
-                    (*prob) += log(rho[sl]) + log(1 - rho[sl]);
+                    (*prob) += log(rho[sl]);
                     }
                 E++;              /* number of extant taxa */
                 }
@@ -9031,6 +9031,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                 }
             else
                 {
+                //  (*prob) += log(rho[sl]);  // rho[sl] == 1
                 E++;              /* number of extant taxa */
                 }
             }
