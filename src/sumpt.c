@@ -4114,7 +4114,7 @@ int DoCompareTree (void)
     maxX = maxY = -1000000000.0;
     for (i=0; i<minNumTrees; i++)
         {
-        xVal = (MrBFlt) (i + chainParams.chainBurnIn);
+        xVal = (MrBFlt) (i + comptreeParams.burnin);
         yVal = dT1[i];
         if (xVal < minX)
             minX = xVal;
@@ -4132,7 +4132,7 @@ int DoCompareTree (void)
         }
     for (i=0; i<minNumTrees; i++)
         {
-        xVal = (MrBFlt) (i + chainParams.chainBurnIn);
+        xVal = (MrBFlt) (i + comptreeParams.burnin);
         yVal = dT1[i];
         k = (int)(((xVal - minX) / (maxX - minX)) * screenWidth);
         if (k >= screenWidth)
