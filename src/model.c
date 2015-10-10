@@ -1702,8 +1702,8 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
             }
         }
 
-    /* return if variable is no or if a restriction site char */
-    if (ci->variable == NO || ci->dType == RESTRICTION)
+    /* return if variable is no */
+    if (ci->variable == NO)
         return;
 
     /* the character is either (variable and uninformative) or informative */
