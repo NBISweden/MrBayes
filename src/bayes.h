@@ -240,6 +240,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define RIGHTCURL               26
 #define DOLLAR                  27
 #define AMPERSAND               28
+#define VERTICALBAR             29
 
 #define MAX_Q_RATE              100.0f
 #define MIN_SHAPE_PARAM         0.00001f
@@ -444,6 +445,18 @@ enum ConstraintType
     PARTIAL,
     NEGATIVE,
     HARD
+    };
+
+enum CodingType
+    {
+    ALL                = 0,
+    NOABSENCESITES     = 1,
+    NOPRESENCESITES    = 2,
+    VARIABLE           = 3,
+    NOSINGLETONPRESENT = 4,
+    NOSINGLETONABSENT  = 8,
+    NOSINGLETONS       = 12,
+    INFORMATIVE        = 15
     };
 
 /* typedef for calibration */
@@ -901,7 +914,8 @@ typedef struct model
     char        nst[100];          /* number of substitution types                 */
     char        parsModel[100];    /* use the (so-called) parsimony model          */
     char        geneticCode[100];  /* genetic code used                            */
-    char        coding[100];       /* type of patterns encoded                     */
+    int         coding;            /* type of patterns encoded                     */
+    char        codingString[100]; /* string describing type of patterns encoded   */
     char        ploidy[100];       /* ploidy level                                 */
     char        omegaVar[100];     /* type of omega variation model                */
     char        ratesModel[100];   /* rates across sites model                     */
@@ -1419,6 +1433,7 @@ typedef struct charinfo
     int cType;
     int nStates;
     int constant[10];
+    int singleton[10];
     int variable;
     int informative;
     } CharInfo;

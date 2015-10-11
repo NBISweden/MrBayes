@@ -570,7 +570,8 @@ int InitializeMrBayes (void)
     
     /* Prior model settings */
     defaultModel.dataType = DNA;                        /* datatype                                     */
-    strcpy(defaultModel.coding, "All");                 /* ascertainment bias                           */
+    defaultModel.coding = 0;                            /* ascertainment bias                           */
+    strcpy(defaultModel.codingString, "All");           /* ascertainment bias string                    */
     strcpy(defaultModel.nucModel, "4by4");              /* nucleotide model                             */
     strcpy(defaultModel.nst, "1");                      /* number of substitution types                 */
     strcpy(defaultModel.aaModelPr, "Fixed");            /* amino acid model prior                       */

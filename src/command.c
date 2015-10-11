@@ -282,7 +282,7 @@ CmdType     commands[] =
                     6 = List of valid parameters (parmList) 
                     7 = Expecting (2^TokenType) (expect) (PARAMETER = 4; SEMICOLON = 32; ALPHA = 16384; 
                         ALPHA | QUESTIONMARK | DASH | NUMBER | ASTERISK | EXCLAMATIONMARK | PERCENT | WEIRD | SEMICOLON = 11715360;
-                        ALPHA | QUESTIONMARK | DASH | NUMBER | ASTERISK | EXCLAMATIONMARK | PERCENT | WEIRD | SEMICOLON | LEFTPAR | RIGHTPAR | LEFTCURL | RIGHTCURL = 112381728;
+                        ALPHA | QUESTIONMARK | DASH | NUMBER | ASTERISK | EXCLAMATIONMARK | PERCENT | WEIRD | VERTICALBAR | SEMICOLON | LEFTPAR | RIGHTPAR | LEFTCURL | RIGHTCURL = 649252640;
                         PARAMETER | SEMICOLON = 36; NUMBER | ALPHA = 49152; ALPHA | SEMICOLON = 16416; EQUALSIGN = 8; NUMBER = 32768)
                     8 = Description of the command (cmdDescription)
                     9 = Where should the command be used (cmdUse) (IN_CMD = used from command line or mrbayes block; IN_FILE = used in data block or in tree block)
@@ -317,7 +317,7 @@ CmdType     commands[] =
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
             { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,          "Manual",  NO,          DoManual,  1,                                                                                            {126},       36,                  "Prints a command reference to a text file",  IN_CMD, SHOW },
-            { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},112381728,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
+            { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},649252640,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
             { 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
                                                                                      153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215},       36,                   "Starts Markov chain Monte Carlo analysis",  IN_CMD, SHOW },
             { 28,           "Mcmcp",  NO,           DoMcmcp, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
@@ -4411,6 +4411,7 @@ int DoFormatParm (char *parmName, char *tkn)
                 expecting |= Expecting(EXCLAMATIONMARK);
                 expecting |= Expecting(PERCENT);
                 expecting |= Expecting(WEIRD);
+                expecting |= Expecting(VERTICALBAR);
                 }
             else if (((expecting & Expecting(ALPHA)) == Expecting(ALPHA)) || 
                      ((expecting & Expecting(QUESTIONMARK)) == Expecting(QUESTIONMARK)) || 
@@ -4419,7 +4420,8 @@ int DoFormatParm (char *parmName, char *tkn)
                      ((expecting & Expecting(ASTERISK)) == Expecting(ASTERISK)) || 
                      ((expecting & Expecting(EXCLAMATIONMARK)) == Expecting(EXCLAMATIONMARK)) || 
                      ((expecting & Expecting(PERCENT)) == Expecting(PERCENT)) || 
-                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)))
+                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)) ||
+                     ((expecting & Expecting(VERTICALBAR)) == Expecting(VERTICALBAR)))
                 {
                 if (strlen(tkn) == 1)
                     {
@@ -4454,6 +4456,7 @@ int DoFormatParm (char *parmName, char *tkn)
                 expecting |= Expecting(EXCLAMATIONMARK);
                 expecting |= Expecting(PERCENT);
                 expecting |= Expecting(WEIRD);
+                expecting |= Expecting(VERTICALBAR);
                 }
             else if (((expecting & Expecting(ALPHA)) == Expecting(ALPHA)) || 
                      ((expecting & Expecting(QUESTIONMARK)) == Expecting(QUESTIONMARK)) || 
@@ -4462,7 +4465,8 @@ int DoFormatParm (char *parmName, char *tkn)
                      ((expecting & Expecting(ASTERISK)) == Expecting(ASTERISK)) || 
                      ((expecting & Expecting(EXCLAMATIONMARK)) == Expecting(EXCLAMATIONMARK)) || 
                      ((expecting & Expecting(PERCENT)) == Expecting(PERCENT)) || 
-                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)))
+                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)) ||
+                     ((expecting & Expecting(VERTICALBAR)) == Expecting(VERTICALBAR)))
                 {
                 if (strlen(tkn) == 1)
                     {
@@ -4497,6 +4501,7 @@ int DoFormatParm (char *parmName, char *tkn)
                 expecting |= Expecting(EXCLAMATIONMARK);
                 expecting |= Expecting(PERCENT);
                 expecting |= Expecting(WEIRD);
+                expecting |= Expecting(VERTICALBAR);
                 }
             else if (((expecting & Expecting(ALPHA)) == Expecting(ALPHA)) || 
                      ((expecting & Expecting(QUESTIONMARK)) == Expecting(QUESTIONMARK)) || 
@@ -4505,7 +4510,8 @@ int DoFormatParm (char *parmName, char *tkn)
                      ((expecting & Expecting(ASTERISK)) == Expecting(ASTERISK)) || 
                      ((expecting & Expecting(EXCLAMATIONMARK)) == Expecting(EXCLAMATIONMARK)) || 
                      ((expecting & Expecting(PERCENT)) == Expecting(PERCENT)) || 
-                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)))
+                     ((expecting & Expecting(WEIRD)) == Expecting(WEIRD)) ||
+                     ((expecting & Expecting(VERTICALBAR)) == Expecting(VERTICALBAR)))
                 {
                 if (strlen(tkn) == 1)
                     {
@@ -5263,6 +5269,7 @@ int DoMatrixParm (char *parmName, char *tkn)
     expecting |= Expecting(EXCLAMATIONMARK);
     expecting |= Expecting(PERCENT);
     expecting |= Expecting(WEIRD);
+    expecting |= Expecting(VERTICALBAR);
     expecting |= Expecting(SEMICOLON);
     expecting |= Expecting(LEFTPAR);
     expecting |= Expecting(RIGHTPAR);
@@ -9486,10 +9493,15 @@ int GetToken (char *token, int *tokenType, char **sourceH)
         *temp++ = *(*sourceH)++;
         *tokenType = AMPERSAND;
         }
-    else if (IsIn(**sourceH,"~+^@|{}`><"))
+    else if (IsIn(**sourceH,"~+^@{}`><"))
         {
         *temp++ = *(*sourceH)++;
         *tokenType = WEIRD;
+        }
+    else if (IsIn(**sourceH,"|"))
+        {
+        *temp++ = *(*sourceH)++;
+        *tokenType = VERTICALBAR;
         }
 
     *temp = '\0';
@@ -10425,13 +10437,17 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Coding    -- This specifies how characters were sampled. If all site patterns \n");
         MrBayesPrint ("                had the possibility of being sampled, then \"all\" should be     \n");
         MrBayesPrint ("                specified (the default). Otherwise \"variable\" (only variable   \n");
-        MrBayesPrint ("                characters had the possibility of being sampled), \"noabsence\"  \n");
-        MrBayesPrint ("                (characters for which all taxa were coded as absent were not     \n");
-        MrBayesPrint ("                sampled), and \"nopresence\" (characters for which all taxa were \n");
-        MrBayesPrint ("                coded as present were not sampled. \"All\" works for all data    \n");
-        MrBayesPrint ("                types. However, the others only work for morphological (all/     \n");
-        MrBayesPrint ("                variable) or restriction site (all/variable/noabsence/nopresence)\n");
-        MrBayesPrint ("                data.                                                            \n");
+        MrBayesPrint ("                characters had the possibility of being sampled), \"informative\"\n");
+        MrBayesPrint ("                (only parsimony informative characters has the possibility of    \n");
+        MrBayesPrint ("                being sampled), \"nosingletons\" (characters which are constant  \n");
+        MrBayesPrint ("                in all but one taxon were not sampled), \"noabsencesites\" (char-\n");
+        MrBayesPrint ("                acters for which all taxa were coded as absent were not sampled),\n");
+        MrBayesPrint ("                \"nopresencesites\" (characters for which all taxa were coded as \n");
+        MrBayesPrint ("                present were not sampled). \"All\" works for all data types.     \n");
+        MrBayesPrint ("                However, the others only work for morphological (all/variable/   \n");
+        MrBayesPrint ("                informative/nosingletons) or restriction site (all/variable/     \n");
+        MrBayesPrint ("                informative/nosingletons/noabsencesites/nopresencesites/         \n");
+        MrBayesPrint ("                nosingletonpresent/nosingletonabsent) data.                      \n");
         MrBayesPrint ("   Parsmodel -- This forces calculation under the so-called parsimony model      \n");
         MrBayesPrint ("                described by Tuffley and Steel (1998). The options are \"yes\"   \n");
         MrBayesPrint ("                or \"no\". Note that the biological assumptions of this model    \n");
@@ -10479,8 +10495,9 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Nbetacat     <number>                              %d                         \n", mp->numBetaCats);
             MrBayesPrint ("   Omegavar     Equal/Ny98/M3                         %s                         \n", mp->omegaVar);
             MrBayesPrint ("   Covarion     No/Yes                                %s                         \n", mp->covarionModel);
-            MrBayesPrint ("   Coding       All/Variable/Noabsencesites/                                     \n");
-            MrBayesPrint ("                Nopresencesites                       %s                         \n", mp->coding);
+            MrBayesPrint ("   Coding       All/Variable/Informative/Nosingletons                            \n");
+            MrBayesPrint ("                Noabsencesites/Nopresencesites/                                  \n");
+            MrBayesPrint ("                Nosingletonabsent/Nosingletonpresent  %s                         \n", mp->codingString);
             MrBayesPrint ("   Parsmodel    No/Yes                                %s                         \n", mp->parsModel);
         /*  MrBayesPrint ("   Augment      No/Yes                                %s                         \n", mp->augmentData); */
             MrBayesPrint ("   ------------------------------------------------------------------            \n");       
@@ -14290,7 +14307,7 @@ void SetUpParms (void)
     PARAM  (31, "Parsmodel",      DoLsetParm,        "Yes|No|\0");
     PARAM  (32, "Omegavar",       DoLsetParm,        "Equal|Ny98|M3|M10|\0");
     PARAM  (33, "Code",           DoLsetParm,        "Universal|Vertmt|Invermt|Mycoplasma|Yeast|Ciliate|Echinoderm|Euplotid|Metmt|\0");
-    PARAM  (34, "Coding",         DoLsetParm,        "All|Variable|Noabsencesites|Nopresencesites|Informative|\0");
+    PARAM  (34, "Coding",         DoLsetParm,        "All|Variable|Informative|Nosingletons|Noabsencesites|Nopresencesites|Nosingletonpresent|Nosingletonabsent|\0");
     PARAM  (35, "Seqerror",       DoPrsetParm,       "\0");
     PARAM  (36, "Tratiopr",       DoPrsetParm,       "Beta|Fixed|\0");
     PARAM  (37, "Revmatpr",       DoPrsetParm,       "Dirichlet|Fixed|\0");
@@ -14909,6 +14926,13 @@ void WhatVariableExp (BitsLong exp, char *st)
             if (n > 0)
                 strcat(st, " or");
             strcat(st, " <whatever>");
+            n++;
+            }
+        if ((exp & Expecting(VERTICALBAR)) == Expecting(VERTICALBAR))
+            {
+            if (n > 0)
+                strcat(st, " or");
+            strcat(st, " |");
             n++;
             }
         if ((exp & Expecting(UNKNOWN_TOKEN_TYPE)) == Expecting(UNKNOWN_TOKEN_TYPE))

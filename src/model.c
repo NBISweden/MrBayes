@@ -201,20 +201,22 @@ int AddDummyChars (void)
 
         if (mp->dataType == RESTRICTION && !strcmp(mp->parsModel,"No"))
             {
-            if (!strcmp(mp->coding, "Variable"))
-                m->numDummyChars = 2;
-            else if (!strcmp(mp->coding, "Noabsencesites") || !strcmp(mp->coding, "Nopresencesites"))
-                m->numDummyChars = 1;
-            else if (!strcmp(mp->coding, "Informative"))
-                m->numDummyChars = 2 + 2 * numLocalTaxa;
+            if (mp->coding & NOABSENCESITES)
+                m->numDummyChars++;
+            if (mp->coding & NOPRESENCESITES)
+                m->numDummyChars++;
+            if (mp->coding & NOSINGLETONABSENT)
+                m->numDummyChars += numLocalTaxa;
+            if (mp->coding & NOSINGLETONPRESENT)
+                m->numDummyChars += numLocalTaxa;
             }
 
         if (mp->dataType == STANDARD && !strcmp(mp->parsModel,"No"))
             {
-            if (!strcmp(mp->coding, "Variable"))
-                m->numDummyChars = 2;
-            else if (!strcmp(mp->coding, "Informative"))
-                m->numDummyChars = 2 + 2 * numLocalTaxa;
+            if (mp->coding & VARIABLE)
+                m->numDummyChars += 2;
+            if (mp->coding & NOSINGLETONS)
+                m->numDummyChars += 2*numLocalTaxa;
             numStdChars += (m->numChars + m->numDummyChars);
             }
 
@@ -267,22 +269,10 @@ int AddDummyChars (void)
             {
             // MrBayesPrint("%s   Adding dummy characters (unobserved site patterns) for division %d\n", spacer, d+1);
             // do not print this every time
-            if (!strcmp(mp->coding, "Variable") || !strcmp(mp->coding, "Informative"))
-                {
-                for (k=0; k<2; k++)
-                    {
-                    for (i=0; i<numLocalTaxa; i++)
-                        tempMatrix[pos(i,newColumn,newRowSize)] = (bitsLongOne<<k);
-                    tempSitesOfPat[newChar] = 0;
-                    tempChar[newColumn] = -1;
-                    newChar++;
-                    newColumn++;
-                    }
-                }
 
-            if (!strcmp(mp->coding, "Informative"))
+            for (k=0; k<2; k++)
                 {
-                for (k=0; k<2; k++)
+                if (((mp->coding & NOSINGLETONPRESENT) && k == 0) || ((mp->coding & NOSINGLETONABSENT) && k == 1))
                     {
                     for (i=0; i< numLocalTaxa; i++)
                         {
@@ -301,7 +291,7 @@ int AddDummyChars (void)
                     }
                 }
 
-            if (!strcmp(mp->coding, "Noabsencesites"))
+            if (mp->coding & NOABSENCESITES)
                 {
                 for (i=0; i<numLocalTaxa; i++)
                     tempMatrix[pos(i,newColumn,newRowSize)] = 1;
@@ -311,7 +301,7 @@ int AddDummyChars (void)
                 newColumn++;
                 }
 
-            if (!strcmp(mp->coding, "Nopresencesites"))
+            if (mp->coding & NOPRESENCESITES)
                 {
                 for (i=0; i<numLocalTaxa; i++)
                     tempMatrix[pos(i,newColumn,newRowSize)] = 2;
@@ -338,14 +328,36 @@ int AddDummyChars (void)
                 cinfo.nStates = charInfo[origChar[oldChar]].numStates;
                 CheckCharCodingType(&matrix, &cinfo);
 
-                if (!strcmp(mp->coding, "Variable") && cinfo.variable == NO)
-                    isCompat = NO;
-                else if (!strcmp(mp->coding, "Informative") && cinfo.informative == NO)
-                    isCompat = NO;
-                else if (!strcmp(mp->coding, "Noabsencesites") && cinfo.constant[0] == YES)
-                    isCompat = NO;
-                else if (!strcmp(mp->coding, "Nopresencesites") && cinfo.constant[1] == YES)
-                    isCompat = NO;
+                if (mp->coding & VARIABLE)
+                    {
+                    if((mp->coding & VARIABLE) == VARIABLE && cinfo.variable == NO)
+                        {
+                        isCompat = NO;
+                        }
+                    else if((mp->coding & NOABSENCESITES) && cinfo.constant[0] == YES)
+                        {
+                        isCompat = NO;
+                        }
+                    else if((mp->coding & NOPRESENCESITES) && cinfo.constant[1] == YES)
+                        {
+                        isCompat = NO;
+                        }
+                    }
+                if (mp->coding & NOSINGLETONS)
+                    {
+                    if((mp->coding & NOSINGLETONS) == NOSINGLETONS && cinfo.informative == NO && cinfo.variable == YES)
+                        {
+                        isCompat = NO;
+                        }
+                    else if((mp->coding & NOSINGLETONABSENT) && cinfo.singleton[0] == YES && cinfo.informative == NO)
+                        {
+                        isCompat = NO;
+                        }
+                    else if((mp->coding & NOSINGLETONPRESENT) && cinfo.singleton[1] == YES && cinfo.informative == NO)
+                        {
+                        isCompat = NO;
+                        }
+                    }
                 }
 
             if (isCompat == NO)
@@ -1664,7 +1676,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     /* set constant to no and state counters to 0 for all states */
     for (i=0; i<10; i++)
         {
-        ci->constant[i] = NO;
+        ci->constant[i] = ci->singleton[i] = NO;
         n1[i] = n2[i] = 0;
         }
 
@@ -1699,6 +1711,10 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
             {
             ci->constant[i] = YES;
             ci->variable = ci->informative = NO;
+            }
+            else if (n1[i] == 1)
+            {
+            ci->singleton[i] = YES;
             }
         }
 
@@ -2238,6 +2254,76 @@ int CheckExpandedModels (void)
 
     free (tempStr);
     return (NO_ERROR);
+}
+
+void CodingToString(int coding, char* string)
+{
+    if(coding == ALL)
+        strcpy(string, "All");
+    else if(coding == INFORMATIVE)
+        strcpy(string, "Informative");
+    else if((coding & VARIABLE) == VARIABLE)
+        {
+        if (coding == VARIABLE)
+            {
+            strcpy(string, "Variable");
+            }
+        else if (coding & NOSINGLETONABSENT)
+            {
+            strcpy(string, "Variable|Nosingletonabsent");
+            }
+        else if (coding & NOSINGLETONPRESENT)
+            {
+            strcpy(string, "Variable|Nosingletonpresent");
+            }
+        }
+    else if((coding & NOSINGLETONS) == NOSINGLETONS)
+        {
+        if (coding == NOSINGLETONS)
+            {
+            strcpy(string, "Nosingletons");
+            }
+        else if (coding & NOABSENCESITES)
+            {
+            strcpy(string, "Noabsencesites|Nosingletons");
+            }
+        else if (coding & NOPRESENCESITES)
+            {
+            strcpy(string, "Nopresencesites|Nosingletons");
+            }
+        }
+    else if(coding == NOABSENCESITES)
+        {
+        strcpy(string, "Noabsencesites");
+        }
+    else if(coding == NOPRESENCESITES)
+        {
+        strcpy(string, "Nopresencesites");
+        }
+    else if(coding == NOSINGLETONABSENT)
+        {
+        strcpy(string, "Nosingletonabsent");
+        }
+    else if(coding == NOSINGLETONPRESENT)
+        {
+        strcpy(string, "Nosingletonpresent");
+        }
+    else if(coding == (NOABSENCESITES | NOSINGLETONABSENT))
+        {
+        strcpy(string, "Noabsencesites|Nosingletonabsent");
+        }
+    else if(coding == (NOABSENCESITES | NOSINGLETONPRESENT))
+        {
+        strcpy(string, "Noabsencesites|Nosingletonpresent");
+        }
+    else if(coding == (NOPRESENCESITES | NOSINGLETONABSENT))
+        {
+        strcpy(string, "Nopresencesites|Nosingletonabsent");
+        }
+    else if(coding == (NOPRESENCESITES | NOSINGLETONPRESENT))
+        {
+        strcpy(string, "Nopresencesites|Nosingletonpresent");
+        }
 }
 
 
@@ -3559,6 +3645,13 @@ int DoLsetParm (char *parmName, char *tkn)
         else if (!strcmp(parmName, "Coding"))
             {
             if (expecting == Expecting(EQUALSIGN))
+                {
+                for (i=0; i<numCurrentDivisions; i++)
+                    modelParams[i].coding = ALL;
+                
+                expecting = Expecting(ALPHA);
+                }
+            else if (expecting == Expecting(VERTICALBAR))
                 expecting = Expecting(ALPHA);
             else if (expecting == Expecting(ALPHA))
                 {
@@ -3569,11 +3662,50 @@ int DoLsetParm (char *parmName, char *tkn)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
                             {
-                            strcpy(modelParams[i].coding, tempStr);
-                            if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Coding to %s\n", spacer, modelParams[i].coding);
+                            if(!strcmp(tempStr, "Nosingletons"))
+                                {
+                                modelParams[i].coding |= NOSINGLETONS;
+                                }
+                            else if(!strcmp(tempStr, "Variable"))
+                                {
+                                modelParams[i].coding |= VARIABLE;
+                                }
+                            else if(!strcmp(tempStr, "Informative"))
+                                {
+                                modelParams[i].coding |= INFORMATIVE;
+                                }
                             else
-                                MrBayesPrint ("%s   Setting Coding to %s for partition %d\n", spacer, modelParams[i].coding, i+1);
+                                {
+                                if(modelParams[i].dataType != RESTRICTION)
+                                    {
+                                    MrBayesPrint ("%s   Invalid coding for standard characters: %s\n", spacer, tempStr);
+                                    return (ERROR);
+                                    }
+                                
+                                if(!strcmp(tempStr, "Noabsencesites"))
+                                    {
+                                    modelParams[i].coding |= NOABSENCESITES;
+                                    }
+                                else if(!strcmp(tempStr, "Nopresencesites"))
+                                    {
+                                    modelParams[i].coding |= NOPRESENCESITES;
+                                    }
+                                else if(!strcmp(tempStr, "Nosingletonpresent"))
+                                    {
+                                    modelParams[i].coding |= NOSINGLETONPRESENT;
+                                    }
+                                else if(!strcmp(tempStr, "Nosingletonabsent"))
+                                    {
+                                    modelParams[i].coding |= NOSINGLETONABSENT;
+                                    }
+                                }
+                            
+                            CodingToString(modelParams[i].coding, modelParams[i].codingString);
+                            
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Enabling Coding %s\n", spacer, tempStr);
+                            else
+                                MrBayesPrint ("%s   Enabling Coding %s for partition %d\n", spacer, tempStr, i+1);
                             }
                         }
                     }
@@ -3582,7 +3714,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Invalid argument for missing patterns\n", spacer);
                     return (ERROR);
                     }
-                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON) | Expecting(VERTICALBAR);
                 }
             else
                 return (ERROR);
@@ -17266,12 +17398,21 @@ int SetModelDefaults (void)
         
         modelParams[j].dataType = DataType (j);             /* data type for partition                      */
 
-        if (modelParams[j].dataType == STANDARD)            /* set default ascertainment bias for partition */
-            strcpy(modelParams[j].coding, "Variable"); 
+        if (modelParams[j].dataType == STANDARD)
+            {   /* set default ascertainment bias for partition */
+            modelParams[j].coding = VARIABLE;
+            strcpy(modelParams[j].codingString, "Variable"); 
+            }
         else if (modelParams[j].dataType == RESTRICTION)
-            strcpy(modelParams[j].coding, "Noabsencesites");
+            {
+            modelParams[j].coding = NOABSENCESITES;
+            strcpy(modelParams[j].codingString, "Noabsencesites");   
+            }
         else
-            strcpy(modelParams[j].coding, "All");
+            {
+            modelParams[j].coding = ALL;
+            strcpy(modelParams[j].codingString, "All");
+            }
 
         SetCode (j);
         modelParams[j].nStates = NumStates (j);             /* number of states for partition             */
@@ -21960,7 +22101,7 @@ int ShowModel (void)
                 else if (modelSettings[i].dataType == RESTRICTION || modelSettings[i].dataType == STANDARD)
                     {
                     /* what type of characters are sampled? */
-                    MrBayesPrint ("%s         Coding    = %s\n", spacer, modelParams[i].coding);
+                    MrBayesPrint ("%s         Coding    = %s\n", spacer, modelParams[i].codingString);
                     }
                     
                 /* is there rate variation in a single site across the tree? */
