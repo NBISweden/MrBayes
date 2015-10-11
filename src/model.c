@@ -205,9 +205,9 @@ int AddDummyChars (void)
                 m->numDummyChars++;
             if (mp->coding & NOPRESENCESITES)
                 m->numDummyChars++;
-            if (mp->coding & NOSINGLETONABSENT)
+            if (mp->coding & NOSINGLETONABSENCE)
                 m->numDummyChars += numLocalTaxa;
-            if (mp->coding & NOSINGLETONPRESENT)
+            if (mp->coding & NOSINGLETONPRESENCE)
                 m->numDummyChars += numLocalTaxa;
             }
 
@@ -272,7 +272,7 @@ int AddDummyChars (void)
 
             for (k=0; k<2; k++)
                 {
-                if (((mp->coding & NOSINGLETONPRESENT) && k == 0) || ((mp->coding & NOSINGLETONABSENT) && k == 1))
+                if (((mp->coding & NOSINGLETONPRESENCE) && k == 0) || ((mp->coding & NOSINGLETONABSENCE) && k == 1))
                     {
                     for (i=0; i< numLocalTaxa; i++)
                         {
@@ -349,11 +349,11 @@ int AddDummyChars (void)
                         {
                         isCompat = NO;
                         }
-                    else if((mp->coding & NOSINGLETONABSENT) && cinfo.singleton[0] == YES && cinfo.informative == NO)
+                    else if((mp->coding & NOSINGLETONABSENCE) && cinfo.singleton[0] == YES && cinfo.informative == NO)
                         {
                         isCompat = NO;
                         }
-                    else if((mp->coding & NOSINGLETONPRESENT) && cinfo.singleton[1] == YES && cinfo.informative == NO)
+                    else if((mp->coding & NOSINGLETONPRESENCE) && cinfo.singleton[1] == YES && cinfo.informative == NO)
                         {
                         isCompat = NO;
                         }
@@ -2268,13 +2268,13 @@ void CodingToString(int coding, char* string)
             {
             strcpy(string, "Variable");
             }
-        else if (coding & NOSINGLETONABSENT)
+        else if (coding & NOSINGLETONABSENCE)
             {
-            strcpy(string, "Variable|Nosingletonabsent");
+            strcpy(string, "Variable|Nosingletonabsence");
             }
-        else if (coding & NOSINGLETONPRESENT)
+        else if (coding & NOSINGLETONPRESENCE)
             {
-            strcpy(string, "Variable|Nosingletonpresent");
+            strcpy(string, "Variable|Nosingletonpresence");
             }
         }
     else if((coding & NOSINGLETONS) == NOSINGLETONS)
@@ -2300,29 +2300,29 @@ void CodingToString(int coding, char* string)
         {
         strcpy(string, "Nopresencesites");
         }
-    else if(coding == NOSINGLETONABSENT)
+    else if(coding == NOSINGLETONABSENCE)
         {
-        strcpy(string, "Nosingletonabsent");
+        strcpy(string, "Nosingletonabsence");
         }
-    else if(coding == NOSINGLETONPRESENT)
+    else if(coding == NOSINGLETONPRESENCE)
         {
-        strcpy(string, "Nosingletonpresent");
+        strcpy(string, "Nosingletonpresence");
         }
-    else if(coding == (NOABSENCESITES | NOSINGLETONABSENT))
+    else if(coding == (NOABSENCESITES | NOSINGLETONABSENCE))
         {
-        strcpy(string, "Noabsencesites|Nosingletonabsent");
+        strcpy(string, "Noabsencesites|Nosingletonabsence");
         }
-    else if(coding == (NOABSENCESITES | NOSINGLETONPRESENT))
+    else if(coding == (NOABSENCESITES | NOSINGLETONPRESENCE))
         {
-        strcpy(string, "Noabsencesites|Nosingletonpresent");
+        strcpy(string, "Noabsencesites|Nosingletonpresence");
         }
-    else if(coding == (NOPRESENCESITES | NOSINGLETONABSENT))
+    else if(coding == (NOPRESENCESITES | NOSINGLETONABSENCE))
         {
-        strcpy(string, "Nopresencesites|Nosingletonabsent");
+        strcpy(string, "Nopresencesites|Nosingletonabsence");
         }
-    else if(coding == (NOPRESENCESITES | NOSINGLETONPRESENT))
+    else if(coding == (NOPRESENCESITES | NOSINGLETONPRESENCE))
         {
-        strcpy(string, "Nopresencesites|Nosingletonpresent");
+        strcpy(string, "Nopresencesites|Nosingletonpresence");
         }
 }
 
@@ -3690,13 +3690,13 @@ int DoLsetParm (char *parmName, char *tkn)
                                     {
                                     modelParams[i].coding |= NOPRESENCESITES;
                                     }
-                                else if(!strcmp(tempStr, "Nosingletonpresent"))
+                                else if(!strcmp(tempStr, "Nosingletonpresence"))
                                     {
-                                    modelParams[i].coding |= NOSINGLETONPRESENT;
+                                    modelParams[i].coding |= NOSINGLETONPRESENCE;
                                     }
-                                else if(!strcmp(tempStr, "Nosingletonabsent"))
+                                else if(!strcmp(tempStr, "Nosingletonabsence"))
                                     {
-                                    modelParams[i].coding |= NOSINGLETONABSENT;
+                                    modelParams[i].coding |= NOSINGLETONABSENCE;
                                     }
                                 }
                             

@@ -449,14 +449,14 @@ enum ConstraintType
 
 enum CodingType
     {
-    ALL                = 0,
-    NOABSENCESITES     = 1,
-    NOPRESENCESITES    = 2,
-    VARIABLE           = 3,
-    NOSINGLETONPRESENT = 4,
-    NOSINGLETONABSENT  = 8,
-    NOSINGLETONS       = 12,
-    INFORMATIVE        = 15
+    ALL                 = 0,
+    NOABSENCESITES      = 1,
+    NOPRESENCESITES     = 2,
+    VARIABLE            = 3,
+    NOSINGLETONPRESENCE = 4,
+    NOSINGLETONABSENCE  = 8,
+    NOSINGLETONS        = 12,
+    INFORMATIVE         = 15
     };
 
 /* typedef for calibration */
