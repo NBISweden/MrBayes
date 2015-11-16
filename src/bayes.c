@@ -987,7 +987,7 @@ int ReinitializeMrBayes (void)
     /* comparetree parameters */
     strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
     strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */
-    strcpy(comptreeParams.comptOutfile, "temp.comp");/* input name for comparetree command            */
+    strcpy(comptreeParams.comptOutfile, "temp.comp");/* output name for comparetree command           */
     comptreeParams.minPartFreq = 0.0;                /* minimum frequency of partitions to include    */
 
     /* plot parameters */

@@ -342,6 +342,9 @@ int             lowestLocalRunId;            /* lowest local run Id             
 int             highestLocalRunId;           /* highest local run Id                         */
 #endif
 
+#if defined (PRINT_DUMP)
+FILE            **fpDump = NULL;             /* pointer to .dump file(s)                     */
+#endif
 
 /* AddPartition: Add a partition to the tree keeping track of partition frequencies */
 PFNODE *AddPartition (PFNODE *r, BitsLong *p, int runId)
@@ -1831,37 +1834,29 @@ int CheckTemperature (void)
 
 void CloseMBPrintFiles (void)
 {
-    int     i, k, n;
-
-    for (n=0; n<chainParams.numRuns; n++)
-        {
-#   if defined (MPI_ENABLED)
-        if (proc_id == 0)
-            {
-#   endif
-        k = n;
-
-        SafeFclose (&fpParm[k]);
-
-        for (i=0; i<numTrees; i++)
-            {
-            if (fpTree[k][i])
-                {
-                fprintf (fpTree[k][i], "end;\n");
-                SafeFclose (&fpTree[k][i]);
-                }
-            fpTree[k][i] = NULL;
-            }
-
-#   if defined (MPI_ENABLED)
-            }
-#   endif
-        }
+    int     i, n;
 
 #   if defined (MPI_ENABLED)
     if (proc_id != 0)
         return;
 #   endif
+
+    for (n=0; n<chainParams.numRuns; n++)
+        {
+        SafeFclose (&fpParm[n]);
+#if defined (PRINT_DUMP)
+        SafeFclose (&fpDump[n]);
+#endif
+
+        for (i=0; i<numTrees; i++)
+            {
+            if (fpTree[n][i])
+                {
+                fprintf (fpTree[n][i], "end;\n");
+                SafeFclose (&fpTree[n][i]);
+                }
+            }
+        }
 
     if (chainParams.mcmcDiagn == YES)
         SafeFclose (&fpMcmc);
@@ -2386,8 +2381,8 @@ int DoMcmc (void)
        
         /* Get starting values from checkpoint file */
         MrBayesPrint ("%s   Getting values from previous run\n", spacer);
-        strcpy(inputFileName,chainParams.chainFileName);
-        strcat(inputFileName,".ckp");
+        strcpy(inputFileName, chainParams.chainFileName);
+        strcat(inputFileName, ".ckp");
         if (OpenTextFileR(inputFileName) == NULL)
             {
             MrBayesPrint ("%s   Could not find the checkpoint file '%s'.\n", spacer, inputFileName);
@@ -10206,8 +10201,6 @@ int PreparePrintFiles (void)
     oldAutoOverwrite = autoOverwrite;
 
     /* Allocate space for file pointers */
-    n = chainParams.numRuns;
-
     if (memAllocs[ALLOC_FILEPOINTERS] == YES)
         {
         MrBayesPrint ("%s   File pointers already allocated in PreparePrintFiles\n", spacer);
@@ -10217,26 +10210,26 @@ int PreparePrintFiles (void)
     fpSS = NULL;
     fpParm = NULL;
     fpTree = NULL;  
-    fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *)); 
+    fpParm = (FILE **) SafeCalloc (chainParams.numRuns, sizeof (FILE *));
     if (fpParm == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpParm in PreparePrintFiles\n", spacer);
         return ERROR;
         }
     memAllocs[ALLOC_FILEPOINTERS] = YES;
-    fpTree = (FILE ***) SafeCalloc (n, sizeof (FILE **));   
+    fpTree = (FILE ***) SafeCalloc (chainParams.numRuns, sizeof (FILE **));
     if (fpTree == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpTree in PreparePrintFiles\n", spacer);
         return ERROR;
         }
-    fpTree[0] = (FILE **) SafeCalloc (numTrees*n, sizeof (FILE *));
+    fpTree[0] = (FILE **) SafeCalloc (numTrees*chainParams.numRuns, sizeof (FILE *));
     if (fpTree[0] == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpTree[0] in PreparePrintFiles\n", spacer);
         return ERROR;
         }
-    for (i=1; i<n; i++)
+    for (i=1; i<chainParams.numRuns; i++)
         fpTree[i] = fpTree[0] + i*numTrees;
 
     /* Get root of local file name */
@@ -10316,7 +10309,6 @@ int PreparePrintFiles (void)
             return (ERROR);
             }
         }
-
     
     /* Prepare the .p and .t files */
     for (n=0; n<chainParams.numRuns; n++)
@@ -10369,6 +10361,21 @@ int PreparePrintFiles (void)
     strcat (bkupName, "~");
     remove (bkupName);
     rename (fileName, bkupName);
+    
+#   if defined (PRINT_DUMP)
+    fpDump = (FILE **) SafeCalloc (chainParams.numRuns, sizeof (FILE *));
+
+    for (n=0; n<chainParams.numRuns; n++)
+        {
+        if (chainParams.numRuns == 1)
+            sprintf (fileName, "%s.dump", localFileName);
+        else
+            sprintf (fileName, "%s.run%d.dump", localFileName, n+1);
+        
+        if ((fpDump[n] = OpenNewMBPrintFile (fileName)) == NULL)
+            return (ERROR);
+        }
+#   endif
 
     return (NO_ERROR);
 }
@@ -15173,26 +15180,27 @@ int RemoveTreeSamples (int from, int to)
 
 int ReopenMBPrintFiles (void)
 {
-    int     i, k, n;
+    int     i, n;
     char    fileName[120], localFileName[100];
     
+    /* Take care of the mpi procs that do not have a file */
+#   if defined (MPI_ENABLED)
+    if (proc_id != 0)
+        return (NO_ERROR);
+#   endif
+
     /* Get root of local file name */
     strcpy (localFileName, chainParams.chainFileName);
 
     /* Reopen the .p and .t files */
     for (n=0; n<chainParams.numRuns; n++)
         {
-        k = n;
-
         if (chainParams.numRuns == 1)
             sprintf (fileName, "%s.p", localFileName);
         else
             sprintf (fileName, "%s.run%d.p", localFileName, n+1);
 
-#       if defined (MPI_ENABLED)
-        if (proc_id == 0)
-#       endif
-        if ((fpParm[k] = OpenTextFileA (fileName)) == NULL)
+        if ((fpParm[n] = OpenTextFileA (fileName)) == NULL)
             return (ERROR);
 
         for (i=0; i<numTrees; i++)
@@ -15206,29 +15214,32 @@ int ReopenMBPrintFiles (void)
             else
                 sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
 
-#           if defined (MPI_ENABLED)
-            if (proc_id == 0)
-#           endif
-            if ((fpTree[k][i] = OpenTextFileA (fileName)) == NULL)
+            if ((fpTree[n][i] = OpenTextFileA (fileName)) == NULL)
                 return (ERROR);
             }
-
         }
-
-    /* Take care of the mpi procs that do not have a mcmc file */
-#   if defined (MPI_ENABLED)
-    if (proc_id != 0)
-        return (NO_ERROR);
-#   endif
 
     /* Reopen the .mcmc file */
     if (chainParams.mcmcDiagn == YES)
         {
-        sprintf (fileName, "%s.mcmc", chainParams.chainFileName);
+        sprintf (fileName, "%s.mcmc", localFileName);
 
         if ((fpMcmc = OpenTextFileA (fileName)) == NULL)
             return (ERROR);
         }
+    
+#   if defined (PRINT_DUMP)
+    for (n=0; n<chainParams.numRuns; n++)
+        {
+        if (chainParams.numRuns == 1)
+            sprintf (fileName, "%s.dump", localFileName);
+        else
+            sprintf (fileName, "%s.run%d.dump", localFileName, n+1);
+
+        if ((fpDump[n] = OpenTextFileA (fileName)) == NULL)
+            return (ERROR);
+        }
+#   endif
 
     return (NO_ERROR);
 }
@@ -15672,7 +15683,7 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 ------------------------------------------------------------------------*/
 int ReusePreviousResults (int *numSamples, int steps)
 {
-    int         i, k, n;
+    int         i, n;
     char        localFileName[100], fileName[220], bkupName[220];
 
     (*numSamples) = 0;
@@ -15683,8 +15694,6 @@ int ReusePreviousResults (int *numSamples, int steps)
 #   endif
 
     /* Allocate space for file pointers */
-    n = chainParams.numRuns;
-
     if (memAllocs[ALLOC_FILEPOINTERS] == YES)
         {
         MrBayesPrint ("%s   File pointers already allocated in ReusePreviousResults\n", spacer);
@@ -15694,26 +15703,26 @@ int ReusePreviousResults (int *numSamples, int steps)
     fpSS = NULL;
     fpParm = NULL;
     fpTree = NULL;  
-    fpParm = (FILE **) SafeCalloc (n, sizeof (FILE *)); 
+    fpParm = (FILE **) SafeCalloc (chainParams.numRuns, sizeof (FILE *));
     if (fpParm == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpParm in ReusePreviousResults\n", spacer);
         return ERROR;
         }
     memAllocs[ALLOC_FILEPOINTERS] = YES;
-    fpTree = (FILE ***) SafeCalloc (n, sizeof (FILE **));   
+    fpTree = (FILE ***) SafeCalloc (chainParams.numRuns, sizeof (FILE **));
     if (fpTree == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpTree in ReusePreviousResults\n", spacer);
         return ERROR;
         }
-    fpTree[0] = (FILE **) SafeCalloc (numTrees*n, sizeof (FILE *));
+    fpTree[0] = (FILE **) SafeCalloc (numTrees*chainParams.numRuns, sizeof (FILE *));
     if (fpTree[0] == NULL)
         {
         MrBayesPrint ("%s   Could not allocate fpTree[0] in ReusePreviousResults\n", spacer);
         return ERROR;
         }
-    for (i=1; i<n; i++)
+    for (i=1; i<chainParams.numRuns; i++)
         fpTree[i] = fpTree[0] + i*numTrees;
 
     /* Get root of local file name */
@@ -15722,8 +15731,6 @@ int ReusePreviousResults (int *numSamples, int steps)
     /* Store old and prepare new .p and .t files */
     for (n=0; n<chainParams.numRuns; n++)
         {
-        k = n;
-
         if (chainParams.numRuns == 1)
             sprintf (fileName, "%s%s.p", workingDir, localFileName);
         else
@@ -15737,9 +15744,9 @@ int ReusePreviousResults (int *numSamples, int steps)
             return ERROR;
             }
 
-        if ((fpParm[k] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
+        if ((fpParm[n] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
             return (ERROR);
-        else if (CopyResults(fpParm[k],bkupName+strlen(workingDir),numPreviousGen) == ERROR)
+        else if (CopyResults(fpParm[n],bkupName+strlen(workingDir),numPreviousGen) == ERROR)
             return (ERROR);
 
         for (i=0; i<numTrees; i++)
@@ -15760,9 +15767,9 @@ int ReusePreviousResults (int *numSamples, int steps)
                 MrBayesPrint ("%s   Could not rename file %s\n", spacer, fileName);
                 return ERROR;
                 }
-            if ((fpTree[k][i] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
+            if ((fpTree[n][i] = OpenNewMBPrintFile (fileName+strlen(workingDir))) == NULL)
                 return (ERROR);
-            else if (CopyTreeResults(fpTree[k][i],bkupName+strlen(workingDir),numPreviousGen,numSamples) == ERROR)
+            else if (CopyTreeResults(fpTree[n][i],bkupName+strlen(workingDir),numPreviousGen,numSamples) == ERROR)
                 return (ERROR);
             }
         }
@@ -15802,6 +15809,21 @@ int ReusePreviousResults (int *numSamples, int steps)
         else if (CopyResults(fpMcmc,bkupName+strlen(workingDir),numPreviousGen)==ERROR)
             return (ERROR);
         }
+    
+#   if defined (PRINT_DUMP)
+    fpDump = (FILE **) SafeCalloc (chainParams.numRuns, sizeof (FILE *));
+    
+    for (n=0; n<chainParams.numRuns; n++)
+        {
+        if (chainParams.numRuns == 1)
+            sprintf (fileName, "%s.dump", localFileName);
+        else
+            sprintf (fileName, "%s.run%d.dump", localFileName, n+1);
+        
+        if ((fpDump[n] = OpenTextFileA (fileName)) == NULL)
+            return (ERROR);
+    }
+#   endif
 
     return (NO_ERROR);
 }
@@ -15848,12 +15870,6 @@ int RunChain (RandLong *seed)
 #   endif
 #   if defined (DEBUG_RUNCHAIN)
     ModelInfo   *m;
-#   endif
-
-#   if defined (PRINT_DUMP)
-    char tempName[150];
-    sprintf (tempName, "%s.dump.txt", chainParams.chainFileName);
-    dumpFile = OpenNewMBPrintFile (tempName);
 #   endif
     
     /* set nErrors to 0 */
@@ -16669,11 +16685,11 @@ int RunChain (RandLong *seed)
                 abortMove = YES;
                 }
 
-            /* calculate likelihood ratio -- abortMove is set to YES if the calculation fails because the likelihood is too small */
+            /* abortMove is set to YES if the calculation fails because the likelihood is too small */
             if (abortMove == NO)
                 lnLike = LogLike(chn);
 
-            /* determine whether we want to accept the move */
+            /* calculate acceptance probability */
             if (abortMove == NO)
                 {
                 lnLikelihoodRatio = lnLike - curLnL[chn];
@@ -16828,7 +16844,9 @@ int RunChain (RandLong *seed)
             {
             PrintToScreen(n, numPreviousGen, time(0), startingT);
 #   if defined (TIMING_ANALIZ)
-            MrBayesPrint ("%s   Time elapsed:%f CondlikeDownTime:%f CondLikeRoot:%f Likelihood:%f ScalersTime:%f ScalersRemove:%f\n", spacer, CPUTime,CPUCondLikeDown/(MrBFlt) CLOCKS_PER_SEC,CPUCondLikeRoot/(MrBFlt) CLOCKS_PER_SEC,CPULilklihood/(MrBFlt) CLOCKS_PER_SEC, CPUScalers/(MrBFlt) CLOCKS_PER_SEC, CPUScalersRemove/(MrBFlt) CLOCKS_PER_SEC);
+            MrBayesPrint ("%s   Time elapsed:%f CondlikeDownTime:%f CondLikeRoot:%f Likelihood:%f ScalersTime:%f ScalersRemove:%f\n", spacer,
+                          CPUTime, CPUCondLikeDown/(MrBFlt)CLOCKS_PER_SEC, CPUCondLikeRoot/(MrBFlt)CLOCKS_PER_SEC, CPULilklihood/(MrBFlt)CLOCKS_PER_SEC,
+                          CPUScalers/(MrBFlt)CLOCKS_PER_SEC, CPUScalersRemove/(MrBFlt)CLOCKS_PER_SEC);
 #   endif
             }
 
@@ -17529,10 +17547,6 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   tuning MCMC proposal or heating parameters.                               \n", spacer);
             }
         }
-
-#   if defined (PRINT_DUMP)
-    SafeFclose (&dumpFile);
-#   endif
     
     return (NO_ERROR);
 }
@@ -17753,14 +17767,14 @@ void SetFileNames (void)
     strcpy (sumpParams.sumpFileName, chainParams.chainFileName);
     strcpy (sumpParams.sumpOutfile, chainParams.chainFileName);
     if (chainParams.numRuns == 1)
-        sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
-    else /* if (chainParams.numRuns > 1) */
         sprintf (comptreeParams.comptFileName1, "%s.t", chainParams.chainFileName);
+    else /* if (chainParams.numRuns > 1) */
+        sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
     strcpy (comptreeParams.comptFileName2, comptreeParams.comptFileName1);
     if (chainParams.numRuns == 1)
-        sprintf (plotParams.plotFileName, "%s.run1.p", chainParams.chainFileName);
-    else /* if (chainParams.numRuns > 1) */
         sprintf (plotParams.plotFileName, "%s.p", chainParams.chainFileName);
+    else /* if (chainParams.numRuns > 1) */
+        sprintf (plotParams.plotFileName, "%s.run1.p", chainParams.chainFileName);
     if (chainParams.numRuns > 1)
         MrBayesPrint ("%s   Setting chain output file names to \"%s.run<i>.<p/t>\"\n", spacer, chainParams.chainFileName);
     else
