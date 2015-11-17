@@ -37,9 +37,9 @@
 /* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
 /* #define RELEASE */
 #ifdef RELEASE
-#define VERSION_NUMBER  "3.2.6"
+#define VERSION_NUMBER  "3.2.7"
 #else
-#define VERSION_NUMBER  "3.2.6-svn"
+#define VERSION_NUMBER  "3.2.7-svn"
 #endif
 
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
