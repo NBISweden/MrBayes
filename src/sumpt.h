@@ -39,6 +39,7 @@ int     ReadParamSamples (char *fileName, SumpFileInfo *fileInfo, ParameterSampl
 
 int     DoCompareTree (void);
 int     DoCompareTreeParm (char *parmName, char *tkn);
+int     DoCompRefTree (void);
 int     DoSumt (void);
 int     DoSumtParm (char *parmName, char *tkn);
 int     DoSumtTree (void);

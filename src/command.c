@@ -47,9 +47,8 @@
 
 const char* const svnRevisionCommandC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
-#define NUMCOMMANDS                     61  /* Note: NUMCOMMANDS gives the total number  */
-                                            /*       of commands in the program          */
-#define NUMPARAMS                       276
+#define NUMCOMMANDS                     62    /* The total number of commands in the program  */
+#define NUMPARAMS                       276   /* The total number of parameters  */
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -358,6 +357,7 @@ CmdType     commands[] =
                                                                                                                                                      270,273,274},        4,             "Unlinks parameters across character partitions",  IN_CMD, SHOW },
             { 59,        "Usertree", YES,        DoUserTree,  1,                                                                                            {203},        8,                                 "Defines a single user tree",  IN_CMD, HIDE },
             { 60,         "Version",  NO,         DoVersion,  0,                                                                                             {-1},       32,                                      "Shows program version",  IN_CMD, SHOW },
+            { 61,      "Compareref",  NO,     DoCompRefTree,  7,                                                                    {127,128,129,130,221,222,223},       36,                     "Compares the tree to the reference trees",  IN_CMD, HIDE },
             /* NOTE: If you add a command here, make certain to change NUMCOMMANDS (above, in this file) appropriately! */
             { 999,             NULL,  NO,              NULL,  0,                                                                                             {-1},       32,                                                           "",  IN_CMD, HIDE }  
             };

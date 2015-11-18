@@ -15891,17 +15891,6 @@ int RunChain (RandLong *seed)
             }
         }
 
-    /* Adjust default comparetree file name; we know now how many trees we have */
-    if (numTrees > 1 && chainParams.numRuns > 1)
-        sprintf (comptreeParams.comptFileName1, "%s.tree1.run1.t", chainParams.chainFileName);
-    else if (numTrees > 1 && chainParams.numRuns == 1)
-        sprintf (comptreeParams.comptFileName1, "%s.tree1.t", chainParams.chainFileName);
-    else if (numTrees == 1 && chainParams.numRuns > 1)
-        sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
-    else if (numTrees == 1 && chainParams.numRuns == 1)
-        sprintf (comptreeParams.comptFileName1, "%s.t", chainParams.chainFileName);
-    strcpy (comptreeParams.comptFileName2, comptreeParams.comptFileName1);
-
     /* allocate some memory for the chains */
     if (memAllocs[ALLOC_CURLNL] == YES)
         {
@@ -17767,18 +17756,19 @@ void SetFileNames (void)
     strcpy (sumpParams.sumpFileName, chainParams.chainFileName);
     strcpy (sumpParams.sumpOutfile, chainParams.chainFileName);
     if (chainParams.numRuns == 1)
+        {
         sprintf (comptreeParams.comptFileName1, "%s.t", chainParams.chainFileName);
-    else /* if (chainParams.numRuns > 1) */
-        sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
-    strcpy (comptreeParams.comptFileName2, comptreeParams.comptFileName1);
-    if (chainParams.numRuns == 1)
+        sprintf (comptreeParams.comptFileName2, "%s.t", chainParams.chainFileName);
         sprintf (plotParams.plotFileName, "%s.p", chainParams.chainFileName);
-    else /* if (chainParams.numRuns > 1) */
-        sprintf (plotParams.plotFileName, "%s.run1.p", chainParams.chainFileName);
-    if (chainParams.numRuns > 1)
-        MrBayesPrint ("%s   Setting chain output file names to \"%s.run<i>.<p/t>\"\n", spacer, chainParams.chainFileName);
-    else
         MrBayesPrint ("%s   Setting chain output file names to \"%s.<p/t>\"\n", spacer, chainParams.chainFileName);
+        }
+    else /* if (chainParams.numRuns > 1) */
+        {
+        sprintf (comptreeParams.comptFileName1, "%s.run1.t", chainParams.chainFileName);
+        sprintf (comptreeParams.comptFileName2, "%s.run2.t", chainParams.chainFileName);
+        sprintf (plotParams.plotFileName, "%s.run1.p", chainParams.chainFileName);
+        MrBayesPrint ("%s   Setting chain output file names to \"%s.run<i>.<p/t>\"\n", spacer, chainParams.chainFileName);
+        }
 }
 
 

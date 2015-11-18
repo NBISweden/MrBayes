@@ -3763,7 +3763,7 @@ int DoCompareTree (void)
         MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
             spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
 
-    MrBayesPrint ("%s   Writing statistics to file %s\n", spacer, comptreeParams.comptOutfile);
+    MrBayesPrint ("%s   Writing statistics to file %s.<dists|pairs>\n", spacer, comptreeParams.comptOutfile);
 
     /* Set up cheap status bar. */
     MrBayesPrint ("\n%s   Tree reading status:\n\n", spacer);
@@ -4557,6 +4557,15 @@ int DoCompareTreeParm (char *parmName, char *tkn)
         }
 
     return (NO_ERROR);
+}
+
+
+int DoCompRefTree (void)
+{
+
+    /* use parameters in CompareTree */
+
+    return NO_ERROR;
 }
 
 
