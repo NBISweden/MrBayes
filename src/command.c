@@ -12947,9 +12947,9 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   tree distance values.                                                         \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Note that the \"Sumt\" command provides a different set of convergence diag-  \n");
-        MrBayesPrint ("   nostics tools that you may also want to explore. Unlike \"Comparetree\", \"Sumt\"\n");
-        MrBayesPrint ("   can compare more than two tree samples and will calculate consensus trees and \n");
-        MrBayesPrint ("   split frequencies from the pooled samples.                                    \n");
+        MrBayesPrint ("   nostics tools that you may also want to explore. Unlike \"Comparetree\",      \n");
+        MrBayesPrint ("   \"Sumt\" can compare more than two tree samples and will calculate consensus  \n");
+        MrBayesPrint ("   trees and split frequencies from the pooled samples.                          \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Options:                                                                      \n");
         MrBayesPrint ("                                                                                 \n");

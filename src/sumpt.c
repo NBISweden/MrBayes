@@ -93,6 +93,11 @@ extern int DoUserTree (void);
 extern int DoUserTreeParm (char *parmName, char *tkn);
 extern int SafeFclose(FILE **);
 
+extern int  SetUpPartitionCounters (void);
+extern int  AddTreeToPartitionCounters (Tree *tree, int treeId, int runId);
+extern void CalcTopoConvDiagn2 (int *nTrees);
+extern void FreeChainMemory (void);
+
 /* local prototypes */
 int      CompareModelProbs (const void *x, const void *y);
 int      PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples);
@@ -3188,7 +3193,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 }
 
 
-/* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
+/* ConTree: Construct consensus tree */
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
     int         i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
@@ -3840,7 +3845,7 @@ int DoCompareTree (void)
 
     /* Read file 2 for real */
     if ((fp = OpenTextFileR(comptreeParams.comptFileName2)) == NULL)
-        return ERROR;
+        goto errorExit;
         
     /* ...and fast forward to beginning of last tree block. */
     for (i=0; i<lastTreeBlockBegin[1] + 1; i++)
@@ -3894,7 +3899,6 @@ int DoCompareTree (void)
             MrBayesPrint ("*");
     MrBayesPrint ("\n\n");
     
-    /* tell user how many trees were successfully read */
     /* tell user how many trees were successfully read */
     MrBayesPrint ("%s   Read %d trees from last tree block of file \"%s\" (sampling %d of them)\n", spacer,
         sumtParams.numFileTrees[0],
@@ -4562,10 +4566,224 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 
 int DoCompRefTree (void)
 {
+    /* Compare a tree file with the reference tree files to generate the SDSFs.
+       Use parameters in CompareTree and MCMCP (lazy option) */
+    
+    char         outName[130], inName[130], inRefName[130], treeName[100], *lineBuf=NULL, *s;
+    FILE         *fpTre=NULL, *fpOut=NULL;
+    int          i, n, longestL=0, burnin, gen, nRefRun, nTre[100]={0};
+    SumtFileInfo tFileInfo;
+    Tree         *t;
 
-    /* use parameters in CompareTree */
+#   if defined (MPI_ENABLED)
+    if (proc_id != 0)
+        return NO_ERROR;
+#   endif
 
-    return NO_ERROR;
+    /* Check that a data set has been read in. We check taxon names against those read in. */
+    if (isTaxsetDef == NO)
+        {
+        MrBayesPrint ("%s   A matrix or set of taxon labels must be specified before compareref can be used\n", spacer);
+        return (ERROR);
+        }
+
+    /* this is a hack to account for the additional comparing tree sample 
+       chainParams.numRuns is used in AddTreeToPartitionCounters to alloc mem correctly */
+    nRefRun = chainParams.numRuns;
+    chainParams.numRuns += 1;
+
+    /* initialize */
+    if ((t = AllocateTree (numLocalTaxa)) == NULL)
+        {
+        MrBayesPrint ("%s   Problem allocating diagn tree\n", spacer);
+        goto errorExit;
+        }
+    if (SetUpPartitionCounters () == ERROR)
+        goto errorExit;
+    if ((chainParams.stat = (STATS *) SafeCalloc (numTopologies, sizeof (STATS))) == NULL)
+        goto errorExit;
+    else
+        memAllocs[ALLOC_STATS] = YES;
+
+    /* deal with the reference tree files */
+    // for (k=0; k<numTopologies; k++)
+    for (n=0; n<nRefRun; n++)
+        {
+        if (nRefRun == 1)
+            sprintf (inRefName, "%s.t", comptreeParams.comptFileName2);
+        else
+            sprintf (inRefName, "%s.run%d.t", comptreeParams.comptFileName2, n+1);
+        
+        /* Examine each ref tree file, save info to tFileInfo */
+        if (ExamineSumtFile(inRefName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+            goto errorExit;
+        if (longestL < tFileInfo.longestLineLength)
+            {
+            longestL = tFileInfo.longestLineLength;
+            lineBuf = (char *) SafeRealloc (lineBuf, (size_t)longestL * sizeof(char));
+            if (!lineBuf)
+                {
+                MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
+                goto errorExit;
+                }
+            }
+        
+        /* calculate burnin */
+        if (chainParams.relativeBurnin == YES)
+            burnin = (int)(chainParams.burninFraction * tFileInfo.numTreesInLastBlock);
+        else
+            burnin = chainParams.chainBurnIn;
+        if (burnin >= tFileInfo.numTreesInLastBlock)
+            {
+            MrBayesPrint ("%s   Burnin should be smaller than the total number of trees\n", spacer);
+            goto errorExit;
+            }
+       
+        /* open the ref tree file */
+        if ((fpTre = OpenTextFileR (inRefName)) == NULL)
+            goto errorExit;
+        /* ...and fast forward to beginning in last tree block */
+        for (i=0; i <= tFileInfo.lastTreeBlockBegin; i++)
+            {
+            if (fgets(lineBuf, longestL-2, fpTre) == NULL)
+                goto errorExit;
+            }
+        
+        /* process each ref tree */
+        for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
+            {
+            do {
+                if (fgets (lineBuf, longestL-2, fpTre) == NULL)
+                    goto errorExit;
+                s = strtok (lineBuf, " ");
+                }
+            while (strcmp (s, "tree") != 0);
+            
+            /* add reference trees to partition counters, discarding burnin */
+            if (i > burnin)
+                {
+                s = strtok (NULL, ";");
+                while (*s != '(')
+                    s++;
+                StripComments(s);
+
+                if (ResetTopology (t, s) == ERROR)
+                    goto errorExit;
+                if (AddTreeToPartitionCounters (t, 0, n) == ERROR)
+                    goto errorExit;
+                nTre[n]++;
+                }
+            }
+
+        /* close the tree file */
+        SafeFclose (&fpTre);
+        }
+    /* end reference tree files */
+    
+    /* open output file */
+    strcpy (outName, comptreeParams.comptOutfile);
+    strcat (outName, ".sdsf");
+    if ((fpOut = OpenNewMBPrintFile (outName)) == NULL)
+        goto errorExit;
+    /* print stamp and header */
+    if ((int)strlen(stamp) > 1)
+        MrBayesPrintf (fpOut, "[ID: %s]\n", stamp);
+    if (chainParams.diagnStat == AVGSTDDEV)
+        MrBayesPrintf (fpOut, "Gen\tASDSF\n");
+    else  // MAXSTDDEV
+        MrBayesPrintf (fpOut, "Gen\tMSDSF\n");
+
+    /* Examine the tree file to be compared, save info to tFileInfo */
+    strcpy(inName, comptreeParams.comptFileName1);
+    if (ExamineSumtFile(inName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+        goto errorExit;
+    if (longestL < tFileInfo.longestLineLength)
+        {
+        longestL = tFileInfo.longestLineLength;
+        lineBuf = (char *) SafeRealloc (lineBuf, (size_t)longestL * sizeof(char));
+        if (!lineBuf)
+            {
+            MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
+            goto errorExit;
+            }
+        }
+
+    /* open the tree file to be compared */
+    if ((fpTre = OpenTextFileR (inName)) == NULL)
+        goto errorExit;
+    /* ...and fast forward to beginning in last tree block */
+    for (i=0; i <= tFileInfo.lastTreeBlockBegin; i++)
+        {
+        if (fgets(lineBuf, longestL-2, fpTre) == NULL)
+            goto errorExit;
+        }
+
+    /* process each tree to be compared and print SDSF to file */
+    for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
+        {
+        do {
+            if (fgets (lineBuf, longestL-2, fpTre) == NULL)
+                goto errorExit;
+            s = strtok (lineBuf, " ");
+            }
+        while (strcmp (s, "tree") != 0);
+        
+        s = strtok (NULL, ";");
+        gen = atoi(s+4);  // 4 is offset to get rid of "rep." in tree name
+        while (*s != '(')
+            s++;
+        StripComments(s);
+
+        /* add the tree to partition counters */
+        if (ResetTopology (t, s) == ERROR)
+            goto errorExit;
+        if (AddTreeToPartitionCounters (t, 0, nRefRun) == ERROR)
+            goto errorExit;
+        nTre[nRefRun]++;
+            
+        /* calculate and write stdev of split freq */
+        CalcTopoConvDiagn2 (nTre);
+        if (chainParams.stat[0].numPartitions == 0)
+            {
+            MrBayesPrintf (fpOut, "%d\tNA\n", gen);
+            }
+        else if (chainParams.diagnStat == AVGSTDDEV)
+            {
+            MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].avgStdDev);
+            }
+        else  // MAXSTDDEV
+            {
+            MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].max);
+            }
+        }
+    
+    /* change back to the actual numRuns, end of hack */
+    chainParams.numRuns -= 1;
+    
+    /* close tree file */
+    SafeFclose (&fpTre);
+    /* close output file */
+    SafeFclose (&fpOut);
+    /* free memory */
+    free(lineBuf);
+    FreeTree (t);
+    FreeChainMemory();
+    
+    return (NO_ERROR);
+    
+    /* error exit */
+errorExit:
+    MrBayesPrint ("%s   Error in DoCompRefTree\n", spacer);
+    
+    chainParams.numRuns -= 1;
+    SafeFclose (&fpTre);
+    SafeFclose (&fpOut);
+    
+    FreeTree (t);
+    FreeChainMemory();
+    free(lineBuf);
+    
+    return (ERROR);
 }
 
 
@@ -5505,25 +5723,25 @@ int DoSumt (void)
             MrBayesPrint ("\n\n");
             }
             
-            /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
-            avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
-            avgPSRF   = sumPSRF / numPSRFSamples;
-
-            if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
-                {
-                MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-                MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
-                MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
-                }
-            if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
-                {
-                MrBayesPrint ("%s       Average PSRF for parameter values (excluding NA and >10.0) = %1.3lf\n", spacer, avgPSRF);
-                if (maxPSRF == 10)
-                    MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
-                else
-                    MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
-                }
-            MrBayesPrint ("\n");
+        /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
+        avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
+        avgPSRF   = sumPSRF / numPSRFSamples;
+        
+        if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
+            {
+            MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
+            MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+            MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
+            }
+        if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
+            {
+            MrBayesPrint ("%s       Average PSRF for parameter values (excluding NA and >10.0) = %1.3lf\n", spacer, avgPSRF);
+            if (maxPSRF == 10)
+                MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
+            else
+                MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
+            }
+        MrBayesPrint ("\n");
 
         SortPartCtr (treeParts, 0, numUniqueSplitsFound-1); /* We sort again but this time we sort all partitions instead of just first numTreePartsToPrintNow */
         /* make the majority rule consensus tree */

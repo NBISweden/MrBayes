@@ -507,12 +507,12 @@ int AddTreeSamples (int from, int to, int saveToList)
                 {
                 do {
                     if (fgets (lineBuf, longestLine, fp) == NULL) 
-                            {
-                            SafeFclose (&fp);
-                            free (lineBuf);
-                            free (tempStr);
+                        {
+                        SafeFclose (&fp);
+                        free (lineBuf);
+                        free (tempStr);
                         return ERROR;
-                                                }
+                        }
                     word = strtok (lineBuf, " ");
                     } while (strcmp (word, "tree") != 0);
                 if (k>=from)
@@ -1708,7 +1708,7 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
 
     n = chainParams.numRuns;
     min = (int)(chainParams.minPartFreq * stat->numSamples);
-    if (((MrBFlt)min) != chainParams.minPartFreq * stat->numSamples)
+    if ((MrBFlt)min != chainParams.minPartFreq * stat->numSamples)
         min++;
 
     /* recursively compute partition frequencies for all subpartitions */
@@ -1811,6 +1811,56 @@ void CalcTopoConvDiagn (int numSamples)
             }
     
         CalcPartFreqStats (partFreqTreeRoot[n], stat);
+        
+        stat->avgStdDev = stat->sum / stat->numPartitions;
+        }
+}
+
+
+/* used in DoCompRefTree */
+void PartFreq (PFNODE *p, STATS *stat, int *ntrees)
+{
+    int     i, n = chainParams.numRuns;
+    MrBFlt  f, sum, sumsq, stdev;
+    
+    /* recursively compute partition frequencies for all subpartitions */
+    if (p->left != NULL)
+        PartFreq (p->left, stat, ntrees);
+    if (p->right != NULL)
+        PartFreq (p->right, stat, ntrees);
+    
+    sum = sumsq = 0.0;
+    for (i=0; i<chainParams.numRuns; i++)
+        {
+        f = (MrBFlt)(p->count[i]) / (MrBFlt)ntrees[i];
+        sum += f;
+        sumsq += f * f;
+        }
+    
+    f = (sumsq - sum * sum / n) / (n - 1);
+    if (f < 0.0)
+        stdev = 0.0;
+    else
+        stdev = sqrt (f);
+    
+    stat->sum += stdev;
+    if (stat->max < stdev)
+        stat->max = stdev;
+    
+    stat->numPartitions++;
+}
+void CalcTopoConvDiagn2 (int *nTrees)
+{
+    int     n;
+    STATS   *stat;
+    
+    for (n=0; n<numTopologies; n++)
+        {
+        stat = &chainParams.stat[n];
+        stat->numPartitions = 0.0;
+        stat->sum = stat->max = 0.0;
+    
+        PartFreq (partFreqTreeRoot[n], stat, nTrees);
         
         stat->avgStdDev = stat->sum / stat->numPartitions;
         }
@@ -16102,16 +16152,15 @@ int RunChain (RandLong *seed)
             for (i=0; i<numTopologies; i++)
                 chainParams.stat[i].pair = NULL;
             }
-        if (chainParams.relativeBurnin == YES)
+            
+        if ((chainParams.dtree = AllocateTree (numLocalTaxa)) == NULL)
             {
-            if ((chainParams.dtree = AllocateTree (numLocalTaxa)) == NULL)
-                {
-                MrBayesPrint ("%s   Could not allocate chainParams.dtree in RunChain\n", spacer);
-                return ERROR;
-                }
-            else
-                memAllocs[ALLOC_DIAGNTREE] = YES;
+            MrBayesPrint ("%s   Could not allocate chainParams.dtree in RunChain\n", spacer);
+            return ERROR;
             }
+        else
+            memAllocs[ALLOC_DIAGNTREE] = YES;
+        
         if (chainParams.allComps == YES)
             {
             for (i=0; i<numTopologies; i++)
@@ -16871,12 +16920,13 @@ int RunChain (RandLong *seed)
             }
 
         /* print mcmc diagnostics. Blocking for MPI */
-        if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0 || n == chainParams.numGen || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
+        if (chainParams.mcmcDiagn == YES && (n % chainParams.diagnFreq == 0
+                                             || n == chainParams.numGen
+                                             || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
             {
-            if (chainParams.numRuns > 1
-                && ((n > 0 && chainParams.relativeBurnin == YES &&
-                     (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
-                    || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
+            if (chainParams.numRuns > 1 &&
+                ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
+                 || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
                 {
                 /* we need some space for coming output */
                 MrBayesPrint ("\n");
@@ -16992,7 +17042,7 @@ int RunChain (RandLong *seed)
                             }
                         if (chainParams.isSS == YES)
                             splitfreqSS[i*chainParams.numStepsSS+chainParams.numStepsSS-stepIndexSS-1] = f;
-                        if (chainParams.stat[i].numPartitions == 0 && f > chainParams.stopVal)
+                        if (chainParams.stat[i].numPartitions == 0 || f > chainParams.stopVal)
                             stopChain = NO;
                         }
                     if (n < chainParams.numGen - chainParams.printFreq && (chainParams.stopRule == NO || stopChain == NO))
