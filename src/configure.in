@@ -71,7 +71,7 @@ if test "x$enable_sse" == "xyes"; then
 fi
 
 AC_ARG_ENABLE(avx,
-[--enable-avx=[no/yes] enable avx instructions [default="yes"]]
+[--enable-avx=[no/yes] enable avx instructions [default="no"]]
 ,,enable_avx="yes")
 if test "x$enable_avx" == "xyes"; then
 AC_MSG_CHECKING(for AVX support)
@@ -98,7 +98,7 @@ AC_DEFINE(AVX_ENABLED)
 fi
 
 AC_ARG_ENABLE(fma,
-[--enable-fma=[no/yes] enable fma instructions [default="yes"]]
+[--enable-fma=[no/yes] enable fma instructions [default="no"]]
 ,,enable_fma="yes")
 if test "x$enable_fma" == "xyes"; then
 AC_MSG_CHECKING(for FMA support)
