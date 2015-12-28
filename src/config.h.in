@@ -25,6 +25,12 @@
 /* Define to 1 if you want to compile SSE-enabled version */
 #undef SSE_ENABLED
 
+/* Define to 1 if you want to compile AVX-enabled version */
+#undef AVX_ENABLED
+
+/* Define to 1 if you want to compile FMA-enabled version */
+#undef FMA_ENABLED
+
 /* Define one of the UNIX, MAC or WINDOWS */
 #undef UNIX_VERSION
 #undef MAC_VERSION

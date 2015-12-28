@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -934,14 +935,13 @@ int DoAbout (void)
     MrBayesPrint ("   program. Version 3 of MrBayes was a fully joint effort, started in the summer \n");
     MrBayesPrint ("   of 2002 when JPH visited Sweden on a grant from the Wenner-Gren Foundations.  \n");
     MrBayesPrint ("   Several others have contributed to the MrBayes code since then, most notably  \n");
-    MrBayesPrint ("   Paul van der Mark and Maxim Teslenko, both postdocs/programmers in Fredrik's  \n");
-    MrBayesPrint ("   lab. A large number of users and students, too many to list here, have also   \n");
-    MrBayesPrint ("   contributed importantly to the project (type 'Acknowledgments' for a list of  \n");
-    MrBayesPrint ("   some of them).                                                                \n");
+    MrBayesPrint ("   Paul van der Mark, Maxim Teslenko and Chi Zhang, all postdocs/programmers in  \n");
+    MrBayesPrint ("   Fredrik's lab. A large number of users and students, too many to list here,   \n");
+    MrBayesPrint ("   have also contributed importantly to the project (type 'Acknowledgments' for  \n");
+    MrBayesPrint ("   a list of some of them).                                                      \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Since 2003, MrBayes has been distributed from SourceForge. Bugs can be repor- \n");
-    MrBayesPrint ("   ted to the MrBayes site on SourceForge or by contacting Maxim Teslenko        \n");
-    MrBayesPrint ("   (maxim.teslenko@nrm.se) directly.                                             \n");
+    MrBayesPrint ("   ted to the MrBayes site on SourceForge.                                       \n");
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
@@ -965,8 +965,8 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   instrumental in getting the Windows installer set up. Liu Liang and Dennis    \n");
     MrBayesPrint ("   Pearl helped integrate MrBayes with BEST.                                     \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   Bug fixes and user support was provided by Paul van der Mark (2005-2007) and  \n");
-    MrBayesPrint ("   from 2010 by Maxim Teslenko (maxim.teslenko@nrm.se).                          \n");
+    MrBayesPrint ("   Bug fixes and user support was provided by Paul van der Mark (2005-2007),     \n");
+    MrBayesPrint ("   Maxim Teslenko (2010-2012) and Chi Zhang (2012-2015).                         \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Our wives -- Edna Huelsenbeck and Eva Ronquist -- showed extraordinary        \n");
     MrBayesPrint ("   patience with us while we spent many late nights programming.                 \n");
@@ -11944,8 +11944,6 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                   user starting tree. This allows you to have something         \n");
         MrBayesPrint ("                   between completely random and user-defined trees start        \n");
         MrBayesPrint ("                   the chain.                                                    \n");
-/*      MrBayesPrint ("   Savebrlens   -- This specifies whether branch length information is           \n");
-        MrBayesPrint ("                   saved on the trees.                                           \n"); */
         MrBayesPrint ("   Data         -- When Data is set to NO, the chain is run without data. This   \n");
         MrBayesPrint ("                   should be used only for examining induced priors. DO NOT SET  \n");
         MrBayesPrint ("                   'DATA' TO 'NO' UNLESS YOU KNOW WHAT YOU ARE DOING!            \n");
@@ -13115,6 +13113,12 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Hpd           -- Determines whether credibility intervals will be given as the\n");
         MrBayesPrint ("                    region of Highest Posterior Density ('Yes') or as the inter- \n");
         MrBayesPrint ("                    val containing the median 95 %% of sampled values ('No').    \n");
+        MrBayesPrint ("   Savebrparams  -- Set this option to 'yes' to save all sampled branch and node \n");
+        MrBayesPrint ("                    parameter values to a separate file with the filename ending \n");
+        MrBayesPrint ("                    in '.brparams'. All partitions with a posterior probability  \n");
+        MrBayesPrint ("                    larger than Minbrparamfreq will be included.                 \n");
+        MrBayesPrint ("   Minbrparamfreq -- The minimum probability of partitions for which to save     \n");
+        MrBayesPrint ("                     parameter values to file if 'Savebrparams' is set to 'yes'. \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Current settings:                                                             \n");
         MrBayesPrint ("                                                                                 \n");
@@ -13140,6 +13144,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Calctreeprobs   Yes/No                   %s                                   \n", sumtParams.calcTreeprobs == YES ? "Yes" : "No");
         MrBayesPrint ("   Showtreeprobs   Yes/No                   %s                                   \n", sumtParams.showSumtTrees == YES ? "Yes" : "No");
         MrBayesPrint ("   Hpd             Yes/No                   %s                                   \n", sumtParams.HPD == YES ? "Yes" : "No");
+        MrBayesPrint ("   Savebrparams    Yes/No                   %s                                   \n", sumtParams.saveBrParams == YES ? "Yes" : "No");
+        MrBayesPrint ("   Minbrparamfreq  <number>                 %1.2lf                               \n", sumtParams.minBrParamFreq);
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
@@ -14419,8 +14425,8 @@ void SetUpParms (void)
     PARAM (143, "Swapseed",       DoMcmcParm,        "\0");
     PARAM (144, "Runidseed",      DoMcmcParm,        "\0");
     PARAM (145, "Quitonerror",    DoSetParm,         "Yes|No|\0");
-    PARAM (146, "Printbrlens",    DoSumtParm,        "Yes|No|\0");
-    PARAM (147, "Brlensgeq",      DoSumtParm,        "\0");
+    PARAM (146, "Savebrparams",   DoSumtParm,        "Yes|No|\0");
+    PARAM (147, "Minbrparamfreq", DoSumtParm,        "\0");
     PARAM (148, "Minpartfreq",    DoMcmcParm,        "\0");
     PARAM (149, "Allchains",      DoMcmcParm,        "Yes|No|\0");
     PARAM (150, "Mcmcdiagn",      DoMcmcParm,        "Yes|No|\0");
@@ -14563,24 +14569,24 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
         printf ("   ");
         if (p->left == NULL && p->right == NULL && p->anc != NULL)
             {
-            printf ("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) scalerNode=%d isDated=%d ",
-            indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->scalerNode, p->isDated);
+            printf ("%*cN %d (l=%d r=%d a=%d) %1.15lf (%s) isDated=%d ",
+            indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->label, p->isDated);
             }
         else if (p->left != NULL && p->right == NULL && p->anc == NULL)
             {
             if (isThisTreeRooted == NO)
                 {
                 if (p->label[0] == '\0' || p->label[0] == '\n' || p->label[0] == ' ')
-                    printf ("%*cN %d (l=%d r=%d a=%d) (---) scalerNode=%d ",
-                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
+                    printf ("%*cN %d (l=%d r=%d a=%d) (---) ",
+                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
                 else
-                    printf ("%*cN %d (l=%d r=%d a=%d) (%s) scalerNode=%d ",
-                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label, p->scalerNode);
+                    printf ("%*cN %d (l=%d r=%d a=%d) (%s) ",
+                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->label);
                 }
             else
                 {
-                printf ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ",
-                indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
+                printf ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ",
+                indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
                 }
             }
         else
@@ -14588,11 +14594,11 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
             if (p->anc != NULL)
                 {
                 if (p->anc->anc == NULL && isThisTreeRooted == YES)
-                    printf ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX scalerNode=%d ",
-                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->scalerNode);
+                    printf ("%*cN %d (l=%d r=%d a=%d) X.XXXXXX ",
+                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc));
                 else    
-                    printf ("%*cN %d (l=%d r=%d a=%d) %1.15lf scalerNode=%d ",
-                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length, p->scalerNode);
+                    printf ("%*cN %d (l=%d r=%d a=%d) %1.15lf ",
+                    indent, ' ', Dex(p), Dex(p->left), Dex(p->right), Dex(p->anc), p->length);
                 }
             }
         if (isThisTreeRooted == YES)

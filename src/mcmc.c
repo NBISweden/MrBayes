@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -57,8 +58,6 @@ const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is exp
 typedef void (*sighandler_t) (int);
 #endif
 
-#define RESCALE_FREQ                1           /* node cond like rescaling frequency */
-#define SCALER_REFRESH_FREQ         1           /* generations between refreshing scaler nodes */
 #define GIBBS_SAMPLE_FREQ           100         /* generations between gibbs sampling of gamma cats */
 #define MAX_SMALL_JUMP              10          /* threshold for precalculating trans probs of adgamma model */
 #define BIG_JUMP                    100         /* threshold for using stationary approximation */
@@ -70,7 +69,7 @@ typedef void (*sighandler_t) (int);
 #define MAXTUNINGPARAM              10000       /* limit to ensure convergence for autotuning */
 #define SAMPLE_ALL_SS                           /* if defined makes ss sample every generation instead of every sample frequency */
 #define BEAGLE_RESCALE_FREQ         160
-#define BEAGLE_RESCALE_FREQ_DOUBLE  10          /* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presition is used */
+#define BEAGLE_RESCALE_FREQ_DOUBLE  10          /* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presicion is used */
 #define TARGETLENDELTA              100
 
 /* debugging compiler statements */
@@ -221,7 +220,6 @@ int       RemoveTreeSamples (int from, int to);
 int       ReopenMBPrintFiles (void);
 void      ResetChainIds (void);
 void      ResetFlips(int chain);
-int       ResetScalers (void);
 void      ResetSiteScalers (ModelInfo *m, int chain);
 int       ReusePreviousResults(int *numSamples, int);
 int       RunChain (RandLong *seed);
@@ -2237,7 +2235,7 @@ void DebugTreeScalers(int chain, int d)
             {
             p = tree->intDownPass[i];
             
-            if (p->scalerNode == YES)
+            if (m->unscaledNodes[chain][p->index] == 0)
                 {
                 printf ("Node:%d Sum scalers:%f\n",p->index,DebugNodeScalers(p, d, chain));
                 }
@@ -4392,9 +4390,9 @@ void FlipNodeScalerSpace (ModelInfo* m, int chain, int nodeIndex)
     m->nodeScalerIndex[chain][nodeIndex] = m->nodeScalerScratchIndex[nodeIndex];
     m->nodeScalerScratchIndex[nodeIndex] = temp;
 
-    temp                                 = m->scalersSet[chain][nodeIndex];
-    m->scalersSet[chain][nodeIndex]      = m->scalersSetScratch[nodeIndex];
-    m->scalersSetScratch[nodeIndex]      = temp;
+    temp                                 = m->unscaledNodes[chain][nodeIndex];
+    m->unscaledNodes[chain][nodeIndex]   = m->unscaledNodesScratch[nodeIndex];
+    m->unscaledNodesScratch[nodeIndex]   = temp;
 }
 
 
@@ -4490,7 +4488,7 @@ void FreeChainMemory (void)
             for (j=0; j<m->numCondLikes; j++)
                 {
 #   if defined (SSE_ENABLED)
-                if (m->useSSE == YES)
+                if (m->useVec != NO)
                     AlignedSafeFree ((void **)(&m->condLikes[j]));
                 else
                     free (m->condLikes[j]);
@@ -4506,7 +4504,7 @@ void FreeChainMemory (void)
             {
             for (j=0; j<m->numScalers; j++)
 #   if defined (SSE_ENABLED)
-            if (m->useSSE == YES)
+            if (m->useVec != VEC_NONE)
                 AlignedSafeFree ((void **)(&m->scalers[j]));
             else
                 free (m->scalers[j]);
@@ -4524,17 +4522,24 @@ void FreeChainMemory (void)
             m->clP = NULL;
             }
 #   if defined (SSE_ENABLED)
-        if (m->useSSE == YES)
+        if (m->useVec != VEC_NONE)
             {
             if (m->clP_SSE)
                 {
                 free (m->clP_SSE);
                 m->clP_SSE = NULL;
                 }
-            if (m->lnL_SSE)
-                AlignedSafeFree ((void **)(&m->lnL_SSE));
-            if (m->lnLI_SSE)
-                AlignedSafeFree ((void **)(&m->lnLI_SSE));
+#if defined (AVX_ENABLED)
+            if (m->clP_AVX)
+                {
+                free (m->clP_AVX);
+                m->clP_AVX = NULL;
+                }
+#endif
+            if (m->lnL_Vec)
+                AlignedSafeFree ((void **)(&m->lnL_Vec));
+            if (m->lnLI_Vec)
+                AlignedSafeFree ((void **)(&m->lnLI_Vec));
             }
 #   endif
 
@@ -4592,17 +4597,17 @@ void FreeChainMemory (void)
             free (m->nodeScalerScratchIndex);
             m->nodeScalerScratchIndex = NULL;
             }
-        if (m->scalersSet)
+        if (m->unscaledNodes)
             {
             for (j=0; j<numLocalChains; j++)
-                free (m->scalersSet[j]);
-            free (m->scalersSet);
-            m->scalersSet = NULL;
+                free (m->unscaledNodes[j]);
+            free (m->unscaledNodes);
+            m->unscaledNodes = NULL;
             }
-        if (m->scalersSetScratch)
+        if (m->unscaledNodesScratch)
             {
-            free (m->scalersSetScratch);
-            m->scalersSetScratch = NULL;
+            free (m->unscaledNodesScratch);
+            m->unscaledNodesScratch = NULL;
             }
         if (m->siteScalerIndex)
             {
@@ -4654,7 +4659,7 @@ void FreeChainMemory (void)
 
     if (memAllocs[ALLOC_CURLNL] == YES) /*alloc in RunChain()*/
         {
-        free (maxLnL0); 
+        free (maxLnL0);
         free (curLnL);
         memAllocs[ALLOC_CURLNL] = NO;
         }
@@ -5335,7 +5340,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
                 m->CondLikeRoot (p, division, chain);
             else
                 m->CondLikeDown (p, division, chain);
-            if (p->scalerNode == YES)
+            if (m->unscaledNodes[chain][p->index] == 0)
                 m->CondLikeScaler (p, division, chain);
             }
         /* find root conditional likes */
@@ -5415,7 +5420,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
             m->CondLikeRoot (p, division, chain);
         else
             m->CondLikeDown (p, division, chain);
-        if (p->scalerNode == YES)
+        if (m->unscaledNodes[chain][p->index] == 0)
             m->CondLikeScaler (p, division, chain);
         }
     lnL = 0.0;
@@ -5870,18 +5875,29 @@ int InitChainCondLikes (void)
                 m->useBeagle = NO;
             }
 #   endif
-        //m->useSSE = NO;
 #   if defined (SSE_ENABLED)
         /*if (useBeagle == NO && m->dataType != STANDARD)
             m->useSSE = YES;*/
         if (useBeagle == YES)
-            m->useSSE = NO;
+            {
+            m->useVec = VEC_NONE;
+            m->numFloatsPerVec = 0;
+            }
 
 #   endif
-        if (useBeagle == NO && m->useSSE == NO)
+        if (m->useBeagle == NO && m->useVec == VEC_NONE)
             MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
-        else if (useBeagle == NO && m->useSSE == YES)
+        else if (m->useBeagle == NO && m->useVec == VEC_SSE)
             MrBayesPrint ("%s   Using standard SSE likelihood calculator for division %d (single-precision)\n", spacer, d+1);
+        else if (m->useBeagle == NO && m->useVec == VEC_AVX)
+            MrBayesPrint ("%s   Using standard AVX likelihood calculator for division %d (single-precision)\n", spacer, d+1);
+        else if (m->useBeagle == NO && m->useVec == VEC_FMA)
+            MrBayesPrint ("%s   Using standard FMA likelihood calculator for division %d (single-precision)\n", spacer, d+1);
+        else if (m->useBeagle == NO)
+            {
+            MrBayesPrint ("%s   WARNING! Using unknown SIMD likelihood calculator for division %d (single-precision)\n", spacer, d+1);
+            return (ERROR);
+            }
 
         if (useBeagle == NO)
             {
@@ -5892,19 +5908,23 @@ int InitChainCondLikes (void)
             for (i=0; i<m->numCondLikes; i++)
                 {
 #   if defined (SSE_ENABLED)
-                if (m->useSSE == YES)
+                if (m->useVec != VEC_NONE)
                     {
                     /* calculate number SSE chars */
-                    m->numSSEChars = ((m->numChars - 1) / FLOATS_PER_VEC) + 1;
+                    m->numVecChars = ((m->numChars - 1) / m->numFloatsPerVec) + 1;
 
                     /* allocate space with padding (m->condLikeLength is without padding) */
                     if (m->gibbsGamma == YES)
                         numReps = 1;
                     else
                         numReps = m->numGammaCats * m->numOmegaCats;
-                    k = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates * numReps;
+                    k = m->numVecChars * m->numFloatsPerVec * m->numModelStates * numReps;
                     
-                    m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 16);
+                    if (m->useVec == VEC_AVX)
+                        m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 32);
+                    else
+                        m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 16);
+
                     if (!m->condLikes[i])
                         return (ERROR);
 
@@ -5932,13 +5952,16 @@ int InitChainCondLikes (void)
             for (i=0; i<m->numScalers; i++)
                 {
 #   if defined (SSE_ENABLED)
-                if (m->useSSE == YES)
+                if (m->useVec != VEC_NONE)
                     {
                     /* allocate space with padding */
-                    m->scalers[i] = (CLFlt*) AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt), 16);
+                    if (m->useVec == VEC_SSE)
+                        m->scalers[i] = (CLFlt*) AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt), 16);
+                    else if (m->useVec == VEC_AVX || m->useVec == VEC_FMA)
+                        m->scalers[i] = (CLFlt*) AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt), 32);
                     if (!m->scalers[i])
                         return (ERROR);
-                    for (j=0; j<m->numSSEChars*FLOATS_PER_VEC; j++)
+                    for (j=0; j<m->numVecChars*m->numFloatsPerVec; j++)
                         m->scalers[i][j] = 0.0f;
                     }
                 else
@@ -5967,16 +5990,40 @@ int InitChainCondLikes (void)
                 if (!m->clP)
                     return (ERROR);
 #   if defined (SSE_ENABLED)
-                if (m->useSSE == YES)
+                if (m->useVec == VEC_SSE)
                     {
                     m->clP_SSE = (__m128 **) SafeMalloc(m->numTiCats * sizeof(__m128 *));
                     if (!m->clP_SSE)
                         return (ERROR);
-                    m->lnL_SSE  = AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-                    m->lnLI_SSE = AlignedMalloc (m->numSSEChars * FLOATS_PER_VEC * sizeof(CLFlt*), 16);
-                    if (!m->lnL_SSE || !m->lnLI_SSE)
+                    m->lnL_Vec  = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 16);
+                    m->lnLI_Vec = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 16);
+                    if (!m->lnL_Vec || !m->lnLI_Vec)
                         return (ERROR);
                     }
+#if defined (AVX_ENABLED)
+                else if (m->useVec == VEC_AVX)
+                    {
+                    m->clP_AVX = (__m256 **) SafeMalloc(m->numTiCats * sizeof(__m256 *));
+                    if (!m->clP_AVX)
+                        return (ERROR);
+                    m->lnL_Vec  = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 32);
+                    m->lnLI_Vec = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 32);
+                    if (!m->lnL_Vec || !m->lnLI_Vec)
+                        return (ERROR);
+                    }
+#endif
+#if defined (FMA_ENABLED)
+                else if (m->useVec == VEC_FMA)
+                {
+                    m->clP_AVX = (__m256 **) SafeMalloc(m->numTiCats * sizeof(__m256 *));
+                    if (!m->clP_AVX)
+                        return (ERROR);
+                    m->lnL_Vec  = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 32);
+                    m->lnLI_Vec = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 32);
+                    if (!m->lnL_Vec || !m->lnLI_Vec)
+                        return (ERROR);
+                }
+#endif
 #   endif
                 }
 
@@ -6102,6 +6149,30 @@ int InitChainCondLikes (void)
             tiIndex += indexStep;
             }
 
+        /* allocate and set up rescale frequency */
+        m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
+        for (i=0; i<numLocalChains; ++i)
+        {
+            if (m->numModelStates == 4 )
+                m->rescaleFreq[i] = 1;
+            else
+                m->rescaleFreq[i] = 1;
+        }
+
+        /* allocate and set up number of unscaled nodes + scratch space */
+        m->unscaledNodes = (int **) SafeCalloc (numLocalChains, sizeof(int *));
+        if (!m->unscaledNodes)
+            return (ERROR);
+        for (i=0; i<numLocalChains; i++)
+        {
+            m->unscaledNodes[i] = (int *) SafeCalloc (nNodes, sizeof(int));
+            if (!m->unscaledNodes[i])
+                return (ERROR);
+        }
+        m->unscaledNodesScratch = (int *) SafeCalloc (nNodes, sizeof (int));
+        if (!m->unscaledNodesScratch)
+            return (ERROR);
+            
         /* allocate and set up node scaler indices */
         scalerIndex = 0;
         m->nodeScalerIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
@@ -6131,24 +6202,6 @@ int InitChainCondLikes (void)
             scalerIndex += indexStep;
             }
 
-        /* allocate and set up node scaler flags */
-        m->scalersSet = (int **) SafeMalloc (numLocalChains * sizeof(int *));
-        if (!m->scalersSet)
-            return (ERROR);
-        for (i=0; i<numLocalChains; i++)
-            {
-            m->scalersSet[i] = (int *) SafeMalloc (nNodes * sizeof(int));
-            if (!m->scalersSet[i])
-                return (ERROR);
-            for (j=0; j<nNodes; j++)
-                m->scalersSet[i][j] = NO;
-            }
-        m->scalersSetScratch = (int *) SafeMalloc (nNodes * sizeof (int));
-        if (!m->scalersSetScratch)
-            return (ERROR);
-        for (i=0; i<nNodes; i++)
-            m->scalersSetScratch[i] = NO;
-
         /* allocate and set up site scaler indices */
         m->siteScalerIndex = (int *) SafeMalloc (numLocalChains * sizeof(int));
         if (!m->siteScalerIndex)
@@ -6159,13 +6212,12 @@ int InitChainCondLikes (void)
             scalerIndex += indexStep;
             }
         m->siteScalerScratchIndex = scalerIndex;
-
+            
 #   if defined (BEAGLE_ENABLED)
         /* used only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
         if (m->useBeagle == YES)
             {
             m->succesCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
-            m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
             m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains);
             t=BEAGLE_RESCALE_FREQ/m->numModelStates;
             if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE) /*if double presition is used*/
@@ -6282,19 +6334,19 @@ int InitChainCondLikes (void)
                 */
 #   endif
                 cL = m->condLikes[clIndex++];
-#   if defined (SSE_ENABLED)
-                if (m->useSSE == YES)
+#   if defined (SSE_ENABLED)    /* deal with setup for SIMD code */
+                if (m->useVec != VEC_NONE)
                     {
                     for (k=0; k<numReps; k++)
                         {
                         charBits = m->parsSets[i];
-                        for (c=0; c<m->numChars/FLOATS_PER_VEC; c++)
+                        for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
                             {
                             for (j=0; j<m->numModelStates/m->numStates; j++)
                                 {
                                 for (s=0; s<m->numStates; s++)
                                     {
-                                    for (j1=0; j1<FLOATS_PER_VEC; j1++)
+                                    for (j1=0; j1<m->numFloatsPerVec; j1++)
                                         {
                                         if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
                                             (*cL) = 1.0;
@@ -6302,22 +6354,22 @@ int InitChainCondLikes (void)
                                         }
                                     }
                                 }   
-                            charBits += FLOATS_PER_VEC * m->nParsIntsPerSite;
+                            charBits += m->numFloatsPerVec * m->nParsIntsPerSite;
                             }
-                        if (m->numChars % FLOATS_PER_VEC > 0)
+                        if (m->numChars % m->numFloatsPerVec > 0)
                             {
                             /* add last characters and padd */
                             for (j=0; j<m->numModelStates/m->numStates; j++)
                                 {
                                 for (s=0; s<m->numStates; s++)
                                     {
-                                    for (j1=0; j1<m->numChars%FLOATS_PER_VEC; j1++)
+                                    for (j1=0; j1<m->numChars%m->numFloatsPerVec; j1++)
                                         {
                                         if (IsBitSet(s, charBits + j1*m->nParsIntsPerSite))
                                             (*cL) = 1.0;
                                         cL++;
                                         }
-                                    for (; j1<FLOATS_PER_VEC; j1++)
+                                    for (; j1<m->numFloatsPerVec; j1++)
                                         {
                                         (*cL) = 1.0;
                                         cL++;
@@ -6553,10 +6605,16 @@ int InitInvCondLikes (void)
 
         usingInvCondLikes = YES;
 #   if defined (SSE_ENABLED)
-        c1 = m->numSSEChars * FLOATS_PER_VEC * m->numModelStates;
-        m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 16);
-        for (i=0; i<c1; i++)
-            m->invCondLikes[i] = 0.0f;
+        if ( m->useVec != VEC_NONE )
+            {
+            c1 = m->numVecChars * m->numFloatsPerVec * m->numModelStates;
+            if (m->useVec == VEC_AVX)
+                m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 32);
+            else
+                m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 16);
+            for (i=0; i<c1; i++)
+                m->invCondLikes[i] = 0.0f;
+            }
 #   else
         m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
 #   endif
@@ -6607,17 +6665,17 @@ int InitInvCondLikes (void)
             {
             assert (m->numModelStates == m->numStates);
 #   if defined (SSE_ENABLED)
-             for (c=0; c<m->numChars/FLOATS_PER_VEC; c++)
+             for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
                 {
                 for (s=0; s<m->numModelStates; s++)
                     {
-                    for (c1=0; c1<FLOATS_PER_VEC; c1++)
+                    for (c1=0; c1<m->numFloatsPerVec; c1++)
                         {
                         isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + ((c * FLOATS_PER_VEC) + c1) * m->nParsIntsPerSite;
+                        //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
                         for (i=0; i<numLocalTaxa; i++)
                             {
-                            charBits = &m->parsSets[i][((c * FLOATS_PER_VEC) + c1) *m->nParsIntsPerSite];
+                            charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
                             if (IsBitSet(s, charBits) == NO)
                                 {
                                 isConstant = NO;
@@ -6631,17 +6689,17 @@ int InitInvCondLikes (void)
                         }
                     }
                 }
-             if (m->numChars % FLOATS_PER_VEC != 0)
+             if (m->numChars % m->numFloatsPerVec != 0)
                 {
                 for (s=0; s<m->numModelStates; s++)
                     {
-                    for (c1=0; c1<m->numChars%FLOATS_PER_VEC; c1++)
+                    for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
                         {
                         isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / FLOATS_PER_VEC) * FLOATS_PER_VEC) + c1) * m->nParsIntsPerSite;
+                        //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
                         for (i=0; i<numLocalTaxa; i++)
                             {
-                            charBits = &m->parsSets[i][(((m->numChars / FLOATS_PER_VEC) * FLOATS_PER_VEC) + c1) *m->nParsIntsPerSite];
+                            charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
                             if (IsBitSet(s, charBits) == NO)
                                 {
                                 isConstant = NO;
@@ -6653,7 +6711,7 @@ int InitInvCondLikes (void)
                             *cI = 1.0;
                         cI++;
                         }
-                    for (; c1<FLOATS_PER_VEC; c1++)
+                    for (; c1<m->numFloatsPerVec; c1++)
                         {
                         *cI = 1.0;
                         cI++;
@@ -10033,14 +10091,14 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     for (k=0; k<m->numOmegaCats; k++)
         {
         clP[k] = clPtr;
-        clPtr += m->numSSEChars * nStates;
+        clPtr += m->numVecChars * nStates;
         catLike[k] = (CLFlt *) (&(mCatLike[k]));
         }
     siteLike = (CLFlt *) (&mSiteLike);
     
     /* find posSelProbs */
     ps = posSelProbs + m->compCharStart;
-    for (c1=c2=0; c1<m->numSSEChars; c1++)
+    for (c1=c2=0; c1<m->numVecChars; c1++)
         {
         mSiteLike = _mm_setzero_ps ();
         for (k=0; k<m->numOmegaCats; k++)
@@ -10057,7 +10115,7 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
             clP[k] += nStates;
             }
 
-        for (i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+        for (i=0; i<m->numFloatsPerVec && c2 < m->numChars; ++i, ++c2)
             {
             posProb = 0.0;
             for (k=0; k<m->numOmegaCats; k++)
@@ -10188,14 +10246,14 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     for (k=0; k<m->numOmegaCats; k++)
         {
         clP[k] = clPtr;
-        clPtr += m->numSSEChars * nStates;
+        clPtr += m->numVecChars * nStates;
         catLike[k] = (CLFlt *) (&(mCatLike[k]));
         }
     siteLike = (CLFlt *) (&mSiteLike);
     
     /* find site omegas (using posSelProbs space) */
     ps = posSelProbs + m->compCharStart;
-    for (c1=c2=0; c1<m->numSSEChars; c1++)
+    for (c1=c2=0; c1<m->numVecChars; c1++)
         {
         mSiteLike = _mm_setzero_ps ();
         for (k=0; k<m->numOmegaCats; k++)
@@ -10212,7 +10270,7 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
             clP[k] += nStates;
             }
         
-        for (i=0; i<FLOATS_PER_VEC && c2 < m->numChars; ++i, ++c2)
+        for (i=0; i<m->numFloatsPerVec && c2 < m->numChars; ++i, ++c2)
             {
             siteOmega = 0.0;
             for (k=0; k<m->numOmegaCats; k++)
@@ -15632,80 +15690,11 @@ int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
 }
 
 
-/*-------------------------------------------------------------------
-|
-|   ResetScalers: reset scaler nodes of all trees of all chains
-|       This scheme ensures that minimally RESCALE_FREQ
-|       unscaled interior nodes occur before rescaling is done
-|
---------------------------------------------------------------------*/
-int ResetScalers (void)
-{
-    int         i, n, chn;
-    Tree        *t;
-    TreeNode    *p;
-
-#if defined (DEBUG_NOSCALING)
-    return (NO_ERROR);
-#endif
-
-    for (chn=0; chn<numLocalChains; chn++)
-        {
-        for (i=0; i<numTrees; i++)
-            {
-            t = GetTreeFromIndex (i, chn, state[chn]);
-        
-            /* set the node depth value of terminal nodes to zero; reset scalerNode */
-            for (n=0; n<t->nNodes; n++)
-                {
-                p = t->allDownPass[n];
-                p->scalerNode = NO;
-                if (p->left == NULL)
-                    p->x = 0;
-                }
-
-            /* loop over interior nodes */
-            for (n=0; n<t->nIntNodes; n++)
-                {
-                p = t->intDownPass[n];
-
-                p->x = p->left->x + p->right->x + 1;
-
-                if (p->x > 2 * RESCALE_FREQ)
-                    {
-                    assert (p->left->left != NULL && p->right->left != NULL);
-                    p->left->scalerNode = YES;
-                    p->left->x = 0;
-                    p->right->scalerNode = YES;
-                    p->right->x = 0;
-                    p->x = 1;
-                    }
-                else if (p->x > RESCALE_FREQ)
-                    {
-                    if (p->left->x > p->right->x)
-                        {
-                        assert (p->left->left != NULL);
-                        p->left->scalerNode = YES;
-                        p->left->x = 0;
-                        }
-                    else
-                        {
-                        assert (p->right->left != NULL);
-                        p->right->scalerNode = YES;
-                        p->right->x = 0;
-                        }
-                    p->x = p->left->x + p->right->x + 1;
-                    }
-                else
-                    p->scalerNode = NO;
-                }
-            }
-        }
-
-    return NO_ERROR;
-}
-
-
+/*----------------------------------------------------------------------
+ |
+ |   ResetSiteScalers: Set log site scalers to 0.0.
+ |
+ ------------------------------------------------------------------------*/
 void ResetSiteScalers (ModelInfo *m, int chain)
 {
     int     c;
@@ -16194,12 +16183,6 @@ int RunChain (RandLong *seed)
 
     /* initialize likelihoods and prior                  */
     /* touch everything and calculate initial cond likes */
-#   if defined (BEAGLE_ENABLED)
-    if (ResetScalersNeeded)
-        ResetScalers();
-#   else
-    ResetScalers();
-#   endif
     TouchAllPartitions ();
     for (chn=0; chn<numLocalChains; chn++)
         {
@@ -16623,17 +16606,6 @@ int RunChain (RandLong *seed)
         /*! requestAbortRun is set by the signal handler when it receives a CTRL-C (serial version only) */
         if (requestAbortRun == YES && ConfirmAbortRun() == 1)
             return ABORT;
-
-        /* Refresh scalers every SCALER_REFRESH_FREQ generations.                */
-        /* It is done before copying so we know it will take effect immediately. */
-        /* However, the actual scalers are recalculated only when really needed. */
-#   if defined (BEAGLE_ENABLED)
-        if (ResetScalersNeeded && n % SCALER_REFRESH_FREQ == 0)
-            ResetScalers();
-#   else
-        if (n % SCALER_REFRESH_FREQ == 0)
-            ResetScalers();
-#   endif
 
         // RandLong oldSeed = *seed;  /* record the old seed for debugging */
         for (chn=0; chn<numLocalChains; chn++)
@@ -17284,7 +17256,6 @@ int RunChain (RandLong *seed)
 
 #   if defined (BEAGLE_ENABLED)
 #       ifdef DEBUG_BEAGLE
-    ResetScalers ();
     beagleScalingSchemeOld = beagleScalingScheme;
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;
     for (chn=0; chn<numLocalChains; chn++)
@@ -17825,7 +17796,8 @@ void SetFileNames (void)
 /*----------------------------------------------------------------------------
 |
 |   SetLikeFunctions: This function will set up the pointers from each
-|       data division to the relevant likelihood functions
+|       data division to the relevant likelihood functions. It will also
+|       deal with the settings for SIMD code.
 |
 -----------------------------------------------------------------------------*/
 int SetLikeFunctions (void)
@@ -17838,7 +17810,7 @@ int SetLikeFunctions (void)
     for (i=0; i<numCurrentDivisions; i++)
         {
         m = &modelSettings[i];
-        m->useSSE= NO;
+        m->useVec = VEC_NONE;
         
         if (m->dataType == DNA || m->dataType == RNA)
             {
@@ -17906,10 +17878,23 @@ int SetLikeFunctions (void)
                             }
                         else
                             {
-                            m->useSSE= YES;
+                            m->useVec = VEC_SSE;
+                            m->numFloatsPerVec = 4;
                             m->CondLikeDown = &CondLikeDown_NUC4_SSE;
                             m->CondLikeRoot = &CondLikeRoot_NUC4_SSE;
                             m->CondLikeScaler = &CondLikeScaler_NUC4_SSE;
+#if defined (AVX_ENABLED)   // override SSE settings
+                            m->useVec = VEC_AVX;
+                            m->numFloatsPerVec = 8;
+                            m->CondLikeDown = &CondLikeDown_NUC4_AVX;
+                            m->CondLikeRoot = &CondLikeRoot_NUC4_AVX;
+                            m->CondLikeScaler = &CondLikeScaler_NUC4_AVX;
+#if defined (FMA_ENABLED)   // override AVX settings (CondLikeScaler cannot be improved over AVX)
+                            m->useVec = VEC_FMA;
+                            m->CondLikeDown = &CondLikeDown_NUC4_FMA;
+                            m->CondLikeRoot = &CondLikeRoot_NUC4_FMA;
+#endif
+#endif
                             /* Should be sse versions if we want to handle m->printAncStates == YES || inferSiteRates == YES.
                             For now just set to NULL for early error detection if functions anyway got called by mistake */
                             m->CondLikeUp = NULL;
@@ -17924,7 +17909,15 @@ int SetLikeFunctions (void)
                         else if (m->printAncStates == YES || inferSiteRates == YES)
                             m->Likelihood = &Likelihood_NUC4;
                         else
+                            {
                             m->Likelihood = &Likelihood_NUC4_SSE;
+#if defined (AVX_ENABLED)
+                            m->Likelihood = &Likelihood_NUC4_AVX;
+#if defined (FMA_ENABLED)
+                            m->Likelihood = &Likelihood_NUC4_FMA;
+#endif
+#endif
+                            }
 #   else
                         if (m->gibbsGamma == YES)
                             {
@@ -18011,7 +18004,8 @@ int SetLikeFunctions (void)
                                 }
                             else
                                 {
-                                m->useSSE= YES;
+                                m->useVec = VEC_SSE;
+                                m->numFloatsPerVec = 4;
                                 m->CondLikeDown = &CondLikeDown_Gen_SSE;
                                 m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
                                 m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
@@ -18036,7 +18030,8 @@ int SetLikeFunctions (void)
                             }
                         else
                             {
-                            m->useSSE= YES;
+                            m->useVec = VEC_SSE;
+                            m->numFloatsPerVec = 4;
                             m->CondLikeDown   = &CondLikeDown_NY98_SSE;
                             m->CondLikeRoot   = &CondLikeRoot_NY98_SSE;
                             m->CondLikeScaler = &CondLikeScaler_NY98_SSE;
@@ -18076,7 +18071,8 @@ int SetLikeFunctions (void)
                             }
                         else
                             {
-                            m->useSSE= YES;
+                            m->useVec = VEC_SSE;
+                            m->numFloatsPerVec = 4;
                             m->CondLikeDown = &CondLikeDown_Gen_SSE;
                             m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
                             m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
@@ -18125,7 +18121,8 @@ int SetLikeFunctions (void)
                         }
                     else
                         {
-                        m->useSSE= YES;
+                        m->useVec = VEC_SSE;
+                        m->numFloatsPerVec = 4;
                         m->CondLikeDown = &CondLikeDown_Gen_SSE;
                         m->CondLikeRoot = &CondLikeRoot_Gen_SSE;
                         m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
@@ -18173,7 +18170,8 @@ int SetLikeFunctions (void)
                     }
                 else
                     {
-                    m->useSSE= YES;
+                    m->useVec = VEC_SSE;
+                    m->numFloatsPerVec = 4;
                     m->CondLikeDown   = &CondLikeDown_Bin_SSE;
                     m->CondLikeRoot   = &CondLikeRoot_Bin_SSE;
                     m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
@@ -18472,9 +18470,11 @@ int SetUpTermState (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        m->numSSEChars = ((m->numChars - 1) / FLOATS_PER_VEC) + 1;
-        if (m->dataType != STANDARD && m->gibbsGamma == NO)
-            numComprChars += m->numSSEChars * FLOATS_PER_VEC;
+        if ( m->useVec != VEC_NONE )
+            {
+            m->numVecChars = ((m->numChars - 1) / m->numFloatsPerVec) + 1;
+            numComprChars += m->numVecChars * m->numFloatsPerVec;
+            }
         else
             numComprChars += m->numChars;
         }
@@ -18523,7 +18523,7 @@ int SetUpTermState (void)
 
 #   if defined SSE_ENABLED
         if (m->dataType != STANDARD && m->gibbsGamma == NO)
-            numComprChars = m->numSSEChars * FLOATS_PER_VEC;
+            numComprChars = m->numVecChars * m->numFloatsPerVec;
         else
             numComprChars = m->numChars;
 

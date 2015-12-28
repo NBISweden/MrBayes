@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -17521,9 +17522,20 @@ int SetModelInfo (void)
 #   endif
 
         /* likelihood calculator flags */
-        m->useSSE = NO;                       /* use SSE code for this partition?             */
+        m->useVec = VEC_NONE;                 /* use SIMD code for this partition?            */
         m->useBeagle = NO;                    /* use Beagle for this partition?               */
 
+#if defined (SSE_ENABLED)
+        m->numVecChars = 0;
+        m->numFloatsPerVec = 0;
+        m->lnL_Vec = NULL;
+        m->lnLI_Vec = NULL;
+        m->clP_SSE = NULL;
+#if defined (AVX_ENABLED)
+        m->clP_AVX = NULL;
+#endif
+#endif
+            
         /* set all memory pointers to NULL */
         m->parsSets = NULL;
         m->numParsSets = 0;
@@ -20309,6 +20321,32 @@ void SetUpMoveTypes (void)
     mt->level =STANDARD_USER;
     mt->isApplicable = &IsApplicable_AncestralFossil;
 
+    /* Move_ExtFossilSPRClock */
+    mt = &moveTypes[i++];
+    mt->name = "Extending fossil SPR for clock trees";
+    mt->shortName = "ExtFossilSprClock";
+    mt->subParams = YES;
+    mt->tuningName[0] = "Extension probability";
+    mt->shortTuningName[0] = "p_ext";
+    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
+    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
+    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
+    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
+    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
+    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
+    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
+    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
+    mt->nApplicable = 8;
+    mt->moveFxn = &Move_ExtFossilSPRClock;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 0.99999;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
+    
     /* Move_ExtSPR */
     mt = &moveTypes[i++];
     mt->name = "Extending SPR";
@@ -20983,6 +21021,32 @@ void SetUpMoveTypes (void)
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
+    /* Move_ParsFossilSPRClock */
+    mt = &moveTypes[i++];
+    mt->name = "Parsimony-biased fossil SPR for clock trees";
+    mt->shortName = "ParsFossilSPRClock";
+    mt->subParams = YES;
+    mt->tuningName[0] = "parsimony warp factor";
+    mt->shortTuningName[0] = "warp";
+    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
+    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
+    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
+    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
+    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
+    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
+    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
+    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
+    mt->nApplicable = 8;
+    mt->moveFxn = &Move_ParsFossilSPRClock;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.1;  /* warp */
+    mt->minimum[0] = 0.0;
+    mt->maximum[0] = 1.0;
+    mt->parsimonyBased = YES;
+    mt->level = STANDARD_USER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
+    
     /* Move_ParsSPR asym */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased SPR";
@@ -21105,10 +21169,6 @@ void SetUpMoveTypes (void)
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
     mt->shortTuningName[0] = "warp";
-    mt->tuningName[1] = "reweighting probability";
-    mt->shortTuningName[1] = "r";
-    mt->tuningName[2] = "typical branch length";
-    mt->shortTuningName[2] = "v_t";
     mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
     mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
     mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
@@ -21120,16 +21180,10 @@ void SetUpMoveTypes (void)
     mt->nApplicable = 8;
     mt->moveFxn = &Move_ParsSPRClock;
     mt->relProposalProb = 8.0;
-    mt->numTuningParams = 3;
+    mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* warp */
-    mt->tuningParam[1] = 0.05; /* upweight and downweight probability */
-    mt->tuningParam[2] = 0.03; /* typical branch length */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 1.0;
-    mt->minimum[1] = 0.0;
-    mt->maximum[1] = 0.3;
-    mt->minimum[2] = 0.0001;
-    mt->maximum[2] = 0.5;
     mt->parsimonyBased = YES;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
@@ -21825,6 +21879,8 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     
     numMoveTypes = i;
+    
+    assert( numMoveTypes < NUM_MOVE_TYPES);
 }
 
 

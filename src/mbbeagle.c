@@ -265,7 +265,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             }
 
         if (beagleScalingFrequency != 0 && 
-            m->beagleComputeCount[chain] % (beagleScalingFrequency) == 0)
+            m->computeCount[chain] % (beagleScalingFrequency) == 0)
             {
             m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
             for (i=0; i<tree->nIntNodes; i++)
@@ -349,7 +349,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         }
     
     /* Count number of evaluations */
-    m->beagleComputeCount[chain]++;
+    m->computeCount[chain]++;
 }
 
 
@@ -432,7 +432,7 @@ void BeaglePrintResources()
         BeaglePrintFlags(beagleResources->list[i].supportFlags);
         MrBayesPrint ("\n\n");
         }
-    MrBayesPrint ("%s   BEAGLE vesion: %s\n", spacer, beagleGetVersion());
+    MrBayesPrint ("%s   BEAGLE version: %s\n", spacer, beagleGetVersion());
 }
 
 
@@ -815,7 +815,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
         if (p->upDateCl == YES)
             {
             /* remove old scalers */
-            if (m->scalersSet[chain][p->index] == YES && m->upDateAll == NO)
+            if (m->unscaledNodes[chain][p->index] == 0 && m->upDateAll == NO)
                 {
                 destinationScaleRead = m->nodeScalerIndex[chain][p->index];
                 cumulativeScaleIndex = m->siteScalerIndex[chain];
@@ -833,7 +833,6 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             /* flip to the new workspace */
             FlipCondLikeSpace (m, chain, p->index);
             FlipNodeScalerSpace (m, chain, p->index);
-            m->scalersSet[chain][p->index] = NO;
             
             /* update conditional likelihoods */
             operations.destinationPartials    = m->condLikeIndex[chain][p->index       ];
@@ -842,7 +841,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             operations.child2Partials         = m->condLikeIndex[chain][p->right->index];
             operations.child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
 
-            /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+            /* All partials for tips are the same across omega categories, thus we are doing the following two if statments.*/
             if (p->left->left== NULL && p->left->right== NULL)
                 chil1Step=0;
             else
@@ -853,9 +852,12 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             else
                 chil2Step=1;
 
-            if (p->scalerNode == YES)
+            /* Now deal with scalers */
+            m->unscaledNodes[chain][p->index] = 1 + m->unscaledNodes[chain][p->left->index] + m->unscaledNodes[chain][p->right->index];
+
+            if (m->unscaledNodes[chain][p->index] >= m->rescaleFreq)
                 {
-                m->scalersSet[chain][p->index] = YES;
+                m->unscaledNodes[chain][p->index] = 0;
                 operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
                 cumulativeScaleIndex  = m->siteScalerIndex[chain];
                 }

@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -93,11 +94,6 @@ extern int DoUserTree (void);
 extern int DoUserTreeParm (char *parmName, char *tkn);
 extern int SafeFclose(FILE **);
 
-extern int  SetUpPartitionCounters (void);
-extern int  AddTreeToPartitionCounters (Tree *tree, int treeId, int runId);
-extern void CalcTopoConvDiagn2 (int *nTrees);
-extern void FreeChainMemory (void);
-
 /* local prototypes */
 int      CompareModelProbs (const void *x, const void *y);
 int      PrintModelStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples);
@@ -121,7 +117,7 @@ int      OpenBrlensFile (int treeNo);
 int      OpenComptFiles (void);
 int      OpenSumtFiles (int treeNo);
 void     PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index);
-int      PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo);
+int      PrintBrParamsToFile (PartCtr **treeParts, int numTreeParts, int treeNo, char *divString);
 void     PrintConTree (FILE *fp, PolyTree *t);
 void     PrintFigTreeConTree (FILE *fp, PolyTree *t, PartCtr **treeParts);
 void     PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length);
@@ -3193,7 +3189,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 }
 
 
-/* ConTree: Construct consensus tree */
+/* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
     int         i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
@@ -3768,7 +3764,7 @@ int DoCompareTree (void)
         MrBayesPrint ("%s   Using absolute burnin ('relburnin=no'), discarding the first %d ('burnin=%d') sampled trees\n",
             spacer, chainParams.chainBurnIn, chainParams.chainBurnIn);
 
-    MrBayesPrint ("%s   Writing statistics to file %s.<dists|pairs>\n", spacer, comptreeParams.comptOutfile);
+    MrBayesPrint ("%s   Writing statistics to file %s\n", spacer, comptreeParams.comptOutfile);
 
     /* Set up cheap status bar. */
     MrBayesPrint ("\n%s   Tree reading status:\n\n", spacer);
@@ -3845,7 +3841,7 @@ int DoCompareTree (void)
 
     /* Read file 2 for real */
     if ((fp = OpenTextFileR(comptreeParams.comptFileName2)) == NULL)
-        goto errorExit;
+        return ERROR;
         
     /* ...and fast forward to beginning of last tree block. */
     for (i=0; i<lastTreeBlockBegin[1] + 1; i++)
@@ -3899,6 +3895,7 @@ int DoCompareTree (void)
             MrBayesPrint ("*");
     MrBayesPrint ("\n\n");
     
+    /* tell user how many trees were successfully read */
     /* tell user how many trees were successfully read */
     MrBayesPrint ("%s   Read %d trees from last tree block of file \"%s\" (sampling %d of them)\n", spacer,
         sumtParams.numFileTrees[0],
@@ -4564,226 +4561,9 @@ int DoCompareTreeParm (char *parmName, char *tkn)
 }
 
 
-int DoCompRefTree (void)
+/* Placeholder to make code compile */
+int DoCompRefTree(void)
 {
-    /* Compare a tree file with the reference tree files to generate the SDSFs.
-       Use parameters in CompareTree and MCMCP (lazy option) */
-    
-    char         outName[130], inName[130], inRefName[130], treeName[100], *lineBuf=NULL, *s;
-    FILE         *fpTre=NULL, *fpOut=NULL;
-    int          i, n, longestL=0, burnin, gen, nRefRun, nTre[100]={0};
-    SumtFileInfo tFileInfo;
-    Tree         *t;
-
-#   if defined (MPI_ENABLED)
-    if (proc_id != 0)
-        return NO_ERROR;
-#   endif
-
-    /* Check that a data set has been read in. We check taxon names against those read in. */
-    if (isTaxsetDef == NO)
-        {
-        MrBayesPrint ("%s   A matrix or set of taxon labels must be specified before compareref can be used\n", spacer);
-        return (ERROR);
-        }
-
-    /* this is a hack to account for the additional comparing tree sample 
-       chainParams.numRuns is used in AddTreeToPartitionCounters to alloc mem correctly */
-    nRefRun = chainParams.numRuns;
-    chainParams.numRuns += 1;
-
-    /* initialize */
-    if ((t = AllocateTree (numLocalTaxa)) == NULL)
-        {
-        MrBayesPrint ("%s   Problem allocating diagn tree\n", spacer);
-        goto errorExit;
-        }
-    if (SetUpPartitionCounters () == ERROR)
-        goto errorExit;
-    if ((chainParams.stat = (STATS *) SafeCalloc (numTopologies, sizeof (STATS))) == NULL)
-        goto errorExit;
-    else
-        memAllocs[ALLOC_STATS] = YES;
-
-    /* deal with the reference tree files */
-    // for (k=0; k<numTopologies; k++)
-    for (n=0; n<nRefRun; n++)
-        {
-        if (nRefRun == 1)
-            sprintf (inRefName, "%s.t", comptreeParams.comptFileName2);
-        else
-            sprintf (inRefName, "%s.run%d.t", comptreeParams.comptFileName2, n+1);
-        
-        /* Examine each ref tree file, save info to tFileInfo */
-        if (ExamineSumtFile(inRefName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
-            goto errorExit;
-        if (longestL < tFileInfo.longestLineLength)
-            {
-            longestL = tFileInfo.longestLineLength;
-            lineBuf = (char *) SafeRealloc (lineBuf, (size_t)longestL * sizeof(char));
-            if (!lineBuf)
-                {
-                MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
-                goto errorExit;
-                }
-            }
-        
-        /* calculate burnin */
-        if (chainParams.relativeBurnin == YES)
-            burnin = (int)(chainParams.burninFraction * tFileInfo.numTreesInLastBlock);
-        else
-            burnin = chainParams.chainBurnIn;
-        if (burnin >= tFileInfo.numTreesInLastBlock)
-            {
-            MrBayesPrint ("%s   Burnin should be smaller than the total number of trees\n", spacer);
-            goto errorExit;
-            }
-       
-        /* open the ref tree file */
-        if ((fpTre = OpenTextFileR (inRefName)) == NULL)
-            goto errorExit;
-        /* ...and fast forward to beginning in last tree block */
-        for (i=0; i <= tFileInfo.lastTreeBlockBegin; i++)
-            {
-            if (fgets(lineBuf, longestL-2, fpTre) == NULL)
-                goto errorExit;
-            }
-        
-        /* process each ref tree */
-        for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
-            {
-            do {
-                if (fgets (lineBuf, longestL-2, fpTre) == NULL)
-                    goto errorExit;
-                s = strtok (lineBuf, " ");
-                }
-            while (strcmp (s, "tree") != 0);
-            
-            /* add reference trees to partition counters, discarding burnin */
-            if (i > burnin)
-                {
-                s = strtok (NULL, ";");
-                while (*s != '(')
-                    s++;
-                StripComments(s);
-
-                if (ResetTopology (t, s) == ERROR)
-                    goto errorExit;
-                if (AddTreeToPartitionCounters (t, 0, n) == ERROR)
-                    goto errorExit;
-                nTre[n]++;
-                }
-            }
-
-        /* close the tree file */
-        SafeFclose (&fpTre);
-        }
-    /* end reference tree files */
-    
-    /* open output file */
-    strcpy (outName, comptreeParams.comptOutfile);
-    strcat (outName, ".sdsf");
-    if ((fpOut = OpenNewMBPrintFile (outName)) == NULL)
-        goto errorExit;
-    /* print stamp and header */
-    if ((int)strlen(stamp) > 1)
-        MrBayesPrintf (fpOut, "[ID: %s]\n", stamp);
-    if (chainParams.diagnStat == AVGSTDDEV)
-        MrBayesPrintf (fpOut, "Gen\tASDSF\n");
-    else  // MAXSTDDEV
-        MrBayesPrintf (fpOut, "Gen\tMSDSF\n");
-
-    /* Examine the tree file to be compared, save info to tFileInfo */
-    strcpy(inName, comptreeParams.comptFileName1);
-    if (ExamineSumtFile(inName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
-        goto errorExit;
-    if (longestL < tFileInfo.longestLineLength)
-        {
-        longestL = tFileInfo.longestLineLength;
-        lineBuf = (char *) SafeRealloc (lineBuf, (size_t)longestL * sizeof(char));
-        if (!lineBuf)
-            {
-            MrBayesPrint ("%s   Problem allocating string for reading tree file\n", spacer);
-            goto errorExit;
-            }
-        }
-
-    /* open the tree file to be compared */
-    if ((fpTre = OpenTextFileR (inName)) == NULL)
-        goto errorExit;
-    /* ...and fast forward to beginning in last tree block */
-    for (i=0; i <= tFileInfo.lastTreeBlockBegin; i++)
-        {
-        if (fgets(lineBuf, longestL-2, fpTre) == NULL)
-            goto errorExit;
-        }
-
-    /* process each tree to be compared and print SDSF to file */
-    for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
-        {
-        do {
-            if (fgets (lineBuf, longestL-2, fpTre) == NULL)
-                goto errorExit;
-            s = strtok (lineBuf, " ");
-            }
-        while (strcmp (s, "tree") != 0);
-        
-        s = strtok (NULL, ";");
-        gen = atoi(s+4);  // 4 is offset to get rid of "rep." in tree name
-        while (*s != '(')
-            s++;
-        StripComments(s);
-
-        /* add the tree to partition counters */
-        if (ResetTopology (t, s) == ERROR)
-            goto errorExit;
-        if (AddTreeToPartitionCounters (t, 0, nRefRun) == ERROR)
-            goto errorExit;
-        nTre[nRefRun]++;
-            
-        /* calculate and write stdev of split freq */
-        CalcTopoConvDiagn2 (nTre);
-        if (chainParams.stat[0].numPartitions == 0)
-            {
-            MrBayesPrintf (fpOut, "%d\tNA\n", gen);
-            }
-        else if (chainParams.diagnStat == AVGSTDDEV)
-            {
-            MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].avgStdDev);
-            }
-        else  // MAXSTDDEV
-            {
-            MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].max);
-            }
-        }
-    
-    /* change back to the actual numRuns, end of hack */
-    chainParams.numRuns -= 1;
-    
-    /* close tree file */
-    SafeFclose (&fpTre);
-    /* close output file */
-    SafeFclose (&fpOut);
-    /* free memory */
-    free(lineBuf);
-    FreeTree (t);
-    FreeChainMemory();
-    
-    return (NO_ERROR);
-    
-    /* error exit */
-errorExit:
-    MrBayesPrint ("%s   Error in DoCompRefTree\n", spacer);
-    
-    chainParams.numRuns -= 1;
-    SafeFclose (&fpTre);
-    SafeFclose (&fpOut);
-    
-    FreeTree (t);
-    FreeChainMemory();
-    free(lineBuf);
-    
-    return (ERROR);
 }
 
 
@@ -5723,25 +5503,30 @@ int DoSumt (void)
             MrBayesPrint ("\n\n");
             }
             
-        /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
-        avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
-        avgPSRF   = sumPSRF / numPSRFSamples;
-        
-        if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
-            {
-            MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-            MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
-            MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
-            }
-        if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
-            {
-            MrBayesPrint ("%s       Average PSRF for parameter values (excluding NA and >10.0) = %1.3lf\n", spacer, avgPSRF);
-            if (maxPSRF == 10)
-                MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
-            else
-                MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
-            }
-        MrBayesPrint ("\n");
+            /* Print branch parameters to file if requested */
+            strcpy( divString, treeName+4);
+            if (sumtParams.saveBrParams == YES && PrintBrParamsToFile (treeParts, numUniqueSplitsFound, treeNo, divString) == ERROR)
+                goto errorExit;
+            
+            /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
+            avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
+            avgPSRF   = sumPSRF / numPSRFSamples;
+
+            if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
+                {
+                MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
+                MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+                MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
+                }
+            if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)
+                {
+                MrBayesPrint ("%s       Average PSRF for parameter values (excluding NA and >10.0) = %1.3lf\n", spacer, avgPSRF);
+                if (maxPSRF == 10)
+                    MrBayesPrint ("%s       Maximum PSRF for parameter values = NA\n", spacer);
+                else
+                    MrBayesPrint ("%s       Maximum PSRF for parameter values = %1.3lf\n", spacer, maxPSRF);
+                }
+            MrBayesPrint ("\n");
 
         SortPartCtr (treeParts, 0, numUniqueSplitsFound-1); /* We sort again but this time we sort all partitions instead of just first numTreePartsToPrintNow */
         /* make the majority rule consensus tree */
@@ -5752,10 +5537,6 @@ int DoSumt (void)
         if (TreeProb () == ERROR)
             goto errorExit;
         
-        /* print brlens */
-        if (sumtParams.printBrlensToFile == YES && PrintBrlensToFile (treeParts, numUniqueSplitsFound, treeNo) == ERROR)
-            goto errorExit;
-
         /* close files */
         SafeFclose (&fpParts);
         SafeFclose (&fpTstat);
@@ -6128,8 +5909,8 @@ int DoSumtParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-        /* set Printbrlens (sumtParams.printBrlensToFile) *********************************************/
-        else if (!strcmp(parmName, "Printbrlens"))
+        /* set Savebrparams (sumtParams.saveBrParams) *********************************************/
+        else if (!strcmp(parmName, "Savebrparams"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
@@ -6138,34 +5919,34 @@ int DoSumtParm (char *parmName, char *tkn)
                 if (IsArgValid(tkn, tempStr) == NO_ERROR)
                     {
                     if (!strcmp(tempStr, "Yes"))
-                        sumtParams.printBrlensToFile = YES;
+                        sumtParams.saveBrParams = YES;
                     else
-                        sumtParams.printBrlensToFile = NO;
+                        sumtParams.saveBrParams = NO;
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid argument for printbrlens\n", spacer);
+                    MrBayesPrint ("%s   Invalid argument for savebrparams\n", spacer);
                     return (ERROR);
                     }
-                if (sumtParams.printBrlensToFile == YES)
-                    MrBayesPrint ("%s   Setting printbrlens to yes\n", spacer);
+                if (sumtParams.saveBrParams == YES)
+                    MrBayesPrint ("%s   Setting savebrparams to yes\n", spacer);
                 else
-                    MrBayesPrint ("%s   Setting printbrlens to no\n", spacer);
+                    MrBayesPrint ("%s   Setting savebrparams to no\n", spacer);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
             else
                 return (ERROR);
             }
-        /* set Brlensgeq (sumtParams.brlensFreqDisplay) *******************************************************/
-        else if (!strcmp(parmName, "Brlensgeq"))
+        /* set Minbrparamfreq (sumtParams.minBrParamFreq) *******************************************************/
+        else if (!strcmp(parmName, "Minbrparamfreq"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%lf", &tempD);
-                sumtParams.brlensFreqDisplay = tempD;
-                MrBayesPrint ("%s   Printing branch lengths to file for partitions with probability >= %lf\n", spacer, sumtParams.brlensFreqDisplay);
+                sumtParams.minBrParamFreq = tempD;
+                MrBayesPrint ("%s   Printing branch parameters to file for partitions with probability >= %lf\n", spacer, sumtParams.minBrParamFreq);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
             else
@@ -7242,57 +7023,197 @@ void PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index)
 }
 
 
-/* PrintBrlensToFile: Print brlens to file */
-int PrintBrlensToFile (PartCtr **treeParts, int numTreeParts, int treeNo)
+/* PrintBrParamsToFile: Print branach parameters to file */
+int PrintBrParamsToFile (PartCtr **treeParts, int numTreeParts, int treeNo, char *divString)
 {
-    int     i, j, runNo, numBrlens;
+    int     i, j, numPartitions, min, treeSample, runNo;
     char    filename[100];
     PartCtr *x;
     FILE    *fp;
-
+    
     /* set file name */
     if (sumtParams.numTrees > 1)
-        sprintf (filename, "%s.tree%d.brlens", sumtParams.sumtOutfile, treeNo+1);
+        sprintf (filename, "%s.tree%d.brparams", sumtParams.sumtOutfile, treeNo+1);
     else
-        sprintf (filename, "%s.brlens", sumtParams.sumtOutfile);
-
+        sprintf (filename, "%s.brparams", sumtParams.sumtOutfile);
+    MrBayesPrint( "%s   Saving branch parameters to file \"%s\"\n", spacer, filename);
+    
     /* Open file checking for over-write as appropriate */
     if ((fp = OpenNewMBPrintFile(filename)) == NULL)
+    {
+        MrBayesPrint ("\n");
         return ERROR;
+    }
 
-    /* count number of brlens to print */
+    /* count number of branch params to print */
+    min = (sumtParams.minBrParamFreq * (sumtParams.numTreesSampled/sumtParams.numRuns));
     for (i=0; i<numTreeParts; i++)
-        {
-        if (treeParts[i]->totCount < sumtParams.brlensFreqDisplay)
+    {
+        if (treeParts[i]->totCount < min)
             break;
-        }
-    numBrlens = i;
-
+    }
+    numPartitions = i;
+    
     /* print header */
-    for (i=0; i<numBrlens; i++)
-        {
-        MrBayesPrintf (fp, "v[%d]", i+1);
-        if (i==numBrlens-1)
-            MrBayesPrintf (fp, "\n");
-        else
-            MrBayesPrintf (fp, "\t");
-        }
 
-    /* print values */
-    for (i=0; i<numBrlens; i++)
+    /* -- header for branch lengths; NB! We skip the root branch length (i starts at 1) */
+    for (i=1; i<numPartitions; ++i)
+    {
+        MrBayesPrintf (fp, "length%s[%d]", divString, i);
+        if (i!=numPartitions-1)
+            MrBayesPrintf (fp, "\t");
+    }
+    
+    /* -- header for node heights */
+    if (sumtParams.isClock == YES )
         {
-        x = treeParts[numBrlens];
-        for (runNo=0; runNo<sumtParams.numRuns; runNo++)
+        MrBayesPrintf (fp, "\t");
+        for (i=0; i<numPartitions; i++)
             {
-            MrBayesPrintf (fp, "%s", MbPrintNum (x->length[runNo][0]));
-            for (j=1; j<x->count[i]; j++)
+            MrBayesPrintf (fp, "height%s[%d]", divString, i);
+            if (i!=numPartitions-1)
+                MrBayesPrintf (fp, "\t");
+            }
+        }
+    
+    /* -- header for node ages */
+    if (sumtParams.isCalibrated == YES )
+    {
+        MrBayesPrintf (fp, "\t");
+        for (i=0; i<numPartitions; i++)
+        {
+            MrBayesPrintf (fp, "age%s[%d]", divString, i);
+            if (i!=numPartitions-1)
+                MrBayesPrintf (fp, "\t");
+        }
+    }
+
+    /* -- header for effective branch lengths and branch rates; NB! We skip the root branch (j starts at 1) */
+    if (sumtParams.isRelaxed == YES)
+    {
+        for (i=0; i<sumtParams.nBSets; i++)
+        {
+            MrBayesPrintf (fp, "\t");
+            for (j=1; j<numPartitions; j++)
+            {
+                MrBayesPrintf (fp, "%s_length[%d]", sumtParams.bSetName[i], j);
+                MrBayesPrintf (fp, "\t");
+            }
+
+            for (j=1; j<numPartitions; j++)
+            {
+                MrBayesPrintf (fp, "%s_rate[%d]", sumtParams.bSetName[i], j);
+                if (j!=numPartitions-1)
+                    MrBayesPrintf (fp, "\t");
+            }
+        }
+        for (i=0; i<sumtParams.nESets; i++)
+        {
+            MrBayesPrintf (fp, "\t");
+            for (j=1; j<numPartitions; j++)
+            {
+                MrBayesPrintf (fp, "%s_nEvents[%d]", sumtParams.eSetName[i], j);
+                if (j!=numPartitions-1)
+                    MrBayesPrintf (fp, "\t");
+            }
+        }
+    }
+
+    /* finalize header line */
+    MrBayesPrintf (fp, "\n");
+    
+    /* print values */
+    for (runNo=0; runNo<sumtParams.numRuns; runNo++)
+    {
+        for (treeSample=0; treeSample<sumtParams.numTreesSampled/sumtParams.numRuns; treeSample++)
+        {
+            /* print branch lengths */
+            for (i=1; i<numPartitions; i++)
+            {
+                x = treeParts[i];
+                if ( x->count[runNo] > treeSample )
+                    MrBayesPrintf (fp, "%s", MbPrintNum (x->length[runNo][treeSample]));
+                else
+                    MrBayesPrintf (fp, "NA");
+                if (i!=numPartitions-1)
+                    MrBayesPrintf (fp, "\t");
+            }
+            /* print node heights */
+            if (sumtParams.isClock == YES)
+            {
+                MrBayesPrintf (fp, "\t");
+                for (i=0; i<numPartitions; i++)
                 {
-                MrBayesPrintf (fp, "\t%s", MbPrintNum (x->length[runNo][j]));
+                    x = treeParts[i];
+                    if ( x->count[runNo] > treeSample )
+                        MrBayesPrintf (fp, "%s", MbPrintNum (x->height[runNo][treeSample]));
+                    else
+                        MrBayesPrintf (fp, "NA");
+                    if (i!=numPartitions-1)
+                        MrBayesPrintf (fp, "\t");
                 }
             }
-        MrBayesPrintf (fp, "\n");
-        }
+            /* print node ages */
+            if (sumtParams.isCalibrated == YES)
+            {
+                MrBayesPrintf (fp, "\t");
+                for (i=0; i<numPartitions; i++)
+                {
+                    x = treeParts[i];
+                    if ( x->count[runNo] > treeSample )
+                        MrBayesPrintf (fp, "%s", MbPrintNum (x->age[runNo][treeSample]));
+                    else
+                        MrBayesPrintf (fp, "NA");
+                    if (i!=numPartitions-1)
+                        MrBayesPrintf (fp, "\t");
+                }
+            }
+            /* print effective branch lengths */
+            if (sumtParams.isRelaxed)
+            {
+                for (i=0; i<sumtParams.nBSets; i++)
+                {
+                    MrBayesPrintf (fp, "\t");
+                    for (j=1; j<numPartitions; j++)
+                    {
+                        x = treeParts[j];
+                        if ( x->count[runNo] > treeSample )
+                            MrBayesPrintf (fp, "%s", MbPrintNum (x->bLen[i][runNo][treeSample]));
+                        else
+                            MrBayesPrintf (fp, "NA");
+                        MrBayesPrintf (fp, "\t");
+                    }
+                    for (j=1; j<numPartitions; j++)
+                    {
+                        x = treeParts[j];
+                        if ( x->count[runNo] > treeSample )
+                            MrBayesPrintf (fp, "%s", MbPrintNum (x->bRate[i][runNo][treeSample]));
+                        else
+                            MrBayesPrintf (fp, "NA");
+                        if (j!=numPartitions-1)
+                            MrBayesPrintf (fp, "\t");
+                    }
+                }
+                for (i=0; i<sumtParams.nESets; i++)
+                {
+                    MrBayesPrintf (fp, "\t");
+                    for (j=1; j<numPartitions; j++)
+                    {
+                        x = treeParts[j];
+                        if ( x->count[runNo] > treeSample )
+                            MrBayesPrintf (fp, "%d", x->nEvents[i][runNo][treeSample]);
+                        else
+                            MrBayesPrintf (fp, "NA");
+                        if (j!=numPartitions-1)
+                            MrBayesPrintf (fp, "\t");
+                    }
+                }
+            }
+            MrBayesPrintf (fp, "\n");
+        }   // next tree sample
+    }   // next run
 
+    MrBayesPrint("\n");
     return NO_ERROR;
 }
 

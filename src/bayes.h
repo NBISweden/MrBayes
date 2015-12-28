@@ -13,6 +13,7 @@
 #include <stdarg.h>
 #include <time.h>
 
+
 #ifdef USECONFIG_H
 #   include "config.h"
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
@@ -21,6 +22,8 @@
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
 #   define SSE_ENABLED  1
+#   undef  AVX_ENABLED
+#   undef  FMA_ENABLED
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
 #   undef  FAST_LOG
@@ -86,20 +89,54 @@ typedef double MrBFlt;      /* double used for parameter values and generally fo
                                if set to float MPI would not work becouse of use MPI_DOUBLE */
 typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
                             /* set CLFlt to double if you want increased precision */
-                            /* NOTE: CLFlt = double not compatible with SSE_ENABLED */
+                            /* NOTE: CLFlt = double not compatible with SSE_ENABLED, AVX_ENABLED or FMA_ENABLED */
 
-/* Define a compiler and vector size for the SSE code */
-#if defined (SSE_ENABLED)
-#  define FLOATS_PER_VEC 4
-#  if defined (WIN_VERSION)
-#    define MS_VCPP_SSE
-#    include <xmmintrin.h>
-#  else
-#    define GCC_SSE
-#    undef ICC_SSE
-#    include <xmmintrin.h>
+
+/*
+ * Make sure we define SIMD instruction flags in a stepwise manner. That is, if we have FMA, make sure we have AVX;
+ * if we have AVX, make sure we have SSE.
+ */
+#if defined (FMA_ENABLED)
+#  if !defined (AVX_ENABLED)
+#    define AVX_ENABLED
 #  endif
 #endif
+
+#if defined (AVX_ENABLED)
+#  if !defined (SSE_ENABLED)
+#    define SSE_ENABLED
+#  endif
+#endif
+
+/* Define compiler for appropriate SIMD vector data alignment and free operations */
+#if defined (SSE_ENABLED)
+#  if defined (WIN_VERSION)
+#    define MS_VCPP_SIMD
+#  else
+#    define GCC_SIMD
+#    undef ICC_SIMD
+#  endif
+#endif
+
+/* Include header for SSE code */
+#if defined (SSE_ENABLED)
+#  include <xmmintrin.h>
+#endif
+
+/* Include header for AVX code */
+#if defined (AVX_ENABLED)
+#  include <immintrin.h>
+#endif
+
+#if defined (FMA_ENABLED)
+#  include <immintrin.h>
+#endif
+
+/* Define vector code constants */
+#define VEC_NONE    0
+#define VEC_SSE     1
+#define VEC_AVX     2
+#define VEC_FMA     3
 
 /* For comparing floating points: two values are the same if the absolute difference is less then
    this value.
@@ -503,7 +540,6 @@ typedef struct node
     int             index;                  /*!< index to node (0 to numLocalTaxa for tips) */
     int             upDateCl;               /*!< cond likes need update?                    */
     int             upDateTi;               /*!< transition probs need update?              */
-    int             scalerNode;             /*!< is node scaling cond likes?                */
     int             isLocked;               /*!< is node locked?                            */
     int             lockID;                 /*!< id of lock                                 */
     int             isDated;                /*!< is node dated (calibrated)?                */
@@ -843,7 +879,7 @@ typedef struct
     } MoveType;
 
 /* max number of move types */
-#define NUM_MOVE_TYPES 100
+#define NUM_MOVE_TYPES 101
 
 /* struct holding info on each move */
 /* Note: This allows several different moves to affect the same parameter */
@@ -1243,17 +1279,21 @@ typedef struct modelinfo
     CLFlt       **clP;                      /* handy pointers to cond likes for ti cats     */
 #if defined (SSE_ENABLED)
     __m128      **clP_SSE;                  /* handy pointers to cond likes, SSE version    */
-    int         numSSEChars;                /* number of compact SSE character groups       */
-    CLFlt       *lnL_SSE;                   /* temp storage for log site likes              */
-    CLFlt       *lnLI_SSE;                  /* temp storage for log site invariable likes   */
+    int         numVecChars;                /* number of compact SIMD vectors               */
+    int         numFloatsPerVec;            /* number of floats per SIMD vector             */
+    CLFlt       *lnL_Vec;                   /* temp storage for log site likes              */
+    CLFlt       *lnLI_Vec;                  /* temp storage for log site invariable likes   */
+#if defined (AVX_ENABLED)
+    __m256      **clP_AVX;                  /* handy pointers to cond likes, AVX version    */
+#endif
 #endif
     MrBFlt      **cijks;                    /* space for cijks                              */
     int         **condLikeIndex;            /* index to cond like space for nodes & chains  */
     int         *condLikeScratchIndex;      /* index to scratch space for node cond likes   */
+    int         **unscaledNodes;            /* # unscaled nodes at a node                   */
+    int         *unscaledNodesScratch;      /* scratch # unscaled nodes at a node           */
     int         **nodeScalerIndex;          /* index to scaler space for nodes & chains     */
     int         *nodeScalerScratchIndex;    /* index to scratch space for node scalers      */
-    int         **scalersSet;               /* flags whether scalers are set                */
-    int         *scalersSetScratch;         /* scratch flag for whether scalers are set     */
     int         *siteScalerIndex;           /* index to site scaler space for chains        */
     int         siteScalerScratchIndex;     /* index to scratch space for site scalers      */
     int         **tiProbsIndex;             /* index to ti probs for branches & chains      */
@@ -1287,9 +1327,10 @@ typedef struct modelinfo
     int         printPosSel;                /* should selection be printed (YES/NO)         */
     int         printSiteOmegas;            /* should site omegas be printed (YES/NO)       */
 
-    /* likelihood calculator flags */
+    /* likelihood calculator flags and variables */
     int         useBeagle;                  /* use Beagle for this partition?               */
-    int         useSSE;                     /* use SSE for this partition?                  */
+    int         useVec;                     /* use SSE for this partition?                  */
+    int*        rescaleFreq;                /* rescale frequency for each chain             */
 
 #if defined (BEAGLE_ENABLED)
     /* Beagle variables */
@@ -1306,7 +1347,6 @@ typedef struct modelinfo
     int*        childTiProbIndices;         /* array of child ti prob indices (unrooted)    */
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
-    int*        rescaleFreq;                /* rescale frequency for each chain's tree      */
     int         rescaleFreqOld;             /* holds rescale frequency of current state     */
     int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
     int*        succesCount;                /* count number of succesful computation since last reset of scalers */
@@ -1328,8 +1368,6 @@ typedef struct sumt
     char        sumtConType[100];      /* consensus tree type                           */
     int         calcTreeprobs;         /* should the individual tree probs be calculated*/
     int         showSumtTrees;         /* should the individual tree probs be shown     */
-    int         printBrlensToFile;     /* should branch lengths be printed to file      */
-    MrBFlt      brlensFreqDisplay;     /* threshold for printing branch lengths to file */
     int         numRuns;               /* number of independent analyses to summarize   */
     int         numTrees;              /* number of tree params to summarize            */
     int         orderTaxa;             /* order taxa in trees?                          */
@@ -1361,6 +1399,8 @@ typedef struct sumt
     int        *numFileTrees;          /* number of trees per file                      */
     int        *numFileTreesSampled;   /* number of trees sampled per file              */
     int         HPD;                   /* use highest posterior density?                */
+    int         saveBrParams;          /* save node/branch parameters?                  */
+    MrBFlt      minBrParamFreq;        /* threshold for printing branch params to file  */
     } Sumt;
 
 /* formats for consensus trees */

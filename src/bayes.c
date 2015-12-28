@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -956,8 +957,6 @@ int ReinitializeMrBayes (void)
     strcpy(sumtParams.sumtConType, "Halfcompat");    /* type of consensus tree output                 */
     sumtParams.calcTreeprobs = YES;                  /* should individual tree probs be calculated    */
     sumtParams.showSumtTrees = NO;                   /* should the individual tree probs be shown     */
-    sumtParams.printBrlensToFile = NO;               /* should brlens be printed to file              */
-    sumtParams.brlensFreqDisplay = 0.50;             /* threshold for printing brlens to file         */
     sumtParams.numTrees = 1;                         /* number of trees to summarize                  */
     sumtParams.numRuns = 2;                          /* number of analyses to summarize               */
     sumtParams.orderTaxa = YES;                      /* order taxa in trees ?                         */
@@ -968,6 +967,8 @@ int ReinitializeMrBayes (void)
     sumtParams.consensusFormat = FIGTREE;            /* format of consensus tree                      */
     strcpy (sumtParams.sumtOutfile, "temp");         /* output name for sumt command                  */
     sumtParams.HPD = YES;                            /* use Highest Posterior Density?                */
+    sumtParams.saveBrParams = NO;                    /* save branch/node params?                      */
+    sumtParams.minBrParamFreq = 0.50;                /* threshold for printing branch params to file  */
 
     /* sump parameters */
     strcpy(sumpParams.sumpFileName, "temp");         /* input name for sump command                   */

@@ -53,6 +53,12 @@ int       CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain);
 #endif
 int       CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain);
 int       CondLikeDown_NUC4 (TreeNode *p, int division, int chain);
+#if defined (FMA_ENABLED)
+int       CondLikeDown_NUC4_FMA (TreeNode *p, int division, int chain);
+#endif
+#if defined (AVX_ENABLED)
+int       CondLikeDown_NUC4_AVX (TreeNode *p, int division, int chain);
+#endif
 #if defined (SSE_ENABLED)
 int       CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain);
 #endif
@@ -72,6 +78,12 @@ int       CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain);
 #endif
 int       CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain);
 int       CondLikeRoot_NUC4 (TreeNode *p, int division, int chain);
+#if defined (FMA_ENABLED)
+int       CondLikeRoot_NUC4_FMA (TreeNode *p, int division, int chain);
+#endif
+#if defined (AVX_ENABLED)
+int       CondLikeRoot_NUC4_AVX (TreeNode *p, int division, int chain);
+#endif
 #if defined (SSE_ENABLED)
 int       CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain);
 #endif
@@ -87,6 +99,9 @@ int       CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain);
 #endif
 int       CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain);
 int       CondLikeScaler_NUC4 (TreeNode *p, int division, int chain);
+#if defined (AVX_ENABLED)
+int       CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain);
+#endif
 #if defined (SSE_ENABLED)
 int       CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain);
 #endif
@@ -108,6 +123,12 @@ int       Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL,
 #endif
 int       Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
+#if defined (FMA_ENABLED)
+int       Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
+#endif
+#if defined (AVX_ENABLED)
+int       Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
+#endif
 #if defined (SSE_ENABLED)
 int       Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 #endif

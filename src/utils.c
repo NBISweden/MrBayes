@@ -18,7 +18,8 @@
  *  With important contributions by
  *
  *  Paul van der Mark (paulvdm@sc.fsu.edu)
- *  Maxim Teslenko (maxim.teslenko@nrm.se)
+ *  Maxim Teslenko (maxkth@gmail.com)
+ *  Chi Zhang (zhangchicool@gmail.com)
  *
  *  and by many users (run 'acknowledgments' to see more info)
  *
@@ -158,17 +159,17 @@ int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
 }
 
 
-#if defined (SSE_ENABLED)
+#if defined (SSE_ENABLED)   /* SSE or more advanced SIMD */
 void * AlignedMalloc (size_t size, size_t alignment)
 {
     void *mem;
 
-    #if defined GCC_SSE     /* gcc compiler */
+    #if defined GCC_SIMD    /* gcc compiler */
     if (posix_memalign (&mem, alignment, size))
         return 0;
-    #elif defined ICC_SSE   /* icc compiler */
+    #elif defined ICC_SIMD   /* icc compiler */
     mem = _mm_malloc (size, alignment);
-    #elif defined MS_VCPP_SSE  /* ms visual */
+    #elif defined MS_VCPP_SIMD  /* ms visual */
     mem = _aligned_malloc (size, alignment);
     #else
     mem = malloc (size);
@@ -181,9 +182,9 @@ void * AlignedMalloc (size_t size, size_t alignment)
 void AlignedSafeFree (void **ptr)
 {
 
-    #if defined ICC_SSE     /* icc compiler */
+    #if defined ICC_VEC     /* icc compiler */
     _mm_free (*ptr);
-    #elif defined MS_VCPP_SSE  /* ms visual */
+    #elif defined MS_VCPP_VEC  /* ms visual */
     _aligned_free (*ptr);
     #else
     free (*ptr);
@@ -3448,7 +3449,6 @@ void CopyTreeNodes (TreeNode *p, TreeNode *q, int nLongsNeeded)
     p->index                  = q->index;
     p->upDateCl               = q->upDateCl;
     p->upDateTi               = q->upDateTi;
-    p->scalerNode             = q->scalerNode;
     p->isLocked               = q->isLocked;
     p->lockID                 = q->lockID;
     p->isDated                = q->isDated;
@@ -6148,7 +6148,6 @@ void ResetTreeNode (TreeNode *p)
 {
     /* do not change memoryIndex; that is set once and for all when tree is allocated */
     p->index                  = 0; 
-    p->scalerNode             = NO;         
     p->upDateCl               = NO;
     p->upDateTi               = NO;
     p->marked                 = NO;
