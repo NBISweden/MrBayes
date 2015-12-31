@@ -6014,7 +6014,7 @@ int InitChainCondLikes (void)
 #endif
 #if defined (FMA_ENABLED)
                 else if (m->useVec == VEC_FMA)
-                {
+                    {
                     m->clP_AVX = (__m256 **) SafeMalloc(m->numTiCats * sizeof(__m256 *));
                     if (!m->clP_AVX)
                         return (ERROR);
@@ -6022,7 +6022,7 @@ int InitChainCondLikes (void)
                     m->lnLI_Vec = AlignedMalloc (m->numVecChars * m->numFloatsPerVec * sizeof(CLFlt*), 32);
                     if (!m->lnL_Vec || !m->lnLI_Vec)
                         return (ERROR);
-                }
+                    }
 #endif
 #   endif
                 }
@@ -6152,23 +6152,23 @@ int InitChainCondLikes (void)
         /* allocate and set up rescale frequency */
         m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
         for (i=0; i<numLocalChains; ++i)
-        {
+            {
             if (m->numModelStates == 4 )
                 m->rescaleFreq[i] = 1;
             else
                 m->rescaleFreq[i] = 1;
-        }
+            }
 
         /* allocate and set up number of unscaled nodes + scratch space */
         m->unscaledNodes = (int **) SafeCalloc (numLocalChains, sizeof(int *));
         if (!m->unscaledNodes)
             return (ERROR);
         for (i=0; i<numLocalChains; i++)
-        {
+            {
             m->unscaledNodes[i] = (int *) SafeCalloc (nNodes, sizeof(int));
             if (!m->unscaledNodes[i])
                 return (ERROR);
-        }
+            }
         m->unscaledNodesScratch = (int *) SafeCalloc (nNodes, sizeof (int));
         if (!m->unscaledNodesScratch)
             return (ERROR);

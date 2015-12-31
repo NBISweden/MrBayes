@@ -90,7 +90,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
                             /* set CLFlt to double if you want increased precision */
                             /* NOTE: CLFlt = double not compatible with SSE_ENABLED, AVX_ENABLED or FMA_ENABLED */
 
-
 /*
  * Make sure we define SIMD instruction flags in a stepwise manner. That is, if we have FMA, make sure we have AVX;
  * if we have AVX, make sure we have SSE.

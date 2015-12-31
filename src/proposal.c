@@ -11800,8 +11800,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate=NULL, nu, *tk02Rate=NULL, minLength=0.0, length=0.0,
-                cumulativeProb, warpFactor, sum1, sum2, ran,
-                divFactor, nStates, rateMult, v_approx, minV;
+                cumulativeProb, warpFactor, sum1, sum2, ran, divFactor, nStates, rateMult, v_approx, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
     Tree        *t;
@@ -12340,8 +12339,8 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
             ++numMovableNodesNew;
         }
-    if (numMovableNodesOld!=numMovableNodesNew)
-        (*lnProposalRatio) += log( numMovableNodesOld/numMovableNodesNew);
+    if (numMovableNodesOld != numMovableNodesNew)
+        (*lnProposalRatio) += log(numMovableNodesOld/numMovableNodesNew);
 
     /* adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
