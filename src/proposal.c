@@ -11800,7 +11800,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate=NULL, nu, *tk02Rate=NULL, minLength=0.0, length=0.0,
-                cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
+                cumulativeProb, warpFactor, sum1, sum2, ran,
                 divFactor, nStates, rateMult, v_approx, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
@@ -11829,12 +11829,14 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     
     numMovableNodesOld=0;
     for (i=0; i<t->nNodes-2; ++i)
-    {
+        {
         p = t->allDownPass[i];
+        a = p->anc->left;
+        b = p->anc->right;
         if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-               || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
             ++numMovableNodesOld;
-    }
+        }
     
     /* pick a branch */
     do  {
@@ -12020,14 +12022,14 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     for (i=0; i<numCompressedChars; i++)
         {
         nSitesOfPat[i] = globalNSitesOfPat[i];
-        for (j=0; j<globalNSitesOfPat[i]; j++)
-            {
-            ran = RandomNumber(seed);
-            if (ran < decreaseProb)
-                nSitesOfPat[i]--;
-            else if (ran > 1.0 - increaseProb)
-                nSitesOfPat[i]++;
-            }
+        // for (j=0; j<globalNSitesOfPat[i]; j++)
+        //    {
+        //    ran = RandomNumber(seed);
+        //    if (ran < decreaseProb)
+        //        nSitesOfPat[i]--;
+        //    else if (ran > 1.0 - increaseProb)
+        //        nSitesOfPat[i]++;
+        //    }
         }
 
     /* cycle through the possibilities and record the parsimony length */
@@ -12304,18 +12306,6 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens[c->index] = igrRate[c->index] * c->length;
             }   /* end igr branch rate parameter */
         }   /* next subparameter */
-
-    /* adjust proposal ratio for number of movable nodes */
-    numMovableNodesNew=0;
-    for (i=0; i<t->nNodes-2; ++i)
-    {
-        p = t->allDownPass[i];
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
-            ++numMovableNodesNew;
-    }
-    if (numMovableNodesOld!=numMovableNodesNew)
-        (*lnProposalRatio) += log( numMovableNodesOld/numMovableNodesNew);
     
     /* set tiprobs update flags */
     c->upDateTi = YES;
@@ -12338,6 +12328,20 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* get down pass sequence */
     GetDownPass (t);
+
+    /* adjust proposal ratio for number of movable nodes */
+    numMovableNodesNew=0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        a = p->anc->left;
+        b = p->anc->right;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
+            ++numMovableNodesNew;
+        }
+    if (numMovableNodesOld!=numMovableNodesNew)
+        (*lnProposalRatio) += log( numMovableNodesOld/numMovableNodesNew);
 
     /* adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio (param, chain, &x) == ERROR)

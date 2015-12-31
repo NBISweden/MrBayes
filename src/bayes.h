@@ -13,7 +13,6 @@
 #include <stdarg.h>
 #include <time.h>
 
-
 #ifdef USECONFIG_H
 #   include "config.h"
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
