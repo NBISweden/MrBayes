@@ -13,3 +13,6 @@ configure
 depcomp
 Makefile
 missing
+install-sh
+*~
+*.log
