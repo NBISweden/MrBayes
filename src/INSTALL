@@ -1,11 +1,12 @@
 MrBayes 3.2.7-dev (development version)
 
-Using GNU autotools (Autoconf and Automake):
+Building MrBayes using the GNU autotools (Autoconf and Automake):
 
 *   Make sure Autoconf 2.69 is installed.
 *   Make sure Automake 1.15 is installed.
+*   Make sure pkg-config >=0.9.0 is installed
 
-*   On some systems who uses metaauto for wrapping multiple versions of
+*   On some systems that uses metaauto for wrapping multiple versions of
     the GNU autotools:
 
     $ export AUTOCONF_VERSION=2.69
@@ -27,10 +28,37 @@ Using GNU autotools (Autoconf and Automake):
 
     $ autoconf
 
-*   Run configure to create "Makefile":
+*   Run configure to create "Makefile" (see "./configure --help" for
+    info about enabling and disabling features of MrBayes, or how to
+    install in non-standard locations etc.):
 
-    $ configure
+    $ ./configure
 
 *   Make the project:
 
     $ make
+
+Picking up the Beagle library:
+
+Assuming Beagle was compiled and installed in a standard location,
+it will be picked up by the configure script automatically (using
+the pkg-config tool).  If it isn't found, or the configure script
+is run with "--without-beagle", Beagle will not be used.  If Beagle
+is installed in a non-default location, point the PKG_CONFIG_PATH
+environment variable to the "pkgconfig" directory that Beagle used.
+
+For example, I installed Beagle in my home directory using
+
+    $ ./configure --prefix=$HOME/local
+    $ make && make install
+
+This means I will need to point PKG_CONFIG_PATH to
+"$HOME/local/lib/pkgconfig" when I build MrBayes:
+
+    $ env PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig ./configure
+    [...]
+    checking for pkg-config... /usr/bin/pkg-config
+    checking pkg-config is at least version 0.9.0... yes
+    checking for BEAGLE... yes
+    [...]
+    $ make && make install
