@@ -9,23 +9,25 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 
+# Determine if we can (and want) to use an MPI C compiler.
+
 AC_ARG_WITH([mpi],
-            [AS_HELP_STRING([--with-mpi],
-                [Build with MPI parallelization support @<:@default=check@:>@])
-            ],
-            [],
-            [with_mpi=check])
+    [AS_HELP_STRING([--with-mpi],
+        [Build with MPI parallelization support @<:@default=check@:>@])],
+    [],
+    [with_mpi=check])
 
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
     [AS_IF([test "x$with_mpi" = "xyes"],
-        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])])])
+        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])]
+    )]
+)
 
 AC_PROG_INSTALL
 
 # Checks for libraries.
-# FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main])
+AC_CHECK_LIB([m], [sqrt])
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
@@ -40,23 +42,20 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup strncasecmp])
 
 # Check for the Beagle library.
-AC_ARG_WITH([beagle],
-            [AS_HELP_STRING([--with-beagle],
-                [Build with the Beagle library @<:@default=check@:>@])
-            ],
-            [],
-            [with_beagle=check])
 
-if test "x$with_beagle" != "xno"; then
-   PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-1],
-                     AC_DEFINE([BEAGLE_ENABLED], [1],
-                               [Define if you want to enable Beagle]),
-                     [if test "x$with_beagle" != "xcheck"; then
-                        AC_MSG_FAILURE(
-                           [--with-beagle was given, but test for Beagle failed])
-                      fi
-                     ])
-fi
+AC_ARG_WITH([beagle],
+    [AS_HELP_STRING([--with-beagle],
+        [Build with the Beagle library @<:@default=check@:>@])],
+    [],
+    [with_beagle=check])
+
+AS_IF([test "x$with_beagle" != "xno"],
+    [PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-1],
+        [AC_DEFINE([BEAGLE_ENABLED], [1],
+            [Define if you want to enable Beagle])],
+        [AS_IF([test "x$with_beagle" != "xcheck"],
+            [AC_MSG_FAILURE(
+                [--with-beagle was given, but test for Beagle failed])])])])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
