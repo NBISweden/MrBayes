@@ -46,5 +46,23 @@ if test "x$with_beagle" != "xno"; then
                      ])
 fi
 
+# Check for MPI.
+
+AC_ARG_WITH([mpi],
+            [AS_HELP_STRING([--with-mpi],
+                [Build with MPI support @<:@default=check@:>@])
+            ],
+            [],
+            [with_mpi=check])
+
+AX_MPI([AC_DEFINE([MPI_ENABLED], [1],
+                  [Define if you want to enable MPI])],
+       [if test "x$with_mpi" != "xcheck"; then
+           AC_MSG_FAILURE(
+               [--with-mpi was given, but test for MPI failed])
+        fi
+       ])
+
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
