@@ -27,7 +27,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup strncasecmp])
 
-# Checks for Beagle libraries etc.
+# Check for the Beagle library.
 AC_ARG_WITH([beagle],
             [AS_HELP_STRING([--with-beagle],
                 [Build with the Beagle library @<:@default=check@:>@])
