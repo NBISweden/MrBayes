@@ -57,3 +57,29 @@ This means I will need to point PKG_CONFIG_PATH to
     checking for BEAGLE... yes
     [...]
     $ make && make install
+
+Picking up and using MPI:
+
+By default, the configure script will find any available MPI C compiler
+and use it.  This behaviour may be changed by using the "--without-mpi"
+flag when running the configure script.  Setting the environment
+variable CC to a specific C compiler will also disable MPI support
+(unless this compiler happens to be an MPI C compiler).
+
+When running configure, unless "--without-mpi" is used, it will always
+say it's going to use MPI, even though no MPI C compiler is available:
+
+    $ ./configure
+    [...]
+    checking whether to compile using MPI... yes
+    [...]
+
+Don't worry, MPI support will not acually be enabled if configure can't
+find the MPI libraries and header files:
+
+    [...]
+    checking for function MPI_Init... no
+    checking for function MPI_Init in -lmpi... no
+    checking for function MPI_Init in -lmpich... no
+    [...]
+
