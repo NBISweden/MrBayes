@@ -364,26 +364,6 @@ char **readline_completion (const char *text, int start, int stop)
 #endif
 
 
-unsigned FindMaxRevision (unsigned amount, ...)
-{
-    const char* cur;
-    char tmp[20];
-    unsigned val,i,max;
-    
-    va_list vl;
-    va_start(vl,amount);
-    max=0;
-    for (i=0;i<amount;i++)
-        {
-        cur=va_arg(vl,const char*);
-        sscanf(cur,"%s %d",tmp,&val);
-        max=(max>val)?max:val;
-        }
-    va_end(vl);
-    return max;
-}
-
-
 void GetTimeSeed (void)
 {
     time_t      curTime;
