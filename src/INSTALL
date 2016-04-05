@@ -20,7 +20,8 @@ Building MrBayes using the GNU autotools (Autoconf and Automake):
 
     $ aclocal
 
-*   Run automake to create "Makefile.in" from "Makefile.am":
+*   Run automake to create "Makefile.in" (and other building tools) from
+    "Makefile.am":
 
     $ automake --add-missing
 
