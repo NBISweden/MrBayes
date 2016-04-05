@@ -6,3 +6,10 @@ config.status
 config.log
 mb
 config.h
+aclocal.m4
+compile
+*.in
+configure
+depcomp
+Makefile
+missing
