@@ -827,11 +827,7 @@ void PrintHeader (void)
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");
 
     MrBayesPrint ("\n\n");
-#   ifdef RELEASE
     MrBayesPrint ("                            MrBayes v%s %s\n\n", VERSION_NUMBER,arch);
-#   else
-    MrBayesPrint ("                        MrBayes v%s(r%d) %s\n\n", VERSION_NUMBER,rev,arch);
-#   endif
     MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #   if defined (MPI_ENABLED)
     MrBayesPrint ("                             (Parallel version)\n");
