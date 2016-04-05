@@ -1,10 +1,17 @@
 MrBayes 3.2.7-dev (development version)
 
-Building MrBayes using the GNU autotools (Autoconf and Automake):
+Building MrBayes using the GNU autotools (Autoconf and Automake) from a
+bare-bones Git clone:
 
-*   Make sure Autoconf 2.69 is installed.
 *   Make sure Automake 1.15 is installed.
-*   Make sure pkg-config >=0.9.0 is installed
+*   Make sure Autoconf 2.69 is installed.
+
+    The configure.ac script here uses pkg-config for detection of
+    external libraries (Beagle) and also uses m4 macros from the
+    autoconf-archive collection for deteciton of MPI.  Therefore,
+
+*   Make sure pkg-config >=0.9.0 is installed.
+*   Make sure autoconf-archive is installed.
 
 *   On some systems that uses metaauto for wrapping multiple versions of
     the GNU autotools:
@@ -12,22 +19,9 @@ Building MrBayes using the GNU autotools (Autoconf and Automake):
     $ export AUTOCONF_VERSION=2.69
     $ export AUTOMAKE_VERSION=1.15
 
-*   Run autoheader to create "config.h.in" from "configure.ac":
+*   Run autoreconf to generate the configure script:
 
-    $ autoheader
-
-*   Run aclocal to create "aclocal.m4" from "configure.ac":
-
-    $ aclocal
-
-*   Run automake to create "Makefile.in" (and other building tools) from
-    "Makefile.am":
-
-    $ automake --add-missing
-
-*   Run autoconf to create "configure":
-
-    $ autoconf
+    $ autoreconf -i
 
 *   Run configure to create "Makefile" (see "./configure --help" for
     info about enabling and disabling features of MrBayes, or how to
