@@ -17,12 +17,9 @@ AC_ARG_WITH([mpi],
             [with_mpi=check])
 
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
-               [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
-       [if test "x$with_mpi" != "xno"; then
-           AC_MSG_FAILURE(
-               [--with-mpi was given, but test for MPI failed])
-        fi
-       ])
+    [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
+    [AS_IF([test "x$with_mpi" = "xyes"],
+        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])])])
 
 AC_PROG_INSTALL
 
