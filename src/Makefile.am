@@ -1,4 +1,7 @@
+EXTRA_DIST=	COPYING
+
 bin_PROGRAMS=	mb
+
 mb_SOURCES=	\
 	bayes.c \
 	bayes.h \
