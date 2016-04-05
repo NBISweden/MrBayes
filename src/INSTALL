@@ -1,3 +1,36 @@
 MrBayes 3.2.7-dev (development version)
 
+Using GNU autotools (Autoconf and Automake):
 
+*   Make sure Autoconf 2.69 is installed.
+*   Make sure Automake 1.15 is installed.
+
+*   On some systems who uses metaauto for wrapping multiple versions of
+    the GNU autotools:
+
+    $ export AUTOCONF_VERSION=2.69
+    $ export AUTOMAKE_VERSION=1.15
+
+*   Run autoheader to create "config.h.in" from "configure.ac":
+
+    $ autoheader
+
+*   Run aclocal to create "aclocal.m4" from "configure.ac":
+
+    $ aclocal
+
+*   Run automake to create "Makefile.in" from "Makefile.am":
+
+    $ automake --add-missing
+
+*   Run autoconf to create "configure":
+
+    $ autoconf
+
+*   Run configure to create "Makefile":
+
+    $ configure
+
+*   Make the project:
+
+    $ make
