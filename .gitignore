@@ -1,1 +1,8 @@
 src/autom4te.cache
+*.o
+stamp-h1
+src/.deps
+config.status
+config.log
+mb
+config.h
