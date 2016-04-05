@@ -13,7 +13,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef USECONFIG_H
+#ifdef HAVE_CONFIG_H
 #   include "config.h"
 #define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
