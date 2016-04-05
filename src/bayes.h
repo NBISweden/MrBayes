@@ -15,9 +15,11 @@
 
 #ifdef USECONFIG_H
 #   include "config.h"
+#define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
-#   define PACKAGE_NAME "mrbayes"
-#   define PACKAGE_VERSION "3.2"
+#   define PACKAGE_NAME "MrBayes"
+#   define PACKAGE_VERSION "3.2.7-dev"
+#   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
 #   define SSE_ENABLED  1
@@ -38,11 +40,6 @@
 
 /* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
 /* #define RELEASE */
-#ifdef RELEASE
-#define VERSION_NUMBER  "3.2.7"
-#else
-#define VERSION_NUMBER  "3.2.7-svn"
-#endif
 
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
 #  ifdef __MWERKS__
