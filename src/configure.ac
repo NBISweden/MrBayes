@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([MrBayes],[3.2.7a])
+AC_INIT([MrBayes],[3.2.7-pre])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([bayes.c])
 AC_CONFIG_HEADERS([config.h])
