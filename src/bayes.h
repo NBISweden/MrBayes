@@ -38,9 +38,6 @@
 #include "libhmsbeagle/beagle.h"
 #endif
 
-/* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
-/* #define RELEASE */
-
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
 #  ifdef __MWERKS__
 #    define MAC_VERSION
