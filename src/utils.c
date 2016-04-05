@@ -42,8 +42,6 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionUtilsC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-
 #define MAX_GAMMA_CATS                      20
 #define PI                                  3.14159265358979324
 #define PIOVER2                             1.57079632679489662

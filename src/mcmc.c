@@ -50,8 +50,6 @@
 #endif
 #include <signal.h>
 
-const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
-
 #if defined (WIN_VERSION) && !defined (__GNUC__)
 #define VISUAL
 #else

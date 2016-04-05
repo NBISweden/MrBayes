@@ -41,17 +41,6 @@
 #include "sumpt.h"
 #include "utils.h"
 
-       const char* const svnRevisionBayesC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-extern const char* const svnRevisionBestC;
-extern const char* const svnRevisionCommandC;
-extern const char* const svnRevisionLikeliC;
-extern const char* const svnRevisionMbbeagleC;
-extern const char* const svnRevisionMcmcC;
-extern const char* const svnRevisionModelC;
-extern const char* const svnRevisionProposalC;
-extern const char* const svnRevisionSumptC;
-extern const char* const svnRevisionUtilsC;
-
 #ifdef HAVE_LIBREADLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -854,10 +843,6 @@ int InitializeMrBayes (void)
 void PrintHeader (void)
 {
     char arch[4];
-#   ifndef RELEASE
-    unsigned rev = FindMaxRevision (10, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionLikeliC,svnRevisionMbbeagleC,
-                                        svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
-#   endif
 
     strcpy(arch,(sizeof(void*)==4)?"x86":"x64");
 

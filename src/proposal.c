@@ -43,8 +43,6 @@
 #include "proposal.h"
 #include "utils.h"
 
-const char* const svnRevisionProposalC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
-
 /* debugging compiler statements */
 #undef  DEBUG_LOCAL
 #undef  DEBUG_UNROOTED_SLIDER

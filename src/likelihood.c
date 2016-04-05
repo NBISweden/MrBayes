@@ -41,8 +41,6 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionLikeliC = "$Rev: 1003 $";   /* Revision keyword which is expanded/updated by svn on each commit/update */
-
 #define LIKE_EPSILON                1.0e-300
 
 extern int      *chainId;

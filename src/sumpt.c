@@ -44,8 +44,6 @@
 #include "SIOUX.h"
 #endif
 
-const char* const svnRevisionSumptC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-
 typedef struct partctr
     {
     struct partctr  *left, *right;
