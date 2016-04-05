@@ -8,7 +8,22 @@ AC_CONFIG_SRCDIR([bayes.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
-AC_PROG_CC
+
+AC_ARG_WITH([mpi],
+            [AS_HELP_STRING([--with-mpi],
+                [Build with MPI parallelization support @<:@default=check@:>@])
+            ],
+            [],
+            [with_mpi=check])
+
+AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
+               [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
+       [if test "x$with_mpi" != "xno"; then
+           AC_MSG_FAILURE(
+               [--with-mpi was given, but test for MPI failed])
+        fi
+       ])
+
 AC_PROG_INSTALL
 
 # Checks for libraries.
@@ -45,24 +60,6 @@ if test "x$with_beagle" != "xno"; then
                       fi
                      ])
 fi
-
-# Check for MPI.
-
-AC_ARG_WITH([mpi],
-            [AS_HELP_STRING([--with-mpi],
-                [Build with MPI support @<:@default=check@:>@])
-            ],
-            [],
-            [with_mpi=check])
-
-AX_MPI([AC_DEFINE([MPI_ENABLED], [1],
-                  [Define if you want to enable MPI])],
-       [if test "x$with_mpi" != "xcheck"; then
-           AC_MSG_FAILURE(
-               [--with-mpi was given, but test for MPI failed])
-        fi
-       ])
-
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
