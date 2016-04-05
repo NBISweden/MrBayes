@@ -43,6 +43,8 @@
 #    define MAC_VERSION
 #  elif defined __APPLE__
 #    define MAC_VERSION
+#  elif defined __unix__
+#    define UNIX_VERISON
 #  else
 #    define WIN_VERSION
 #  endif
