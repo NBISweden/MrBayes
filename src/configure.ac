@@ -24,6 +24,9 @@ AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     )]
 )
 
+# Check for SIMD extensions supported by hardware and compiler (-msse2 etc.)
+AX_EXT
+
 AC_PROG_INSTALL
 
 # Checks for libraries.
@@ -35,6 +38,7 @@ AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 AC_CHECK_HEADER_STDBOOL
+
 
 # Checks for library functions.
 AC_FUNC_MALLOC
