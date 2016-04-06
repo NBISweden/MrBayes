@@ -11,7 +11,7 @@ bare-bones Git clone:
     autoconf-archive collection for deteciton of MPI.  Therefore,
 
 *   Make sure pkg-config >=0.9.0 is installed.
-*   Make sure autoconf-archive is installed.
+*   Make sure autoconf-archive 2016.03.20 is installed.
 
 *   On some systems that uses metaauto for wrapping multiple versions of
     the GNU autotools:
