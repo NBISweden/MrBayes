@@ -8914,13 +8914,37 @@ int DoUserTreeParm (char *parmName, char *tkn)
 }
 
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 int DoVersion (void)
 {
-    MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
-    MrBayesPrint ("   Version                                                                       \n");
-    MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   MrBayes v%s                                                                   \n", VERSION_NUMBER);
-    MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
+    MrBayesPrint ("   ---------------------------------------------------------------------------\n");
+    MrBayesPrint ("   Version\n");
+    MrBayesPrint ("\n");
+    MrBayesPrint ("   MrBayes v%s\n", VERSION_NUMBER);
+    MrBayesPrint("\n");
+    MrBayesPrint("   Features: ");
+#ifdef SSE_ENABLED
+    MrBayesPrint(" SSE");
+#endif
+#ifdef AVX_ENABLED
+    MrBayesPrint(" AVX");
+#endif
+#ifdef FMA_ENABLED
+    MrBayesPrint(" FMA");
+#endif
+#ifdef BEAGLE_ENABLED
+    MrBayesPrint(" Beagle");
+#endif
+#ifdef MPI_ENABLED
+    MrBayesPrint(" MPI");
+#endif
+    MrBayesPrint("\n");
+#ifdef HOST
+    MrBayesPrint("   Built for %s\n", TOSTRING(HOST));
+#endif
+    MrBayesPrint ("   ---------------------------------------------------------------------------\n");
 
     return (NO_ERROR);
 }
