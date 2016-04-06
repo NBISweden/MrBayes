@@ -2,10 +2,8 @@ src/autom4te.cache
 *.o
 stamp-h1
 src/.deps
-config.status
-config.log
+config.*
 mb
-config.h
 aclocal.m4
 compile
 *.in
@@ -15,4 +13,3 @@ Makefile
 missing
 install-sh
 *~
-*.log
