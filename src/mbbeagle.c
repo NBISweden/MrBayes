@@ -265,7 +265,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             }
 
         if (beagleScalingFrequency != 0 && 
-            m->computeCount[chain] % (beagleScalingFrequency) == 0)
+            m->beagleComputeCount[chain] % (beagleScalingFrequency) == 0)
             {
             m->rescaleFreqOld = rescaleFreqNew = m->rescaleFreq[chain];
             for (i=0; i<tree->nIntNodes; i++)
@@ -349,7 +349,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
         }
     
     /* Count number of evaluations */
-    m->computeCount[chain]++;
+    m->beagleComputeCount[chain]++;
 }
 
 
@@ -855,7 +855,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             /* Now deal with scalers */
             m->unscaledNodes[chain][p->index] = 1 + m->unscaledNodes[chain][p->left->index] + m->unscaledNodes[chain][p->right->index];
 
-            if (m->unscaledNodes[chain][p->index] >= m->rescaleFreq)
+            if (m->unscaledNodes[chain][p->index] >= m->rescaleFreq[chain])
                 {
                 m->unscaledNodes[chain][p->index] = 0;
                 operations.destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
@@ -880,7 +880,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
                 operations.child1TransitionMatrix++;
                 operations.child2Partials+=chil2Step;
                 operations.child2TransitionMatrix++;
-                if (p->scalerNode == YES)
+                if (m->isScalerNode == YES)
                     {
                     operations.destinationScaleWrite++;
                     cumulativeScaleIndex++;
