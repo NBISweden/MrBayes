@@ -30,6 +30,26 @@
 #   undef  FAST_LOG
 #endif
 
+/* Set SSE_ENABLED if SSE SIMD extensions available. */
+#if defined(HAVE_SSE) || defined(HAVE_SSE2) || defined(HAVE_SSE3) || \
+    defined(HAVE_SSSE3) || defined(HAVE_SSE4_1) || defined(HAVE_SSE4_2) || \
+    defined(HAVE_SSE4a)
+#define SSE_ENABLED
+#endif
+
+/* Set AVX_ENABLED if AVX SIMD extensions available. */
+#if defined(HAVE_AVX) || defined(HAVE_AVX2) || defined(HAVE_AVX512_F) || \
+    defined(HAVE_AVX512_CD) || defined(HAVE_AVX512_PF) || defined(HAVE_AVX512_ER) || \
+    defined(HAVE_AVX512_VL)|| defined(HAVE_AVX512_BW) || defined(HAVE_AVX512_DQ) || \
+    defined(HAVE_AVX512_IFMA) || defined(HAVE_AVX512_VBMI)
+#define AVX_ENABLED
+#endif
+
+/* Set FMA_ENABLED if FMA SIMD extensions available. */
+#if defined(HAVE_FMA3) || defined(HAVE_FMA4)
+#define FMA_ENABLED
+#endif
+
 #if defined (MPI_ENABLED)
 #include "mpi.h"
 #endif
