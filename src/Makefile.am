@@ -24,7 +24,7 @@ mb_SOURCES=	\
 	utils.c \
 	utils.h
 
-mb_CFLAGS=	$(SIMD_FLAGS)
+mb_CFLAGS=	$(SIMD_FLAGS) $(CPUEXT_FLAGS)
 
 mb_LDADD=	$(BEAGLE_LIBS)
 mb_CFLAGS+=	$(BEAGLE_CFLAGS)
