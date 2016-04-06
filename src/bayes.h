@@ -31,12 +31,12 @@
 #endif
 
 /* Set SSE_ENABLED if SSE SIMD extensions available. */
-#ifdef(HAVE_SSE)
+#ifdef HAVE_SSE
 #define SSE_ENABLED
 #endif
 
 /* Set AVX_ENABLED if AVX SIMD extensions available. */
-#ifdef(HAVE_AVX)
+#ifdef HAVE_AVX
 #define AVX_ENABLED
 #endif
 
