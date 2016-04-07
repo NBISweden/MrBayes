@@ -83,3 +83,19 @@ find the MPI libraries and header files:
     checking for function MPI_Init in -lmpich... no
     [...]
 
+About readline support:
+
+MrBayes will be compiled with readline support (which allows for command
+line history within an interactive session, and command completion
+through pressing the <tab> key) if the readline library is available.
+However, it seems as if the readline library doesn't work well together
+with common MPI implentations (OpenMPI and MPICH), so if MrBayes is
+compiled with support for MPI parallelization, readline support will be
+automatically disabled.
+
+A possible workaround is to use a readline wrapper, such as rlwrap,
+which gives you persistant command line history between sessions, but no
+command completion.  To use rlwrap with an MPI-enabled MrBayes, simply
+start MrBayes like this:
+
+    $ rlwrap mb
