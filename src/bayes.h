@@ -45,6 +45,11 @@
 #define FMA_ENABLED
 #endif
 
+/* Set COMPLETIONMATCHES if we have the readline library */
+#ifdef HAVE_LIBREADLINE
+#define COMPLETIONMATCHES
+#endif
+
 #if defined (MPI_ENABLED)
 #include "mpi.h"
 #endif

@@ -42,8 +42,21 @@
 #include "utils.h"
 
 #ifdef HAVE_LIBREADLINE
-#include <readline/readline.h>
-#include <readline/history.h>
+#  if defined(HAVE_READLINE_READLINE_H)
+#    include <readline/readline.h>
+#  elif defined(HAVE_READLINE_H)
+#    include <readline.h>
+#  endif /* !defined(HAVE_READLINE_H) */
+#endif /* HAVE_LIBREADLINE */
+#ifdef HAVE_READLINE_HISTORY
+#  if defined(HAVE_READLINE_HISTORY_H)
+#    include <readline/history.h>
+#  elif defined(HAVE_HISTORY_H)
+#    include <history.h>
+#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+#endif /* HAVE_READLINE_HISTORY */
+
+#ifdef HAVE_LIBREADLINE
 static char **readline_completion(const char *, int, int);
 #endif
 

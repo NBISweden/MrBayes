@@ -18,8 +18,10 @@ AC_ARG_WITH([mpi],
     [with_mpi=check])
 
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
-    [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
-    [AS_IF([test "x$with_mpi" = "xyes"],
+    [use_mpi=yes
+     AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
+    [use_mpi=no
+     AS_IF([test "x$with_mpi" = "xyes"],
         [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])
     ]) dnl AS_IF
 ]) dnl AX_PROG_CC_MPI
@@ -31,6 +33,10 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [sqrt])
+
+# Check for readline, but only if we don't have MPI, because aparantly
+# it won't work.
+AS_IF([test "x$use_mpi" != "xyes"], [AX_LIB_READLINE])
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
