@@ -20,9 +20,9 @@ AC_ARG_WITH([mpi],
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     [AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
     [AS_IF([test "x$with_mpi" = "xyes"],
-        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])]
-    )]
-)
+        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])
+    ]) dnl AS_IF
+]) dnl AX_PROG_CC_MPI
 
 # Check for SIMD extensions supported by hardware and compiler (-msse2 etc.)
 AX_EXT
@@ -38,7 +38,6 @@ AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 AC_CHECK_HEADER_STDBOOL
-
 
 # Checks for library functions.
 AC_FUNC_MALLOC
@@ -59,7 +58,10 @@ AS_IF([test "x$with_beagle" != "xno"],
             [Define if you want to enable Beagle])],
         [AS_IF([test "x$with_beagle" != "xcheck"],
             [AC_MSG_FAILURE(
-                [--with-beagle was given, but test for Beagle failed])])])])
+                [--with-beagle was given, but test for Beagle failed])
+        ]) dnl AS_IF
+    ]) dnl PKG_CHECK_MODULES
+]) dnl AS_IF
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
