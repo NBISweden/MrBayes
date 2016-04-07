@@ -32,6 +32,9 @@ AC_PROG_INSTALL
 # Checks for libraries.
 AC_CHECK_LIB([m], [sqrt])
 
+# Check for readline
+AX_LIB_READLINE
+
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
 
