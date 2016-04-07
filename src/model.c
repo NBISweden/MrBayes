@@ -47,8 +47,6 @@
 #include "SIOUX.h"
 #endif
 
-const char* const svnRevisionModelC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-
 #undef  DEBUG_ADDDUMMYCHARS
 #undef  DEBUG_CONSTRAINTS
 #undef  DEBUG_COMPRESSDATA

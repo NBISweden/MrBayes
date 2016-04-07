@@ -1,0 +1,15 @@
+src/autom4te.cache
+*.o
+stamp-h1
+src/.deps
+config.*
+mb
+aclocal.m4
+compile
+*.in
+configure
+depcomp
+Makefile
+missing
+install-sh
+*~

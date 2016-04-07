@@ -13,11 +13,13 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef USECONFIG_H
+#ifdef HAVE_CONFIG_H
 #   include "config.h"
+#define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
-#   define PACKAGE_NAME "mrbayes"
-#   define PACKAGE_VERSION "3.2"
+#   define PACKAGE_NAME "MrBayes"
+#   define PACKAGE_VERSION "3.2.7-dev"
+#   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
 #   define SSE_ENABLED  1
@@ -28,6 +30,21 @@
 #   undef  FAST_LOG
 #endif
 
+/* Set SSE_ENABLED if SSE SIMD extensions available. */
+#ifdef HAVE_SSE
+#define SSE_ENABLED
+#endif
+
+/* Set AVX_ENABLED if AVX SIMD extensions available. */
+#ifdef HAVE_AVX
+#define AVX_ENABLED
+#endif
+
+/* Set FMA_ENABLED if FMA SIMD extensions available. */
+#if defined(HAVE_FMA3) || defined(HAVE_FMA4)
+#define FMA_ENABLED
+#endif
+
 #if defined (MPI_ENABLED)
 #include "mpi.h"
 #endif
@@ -36,19 +53,13 @@
 #include "libhmsbeagle/beagle.h"
 #endif
 
-/* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
-/* #define RELEASE */
-#ifdef RELEASE
-#define VERSION_NUMBER  "3.2.7"
-#else
-#define VERSION_NUMBER  "3.2.7-svn"
-#endif
-
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
 #  ifdef __MWERKS__
 #    define MAC_VERSION
 #  elif defined __APPLE__
 #    define MAC_VERSION
+#  elif defined __unix__
+#    define UNIX_VERISON
 #  else
 #    define WIN_VERSION
 #  endif
