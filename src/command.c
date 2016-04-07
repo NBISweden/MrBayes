@@ -8940,6 +8940,9 @@ int DoVersion (void)
 #ifdef MPI_ENABLED
     MrBayesPrint(" MPI");
 #endif
+#ifdef HAVE_LIBREADLINE
+    MrBayesPrint(" readline");
+#endif
     MrBayesPrint("\n");
 #ifdef HOST
     MrBayesPrint("   Built for %s\n", TOSTRING(HOST));
