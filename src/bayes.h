@@ -45,7 +45,13 @@
 #define FMA_ENABLED
 #endif
 
-/* Set COMPLETIONMATCHES if we have tho readline library */
+/* Disable readline support if we have MPI.  Readline does not seem to work well
+ * together with MPICH or OpenMPI */
+#ifdef MPI_ENABLED
+#undef HAVE_LIBREADLINE
+#endif
+
+/* Set COMPLETIONMATCHES if we have the readline library */
 #ifdef HAVE_LIBREADLINE
 #define COMPLETIONMATCHES
 #endif
