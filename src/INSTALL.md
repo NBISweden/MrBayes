@@ -143,4 +143,4 @@ MrBayes like this:
     $ rlwrap mb
 
 
-[//]: # vim: filetype=markdown
+// vim: filetype=markdown
