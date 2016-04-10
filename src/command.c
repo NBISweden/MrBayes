@@ -8913,10 +8913,6 @@ int DoUserTreeParm (char *parmName, char *tkn)
     MrBayesPrint ("%s", tkn);
 }
 
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 int DoVersion (void)
 {
     MrBayesPrint ("   ---------------------------------------------------------------------------\n");

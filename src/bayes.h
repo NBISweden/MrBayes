@@ -13,6 +13,10 @@
 #include <stdarg.h>
 #include <time.h>
 
+/* Utility macro used in bayes.c and command.c */
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 #ifdef HAVE_CONFIG_H
 #   include "config.h"
 #define VERSION_NUMBER  PACKAGE_VERSION
