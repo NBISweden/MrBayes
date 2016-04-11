@@ -1,3 +1,6 @@
+NOTE: These instrutions are outdated, but have been kept as they may
+NOTE: still be informative.  For updated build instructions, please see
+NOTE: the "INSTALL" document.
 
 Content
 =======
