@@ -143,7 +143,7 @@ allows for command line history within an interactive session, and
 command completion through pressing the "tab" key) if the Readline
 library and its associated header files are available.  However, it
 seems as if the Readline library doesn't work well together with common
-MPI implentations (OpenMPI (https://www.open-mpi.org/) and MPICH
+MPI implementations (OpenMPI (https://www.open-mpi.org/) and MPICH
 (https://www.mpich.org/)), so if MrBayes is configured with support for
 MPI parallelization, Readline support will be automatically disabled.
 
