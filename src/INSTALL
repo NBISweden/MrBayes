@@ -2,13 +2,36 @@ MrBayes 3.2.7-dev (development not-yet-3.2.7 version)
 ========================================================================
 
 
-Building MrBayes using the GNU autotools (Autoconf and Automake) from a
-bare-bones Git clone:
+Building MrBayes using the supplied "configure" script:
 ------------------------------------------------------------------------
 
-The code in the Git repository for MrBayes is (as of writing) set up
-to build the software using the GNU autotools, i.e. using Automake and
-Autoconf, on a Unix-like system.  Therefore,
+The code in the MrBayes Git repository comes with a standard GNU
+"configure" script.  On any Unix system, these are the steps required to
+compile and optionally install MrBayes:
+
+* Run "configure" to create "Makefile" (see "./configure --help" for
+  info about enabling and disabling features of MrBayes, or how to
+  install in non-standard locations etc., and also read further down in
+  this document):
+
+        $ ./configure
+
+* Make (i.e. compile) the project:
+
+        $ make
+
+* Install it on the system (optional):
+
+        $ make install
+
+
+Building MrBayes using the GNU autotools (Autoconf and Automake):
+------------------------------------------------------------------------
+
+MrBayes uses the GNU autotools, i.e. Automake and Autoconf, for its
+configuration and build system.  To tinker with "configure.ac" and
+"Makefile.am" and then to regenerate the "configure" script and
+associated files, there are some prerequisites that need to be in place:
 
 * Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
   is installed.
@@ -39,20 +62,6 @@ When all the prerequisites are in place:
 * Run "autoreconf" to generate the "configure" script:
 
         $ autoreconf -i
-
-* Run "configure" to create "Makefile" (see "./configure --help" for
-  info about enabling and disabling features of MrBayes, or how to
-  install in non-standard locations etc.):
-
-        $ ./configure
-
-* Make the project:
-
-        $ make
-
-* Install it on the system (optional):
-
-        $ make install
 
 
 Picking up the Beagle library:
