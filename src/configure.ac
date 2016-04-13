@@ -10,6 +10,10 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([bayes.c])
 AC_CONFIG_HEADERS([config.h])
 
+AC_CANONICAL_HOST
+AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"], [Host triplet])
+AC_DEFINE_UNQUOTED([HOST_CPU], ["$host_cpu"], [Host CPU type])
+
 # Checks for programs.
 
 # Determine if we can (and want) to use an MPI C compiler.
