@@ -33,6 +33,15 @@ AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     ]) dnl AS_IF
 ]) dnl AX_PROG_CC_MPI
 
+# Get compiler's vendor and version
+AX_COMPILER_VENDOR
+AX_COMPILER_VERSION
+
+AC_DEFINE_UNQUOTED([COMPILER_VENDOR],
+    ["$ax_cv_c_compiler_vendor"], [Compiler vendor])
+AC_DEFINE_UNQUOTED([COMPILER_VERSION],
+    ["$ax_cv_c_compiler_version"], [Compiler version])
+
 # Check for SIMD extensions supported by hardware and compiler (-msse2 etc.)
 AX_EXT
 
