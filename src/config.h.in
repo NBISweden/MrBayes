@@ -3,6 +3,12 @@
 /* Define if you want to enable Beagle */
 #undef BEAGLE_ENABLED
 
+/* Compiler vendor */
+#undef COMPILER_VENDOR
+
+/* Compiler version */
+#undef COMPILER_VERSION
+
 /* Define to 1 to support Advanced Bit Manipulation */
 #undef HAVE_ABM
 
@@ -185,6 +191,12 @@
 
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
+
+/* Host CPU type */
+#undef HOST_CPU
+
+/* Host triplet */
+#undef HOST_TYPE
 
 /* Define if you want to enable MPI */
 #undef MPI_ENABLED
