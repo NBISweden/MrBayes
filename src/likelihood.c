@@ -155,12 +155,20 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
         for (c=0; c<m->numVecChars; c++)
             {
             m1 = _mm_load1_ps (&tiPL[0]);
+            m1 = _mm_loadh_pi(m1, &tiPL[2]);
+
             m2 = _mm_load1_ps (&tiPR[0]);
+            m2 = _mm_loadh_pi(m2, &tiPR[2]);
+
             m5 = _mm_mul_ps (m1, clL[0]);
             m6 = _mm_mul_ps (m2, clR[0]);
 
             m1 = _mm_load1_ps (&tiPL[1]);
+            m1 = _mm_loadh_pi(m1, &tipL[3]);
+
             m2 = _mm_load1_ps (&tiPR[1]);
+            m2 = _mm_loadh_pi(m2, &tiPR[3]);
+
             m3 = _mm_mul_ps (m1, clL[1]);
             m4 = _mm_mul_ps (m2, clR[1]);
 
@@ -169,20 +177,6 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
 
             *clP++ = _mm_mul_ps (m5, m6);
 
-            m1 = _mm_load1_ps (&tiPL[2]);
-            m2 = _mm_load1_ps (&tiPR[2]);
-            m5 = _mm_mul_ps (m1, clL[0]);
-            m6 = _mm_mul_ps (m2, clR[0]);
-
-            m1 = _mm_load1_ps (&tiPL[3]);
-            m2 = _mm_load1_ps (&tiPR[3]);
-            m3 = _mm_mul_ps (m1, clL[1]);
-            m4 = _mm_mul_ps (m2, clR[1]);
-
-            m5 = _mm_add_ps (m3, m5);
-            m6 = _mm_add_ps (m4, m6);
-           
-            *clP++ = _mm_mul_ps (m5, m6);
             clL += 2;
             clR += 2;
             }
