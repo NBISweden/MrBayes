@@ -8940,8 +8940,11 @@ int DoVersion (void)
     MrBayesPrint(" readline");
 #endif
     MrBayesPrint("\n");
-#ifdef HOST
-    MrBayesPrint("   Built for %s\n", TOSTRING(HOST));
+#if defined(HOST_TYPE) && defined(HOST_CPU)
+    MrBayesPrint("   Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
+#endif
+#if defined(COMPILER_VENDOR) && defined(COMPILER_VERSION)
+    MrBayesPrint("   Compiler:  %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
 #endif
     MrBayesPrint ("   ---------------------------------------------------------------------------\n");
 
