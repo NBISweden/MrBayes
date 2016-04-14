@@ -731,6 +731,7 @@ enable_option_checking
 enable_silent_rules
 with_mpi
 enable_dependency_tracking
+with_readline
 with_beagle
 '
       ac_precious_vars='build_alias
@@ -1378,6 +1379,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-mpi              Build with MPI parallelization support
                           [default=check]
+  --with-readline         Build with the Readline library [default=check]
   --with-beagle           Build with the Beagle library [default=check]
 
 Some influential environment variables:
@@ -4399,10 +4401,7 @@ else
 
         use_mpi=no
      if test "x$with_mpi" = "xyes"; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "--with-mpi was given, but test for MPI failed
-See \`config.log' for more details" "$LINENO" 5; }
+  as_fn_error $? "--with-mpi was given, but test for MPI failed" "$LINENO" 5
 
 fi
         :
@@ -6347,6 +6346,16 @@ fi
 
 # Check for readline, but only if we don't have MPI, because aparantly
 # it won't work.
+
+
+# Check whether --with-readline was given.
+if test "${with_readline+set}" = set; then :
+  withval=$with_readline;
+else
+  with_readline=check
+fi
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -6744,7 +6753,8 @@ fi
 done
 
 
-if test "x$use_mpi" != "xyes"; then :
+if test "x$use_mpi" = "xno"; then :
+  if test "x$with_readline" != "xno"; then :
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a readline compatible library" >&5
 $as_echo_n "checking for a readline compatible library... " >&6; }
@@ -6874,7 +6884,17 @@ done
   fi
 
 fi
+else
+  if test "x$with_readline" = "xyes"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-readline was given, but MPI support requires
+            readline to be disabled.  Retry with --without-mpi if you
+            *really* need readline support" >&5
+$as_echo "$as_me: WARNING: --with-readline was given, but MPI support requires
+            readline to be disabled.  Retry with --without-mpi if you
+            *really* need readline support" >&2;}
 
+fi
+fi
 # Checks for header files.
 for ac_header in float.h limits.h memory.h stdlib.h string.h
 do :
@@ -7330,20 +7350,14 @@ fi
 	echo "$BEAGLE_PKG_ERRORS" >&5
 
 	if test "x$with_beagle" != "xcheck"; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "--with-beagle was given, but test for Beagle failed
-See \`config.log' for more details" "$LINENO" 5; }
+  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
 
 fi
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	if test "x$with_beagle" != "xcheck"; then :
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "--with-beagle was given, but test for Beagle failed
-See \`config.log' for more details" "$LINENO" 5; }
+  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
 
 fi
 else
