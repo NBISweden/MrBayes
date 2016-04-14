@@ -29,7 +29,7 @@ AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
      AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
     [use_mpi=no
      AS_IF([test "x$with_mpi" = "xyes"],
-        [AC_MSG_FAILURE([--with-mpi was given, but test for MPI failed])
+        [AC_MSG_ERROR([--with-mpi was given, but test for MPI failed])
     ]) dnl AS_IF
 ]) dnl AX_PROG_CC_MPI
 
@@ -94,7 +94,7 @@ AS_IF([test "x$with_beagle" != "xno"],
         [AC_DEFINE([BEAGLE_ENABLED], [1],
             [Define if you want to enable Beagle])],
         [AS_IF([test "x$with_beagle" != "xcheck"],
-            [AC_MSG_FAILURE(
+            [AC_MSG_ERROR(
                 [--with-beagle was given, but test for Beagle failed])
         ]) dnl AS_IF
     ]) dnl PKG_CHECK_MODULES
