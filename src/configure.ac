@@ -52,7 +52,22 @@ AC_CHECK_LIB([m], [sqrt])
 
 # Check for readline, but only if we don't have MPI, because aparantly
 # it won't work.
-AS_IF([test "x$use_mpi" != "xyes"], [AX_LIB_READLINE])
+
+AC_ARG_WITH([readline],
+    [AS_HELP_STRING([--with-readline],
+        [Build with the Readline library @<:@default=check@:>@])],
+    [],
+    [with_readline=check])
+
+AS_IF([test "x$use_mpi" = "xno"],
+    [AS_IF([test "x$with_readline" != "xno"], [AX_LIB_READLINE])],
+    [AS_IF([test "x$with_readline" = "xyes"],
+        [AC_MSG_WARN(
+            [--with-readline was given, but MPI support requires
+            readline to be disabled.  Retry with --without-mpi if you
+            *really* need readline support])
+    ]) dnl AS_IF
+]) dnl AS_IF
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
