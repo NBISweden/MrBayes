@@ -1,0 +1,18 @@
+This website is work in progress!
+
+It is currently being moved over from its old home at SourceForge.
+
+TODO:
+
+    * Frames (really simple ones) for the left side panel and page body.
+
+    * When bugs are migrated to GitHub issues, update issues links.
+
+    * Download-links likewise.
+
+    * Mailing list, likewise.
+
+
+Tidying HTML pages using HTML Tidy:
+
+    $ for f in *.html; do tidy -m -indent -wrap 72 -ashtml -latin1 $f; done
