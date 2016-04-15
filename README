@@ -15,4 +15,4 @@ TODO:
 
 Tidying HTML pages using HTML Tidy:
 
-    $ for f in *.html; do tidy -m -indent -wrap 72 -ashtml -latin1 $f; done
+    $ for f in *.html; do tidy -config tidy.conf -xml $f; done
