@@ -1,0 +1,49 @@
+.verdana10, .verdana10vit {
+	font-family: Verdana, helvetica;
+	font-size: 10px;
+}
+.verdana10 {
+	color: #333333;
+}
+.verdana10vit {
+	color: #FFFFFF;
+}
+
+P, UL, LI {
+   font-family:Times,"Times New Roman", "Times Roman", serif; 
+   font-size:12pt;
+}
+
+
+H1, H2, H3 {
+   font-family:Helvetica, Arial, sans-serif; 
+
+   font-weight:bold;
+   }
+H1 { 
+   font-size:24pt;
+}
+H2 {
+   font-size:18pt;
+}
+
+H3 {
+   font-size:12pt;
+}
+
+.selected {
+	text-decoration: none;
+	color: green;
+	font-size: 1.1em;
+}
+.notselected {
+	text-decoration: none;
+	color: blue;
+	font-size: 1.1em;
+}
+
+.notselected:hover { 
+	color: darkblue;
+	font-size: 1.2em;
+}
+
