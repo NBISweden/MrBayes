@@ -42,6 +42,8 @@ AC_DEFINE_UNQUOTED([COMPILER_VENDOR],
 AC_DEFINE_UNQUOTED([COMPILER_VERSION],
     ["$ax_cv_c_compiler_version"], [Compiler version])
 
+AX_CFLAGS_WARN_ALL
+
 # Check for SIMD extensions supported by hardware and compiler (-msse2 etc.)
 AX_EXT
 
