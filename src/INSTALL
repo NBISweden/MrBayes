@@ -34,6 +34,11 @@ compile and optionally install MrBayes:
 
         $ make install
 
+To build a statically linked version of MrBayes, set the environment
+variable LDFLAGS to "-static" when configuring:
+
+    $ env LDFLAGS=-static ./configure
+
 
 Building MrBayes using the GNU autotools (Autoconf and Automake):
 ------------------------------------------------------------------------
