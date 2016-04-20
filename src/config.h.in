@@ -9,6 +9,15 @@
 /* Compiler version */
 #undef COMPILER_VERSION
 
+/* AVX code path should not be compiled. */
+#undef DISABLE_AVX
+
+/* FMA code path should not be compiled. */
+#undef DISABLE_FMA
+
+/* SSE code path should not be compiled. */
+#undef DISABLE_SSE
+
 /* Define to 1 to support Advanced Bit Manipulation */
 #undef HAVE_ABM
 
