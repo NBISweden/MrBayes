@@ -1,0 +1,32 @@
+Hi,
+
+This is the GitHub repository for MrBayes, a program used for Bayesian
+inference of phylogeny.
+
+Currently, we are in the process of moving everything over from
+Subversion to Git, and from SourceForge to GitHub.  The code, web
+pages and PDF manuals are already available here, but the bug tracking
+database and mailing list are still to be processed.  Also, the MrBayes
+home page link at http://mrbayes.net/ is still pointing to the old web
+pages.  The new web site is available at http://bils.github.io/MrBayes/
+
+Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0
+onwards.  As soon as issue #1 has been resolved, the 'master' branch
+should only contain releasable (stable, working) code.  The 'develop'
+branch should hopefully, at all times, contain working development
+code that at least compiles.  Apart from simple fixes, new development
+happens on feature branches off the 'develop' branch, and are merged
+back into 'develop' when finished.  This more or less follows the
+"git-flow" branching model.  The orphaned 'gh-pages' branch contains the
+web site (only).
+
+After release 3.2.6 (November 2015), MrBayes entered "maintenance mode",
+and its care has been passed over to NBIS (National Bioinformatics
+Infrastructure Sweden, http://nbis.se/).  The original development
+team is still involved with the program, but any future releases will
+probably be geared more towards bug-fixes rather than addition of new
+features.
+
+With kind regards,
+    Andreas (Kusalananda) Kähäri
+    NBIS
