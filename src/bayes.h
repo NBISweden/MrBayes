@@ -122,6 +122,23 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #  endif
 #endif
 
+/* Likewise, if the user has asked for SIMD instructions to be disabled, do this
+ * too in a stepwise manner */
+#ifdef DISABLE_SSE
+#undef SSE_ENABLED
+#undef AVX_ENABLED
+#undef FMA_ENABLED
+#endif
+
+#ifdef DISABLE_AVX
+#undef AVX_ENABLED
+#undef FMA_ENABLED
+#endif
+
+#ifdef DISABLE_FMA
+#undef FMA_ENABLED
+#endif
+
 /* Define compiler for appropriate SIMD vector data alignment and free operations */
 #if defined (SSE_ENABLED)
 #  if defined (WIN_VERSION)
