@@ -5265,7 +5265,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
 {
     int             c, k;
     CLFlt           *scP, *lnScaler;
-    __m256          *clPtr, **clP, *scP_AVX, m1; /* , m2 */;
+    __m256          *clPtr, **clP, *scP_AVX, m1; /* , m2; */
     ModelInfo       *m;
     
     m = &modelSettings[division];
