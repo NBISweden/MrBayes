@@ -5265,7 +5265,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
 {
     int             c, k;
     CLFlt           *scP, *lnScaler;
-    __m256          *clPtr, **clP, *scP_AVX, m1, m2;
+    __m256          *clPtr, **clP, *scP_AVX, m1; /* , m2 */;
     ModelInfo       *m;
     
     m = &modelSettings[division];
@@ -6745,7 +6745,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     MrBFlt          freq, *bs, pInvar=0.0, like, likeI;
     CLFlt           *lnScaler, *nSitesOfPat, *lnL_Vec, *lnLI_Vec;
     __m256          *clPtr, **clP, *clInvar=NULL;
-    __m256          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
+    __m256          /* m1, */ mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
     ModelInfo       *m;
     
 #   if defined (FAST_LOG)
