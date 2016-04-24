@@ -78,6 +78,8 @@ When all the prerequisites are in place:
 
         $ autoreconf -i
 
+* Then continue as outlined earlier in this document.
+
 
 Disabling the SSE, AVX and FMA code paths
 ------------------------------------------------------------------------
@@ -90,6 +92,11 @@ part of this code, you may use "--disable-sse", "--disable-avx" and/or
 
 Note however, that disabling SSE will also disable AVX and FMA, and
 disabling AVX will also disable FMA.
+
+Note also that disabling these accelerated code paths will not remove
+the "-msse" (etc.) compiler flags.  These compiler flags affects what
+instructions the compiler is allowed to generate, not what code path is
+choosen for compilation.
 
 
 Picking up the Beagle library:
@@ -134,27 +141,12 @@ Picking up and using MPI:
 ------------------------------------------------------------------------
 
 By default, the "configure" script will find any available MPI C
-compiler and use it.  This behaviour may be changed by using the
-"--without-mpi" flag when running the "configure".  Setting the
-environment variable "CC" to a specific C compiler will also disable MPI
-support (unless this compiler happens to be an MPI C compiler).
-
-When running "configure", unless "--without-mpi" is used, it will always
-say it's going to use MPI, even though no MPI C compiler is available:
-
-    $ ./configure
-    [...]
-    checking whether to compile using MPI... yes
-    [...]
-
-Don't worry, MPI support will not actually be enabled if configure can't
-find the MPI libraries and header files:
-
-    [...]
-    checking for function MPI_Init... no
-    checking for function MPI_Init in -lmpi... no
-    checking for function MPI_Init in -lmpich... no
-    [...]
+compiler or compiler wrapper and use it (for example the one provided by
+OpenMPI (https://www.open-mpi.org/) or MPICH (https://www.mpich.org/)).
+This behaviour may be changed and MPI parallelization may be turned off
+by using the "--without-mpi" flag when running the "configure".  Setting
+the environment variable "CC" to a specific C compiler will also disable
+MPI support (unless this compiler happens to be an MPI C compiler).
 
 You may also set the "MPICC" environment variable to the name or path of
 a specific MPI C compiler, if you have many to choose from:
