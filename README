@@ -2,13 +2,12 @@ This website is work in progress!
 
 It is currently being moved over from its old home at SourceForge.
 
+It is a set of static pages.
+Create them using `make -C _build`.
+Clean them with `make -C _build clean`
+
 TODO:
-
-    * When bugs are migrated to GitHub issues, update issues links.
-
-    * Mailing list, likewise.
+* When bugs are migrated to GitHub issues, update issues links.
+* Mailing list, likewise.
 
 
-Tidying HTML pages using HTML Tidy:
-
-    $ for f in *.html; do tidy -config tidy.conf -ashtml -modify $f; done
