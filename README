@@ -2,13 +2,26 @@ This website is work in progress!
 
 It is currently being moved over from its old home at SourceForge.
 
+It is a set of static pages.  Do not change the HTML documents in the
+top directory, instead modify the source HTML templates in the "source"
+directory and follow the instructions below to rebuild/update the main
+website pages:
+
+Create (or update after changing) them using
+
+    $ make -C build         # alternatively: cd build && make
+
+Clean (remove) them with
+
+    $ make -C build clean   # alternatively: cd build && make clean
+
+Note: This requires a recent version of HTML Tidy that understands
+      HTML5: http://www.html-tidy.org/
+
+
 TODO:
 
-    * When bugs are migrated to GitHub issues, update issues links.
+    * When the bugs in the SourceForge bug tracking database are
+      migrated to GitHub issues, update issues links.
 
     * Mailing list, likewise.
-
-
-Tidying HTML pages using HTML Tidy:
-
-    $ for f in *.html; do tidy -config tidy.conf -ashtml -modify $f; done

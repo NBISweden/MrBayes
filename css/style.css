@@ -1,0 +1,47 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline;}
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block;}
+body{line-height:1;}
+ol,ul{list-style:none;}
+blockquote,q{quotes:none;}
+blockquote:before,blockquote:after,q:before,q:after{content:'';content:none;}
+table{border-collapse:collapse;border-spacing:0;}
+
+/* MrBayes styles */
+
+/* Header */
+header {position:fixed;width:100%;padding-top:2em;top:0;left:0;background:white;}
+header > h1 {margin:0 200px 0 200px; font-size:2em;font-weight:bold;padding:1em 0;background-color:inherit;}
+header nav {
+    position:absolute;top:2em;left:0;width:200px;
+    padding-top:120px;
+    background:transparent url(../img/bayes.jpg) no-repeat top center;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center;
+}
+header nav a {line-height:1.3em;text-decoration:none;}
+/* header nav a:hover:before {content:'\00BB\0020';} */
+/* header nav a:hover:after {content:'\0020\00AB';} */
+/* header nav a.selected {color:green;} */
+header nav a.selected:before {content:'\00BB\0020';}
+header nav a.selected:after {content:'\0020\00AB';}
+header nav a:hover {color:green;}
+
+header aside {
+    position:absolute;top:2em;right:0;width:200px;
+    display:flex; flex-direction:column; align-items:center;
+}
+header aside img { /* height:112px; */ width:80px; margin-bottom:10px; }
+
+main {margin:8em 200px 0 200px;}
+main h2 {font-size:1.5em; font-weight:bold;margin-bottom:1em;}
+main h3 {font-weight:bold;margin-bottom:1em;}
+main p {margin-bottom:1em;line-height:1.3em;}
+main#authors img {margin:0 10px 10px 0;float:left; width:120px; box-shadow: 0 8px 6px -6px black;/* border:1px solid black; */}
+main ul {list-style-type: disc; padding-left:3em;}
+main ul li {margin-bottom: 0.5em;}
+main em {font-style:italic;}
