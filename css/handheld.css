@@ -1,0 +1,30 @@
+/* For mobiles & tablets: http://stephen.io/mediaqueries/ */
+
+main {margin:0; padding:0 0.5em; width:auto; }
+header {display:flex; flex-direction:column; position:static;padding-top:0em;background:white;}
+header > h1 {text-align:center; margin:0; padding:0.3em; width:auto; font-size:1.5em; background:black; color:white; }
+header nav {
+    position:static;width:100%;
+    padding-top:0;
+    background:none;
+    display:flex; flex-flow:row wrap; justify-content:center; align-items:center;
+}
+header nav a {
+    border-color: #89867e;
+    color: #89867e;
+    display: block;
+    margin:0 -3px -3px 0;
+    padding: 0.5em;
+    border: 3px solid #b1aea6;
+    color: #b1aea6;
+    font-weight: 700;
+    position:relative; z-index:0;
+}
+header nav a.selected:before {content:'';}
+header nav a.selected:after {content:'';}
+header nav a.selected {color:green; border-color:green; z-index:1;}
+
+header aside {
+    position:static;width:100%; margin-top:5px;
+    display:flex; flex-flow:row wrap; justify-content:center; align-items:center;
+}
