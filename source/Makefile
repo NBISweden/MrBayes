@@ -13,7 +13,11 @@ all: $(GENERATED_FILES)
 ../%.html: %.html
 	@echo "Creating the $* page [in $@]"
 	@echo '<!DOCTYPE html>' > $@
-	@echo '<html lang=en><head><meta charset="utf-8"><title>MrBayes | $*</title><link rel=stylesheet href="css/style.css"/></head><body>' >> $@
+	@echo '<html lang=en><head><meta charset="utf-8"><title>MrBayes | $*</title>' >> $@
+	@echo '<link rel=stylesheet href="css/style.css"/>' >> $@
+	@echo '<link rel=stylesheet href="css/handheld.css" media="only screen and (min-device-width:320px) and (max-device-width:568px)" />' >> $@
+	@echo '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' >> $@
+	@echo '</head><body>' >> $@
 	@echo '<header><h1>MrBayes: Bayesian Inference of Phylogeny</h1>' >> $@
 	@echo '<nav>' >> $@
 	@echo '<a href="./index.html"' >> $@
