@@ -3,12 +3,24 @@ Hi,
 This is the GitHub repository for MrBayes, a program used for Bayesian
 inference of phylogeny.
 
+
+    Build instructions, very very short version:
+
+    1. Clone the Git repository.
+    2. Refer to src/INSTALL for further information.
+
+
 Currently, we are in the process of moving everything over from
 Subversion to Git, and from SourceForge to GitHub.  The code, web
 pages and PDF manuals are already available here, but the bug tracking
 database and mailing list are still to be processed.  Also, the MrBayes
 home page link at http://mrbayes.net/ is still pointing to the old web
-pages.  The new web site is available at http://bils.github.io/MrBayes/
+pages.
+
+    The new web site is available at
+
+        http://bils.github.io/MrBayes/
+
 
 Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0
 onwards.  As soon as issue #1 has been resolved, the 'master' branch
