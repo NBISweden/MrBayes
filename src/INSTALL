@@ -141,18 +141,17 @@ environment variables prior to running "configure" to override
 Picking up and using MPI:
 ------------------------------------------------------------------------
 
-By default, the "configure" script will find any available MPI C
-compiler or compiler wrapper and use it (for example the one provided by
-OpenMPI (https://www.open-mpi.org/) or MPICH (https://www.mpich.org/)).
-This behaviour may be changed and MPI parallelization may be turned off
-by using the "--without-mpi" flag when running the "configure".  Setting
-the environment variable "CC" to a specific C compiler will also disable
-MPI support (unless this compiler happens to be an MPI C compiler).
+The "configure" script will find any available MPI C compiler or
+compiler wrapper and use it (for example the one provided by OpenMPI
+(https://www.open-mpi.org/) or MPICH (https://www.mpich.org/)) if
+the "--with-mpi" flag is used.  If this flag is not used, or if
+"--without-mpi" is used, MrBayes will be compiled without support for
+MPI parallelization.
 
-You may also set the "MPICC" environment variable to the name or path of
-a specific MPI C compiler, if you have many to choose from:
+You may set the "MPICC" environment variable to the name or path of a
+specific MPI C compiler, if you have many to choose from:
 
-    $ env MPICC="/usr/local/bin/mpicc" ./configure
+    $ env MPICC="/usr/local/bin/mpicc" ./configure --with-mpi
 
 
 About support for the GNU Readline library:
