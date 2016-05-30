@@ -3156,7 +3156,7 @@ fi
 if test "${with_mpi+set}" = set; then :
   withval=$with_mpi;
 else
-  with_mpi=check
+  with_mpi=no
 fi
 
 

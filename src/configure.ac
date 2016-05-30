@@ -43,7 +43,7 @@ AC_ARG_WITH([mpi],
     [AS_HELP_STRING([--with-mpi],
         [Build with MPI parallelization support @<:@default=check@:>@])],
     [],
-    [with_mpi=check])
+    [with_mpi=no])
 
 AC_ARG_WITH([readline],
     [AS_HELP_STRING([--with-readline],
