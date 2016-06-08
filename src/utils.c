@@ -1575,6 +1575,7 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
+/* This routine is not called from anywhere */
 void SortInts (int *item, int *assoc, int count, int descendingOrder)
 {
     SortInts2 (item, assoc, 0, count-1, descendingOrder);
