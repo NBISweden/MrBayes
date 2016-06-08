@@ -1527,7 +1527,9 @@ void *SafeRealloc (void *ptr, size_t s)
         if (ptr == NULL)
             memset(tmp, 0, s);
         ptr = tmp;
-    } else {
+    }
+
+    if (tmp == NULL && s > 0) {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
