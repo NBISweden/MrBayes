@@ -1653,9 +1653,26 @@ void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
 }
 
 
+int MrBFlt_cmp(const void *a, const void *b)
+{
+    MrBFlt x = *(MrBFlt *)a;
+    MrBFlt y = *(MrBFlt *)b;
+
+    if (x < y) {
+        return -1;
+    }
+    else if (x > y) {
+        return 1;
+    }
+    return 0;
+}
+
 /* SortMrBFlt: Sort in increasing order */
 void SortMrBFlt (MrBFlt *item, int left, int right)
 {
+    qsort((void *)item, right - left + 1, sizeof(MrBFlt), &MrBFlt_cmp);
+
+#if 0
     register int    i, j;
     MrBFlt          x, temp;
 
@@ -1682,6 +1699,7 @@ void SortMrBFlt (MrBFlt *item, int left, int right)
         SortMrBFlt (item, left, j);
     if (i < right)
         SortMrBFlt (item, i, right);
+#endif
 }
 
 
