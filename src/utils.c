@@ -1525,28 +1525,20 @@ void *SafeMalloc (size_t s)
 /* SafeRealloc: Print error if out of memory */
 void *SafeRealloc (void *ptr, size_t s)
 {
-    if (s == 0)
-        {
-        free(ptr);
-        return NULL;
-        }
+    void *tmp;
 
-    if (ptr == NULL)
-        {
-        ptr = malloc (s);
-        memset(ptr, 0, s);
-        }
-    else
-        ptr = realloc (ptr, s);
+    tmp = realloc(ptr, s);
 
-    if (ptr==NULL)
-        {
+    if (tmp != NULL) {
+        if (ptr == NULL)
+            memset(tmp, 0, s);
+        ptr = tmp;
+    } else {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        return NULL;
         }
 
     return ptr;
