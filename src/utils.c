@@ -1501,24 +1501,18 @@ void *SafeMalloc (size_t s)
 {
     void *ptr;
 
-    if (s == 0)
-        {
-        return NULL;
-        }
+    ptr = calloc(1, s);
 
-    ptr= malloc(s);
-
-    if (ptr==NULL)
+    if (ptr==NULL && s > 0)
         {
         MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        return NULL;
         }
 
-    return memset(ptr,0,s);
+    return ptr;
 }
 
 
