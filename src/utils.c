@@ -1576,6 +1576,7 @@ void SetBit (int i, BitsLong *bits)
 
 
 /* This routine is not called from anywhere */
+#if 0
 void SortInts (int *item, int *assoc, int count, int descendingOrder)
 {
     SortInts2 (item, assoc, 0, count-1, descendingOrder);
@@ -1651,6 +1652,7 @@ void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
             SortInts2 (item, assoc, i, right, descendingOrder);
         }
 }
+#endif
 
 
 int MrBFlt_cmp(const void *a, const void *b)
