@@ -1,10 +1,10 @@
+*.tar.gz
 Makefile
 autom4te.cache
 config.h
 config.log
 config.status
 src/*.o
-src/*.tar.gz
 src/*~
 src/.deps
 src/mb
