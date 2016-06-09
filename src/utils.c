@@ -764,6 +764,12 @@ int IsBitSet (int i, BitsLong *bits)
 /* IsConsistentWith: Is token consistent with expected word, case insensitive ? */
 int IsConsistentWith (const char *token, const char *expected)
 {
+    if (strcasecmp(token, expected) == 0)
+        return YES;
+
+    return NO;
+
+#if 0
     int     i, len;
 
     if (strlen(token) > strlen(expected))
@@ -778,6 +784,7 @@ int IsConsistentWith (const char *token, const char *expected)
         }
 
     return YES;
+#endif
 }
 
 
