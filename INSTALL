@@ -1,0 +1,184 @@
+MrBayes 3.2.7-dev (development not-yet-3.2.7 version)
+========================================================================
+
+Compilation of MrBayes has been tested on the following systems (and
+compilers):
+
+    x86_64-apple-darwin15.4.0   clang 7.3.0
+
+    x86_64-unknown-openbsd5.9   gnu 4.2.1, clang 3.7.1
+    x86_64-unknown-openbsd6.0   gnu 4.2.1, clang 3.8.0
+
+    x86_64-unknown-linux-gnu    gnu 4.4.7, gnu 4.9.3, gnu 5.3.0, gnu 5.3.1
+                                intel 14.0.0, portland 14.7.0
+
+
+Building MrBayes using the supplied "configure" script:
+------------------------------------------------------------------------
+
+The code in the MrBayes Git repository comes with a standard GNU
+"configure" script.  On any Unix system, these are the steps required to
+compile and optionally install MrBayes:
+
+* Run "configure" in the top-level directory to create "Makefile" (see
+  "./configure --help" for info about enabling and disabling features of
+  MrBayes, or how to install in non-standard locations etc., and also
+  read further down in this document):
+
+        $ ./configure
+
+* Make (i.e. compile) the project:
+
+        $ make
+
+* Install it on the system (optional).  This will install
+  the executable "mb" in /usr/local/bin, the documentation
+  in /usr/local/share/doc/mrbayes, and the example files in
+  /usr/local/share/examples/mrbayes unless the default installation
+  prefix ("/usr/local") is changed with the "--prefix" option when
+  running "configure".
+
+        $ make install
+
+To build a statically linked version of MrBayes, set the environment
+variable LDFLAGS to "-static" when configuring:
+
+    $ env LDFLAGS=-static ./configure
+
+
+Building MrBayes using the GNU autotools (Autoconf and Automake):
+------------------------------------------------------------------------
+
+MrBayes uses the GNU autotools, i.e. Automake and Autoconf, for its
+configuration and build system.  To tinker with "configure.ac" and
+"Makefile.am" and then to regenerate the "configure" script and
+associated files, there are some prerequisites that need to be in place:
+
+* Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
+  is installed.
+
+* Make sure Autoconf 2.69 (http://www.gnu.org/software/autoconf/)
+  is installed.
+
+The "configure.ac" script here uses the "pkg-config" tool for detection
+of external libraries (Beagle) and also uses m4 macros from the
+autoconf-archive collection for detection of MPI, Readline, and some
+architecture-dependent compiler flags.  Therefore,
+
+* Make sure pkg-config
+  (https://www.freedesktop.org/wiki/Software/pkg-config/) is installed.
+
+* Make sure autoconf-archive 2016.03.20
+  (http://www.gnu.org/software/autoconf-archive/) (or later) is
+  installed.
+
+* On some systems that uses metaauto for wrapping multiple versions of
+  the GNU autotools (OpenBSD for example):
+
+        $ export AUTOCONF_VERSION=2.69
+        $ export AUTOMAKE_VERSION=1.15
+
+When all the prerequisites are in place:
+
+* Run "autoreconf" to generate the "configure" script:
+
+        $ autoreconf -i
+
+* Then continue as outlined earlier in this document.
+
+
+Disabling the SSE, AVX and FMA code paths
+------------------------------------------------------------------------
+
+MrBayes will use SSE, AVX and FMA instructions to speed up computations
+an CPUs that support these instruction sets, if the compiler supports
+it.  These code paths are however optional, and if you suspect a bug in
+part of this code, you may use "--disable-sse", "--disable-avx" and/or
+"--disable-fma" to disable it when running the "configure" script.
+
+Note however, that disabling SSE will also disable AVX and FMA, and
+disabling AVX will also disable FMA.
+
+Note also that disabling these accelerated code paths will not remove
+the "-msse" (etc.) compiler flags.  These compiler flags affects what
+instructions the compiler is allowed to generate, not what code path is
+choosen for compilation.
+
+
+Picking up the Beagle library:
+------------------------------------------------------------------------
+
+Assuming Beagle (https://github.com/beagle-dev/beagle-lib) was compiled
+and installed in a standard location, it will be picked up by the
+"configure" script automatically (using the "pkg-config" tool).  If it
+isn't found, or the "configure" script is run with "--without-beagle",
+Beagle will not be used.
+
+If Beagle is installed in a non-default location, point the
+"PKG_CONFIG_PATH" environment variable to the "pkgconfig" directory that
+Beagle installed its "hmsbeagle-1.pc" file into.
+
+For example, I installed Beagle in my home directory using
+
+    $ ./configure --prefix=$HOME/local
+    $ make && make install
+
+This means I will need to point "PKG_CONFIG_PATH" to
+"$HOME/local/lib/pkgconfig" when I build MrBayes:
+
+    $ env PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig ./configure
+    [...]
+    checking for pkg-config... /usr/bin/pkg-config
+    checking pkg-config is at least version 0.9.0... yes
+    checking for BEAGLE... yes
+    [...]
+    $ make && make install
+
+It's also possible to set the "BEAGLE_CFLAGS" and "BEAGLE_LIBS"
+environment variables prior to running "configure" to override
+"pkg-config".
+
+    $ env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
+          BEAGLE_LIBS="-L$HOME/local/lib -lhmsbeagle" \
+          ./configure
+
+
+Picking up and using MPI:
+------------------------------------------------------------------------
+
+The "configure" script will find any available MPI C compiler or
+compiler wrapper and use it (for example the one provided by OpenMPI
+(https://www.open-mpi.org/) or MPICH (https://www.mpich.org/)) if
+the "--with-mpi" flag is used.  If this flag is not used, or if
+"--without-mpi" is used, MrBayes will be compiled without support for
+MPI parallelization.
+
+You may set the "MPICC" environment variable to the name or path of a
+specific MPI C compiler, if you have many to choose from:
+
+    $ env MPICC="/usr/local/bin/mpicc" ./configure --with-mpi
+
+
+About support for the GNU Readline library:
+------------------------------------------------------------------------
+
+MrBayes will be compiled with support for the GNU Readline Library
+(https://cnswww.cns.cwru.edu/php/chet/readline/rltop.html) (which
+allows for command line history within an interactive session, and
+command completion through pressing the "tab" key) if the Readline
+library and its associated header files are available.  However, it
+seems as if the Readline library doesn't work well together with common
+MPI implementations (OpenMPI (https://www.open-mpi.org/) and MPICH
+(https://www.mpich.org/)), so if MrBayes is configured with support for
+MPI parallelization, Readline support will be automatically disabled.
+
+A possible workaround is to use a "Readline wrapper", such as rlwrap
+(https://github.com/hanslub42/rlwrap), which gives you persistent
+command line history between sessions, but no command tab-completion.
+To use rlwrap with an MPI-enabled MrBayes, simply start MrBayes like
+this:
+
+    $ rlwrap mb
+
+
+# vim: filetype=text

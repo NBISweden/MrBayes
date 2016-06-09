@@ -1,0 +1,46 @@
+Release Note
+
+v3.2.6 (Nov 25 2015)
+  1. Add invertebrate mt, Echinoderm and Euplotid codes [lset code=invermt].
+  2. Fix a bug of updating brls in tree-stretch move.
+  3. Correct the proposal ratio in the add/delete branch move.
+  4. Add more coding options for restriction site chars.
+
+v3.2.5 (Apr 8 2015)
+  1. Fix pdf in the coalescent prior.
+  2. Fix a few issues when appending to the previous run.
+  3. Improve the efficiency of moving ancestral fossils.
+  4. Add lognormal rate variation among sites [lset rate=lnorm].
+  5. Add parsimony-biased SPR and TBR proposals (for developers).
+  6. Other minor bug fixes and improvements.
+
+v3.2.4 (Jan 27 2015)
+  1. Correct the proposal ratio in the node slider move for non-clock tree.
+  2. Fix reporting ancestral states under GTR+I+G model.
+  3. Fix the sliding window in the move of updating omega in codon model.
+  4. Fix the likelihood and proposal ratio of NaN in the multi-species coalescent analysis.
+  5. Correct screen output messages for a few commands.
+  6. Fix the interaction of MrBayes with Beagle for the Windows executable. 
+  7. Fix prior pdf of relative rates (rate multipliers).
+
+v3.2.3 (Oct 22 2014)
+  1. Correct the proposal ratio in the extending TBR move for non-clock tree.
+  2. Fix numerical error of calculating proposal ratio in parsimony-biased SPR moves.
+  3. Set unconstrained:gammadir prior as default to help avoid overestimating branch lengths.
+  4. Add clock:fossilization prior for total-evidence dating analysis.
+  5. Add LG model to Aamodelpr [prset aamodelpr=fixed(LG)].
+  6. Rearrange the code to be more concise.
+  7. Other minor bug fixes and improvements.
+
+v3.2.2 (Aug 22 2013)
+  1. Disable LIKE_EPSILON warning for standard users.
+  2. Fix segmentation fault errors in 64bit version.
+  3. Fix some issues when dealing with constraints.
+  4. Fix setting aarevmatpr parameters to fixed for GTR.
+  5. Other bug fixes and improvements.
+
+v3.2.1 (Feb 8 2012)
+v3.2.0 (Nov 16 2011)
+  Major release.
+
+For a full list of bug fixes, see https://sourceforge.net/p/mrbayes/bugs/milestone/v3.2.x/
