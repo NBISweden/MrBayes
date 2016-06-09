@@ -1,3 +1,4 @@
+Makefile
 autom4te.cache
 config.h
 config.log
@@ -6,6 +7,5 @@ src/*.o
 src/*.tar.gz
 src/*~
 src/.deps
-src/Makefile
 src/mb
 src/stamp-h1
