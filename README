@@ -7,7 +7,7 @@ inference of phylogeny.
     Build instructions, very very short version:
 
     1. Clone the Git repository.
-    2. Refer to src/INSTALL for further information.
+    2. Refer to the document called "INSTALL" for further information.
 
 
 Currently, we are in the process of moving everything over from
