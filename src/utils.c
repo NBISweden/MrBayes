@@ -43,8 +43,6 @@
 #include "utils.h"
 
 #define MAX_GAMMA_CATS                      20
-#define PI                                  3.14159265358979324
-#define PIOVER2                             1.57079632679489662
 #define POINTGAMMA(prob,alpha,beta)         PointChi2(prob,2.0*(alpha))/(2.0*(beta))
 #define PAI2                                6.283185307
 #define TINY                                1.0e-20
@@ -9919,7 +9917,7 @@ complex ComplexLog (complex a)
     c.re = log(ComplexAbsoluteValue(a));
     if (AreDoublesEqual(a.re,0.0,ETA)==YES) /* == 0.0 */ 
         {
-        c.im = PIOVER2;
+        c.im = M_PI_2;
         } 
     else 
         {
@@ -12625,7 +12623,7 @@ MrBFlt LnPriorProbLognormal (MrBFlt val, MrBFlt *params)
 
     z = (log(val) - params[0]) / params[1];
 
-    return - log(params[1] * val * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(params[1] * val * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12639,7 +12637,7 @@ MrBFlt LnPriorProbLognormal_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
 
     z= (log(val) - mean_log) / sd_log;
 
-    return - log(sd_log * val * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * val * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12650,7 +12648,7 @@ MrBFlt LnPriorProbNormal (MrBFlt val, MrBFlt *params)
 
     z = (val - params[0]) / params[1];
 
-    return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(params[1] * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12713,7 +12711,7 @@ MrBFlt LnPriorProbOffsetLognormal (MrBFlt val, MrBFlt *params)
 
     z = (log(x) - mean_log) / sd_log;
 
-    return - log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * x * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12730,7 +12728,7 @@ MrBFlt LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *para
 
     z = (log(x) - mean_log) / sd_log;
 
-    return - log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * x * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12743,7 +12741,7 @@ MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
     z_0 = (0.0 - params[0]) / params[1];
     normConst = CdfNormal(z_0);
     
-    return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(1.0 - normConst);
+    return - log(params[1] * sqrt(2.0 * M_PI)) - z * z / 2.0 - log(1.0 - normConst);
 }
 
 
@@ -12756,7 +12754,7 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
     z_trunc = (params[0] - params[1]) / params[2];
     normConst = CdfNormal(z_trunc);
 
-    return - log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0 - log(1.0 - normConst);
+    return - log(params[2] * sqrt(2.0 * M_PI)) - z * z / 2.0 - log(1.0 - normConst);
 }
 
 
@@ -12999,7 +12997,7 @@ MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
     
     z = (log(x) - exp) / sd;
     
-    lnProb = - log (x * sd * sqrt (2.0 * PI)) - (z * z / 2.0);
+    lnProb = - log (x * sd * sqrt (2.0 * M_PI)) - (z * z / 2.0);
     
     return lnProb;
 }
@@ -13028,7 +13026,7 @@ MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
     
     z = (log(x) - mu) / sigma;
     
-    lnProb = - log (x * sigma * sqrt (2.0 * PI)) - (z * z / 2.0);
+    lnProb = - log (x * sigma * sqrt (2.0 * M_PI)) - (z * z / 2.0);
     
     return lnProb;
 }
