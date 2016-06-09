@@ -7,8 +7,8 @@ AC_INIT([MrBayes],[3.2.7-dev])
 AC_CONFIG_AUX_DIR([build])
 
 AM_INIT_AUTOMAKE([foreign])
-AC_CONFIG_SRCDIR([bayes.c])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([src/bayes.c])
+AC_CONFIG_HEADERS([src/config.h])
 
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"], [Host triplet])
@@ -139,5 +139,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup strncasecmp])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
