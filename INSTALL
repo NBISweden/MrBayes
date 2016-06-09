@@ -20,10 +20,10 @@ The code in the MrBayes Git repository comes with a standard GNU
 "configure" script.  On any Unix system, these are the steps required to
 compile and optionally install MrBayes:
 
-* Run "configure" to create "Makefile" (see "./configure --help" for
-  info about enabling and disabling features of MrBayes, or how to
-  install in non-standard locations etc., and also read further down in
-  this document):
+* Run "configure" in the top-level directory to create "Makefile" (see
+  "./configure --help" for info about enabling and disabling features of
+  MrBayes, or how to install in non-standard locations etc., and also
+  read further down in this document):
 
         $ ./configure
 
