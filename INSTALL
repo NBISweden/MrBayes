@@ -31,7 +31,12 @@ compile and optionally install MrBayes:
 
         $ make
 
-* Install it on the system (optional):
+* Install it on the system (optional).  This will install
+  the executable "mb" in /usr/local/bin, the documentation
+  in /usr/local/share/doc/mrbayes, and the example files in
+  /usr/local/share/examples/mrbayes unless the default installation
+  prefix ("/usr/local") is changed with the "--prefix" option when
+  running "configure".
 
         $ make install
 
