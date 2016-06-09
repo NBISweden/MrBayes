@@ -1,3 +1,3 @@
 EXTRA_DIST=	COPYING INSTALL README doc examples
 
-SUBDIRS=	src
+SUBDIRS=	src doc examples
