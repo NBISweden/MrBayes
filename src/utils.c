@@ -10427,7 +10427,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
     int i;
     MrBFlt t, factor;
     MrBFlt sigmaL = sqrt(sigma);
-    MrBFlt mu = -1.0*((0.5*pow(sigmaL,2.0)));
+    MrBFlt mu = -0.5*sigmaL*sigmaL;
     if (median)
         {
         for (i=0; i<K; i++) {
@@ -10442,7 +10442,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
         }
     else
         {
-        mu = -1.0*((0.5*pow(sigmaL,2.0)));
+        mu = -0.5*sigmaL*sigmaL;
         /* Mean set to 1.0 so factor = K */
         factor = 1.0*K;
         for (i=0; i<K-1; i++) {
@@ -10452,7 +10452,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
             //rK[i] = LogNormalPoint(rK[i], mu, sigma);
             //rK[i] = QuantileLogNormal(rK[i], mu, sigma);
             //rK[i] = CdfNormal((log(rK[i])-mu)/sigma);
-            rK[i] = 1 - (1.0 * CdfNormal((mu + pow(sigmaL,2.0) - log(rK[i]))/sigmaL));
+            rK[i] = 1 - (1.0 * CdfNormal((mu + sigmaL*sigmaL - log(rK[i]))/sigmaL));
             }
         rK[K-1] = 1.0;
         for (i=K-1; i>0; i--) {
@@ -13288,9 +13288,9 @@ int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
 
         /* how many times can I multiply the matrices together */
         numSquares = 0;
-        while (pow (2.0, (MrBFlt)(numSquares)) < power)
+        while ((1 << numSquares) < power)
             numSquares++;
-        numRemaining = power - (int)(pow(2.0, (MrBFlt)(numSquares)));
+        numRemaining = power - (1 << numSquares);
         
         /* now, multiply matrix by power of 2's */
         CopyDoubleMatrices (dim, Mat, TempIn);
@@ -13330,7 +13330,8 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
 {
     MrBFlt      e = 0.5e-6, aa = 0.6931471805, p = prob, g,
                     xx, c, ch, a = 0.0, q = 0.0, p1 = 0.0, p2 = 0.0, t = 0.0, 
-                    x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6;
+                    x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6,
+                    tmp;
 
     if (p < 0.000002 || p > 0.999998 || v <= 0.0) 
         return (-1.0);
@@ -13361,7 +13362,8 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
     l3: 
         x = PointNormal (p);
         p1 = 0.222222/v;   
-        ch = v*pow((x*sqrt(p1)+1.0-p1), 3.0);
+        tmp = (x*sqrt(p1)+1.0-p1);
+        ch = v*tmp*tmp*tmp;
         if (ch > 2.2*v+6.0)  
             ch = -2.0*(log(1.0-p)-c*log(0.5*ch)+g);
     l4:
@@ -13790,7 +13792,10 @@ int SetQvalue (MrBFlt tol)
     int         qV;
     MrBFlt      x;
     
+    /*
     x = pow(2.0, 3.0 - (0 + 0)) * Factorial(0) * Factorial (0) / (Factorial(0+0) * Factorial (0+0+1));
+    */
+    x = 4.0;
     qV = 0;
     while (x > tol)
         {
