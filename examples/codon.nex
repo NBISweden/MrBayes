@@ -1,0 +1,47 @@
+#NEXUS
+
+[ Example command file, which reads in a data file and sets up different codon models.
+  Use one of the blocks to set up the model you are interested in. ]
+
+begin mrbayes;
+	[The following line is useful for automatic execution with no
+	 warnings issued before files are overwritten and automatic
+	 termination of chains after the prespecified number of generations.]
+	set autoclose=yes nowarn=yes;
+	   
+    [Read in a data file with protein-coding sequences]
+    execute replicase.nex;
+
+    [Use ONE of the blocks below depending one what model you like]
+
+    [One omega value for the gene
+     The estimated single omega value, valid for
+     the entire gene or gene fragment, is printed
+     to the .p file(s)]
+    lset nucmodel=codon;
+
+    [Omega variation across sites with three classes,
+     omega_1 < 1, omega_2 = 1, omega_3 > 1.
+     The estimated omega_1 and omega_3 are printed to
+     the .p file(s) as omega(-) and omega(+).
+     If you set report possel=yes, you
+     will also get the probability of each site being in
+     the positively selected omega class.
+     If you set report siteomega=yes, you
+     will also get the omega value for each site.]
+    lset nucmodel=codon omegavar=ny98;
+    report possel=yes;
+    report siteomega=yes;
+    
+    [Omega variation across sites with three classes,
+     omega_1 < omega_2 < omega_3. Otherwise very similar
+     to the Nielsen and Yang model.]
+    lset nucmodel=codon omegavar=m3;
+    report possel=yes;
+    
+    [These models are slow, so print to screen more frequently]
+    mcmcp printfreq = 10;
+
+    [Only the mcmc command is missing now to run the analysis]
+end;
+

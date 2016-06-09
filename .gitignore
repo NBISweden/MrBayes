@@ -1,11 +1,11 @@
+*.tar.gz
+Makefile
+autom4te.cache
+config.h
+config.log
+config.status
 src/*.o
-src/*.tar.gz
 src/*~
 src/.deps
-src/Makefile
-src/autom4te.cache
-src/config.h
-src/config.log
-src/config.status
 src/mb
 src/stamp-h1
