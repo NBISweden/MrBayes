@@ -13800,7 +13800,7 @@ int SetQvalue (MrBFlt tol)
     /*
     x = pow(2.0, 3.0 - (0 + 0)) * Factorial(0) * Factorial (0) / (Factorial(0+0) * Factorial (0+0+1));
     */
-    x = 4.0;
+    x = 8.0;
     qV = 0;
     while (x > tol)
         {
