@@ -147,8 +147,8 @@ MrBFlt          lgPi[20];                    /* stationary frequencies for LG mo
 
 /* parser flags and variables */
 int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
-            foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar,
-            foundFSNum[999], foundFSTime[999], tempNumStates, isNegative;
+            foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar, tempNumStates, isNegative,
+            foundBSNum[999], foundDSNum[999], foundFSNum[999], foundBSTime[999], foundDSTime[999], foundFSTime[999];
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char        colonPr[100], clockPr[30];
 
@@ -7593,8 +7593,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
                             if (!strcmp(modelParams[i].sampleStrat,"Random") || !strcmp(modelParams[i].sampleStrat,"Diversity"))
                                 {
-                                foundFSNum[i] = foundFSTime[i] = NO;
-                                modelParams[i].sampleFSNum = 0;
+                                foundFSNum[i] = foundBSNum[i] = foundDSNum[i] = NO;
+                                foundFSTime[i] = foundBSTime[i] = foundDSTime[i] = NO;
+                                modelParams[i].fossilSamplingNum = modelParams[i].birthRateShiftNum = modelParams[i].deathRateShiftNum = 0;
                                 numVars[i] = 0;
                                 expecting  = Expecting(NUMBER);
                                 expecting |= Expecting(PARAMETER);
@@ -7618,23 +7619,15 @@ int DoPrsetParm (char *parmName, char *tkn)
                     {
                     if (activeParts[i] == YES || nApplied == 0)
                         {
-                        if (foundFSNum[i] == NO)
+                        if (foundFSNum[i] == NO)  // fossil sampling rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0)
+                            if (tempInt <= 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of fossil slice sampling events must be > 0\n", spacer);
+                                MrBayesPrint ("%s   Number of fossil sampling shift must be > 0 and < 100\n", spacer);
                                 return (ERROR);
                                 }
-                            modelParams[i].sampleFSNum = tempInt;
-                            if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
-                                {
-                                free(modelParams[i].sampleFSProb);
-                                free(modelParams[i].sampleFSTime);
-                                }
-                            modelParams[i].sampleFSTime = (MrBFlt *) SafeMalloc ((size_t)tempInt * sizeof(MrBFlt));
-                            modelParams[i].sampleFSProb = (MrBFlt *) SafeMalloc ((size_t)tempInt * sizeof(MrBFlt));
-                            memAllocs[ALLOC_SAMPLEFOSSILSLICE] = YES;
+                            modelParams[i].fossilSamplingNum = tempInt;
                             foundFSNum[i] = YES;
                             expecting  = Expecting(COLON);
                             }
@@ -7643,37 +7636,106 @@ int DoPrsetParm (char *parmName, char *tkn)
                             sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
-                                MrBayesPrint ("%s   Time of fossil slice sampling events must be > 0.\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling shift must be > 0.\n", spacer);
                                 return (ERROR);
                                 }
-                            if (numVars[i] > 0 && modelParams[i].sampleFSTime[numVars[i]-1] < tempD)
+                            if (numVars[i] > 0 && modelParams[i].fossilSamplingTime[numVars[i]-1] < tempD)
                                 {
-                                MrBayesPrint ("%s   Time of fossil slice sampling events must be in decreasing order\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling shift must be in decreasing order\n", spacer);
                                 return (ERROR);
                                 }
-                            modelParams[i].sampleFSTime[numVars[i]] = tempD;
-                            foundFSTime[i] = YES;
+                            modelParams[i].fossilSamplingTime[numVars[i]] = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf\n", spacer, numVars[i]+1,
+                                              modelParams[i].fossilSamplingTime[numVars[i]]);
+                            else
+                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                              modelParams[i].fossilSamplingTime[numVars[i]], i+1);
+                            numVars[i]++;
                             expecting  = Expecting(NUMBER);
+                            if (numVars[i] == modelParams[i].fossilSamplingNum) {
+                                foundFSTime[i] = YES;
+                                numVars[i] = 0;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
                             }
-                        else
+                        else if (foundBSNum[i] == NO)  // birth rate shift times
+                            {
+                            sscanf (tkn, "%d", &tempInt);
+                            if (tempInt <= 0 || tempInt > 99)
+                                {
+                                MrBayesPrint ("%s   Number of birth rate shift must be > 0 and <100\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].birthRateShiftNum = tempInt;
+                            foundBSNum[i] = YES;
+                            expecting  = Expecting(COLON);
+                            }
+                        else if (foundBSTime[i] == NO)
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD > 1.0)
+                            if (tempD <= 0.0)
                                 {
-                                MrBayesPrint ("%s   Prob of fossil slice sampling events must be in [0,1]\n", spacer);
+                                MrBayesPrint ("%s   Time of birth rate shift must be > 0.\n", spacer);
                                 return (ERROR);
                                 }
-                            modelParams[i].sampleFSProb[numVars[i]] = tempD;
-                            foundFSTime[i] = NO;
-                            expecting  = Expecting(COMMA);
+                            if (numVars[i] > 0 && modelParams[i].birthRateShiftTime[numVars[i]-1] < tempD)
+                                {
+                                MrBayesPrint ("%s   Time of birth rate shift must be in decreasing order\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].birthRateShiftTime[numVars[i]] = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.6lf\n", spacer, numVars[i]+1,
-                                              modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]]);
+                                MrBayesPrint ("%s   Setting %d birth rate shift time to %1.2lf\n", spacer, numVars[i]+1,
+                                              modelParams[i].birthRateShiftTime[numVars[i]]);
                             else
-                                MrBayesPrint ("%s   Setting %d FSTime FSProb to %1.2lf %1.6lf for partition %d\n", spacer, numVars[i]+1,
-                                              modelParams[i].sampleFSTime[numVars[i]], modelParams[i].sampleFSProb[numVars[i]], i+1);
+                                MrBayesPrint ("%s   Setting %d birth rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                              modelParams[i].birthRateShiftTime[numVars[i]], i+1);
                             numVars[i]++;
-                            if (numVars[i] == modelParams[i].sampleFSNum)
+                            expecting  = Expecting(NUMBER);
+                            if (numVars[i] == modelParams[i].birthRateShiftNum) {
+                                foundBSTime[i] = YES;
+                                numVars[i] = 0;
+                                expecting = Expecting(COMMA);
+                                }
+                            }
+                        else if (foundDSNum[i] == NO)  // death rate shift times
+                            {
+                            sscanf (tkn, "%d", &tempInt);
+                            if (tempInt <= 0 || tempInt > 99)
+                                {
+                                MrBayesPrint ("%s   Number of death rate shift must be > 0 and < 100\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].deathRateShiftNum = tempInt;
+                            foundDSNum[i] = YES;
+                            expecting  = Expecting(COLON);
+                            }
+                        else if (foundDSTime[i] == NO)
+                            {
+                            sscanf (tkn, "%lf", &tempD);
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Time of death rate shift must be > 0.\n", spacer);
+                                return (ERROR);
+                                }
+                            if (numVars[i] > 0 && modelParams[i].deathRateShiftTime[numVars[i]-1] < tempD)
+                                {
+                                MrBayesPrint ("%s   Time of death rate shift must be in decreasing order\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].deathRateShiftTime[numVars[i]] = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting %d death rate shift time to %1.2lf\n", spacer, numVars[i]+1,
+                                              modelParams[i].deathRateShiftTime[numVars[i]]);
+                            else
+                                MrBayesPrint ("%s   Setting %d death rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                              modelParams[i].deathRateShiftTime[numVars[i]], i+1);
+                            numVars[i]++;
+                            expecting  = Expecting(NUMBER);
+                            if (numVars[i] == modelParams[i].deathRateShiftNum)
                                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }
                         }
@@ -12099,12 +12161,6 @@ int FreeModel (void)
         for (i=0; i<numCurrentDivisions; i++)
             {
             free (modelParams[i].activeConstraints);
-            if (memAllocs[ALLOC_SAMPLEFOSSILSLICE] == YES)
-                {
-                free(modelParams[i].sampleFSProb);
-                free(modelParams[i].sampleFSTime);
-                memAllocs[ALLOC_SAMPLEFOSSILSLICE] = NO;
-                }
             }
         free (modelParams);
         free (modelSettings);
@@ -18995,7 +19051,7 @@ int SetModelParams (void)
             /* Set up speciation rate ******************************************************************************/
             p->paramType = P_SPECRATE;
             if (!strcmp(mp->clockPr,"Fossilization"))
-                p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+                p->nValues = mp->birthRateShiftNum +1;  // rate in each time interval
             else
                 p->nValues = 1;
             p->nSubValues = 0;
@@ -19037,7 +19093,7 @@ int SetModelParams (void)
             /* Set up extinction rates ******************************************************************************/
             p->paramType = P_EXTRATE;
             if (!strcmp(mp->clockPr,"Fossilization"))
-                p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+                p->nValues = mp->deathRateShiftNum +1;  // rate in each time interval
             else
                 p->nValues = 1;
             p->nSubValues = 0;
@@ -19076,7 +19132,7 @@ int SetModelParams (void)
             {
             /* Set up fossilization rates */
             p->paramType = P_FOSLRATE;
-            p->nValues = mp->sampleFSNum +1;  // rate in each time interval
+            p->nValues = mp->fossilSamplingNum +1;  // rate in each time interval
             p->nSubValues = 0;
             p->min = 0.0;
             p->max = 1.0;

@@ -8816,7 +8816,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     tmrca = t->root->left->nodeDepth / clockRate;
     
     /* get the number of fossil slice sampling events, s >= 0 */
-    sl = mp->sampleFSNum;
+    sl = mp->fossilSamplingNum;
     
     /* alloc memory for time of each slice, t_f[sl] = 0 */
     t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
@@ -8846,14 +8846,14 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         mu[i] = lambda[i] * eR[i];
         psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
         if (i < sl) {
-            rho[i] = mp->sampleFSProb[i];
-            t_f[i] = mp->sampleFSTime[i];
+            rho[i] = 0.0;
+            t_f[i] = mp->fossilSamplingTime[i];
             }
         }
     rho[sl] = sF;
     t_f[sl] = 0.0;
 
-    if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
+    if (sl > 0)  assert (mp->fossilSamplingTime[0] < tmrca);
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -8994,7 +8994,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     tmrca = t->root->left->nodeDepth / clockRate;
     
     /* get the number of fossil slice sampling events, plus 1 extra slice (x_cut) to shift psi to 0 */
-    sl = mp->sampleFSNum + 1;
+    sl = mp->fossilSamplingNum + 1;
     
     /* alloc memory for time of each slice */
     t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
@@ -9033,8 +9033,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* lower the cutoff time if not compatible */
     if (x_min > t_min)
         x_min = t_min;
-    if (sl > 1 && mp->sampleFSTime[sl-2] < x_min)
-        x_min = mp->sampleFSTime[sl-2];
+    if (sl > 1 && mp->fossilSamplingTime[sl-2] < x_min)
+        x_min = mp->fossilSamplingTime[sl-2];
     
     /* initialization (sl >= 1) */
     for (i = 0; i < sl; i++)
@@ -9049,15 +9049,15 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     psi[sl] = 0.0;  // psi = 0 in [0, x_cut]
     for (i = 0; i < sl-1; i++)
         {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
+        rho[i] = 0.0;
+        t_f[i] = mp->fossilSamplingTime[i];
         }
     rho[sl-1] = 0.0;
     t_f[sl-1] = x_min * 0.95; // x_cut
     rho[sl]   = 1.0;          // not sF
     t_f[sl]   = 0.0;
     
-    if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
+    if (sl > 1)  assert (mp->fossilSamplingTime[0] < tmrca);
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);

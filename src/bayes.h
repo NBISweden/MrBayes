@@ -15,10 +15,11 @@
 
 #ifdef HAVE_CONFIG_H
 #   include "config.h"
-#define VERSION_NUMBER  PACKAGE_VERSION
+#   define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
 #   define PACKAGE_VERSION "3.2.7-dev"
+#   define HOST_CPU "x86_64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
@@ -424,7 +425,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define ALLOC_BEST               88
 #define ALLOC_SPECIESPARTITIONS  89
 #define ALLOC_SS                 90
-#define ALLOC_SAMPLEFOSSILSLICE  91
 
 #define LINKED                  0
 #define UNLINKED                1
@@ -1096,9 +1096,13 @@ typedef struct model
     MrBFlt      fossilizationFix;
     MrBFlt      fossilizationBeta[2];
     char        sampleStrat[100];      /* taxon sampling strategy (for b-d process)         */
-    int         sampleFSNum;           /* number of fossil slice sampling events (s)        */
-    MrBFlt     *sampleFSTime;          /* fossil slice sampling times (t_i,   i=1,..,s)     */
-    MrBFlt     *sampleFSProb;          /* fossil slice sampling probs (rho_i, i=1,..,s)     */
+    int         birthRateShiftNum;     /* number of birth rate shifts                       */
+    MrBFlt      birthRateShiftTime[100];    /* birth rate shifting times                    */
+    int         deathRateShiftNum;     /* number of death rate shifts                       */
+    MrBFlt      deathRateShiftTime[100];    /* death rate shifting times                    */
+    int         fossilSamplingNum;     /* number of fossil sampling rate shiftings / slice sampling events */
+    MrBFlt      fossilSamplingTime[100];    /* fossil sampling rate shifting times          */
+    // MrBFlt     *fossilSamplingProb; /* fossil slice sampling probs (rho_i)               */
     MrBFlt      sampleProb;            /* extant taxon sampling fraction (rho)              */
     Calibration treeAgePr;             /* prior on tree age for uniform clock trees         */
     char        clockRatePr[100];      /* prior on base substitution rate of tree for clock trees */
