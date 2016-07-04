@@ -7571,7 +7571,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 return (ERROR);
             }
         /* set SampleStrat (sampleStrat) ***************************************************/
-        else if (!strcmp(parmName, "Samplestrat"))
+        else if (!strcmp(parmName, "Samplestrat"))  // prset samplestrat = random 3: 250 100 60 [fossil sampling], 1: 150 [birth], 2: 200 100 [death];
             {
             if (expecting == Expecting(EQUALSIGN))
                 {
@@ -7593,9 +7593,11 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting SampleStrat to %s for partition %d\n", spacer, modelParams[i].sampleStrat, i+1);
                             if (!strcmp(modelParams[i].sampleStrat,"Random") || !strcmp(modelParams[i].sampleStrat,"Diversity"))
                                 {
-                                foundFSNum[i] = foundBSNum[i] = foundDSNum[i] = NO;
+                                foundFSNum[i]  = foundBSNum[i]  = foundDSNum[i]  = NO;
                                 foundFSTime[i] = foundBSTime[i] = foundDSTime[i] = NO;
-                                modelParams[i].fossilSamplingNum = modelParams[i].birthRateShiftNum = modelParams[i].deathRateShiftNum = 0;
+                                modelParams[i].fossilSamplingNum = 0;
+                                modelParams[i].birthRateShiftNum = 0;
+                                modelParams[i].deathRateShiftNum = 0;
                                 numVars[i] = 0;
                                 expecting  = Expecting(NUMBER);
                                 expecting |= Expecting(PARAMETER);
@@ -7629,7 +7631,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             modelParams[i].fossilSamplingNum = tempInt;
                             foundFSNum[i] = YES;
-                            expecting  = Expecting(COLON);
+                            expecting = Expecting(COLON);
                             }
                         else if (foundFSTime[i] == NO)
                             {
@@ -7652,7 +7654,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].fossilSamplingTime[numVars[i]], i+1);
                             numVars[i]++;
-                            expecting  = Expecting(NUMBER);
+                            expecting = Expecting(NUMBER);
                             if (numVars[i] == modelParams[i].fossilSamplingNum) {
                                 foundFSTime[i] = YES;
                                 numVars[i] = 0;
@@ -7671,7 +7673,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             modelParams[i].birthRateShiftNum = tempInt;
                             foundBSNum[i] = YES;
-                            expecting  = Expecting(COLON);
+                            expecting = Expecting(COLON);
                             }
                         else if (foundBSTime[i] == NO)
                             {
@@ -7694,7 +7696,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting %d birth rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].birthRateShiftTime[numVars[i]], i+1);
                             numVars[i]++;
-                            expecting  = Expecting(NUMBER);
+                            expecting = Expecting(NUMBER);
                             if (numVars[i] == modelParams[i].birthRateShiftNum) {
                                 foundBSTime[i] = YES;
                                 numVars[i] = 0;
@@ -7711,7 +7713,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 }
                             modelParams[i].deathRateShiftNum = tempInt;
                             foundDSNum[i] = YES;
-                            expecting  = Expecting(COLON);
+                            expecting = Expecting(COLON);
                             }
                         else if (foundDSTime[i] == NO)
                             {
@@ -7734,7 +7736,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting %d death rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].deathRateShiftTime[numVars[i]], i+1);
                             numVars[i]++;
-                            expecting  = Expecting(NUMBER);
+                            expecting = Expecting(NUMBER);
                             if (numVars[i] == modelParams[i].deathRateShiftNum)
                                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                             }

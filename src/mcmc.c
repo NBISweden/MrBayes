@@ -160,7 +160,7 @@ MrBFlt    LogPrior (int chain);
 int       LnBirthDeathPriorPrRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrCluster   (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
+int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
 int       LnFossilizedBDPriorRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
 int       LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
 MrBFlt    LnP0 (MrBFlt t, MrBFlt l, MrBFlt m);
@@ -8658,7 +8658,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
      //chi */
     
     if (!strcmp(sS, "FossilTip"))
-        return LnFossilizedBDPriorFossilTip (t, clockRate, prob, *sR, *eR, sF, *fR);
+        return LnFossilizedBDPriorFossilTip (t, clockRate, prob, sR, eR, sF, fR);
     else if (!strcmp(sS, "Random"))
         return LnFossilizedBDPriorRandom    (t, clockRate, prob, sR, eR, sF, fR);
     else if (!strcmp(sS, "Diversity"))
@@ -8707,7 +8707,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
  |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
+int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 {
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
@@ -8717,13 +8717,13 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     Model       *mp;
     
     /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
-    lambda = sR / (1.0 - eR);
-    psi    = lambda * eR * fR;
+    lambda = sR[0] / (1.0 - eR[0]);
+    psi    = lambda * eR[0] * fR[0];
     rho    = sF;
     
     tmrca = t->root->left->nodeDepth / clockRate;
-    c1 = sqrt(sR*sR + 4 *lambda *psi);
-    c2 = (2 *lambda *rho - sR) / c1;
+    c1 = sqrt(sR[0]*sR[0] + 4 *lambda *psi);
+    c2 = (2 *lambda *rho - sR[0]) / c1;
 
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
@@ -8751,7 +8751,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
 
     /* p_0 (t |psi=0, mu->mu+psi) */
-    hatP0 = 1.0 - rho*sR / (rho*lambda + (sR - rho*lambda) * exp(-sR*tmrca));
+    hatP0 = 1.0 - rho*sR[0] / (rho*lambda + (sR[0] - rho*lambda) * exp(-sR[0]*tmrca));
     
     (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0));
     
@@ -8760,10 +8760,55 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-    /* conversion to labeled tree from oriented tree , constant for a given dataset */
+    /* conversion to labeled tree from oriented tree, constant for a given dataset */
     (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
     return (NO_ERROR);
+}
+
+
+int compare_descending (const void *x, const void *y)
+{
+    if (*((double *)(x)) > *((double *)(y)))
+        return -1;
+    else if (*((double *)(x)) < *((double *)(y)))
+        return 1;
+    else
+        return 0;
+}
+int getTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
+{
+    int    i, j, sLen, sTotal;
+
+    /* get the total number of rate shift */
+    sTotal = mp->fossilSamplingNum;
+    for (i = 0; i < mp->fossilSamplingNum; i++) {
+        shiftTimes[i] = mp->fossilSamplingTime[i];
+    }
+    sLen = sTotal;
+    for (i = 0; i < mp->birthRateShiftNum; i++) {
+        for (j = 0; j < sLen; j++) {
+            if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2) break;
+        }
+        if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2) {
+            shiftTimes[sTotal++] = mp->birthRateShiftTime[i];
+        }
+    }
+    sLen = sTotal;
+    for (i = 0; i < mp->deathRateShiftNum; i++) {
+        for (j = 0; j < sLen; j++) {
+            if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2) break;
+        }
+        if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2) {
+            shiftTimes[sTotal++] = mp->deathRateShiftTime[i];
+        }
+    }
+    
+    /* sort shiftTimes[] in ascending order */
+    qsort(shiftTimes, sTotal, sizeof(double), compare_descending);
+    // for (i = 0; i < sTotal; i++) printf("%lf\n", shiftTimes[i]);
+
+    return sTotal;
 }
 
 
@@ -8801,12 +8846,11 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 {
-    /* Fossils in the past are sampled with piecewise constant rates, 
-       also in several time slices each with a seperate probability.
-       Extant taxa are sampled uniformly at random at time 0 (present). */
+    /* Fossils are sampled with piecewise constant rates in the past.
+       Extant taxa are sampled uniformly at random at present. */
     
-    int         i, j, sl, K, M, E;
-    MrBFlt      x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
+    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    MrBFlt      x, tmrca, *t_f, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
@@ -8815,45 +8859,60 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     /* time of most recent common ancestor */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    /* get the number of fossil slice sampling events, s >= 0 */
-    sl = mp->fossilSamplingNum;
-    
-    /* alloc memory for time of each slice, t_f[sl] = 0 */
-    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    
-    if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
+    /* alloc memory for time of each shift, t_f[sl] = 0 */
+    t_f = (MrBFlt *)SafeMalloc((size_t)(mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum +1) * sizeof(MrBFlt));
+    if (!t_f)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating t_f in LnFossilizedBDPriorRandom\n", spacer);
+        return (ERROR);
+        }
+    /* get the total rate shifts, sl >= 0 */
+    sl = getTotalRateShifts(mp, t_f);
+
+    /* alloc memory for the other parameters */
+    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
         {
         MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorRandom\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho);
-        free(t_f); free(c1); free(c2); free(p_t);
+        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
+        return (ERROR);
         }
     
     /* initialization */
+    i1 = i2 = i3 = 0;
     for (i = 0; i <= sl; i++)
         {
-        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-        lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i] = lambda[i] * eR[i];
-        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
-        if (i < sl) {
-            rho[i] = 0.0;
-            t_f[i] = mp->fossilSamplingTime[i];
-            }
+        if (mp->birthRateShiftNum > 0 && mp->birthRateShiftTime[i1] > t_f[i] +BRLENS_MIN/2)
+            i1++;
+        if (mp->deathRateShiftNum > 0 && mp->deathRateShiftTime[i2] > t_f[i] +BRLENS_MIN/2)
+            i2++;
+        if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_f[i] +BRLENS_MIN/2)
+            i3++;
+        netDiver[i] = sR[i1];
+        turnOver[i] = eR[i2];
+        sampProp[i] = fR[i3];
+        }
+    for (i = 0; i <= sl; i++)
+        {
+        /* netDiver = lambda-mu, turnOver = mu/lambda, sampProp = psi/(mu+psi) */
+        lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
+        mu[i] = lambda[i] * turnOver[i];
+        psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
+        rho[i] = 0.0;
         }
     rho[sl] = sF;
     t_f[sl] = 0.0;
+    assert (t_f[0] < tmrca);
 
-    if (sl > 0)  assert (mp->fossilSamplingTime[0] < tmrca);
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -8871,7 +8930,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
+        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
         printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
@@ -8962,8 +9021,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
 #   endif
     
     /* free memory */
-    free(lambda); free(mu); free(psi); free(rho);
-    free(t_f); free(c1); free(c2); free(p_t);
+    free(t_f);
+    free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
 }
@@ -8979,12 +9038,11 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
  ---------------------------------------------------------------------------------*/
 int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
 {
-    /* Fossils in the past are sampled with piecewise constant rates, 
-       also in several time slices each with a seperate probability.
+    /* Fossils are sampled with piecewise constant rates in the past.
        Extant taxa are sampled with prop sF to maximize diversity. */
     
-    int         i, j, sl, K, M, E;
-    MrBFlt      x, x_min, t_min, M_x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
+    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    MrBFlt      x, tmrca, *t_f, x_min, t_min, M_x, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
@@ -8993,27 +9051,32 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* time of most recent common ancestor */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    /* get the number of fossil slice sampling events, plus 1 extra slice (x_cut) to shift psi to 0 */
-    sl = mp->fossilSamplingNum + 1;
+    /* alloc memory for time of each shift, t_f[sl] = 0, t_f[sl-1] = x_cut */
+    t_f = (MrBFlt *)SafeMalloc((size_t)(mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum +2) * sizeof(MrBFlt));
+    if (!t_f)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating t_f in LnFossilizedBDPriorDiversity\n", spacer);
+        return (ERROR);
+        }
+    /* get the total rate shifts, plus 1 to shift psi to 0 */
+    sl = getTotalRateShifts(mp, t_f) + 1;
     
-    /* alloc memory for time of each slice */
-    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    
-    if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
+    /* alloc memory for the other parameters */
+    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
         {
         MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho);
-        free(t_f); free(c1); free(c2); free(p_t);
+        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
+        return (ERROR);
         }
     
     /* get time of youngest fossil and internal node */
@@ -9033,31 +9096,39 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* lower the cutoff time if not compatible */
     if (x_min > t_min)
         x_min = t_min;
-    if (sl > 1 && mp->fossilSamplingTime[sl-2] < x_min)
-        x_min = mp->fossilSamplingTime[sl-2];
+    if (sl > 1 && t_f[sl-2] < x_min)
+        x_min = t_f[sl-2];
     
     /* initialization (sl >= 1) */
+    i1 = i2 = i3 = 0;
     for (i = 0; i < sl; i++)
         {
-        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-        lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i] = lambda[i] * eR[i];
-        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
+        if (mp->birthRateShiftNum > 0 && mp->birthRateShiftTime[i1] > t_f[i] +BRLENS_MIN/2)
+            i1++;
+        if (mp->deathRateShiftNum > 0 && mp->deathRateShiftTime[i2] > t_f[i] +BRLENS_MIN/2)
+            i2++;
+        if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_f[i] +BRLENS_MIN/2)
+            i3++;
+        netDiver[i] = sR[i1];
+        turnOver[i] = eR[i2];
+        sampProp[i] = fR[i3];
+        }
+    for (i = 0; i < sl; i++)
+        {
+        /* netDiver = lambda-mu, turnOver = mu/lambda, sampProp = psi/(mu+psi) */
+        lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
+        mu[i] = lambda[i] * turnOver[i];
+        psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
+        rho[i] = 0.0;
         }
     lambda[sl] = lambda[sl-1];
-    mu[sl] = mu[sl-1];
-    psi[sl] = 0.0;  // psi = 0 in [0, x_cut]
-    for (i = 0; i < sl-1; i++)
-        {
-        rho[i] = 0.0;
-        t_f[i] = mp->fossilSamplingTime[i];
-        }
-    rho[sl-1] = 0.0;
+    mu[sl]  = mu[sl-1];
+    psi[sl] = 0.0;   // psi = 0 in [0, x_cut]
+    rho[sl] = 1.0;   // not sF
+    t_f[sl] = 0.0;
     t_f[sl-1] = x_min * 0.95; // x_cut
-    rho[sl]   = 1.0;          // not sF
-    t_f[sl]   = 0.0;
-    
-    if (sl > 1)  assert (mp->fossilSamplingTime[0] < tmrca);
+    assert (t_f[0] < tmrca);
+
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -9075,9 +9146,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
+        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
     
     /* first calculate prob of the fbd tree assuming complete sampling */
@@ -9169,8 +9240,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 #   endif
     
     /* free memory */
-    free(lambda); free(mu); free(psi); free(rho);
-    free(t_f); free(c1); free(c2); free(p_t);
+    free(t_f);
+    free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
 }
