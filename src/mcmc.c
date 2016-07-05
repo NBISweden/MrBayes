@@ -8780,7 +8780,7 @@ int getTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
 {
     int    i, j, sLen, sTotal;
 
-    /* get the total number of rate shift */
+    /* get the total number of rate shifts */
     sTotal = mp->fossilSamplingNum;
     for (i = 0; i < mp->fossilSamplingNum; i++) {
         shiftTimes[i] = mp->fossilSamplingTime[i];
@@ -8806,7 +8806,6 @@ int getTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
     
     /* sort shiftTimes[] in ascending order */
     qsort(shiftTimes, sTotal, sizeof(double), compare_descending);
-    // for (i = 0; i < sTotal; i++) printf("%lf\n", shiftTimes[i]);
 
     return sTotal;
 }
@@ -8868,6 +8867,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         }
     /* get the total rate shifts, sl >= 0 */
     sl = getTotalRateShifts(mp, t_f);
+    
+    t_f[sl] = 0.0;
+    assert (t_f[0] < tmrca);
 
     /* alloc memory for the other parameters */
     lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
@@ -8910,8 +8912,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         rho[i] = 0.0;
         }
     rho[sl] = sF;
-    t_f[sl] = 0.0;
-    assert (t_f[0] < tmrca);
 
     for (i = sl; i >= 0; i--)
         {
@@ -8930,9 +8930,10 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+                i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
     
     /* calculate prior prob of the fbd tree */
@@ -9061,24 +9062,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* get the total rate shifts, plus 1 to shift psi to 0 */
     sl = getTotalRateShifts(mp, t_f) + 1;
     
-    /* alloc memory for the other parameters */
-    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
-        {
-        MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
-        return (ERROR);
-        }
-    
     /* get time of youngest fossil and internal node */
     t_min = x_min = tmrca;
     for (i = 0; i < t->nNodes -1; i++)
@@ -9099,7 +9082,29 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (sl > 1 && t_f[sl-2] < x_min)
         x_min = t_f[sl-2];
     
-    /* initialization (sl >= 1) */
+    t_f[sl] = 0.0;
+    t_f[sl-1] = x_min * 0.95; // x_cut
+    assert (t_f[0] < tmrca);
+
+    /* alloc memory for the other parameters */
+    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
+        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
+        return (ERROR);
+        }
+    
+    /* initialization */
     i1 = i2 = i3 = 0;
     for (i = 0; i < sl; i++)
         {
@@ -9125,9 +9130,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     mu[sl]  = mu[sl-1];
     psi[sl] = 0.0;   // psi = 0 in [0, x_cut]
     rho[sl] = 1.0;   // not sF
-    t_f[sl] = 0.0;
-    t_f[sl-1] = x_min * 0.95; // x_cut
-    assert (t_f[0] < tmrca);
 
     for (i = sl; i >= 0; i--)
         {
@@ -9146,7 +9148,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     
 #   ifdef DEBUG_FBDPR
     for (i = 0; i <= sl; i++)
-        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+                i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
     for (i = 0; i <= sl; i++)
         printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i, c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
