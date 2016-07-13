@@ -722,7 +722,9 @@ int InitializeMrBayes (void)
     defaultModel.fossilizationBeta[1] = 1;
     strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                      */
     defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction               */
-    defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events       */
+    defaultModel.birthRateShiftNum = 0;                 /* number of birth rate shifts                  */
+    defaultModel.deathRateShiftNum = 0;                 /* number of death rate shifts                  */
+    defaultModel.fossilSamplingNum = 0;                 /* number of fossil sampling rate shifts / slice sampling events */
 
     strcpy(defaultModel.popSizePr, "Gamma");            /* prior on coalescence population size         */
     defaultModel.popSizeFix = 100.0;                    /* N_e = 100 */

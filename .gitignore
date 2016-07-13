@@ -1,3 +1,4 @@
+*.xcodeproj
 *.tar.gz
 Makefile
 autom4te.cache
