@@ -804,8 +804,10 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
     TreeNode            *p;
     ModelInfo           *m;
     unsigned            chil1Step, chil2Step;
+    int                 *isScalerNode;
     
     m = &modelSettings[division];
+    isScalerNode = m->isScalerNode[chain];
     
     for (i=0; i<t->nIntNodes; i++)
         {
@@ -880,7 +882,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
                 operations.child1TransitionMatrix++;
                 operations.child2Partials+=chil2Step;
                 operations.child2TransitionMatrix++;
-                if (m->isScalerNode == YES)
+                if (isScalerNode[p->index] == YES)
                     {
                     operations.destinationScaleWrite++;
                     cumulativeScaleIndex++;
