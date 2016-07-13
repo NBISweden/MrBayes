@@ -1523,9 +1523,10 @@ void *SafeRealloc (void *ptr, size_t s)
     tmp = realloc(ptr, s);
 
     if (tmp != NULL) {
+
+        /* If called with a NULL pointer, act as calloc() */
         if (ptr == NULL)
             memset(tmp, 0, s);
-        ptr = tmp;
     }
 
     if (tmp == NULL && s > 0) {
@@ -1534,9 +1535,9 @@ void *SafeRealloc (void *ptr, size_t s)
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        }
+    }
 
-    return ptr;
+    return tmp;
 }
 
 
