@@ -1460,7 +1460,7 @@ void *SafeCalloc(size_t n, size_t s) {
 
     if (ptr==NULL && n*s > 0)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
@@ -1504,7 +1504,7 @@ void *SafeMalloc (size_t s)
 
     if (ptr==NULL && s > 0)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
@@ -1530,7 +1530,7 @@ void *SafeRealloc (void *ptr, size_t s)
     }
 
     if (tmp == NULL && s > 0) {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
         MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
         MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
