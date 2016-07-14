@@ -1453,17 +1453,17 @@ void *SafeCalloc(size_t n, size_t s) {
     
     if (s*n == 0)
         {
-        //return NULL;
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. \n", spacer);
+        return NULL;
         }
 
     ptr= calloc(n, s);
 
     if (ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
@@ -1503,6 +1503,7 @@ void *SafeMalloc (size_t s)
 
     if (s == 0)
         {
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. \n", spacer);
         return NULL;
         }
 
@@ -1510,10 +1511,9 @@ void *SafeMalloc (size_t s)
 
     if (ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
@@ -1527,6 +1527,7 @@ void *SafeRealloc (void *ptr, size_t s)
 {
     if (s == 0)
         {
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. \n", spacer);
         free(ptr);
         return NULL;
         }
@@ -1541,10 +1542,9 @@ void *SafeRealloc (void *ptr, size_t s)
 
     if (ptr==NULL)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         return NULL;
         }
