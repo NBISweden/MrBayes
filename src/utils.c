@@ -1447,9 +1447,9 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
 
 
 /* SafeCalloc: Print error if out of memory */
-void *SafeCalloc(size_t n, size_t s) {
-
-    void *ptr;
+void *SafeCalloc(size_t n, size_t s)
+{
+   void *ptr;
     
     if (s*n == 0)
         {
