@@ -250,7 +250,7 @@ void      TouchAllPartitions (void);
 void      TouchAllTrees (int chain);
 void      TouchEverything (int chain);
 
-/* globals */
+/* globals declared here and used elsewhere */
 int             *bsIndex;                    /* compressed std stat freq index               */
 Chain           chainParams;                 /* parameters of Markov chain                   */
 int             *compCharPos;                /* char position in compressed matrix           */
@@ -271,6 +271,11 @@ int             *tiIndex;                    /* compressed std char ti index    
 #if defined (BEAGLE_ENABLED)
 int             recalcScalers;               /* shoud we recalculate scalers for current state YES/NO */
 #endif
+
+/* globals used here but declared elsewhere (in likelihood.c) */
+extern CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
+extern CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
+extern CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
 
 /* local (to this file) variables */
 int             numLocalChains;              /* number of Markov chains                      */

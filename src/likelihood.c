@@ -43,6 +43,12 @@
 
 #define LIKE_EPSILON                1.0e-300
 
+/* global variables declared here */
+CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
+CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
+CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
+
+/* global variables used here but declared elsewhere */
 extern int      *chainId;
 extern int      numLocalChains;
 extern int      rateProbRowSize;            /* size of rate probs for one chain one state   */

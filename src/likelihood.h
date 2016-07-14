@@ -39,10 +39,6 @@
 #define TG                          14
 #define TT                          15
 
-CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
-CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
-CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
-
 int       CondLikeDown_Bin (TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
 int       CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain);

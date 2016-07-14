@@ -145,12 +145,14 @@ MrBFlt          vtPi[20];                    /* stationary frequencies for VT mo
 MrBFlt          blosPi[20];                  /* stationary frequencies for Blosum62 model    */
 MrBFlt          lgPi[20];                    /* stationary frequencies for LG model          */
 
-/* parser flags and variables */
-int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
-            foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar, tempNumStates, isNegative,
+/* parser flags and variables only used in this file */
+int         foundComma, foundBeta, foundAaSetting, modelIsFixed, linkNum, foundLeftPar, tempNumStates,
             foundBSNum[999], foundDSNum[999], foundFSNum[999], foundBSTime[999], foundDSTime[999], foundFSTime[999];
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char        colonPr[100], clockPr[30];
+
+/* parser flags and variables shared with command.c */
+extern int  fromI, toJ, foundDash, foundExp, foundEqual, isNegative;
 
 /* other local variables (this file) */
 MrBFlt          empiricalFreqs[200];         /* emprical base frequencies for partition                 */
