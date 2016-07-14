@@ -19662,17 +19662,19 @@ int SetMoves (void)
             if (moveTypes[i].isApplicable(param) == NO)
                 continue;
             for (j=0; j<moveTypes[i].nApplicable; j++)
+                {
                 if (moveTypes[i].applicableTo[j] == param->paramId)
                     {
                     numApplicableMoves++;
                     break;
                     }
+                }
             }
         }
 
     /* then allocate space for move pointers */
     moves = (MCMCMove **) SafeMalloc (numApplicableMoves * sizeof (MCMCMove *));
-    if (!moves)
+    if (!moves && numApplicableMoves > 0)   /* in the middle of defining a model, numApplicableMoves can be 0 */
         {
         MrBayesPrint ("%s   Problem allocating moves\n", spacer);
         return (ERROR);
@@ -23237,10 +23239,24 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->topologyPr,"Speciestree"))
                 MrBayesPrint ("%s            Prior      = Topology constrained to fold within species tree\n", spacer);
             else if (!strcmp(mp->topologyPr,"Constraints"))
-                MrBayesPrint ("%s            Prior      = Prior on topologies obeys constraints\n", spacer);
+                MrBayesPrint ("%s            Prior      = Prior on topology obeys the following constraints:\n", spacer);
             else
                 MrBayesPrint ("%s            Prior      = Prior is fixed to the topology of user tree '%s'\n", spacer,
                                                     userTree[mp->topologyFix]->name);
+            if (!strcmp(mp->topologyPr,"Constraints"))
+                {
+                for (a=0; a<numDefinedConstraints; ++a)
+                    {
+                    if (mp->activeConstraints[a] == NO)
+                        continue;
+                    if (definedConstraintsType[a] == HARD)
+                        MrBayesPrint ("%s                         -- Hard constraint \"%s\"\n", spacer, constraintNames[a]);
+                    else if (definedConstraintsType[a] == PARTIAL)
+                        MrBayesPrint ("%s                         -- Partial constraint \"%s\"\n", spacer, constraintNames[a]);
+                    else /* if (true) */
+                        MrBayesPrint ("%s                         -- Negative constraint \"%s\"\n", spacer, constraintNames[a]);
+                    }
+                }
             }
         else if (j == P_BRLENS)
             {

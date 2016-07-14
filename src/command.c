@@ -369,7 +369,7 @@ CmdType             *commandPtr; /* Points to the commands array entry which cor
 ParmInfoPtr         paramPtr;    /* Points to paramTable table array entry which corresponds to currently processed parameter of current command */
 TreeNode            *pPtr, *qPtr;
 
-enum ConstraintType     consrtainType; /* Used only in processing of constraine command to indicate what is the type of constrain */
+enum ConstraintType constraintType; /* Used only in processing of constraint command to indicate the type of constraint */
 
 
 int AddToGivenSet (int i, int j, int k, int id, int *Set)
@@ -2392,7 +2392,7 @@ int DoConstraint (void)
     int         i, howMany;
     int         *tset;
 
-    if (consrtainType == PARTIAL)
+    if (constraintType == PARTIAL)
         tset=tempSetNeg;
     else
         tset=tempSet;
@@ -2426,19 +2426,19 @@ int DoConstraint (void)
         return (ERROR);
         }
 
-    if (consrtainType == HARD)
+    if (constraintType == HARD)
         {
         if (howMany == numTaxa)
             {
             /* We allow this so we can report states from and calibrate root */
             }
         
-        } /*end consrtainType == HARD */
-    else if (consrtainType == PARTIAL)
+        } /*end constraintType == HARD */
+    else if (constraintType == PARTIAL)
         {
         if (howMany == 1)
             {
-            MrBayesPrint ("%s   This partial constraint include only one taxa. It is alwayes satisfied and will not be defined.\n", spacer);
+            MrBayesPrint ("%s   This partial constraint includes only one taxon. It is always satisfied and will not be defined.\n", spacer);
             return (ERROR);
             }
 
@@ -2461,11 +2461,11 @@ int DoConstraint (void)
             return (ERROR);
             }
         }
-    else if (consrtainType == NEGATIVE)
+    else if (constraintType == NEGATIVE)
         {
         if (howMany == 1)
             {
-            MrBayesPrint ("%s   Negative constraint should include more than one taxa. Constraint will not be defined\n", spacer);
+            MrBayesPrint ("%s   Negative constraint should include more than one taxon. Constraint will not be defined\n", spacer);
             return (ERROR);
             }
         }
@@ -2479,7 +2479,7 @@ int DoConstraint (void)
 
     /* store tempSet */
     AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
-    if (consrtainType == PARTIAL)
+    if (constraintType == PARTIAL)
         {
         AddBitfield (&definedConstraintTwo, numDefinedConstraints, tempSetNeg, numTaxa);
         }
@@ -2520,7 +2520,7 @@ int DoConstraint (void)
     definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)numDefinedConstraints*sizeof(enum ConstraintType));
     if (definedConstraintsType==NULL)
         return ERROR;
-    definedConstraintsType[numDefinedConstraints-1] = consrtainType;
+    definedConstraintsType[numDefinedConstraints-1] = constraintType;
 
     definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)numDefinedConstraints*sizeof(BitsLong *));
     if (definedConstraintPruned==NULL)
@@ -2584,7 +2584,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             for (i=0; i<numTaxa; i++)
                 tempSet[i] = 0;
 
-            consrtainType = HARD; /* set default constrain type */
+            constraintType = HARD; /* set default constrain type */
             tempSetCurrent=tempSet;
             fromI = toJ = everyK = -1;
             foundDash = foundSlash = NO;
@@ -2638,19 +2638,19 @@ int DoConstraintParm (char *parmName, char *tkn)
                 for (i=0; i<numTaxa; i++)
                     tempSetNeg[i] = 0;
 
-                consrtainType = PARTIAL;
+                constraintType = PARTIAL;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Hard", tkn) == SAME)
                 {
-                consrtainType = HARD;
+                constraintType = HARD;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Negative", tkn) == SAME)
                 {
-                consrtainType = NEGATIVE;
+                constraintType = NEGATIVE;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
@@ -2701,7 +2701,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 
             expecting  = Expecting(ALPHA);
             expecting |= Expecting(NUMBER);
-            if (consrtainType != PARTIAL || foundColon == YES)
+            if (constraintType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
@@ -2814,7 +2814,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             expecting |= Expecting(NUMBER);
             expecting |= Expecting(DASH);
             expecting |= Expecting(BACKSLASH);
-            if (consrtainType != PARTIAL || foundColon == YES)
+            if (constraintType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
