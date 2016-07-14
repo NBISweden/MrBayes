@@ -729,6 +729,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_silent_rules
+enable_debug
 enable_sse
 enable_avx
 enable_fma
@@ -1372,6 +1373,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-silent-rules   less verbose build output (undo: "make V=1")
   --disable-silent-rules  verbose build output (undo: "make V=0")
+  --enable-debug          Enable debugging [default=no]
   --enable-sse            Enable use of code written using SSE (Streaming SIMD
                           Extensions) [default=yes] (if supported)
   --enable-avx            Enable use of code written using AVX (Advanced
@@ -3125,6 +3127,36 @@ cat >>confdefs.h <<_ACEOF
 #define HOST_CPU "$host_cpu"
 _ACEOF
 
+
+# NB: DEFAULT CFLAGS:
+#     Using --enable-debug sets CFLAGS to "-g -O2"  ($DEBUG_CFLAGS)
+#     Not using --enable-debug sets CFLAGS to "-O3" ($RELEASE_CFLAGS)
+#     "-std=c99 -pedantic" will always be added     ($DEFAULT_CFLAGS)
+
+DEBUG_CFLAGS="-g -O2"
+RELEASE_CFLAGS="-O3"
+DEFAULT_CFLAGS="-std=c99 -pedantic"
+
+# Optional feature: debug
+
+# Check whether --enable-debug was given.
+if test "${enable_debug+set}" = set; then :
+  enableval=$enable_debug; enable_debug=$enableval
+else
+  enable_debug=no
+fi
+
+
+# Handle CFLAGS at once, before AX_PROG_CC_MPI further down.
+
+if test "x$enable_debug" = "xyes"; then :
+  CFLAGS="$DEBUG_CFLAGS"
+else
+  CFLAGS="$RELEASE_CFLAGS"
+fi
+
+# Add DEFAULT_CFLAGS to the end of CFLAGS.
+CFLAGS="$CFLAGS $DEFAULT_CFLAGS"
 
 # Optional features: SSE, AVX, FMA
 
