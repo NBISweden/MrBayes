@@ -110,33 +110,26 @@ Picking up the Beagle library:
 
 Assuming Beagle (https://github.com/beagle-dev/beagle-lib) was compiled
 and installed in a standard location, it will be picked up by the
-"configure" script automatically (using the "pkg-config" tool).  If it
-isn't found, or the "configure" script is run with "--without-beagle",
-Beagle will not be used.
+"configure" script automatically.  If it isn't found, or the "configure"
+script is run with "--without-beagle", Beagle will not be used.
 
-If Beagle is installed in a non-default location, point the
-"PKG_CONFIG_PATH" environment variable to the "pkgconfig" directory that
-Beagle installed its "hmsbeagle-1.pc" file into.
+If Beagle is installed in a non-default location, there are three ways
+of telling the "configure" script how to find it:
 
-For example, I installed Beagle in my home directory using
+1.  Use the flag "--with-beagle=PATH" where "PATH" is the prefix path
+    where the Beagle headers and libraries may be found.  For example
+    "$HOME/local", "/opt" etc.  The path "/usr/local" is tested if no
+    path is specified.
 
-    $ ./configure --prefix=$HOME/local
-    $ make && make install
+2.  Point the "PKG_CONFIG_PATH" environment variable to the "pkgconfig"
+    directory that Beagle installed its "hmsbeagle-1.pc" file into.
+    This file is installed if Beagle was compiled from sources, and
+    may be found in the installation's "lib" directory.  The detection
+    of Beagle will fall back on using "pkg-config" which picks up this
+    file.
 
-This means I will need to point "PKG_CONFIG_PATH" to
-"$HOME/local/lib/pkgconfig" when I build MrBayes:
-
-    $ env PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig ./configure
-    [...]
-    checking for pkg-config... /usr/bin/pkg-config
-    checking pkg-config is at least version 0.9.0... yes
-    checking for BEAGLE... yes
-    [...]
-    $ make && make install
-
-It's also possible to set the "BEAGLE_CFLAGS" and "BEAGLE_LIBS"
-environment variables prior to running "configure" to override
-"pkg-config".
+3.  As a last resort, it's also possible to set the "BEAGLE_CFLAGS" and
+    "BEAGLE_LIBS" environment variables prior to running "configure":
 
     $ env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
           BEAGLE_LIBS="-L$HOME/local/lib -lhmsbeagle" \
