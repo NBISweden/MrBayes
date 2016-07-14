@@ -14,6 +14,32 @@ AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"], [Host triplet])
 AC_DEFINE_UNQUOTED([HOST_CPU], ["$host_cpu"], [Host CPU type])
 
+# NB: DEFAULT CFLAGS:
+#     Using --enable-debug sets CFLAGS to "-g -O2"  ($DEBUG_CFLAGS)
+#     Not using --enable-debug sets CFLAGS to "-O3" ($RELEASE_CFLAGS)
+#     "-std=c99 -pedantic" will always be added     ($DEFAULT_CFLAGS)
+
+DEBUG_CFLAGS="-g -O2"
+RELEASE_CFLAGS="-O3"
+DEFAULT_CFLAGS="-std=c99 -pedantic"
+
+# Optional feature: debug
+
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+        [Enable debugging @<:@default=no@:>@])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+
+# Handle CFLAGS at once, before AX_PROG_CC_MPI further down.
+
+AS_IF([test "x$enable_debug" = "xyes"],
+    [CFLAGS="$DEBUG_CFLAGS"],
+    [CFLAGS="$RELEASE_CFLAGS"])
+
+# Add DEFAULT_CFLAGS to the end of CFLAGS.
+CFLAGS="$CFLAGS $DEFAULT_CFLAGS"
+
 # Optional features: SSE, AVX, FMA
 
 AC_ARG_ENABLE([sse],
