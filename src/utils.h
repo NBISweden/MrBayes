@@ -83,6 +83,7 @@ void     SetBit (int i, BitsLong *bits);
 void     SortInts (int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
 void     SortMrBFlt (MrBFlt *item, int left, int right);
+int      StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
 FILE    *TestOpenTextFileR (char *name);

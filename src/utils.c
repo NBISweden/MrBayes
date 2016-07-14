@@ -1624,6 +1624,31 @@ void SortMrBFlt (MrBFlt *item, int left, int right)
 }
 
 
+/* StrCmpCaseInsensitiveLen: Case insensitive string comparison (with maximum
+ * string length restriction). */
+int StrCmpCaseInsensitiveLen(const char *s, const char *t, size_t len)
+{
+    if (len == 0)
+        return 0;
+
+    while (len-- > 0) {
+        char sc = tolower(s[0]);
+        s++;
+        char tc = tolower(t[0]);
+        t++;
+
+        if (sc > tc)
+            return 1;
+        else if (sc < tc)
+            return -1;
+        else if (sc == '\0')
+            break;
+    }
+
+    return 0;
+}
+
+
 /* StrCmpCaseInsensitive: Case insensitive string comparison */
 int StrCmpCaseInsensitive (char *s, char *t)
 {
