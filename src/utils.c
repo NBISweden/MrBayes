@@ -76,20 +76,20 @@ MrBFlt  BetaCf (MrBFlt a, MrBFlt b, MrBFlt x);
 MrBFlt  BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt  CdfBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r);
 MrBFlt  CdfNormal (MrBFlt x);
-complex Complex (MrBFlt a, MrBFlt b);
-MrBFlt  ComplexAbsoluteValue (complex a);
-complex ComplexAddition (complex a, complex b);
-complex ComplexConjugate (complex a);
-complex ComplexDivision (complex a, complex b);
+MrBComplex Complex (MrBFlt a, MrBFlt b);
+MrBFlt  ComplexAbsoluteValue (MrBComplex a);
+MrBComplex ComplexAddition (MrBComplex a, MrBComplex b);
+MrBComplex ComplexConjugate (MrBComplex a);
+MrBComplex ComplexDivision (MrBComplex a, MrBComplex b);
 void    ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, MrBFlt *ci);
-complex ComplexExponentiation (complex a);
-int     ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex **aInverse, complex *col);
-complex ComplexLog (complex a);
-void    ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b);
-int     ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd);
-complex ComplexMultiplication (complex a, complex b);
-complex ComplexSquareRoot (complex a);
-complex ComplexSubtraction (complex a, complex b);
+MrBComplex ComplexExponentiation (MrBComplex a);
+int     ComplexInvertMatrix (int dim, MrBComplex **a, MrBFlt *dwork, int *indx, MrBComplex **aInverse, MrBComplex *col);
+MrBComplex ComplexLog (MrBComplex a);
+void    ComplexLUBackSubstitution (int dim, MrBComplex **a, int *indx, MrBComplex *b);
+int     ComplexLUDecompose (int dim, MrBComplex **a, MrBFlt *vv, int *indx, MrBFlt *pd);
+MrBComplex ComplexMultiplication (MrBComplex a, MrBComplex b);
+MrBComplex ComplexSquareRoot (MrBComplex a);
+MrBComplex ComplexSubtraction (MrBComplex a, MrBComplex b);
 int     ComputeEigenSystem (int dim, MrBFlt **a, MrBFlt *v, MrBFlt *vi, MrBFlt **u, int *iwork, MrBFlt *dwork);
 void    ComputeLandU (int dim, MrBFlt **aMat, MrBFlt **lMat, MrBFlt **uMat);
 void    ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f);
@@ -113,11 +113,11 @@ void    LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b);
 int     LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd);
 void    MultiplyMatrixByScalar (int dim, MrBFlt **a, MrBFlt scalar, MrBFlt **result);
 MrBFlt  PointChi2 (MrBFlt prob, MrBFlt v);
-void    PrintComplexVector (int dim, complex *vec);
-void    PrintSquareComplexMatrix (int dim, complex **m);
+void    PrintComplexVector (int dim, MrBComplex *vec);
+void    PrintSquareComplexMatrix (int dim, MrBComplex **m);
 void    PrintSquareDoubleMatrix (int dim, MrBFlt **matrix);
 void    PrintSquareIntegerMatrix (int dim, int **matrix);
-complex ProductOfRealAndComplex (MrBFlt a, complex b);
+MrBComplex ProductOfRealAndComplex (MrBFlt a, MrBComplex b);
 MrBFlt  RndGamma (MrBFlt s, RandLong *seed);
 MrBFlt  RndGamma1 (MrBFlt s, RandLong *seed);
 MrBFlt  RndGamma2 (MrBFlt s, RandLong *seed);
@@ -8728,18 +8728,18 @@ void AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
 |   Allocate memory for a square (dim X dim) complex matrix.
 |
 ---------------------------------------------------------------------------------*/
-complex **AllocateSquareComplexMatrix (int dim)
+MrBComplex **AllocateSquareComplexMatrix (int dim)
 {
     int         i;
-    complex     **m;
+    MrBComplex     **m;
 
-    m = (complex **) SafeMalloc ((size_t)dim * sizeof(complex*));
+    m = (MrBComplex **) SafeMalloc ((size_t)dim * sizeof(MrBComplex*));
     if (!m) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
         exit (0);
         }
-    m[0]=(complex *) SafeMalloc ((size_t)dim * (size_t)dim *sizeof(complex));
+    m[0]=(MrBComplex *) SafeMalloc ((size_t)dim * (size_t)dim *sizeof(MrBComplex));
     if (!m[0]) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
@@ -9649,9 +9649,9 @@ MrBFlt CdfNormal (MrBFlt x)
 |   Returns a complex number with specified real and imaginary parts.
 |
 ---------------------------------------------------------------------------------*/
-complex Complex (MrBFlt a, MrBFlt b)
+MrBComplex Complex (MrBFlt a, MrBFlt b)
 {
-    complex c;
+    MrBComplex c;
     
     c.re = a;
     c.im = b;
@@ -9667,7 +9667,7 @@ complex Complex (MrBFlt a, MrBFlt b)
 |   Returns the complex absolute value (modulus) of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt ComplexAbsoluteValue (complex a)
+MrBFlt ComplexAbsoluteValue (MrBComplex a)
 {
     MrBFlt      x, y, answer, temp;
     
@@ -9699,9 +9699,9 @@ MrBFlt ComplexAbsoluteValue (complex a)
 |   Returns the complex sum of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexAddition (complex a, complex b)
+MrBComplex ComplexAddition (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re + b.re;
     c.im = a.im + b.im;
@@ -9717,9 +9717,9 @@ complex ComplexAddition (complex a, complex b)
 |   Returns the complex conjugate of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexConjugate (complex a)
+MrBComplex ComplexConjugate (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re;
     c.im = -a.im;
@@ -9735,9 +9735,9 @@ complex ComplexConjugate (complex a)
 |   Returns the complex quotient of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexDivision (complex a, complex b)
+MrBComplex ComplexDivision (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     MrBFlt      r, den;
     
     if (fabs(b.re) >= fabs(b.im)) 
@@ -9789,9 +9789,9 @@ void ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, M
 |   Returns the complex exponential of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexExponentiation (complex a)
+MrBComplex ComplexExponentiation (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
 
     c.re = exp(a.re);
     if (AreDoublesEqual(a.im,0.0, ETA)==YES) /* == 0 */
@@ -9823,7 +9823,7 @@ complex ComplexExponentiation (complex a)
 |   The function returns YES (1) or NO (0) if the results are singular.
 |
 ---------------------------------------------------------------------------------*/
-int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex **aInverse, complex *col)
+int ComplexInvertMatrix (int dim, MrBComplex **a, MrBFlt *dwork, int *indx, MrBComplex **aInverse, MrBComplex *col)
 {
     int             isSingular, i, j;
 
@@ -9853,9 +9853,9 @@ int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex
 |   Returns the complex exponential of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexLog (complex a)
+MrBComplex ComplexLog (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = log(ComplexAbsoluteValue(a));
     if (AreDoublesEqual(a.re,0.0,ETA)==YES) /* == 0.0 */ 
@@ -9879,10 +9879,10 @@ complex ComplexLog (complex a)
 |   the inverse.
 |      
 ---------------------------------------------------------------------------------*/
-void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
+void ComplexLUBackSubstitution (int dim, MrBComplex **a, int *indx, MrBComplex *b)
 {
     int             i, ip, j, ii = -1;
-    complex         sum;
+    MrBComplex         sum;
 
     for (i = 0; i < dim; i++) 
         {
@@ -9925,11 +9925,11 @@ void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
 |   The function returns YES (1) or NO (0) if the results are singular.
 |
 ---------------------------------------------------------------------------------*/
-int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
+int ComplexLUDecompose (int dim, MrBComplex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 {
     int             i, imax, j, k;
     MrBFlt          big, dum, temp, d;
-    complex         sum, cdum;
+    MrBComplex         sum, cdum;
 
     d = 1.0;
     imax = 0;
@@ -10009,9 +10009,9 @@ int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 |   Returns the complex product of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexMultiplication (complex a, complex b)
+MrBComplex ComplexMultiplication (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re * b.re - a.im * b.im;
     c.im = a.im * b.re + a.re * b.im;
@@ -10027,9 +10027,9 @@ complex ComplexMultiplication (complex a, complex b)
 |   Returns the complex square root of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexSquareRoot (complex a)
+MrBComplex ComplexSquareRoot (MrBComplex a)
 {
-    complex         c;
+    MrBComplex         c;
     MrBFlt          x, y, w, r;
     
     if (AreDoublesEqual(a.re, 0.0, ETA)==YES && AreDoublesEqual(a.im, 0.0, ETA)==YES) /* 2x == 0.0 */
@@ -10074,9 +10074,9 @@ complex ComplexSquareRoot (complex a)
 |   Returns the complex difference of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexSubtraction (complex a, complex b)
+MrBComplex ComplexSubtraction (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re - b.re;
     c.im = a.im - b.im;
@@ -10243,7 +10243,7 @@ void ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f)
 |   Copies the contents of one matrix of complex numbers to another matrix.
 |
 ---------------------------------------------------------------------------------*/
-void CopyComplexMatrices (int dim, complex **from, complex **to)
+void CopyComplexMatrices (int dim, MrBComplex **from, MrBComplex **to)
 {
     int         i, j;
     
@@ -10916,7 +10916,7 @@ void ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b)
 |   Frees a matrix of complex numbers.
 |      
 ---------------------------------------------------------------------------------*/
-void FreeSquareComplexMatrix (complex **m)
+void FreeSquareComplexMatrix (MrBComplex **m)
 {
     free((char *) (m[0]));
     free((char *) (m));
@@ -11017,11 +11017,11 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 |   returns NO if non complex eigendecomposition, YES if complex eigendecomposition,  ABORT if an error has occured
 |
 ---------------------------------------------------------------------------------*/
-int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs)
+int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, MrBComplex **Ceigvecs, MrBComplex **CinverseEigvecs)
 {
     int         i, j, rc, *iWork, isComplex;
     MrBFlt      **tempWork, *dWork;
-    complex     **cWork, *Ccol;
+    MrBComplex     **cWork, *Ccol;
 
     /* allocate memory */
     dWork = (MrBFlt *) SafeMalloc ((size_t)dim * sizeof(MrBFlt));
@@ -11080,7 +11080,7 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
                     }
                 }
             }
-        Ccol = (complex *) SafeMalloc ((size_t)dim * sizeof(complex));
+        Ccol = (MrBComplex *) SafeMalloc ((size_t)dim * sizeof(MrBComplex));
         if (!Ccol)
             {
             MrBayesPrint ("%s   Error: Problem in GetEigens\n", spacer);
@@ -13374,7 +13374,7 @@ MrBFlt PointNormal (MrBFlt prob)
 |   Prints a vector of dim complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-void PrintComplexVector (int dim, complex *vec)
+void PrintComplexVector (int dim, MrBComplex *vec)
 {
     int     i;
 
@@ -13396,7 +13396,7 @@ void PrintComplexVector (int dim, complex *vec)
 |   Prints a square matrix of complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-void PrintSquareComplexMatrix (int dim, complex **m)
+void PrintSquareComplexMatrix (int dim, MrBComplex **m)
 {
     int     row, col;
 
@@ -13472,9 +13472,9 @@ void PrintSquareIntegerMatrix (int dim, int **matrix)
 |   Returns the complex product of a real and complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ProductOfRealAndComplex (MrBFlt a, complex b)
+MrBComplex ProductOfRealAndComplex (MrBFlt a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a * b.re;
     c.im = a * b.im;
