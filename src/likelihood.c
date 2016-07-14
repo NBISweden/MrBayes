@@ -10626,7 +10626,7 @@ int UpDateCijk (int whichPart, int whichChain)
     MrBFlt      **q[100], **eigvecs, **inverseEigvecs;
     MrBFlt      *eigenValues, *eigvalsImag, *cijk;
     MrBFlt      *bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
-    complex     **Ceigvecs, **CinverseEigvecs;
+    MrBComplex     **Ceigvecs, **CinverseEigvecs;
     ModelInfo   *m;
     Param       *p;
 #   if defined (BEAGLE_ENABLED)

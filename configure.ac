@@ -137,7 +137,7 @@ AS_IF([test "x$enable_fma" = "xno"],
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup strncasecmp])
+AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup])
 
 AC_CONFIG_FILES([Makefile doc/Makefile examples/Makefile src/Makefile])
 AC_OUTPUT

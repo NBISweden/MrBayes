@@ -8977,8 +8977,8 @@ char *command_generator(const char *text, int state)
     while ((command=commands[list_index].string)!=NULL) 
         {
         list_index++;
-        if (strncasecmp(command,text,len)==0) 
-            /* memory is freed by the readline library so we need a strdup here */ 
+        if (StrCmpCaseInsensitiveLen(command, text, len) == 0)
+            /* memory is freed by the readline library so we need a strdup here */
             return strdup(command);
         }
     return (char *)NULL;
