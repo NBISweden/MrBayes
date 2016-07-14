@@ -1592,35 +1592,6 @@ int MrBFlt_cmp(const void *a, const void *b)
 void SortMrBFlt (MrBFlt *item, int left, int right)
 {
     qsort((void *)item, right - left + 1, sizeof(MrBFlt), &MrBFlt_cmp);
-
-#if 0
-    register int    i, j;
-    MrBFlt          x, temp;
-
-    i = left;
-    j = right;
-    x = item[(left+right)/2];
-    do 
-        {
-        while (item[i] < x && i < right)
-            i++;
-        while (x < item[j] && j > left)
-            j--;
-        if (i <= j)
-            {
-            temp = item[i];
-            item[i] = item[j];
-            item[j] = temp;
-                
-            i++;
-            j--;
-            }
-        } while (i <= j);
-    if (left < j)
-        SortMrBFlt (item, left, j);
-    if (i < right)
-        SortMrBFlt (item, i, right);
-#endif
 }
 
 
