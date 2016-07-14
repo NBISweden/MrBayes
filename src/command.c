@@ -3529,6 +3529,7 @@ int DoExecute (void)
     char        *s, exeFileName[100];
     FILE        *fp;
     CmdType     *oldCommandPtr;
+    char        *oldTokenP, oldToken[CMD_STRING_LENGTH];
 #   if defined (MPI_ENABLED)
     int         sumErrors;
 #   endif
@@ -3544,8 +3545,10 @@ int DoExecute (void)
     else
         MrBayesPrint ("%s   Executing file \"%s\"\n", spacer, inputFileName);
 
-    /* Save old command ptr */
+    /* Save old command ptr, token pointer and token */
     oldCommandPtr = commandPtr;
+    oldTokenP     = tokenP;
+    strcpy(oldToken, token);
 
     /* open binary file */
     if ((fp = OpenBinaryFileR(inputFileName)) == NULL)
@@ -3594,29 +3597,8 @@ int DoExecute (void)
     /* find length of longest line */
     longestLineLength = LongestLine (fp);
     MrBayesPrint ("%s   Longest line length = %d\n", spacer, longestLineLength);
-    longestLineLength += 50;
+    longestLineLength += 10;
     
-    /* check that longest line is not longer than CMD_STRING_LENGTH */
-    if (longestLineLength >= CMD_STRING_LENGTH - 100)
-        {
-        /*MrBayesPrint ("%s   A maximum of %d characters is allowed on a single line\n", spacer, CMD_STRING_LENGTH - 100);*/
-        MrBayesPrint ("%s   The longest line of the file %s\n", spacer, inputFileName);
-        MrBayesPrint ("%s   contains at least one line with %d characters.\n", spacer, longestLineLength);
-        }
-    /*
-#   if defined (MPI_ENABLED)
-    MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (sumErrors > 0)
-        {
-        MrBayesPrint ("%s   There was an error on at least one processor\n", spacer);
-        goto errorExit;
-        }
-#   else
-    if (nErrors > 0)
-        goto errorExit;
-#   endif
-    */
-
     /* allocate a string long enough to hold a line */
     s = (char *)SafeMalloc((size_t)longestLineLength * sizeof(char));
     if (!s)
@@ -3667,14 +3649,7 @@ int DoExecute (void)
     do {
         /* read in a new line into s */
         i = 0;
-        do {
-            c = fgetc(fp);
-            if (c == '\r' || c == '\n' || c == EOF)
-                s[i++] = '\n';
-            else
-                s[i++] = c;
-            } while (s[i-1] != '\n');
-        s[i] = '\0';
+        fgets(s, longestLineLength, fp);
         foundNewLine = YES;
         cmdLine++;
 
@@ -3775,6 +3750,8 @@ int DoExecute (void)
             strcpy (spacer, "");
 
         commandPtr = oldCommandPtr;
+        tokenP     = oldTokenP;
+        strcpy(token, oldToken);
 
         return (NO_ERROR_QUIT);
             
@@ -3787,13 +3764,13 @@ int DoExecute (void)
             }
         if (fp)
             {
-            MrBayesPrint ("%s   The error occurred when reading char. %d on line %d\n", spacer, tokenP-cmdStr-strlen(token)+1, cmdLine);
+            MrBayesPrint ("%s   The error occurred when reading char. %d-%d on line %d\n", spacer,
+                (size_t)(tokenP-s)-strlen(token)+1, (size_t)(tokenP-s), cmdLine);
             MrBayesPrint ("%s      in the file '%s'\n", spacer, exeFileName);
             }
         if (s)
             free (s);
         SafeFclose (&fp);
-        numOpenExeFiles--;  /* we increase the value above even if no file is successfully opened */
 
         /* make sure we exit the block we were reading from correctly */
         if (inMrbayesBlock == YES)
@@ -3809,18 +3786,24 @@ int DoExecute (void)
             inForeignBlock = NO;
 
         /* make sure correct return if we came from mrbayes block in another execute file */
-        if (numOpenExeFiles > 0)
+        if (numOpenExeFiles > 1)
             {
             inMrbayesBlock = YES;
             MrBayesPrint ("\n   Returning execution to calling file ...\n\n");
             strcpy (spacer, "   ");
-            commandPtr = oldCommandPtr;
-            return (ERROR);
             }
         else
+            {
             strcpy (spacer, "");
+            MrBayesPrint ("\n   Returning execution to command line ...\n\n");
+            }
 
+        numOpenExeFiles--;  /* we increase the value above even if no file is successfully opened */
+
+        /* restore state of globals */
         commandPtr = oldCommandPtr;
+        tokenP = oldTokenP;
+        strcpy(token, oldToken);
 
         return (ERROR);
 }
