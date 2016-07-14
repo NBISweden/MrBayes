@@ -14,6 +14,34 @@ AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"], [Host triplet])
 AC_DEFINE_UNQUOTED([HOST_CPU], ["$host_cpu"], [Host CPU type])
 
+# NB: DEFAULT CFLAGS:
+#     Using --enable-debug sets CFLAGS to "-g -O2"  ($DEBUG_CFLAGS)
+#     Not using --enable-debug sets CFLAGS to "-O3" ($RELEASE_CFLAGS)
+#     "-std=c99 -pedantic" will always be added     ($DEFAULT_CFLAGS)
+#
+# (warning flags are added by the AX_CFLAGS_WARN_ALL macro further down)
+
+DEBUG_CFLAGS="-g -O2"
+RELEASE_CFLAGS="-O3"
+DEFAULT_CFLAGS="-std=c99 -pedantic"
+
+# Optional feature: debug
+
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+        [Enable debugging @<:@default=no@:>@])],
+    [enable_debug=$enableval],
+    [enable_debug=no])
+
+# Handle CFLAGS at once, before AX_PROG_CC_MPI further down.
+
+AS_IF([test "x$enable_debug" = "xyes"],
+    [CFLAGS="$DEBUG_CFLAGS"],
+    [CFLAGS="$RELEASE_CFLAGS"])
+
+# Add DEFAULT_CFLAGS to the end of CFLAGS.
+CFLAGS="$CFLAGS $DEFAULT_CFLAGS"
+
 # Optional features: SSE, AVX, FMA
 
 AC_ARG_ENABLE([sse],
@@ -52,8 +80,11 @@ AC_ARG_WITH([readline],
     [with_readline=check])
 
 AC_ARG_WITH([beagle],
-    [AS_HELP_STRING([--with-beagle],
-        [Build with the Beagle library @<:@default=check@:>@])],
+    [AS_HELP_STRING([--with-beagle[[=PATH]]],
+        [Build with the Beagle library @<:@default=check@:>@.
+        The PATH argument should be the prefix path where Beagle
+        was installed, e.g. @S|@HOME/local, /opt/local etc.
+        The path /usr/local is checked if no path is specified.])],
     [],
     [with_beagle=check])
 
@@ -77,15 +108,54 @@ AC_CHECK_LIB([m], [sqrt])
 
 # Check for the Beagle library.
 
-AS_IF([test "x$with_beagle" != "xno"],
-    [PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-1],
-        [AC_DEFINE([BEAGLE_ENABLED], [1],
-            [Define if you want to enable Beagle])],
+# Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
+# and headers with the given prefix, or in /usr/local if no prefix path
+# was given, and if that fails use PKG_CHECK_MODULES (and trust its
+# result).
+
+AS_IF([test "x$with_beagle" != "xno"], [
+    old_cppflags="$CPPFLAGS"
+    old_ldflags="$LDFLAGS"
+
+    beagle_subinc="include/libhmsbeagle-1"
+    beagle_sublib="lib"
+
+    AS_IF([test -d "$with_beagle"],
+          [beagle_prefix="$with_beagle"],
+          [beagle_prefix="/usr/local"])
+
+    AC_MSG_NOTICE([Trying to locate Beagle in '$beagle_prefix'])
+
+    CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+    LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+
+    AC_CHECK_HEADER([libhmsbeagle/beagle.h],
+        [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
+    AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+        [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
+
+    CPPFLAGS="$old_cppflags"
+    LDFLAGS="$old_ldflags"
+
+    AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
+        [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
+         beagle_found="yes"],
+        [AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
+         PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-1],
+            [AC_MSG_NOTICE([Found Beagle with pkg-config])
+             beagle_found="yes"],
+            [beagle_found="no"])
+    ]) dnl AS_IF
+
+    AS_IF([test "x$beagle_found" != "xyes"],
         [AS_IF([test "x$with_beagle" != "xcheck"],
             [AC_MSG_ERROR(
-                [--with-beagle was given, but test for Beagle failed])
-        ]) dnl AS_IF
-    ]) dnl PKG_CHECK_MODULES
+                [--with-beagle was given, but test for Beagle failed])]
+        )], dnl AS_IF
+        [AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
+         AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
+         AC_DEFINE([BEAGLE_ENABLED], [1],
+            [Define if you want to enable Beagle])])
 ]) dnl AS_IF
 
 # Check for readline, but only if we don't have MPI, because aparantly
