@@ -764,12 +764,6 @@ int IsBitSet (int i, BitsLong *bits)
 /* IsConsistentWith: Is token consistent with expected word, case insensitive ? */
 int IsConsistentWith (const char *token, const char *expected)
 {
-    if (strcasecmp(token, expected) == 0)
-        return YES;
-
-    return NO;
-
-#if 0
     int     i, len;
 
     if (strlen(token) > strlen(expected))
@@ -784,7 +778,6 @@ int IsConsistentWith (const char *token, const char *expected)
         }
 
     return YES;
-#endif
 }
 
 
@@ -1634,8 +1627,6 @@ void SortMrBFlt (MrBFlt *item, int left, int right)
 /* StrCmpCaseInsensitive: Case insensitive string comparison */
 int StrCmpCaseInsensitive (char *s, char *t)
 {
-    return strcasecmp(s, t);
-#if 0
     int i, minLen;
 
     if (strlen(s) < strlen(t))
@@ -1653,7 +1644,6 @@ int StrCmpCaseInsensitive (char *s, char *t)
         return 1;
     else
         return -1;
-#endif
 }
 
 
