@@ -626,14 +626,14 @@ LIBOBJS
 CPUEXT_FLAGS
 SIMD_FLAGS
 SED
-EGREP
-GREP
-CPP
-BEAGLE_LIBS
-BEAGLE_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+BEAGLE_LIBS
+BEAGLE_CFLAGS
+EGREP
+GREP
+CPP
 am__fastdepCC_FALSE
 am__fastdepCC_TRUE
 CCDEPMODE
@@ -746,12 +746,12 @@ CFLAGS
 LDFLAGS
 LIBS
 CPPFLAGS
+CPP
 PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
 BEAGLE_CFLAGS
-BEAGLE_LIBS
-CPP'
+BEAGLE_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1390,7 +1390,10 @@ Optional Packages:
   --with-mpi              Build with MPI parallelization support
                           [default=check]
   --with-readline         Build with the Readline library [default=check]
-  --with-beagle           Build with the Beagle library [default=check]
+  --with-beagle[=PATH]    Build with the Beagle library [default=check]. The
+                          PATH argument should be the prefix path where Beagle
+                          was installed, e.g. $HOME/local, /opt/local etc. The
+                          path /usr/local is checked if no path is specified.
 
 Some influential environment variables:
   MPICC       MPI C compiler command
@@ -1401,6 +1404,7 @@ Some influential environment variables:
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
   PKG_CONFIG_PATH
               directories to add to pkg-config's search path
@@ -1409,7 +1413,6 @@ Some influential environment variables:
   BEAGLE_CFLAGS
               C compiler flags for BEAGLE, overriding pkg-config
   BEAGLE_LIBS linker flags for BEAGLE, overriding pkg-config
-  CPP         C preprocessor
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -4516,209 +4519,10 @@ fi
 
 # Check for the Beagle library.
 
-
-
-
-
-
-
-
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-	if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_PKG_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
-$as_echo "$PKG_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_path_PKG_CONFIG"; then
-  ac_pt_PKG_CONFIG=$PKG_CONFIG
-  # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_ac_pt_PKG_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $ac_pt_PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
-if test -n "$ac_pt_PKG_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
-$as_echo "$ac_pt_PKG_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-  if test "x$ac_pt_PKG_CONFIG" = x; then
-    PKG_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    PKG_CONFIG=$ac_pt_PKG_CONFIG
-  fi
-else
-  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
-fi
-
-fi
-if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=0.9.0
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
-$as_echo_n "checking pkg-config is at least version $_pkg_min_version... " >&6; }
-	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	else
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-		PKG_CONFIG=""
-	fi
-fi
-if test "x$with_beagle" != "xno"; then :
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BEAGLE" >&5
-$as_echo_n "checking for BEAGLE... " >&6; }
-
-if test -n "$BEAGLE_CFLAGS"; then
-    pkg_cv_BEAGLE_CFLAGS="$BEAGLE_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "hmsbeagle-1" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$BEAGLE_LIBS"; then
-    pkg_cv_BEAGLE_LIBS="$BEAGLE_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "hmsbeagle-1" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
-        else
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$BEAGLE_PKG_ERRORS" >&5
-
-	if test "x$with_beagle" != "xcheck"; then :
-  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
-
-fi
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	if test "x$with_beagle" != "xcheck"; then :
-  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
-
-fi
-else
-	BEAGLE_CFLAGS=$pkg_cv_BEAGLE_CFLAGS
-	BEAGLE_LIBS=$pkg_cv_BEAGLE_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-$as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
-
-fi
-fi
-# Check for readline, but only if we don't have MPI, because aparantly
-# it won't work.
+# Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
+# and headers with the given prefix, or in /usr/local if no prefix path
+# was given, and if that fails use PKG_CHECK_MODULES (and trust its
+# result).
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5116,6 +4920,299 @@ fi
 
 done
 
+
+
+
+
+
+
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_PKG_CONFIG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+$as_echo "$PKG_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_ac_pt_PKG_CONFIG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+$as_echo "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+$as_echo_n "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+		PKG_CONFIG=""
+	fi
+fi
+if test "x$with_beagle" != "xno"; then :
+
+    old_cppflags="$CPPFLAGS"
+    old_ldflags="$LDFLAGS"
+
+    beagle_subinc="include/libhmsbeagle-1"
+    beagle_sublib="lib"
+
+    if test -d "$with_beagle"; then :
+  beagle_prefix="$with_beagle"
+else
+  beagle_prefix="/usr/local"
+fi
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle in '$beagle_prefix'" >&5
+$as_echo "$as_me: Trying to locate Beagle in '$beagle_prefix'" >&6;}
+
+    CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+    LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+
+    ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
+if test "x$ac_cv_header_libhmsbeagle_beagle_h" = xyes; then :
+  BEAGLE_CFLAGS=$CPPFLAGS
+
+fi
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
+$as_echo_n "checking for beagleCreateInstance in -lhmsbeagle... " >&6; }
+if ${ac_cv_lib_hmsbeagle_beagleCreateInstance+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lhmsbeagle  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char beagleCreateInstance ();
+int
+main ()
+{
+return beagleCreateInstance ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_hmsbeagle_beagleCreateInstance=yes
+else
+  ac_cv_lib_hmsbeagle_beagleCreateInstance=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleCreateInstance" >&5
+$as_echo "$ac_cv_lib_hmsbeagle_beagleCreateInstance" >&6; }
+if test "x$ac_cv_lib_hmsbeagle_beagleCreateInstance" = xyes; then :
+  BEAGLE_LIBS=$LDFLAGS
+
+fi
+
+
+    CPPFLAGS="$old_cppflags"
+    LDFLAGS="$old_ldflags"
+
+    if test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
+$as_echo "$as_me: Found Beagle in '$beagle_prefix'" >&6;}
+         beagle_found="yes"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
+$as_echo "$as_me: WARNING: Failed to locate Beagle, falling back on pkg-config" >&2;}
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BEAGLE" >&5
+$as_echo_n "checking for BEAGLE... " >&6; }
+
+if test -n "$BEAGLE_CFLAGS"; then
+    pkg_cv_BEAGLE_CFLAGS="$BEAGLE_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "hmsbeagle-1" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$BEAGLE_LIBS"; then
+    pkg_cv_BEAGLE_LIBS="$BEAGLE_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "hmsbeagle-1" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
+        else
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$BEAGLE_PKG_ERRORS" >&5
+
+	beagle_found="no"
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	beagle_found="no"
+else
+	BEAGLE_CFLAGS=$pkg_cv_BEAGLE_CFLAGS
+	BEAGLE_LIBS=$pkg_cv_BEAGLE_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle with pkg-config" >&5
+$as_echo "$as_me: Found Beagle with pkg-config" >&6;}
+             beagle_found="yes"
+fi
+
+fi
+    if test "x$beagle_found" != "xyes"; then :
+  if test "x$with_beagle" != "xcheck"; then :
+  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
+
+fi
+else
+          { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
+$as_echo "$as_me: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&6;}
+         { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&5
+$as_echo "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
+
+$as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
+
+fi
+
+fi
+# Check for readline, but only if we don't have MPI, because aparantly
+# it won't work.
 
 if test "x$use_mpi" = "xno"; then :
   if test "x$with_readline" != "xno"; then :
