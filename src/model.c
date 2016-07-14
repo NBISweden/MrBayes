@@ -74,8 +74,7 @@ int       IsApplicable (Param *param);
 int       IsApplicable_FiveTaxaOrMore (Param *param);
 int       IsApplicable_FourTaxaOrMore (Param *param);
 int       IsApplicable_ThreeTaxaOrMore (Param *param);
-int       IsApplicableTreeAgeMove (Param *param);
-int       IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
+int       IsApplicable_TreeAgeMove (Param *param);
 int       LargestMovableSubtree(Param *treeParam);
 int       NumActiveParts (void);
 int       NumInformativeHardConstraints (ModelParams *mp);
@@ -12935,6 +12934,9 @@ int IsApplicable (Param *param)
 
 int IsApplicable_ThreeTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+        
     if (LargestMovableSubtree (param) >= 3)
         return YES;
     else
@@ -12944,6 +12946,9 @@ int IsApplicable_ThreeTaxaOrMore (Param *param)
 
 int IsApplicable_FourTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+    
     if (LargestMovableSubtree (param) >= 4)
         return YES;
     else
@@ -12953,6 +12958,9 @@ int IsApplicable_FourTaxaOrMore (Param *param)
 
 int IsApplicable_FiveTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+    
     if (LargestMovableSubtree (param) >= 5)
         return YES;
     else
@@ -14878,6 +14886,7 @@ int LargestMovableSubtree(Param *treeParam)
     int         i, j, k, a, nLongsNeeded, numPartitions, largestSubtree;
     BitsLong    **constraintPartition, *subtreePartition, *testPartition, *mask;
     ModelParams *mp;
+    int         foundAllSpeciesPartition;
 
     mp = &modelParams[treeParam->relParts[0]];
 
@@ -14901,6 +14910,7 @@ int LargestMovableSubtree(Param *treeParam)
     
     /* retrieve partitions */
     numPartitions = 0;
+    foundAllSpeciesPartition = NO;
     for (a=0; a<numDefinedConstraints; a++)
         {
         if (mp->activeConstraints[a] == NO || definedConstraintsType[a] != HARD)
@@ -14926,12 +14936,26 @@ int LargestMovableSubtree(Param *treeParam)
         if (k == 0 || k == 1)
             continue;
         
+        /* record if we hit an all-species partition */
+        if (k == numLocalTaxa)
+            foundAllSpeciesPartition = YES;
+        
         numPartitions++;
         }
     
-    /* Add all-species partition */
-    CopyBits(constraintPartition[numPartitions], mask, nLongsNeeded);
-    numPartitions++;
+    /* Add all-species partition if not already present */
+    if (foundAllSpeciesPartition == NO)
+    {
+        ClearBits(constraintPartition[numPartitions], nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+        {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            SetBit(j, constraintPartition[numPartitions]);
+            j++;
+        }
+        numPartitions++;
+    }
     
     /* Now we have all constraints. Calculate the movable subtree for each */
     largestSubtree = 0;
