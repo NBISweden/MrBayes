@@ -16,13 +16,13 @@ AC_DEFINE_UNQUOTED([HOST_CPU], ["$host_cpu"], [Host CPU type])
 
 # NB: DEFAULT CFLAGS:
 #     Using --enable-debug sets CFLAGS to "-g -O2"  ($DEBUG_CFLAGS)
-#     Not using --enable-debug sets CFLAGS to "-O3" ($RELEASE_CFLAGS)
-#     "-std=c99 -pedantic" will always be added     ($DEFAULT_CFLAGS)
+#     Not using --enable-debug sets CFLAGS to "-O3 -DNDEBUG" ($RELEASE_CFLAGS)
+#     "-std=c99 -pedantic" will always be added ($DEFAULT_CFLAGS)
 #
 # (warning flags are added by the AX_CFLAGS_WARN_ALL macro further down)
 
 DEBUG_CFLAGS="-g -O2"
-RELEASE_CFLAGS="-O3"
+RELEASE_CFLAGS="-O3 -DNDEBUG"
 DEFAULT_CFLAGS="-std=c99 -pedantic"
 
 # Optional feature: debug
