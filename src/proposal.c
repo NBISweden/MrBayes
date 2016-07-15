@@ -13451,7 +13451,7 @@ int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             {
             /* find rate category index and number of gamma categories */
             rateCat = m->tiIndex + chain * m->numChars;
-            nGammaCats = m->numGammaCats;
+            nGammaCats = m->numRateCats;
 
             /* find nSitesOfPat */
             nSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains)*numCompressedChars + m->compCharStart;

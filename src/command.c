@@ -10360,7 +10360,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                              at a site is drawn from a gamma distribution.      \n");
         MrBayesPrint ("                              The gamma distribution has a single parameter      \n");
         MrBayesPrint ("                              that describes how much rates vary.                \n");
-        MrBayesPrint ("                * lnorm    -- Log Normal-distributed rates across sites. The     \n");
+        MrBayesPrint ("                * lnorm    -- Lognormal-distributed rates across sites. The      \n");
         MrBayesPrint ("                              rate at a site is drawn from a lognormal           \n");
         MrBayesPrint ("                              distribution. the lognormal distribiton has a      \n");
         MrBayesPrint ("                              single parameter, sigma (SD) that describes how    \n");
@@ -10372,6 +10372,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                * invgamma -- A proportion of the sites are invariable while     \n");
         MrBayesPrint ("                              the rate for the remaining sites are drawn from    \n");
         MrBayesPrint ("                              a gamma distribution.                              \n");
+        MrBayesPrint ("                * kmixture -- Site rates come from a mixture with k categories.  \n");
+        MrBayesPrint ("                              Category rates are drawn from an ordered flat      \n");
+        MrBayesPrint ("                              Dirichlet distribution with mean rather than sum   \n");
+        MrBayesPrint ("                              equal to 1.0.                                      \n");
         MrBayesPrint ("                Note that MrBayes versions 2.0 and earlier supported options     \n");
         MrBayesPrint ("                that allowed site specific rates (e.g., ssgamma). In versions    \n");
         MrBayesPrint ("                3.0 and later, site specific rates are allowed, but set using    \n");
@@ -10387,9 +10391,12 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
         MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
         MrBayesPrint ("                approximating the continuous gamma.                              \n");
-        MrBayesPrint ("                It is also used to set the number of rate categories for the     \n");
-        MrBayesPrint ("                lognormal distribution to avoid changing too much of the code,   \n");
-        MrBayesPrint ("                although the name is bad (should add Nlnormcat in future).       \n");
+        MrBayesPrint ("   Nlnormcat -- Used to set the number of discrete categories used for the ap-   \n");
+        MrBayesPrint ("                proximation of the lognormal distribution, in the same way as    \n");
+        MrBayesPrint ("                the Ngammacat setting for the discrete gamma approximation.      \n");
+        MrBayesPrint ("                Default value is 4.                                              \n");
+        MrBayesPrint ("   Nmixtcat  -- Used to set the number of components in the k-mixture model of   \n");
+        MrBayesPrint ("                rate variation across sites. Default value is 4.                 \n");
 #if 0
         /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
         MrBayesPrint ("   Usegibbs  -- Specifies whether site probabilities under the discrete gamma    \n");
@@ -10492,8 +10499,10 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("                Ciliate/Echinoderm/Euplotid/Metmt       %s                       \n", mp->geneticCode);
             MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked                 %s                       \n", mp->ploidy);
             MrBayesPrint ("   Rates        Equal/Gamma/LNorm/Propinv/                                       \n");
-            MrBayesPrint ("                Invgamma/Adgamma                        %s                       \n", mp->ratesModel);
+            MrBayesPrint ("                Invgamma/Adgamma/Kmixture               %s                       \n", mp->ratesModel);
             MrBayesPrint ("   Ngammacat    <number>                                %d                       \n", mp->numGammaCats);
+            MrBayesPrint ("   Nlnormcat    <number>                                %d                       \n", mp->numLnormCats);
+            MrBayesPrint ("   Nmixtcat     <number>                                %d                       \n", mp->numMixtCats);
 #if 0
 /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
             MrBayesPrint ("   Usegibbs     Yes/No                                  %s                       \n", mp->useGibbs);
@@ -14334,7 +14343,7 @@ void SetUpParms (void)
     PARAM  (49, "Xxxxxxxxxx",     DoTaxasetParm,     "\0");
     PARAM  (50, "Xxxxxxxxxx",     DoHelpParm,        "\0");
     PARAM  (51, "Applyto",        DoLsetParm,        "\0");
-    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|LNorm|Propinv|Invgamma|Adgamma|\0");
+    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|LNorm|Propinv|Invgamma|Adgamma|Kmixture|\0");
     PARAM  (53, "Covarion",       DoLsetParm,        "Yes|No|\0");
     PARAM  (54, "Applyto",        DoPrsetParm,       "\0");
     PARAM  (55, "Tratio",         DoLinkParm,        "\0");

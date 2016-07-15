@@ -1541,7 +1541,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
     /* find nRates for first division in HMM */
     m = &modelSettings[d];
     mp = &modelParams[d];
-    nRates = m->numGammaCats;
+    nRates = m->numRateCats;
 
     /* calculate rate category frequencies */
     freq = (CLFlt) ((CLFlt) 1.0 / nRates);
@@ -1596,7 +1596,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
     /* fill in fi(0) */
     max = 0.0;
     m = &modelSettings[partitionId[c][partitionNum] - 1];
-    posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numGammaCats;
+    posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numRateCats;
 
     for (i=0; i<nRates; i++)
         {
@@ -1636,7 +1636,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
 
         /* find the position of the rate probs */
         m = &modelSettings[partitionId[c][partitionNum] - 1];
-        posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numGammaCats;
+        posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numRateCats;
                 
         /* calculate the HMM forward probs fi(x) at site x in HMM */
         if (siteJump[c] <= MAX_SMALL_JUMP)
@@ -4436,7 +4436,7 @@ void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
 
 void FreeChainMemory (void)
 {
-    int         i, j, k, nRateCats;
+    int         i, j, k, nRates;
     ModelInfo   *m;
 
     /* free model variables for Gibbs gamma */
@@ -4445,12 +4445,12 @@ void FreeChainMemory (void)
         if (modelSettings[i].gibbsGamma == YES)
             {
             if (modelSettings[i].pInvar != NULL)
-                nRateCats = modelSettings[i].numGammaCats + 1;
+                nRates = modelSettings[i].numRateCats + 1;
             else
-                nRateCats = modelSettings[i].numGammaCats;
+                nRates = modelSettings[i].numRateCats;
             for (j=0; j<numLocalChains; j++)
                 {
-                for (k=0; k<nRateCats; k++)
+                for (k=0; k<nRates; k++)
                     {
                     free(modelSettings[i].catLnScaler[j][k]);
                     free(modelSettings[i].catLike[j][k]);
@@ -5281,7 +5281,7 @@ void GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp)
 
 MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
 {
-    int             c, i, k, *rateCat, nStates, nRateCats, nGammaCats, id;
+    int             c, i, k, *rateCat, nStates, nRateCats, nPosRateCats, id;
     CLFlt           **catLike, **catLnScaler, *lnScaler, maxLnScaler,
                     *clRoot, f, bs[64], *clInvar, pInvar, freq;
     MrBFlt          ran, lnL, *bsVals, deltaLnL, temp;
@@ -5308,7 +5308,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
     rateCat = m->tiIndex + chain*m->numChars;
     
     /* find number of rate cats and gamma cats */
-    nRateCats = nGammaCats = m->numGammaCats;
+    nRateCats = nPosRateCats = m->numRateCats;
     if (m->pInvar != NULL)
         nRateCats++;
 
@@ -5323,14 +5323,14 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
         pInvar = 0.0;
     else
         pInvar = (CLFlt) *GetParamVals (m->pInvar, chain, state[chain]);
-    freq = ((CLFlt)1.0 - pInvar) / nGammaCats;
+    freq = ((CLFlt)1.0 - pInvar) / nPosRateCats;
 
     /* get chain temperature */
     temp = Temperature (chainId[chain]);
     id = chainId[chain] % chainParams.numChains;
 
     /* calculate rate probs */
-    for (k=0; k<nGammaCats; k++)
+    for (k=0; k<nPosRateCats; k++)
         {
         FlipSiteScalerSpace(m, chain);
         ResetSiteScalers(m, chain);
@@ -5364,7 +5364,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
     /* fill in the invar cond likes if needed */
     if (m->pInvar != NULL)
         {
-        k = nGammaCats;
+        k = nPosRateCats;
         for (c=0; c<m->numChars; c++)
             {
             catLike[k][c] = 0.0;
@@ -5506,8 +5506,8 @@ int InitAdGamma (void)
             }
         k++;
 
-        if (m->numGammaCats > maxRates)
-            maxRates = m->numGammaCats;
+        if (m->numRateCats > maxRates)
+            maxRates = m->numRateCats;
 
         }
 
@@ -5604,7 +5604,7 @@ int InitAdGamma (void)
         if (m->correlation != NULL)
             {
             m->rateProbStart = i;
-            i += m->numGammaCats * m->numChars;
+            i += m->numRateCats * m->numChars;
             }
         }
     rateProbRowSize = i;
@@ -5682,9 +5682,9 @@ int InitAugmentedModels (void)
         if (!m->catLnScaler)
             return ERROR;
         if (m->pInvar == NULL)
-            nRateCats = m->numGammaCats;
+            nRateCats = m->numRateCats;
         else
-            nRateCats = m->numGammaCats + 1;
+            nRateCats = m->numRateCats + 1;
         for (i=0; i<numLocalChains; i++)
             {
             m->catLike[i] = (CLFlt **) SafeCalloc (nRateCats, sizeof (CLFlt *));
@@ -5760,7 +5760,7 @@ int InitChainCondLikes (void)
 #   endif
             for (c=0; c<m->numChars; c++)
                 {
-                numReps = m->numGammaCats;
+                numReps = m->numRateCats;
                 if (m->nStates[c] == 2)
                     numReps *= m->numBetaCats;
                 m->condLikeLength += m->nStates[c] * numReps;
@@ -5771,7 +5771,7 @@ int InitChainCondLikes (void)
             if (m->gibbsGamma == YES)
                 m->condLikeLength = m->numChars * m->numModelStates;
             else
-                m->condLikeLength = m->numChars * m->numGammaCats * m->numOmegaCats * m->numModelStates;
+                m->condLikeLength = m->numChars * m->numRateCats * m->numOmegaCats * m->numModelStates;
 #   if defined (BEAGLE_ENABLED)
             /* tentatively decide on whether to use Beagle */
             if (tryToUseBEAGLE == YES)
@@ -5817,36 +5817,36 @@ int InitChainCondLikes (void)
                 for (k=0; k<9; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k + 2) * (k + 2) * m->numGammaCats;
+                        m->tiProbLength += (k + 2) * (k + 2) * m->numRateCats;
                     }
                 for (k=9; k<13; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k - 6) * (k - 6) * m->numGammaCats;
+                        m->tiProbLength += (k - 6) * (k - 6) * m->numRateCats;
                     }
                 for (k=13; k<18; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                         m->tiProbLength += (k - 11) * (k - 11) * m->numGammaCats;
+                         m->tiProbLength += (k - 11) * (k - 11) * m->numRateCats;
                     }
                 }
             else
                 {
                 /* deal with unequal state frequencies */
                 if (m->isTiNeeded[0] == YES)
-                    m->tiProbLength += 4 * m->numGammaCats * m->numBetaCats;
+                    m->tiProbLength += 4 * m->numRateCats * m->numBetaCats;
                 for (c=0; c<m->numChars; c++)
                     {
                     if (m->nStates[c] > 2 && (m->cType[c] == UNORD || m->cType[c] == ORD))
                         {
-                        m->tiProbLength += (m->nStates[c] * m->nStates[c]) * m->numGammaCats;
+                        m->tiProbLength += (m->nStates[c] * m->nStates[c]) * m->numRateCats;
                         }
                     }
                 }
             }
         else
             {
-            m->numTiCats    = m->numGammaCats * m->numBetaCats * m->numOmegaCats;   /* A single partition has either gamma, beta or omega categories */
+            m->numTiCats    = m->numRateCats * m->numBetaCats * m->numOmegaCats;   /* A single partition has either gamma, beta or omega categories */
             m->tiProbLength = m->numModelStates * m->numModelStates * m->numTiCats;
             }
         m->numTiProbs = (numLocalChains + 1) * nNodes;
@@ -5920,7 +5920,7 @@ int InitChainCondLikes (void)
                     if (m->gibbsGamma == YES)
                         numReps = 1;
                     else
-                        numReps = m->numGammaCats * m->numOmegaCats;
+                        numReps = m->numRateCats * m->numOmegaCats;
                     k = m->numVecChars * m->numFloatsPerVec * m->numModelStates * numReps;
                     
                     if (m->useVec == VEC_AVX)
@@ -5983,7 +5983,7 @@ int InitChainCondLikes (void)
             /* allocate stuff for facilitating scaling and accumulation of cond likes */
             if (m->dataType == STANDARD)
                 {
-                m->clP = (CLFlt **) SafeMalloc(m->numGammaCats * sizeof(CLFlt *));
+                m->clP = (CLFlt **) SafeMalloc(m->numRateCats * sizeof(CLFlt *));
                 if (!m->clP)
                     return (ERROR);
                 }
@@ -6266,12 +6266,12 @@ int InitChainCondLikes (void)
                 /* find category frequencies */
                 if (m->pInvar == NO)
                     {
-                    freq =  1.0 /  m->numGammaCats;
+                    freq =  1.0 /  m->numRateCats;
                     
                     /* set category frequencies in beagle instance */
                     if (m->numOmegaCats <= 1)
                         {
-                        for (i=0; i<m->numGammaCats; i++)
+                        for (i=0; i<m->numRateCats; i++)
                             m->inWeights[i] = freq;
                         for (i=0; i< (numLocalChains); i++) {
                             beagleSetCategoryWeights(m->beagleInstance,
@@ -6297,7 +6297,7 @@ int InitChainCondLikes (void)
             for (i=0; i<numLocalTaxa; i++)
                 {
                 cL = m->condLikes[clIndex++];
-                for (t=0; t<m->numGammaCats;t++)
+                for (t=0; t<m->numRateCats;t++)
                     {
                     charBits = m->parsSets[i];
                     for (c=0; c<m->numChars; c++)
@@ -6323,7 +6323,7 @@ int InitChainCondLikes (void)
         else if (useBeagle == NO)
             {
             if (m->gibbsGamma == YES)
-                numReps = m->numTiCats / m->numGammaCats;
+                numReps = m->numTiCats / m->numRateCats;
             else
                 numReps = m->numTiCats;
 
@@ -6490,8 +6490,8 @@ int InitEigenSystemInfo (ModelInfo *m)
         m->nCijkParts = 1;
         if (m->switchRates != NULL) /* covarion model */
             {
-            m->cijkLength *= m->numGammaCats;
-            m->nCijkParts = m->numGammaCats;
+            m->cijkLength *= m->numRateCats;
+            m->nCijkParts = m->numRateCats;
             }
         }
     else if (m->dataType == DNA || m->dataType == RNA)
@@ -6516,8 +6516,8 @@ int InitEigenSystemInfo (ModelInfo *m)
                 }
             if (m->switchRates != NULL)
                 {
-                m->cijkLength *= m->numGammaCats;
-                m->nCijkParts = m->numGammaCats;
+                m->cijkLength *= m->numRateCats;
+                m->nCijkParts = m->numRateCats;
                 }
             }
         else if (m->nucModelId == NUCMODEL_DOUBLET)
@@ -7749,16 +7749,16 @@ MrBFlt LogPrior (int chain)
                 if (m->gibbsGamma == YES)
                     {
                     if (m->pInvar == NULL)
-                        lnPrior += log(1.0/m->numGammaCats) * m->numUncompressedChars;
+                        lnPrior += log(1.0/m->numRateCats) * m->numUncompressedChars;
                     else
                         {
                         rateCat = m->tiIndex + chain * m->numChars;
                         pInvar = *GetParamVals (m->pInvar, chain, state[chain]);
                         nSitesOfPat = numSitesOfPat + m->compCharStart;
-                        freq = (1.0 - pInvar)/m->numGammaCats;
+                        freq = (1.0 - pInvar)/m->numRateCats;
                         for (c=0; c<m->numChars; c++)
                             {
-                            if (rateCat[c] < m->numGammaCats)
+                            if (rateCat[c] < m->numRateCats)
                                 lnPrior += log(freq) * nSitesOfPat[c];
                             else
                                 lnPrior += log(pInvar) * nSitesOfPat[c];
@@ -9613,12 +9613,12 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
     
             /* find category frequencies and some additional stuff for the invar model */
             if (m->pInvar == NULL)
-                freq =  (CLFlt) (1.0 /  m->numGammaCats);
+                freq =  (CLFlt) (1.0 /  m->numRateCats);
             else
                 {
                 /* invariable sites model */
                 pInvar = * GetParamVals(m->pInvar, chain, state[chain]);
-                freq = (CLFlt) ((1.0 - pInvar) /  m->numGammaCats);
+                freq = (CLFlt) ((1.0 - pInvar) /  m->numRateCats);
                 baseRate /= (1.0 - pInvar);
                 clInvar = m->invCondLikes;
                 lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -9662,7 +9662,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 beta = 0.5 / sum;
 
                 /* calculate derivatives */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k] * baseRate;
                     expBetaV = exp (- beta * v);
@@ -9707,7 +9707,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 beta = 0.5 / sum;
 
                 /* calculate derivatives */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k] * baseRate;
                     expBetaV = exp (- beta * v);
@@ -9751,7 +9751,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 cijk        = eigenValues + (2 * n);
 
                 /* calculate P'(v) and P''(v) */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k];
                     for (s=0; s<n; s++)
@@ -9789,7 +9789,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 /* calculate P'(v) and P''(v) */
                 for (k=0; k<m->numTiCats; k++)
                     {
-                    if (m->numGammaCats > 1)
+                    if (m->numRateCats > 1)
                         v = length * catRate[k];
                     else
                         v = length;
@@ -9830,7 +9830,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                     {
                     like = like1 = like2 = 0.0;
                     r = rateCat[c];
-                    if (r < m->numGammaCats)
+                    if (r < m->numRateCats)
                         {
                         index = r*m->numModelStates*m->numModelStates;
                         for (j=0; j<n; j++)
@@ -10595,13 +10595,13 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
     /* find frequencies of rate categories */
-    freq =  1.0 /  m->numGammaCats;
+    freq =  1.0 /  m->numRateCats;
     
     /* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
 
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] =  clFP;
         clFP += m->numChars * m->numModelStates;
@@ -10614,7 +10614,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     for (c=0; c<m->numChars; c++)
         {
         cL[0] = cL[1] = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             cL[0] += clP[k][0];
             cL[1] += clP[k][1];
@@ -10709,7 +10709,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
         }
 
     /* find number of rate categories */
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find frequencies of rate categories (only relevant if gibbsGamma == NO) */
     freq = ((CLFlt)1.0 - pInvar) / nGammaCats;
@@ -10759,7 +10759,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
         {
         /* find conditional likelihood pointers */
         clP = (const CLFlt**)m->clP;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             clP[k] = clFP;
             clFP += m->numChars * m->numModelStates;
@@ -10883,7 +10883,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         }
 
     /* find number of rate categories */
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find frequencies of rate categories (only relevant if gibbsGamma == NO) */
     if (hasPInvar == NO)
@@ -10936,7 +10936,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         {
         /* find conditional likelihood pointers */
         clP = (const CLFlt**)m->clP;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             clP[k] = clFP;
             clFP += m->numChars * m->numModelStates;
@@ -11053,7 +11053,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
     /* find conditional likelihood pointers */
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clFP;
         clFP += numReps;
@@ -11073,10 +11073,10 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
         if (nStates == 2)
             {
-            freq = 1.0 / (m->numBetaCats * m->numGammaCats);
+            freq = 1.0 / (m->numBetaCats * m->numRateCats);
             for (i=0; i<m->numBetaCats; i++)
                 {
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     for (s=0; s<nStates; s++)
                         cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
@@ -11087,8 +11087,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
            }
         else
             {
-            freq = 1.0 / (m->numGammaCats);
-            for (k=0; k<m->numGammaCats; k++)
+            freq = 1.0 / (m->numRateCats);
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (s=0; s<nStates; s++)
                     cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
@@ -12226,9 +12226,9 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq = 1.0 /  m->numGammaCats;
+        freq = 1.0 /  m->numRateCats;
     else
-        freq = (1.0 - pInvar) /  m->numGammaCats;
+        freq = (1.0 - pInvar) /  m->numRateCats;
 
     /* get rate multipliers (for gamma & partition specific rates) */
     baseRate = GetRate (division, chain);
@@ -12248,7 +12248,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
             {
             siteLike = 0.0;
             siteRates[c] = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -12266,7 +12266,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
             {
             siteLike = invLike = 0.0;
             siteRates[c] = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -12344,7 +12344,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
         siteLike = 0.0;
         siteRates[c] = 0.0;
         nStates = m->nStates[c];
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             catLike = 0.0;
             for (j=0; j<nStates; j++)

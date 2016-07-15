@@ -76,10 +76,10 @@ int InitBeagleInstance (ModelInfo *m, int division)
 
     /* allocate memory used by beagle */
     m->logLikelihoods          = (MrBFlt *) SafeCalloc ((numLocalChains)*m->numChars, sizeof(MrBFlt));
-    m->inRates                 = (MrBFlt *) SafeCalloc (m->numGammaCats, sizeof(MrBFlt));
+    m->inRates                 = (MrBFlt *) SafeCalloc (m->numRateCats, sizeof(MrBFlt));
     m->branchLengths           = (MrBFlt *) SafeCalloc (2*numLocalTaxa, sizeof(MrBFlt));
     m->tiProbIndices           = (int *) SafeCalloc (2*numLocalTaxa, sizeof(int));
-    m->inWeights               = (MrBFlt *) SafeCalloc (m->numGammaCats*m->nCijkParts, sizeof(MrBFlt));
+    m->inWeights               = (MrBFlt *) SafeCalloc (m->numRateCats*m->nCijkParts, sizeof(MrBFlt));
     m->bufferIndices           = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
     m->eigenIndices            = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
     m->childBufferIndices      = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
@@ -123,7 +123,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
                                              m->numChars,
                                             (numLocalChains + 1) * m->nCijkParts,
                                              m->numTiProbs*m->nCijkParts,
-                                             m->numGammaCats,
+                                             m->numRateCats,
                                              m->numScalers * m->nCijkParts,
                                              (beagleResourceCount == 0 ? NULL : &resource),
                                              (beagleResourceCount == 0 ? 0 : 1),                                             
@@ -969,9 +969,9 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq = 1.0 / m->numGammaCats;
+        freq = 1.0 / m->numRateCats;
     else
-        freq = (1.0 - pInvar) / m->numGammaCats;
+        freq = (1.0 - pInvar) / m->numRateCats;
 
     /* TODO: cat weights only need to be set when they change */
     /* set category frequencies in beagle instance */
@@ -980,7 +980,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
         omegaCatFreq = GetParamSubVals(m->omega, chain, state[chain]);
         for (i=0; i<m->nCijkParts; i++)
             {
-            for (j=0; j<m->numGammaCats; j++)
+            for (j=0; j<m->numRateCats; j++)
                 m->inWeights[j] = freq * omegaCatFreq[i];
             beagleSetCategoryWeights(m->beagleInstance,
                                      m->cijkIndex[chain] + i,
@@ -989,7 +989,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
         }
     else if (hasPInvar == YES)
         {
-        for (i=0; i<m->numGammaCats; i++)
+        for (i=0; i<m->numRateCats; i++)
             m->inWeights[i] = freq;
         beagleSetCategoryWeights(m->beagleInstance,
                                  m->cijkIndex[chain],
@@ -1169,7 +1169,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
     
     /* get effective category rates */
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         m->inRates[k] = baseRate * catRate[k] * correctionFactor;
 
     /* TODO: only need to set category rates when they change */

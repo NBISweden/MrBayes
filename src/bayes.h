@@ -987,6 +987,8 @@ typedef struct model
     char        omegaVar[100];     /* type of omega variation model                */
     char        ratesModel[100];   /* rates across sites model                     */
     int         numGammaCats;      /* number of categories for gamma approximation */
+    int         numLnormCats;      /* number of categories for lnorm approximation */
+    int         numMixtCats;       /* number of components of rate mixture         */
     char        useGibbs[100];     /* flags whether Gibbs sampling of discrete gamma is used */
     int         gibbsFreq;         /* frequency of Gibbs resampling of discrete gamma */
 
@@ -1220,7 +1222,7 @@ typedef struct modelinfo
     int         parsModelId;                /* is parsimony model used YES/NO           */
 
     /* Specific model information */
-    int         numGammaCats;               /* number of gamma cats (1 if inapplic.)    */
+    int         numRateCats;                /* number of rate cats (1 if inapplic.)    */
     int         numBetaCats;                /* number of beta cats (1 if inapplic.)     */
     int         numOmegaCats;               /* number of omega cats (1 if inapplic.)    */
     int         numTiCats;                  /* number of cats needing different tis     */

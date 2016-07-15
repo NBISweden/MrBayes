@@ -15482,7 +15482,7 @@ int ProcessStdChars (RandLong *seed)
                 {
                 if (m->cType[c] != UNORD || m->nStates[c] > k + 2)
                     {
-                    m->tiIndex[c] += (k + 2) * (k + 2) * m->numGammaCats;
+                    m->tiIndex[c] += (k + 2) * (k + 2) * m->numRateCats;
                     }
                 }
             }
@@ -15497,7 +15497,7 @@ int ProcessStdChars (RandLong *seed)
                 {
                 if (m->cType[c] == IRREV || (m->cType[c] == ORD && m->nStates[c] > k - 6))
                     {
-                    m->tiIndex[c] += (k - 6) * (k - 6) * m->numGammaCats;
+                    m->tiIndex[c] += (k - 6) * (k - 6) * m->numRateCats;
                     }
                 }
             }
@@ -15512,7 +15512,7 @@ int ProcessStdChars (RandLong *seed)
                 {
                 if (m->cType[c] == IRREV && m->nStates[c] > k - 11)
                     {
-                    m->tiIndex[c] += (k - 11) * (k - 11) * m->numGammaCats;
+                    m->tiIndex[c] += (k - 11) * (k - 11) * m->numRateCats;
                     }
                 }
             }
@@ -15522,13 +15522,13 @@ int ProcessStdChars (RandLong *seed)
         /* multistate characters get their ti indices reset here */
         if (m->numBetaCats > 1 && m->isTiNeeded[0] == YES)
             {
-            k = 4 * m->numBetaCats * m->numGammaCats;   /* offset for binary character ti probs */
+            k = 4 * m->numBetaCats * m->numRateCats;   /* offset for binary character ti probs */
             for (c=0; c<m->numChars; c++)
                 {
                 if (m->nStates[c] > 2)
                     {
                     m->tiIndex[c] = k;
-                    k += m->nStates[c] * m->nStates[c] * m->numGammaCats;
+                    k += m->nStates[c] * m->nStates[c] * m->numRateCats;
                     }
                 }
             }
@@ -17732,9 +17732,9 @@ int SetModelInfo (void)
 
         /* number of gamma categories */
         if (activeParams[P_SHAPE][i] > 0)
-            m->numGammaCats = mp->numGammaCats;
+            m->numRateCats = mp->numGammaCats;
         else
-            m->numGammaCats = 1;
+            m->numRateCats = 1;
 
         /* number of beta categories */
         if (mp->dataType == STANDARD && !(AreDoublesEqual(mp->symBetaFix, -1.0, 0.00001) == YES && !strcmp(mp->symPiPr,"Fixed")))
@@ -17746,20 +17746,20 @@ int SetModelInfo (void)
         if ((mp->dataType == DNA || mp->dataType == RNA) && (!strcmp(mp->omegaVar, "Ny98") || !strcmp(mp->omegaVar, "M3")) && !strcmp(mp->nucModel, "Codon"))
             {
             m->numOmegaCats = 3;
-            m->numGammaCats = 1; /* if we are here, then we cannot have gamma or beta variation */
+            m->numRateCats = 1; /* if we are here, then we cannot have gamma or beta variation */
             m->numBetaCats = 1;
             }
         else if ((mp->dataType == DNA || mp->dataType == RNA) && !strcmp(mp->omegaVar, "M10") && !strcmp(mp->nucModel, "Codon"))
             {
             m->numOmegaCats = mp->numM10BetaCats + mp->numM10GammaCats;
-            m->numGammaCats = 1; /* if we are here, then we cannot have gamma or beta variation */
+            m->numRateCats = 1; /* if we are here, then we cannot have gamma or beta variation */
             m->numBetaCats = 1;
             }
         else
             m->numOmegaCats = 1;
 
         /* number of transition matrices depends on numGammaCats, numBetaCats, and numOmegaCats */
-        m->numTiCats = m->numGammaCats * m->numBetaCats * m->numOmegaCats;
+        m->numTiCats = m->numRateCats * m->numBetaCats * m->numOmegaCats;
 
         /* TODO: check that numStates and numModelStates are set
             appropriately for codon and doublet models */
@@ -17800,8 +17800,8 @@ int SetModelInfo (void)
             m->cijkLength = (ts * ts * ts) + (2 * ts);
             if (!strcmp (mp->covarionModel, "Yes"))
                 {
-                m->cijkLength *= m->numGammaCats;
-                m->nCijkParts = m->numGammaCats;
+                m->cijkLength *= m->numRateCats;
+                m->nCijkParts = m->numRateCats;
                 }
             }
         else if (m->dataType == STANDARD)
@@ -17822,8 +17822,8 @@ int SetModelInfo (void)
                     }
                 if (!strcmp (mp->covarionModel, "Yes"))
                     {
-                    m->cijkLength *= m->numGammaCats;
-                    m->nCijkParts = m->numGammaCats;
+                    m->cijkLength *= m->numRateCats;
+                    m->nCijkParts = m->numRateCats;
                     }
                 }
             else if (m->nucModelId == NUCMODEL_DOUBLET)
@@ -17870,7 +17870,7 @@ int SetModelInfo (void)
         /* check if we should calculate site rates */
         if (!strcmp(mp->inferSiteRates,"Yes"))
             {
-            if (m->numGammaCats > 1)
+            if (m->numRateCats > 1)
                 {
                 m->printSiteRates = YES;
                 inferSiteRates = YES;
@@ -17897,7 +17897,7 @@ int SetModelInfo (void)
                 }
             }
         /* check if we should use gibbs sampling of gamma (don't use it with pinvar or invgamma) */
-        if (!strcmp(mp->useGibbs,"Yes") && (m->numGammaCats > 1))
+        if (!strcmp(mp->useGibbs,"Yes") && (m->numRateCats > 1))
             {
             if (m->dataType == DNA || m->dataType == RNA || m->dataType == PROTEIN)
                 {
@@ -22438,7 +22438,7 @@ int ShowModel (void)
                 /* now, let's deal with rate variation across sites */
                 if (modelSettings[i].dataType != CONTINUOUS)
                     {
-                    if (((modelSettings[i].dataType == DNA || modelSettings[i].dataType == RNA) && strcmp(modelParams[i].nucModel,"Codon")) ||
+                    if (((modelSettings[i].dataType == DNA || modelSettings[i].dataType == RNA) && strcmp(modelParams[i].nucModel,"Codon")!=0) ||
                           modelSettings[i].dataType == PROTEIN || modelSettings[i].dataType == RESTRICTION || modelSettings[i].dataType == STANDARD)
                         {
                         if (!strcmp(modelParams[i].covarionModel, "No"))
@@ -22461,14 +22461,16 @@ int ShowModel (void)
                         else
                             {
                             if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Invgamma") ||
-                                !strcmp(modelParams[i].ratesModel, "LNorm") || !strcmp(modelParams[i].ratesModel, "Adgamma"))
+                                !strcmp(modelParams[i].ratesModel, "LNorm") || !strcmp(modelParams[i].ratesModel, "Adgamma") ||
+                                !strcmp(modelParams[i].ratesModel, "Kmixture"))
                                 {
-                                /* how many categories is the continuous gamma approximated by? */
-                                MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
-                                if (!strcmp(modelParams[i].useGibbs,"Yes"))
-                                    MrBayesPrint ("%s                     Rate categories sampled using Gibbs sampling.\n", spacer, modelParams[i].numGammaCats);
+                                /* how many categories is the continuous gamma/lnorm approximated by? or how many components are there in the mixture? */
+                                if (!strcmp(modelParams[i].ratesModel, "Kmixture"))
+                                    MrBayesPrint ("%s                     There are %d components in the mixture.\n", spacer, modelParams[i].numMixtCats);
+                                else if (!strcmp(modelParams[i].ratesModel, "Lnorm"))
+                                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numLnormCats);
                                 else
-                                    MrBayesPrint ("%s                     Likelihood summarized over all rate categories in each generation.\n", spacer, modelParams[i].numGammaCats);
+                                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
                                 /* distribution on shape parameter, if appropriate */
                                 if (!strcmp(modelParams[i].shapePr,"Uniform"))
                                     {
@@ -22485,6 +22487,7 @@ int ShowModel (void)
                                     MrBayesPrint ("%s                     Shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
                                     }
                                 }
+
                             if ((!strcmp(modelParams[i].ratesModel, "Propinv") || !strcmp(modelParams[i].ratesModel, "Invgamma")) && !strcmp(modelParams[i].covarionModel, "No"))
                                 {
                                 /* distribution on pInvar parameter, if appropriate */
