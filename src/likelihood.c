@@ -43,6 +43,12 @@
 
 #define LIKE_EPSILON                1.0e-300
 
+/* global variables declared here */
+CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
+CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
+CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
+
+/* global variables used here but declared elsewhere */
 extern int      *chainId;
 extern int      numLocalChains;
 extern int      rateProbRowSize;            /* size of rate probs for one chain one state   */
@@ -64,6 +70,10 @@ int       RemoveNodeScalers_SSE(TreeNode *p, int division, int chain);
 int       RemoveNodeScalers_AVX(TreeNode *p, int division, int chain);
 #endif
 void      ResetSiteScalers (ModelInfo *m, int chain);
+int       SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
+int       SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS);
+int       SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType);
+int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult);
 int       UpDateCijk (int whichPart, int whichChain);
 
 
