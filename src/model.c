@@ -550,7 +550,7 @@ MCMCMove *AllocateMove (MoveType *moveType, Param *param)
         free (temp);
         return NULL;
         }
-    if ((temp->tuningParam[0] = (MrBFlt *) SafeCalloc (moveType->numTuningParams*numGlobalChains, sizeof (MrBFlt))) == NULL)
+    if (moveType->numTuningParams > 0 && (temp->tuningParam[0] = (MrBFlt *) SafeCalloc (moveType->numTuningParams*numGlobalChains, sizeof (MrBFlt))) == NULL)
         {
         free (temp->tuningParam);
         free (temp->relProposalProb);
@@ -17500,7 +17500,8 @@ int SetModelDefaults (void)
         SetCode (j);
         modelParams[j].nStates = NumStates (j);             /* number of states for partition             */
 
-        modelParams[j].activeConstraints = (int *) SafeCalloc(numDefinedConstraints, sizeof(int));  /* allocate space for active constraints (yes/no) */
+        if (numDefinedConstraints > 0)
+            modelParams[j].activeConstraints = (int *) SafeCalloc((size_t)(numDefinedConstraints), sizeof(int));  /* allocate space for active constraints (yes/no) */
         }
 
     return (NO_ERROR);

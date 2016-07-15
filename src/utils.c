@@ -1475,7 +1475,7 @@ void *SafeMalloc (size_t s)
 
     if (s == 0)
         {
-        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. \n", spacer);
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         return NULL;
         }
 
@@ -1500,7 +1500,7 @@ void *SafeCalloc (size_t n, size_t s)
 
     if (s * n == 0)
         {
-        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. \n", spacer);
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug; problems may follow.\n", spacer);
         return NULL;
         }
 
@@ -1525,7 +1525,7 @@ void *SafeRealloc (void *ptr, size_t s)
 
     if (s == 0)
         {
-        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. \n", spacer);
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         free (ptr);
         return NULL;
         }
