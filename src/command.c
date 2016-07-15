@@ -3525,7 +3525,7 @@ int DoEndBlock (void)
 
 int DoExecute (void)
 {
-    int         c, i, rc, cmdLine, lineTerm, longestLineLength, nErrors;
+    int         rc, cmdLine, lineTerm, longestLineLength, nErrors;
     char        *s, exeFileName[100];
     FILE        *fp;
     CmdType     *oldCommandPtr;
@@ -3646,10 +3646,9 @@ int DoExecute (void)
     expecting = Expecting(COMMAND);
     cmdLine = 0;
 
-    do {
-        /* read in a new line into s */
-        i = 0;
-        fgets(s, longestLineLength, fp);
+    /* read lines into s until end of file */
+    while ( fgets(s, longestLineLength, fp) != NULL)
+    {
         foundNewLine = YES;
         cmdLine++;
 
@@ -3699,7 +3698,7 @@ int DoExecute (void)
                 goto quitExit;
 #           endif
             }
-        } while (c != EOF); 
+        }
     
     MrBayesPrint ("%s   Reached end of file\n", spacer);
 

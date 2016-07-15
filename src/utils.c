@@ -1444,26 +1444,6 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
 }
 
 
-/* SafeCalloc: Print error if out of memory */
-void *SafeCalloc(size_t n, size_t s) {
-
-    void *ptr;
-
-    ptr = calloc(n, s);
-
-    if (ptr==NULL && n*s > 0)
-        {
-        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
-        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
-        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        }
-
-    return ptr;
-}
-
-
 int SafeFclose(FILE **fp) {
     int retval=-1;
 #   if defined MPI_ENABLED
@@ -1491,16 +1471,46 @@ void SafeFree (void **ptr)
 /* SafeMalloc: Print error if out of memory; clear memory */
 void *SafeMalloc (size_t s)
 {
-    void *ptr;
+    void           *ptr;
 
-    ptr = calloc(1, s);
-
-    if (ptr==NULL && s > 0)
+    if (s == 0)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        return NULL;
+        }
+
+    ptr = calloc (1, s);
+
+    if (ptr == NULL && s > 0)
+        {
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
+        }
+
+    return ptr;
+}
+
+
+/* SafeCalloc: Print error if out of memory */
+void *SafeCalloc (size_t n, size_t s)
+{
+    void           *ptr;
+
+    if (s * n == 0)
+        {
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug; problems may follow.\n", spacer);
+        return NULL;
+        }
+
+    ptr = calloc (n, s);
+
+    if (ptr == NULL && n * s > 0)
+        {
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
         }
 
@@ -1511,24 +1521,27 @@ void *SafeMalloc (size_t s)
 /* SafeRealloc: Print error if out of memory */
 void *SafeRealloc (void *ptr, size_t s)
 {
-    void *tmp;
+    void           *tmp;
 
-    tmp = realloc(ptr, s);
+    if (s == 0)
+        {
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        free (ptr);
+        return NULL;
+        }
 
-    if (tmp != NULL) {
+    if (ptr == NULL)
+        tmp = calloc (1, s);
+    else
+        tmp = realloc (ptr, s);
 
-        /* If called with a NULL pointer, act as calloc() */
-        if (ptr == NULL)
-            memset(tmp, 0, s);
-    }
-
-    if (tmp == NULL && s > 0) {
-        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached\n", spacer);
+    if (tmp == NULL)
+        {
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-    }
+        }
 
     return tmp;
 }
@@ -1574,38 +1587,41 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
-int MrBFlt_cmp(const void *a, const void *b)
+int MrBFlt_cmp (const void *a, const void *b)
 {
-    MrBFlt x = *(MrBFlt *)a;
-    MrBFlt y = *(MrBFlt *)b;
+    MrBFlt          x = * (MrBFlt *) a;
+    MrBFlt          y = * (MrBFlt *) b;
 
-    if (x < y) {
+    if (x < y)
         return -1;
-    }
-    else if (x > y) {
+    else if (x > y)
         return 1;
-    }
+
     return 0;
 }
 
 /* SortMrBFlt: Sort in increasing order */
 void SortMrBFlt (MrBFlt *item, int left, int right)
 {
-    qsort((void *)item, right - left + 1, sizeof(MrBFlt), &MrBFlt_cmp);
+    qsort ((void *) item, right - left + 1, sizeof (MrBFlt),
+           &MrBFlt_cmp);
 }
 
 
 /* StrCmpCaseInsensitiveLen: Case insensitive string comparison (with maximum
  * string length restriction). */
-int StrCmpCaseInsensitiveLen(const char *s, const char *t, size_t len)
+int StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len)
 {
+    char            sc, tc;
+
     if (len == 0)
         return 0;
 
-    while (len-- > 0) {
-        char sc = tolower(s[0]);
+    while (len-- > 0)
+        {
+        sc = tolower (s[0]);
         s++;
-        char tc = tolower(t[0]);
+        tc = tolower (t[0]);
         t++;
 
         if (sc > tc)
@@ -1614,7 +1630,7 @@ int StrCmpCaseInsensitiveLen(const char *s, const char *t, size_t len)
             return -1;
         else if (sc == '\0')
             break;
-    }
+        }
 
     return 0;
 }
