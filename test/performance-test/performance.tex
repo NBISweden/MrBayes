@@ -1,0 +1,39 @@
+\documentclass[11pt]{article}
+
+\usepackage{booktabs, rotating}
+
+\begin{document}
+
+
+\begin{sidewaystable}
+\caption{Performance comparisons for a variety of datasets.  Times are reported in seconds.  CPU is a Xeon E5620 @ 2.4GHz.  GPU is a Tesla C2050 @ 1.15GHz.}
+\centering
+\medskip
+\begin{tabular}{lrrrrrrrr}
+\hline\hline
+ & & &
+\multicolumn{3}{c}{Double precision} &
+\multicolumn{3}{c}{Single precision}  \\
+\cmidrule(lr){4-6}
+\cmidrule(lr){7-9}
+\multicolumn{1}{c}{Dataset} &
+\multicolumn{1}{c}{Taxa} &
+\multicolumn{1}{c}{Sites} &
+\multicolumn{1}{c}{MrBayes} &
+\multicolumn{1}{c}{BEAGLE} &
+\multicolumn{1}{c}{GPU} &
+\multicolumn{1}{c}{MrBayes} &
+\multicolumn{1}{c}{BEAGLE} & 
+\multicolumn{1}{c}{GPU} \\
+\hline
+ agtotalcore255 & 253 & 6902 &  317.3 &  288.2 &   \multicolumn{1}{c}{-} &  173.3 &  150.2 &    \multicolumn{1}{c}{-}\\ 
+    alcedinidae &  94 & 6990 &   48.7 &   44.4 &    8.0 &   27.4 &   24.1 &    7.4 \\ 
+          hawks & 139 & 8576 &  162.8 &  147.0 &   21.2 &   96.0 &   86.2 &   15.7 \\ 
+      nuclsu206 & 206 & 8875 &  244.5 &  221.4 &   29.4 &  128.9 &  117.2 &   20.0 \\ 
+      nucssu211 & 211 & 8828 &  304.8 &  294.6 &   24.8 &  108.5 &  100.4 &   19.0 \\ 
+     rpb2199nuc & 199 & 3114 &  108.5 &  101.5 &   17.1 &   69.1 &   62.0 &   13.7 \\ 
+\hline
+\end{tabular}
+\end{sidewaystable}
+
+\end{document}

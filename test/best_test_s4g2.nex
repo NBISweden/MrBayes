@@ -1,0 +1,47 @@
+begin data;
+ dimensions ntax=12 nchar=4;
+ format datatype=DNA interleave missing=? gap=-;
+ matrix
+A1_1	TG
+A5_5	TG
+A6_6	TG
+A2_2	TG
+A3_3	TG
+A4_4	TG
+B4_10	TG
+B5_11	TG
+B6_12	TG
+B1_7	TG
+B2_8	TG
+B3_9	TG
+A1_1	AG
+A5_5	AG
+A6_6	AG
+A2_2	AG
+A3_3	AG
+A4_4	AG
+B4_10	AG
+B5_11	AG
+B6_12	AG
+B1_7	AG
+B2_8	AG
+B3_9	AG
+;
+end;
+
+begin mrbayes;
+ charset gene1 = 1-2;
+ charset gene2 = 3-4;
+ partition genes = 2: gene1, gene2;
+ set partition = genes;
+ speciespartition species = A1:1-3, A2:4-6, B1:7-9, B2:10-12; 
+ set speciespartition = species;
+ prset statefreqpr = fixed(equal);
+ prset topologypr = speciestree;
+ prset brlenspr = clock:speciestree;
+ prset popsizepr = gamma(2,200);
+ unlink topology=(all) brlens=(all);
+ mcmc data=no [nrun=1] ngen=100000000 samplefreq=5000 printfreq=100000 diagnfreq=1000000;
+ sumt burninfrac=0.3 conformat=simple;
+ sump;
+end;

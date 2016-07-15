@@ -1,0 +1,14 @@
+Test criteria
+
+Run with data and debug version of program for a short number of generations, then append a short number of generations, finally run sumt and sump. Test:
+- No Warning or Error messages
+- No crash
+- No proposals with excessively large or small acceptance probability (below/above 10/90%)
+- No positive log likelihoods
+- Final log likelihood and log prior are very similar when calculated from scratch and when based on updates
+- Initial log likelihood and log prior of appended run are similar to final log likelihood and log prior of previous run
+*- Reasonable output from sump and sumt
+*- All consensus trees open in FigTree
+
+Run without data for a reasonable number of generations, then run sump. Test:
+- Substitution model parameters have correct mean and variance

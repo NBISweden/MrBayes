@@ -1,0 +1,93 @@
+
+How to make a release of MrBayes
+================================
+
+1. Remove remains from old release.
+   $svn rm --force release/src
+
+   Copy over new examples, documentation and source files. You probably only want
+   to use some of the files in the current examples and documentation folders.
+
+   $svn copy trunk/src release/
+   $svn copy examples/* release/examples/
+   $svn copy documentation/* release/documentation
+
+   After copying, increase the version number in trunk/src/bayes.h
+   #define  VERSION_NUMBER  "3.2.5"
+
+2. In release/src
+   Add #define RELEASE in file bayes.h
+   You can uncomment /* #define RELEASE */ on line ~40 of bayes.h)
+
+   Modify to the right version number in statement if necessary.
+   #define  VERSION_NUMBER  "3.2.4"
+
+3. Compile and make installer for Windows (using release/src code)
+
+   You need to have Visual Studio 2013. Use VS project at projects/visual_CZ/
+
+   Make sure that active configuration is set to 'Release' and correct platform
+   (Win32 or x64).
+   Make sure SSE_ENABLED BEAGLE_ENABLED are defined, not MPI_ENABLED in bayes.h.
+   (alternatively, should define in project properties)
+   Make sure you link to the release version of the Beagle dlls (and libs), which will
+   be located in 'C:\Program Files\Common Files\libhmsbeagle' for 64-bit version and
+   'C:\Program Files (x86)\Common Files\libhmsbeagle' for 32-bit version.
+
+   Use generated exes with documentation\ and examples\ to make an archive.
+   Put the archive into tags/v3.2.x
+
+   TODO: make a installer using WiX with selectable components (BEAGLE)
+
+4. Compile and make installer for Mac (using release/src code)
+
+   Install the latest release version of the Beagle library.
+
+   Compile release versions in release/src on an x64 Mac (mb and mb-mpi). To make sure
+   the serial version runs on OS X 10.5 and above, compile on a 10.6 machine using
+   compiler option -mmacosx-version-min=10.5. The parallel version should be compiled 
+   on a 10.7 or 10.8 machine and linked with the HomeBrew version of the mpi libraries.
+   Move the binaries to projects/packages/
+   Clean the release/src folder using 'make distclean'.
+
+   Update the documents and texts in projects/packages/
+
+   Use projects/packages/mb-beagle.pkgproj to produce the Mac installer with Packages.
+   This will package MrBayes with the Beagle libraries installed on the machine.
+
+   Sign the package using your Apple Developer ID Installer certificate.
+   $productsign --sign 'Developer ID Installer: your name' 
+         MrBayes-3.2.x_MACx64.pkg  MrBayes-3.2.x_MACx64_signed.pkg
+   $pkgutil --check-signature MrBayes-3.2.5_MACx64_signed.pkg
+
+   Put the installer package into tags/v3.2.x
+
+5. Make a tar ball for compilation of serial and MPI version. We do this from a temporary
+   folder that is deleted afterwards.
+
+   $mkdir mrbayes_3.2.x
+   $svn export --force release/src/ mrbayes_3.2.x/src/
+   $svn export --force release/examples/ mrbayes_3.2.x/examples/
+   $svn export --force release/documentation/ mrbayes_3.2.x/documentation
+   $tar -pczf ./tags/v3.2.x/mrbayes-3.2.x.tar.gz mrbayes_3.2.x/
+   $rm -r mrbayes_3.2.x
+
+6. Commit installer files
+
+   $svn add tags/v3.2.x/*
+   $svn commit -m "Update release files"
+
+7. Copy files to SourceForge release for download.
+
+   Select 'Files' from the Project menu at SourceForge MrBayes site.
+
+   Create subfolder 3.2.XX within 'mrbayes' folder, add tar ball, windows and Mac
+   installers there.
+
+   Click the "i" icon for each of the added files and put proper OS flag,
+   i.e. mark only Windows for win installer, mark only Mac for mac installer,
+   mark all except Mac and Win for tar ball.
+
+8. Change the download links in the download2.php file on the SourceForge project web,
+   and modify the download text in download.php as appropriate for the new release.
+

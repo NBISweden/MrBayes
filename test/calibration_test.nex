@@ -1,0 +1,93 @@
+#NEXUS
+
+begin data;
+    dimensions ntax=10 nchar=1;
+    format datatype=DNA missing=?;
+    matrix
+    Taxon_01     ?
+    Taxon_02     ?
+    Taxon_03     ?
+    Taxon_04     ?
+    Taxon_05     ?
+    Taxon_06     ?
+    Taxon_07     ?
+    Taxon_08     ?
+    Taxon_09     ?
+    Taxon_10     ?
+    ;
+end;
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes;
+    prset brlenspr=clock:uni;
+    mcmcp printfr=100000;
+    constraint root -1 = 1-10;
+
+    prset treeagepr=fixed(15);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_fixed_15;
+
+    prset treeagepr=uniform(10,20);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_unif_10_20;
+
+    prset treeagepr=offsetexp(10,20);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_offsetexp_10_20;
+
+    prset treeagepr=truncatednormal(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_truncnorm_5_15_10;
+
+    prset treeagepr=lognormal(15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_lognor_15_10;
+
+    prset treeagepr=gamma(15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_gamma_15_10;
+
+    prset treeagepr=offsetgamma(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_offsetgamma_5_15_10;
+
+    prset treeagepr=offsetlognormal(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_offsetlognorm_5_15_10;
+
+    prset topologypr=constraints(root);
+    prset nodeagepr=calibrated;
+
+    calibrate root=fixed(15);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_fixed_15;
+
+    calibrate root=uniform(10,20);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_unif_10_20;
+
+    calibrate root=offsetexp(10,20);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_offsetexp_10_20;
+
+    calibrate root=truncatednormal(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_truncnorm_5_15_10;
+
+    calibrate root=lognormal(15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_lognor_15_10;
+
+    calibrate root=gamma(15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_gamma_15_10;
+    
+    calibrate root=offsetgamma(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_offsetgamma_5_15_10;
+
+    calibrate root=offsetlognormal(5,15,10);
+    mcmc nch=1 nr=1 ngen=10000000 data=no;
+    sump out=test_root_offsetlognorm_5_15_10;
+end;
+

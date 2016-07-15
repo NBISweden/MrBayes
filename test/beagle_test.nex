@@ -1,0 +1,95 @@
+#NEXUS
+[This file is for testing the performance of beagle against builtin likelihood calculators]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+
+
+    [Nucleotide models]
+    [=================]
+
+    exe savolainen.nex;
+    set partition=genes;
+   
+    [nuc model]
+    mcmcp ngen=1000 printfr=100;
+    lset nucmodel=4by4 nst=mixed rates=invgamma;
+    prset ratepr=variable; 
+    unlink shape=(all) revmat=(all) statefr=(all) pinvar=(all);
+    
+    set usebeagle=no;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=always;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=always;
+    mcmc;
+
+
+    [Codon models]
+    [============]
+
+    exe adh.nex;
+    exclude 769-771;
+
+    lset code=universal nucmodel=codon rates=gamma;
+    mcmcp ngen=1000 printfr=100;
+
+    set usebeagle=no;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=GPU beagleprec=single beaglesse=no beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=always;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=always;
+    mcmc;
+
+    set usebeagle=yes beagledevice=GPU beagleprec=single beaglesse=no beaglescaling=always;
+    mcmc;
+
+    
+    [Translated protein models]
+    [=========================]
+
+    lset nucmodel=protein rates=gamma;
+    prset aamodelpr=mixed;
+    mcmcp ngen=5000 printfr=500;
+    
+    set usebeagle=no;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=GPU beagleprec=single beaglesse=no beaglescaling=dynamic;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=single beaglesse=yes beaglescaling=always;
+    mcmc;
+
+    set usebeagle=yes beagledevice=CPU beagleprec=double beaglesse=yes beaglescaling=always;
+    mcmc;
+
+    set usebeagle=yes beagledevice=GPU beagleprec=single beaglesse=no beaglescaling=always;
+    mcmc;
+
+end;

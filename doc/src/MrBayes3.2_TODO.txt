@@ -1,0 +1,110 @@
+MrBayes 3.2 release todo-list
+-----------------------------
+
+DONE
+ - Debugging branch fredrik: new format, plot, sumt, sump -- Fredrik
+ - Merge fredrik with trunk -- Maxim
+ - Modify sumt output to have separate table of splits -- Fredrik
+ - Debug and polish plot -- Fredrik
+ - Debug and polish comparetree -- Fredrik
+ - Check coalescent prior (LnCoalescencePriorPr) -- Maxim
+ - Check that nothing lost between cvs and svn root of trunk -- Maxim
+ - Go through all bug reports on SourceForge -- Maxim
+ - Build test files that exercise most models in MrBayes 3.2 -- Maxim and Fredrik
+ - Make sure FigTree can read the consensus tree (FIGTREE format) -- Maxim
+ - Correct sumt when number of trees > 1 -- Fredrik
+ - Change addresses in all source files -- Fredrik
+ - Polish sumt, sump -- Fredrik
+ - Check implementation of HPD and help info for that -- Fredrik
+ - Updated version of tutorial -- Fredrik
+ - Set up visual studio project for beagle version of mrbayes -- Fredrik
+ - Finish initial Beagle implementation -- Fredrik
+ - Check birth-death (LnBirthDeathPriorPr) prior -- Fredrik
+ - Make sumt summarize cpp events per branch (mean, range, HPD on number of events) and branch rates (same thing) -- Maxim
+ - Move web site to SourceForge -- Maxim
+ - Add tex of Tutorial v 3.2 to documentation folder -- Fredrik
+ - Add beaglebayes project to svn beagle2 branch -- Fredrik
+ - Delete branches fredrik and beagle -- Fredrik
+ - Translate manual to Latex, incorporate new version of tutorial, commit to svn -- Maxim
+ - Merge from trunk to beagle2 -- Fredrik
+ - Delete all the old code used by likelihood calculators and update CondLikeUp in beagle2 -- Fredrik
+ - Make sure beagle CPU version runs for some simple model -- Fredrik
+ - Add SSE versions of all cond like down, up, root, scaler and Likelihood functions -- Maxim
+ - Add shortcut to SSE versions of CondLikeDown -- Maxim
+ - Finish branch beagle2 -- Fredrik
+ - Merge branch beagle2 to trunk -- Fredrik & Maxim
+ - Changing nruns & nchains  -- Maxim
+ - Update print info about consensus phylogram (average or median node) -- Fredrik
+ - Finish Beagle coding -- Fredrik & Maxim
+ - Make Standard computation work in beagle2 -- Fredrik
+ - Test all topology proposals with constraints -- Fredrik
+ - Metropolize all tree proposals -- Fredrik
+ - Add more tests with clock trees and inference of ancestral states -- Fredrik
+ - Check Igr prior -- Fredrik
+ - Check Brownian motion prior -- Fredrik
+ - Correct brithdeath prior -- Fredrik
+ - Update SetLikeFunctions() to incorparate SSE code -- Fredrik & Maxim
+ - Fix codon model conflict with ParsSPR moves -- Fredrik
+ - Introduce nst=mixed -- Fredrik
+ - Test BEST code in mpi -- Fredrik
+ - Realloc cmdline when reading exe files with long lines -- Maxim
+ - Check that tree mix-up problem when check-pointing in MPI is gone -- Fredrik
+ - Svn version number -- Maxim
+ - Run tests on clock and relaxed clock trees, produce diagrams for publication -- Maxim
+ - Make the starting trees=parsimony to work -- Maxim
+ - Update CondLikeUp_XXX, PrintAncStates_XXX and  PrintSiteRates_XXX -- Maxim
+ - Revert to non-SSE non-Beagle versions when models or setting do not allow SSE or Beagle -- Maxim
+ - Make  install packages for Windows -- Maxim
+ - Add a command ss that does step sampling (thermodynamic integration). -- Maxim
+ - Add support for more sophisticated constraints. -- Maxim
+ - Run test against Beast (dating paper) -- Maxim
+ - Run regular model test files using beagleCPU, beagleGPU, SSE and regular likelihood calculators -- Maxim (some issues with BeagleGPU)
+
+
+MAXIM
+
+ 1 Make executables and install packages for Mac (convenient for repeated production of installers)
+ 2 Add a command readfasta <filename> that reads a FASTA file of sequences into a matrix.
+ 3 Make it possible to read a Nexus matrix with single-quoted taxon names.
+ 4 Configure file for MrBayes and Beagle (best way of distributing mrbayes with beagle) also NDEBUG
+
+ - Make a script or find a tool which converts Latex to html 
+ - Beagle GPU issues
+ - Run test againgst Phycas (standard nonclock tree with some complex model, see instructions at molecularevolution.org)
+
+ - Make SSE and Beagle versions for reported anc states
+ - Add starting trees=neighbor joining (nj)
+ - Look at FAST_LOG for SSE
+ - Implement a shortcut that skips fully ambiguous parts of the tree (?)
+ - Implement recovery from checkpoints for stepping stone (stepping stone data has to be stored to .ckp file first)
+---------------------------------
+ - Profiling
+ - Alternative ways of scaling?
+
+
+FREDRIK
+ - Email to mrbayes users email list, evoldir, systematikforeningen
+ - Modify and finish manual
+ - Rename gibbsGamma to samplerates, restructure as ordinary parameter
+ - Rename relaxed clock models: igr to igr, bm to tk02
+-------------------------------------------------------
+ - Introduce cppi, mixedcpp, and mixedbr models (?)
+ - Introduce catrate model
+ - Fill in identity or stationary matrix in TiProbs_Std() if brl is extreme 
+
+
+CHI
+ - Extend coalescent prior and birth-death prior to serially sampled trees
+ - Introduce fossils on ancestral branches with several sampling strategies
+ - rjMCMC between relaxed clock models (TK02 and IGR)
+ --------------------------------------
+
+
+NOT ASSIGNED
+ - Make PrunePolyTree() function to handle properly relaxed model parameters.
+ - Improve parsSets implementation to be safer and more memory-efficient
+ - Update web site, Wiki manual, online html help
+ - Test parsimony models
+--------------------------------------
+ - Introduce sampleomega
+
