@@ -6392,16 +6392,26 @@ int DoSumtTree (void)
             {
             if (isTranslateDef == YES && isTranslateDiff == YES)
                 {
-                /* we are using a translate block with different taxa set */
+                /* we are using a translate block with different taxa set (not all taxa) */
                 if (t->nNodes - t->nIntNodes != numTranslates)
                     {
                     MrBayesPrint ("%s   ERROR: Expected %d taxa; found %d taxa\n", spacer, numTranslates, sumtParams.numTaxa);
                     return (ERROR);
                     }
+                /* figure out which taxa are absent */
                 for (i=0; i<numTaxa; i++)
-                    sumtParams.absentTaxa[i] = NO;
-                for (i=numTranslates; i<numTaxa; i++)
                     sumtParams.absentTaxa[i] = YES;
+                for (i=0; i<numTranslates; i++)
+                    {
+                    for (j=0; j<numTaxa; j++)
+                        {
+                        if (strcmp(transFrom[i], taxaNames[j]) == 0)
+                            break;
+                        }
+                    if (j < numTaxa)
+                        sumtParams.absentTaxa[j] = NO;
+                    }
+                /* find local outgroup */
                 for (i=0; i<numTranslates; i++)
                     if (strcmp(transFrom[i], taxaNames[outGroupNum]) == 0)
                         break;
@@ -6452,28 +6462,23 @@ int DoSumtTree (void)
             }
         else
             {
-            /* the following block was conditioned with if (isTranslateDef == NO || isTranslateDiff == NO) 
-            The reason was not clearly stated  but it prevents exclusion of taxa to work in case when the condition does not hold.
-            My guess is that before PrunePolyTree() relied on indeses of tips be set as in original matrix.
-            Now it is not needed after PrunePolyTree and ResetTipIndices ware modified to use labels istead of indexes to recognize tips.*/
+            /* check whether we have some taxa that should not be in the tree */
+            for (i=0; i<t->nNodes; i++)
                 {
-                for (i=0; i<t->nNodes; i++)
+                p = t->allDownPass[i];
+                if (p->left == NULL && taxaInfo[p->index].isDeleted == NO && sumtParams.absentTaxa[p->index] == YES)
                     {
-                    p = t->allDownPass[i];
-                    if (p->left == NULL && taxaInfo[p->index].isDeleted == NO && sumtParams.absentTaxa[p->index] == YES)
-                        {
-                        MrBayesPrint ("%s   Taxon %d should not be in sampled tree\n", spacer, p->index + 1);
-                        return (ERROR);
-                        }
+                    MrBayesPrint ("%s   Taxon %d should not be in sampled tree\n", spacer, p->index + 1);
+                    return (ERROR);
                     }
-
-                /* now we can safely prune the tree based on taxaInfo[].isDeleted */
-                PrunePolyTree (t);
-
-                /* reset tip and int node indices in case some taxa deleted */
-                ResetTipIndices (t);
-                ResetIntNodeIndices(t);
                 }
+
+            /* now we can safely prune the tree based on taxaInfo[].isDeleted */
+            PrunePolyTree (t);
+
+            /* reset tip and int node indices in case some taxa deleted */
+            ResetTipIndices (t);
+            ResetIntNodeIndices(t);
 
             /* check that all taxa are included */
             if (t->nNodes - t->nIntNodes != sumtParams.numTaxa)

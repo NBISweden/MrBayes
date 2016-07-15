@@ -369,7 +369,7 @@ CmdType             *commandPtr; /* Points to the commands array entry which cor
 ParmInfoPtr         paramPtr;    /* Points to paramTable table array entry which corresponds to currently processed parameter of current command */
 TreeNode            *pPtr, *qPtr;
 
-enum ConstraintType     consrtainType; /* Used only in processing of constraine command to indicate what is the type of constrain */
+enum ConstraintType constraintType; /* Used only in processing of constraint command to indicate the type of constraint */
 
 
 int AddToGivenSet (int i, int j, int k, int id, int *Set)
@@ -2392,7 +2392,7 @@ int DoConstraint (void)
     int         i, howMany;
     int         *tset;
 
-    if (consrtainType == PARTIAL)
+    if (constraintType == PARTIAL)
         tset=tempSetNeg;
     else
         tset=tempSet;
@@ -2426,19 +2426,19 @@ int DoConstraint (void)
         return (ERROR);
         }
 
-    if (consrtainType == HARD)
+    if (constraintType == HARD)
         {
         if (howMany == numTaxa)
             {
             /* We allow this so we can report states from and calibrate root */
             }
         
-        } /*end consrtainType == HARD */
-    else if (consrtainType == PARTIAL)
+        } /*end constraintType == HARD */
+    else if (constraintType == PARTIAL)
         {
         if (howMany == 1)
             {
-            MrBayesPrint ("%s   This partial constraint include only one taxa. It is alwayes satisfied and will not be defined.\n", spacer);
+            MrBayesPrint ("%s   This partial constraint includes only one taxon. It is always satisfied and will not be defined.\n", spacer);
             return (ERROR);
             }
 
@@ -2461,11 +2461,11 @@ int DoConstraint (void)
             return (ERROR);
             }
         }
-    else if (consrtainType == NEGATIVE)
+    else if (constraintType == NEGATIVE)
         {
         if (howMany == 1)
             {
-            MrBayesPrint ("%s   Negative constraint should include more than one taxa. Constraint will not be defined\n", spacer);
+            MrBayesPrint ("%s   Negative constraint should include more than one taxon. Constraint will not be defined\n", spacer);
             return (ERROR);
             }
         }
@@ -2479,7 +2479,7 @@ int DoConstraint (void)
 
     /* store tempSet */
     AddBitfield (&definedConstraint, numDefinedConstraints, tempSet, numTaxa);
-    if (consrtainType == PARTIAL)
+    if (constraintType == PARTIAL)
         {
         AddBitfield (&definedConstraintTwo, numDefinedConstraints, tempSetNeg, numTaxa);
         }
@@ -2520,7 +2520,7 @@ int DoConstraint (void)
     definedConstraintsType = (enum ConstraintType *) SafeRealloc((void *)(definedConstraintsType), (size_t)numDefinedConstraints*sizeof(enum ConstraintType));
     if (definedConstraintsType==NULL)
         return ERROR;
-    definedConstraintsType[numDefinedConstraints-1] = consrtainType;
+    definedConstraintsType[numDefinedConstraints-1] = constraintType;
 
     definedConstraintPruned = (BitsLong **) SafeRealloc ((void *)(definedConstraintPruned), (size_t)numDefinedConstraints*sizeof(BitsLong *));
     if (definedConstraintPruned==NULL)
@@ -2584,7 +2584,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             for (i=0; i<numTaxa; i++)
                 tempSet[i] = 0;
 
-            consrtainType = HARD; /* set default constrain type */
+            constraintType = HARD; /* set default constrain type */
             tempSetCurrent=tempSet;
             fromI = toJ = everyK = -1;
             foundDash = foundSlash = NO;
@@ -2638,19 +2638,19 @@ int DoConstraintParm (char *parmName, char *tkn)
                 for (i=0; i<numTaxa; i++)
                     tempSetNeg[i] = 0;
 
-                consrtainType = PARTIAL;
+                constraintType = PARTIAL;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Hard", tkn) == SAME)
                 {
-                consrtainType = HARD;
+                constraintType = HARD;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
             else if (IsSame ("Negative", tkn) == SAME)
                 {
-                consrtainType = NEGATIVE;
+                constraintType = NEGATIVE;
                 expecting = Expecting(EQUALSIGN);
                 expecting |= Expecting(ALPHA);
                 }
@@ -2701,7 +2701,7 @@ int DoConstraintParm (char *parmName, char *tkn)
 
             expecting  = Expecting(ALPHA);
             expecting |= Expecting(NUMBER);
-            if (consrtainType != PARTIAL || foundColon == YES)
+            if (constraintType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
@@ -2814,7 +2814,7 @@ int DoConstraintParm (char *parmName, char *tkn)
             expecting |= Expecting(NUMBER);
             expecting |= Expecting(DASH);
             expecting |= Expecting(BACKSLASH);
-            if (consrtainType != PARTIAL || foundColon == YES)
+            if (constraintType != PARTIAL || foundColon == YES)
                 expecting |= Expecting(SEMICOLON);
             else
                 expecting |= Expecting(COLON);
@@ -3529,6 +3529,7 @@ int DoExecute (void)
     char        *s, exeFileName[100];
     FILE        *fp;
     CmdType     *oldCommandPtr;
+    char        *oldTokenP, oldToken[CMD_STRING_LENGTH];
 #   if defined (MPI_ENABLED)
     int         sumErrors;
 #   endif
@@ -3544,8 +3545,10 @@ int DoExecute (void)
     else
         MrBayesPrint ("%s   Executing file \"%s\"\n", spacer, inputFileName);
 
-    /* Save old command ptr */
+    /* Save old command ptr, token pointer and token */
     oldCommandPtr = commandPtr;
+    oldTokenP     = tokenP;
+    strcpy(oldToken, token);
 
     /* open binary file */
     if ((fp = OpenBinaryFileR(inputFileName)) == NULL)
@@ -3594,29 +3597,8 @@ int DoExecute (void)
     /* find length of longest line */
     longestLineLength = LongestLine (fp);
     MrBayesPrint ("%s   Longest line length = %d\n", spacer, longestLineLength);
-    longestLineLength += 50;
+    longestLineLength += 10;
     
-    /* check that longest line is not longer than CMD_STRING_LENGTH */
-    if (longestLineLength >= CMD_STRING_LENGTH - 100)
-        {
-        /*MrBayesPrint ("%s   A maximum of %d characters is allowed on a single line\n", spacer, CMD_STRING_LENGTH - 100);*/
-        MrBayesPrint ("%s   The longest line of the file %s\n", spacer, inputFileName);
-        MrBayesPrint ("%s   contains at least one line with %d characters.\n", spacer, longestLineLength);
-        }
-    /*
-#   if defined (MPI_ENABLED)
-    MPI_Allreduce (&nErrors, &sumErrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (sumErrors > 0)
-        {
-        MrBayesPrint ("%s   There was an error on at least one processor\n", spacer);
-        goto errorExit;
-        }
-#   else
-    if (nErrors > 0)
-        goto errorExit;
-#   endif
-    */
-
     /* allocate a string long enough to hold a line */
     s = (char *)SafeMalloc((size_t)longestLineLength * sizeof(char));
     if (!s)
@@ -3667,14 +3649,7 @@ int DoExecute (void)
     do {
         /* read in a new line into s */
         i = 0;
-        do {
-            c = fgetc(fp);
-            if (c == '\r' || c == '\n' || c == EOF)
-                s[i++] = '\n';
-            else
-                s[i++] = c;
-            } while (s[i-1] != '\n');
-        s[i] = '\0';
+        fgets(s, longestLineLength, fp);
         foundNewLine = YES;
         cmdLine++;
 
@@ -3775,6 +3750,8 @@ int DoExecute (void)
             strcpy (spacer, "");
 
         commandPtr = oldCommandPtr;
+        tokenP     = oldTokenP;
+        strcpy(token, oldToken);
 
         return (NO_ERROR_QUIT);
             
@@ -3787,13 +3764,13 @@ int DoExecute (void)
             }
         if (fp)
             {
-            MrBayesPrint ("%s   The error occurred when reading char. %d on line %d\n", spacer, tokenP-cmdStr-strlen(token)+1, cmdLine);
+            MrBayesPrint ("%s   The error occurred when reading char. %d-%d on line %d\n", spacer,
+                (size_t)(tokenP-s)-strlen(token)+1, (size_t)(tokenP-s), cmdLine);
             MrBayesPrint ("%s      in the file '%s'\n", spacer, exeFileName);
             }
         if (s)
             free (s);
         SafeFclose (&fp);
-        numOpenExeFiles--;  /* we increase the value above even if no file is successfully opened */
 
         /* make sure we exit the block we were reading from correctly */
         if (inMrbayesBlock == YES)
@@ -3809,18 +3786,24 @@ int DoExecute (void)
             inForeignBlock = NO;
 
         /* make sure correct return if we came from mrbayes block in another execute file */
-        if (numOpenExeFiles > 0)
+        if (numOpenExeFiles > 1)
             {
             inMrbayesBlock = YES;
             MrBayesPrint ("\n   Returning execution to calling file ...\n\n");
             strcpy (spacer, "   ");
-            commandPtr = oldCommandPtr;
-            return (ERROR);
             }
         else
+            {
             strcpy (spacer, "");
+            MrBayesPrint ("\n   Returning execution to command line ...\n\n");
+            }
 
+        numOpenExeFiles--;  /* we increase the value above even if no file is successfully opened */
+
+        /* restore state of globals */
         commandPtr = oldCommandPtr;
+        tokenP = oldTokenP;
+        strcpy(token, oldToken);
 
         return (ERROR);
 }
@@ -8977,8 +8960,8 @@ char *command_generator(const char *text, int state)
     while ((command=commands[list_index].string)!=NULL) 
         {
         list_index++;
-        if (strncasecmp(command,text,len)==0) 
-            /* memory is freed by the readline library so we need a strdup here */ 
+        if (StrCmpCaseInsensitiveLen(command, text, len) == 0)
+            /* memory is freed by the readline library so we need a strdup here */
             return strdup(command);
         }
     return (char *)NULL;

@@ -1,13 +1,12 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#undef complex
-struct complex
+struct MrBComplex
 {
     MrBFlt re;
     MrBFlt im;
 };
-typedef struct complex complex;
+typedef struct MrBComplex MrBComplex;
 
 typedef struct
     {
@@ -83,6 +82,7 @@ void     SetBit (int i, BitsLong *bits);
 void     SortInts (int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
 void     SortMrBFlt (MrBFlt *item, int left, int right);
+int      StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
 FILE    *TestOpenTextFileR (char *name);
@@ -195,21 +195,21 @@ void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
 
 /* math utility functions */
-complex **AllocateSquareComplexMatrix (int dim);
+MrBComplex **AllocateSquareComplexMatrix (int dim);
 MrBFlt  **AllocateSquareDoubleMatrix (int dim);
 int     **AllocateSquareIntegerMatrix (int dim);
 int       AutodGamma (MrBFlt *M, MrBFlt rho, int K);
 void      BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K);
 MrBFlt    BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 void      CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v);
-void      CopyComplexMatrices (int dim, complex **from, complex **to);
+void      CopyComplexMatrices (int dim, MrBComplex **from, MrBComplex **to);
 void      CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to);
 void      DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed);
 int       DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median);
-void      FreeSquareComplexMatrix (complex **m);
+void      FreeSquareComplexMatrix (MrBComplex **m);
 void      FreeSquareDoubleMatrix (MrBFlt **m);
 void      FreeSquareIntegerMatrix (int **m);
-int       GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs);
+int       GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, MrBComplex **Ceigvecs, MrBComplex **CinverseEigvecs);
 MrBFlt    LnFactorial (int value);
 MrBFlt    LnGamma (MrBFlt alp);
 MrBFlt    LnPriorProbExponential (MrBFlt val, MrBFlt *params);

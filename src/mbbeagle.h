@@ -21,6 +21,7 @@ int    TreeCondLikes_Beagle (Tree *t, int division, int chain);
 int    TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int    TreeTiProbs_Beagle (Tree *t, int division, int chain);
 
-extern char *beagleGetVersion(void);
+extern char *beagleGetVersion (void);
 
 #endif  /* __MBBEAGLE_H__ */
+

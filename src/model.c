@@ -74,8 +74,7 @@ int       IsApplicable (Param *param);
 int       IsApplicable_FiveTaxaOrMore (Param *param);
 int       IsApplicable_FourTaxaOrMore (Param *param);
 int       IsApplicable_ThreeTaxaOrMore (Param *param);
-int       IsApplicableTreeAgeMove (Param *param);
-int       IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
+int       IsApplicable_TreeAgeMove (Param *param);
 int       LargestMovableSubtree(Param *treeParam);
 int       NumActiveParts (void);
 int       NumInformativeHardConstraints (ModelParams *mp);
@@ -145,12 +144,14 @@ MrBFlt          vtPi[20];                    /* stationary frequencies for VT mo
 MrBFlt          blosPi[20];                  /* stationary frequencies for Blosum62 model    */
 MrBFlt          lgPi[20];                    /* stationary frequencies for LG model          */
 
-/* parser flags and variables */
-int         fromI, toJ, foundDash, foundComma, foundEqual, foundBeta,
-            foundAaSetting, foundExp, modelIsFixed, linkNum, foundLeftPar, tempNumStates, isNegative,
+/* parser flags and variables only used in this file */
+int         foundComma, foundBeta, foundAaSetting, modelIsFixed, linkNum, foundLeftPar, tempNumStates,
             foundBSNum[999], foundDSNum[999], foundFSNum[999], foundBSTime[999], foundDSTime[999], foundFSTime[999];
 MrBFlt      tempStateFreqs[200], tempAaModelPrs[10];
 char        colonPr[100], clockPr[30];
+
+/* parser flags and variables shared with command.c */
+extern int  fromI, toJ, foundDash, foundExp, foundEqual, isNegative;
 
 /* other local variables (this file) */
 MrBFlt          empiricalFreqs[200];         /* emprical base frequencies for partition                 */
@@ -12933,6 +12934,9 @@ int IsApplicable (Param *param)
 
 int IsApplicable_ThreeTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+        
     if (LargestMovableSubtree (param) >= 3)
         return YES;
     else
@@ -12942,6 +12946,9 @@ int IsApplicable_ThreeTaxaOrMore (Param *param)
 
 int IsApplicable_FourTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+    
     if (LargestMovableSubtree (param) >= 4)
         return YES;
     else
@@ -12951,6 +12958,9 @@ int IsApplicable_FourTaxaOrMore (Param *param)
 
 int IsApplicable_FiveTaxaOrMore (Param *param)
 {
+    if (param->paramType != P_TOPOLOGY )
+        return NO;
+    
     if (LargestMovableSubtree (param) >= 5)
         return YES;
     else
@@ -14876,6 +14886,7 @@ int LargestMovableSubtree(Param *treeParam)
     int         i, j, k, a, nLongsNeeded, numPartitions, largestSubtree;
     BitsLong    **constraintPartition, *subtreePartition, *testPartition, *mask;
     ModelParams *mp;
+    int         foundAllSpeciesPartition;
 
     mp = &modelParams[treeParam->relParts[0]];
 
@@ -14899,6 +14910,7 @@ int LargestMovableSubtree(Param *treeParam)
     
     /* retrieve partitions */
     numPartitions = 0;
+    foundAllSpeciesPartition = NO;
     for (a=0; a<numDefinedConstraints; a++)
         {
         if (mp->activeConstraints[a] == NO || definedConstraintsType[a] != HARD)
@@ -14924,12 +14936,26 @@ int LargestMovableSubtree(Param *treeParam)
         if (k == 0 || k == 1)
             continue;
         
+        /* record if we hit an all-species partition */
+        if (k == numLocalTaxa)
+            foundAllSpeciesPartition = YES;
+        
         numPartitions++;
         }
     
-    /* Add all-species partition */
-    CopyBits(constraintPartition[numPartitions], mask, nLongsNeeded);
-    numPartitions++;
+    /* Add all-species partition if not already present */
+    if (foundAllSpeciesPartition == NO)
+    {
+        ClearBits(constraintPartition[numPartitions], nLongsNeeded);
+        for (i=j=0; i<numTaxa; i++)
+        {
+            if (taxaInfo[i].isDeleted == YES)
+                continue;
+            SetBit(j, constraintPartition[numPartitions]);
+            j++;
+        }
+        numPartitions++;
+    }
     
     /* Now we have all constraints. Calculate the movable subtree for each */
     largestSubtree = 0;
@@ -19660,17 +19686,19 @@ int SetMoves (void)
             if (moveTypes[i].isApplicable(param) == NO)
                 continue;
             for (j=0; j<moveTypes[i].nApplicable; j++)
+                {
                 if (moveTypes[i].applicableTo[j] == param->paramId)
                     {
                     numApplicableMoves++;
                     break;
                     }
+                }
             }
         }
 
     /* then allocate space for move pointers */
     moves = (MCMCMove **) SafeMalloc (numApplicableMoves * sizeof (MCMCMove *));
-    if (!moves)
+    if (!moves && numApplicableMoves > 0)   /* in the middle of defining a model, numApplicableMoves can be 0 */
         {
         MrBayesPrint ("%s   Problem allocating moves\n", spacer);
         return (ERROR);
@@ -23235,10 +23263,24 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->topologyPr,"Speciestree"))
                 MrBayesPrint ("%s            Prior      = Topology constrained to fold within species tree\n", spacer);
             else if (!strcmp(mp->topologyPr,"Constraints"))
-                MrBayesPrint ("%s            Prior      = Prior on topologies obeys constraints\n", spacer);
+                MrBayesPrint ("%s            Prior      = Prior on topology obeys the following constraints:\n", spacer);
             else
                 MrBayesPrint ("%s            Prior      = Prior is fixed to the topology of user tree '%s'\n", spacer,
                                                     userTree[mp->topologyFix]->name);
+            if (!strcmp(mp->topologyPr,"Constraints"))
+                {
+                for (a=0; a<numDefinedConstraints; ++a)
+                    {
+                    if (mp->activeConstraints[a] == NO)
+                        continue;
+                    if (definedConstraintsType[a] == HARD)
+                        MrBayesPrint ("%s                         -- Hard constraint \"%s\"\n", spacer, constraintNames[a]);
+                    else if (definedConstraintsType[a] == PARTIAL)
+                        MrBayesPrint ("%s                         -- Partial constraint \"%s\"\n", spacer, constraintNames[a]);
+                    else /* if (true) */
+                        MrBayesPrint ("%s                         -- Negative constraint \"%s\"\n", spacer, constraintNames[a]);
+                    }
+                }
             }
         else if (j == P_BRLENS)
             {
