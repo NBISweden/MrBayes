@@ -209,5 +209,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr strdup])
 
-AC_CONFIG_FILES([Makefile doc/Makefile examples/Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile doc/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile])
 AC_OUTPUT
