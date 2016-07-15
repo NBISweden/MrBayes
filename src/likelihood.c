@@ -9530,17 +9530,21 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
     /* get base frequencies */
     pis = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
+    
     /* compensate for invariable sites if appropriate */
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* rescale beta */
     beta =  (0.5 / ((pis[0] + pis[2])*(pis[1] + pis[3]) + ((pis[0]*pis[2]) + (pis[1]*pis[3]))));
@@ -9663,8 +9667,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
     
     /* compensate for invariable sites if appropriate */
@@ -9672,11 +9675,14 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
         
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
-        
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* get eigenvalues and cijk pointers */
     eigenValues = m->cijks[m->cijkIndex[chain]];
     cijk        = eigenValues + (2 * n);
@@ -9923,17 +9929,21 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
     /* get base frequencies */
     pis = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
+    
     /* compensate for invariable sites if appropriate */
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* rescale beta */
     beta =  0.5 / ((pis[0] + pis[2])*(pis[1] + pis[3]) + kap*((pis[0]*pis[2]) + (pis[1]*pis[3])));
@@ -10034,7 +10044,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
     /* calculate Jukes Cantor transition probabilities */
     
     int         i, j, k, index;
-    MrBFlt      t, *catRate, baseRate, length;
+    MrBFlt      t, *catRate, baseRate, theRate, length;
     CLFlt       pNoChange, pChange, *tiP;
     ModelInfo   *m;
     
@@ -10043,12 +10053,22 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-    baseRate =  1.0;
-    if (m->shape == NULL)
-        catRate = &baseRate;
-    else
-        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get base rate */
+    baseRate = GetRate (division, chain);
     
+    /* compensate for invariable sites if appropriate */
+    if (m->pInvar != NULL)
+        baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* find length */
     if (m->cppEvents != NULL)
         {
@@ -10075,7 +10095,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
     /* fill in values */
     for (k=index=0; k<m->numRateCats; k++)
         {
-        t = length*catRate[k];
+        t = length * baseRate * catRate[k];
             
         if (t < TIME_MIN)
             {
@@ -10140,14 +10160,18 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-    /* find rates */
+    /* get base rate */
     baseRate = GetRate (division, chain);
-    theRate = 1.0;
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
-        catRate = GetParamSubVals (m->shape, chain, state[chain]);
     
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* find base frequencies */
     bs = GetParamSubVals(m->stateFreq, chain, state[chain]);
 
@@ -10236,15 +10260,17 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     
-    /* get rate multiplier */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
-
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
 #   if defined (DEBUG_TIPROBS_STD)
     /* find base frequencies */
@@ -10295,7 +10321,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
-                v =  length*catRate[k]*baseRate;
+                v =  length * catRate[k] * baseRate;
                 eV1 =  exp(-(nStates / (nStates -  1.0)) * v);
                 pChange   = (CLFlt) ((1.0 / nStates) - ((1.0 / nStates) * eV1));
                 pNoChange = (CLFlt) ((1.0 / nStates) + ((nStates - 1.0) / nStates) * eV1);
@@ -10569,7 +10595,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 for (k=0; k<m->numRateCats; k++)
                     {
                     /* calculate probabilities */
-                    v =  length*catRate[k]*baseRate;
+                    v =  length * catRate[k] * baseRate;
                     eV1 =  exp(- mu * v);
                     tiP[index++] = (CLFlt) (bs[0] + (bs[1] * eV1));
                     tiP[index++] = (CLFlt) (bs[1] - (bs[1] * eV1));
@@ -10660,13 +10686,25 @@ int UpDateCijk (int whichPart, int whichChain)
                 if (m->numOmegaCats > 1)
                     omegaCatFreq = GetParamSubVals (m->omega, whichChain, state[whichChain]);
                 }
-            else if (m->nCijkParts > 1 && m->nucModelId == NUCMODEL_4BY4 && m->numModelStates == 8) /* we have a covarion model */
-                rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);        /* with rate variation      */
+            else if (m->nCijkParts > 1 && m->nucModelId == NUCMODEL_4BY4 && m->numModelStates == 8)
+                {
+                /* we have a covarion (covariotide) model with rate variation */
+                if (m->shape != NULL)
+                    rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);
+                else if (m->mixtureRates != NULL)
+                    rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
+                }
             }
         else if (m->dataType == PROTEIN)
             {
-            if (m->nCijkParts > 1)                                                                  /* we have a covarion model */
-                rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);        /* with rate variation      */
+            if (m->nCijkParts > 1)
+                {
+                /* we have a covarion model with rate variation */
+                if (m->shape != NULL)
+                    rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);
+                else if (m->mixtureRates != NULL)
+                    rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
+                }
             }
 #   if defined (BEAGLE_ENABLED)
         else if (m->dataType == RESTRICTION){}

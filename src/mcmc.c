@@ -12413,7 +12413,7 @@ int PrintStates (int curGen, int coldId)
         }
     if (!tempStr)
         {
-        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, (size_t)(tempStrSize) * sizeof(char));
         goto errorExit;
         }
     
@@ -12851,9 +12851,10 @@ int PrintStates (int curGen, int coldId)
                     }
                 }
             }
-        else if (p->paramType == P_PI)
+        else if (p->paramType == P_PI || p->paramType == P_MIXTURE_RATES)
             {
-            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues). */
+            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues) OR
+               if we are dealing with rates of a siterate mixture (rates held in subvalues). */
             for (j=0; j<p->nSubValues; j++)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
