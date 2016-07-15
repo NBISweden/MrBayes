@@ -1531,9 +1531,7 @@ void *SafeRealloc (void *ptr, size_t s)
         }
 
     if (ptr == NULL)
-        {
-        tmp = calloc (1, s)
-        }
+        tmp = calloc (1, s);
     else
         tmp = realloc (ptr, s);
 
@@ -1589,38 +1587,41 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
-int MrBFlt_cmp(const void *a, const void *b)
+int MrBFlt_cmp (const void *a, const void *b)
 {
-    MrBFlt x = *(MrBFlt *)a;
-    MrBFlt y = *(MrBFlt *)b;
+    MrBFlt          x = * (MrBFlt *) a;
+    MrBFlt          y = * (MrBFlt *) b;
 
-    if (x < y) {
+    if (x < y)
         return -1;
-    }
-    else if (x > y) {
+    else if (x > y)
         return 1;
-    }
+
     return 0;
 }
 
 /* SortMrBFlt: Sort in increasing order */
 void SortMrBFlt (MrBFlt *item, int left, int right)
 {
-    qsort((void *)item, right - left + 1, sizeof(MrBFlt), &MrBFlt_cmp);
+    qsort ((void *) item, right - left + 1, sizeof (MrBFlt),
+           &MrBFlt_cmp);
 }
 
 
 /* StrCmpCaseInsensitiveLen: Case insensitive string comparison (with maximum
  * string length restriction). */
-int StrCmpCaseInsensitiveLen(const char *s, const char *t, size_t len)
+int StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len)
 {
+    char            sc, tc;
+
     if (len == 0)
         return 0;
 
-    while (len-- > 0) {
-        char sc = tolower(s[0]);
+    while (len-- > 0)
+        {
+        sc = tolower (s[0]);
         s++;
-        char tc = tolower(t[0]);
+        tc = tolower (t[0]);
         t++;
 
         if (sc > tc)
@@ -1629,7 +1630,7 @@ int StrCmpCaseInsensitiveLen(const char *s, const char *t, size_t len)
             return -1;
         else if (sc == '\0')
             break;
-    }
+        }
 
     return 0;
 }
