@@ -1,0 +1,59 @@
+#NEXUS
+
+[This file is for testing agreement with topology and brlen priors in MrBayes 3]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+    exe primates.nex;
+    exe primates_treeinfo.nex;
+    delete 1 8-12;
+
+    mcmcp ngen=1000000 nch=1 nr=1 file=crap.nex data=no;
+    
+    [1. Standard non-clock model]
+    [
+    We expect the following results:
+    Taxon split    No.    Frequency
+        1-5         6     105/105 = 1/1  = 1.000000
+        2-4        15     15/105  = 1/7  = 0.142857
+        3-3        10     9/105   = 3/35 = 0.085714
+    
+    Brlens mean   = 1/rate       = 0.1000000
+    Brlens var    = 1/(rate^2)   = 0.010000
+    Brlens median = (ln 2)/ rate = 0.069315
+    ]
+    exclude 4-.;
+    prset brlenspr=unconstr:exp(10) topologypr=uniform;
+    propset NNI$prob=5.0;
+    propset Exttbr$prob=5.0;
+    propset Extspr$prob=5.0;
+    propset Extss$prob=5.0;
+    propset Parsspr$prob=5.0;
+    [
+    mcmc;
+    sumt minpartfreq=0.05;
+    ]
+
+    [2. Standard non-clock model with constraint]
+    [
+    We expect the following results:
+    Taxon split    No.    Frequency
+    1-5, constr     7     15/15 = 1/1  = 1.000000
+    all other      10      3/15 = 1/5  = 0.200000
+    
+    Brlens mean   = 1/rate       = 0.1000000
+    Brlens var    = 1/(rate^2)   = 0.010000
+    Brlens median = (ln 2)/ rate = 0.069315
+    ]
+    
+    prset brlenspr=unconstr:exp(10) topologypr=constraints(mynode);
+    propset NNI$prob=5.0;
+    propset Exttbr$prob=5.0;
+    propset Extspr$prob=5.0;
+    propset Extss$prob=5.0;
+    propset Parsspr$prob=5.0;
+
+    mcmc;
+    sumt;
+
+end;

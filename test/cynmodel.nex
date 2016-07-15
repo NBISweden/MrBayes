@@ -1,0 +1,37 @@
+#NEXUS
+
+begin mrbayes;
+
+	[This block defines several different character sets that could be used in partitioning these data
+	 and then defines and enforces a partition called favored]
+	charset morphology = 1-166;
+	charset molecules = 167-3246;
+	charset COI = 167-1244;
+	charset COI_1st = 167-1244\3;
+	charset COI_2nd = 168-1244\3;
+	charset COI_3rd = 169-1244\3;
+	charset EF1a = 1245-1611;
+	charset EF1a_2nd = 1245-1611\3;
+	charset EF1a_3rd = 1246-1611\3;
+	charset EF1a_1st = 1247-1611\3;
+	charset LWRh = 1612-2092;
+	charset LWRh_2nd = 1612-2092\3;
+	charset LWRh_3rd = 1613-2092\3;
+	charset LWRh_1st = 1614-2092\3;
+	charset 28S = 2093-3246;
+	charset 28S_Stem = 2160-2267 2361-2401 2489-2528 2539-2565 2577-2647 2671-2760 2768-2827 2848-3194 3220-3246;
+	charset 28S_Loop = 2093-2159 2268-2360 2402-2488 2529-2538 2566-2576 2648-2670 2761-2767 2828-2847 3195-3219;
+
+    [This defines an outgroup and sets up a partition]
+	partition favored= 5: morphology, COI, EF1a, LWRh, 28S;
+	set partition=favored;
+
+    [This defines an outgroup (only used for sumt)]
+    outgroup Ibalia;
+
+    [This sets up an evolutionary model]
+	lset app=(2,3,4,5) rates=invgamma nst=6;
+	unlink revmat=(all) pinvar=(all) shape=(all) st=(all);	
+
+end;
+

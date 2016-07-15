@@ -1,0 +1,14 @@
+#!/bin/bash
+
+EXT=mcpud
+MB_NAME=mb-double
+COMMAND="s/usebeagle=no/usebeagle=no/g; s/Outfiles/Outfiles\.$EXT/g"
+
+mkdir Outfiles.$EXT
+
+for DATASET in agtotalcore255 alcedinidae hawks nuclsu_206 nucssu_211 rpb2_199_nuc
+do
+	echo $DATASET.$EXT
+ 	sed -e "$COMMAND"  $DATASET.nex > $DATASET.$EXT.nex
+ 	time $MB_NAME $DATASET.$EXT.nex >& Outfiles.$EXT/$DATASET.log			
+done

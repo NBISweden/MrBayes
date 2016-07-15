@@ -1,0 +1,6 @@
+time mbb agtotalcore255.nex >& Outfiles.dbb/agtotalcore255.log
+time mbb alcedinidae.nex >& Outfiles.dbb/alcedinidae.log
+time mbb hawks.nex >& Outfiles.dbb/hawks.log
+time mbb nuclsu_206.nex >& Outfiles.dbb/nuclsu_206.log
+time mbb nucssu_211.nex >& Outfiles.dbb/nucssu_211.log
+time mbb rpb2_199_nuc.nex >& Outfiles.dbb/rpb2_199_nuc.log

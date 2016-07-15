@@ -1,0 +1,22 @@
+#NEXUS
+
+begin mrbayes;
+    set seed=1 swapseed=1;
+    set autoclose=yes nowarn=yes;
+
+    [Simple DNA analysis using single partition GTR+I+G model]
+    exe replicase.nex;
+    lset nst=6 rates=invgamma;
+    mcmc ngen=10000;
+
+    [Some posthoc analyses]
+    sumt;
+    sump;
+
+    [Another simple DNA analysis using HKY+I model]
+    exe primates.nex;
+    lset nst=2 rates=propinv;
+    mcmc ngen=10000;
+
+end;
+

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+EXT=bgpus
+MB_NAME=mbb
+COMMAND="s/usebeagle=no/usebeagle=yes/g; s/beagledevice=cpu/beagledevice=gpu/; s/beagleprecision=double/beagleprecision=single/g; s/Outfiles/Outfiles\.$EXT/g"
+
+mkdir Outfiles.$EXT
+
+for DATASET in alcedinidae hawks nuclsu_206 nucssu_211 rpb2_199_nuc
+do
+	echo $DATASET.$EXT
+ 	sed -e "$COMMAND"  $DATASET.nex > $DATASET.$EXT.nex
+ 	time $MB_NAME $DATASET.$EXT.nex >& Outfiles.$EXT/$DATASET.log			
+done

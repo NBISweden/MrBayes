@@ -1,0 +1,8 @@
+#NEXUS
+
+begin mrbayes;
+    mcmc ngen=1000 append=no file=crap.nex checkfreq=100;
+    mcmc ngen=2000 append=yes;
+    [sump;
+    sumt;]
+end;

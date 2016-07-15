@@ -1,0 +1,80 @@
+#NEXUS
+
+begin data;
+  dimensions ntax=27 nchar=1;
+  format datatype=dna gap=- missing=?;
+matrix
+  T10 ?
+  T9 ?
+  T6 ?
+  T7 ?
+  T8 ?
+  T2 ?
+  T1 ?
+  T3 ?
+  T4 ?
+  T5 ?
+  F13 ?
+  F12 ?
+  F8 ?
+  F9 ?
+  F11 ?
+  F10 ?
+  F14 ?
+  F15 ?
+  F16 ?
+  F3 ?
+  F2 ?
+  F1 ?
+  F5 ?
+  F6 ?
+  F7 ?
+  F4 ?
+  F0 ?
+;
+end;
+
+begin trees;
+  tree fbdtree = (((((T10:2.23659728291,(T9:2.11589373232,F13:0.0):0.12070355059):0.295156866229,F12:0.0):6.99505325574,(F8:0.0,(F9:0.0,(((T6:0.605472541891,T7:0.605472541891):1.13379411402,(T8:1.41229464622,F11:0.0):0.326972009689):2.05099035097,F10:0.0):2.67472522355):2.50015392406):0.56167125039):0.0138656141011,(F14:0.0,(F15:0.0,F16:1.39998999156):0.814315401576):0.758428176479):1.64522174992,((((T2:3.88397503817,((T1:3.18038574164,F3:1.14095543985):0.293405142925,F2:0.0):0.410184153599):0.567326312811,F1:0.0):1.12050254511,(((F5:0.0,((T3:0.0413454298989,T4:0.0413454298989):0.535443425629,F6:0.0):1.37253460239):2.21634598756,(T5:3.475218918,F7:0.0):0.690450527475):0.141088855864,F4:0.0):1.26504559475):5.17157163511,F0:0.0):0.442519237697);
+end;
+
+begin mrbayes;
+  prset statefreqpr=fixed(equal) brlenspr=clock:fossilization;
+  calibrate F0=fixed(107.433755312);
+  calibrate F1=fixed(44.5130135098);
+  calibrate F2=fixed(34.7379088457);
+  calibrate F3=fixed(20.394303018);
+  calibrate F4=fixed(43.0675830134);
+  calibrate F5=fixed(19.4932345792);
+  calibrate F6=fixed(5.76788855528);
+  calibrate F7=fixed(34.752189180);
+  calibrate F8=fixed(89.6513615449);
+  calibrate F9=fixed(64.6498223043);
+  calibrate F12=fixed(25.3175414914);
+  calibrate F13=fixed(21.1589373232);
+  calibrate F10=fixed(37.9025700688);
+  calibrate F11=fixed(14.1229464622);
+  calibrate F16=fixed(65.6793944937);
+  calibrate F14=fixed(87.822448425);
+  calibrate F15=fixed(79.6792944092);
+  prset nodeagepr=calibrated;
+
+  [ prset topologypr=fixed(fbdtree); ]
+  prset clockratepr = fixed(0.1);
+  [ prset clockvarpr=mixed; ]
+  prset speciationpr=exp(10);       [net diversification]
+  prset extinctionpr=beta(1,1);     [turnover]
+  prset fossilizationpr=beta(1,1);  [fossil sampling proportion]
+  prset samplestrat = random [2: 64.6498223043 0.0001, 20.394303018 0.001];
+  prset sampleprob=0.01;            [extant sampling rate]
+  prset treeagepr=uniform(0,1000);  [prior for tmrca]
+  mcmcp data=no nrun=1 ngen=1000000 samplefreq=200 printfr=100000;
+  [ propset NodesliderClock$prob=0;
+  propset TreeStretch$prob=0;
+  propset AddBranch$prob=0;
+  propset DelBranch$prob=0; ]
+  startvals Tau=fbdtree V=fbdtree;
+  [ mcmc;
+  sump;
+  sumt; ]
+end;

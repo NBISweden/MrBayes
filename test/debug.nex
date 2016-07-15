@@ -1,0 +1,20 @@
+#NEXUS
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes;
+    set seed=1 swapseed=1;
+    exe replicase.nex;
+    mcmc checkfreq=100 ngen=1000000;
+    mcmc checkfreq=100000 ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+    mcmc ngen=10000;
+end;
+	

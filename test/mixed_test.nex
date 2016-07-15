@@ -1,0 +1,104 @@
+#NEXUS
+
+[This file is for testing mixed models and various other options in MrBayes 3]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+    exe cynmix.nex;
+    exe cynmodel.nex;
+    exe cyntree.nex;
+
+    [Standard tree model]
+    prset brlenspr=unconstrained:exp(10);
+    exe testrun.nex;
+
+    [Test hard constraint]
+    constraint mynode = 1-30;
+    prset topologypr=constraints(mynode);
+    exe testrun.nex;
+    
+    [Test negative constraint]
+    constraint notthisnode negative = 24-26;
+    prset topologypr=constraints(notthisnode);
+    exe testrun.nex;
+    
+    [Test partial constraint]
+    constraint backbone partial = 24 25 26 27 : 3;
+    prset topologypr=constraints(notthisnode);
+    exe testrun.nex;
+ 
+    [Test combined constraints]
+    prset topologypr=constraints(mynode, backbone, notthisnode);
+    exe testrun.nex;
+ 
+    [Test fixed topology]
+    prset topologypr=fixed(gen.5000);
+    exe testrun.nex;
+
+    [Strict clock tree]
+    prset topologypr=uniform;
+    prset brlenspr = clock:unif;
+    exe testrun.nex;
+
+    [Relaxed clock tree]
+    prset brlenspr=clock:unif;
+    prset clockvarpr=cpp;
+    prset clockratepr=norm(1,0.5);
+    exe testrun.nex;
+    
+    [Unlink cpp rate]
+    unlink cpprate=(all);
+    exe testrun.nex;
+
+    [Unlink branch rates]
+    prset clockvarpr=igr;
+    unlink igrbranchlens=(all);
+    exe testrun.nex;
+
+    [Calibrate some nodes]
+    prset clockvarpr=igr; 
+    [constraint mynode = 1-30;]
+    calibrate mynode = lognormal(10,5);
+    calibrate Diplolepis = fixed(1);
+    prset topologypr = constraints(mynode);
+    prset nodeagepr = calibrated;
+    exe testrun.nex;
+
+    [Sample unlinked topologies with constraint]
+    prset brlenspr=unconstrained:exp(1);
+    unlink brlens=(all) topology=(all);
+    constraint strange = 10 20;
+    prset applyto=(3) topologypr=constraints(strange);
+    exe testrun.nex;
+    
+    [Report siterates and ancstates]
+    link topology=(all) brlens=(all);
+    prset topologypr=constraints(strange);
+    partition extra = 7: 1-162, 163-164, 165-166, Ef1a, COI, 28S, LWRh;
+    set partition = extra;
+    report applyto=(1) siterates=yes;
+    report applyto=(2,3) ancstates=yes;
+    exe testrun.nex;
+
+    [Mcmc from user tree with unusual settings]
+    exe cynmix.nex;
+    exe cynmodel.nex;
+    exe cyntree.nex;
+    mcmcp append=no ngen=1000000 nch=2 nr=4 [npert=20] diagnstat=maxstddev allcomp=yes allchains=yes stoprule=yes stopval=0.10;
+    startvals tau=gen.5000;
+    mcmc;
+   
+    [Mcmc from parsimony tree, semistandard settings]
+    mcmcp ngen=1000000 nch=8 nr=2 starttree=parsimony npert=20 diagnstat=avgstddev allcomp=no allchains=no stoprule=yes stopval=0.05;
+    mcmc;
+    
+    [Mcmc from parsimony tree, unusual settings]
+    mcmcp ngen=1000000 nch=1 nr=4 starttree=parsimony npert=20 swapfreq=10 nswaps=3 savetrees=yes stoprule=no;
+    mcmc;
+    
+    [Mcmc from random tree, unusual settings]
+    mcmcp ngen=1000000 nch=4 nr=1 starttree=random startparams=reset autotune=no swapfreq=1 nswaps=3 savetrees=yes stoprule=no;
+    mcmc;
+
+end;
+

@@ -1,0 +1,13 @@
+#NEXUS
+
+begin mrbayes;
+
+    exe tree_test.nex;
+    exe treeprior_test.nex;
+    exe model_test.nex;
+    exe mixed_test.nex;
+    exe clockprior_test.nex;
+    exe best_test.nex;
+
+end;
+

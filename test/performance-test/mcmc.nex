@@ -1,0 +1,7 @@
+#NEXUS
+
+begin mrbayes;
+
+mcmc ngen=100 nruns=1 nchains=1;
+
+end;
