@@ -5153,98 +5153,6 @@ int Move_GeneRate_Dir (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 }
 
 
-int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* change gamma/lnorm shape parameter using multiplier */
-    
-    int         i, isAPriorExp, isValidA;
-    MrBFlt      oldA, newA, minA, maxA, alphaExp=0.0, ran, factor, tuning, *rates;
-    ModelParams *mp;
-
-    /* get tuning parameter */
-    tuning = mvp[0];
-
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
-    
-    /* get minimum and maximum values for alpha */
-    if (param->paramId == SHAPE_UNI)
-        {
-        minA = mp->shapeUni[0];
-        maxA = mp->shapeUni[1];
-        if (minA < MIN_SHAPE_PARAM)
-            minA = MIN_SHAPE_PARAM;
-        if (maxA > MAX_SHAPE_PARAM)
-            maxA = MAX_SHAPE_PARAM;
-        isAPriorExp = NO;
-        }
-    else
-        {
-        minA = MIN_SHAPE_PARAM;
-        maxA = MAX_SHAPE_PARAM;
-        alphaExp = mp->shapeExp;
-        isAPriorExp = YES;
-        }
-
-    /* get old value of alpha */
-    oldA = *GetParamVals(param, chain, state[chain]);
-
-    /* change value for alpha */
-    ran = RandomNumber(seed);
-    factor = exp(tuning * (ran - 0.5));
-    newA = oldA * factor;
-
-    /* check validity */
-    isValidA = NO;
-    do  {
-        if (newA < minA)
-            newA = minA * minA / newA;
-        else if (newA > maxA)
-            newA = maxA * maxA / newA;
-        else
-            isValidA = YES;
-        } while (isValidA == NO);
-
-    /* get proposal ratio */
-    *lnProposalRatio = log(newA / oldA);
-    
-    /* get prior ratio */
-    if (isAPriorExp == NO)
-        *lnPriorRatio = 0.0;
-    else
-        *lnPriorRatio = -alphaExp * (newA - oldA);
-    
-    /* copy new alpha value back */
-    *GetParamVals(param, chain, state[chain]) = newA;
-    
-    /* now, update rate category information */
-    rates = GetParamSubVals (param, chain, state[chain]);
-    
-    if(!strcmp(mp->ratesModel, "LNorm"))
-        {
-        if (DiscreteLogNormal (rates, newA, mp->numGammaCats, 1) == ERROR)
-            return (ERROR);
-        }
-    else  /* gamma rate */
-        {
-        if (DiscreteGamma (rates, newA, newA, mp->numGammaCats, 0) == ERROR)
-            return (ERROR);
-        }
-
-    /* Set update flags for all partitions that share this alpha. Note that the conditional
-       likelihood update flags have been set before we even call this function. */
-    for (i=0; i<param->nRelParts; i++)
-        TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
-        
-    /* We need to update flags when we have a covarion model */
-    for (i=0; i<param->nRelParts; i++)
-        if (modelSettings[param->relParts[i]].nCijkParts > 1)
-            modelSettings[param->relParts[i]].upDateCijk = YES;
-
-    return (NO_ERROR);
-}
-
-
 int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     MrBFlt          oldG, newG, lambda, minG, maxG, ran, oldLnPrior, newLnPrior, curTheta;
@@ -7452,6 +7360,187 @@ int Move_LSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     return (NO_ERROR);
 }
 #endif
+
+
+/**---------------------------------------------------------------
+ |
+ |   Move_MixtureRates
+ |
+ |   Change component rates of site rate mixture using a Dirichlet
+ |   proposal. The logic is the same as for the Move_Statefreqs
+ |   proposal.
+ |
+ |   Added by Fredrik Ronquist 2016-07-15.
+ |
+ ----------------------------------------------------------------*/
+int Move_MixtureRates (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* change mixture rates */
+    int         i, nStates, isValid;
+    MrBFlt      dirichletParameters[MAX_RATE_CATS], *newRates, *oldRates, *priorAlpha, sum, alphaPi, x, y, nStatesMrBFlt;
+    
+    /* get the values we need */
+    nStates       = param->nSubValues;
+    nStatesMrBFlt = (MrBFlt)(nStates);
+    priorAlpha    = GetParamVals (param, chain, state[chain]);
+    newRates      = GetParamSubVals (param, chain, state[chain]);
+    oldRates      = GetParamSubVals (param, chain, state[chain] ^ 1);
+    
+    /* tuning parameter */
+    alphaPi = mvp[0]*nStates;
+    
+    /* multiply old values with some large number to get new values close to the old ones */
+    /* we normalize the values in the process so we get a standard simplex                */
+    for (i=0; i<nStates; i++)
+        dirichletParameters[i] = oldRates[i] * alphaPi / nStatesMrBFlt;
+    
+    do  {
+        DirichletRandomVariable (dirichletParameters, newRates, nStates, seed);
+        isValid = YES;
+        for (i=0; i<nStates; i++)
+        {
+            if (newRates[i] * nStatesMrBFlt < RATE_MIN)
+            {
+                isValid = NO;
+                break;
+            }
+        }
+    } while (isValid == NO);
+    
+    /* now we order the new rates and then multiply with number of mixture components to get the new rates */
+    qsort(newRates, (size_t)nStates, sizeof(MrBFlt), &cmpMrBFlt);
+    for (i=0; i<nStates; i++)
+        newRates[i] = newRates[i] * nStatesMrBFlt;
+    
+    /* get proposal ratio */
+    /* we ignore the ordering factor, which is the same for new and old states */
+    sum = 0.0;
+    for (i=0; i<nStates; i++)
+        sum += newRates[i]*alphaPi/nStatesMrBFlt;
+    x = LnGamma(sum);
+    for (i=0; i<nStates; i++)
+        x -= LnGamma(newRates[i]*alphaPi/nStatesMrBFlt);
+    for (i=0; i<nStates; i++)
+        x += (newRates[i]*alphaPi/nStatesMrBFlt-1.0)*log(oldRates[i]/nStatesMrBFlt);
+    sum = 0.0;
+    for (i=0; i<nStates; i++)
+        sum += oldRates[i]*alphaPi/nStatesMrBFlt;
+    y = LnGamma(sum);
+    for (i=0; i<nStates; i++)
+        y -= LnGamma(oldRates[i]*alphaPi/nStatesMrBFlt);
+    for (i=0; i<nStates; i++)
+        y += (oldRates[i]*alphaPi/nStatesMrBFlt-1.0)*log(newRates[i]/nStatesMrBFlt);
+    (*lnProposalRatio) = x - y;
+    
+    /* get prior ratio */
+    /* we ignore the ordering factor, which is the same for new and old states */
+    y = x = 0.0;                    /* the Gamma part of the prior is the same */
+    for (i=0; i<nStates; i++)
+        x += (priorAlpha[i]-1.0)*log(newRates[i]/nStatesMrBFlt);
+    for (i=0; i<nStates; i++)
+        y += (priorAlpha[i]-1.0)*log(oldRates[i]/nStatesMrBFlt);
+    (*lnPriorRatio) = x - y;
+    
+    /* Touch the entire tree */
+    for (i=0; i<param->nRelParts; i++)
+        TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+    
+    /* Set update flags for cijks for all affected partitions. If this is a simple 4 X 4 model,
+     we don't take any hit, because we will never go into a general transition probability
+     calculator. However, for many models we do want to update the cijk flag, as the transition
+     probability matrices require diagonalizing the rate matrix. */
+    for (i=0; i<param->nRelParts; i++)
+        modelSettings[param->relParts[i]].upDateCijk = YES;
+    
+    return (NO_ERROR);
+}
+
+
+/**---------------------------------------------------------------
+ |
+ |   Move_MixtureRates_Slider
+ |
+ |   Change component rates of site rate mixture using sliding
+ |   window mechanism. The logic is the same as for the
+ |   Move_StateFreqs_Slider. See that move for more detailed
+ |   description.
+ |
+ |   Added by Fredrik Ronquist 2016-07-15.
+ |
+ ----------------------------------------------------------------*/
+int Move_MixtureRates_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    int         i, j, nStates, isValid;
+    MrBFlt      delta, *newRates, *oldRates, *priorAlpha, x, y, sum, min, max, nStatesMrBFlt;
+    
+    /* get the values we need */
+    nStates = param->nSubValues;
+    nStatesMrBFlt = (MrBFlt)(nStates);
+    priorAlpha = GetParamVals(param, chain, state[chain]);
+    newRates = GetParamSubVals (param, chain, state[chain]);
+    oldRates = GetParamSubVals (param, chain, state[chain] ^ 1);
+    
+    /* get window size */
+    delta = mvp[0];
+    
+    /* choose a pair to change */
+    i = (int) (RandomNumber(seed) * nStates);
+    j = (int) (RandomNumber(seed) * (nStates-1));
+    if (i == j)
+        j = nStates-1;
+    
+    /* find the sum of these proportions */
+    sum = oldRates[i] + oldRates[j];
+    
+    /* reflect */
+    isValid = NO;
+    min = RATE_MIN;
+    max = 1.0 - min;
+    
+    x   = oldRates[i] / sum;
+    if (delta > max-min) /* we do it to avoid following long while loop in case if delta is high */
+    {
+        delta = max-min;
+    }
+    y = x + delta * (RandomNumber(seed) - 0.5);
+    
+    do {
+        if (y < min)
+            y = 2.0 * min - y;
+        else if (y > max)
+            y = 2.0 * max - y;
+        else
+            isValid = YES;
+    } while (isValid == NO);
+    
+    /* set the new values */
+    newRates[i] = y * sum;
+    newRates[j] = sum - newRates[i];
+    
+    /* get proposal ratio */
+    *lnProposalRatio = 0.0;
+    
+    /* get prior ratio */
+    /* (the Gamma part of the prior is the same) */
+    x = (priorAlpha[i]-1.0)*log(newRates[i]/nStatesMrBFlt);
+    x += (priorAlpha[j]-1.0)*log(newRates[j]/nStatesMrBFlt);
+    y = (priorAlpha[i]-1.0)*log(oldRates[i]/nStatesMrBFlt);
+    y += (priorAlpha[j]-1.0)*log(oldRates[j]/nStatesMrBFlt);
+    (*lnPriorRatio) = x - y;
+    
+    /* Set update for entire tree */
+    for (i=0; i<param->nRelParts; i++)
+        TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+    
+    /* Set update flags for cijks for all affected partitions. If this is a simple 4 X 4 model,
+     we don't take any hit, because we will never go into a general transition probability
+     calculator. However, for many models we do want to update the cijk flag, as the transition
+     probability matrices require diagonalizing the rate matrix. */
+    for (i=0; i<param->nRelParts; i++)
+        modelSettings[param->relParts[i]].upDateCijk = YES;
+    
+    return (NO_ERROR);
+}
 
 
 /* Move_NNI, change topology using NNI move */
@@ -13886,6 +13975,98 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         if (modelSettings[param->relParts[i]].nCijkParts > 1)
             modelSettings[param->relParts[i]].upDateCijk = YES;
 
+    return (NO_ERROR);
+}
+
+
+int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* change gamma/lnorm shape parameter using multiplier */
+    
+    int         i, isAPriorExp, isValidA;
+    MrBFlt      oldA, newA, minA, maxA, alphaExp=0.0, ran, factor, tuning, *rates;
+    ModelParams *mp;
+    
+    /* get tuning parameter */
+    tuning = mvp[0];
+    
+    /* get model params */
+    mp = &modelParams[param->relParts[0]];
+    
+    /* get minimum and maximum values for alpha */
+    if (param->paramId == SHAPE_UNI)
+    {
+        minA = mp->shapeUni[0];
+        maxA = mp->shapeUni[1];
+        if (minA < MIN_SHAPE_PARAM)
+            minA = MIN_SHAPE_PARAM;
+        if (maxA > MAX_SHAPE_PARAM)
+            maxA = MAX_SHAPE_PARAM;
+        isAPriorExp = NO;
+    }
+    else
+    {
+        minA = MIN_SHAPE_PARAM;
+        maxA = MAX_SHAPE_PARAM;
+        alphaExp = mp->shapeExp;
+        isAPriorExp = YES;
+    }
+    
+    /* get old value of alpha */
+    oldA = *GetParamVals(param, chain, state[chain]);
+    
+    /* change value for alpha */
+    ran = RandomNumber(seed);
+    factor = exp(tuning * (ran - 0.5));
+    newA = oldA * factor;
+    
+    /* check validity */
+    isValidA = NO;
+    do  {
+        if (newA < minA)
+            newA = minA * minA / newA;
+        else if (newA > maxA)
+            newA = maxA * maxA / newA;
+        else
+            isValidA = YES;
+    } while (isValidA == NO);
+    
+    /* get proposal ratio */
+    *lnProposalRatio = log(newA / oldA);
+    
+    /* get prior ratio */
+    if (isAPriorExp == NO)
+        *lnPriorRatio = 0.0;
+    else
+        *lnPriorRatio = -alphaExp * (newA - oldA);
+    
+    /* copy new alpha value back */
+    *GetParamVals(param, chain, state[chain]) = newA;
+    
+    /* now, update rate category information */
+    rates = GetParamSubVals (param, chain, state[chain]);
+    
+    if(!strcmp(mp->ratesModel, "LNorm"))
+    {
+        if (DiscreteLogNormal (rates, newA, mp->numGammaCats, 1) == ERROR)
+            return (ERROR);
+    }
+    else  /* gamma rate */
+    {
+        if (DiscreteGamma (rates, newA, newA, mp->numGammaCats, 0) == ERROR)
+            return (ERROR);
+    }
+    
+    /* Set update flags for all partitions that share this alpha. Note that the conditional
+     likelihood update flags have been set before we even call this function. */
+    for (i=0; i<param->nRelParts; i++)
+        TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+    
+    /* We need to update flags when we have a covarion model */
+    for (i=0; i<param->nRelParts; i++)
+        if (modelSettings[param->relParts[i]].nCijkParts > 1)
+            modelSettings[param->relParts[i]].upDateCijk = YES;
+    
     return (NO_ERROR);
 }
 

@@ -1531,7 +1531,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
 {
     int             c, i, j, nRates, posit, lastCharId;
     MrBFlt          logScaler, max, prob, *F,
-                    *oldF, *tempF, fSpace[2][MAX_GAMMA_CATS];
+                    *oldF, *tempF, fSpace[2][MAX_RATE_CATS];
     MrBFlt          *rP;
     CLFlt           freq, *lnScaler;
     ModelInfo       *m;
@@ -5584,7 +5584,7 @@ int InitAdGamma (void)
         memAllocs[ALLOC_MARKOVTIS] = YES;
     else
         {
-        MrBayesPrint ("%s   Problem allocating MarkovTis in InitAdGamma (%d MrBFlt)\n", spacer, 2 * MAX_GAMMA_CATS * MAX_GAMMA_CATS);
+        MrBayesPrint ("%s   Problem allocating MarkovTis in InitAdGamma (%d MrBFlt)\n", spacer, 2 * MAX_RATE_CATS * MAX_RATE_CATS);
         for (i=0; i<MAX_SMALL_JUMP; i++)
             if (markovTi[i] != NULL) 
                 FreeSquareDoubleMatrix (markovTi[i]);
@@ -7732,6 +7732,24 @@ MrBFlt LogPrior (int chain)
                     }
                 }
             }
+        else if (p->paramType == P_MIXTURE_RATES)
+            {
+            /* site rate mixture; first deal with dirichlet prior */
+            nStates = p->nSubValues;
+            sum = 0.0;
+            for (i=0; i<nStates; i++)
+                sum += st[i];
+            x = LnGamma(sum);
+            for (i=0; i<nStates; i++)
+                x -= LnGamma(st[i]);
+            for (i=0; i<nStates; i++)
+                x += (st[i] - 1.0)*log(sst[i]/nStates);
+                
+            /* now deal with the order statistic; we multiply the density by the number of orderings */
+            x += LnFactorial(nStates);
+
+            lnPrior += x;
+        }
         else if (p->paramType == P_SHAPE)
             {
             /* gamma/lnorm shape parameter */

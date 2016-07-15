@@ -75,6 +75,7 @@ int       IsApplicable_FiveTaxaOrMore (Param *param);
 int       IsApplicable_FourTaxaOrMore (Param *param);
 int       IsApplicable_ThreeTaxaOrMore (Param *param);
 int       IsApplicable_TreeAgeMove (Param *param);
+int       IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isApplic2);
 int       LargestMovableSubtree(Param *treeParam);
 int       NumActiveParts (void);
 int       NumInformativeHardConstraints (ModelParams *mp);
@@ -2772,6 +2773,11 @@ int DoLinkParm (char *parmName, char *tkn)
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_PI][i] = tempLinkUnlinkVec[i];
             }
+        else if (!strcmp(parmName, "Mixturerates"))
+        {
+            for (i=0; i<numCurrentDivisions; i++)
+                tempLinkUnlink[P_MIXTURE_RATES][i] = tempLinkUnlinkVec[i];
+        }
         else if (!strcmp(parmName, "Shape"))
             {
             for (i=0; i<numCurrentDivisions; i++)
@@ -3182,7 +3188,7 @@ int DoLsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-        /* set Ncat (numGammaCats) ************************************************************/
+        /* set Ngammacat (numGammaCats) ************************************************************/
         else if (!strcmp(parmName, "Ngammacat"))
             {
             if (expecting == Expecting(EQUALSIGN))
@@ -3190,7 +3196,7 @@ int DoLsetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempInt);
-                if (tempInt >= 2 && tempInt < MAX_GAMMA_CATS)
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
                     {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
@@ -3207,7 +3213,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid Ngammacat argument (should be between 2 and %d)\n", spacer, MAX_GAMMA_CATS);
+                    MrBayesPrint ("%s   Invalid Ngammacat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -3215,6 +3221,72 @@ int DoLsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
+        /* set Nlnormcat (numLnormCats) ************************************************************/
+        else if (!strcmp(parmName, "Nlnormcat"))
+        {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(NUMBER);
+            else if (expecting == Expecting(NUMBER))
+            {
+                sscanf (tkn, "%d", &tempInt);
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
+                {
+                    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                    {
+                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                        {
+                            modelParams[i].numLnormCats = tempInt;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Nlnormcat to %d\n", spacer, modelParams[i].numLnormCats);
+                            else
+                                MrBayesPrint ("%s   Setting Nlnormcat to %d for partition %d\n", spacer, modelParams[i].numLnormCats, i+1);
+                        }
+                    }
+                }
+                else
+                {
+                    MrBayesPrint ("%s   Invalid Nlnormcat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
+                    return (ERROR);
+                }
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+            else
+                return (ERROR);
+        }
+        /* set Nmixtcat (numMixtCats) ************************************************************/
+        else if (!strcmp(parmName, "Nmixtcat"))
+        {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(NUMBER);
+            else if (expecting == Expecting(NUMBER))
+            {
+                sscanf (tkn, "%d", &tempInt);
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
+                {
+                    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                    {
+                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                        {
+                            modelParams[i].numMixtCats = tempInt;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Nmixtcat to %d\n", spacer, modelParams[i].numMixtCats);
+                            else
+                                MrBayesPrint ("%s   Setting Nmixtcat to %d for partition %d\n", spacer, modelParams[i].numLnormCats, i+1);
+                        }
+                    }
+                }
+                else
+                {
+                    MrBayesPrint ("%s   Invalid Nmixtcat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
+                    return (ERROR);
+                }
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+            }
+            else
+                return (ERROR);
+        }
         /* set Usegibbs (useGibbs) *************************************************************/
         else if (!strcmp(parmName, "Usegibbs"))
             {
@@ -3298,7 +3370,7 @@ int DoLsetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempInt);
-                if (tempInt >= 2 && tempInt < MAX_GAMMA_CATS)
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
                     {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
@@ -3315,7 +3387,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid NumM10GammaCats argument (should be between 2 and %d)\n", spacer, MAX_GAMMA_CATS);
+                    MrBayesPrint ("%s   Invalid NumM10GammaCats argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -3331,7 +3403,7 @@ int DoLsetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempInt);
-                if (tempInt >= 2 && tempInt < MAX_GAMMA_CATS)
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
                     {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
@@ -3348,7 +3420,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid NumM10GammaCats argument (should be between 2 and %d)\n", spacer, MAX_GAMMA_CATS);
+                    MrBayesPrint ("%s   Invalid NumM10GammaCats argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -3364,7 +3436,7 @@ int DoLsetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempInt);
-                if (tempInt >= 2 && tempInt < MAX_GAMMA_CATS)
+                if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
                     {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
@@ -3381,7 +3453,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid Nbetacat argument (should be between 2 and %d)\n", spacer, MAX_GAMMA_CATS);
+                    MrBayesPrint ("%s   Invalid Nbetacat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
                     }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -10489,7 +10561,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
 
         /* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
         for (i=0; i<(int)strlen(tempName); i++)
-            tempName[i] = tolower(tempName[i]);
+            tempName[i] = (char)(tolower(tempName[i]));
         
         /* first check exact matches */
         nMatches = j = 0;
@@ -10498,7 +10570,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
             param = &params[i];
             SafeStrcpy (&temp, param->name);
             for (k=0; k<(int)(strlen(temp)); k++)
-                temp[k] = tolower(temp[k]);
+                temp[k] = (char)(tolower(temp[k]));
             if (strcmp(tempName,temp) == 0)
                 {
                 j = i;
@@ -10514,7 +10586,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 param = &params[i];
                 SafeStrcpy (&temp, param->name);
                 for (k=0; k<(int)strlen(temp); k++)
-                    temp[k] = tolower(temp[k]);
+                    temp[k] = (char)(tolower(temp[k]));
                 if (strncmp(tempName,temp,strlen(tempName)) == 0)
                     {
                     j = i;
@@ -10560,7 +10632,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
             {
             theValueMin = param->min;
             theValueMax = param->max;
-            if ((param->paramType == P_PI && modelParams[param->relParts[0]].dataType != STANDARD))
+            if ((param->paramType == P_PI && modelParams[param->relParts[0]].dataType != STANDARD) ||
+                param->paramType == P_MIXTURE_RATES)
                 {
                 useSubvalues = YES;
                 useIntValues = NO;
@@ -11081,6 +11154,18 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                         subValue[i] = 1.0 / mp->nStates;
                     }
                 }
+            else if (p->paramType == P_MIXTURE_RATES)
+            {
+                /* Fill in rates of site rate mixture ****************************************************************************/
+                
+                /* We use value array for dirichlet prior parameters. We use a flat prior, so this will be a series of 1.0 values */
+                for (i=0; i<m->numRateCats; ++i)
+                    value[i] = 1.0;
+                
+                /* Now fill in subvalues by setting them to be equal, Note that we use rates and not rate proportions. */
+                for (i=0; i<m->numRateCats; ++i)
+                    subValue[i] = 1.0;
+            }
             else if (p->paramType == P_SHAPE)
                 {
                 /* Fill in shape values ********************************************************************************/
@@ -13486,9 +13571,65 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the state frequencies are inapplicable for either partition, then the parameter cannot be the same */
         }
+    else if (whichParam == P_MIXTURE_RATES)
+    {
+        /* Check the mixture rate parameter for partitions 1 and 2. */
+        
+        /* Check if the model is parsimony for either partition */
+        if (!strcmp(modelParams[part1].parsModel, "Yes"))
+            *isApplic1 = NO; /* part1 has a parsimony model and mixture rate parameter does not apply */
+        if (!strcmp(modelParams[part2].parsModel, "Yes"))
+            *isApplic2 = NO; /* part2 has a parsimony model and mixture rate parameter does not apply */
+        
+        /* Check that the data are not CONTINUOUS for partitions 1 and 2 */
+        if (modelParams[part1].dataType == CONTINUOUS)
+            *isApplic1 = NO; /* the mixture rate parameter does not make sense for part1 */
+        if (modelParams[part2].dataType == CONTINUOUS)
+            *isApplic2 = NO; /* the mixture rate parameter does not make sense for part2 */
+        
+        /* Now, check that the data are the same (i.e., both nucleotide or both amino acid, or whatever). */
+        if (isFirstNucleotide != isSecondNucleotide)
+            isSame = NO; /* data are not both nucleotide */
+        else if (modelParams[part1].dataType != modelParams[part2].dataType && isFirstNucleotide == NO)
+            isSame = NO; /* data are not the same */
+        
+        /* Let's check that the mixture rate parameter is relevant for the two partitions */
+        if (strcmp(modelParams[part1].ratesModel, "Kmixture") != 0)
+            *isApplic1 = NO; /* the rate mixture parameter does not apply to part1 */
+        if (strcmp(modelParams[part2].ratesModel, "Kmixture") != 0)
+            *isApplic2 = NO; /* the rate mixture parameter does not apply to part2 */
+        
+        /* We may have a nucleotide model. Make certain the models are not of type codon. */
+        if (!strcmp(modelParams[part1].nucModel, "Codon"))
+            *isApplic1 = NO; /* we have a codon model for part1, and a shape parameter does not apply */
+        if (!strcmp(modelParams[part2].nucModel, "Codon"))
+            *isApplic2 = NO;/* we have a codon model for part2, and a shape parameter does not apply */
+        
+        /* Check that the model structure is the same for both partitions */
+        if ((!strcmp(modelParams[part1].nucModel, "4by4") || !strcmp(modelParams[part1].nucModel, "Doublet")) && !strcmp(modelParams[part2].nucModel, "Codon"))
+            isSame = NO; /* the nucleotide models are incompatible with the same rate mixture parameter */
+        if ((!strcmp(modelParams[part2].nucModel, "4by4") || !strcmp(modelParams[part2].nucModel, "Doublet")) && !strcmp(modelParams[part1].nucModel, "Codon"))
+            isSame = NO; /* the nucleotide models are incompatible with the same rate mixture parameter */
+        
+        /* if (strcmp(modelParams[part1].covarionModel, modelParams[part2].covarionModel))
+         isSame = NO; */ /* the models have different covarion struture */
+        /* NOTE: Perhaps we should allow the possiblity that the shape parameter is the same for the case
+         where one partition has a covarion model but the other does not and both datatypes are the same. */
+        
+        /* Check that the number of rate components is the same */
+        if (modelParams[part1].numMixtCats != modelParams[part2].numMixtCats)
+            isSame = NO; /* the number of rate components is not the same, so we cannot set the parameter to be equal for both partitions */
+        
+        /* Check that the priors are the same. */
+        /* For now we only allow a flat Dirichlet prior, so this is not needed */
+        
+        /* Check to see if the rate mixture parameter is inapplicable for either partition. */
+        if ((*isApplic1) == NO || (*isApplic2) == NO)
+            isSame = NO; /* if the rate mixture parameter is inapplicable for either partition, then the parameter cannot be the same */
+    }
     else if (whichParam == P_SHAPE)
         {
-        /* Check the shape parameter for partitions 1 and 2. */
+        /* Check the shape parameter for partitions 1 and 2 (this applies to the lnorm as well as various gamma models of rate variation across sites) */
         
         /* Check if the model is parsimony for either partition */
         if (!strcmp(modelParams[part1].parsModel, "Yes"))
@@ -13509,11 +13650,19 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             isSame = NO; /* data are not the same */
 
         /* Let's check that the shape parameter is even relevant for the two partitions */
-        if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Propinv"))
+        if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Propinv")
+            || !strcmp(modelParams[part1].ratesModel, "Kmixture"))
             *isApplic1 = NO; /* the shape parameter does not make sense for part1 */
-        if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Propinv"))
+        if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Propinv")
+            || !strcmp(modelParams[part2].ratesModel, "Kmixture"))
             *isApplic2 = NO; /* the shape parameter does not make sense for part2 */
-        
+
+        /* Check that the model is either lnorm or gamma for both partitions */
+        if (!strcmp(modelParams[part1].ratesModel, "Lnorm") && strcmp(modelParams[part1].ratesModel, "Lnorm") != 0)
+            isSame = NO;    /* if the first is lnorm, the second must be lnorm */
+        if (strcmp(modelParams[part1].ratesModel, "Lnorm") != 0 && !strcmp(modelParams[part1].ratesModel, "Lnorm"))
+            isSame = NO;    /* if the first is not lnorm, the second cannot be lnorm */
+
         /* We may have a nucleotide model. Make certain the models are not of type codon. */
         if (!strcmp(modelParams[part1].nucModel, "Codon"))
             *isApplic1 = NO; /* we have a codon model for part1, and a shape parameter does not apply */
@@ -13529,9 +13678,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             isSame = NO; */ /* the models have different covarion struture */
         /* NOTE: Perhaps we should allow the possiblity that the shape parameter is the same for the case
                  where one partition has a covarion model but the other does not and both datatypes are the same. */
-        
+
         /* Check that the number of rate categories is the same */
-        if (modelParams[part1].numGammaCats != modelParams[part2].numGammaCats)
+        if (!strcmp(modelParams[part1].ratesModel, "Lnorm") && (modelParams[part1].numLnormCats != modelParams[part2].numLnormCats))
+            isSame = NO; /* the number of rate categories is not the same, so we cannot set the parameter to be equal for both partitions */
+        else if (modelParams[part1].numGammaCats != modelParams[part2].numGammaCats)
             isSame = NO; /* the number of rate categories is not the same, so we cannot set the parameter to be equal for both partitions */
 
         /* Check that the priors are the same. */
@@ -13583,10 +13734,12 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 
         /* Let's check that proportion of invariable sites parameter is even relevant for the two partitions */
         if (!strcmp(modelParams[part1].ratesModel, "Equal") || !strcmp(modelParams[part1].ratesModel, "Gamma") ||
-            !strcmp(modelParams[part1].ratesModel, "LNorm") || !strcmp(modelParams[part1].ratesModel, "Adgamma"))
+            !strcmp(modelParams[part1].ratesModel, "LNorm") || !strcmp(modelParams[part1].ratesModel, "Adgamma") ||
+            !strcmp(modelParams[part1].ratesModel, "Kmixture"))
             *isApplic1 = NO; /* the proportion of invariable sites parameter does not make sense for part1 */
         if (!strcmp(modelParams[part2].ratesModel, "Equal") || !strcmp(modelParams[part2].ratesModel, "Gamma") ||
-            !strcmp(modelParams[part2].ratesModel, "LNorm") || !strcmp(modelParams[part2].ratesModel, "Adgamma"))
+            !strcmp(modelParams[part2].ratesModel, "LNorm") || !strcmp(modelParams[part2].ratesModel, "Adgamma") ||
+            !strcmp(modelParams[part1].ratesModel, "Kmixture"))
             *isApplic2 = NO; /* the proportion of invariable sites parameter does not make sense for part2 */
             
         /* It is not sensible to have a covarion model and a proportion of invariable sites */
@@ -17543,6 +17696,7 @@ int SetModelInfo (void)
         m->revMat = NULL;
         m->omega = NULL;
         m->stateFreq = NULL;
+        m->mixtureRates = NULL;
         m->shape = NULL;
         m->pInvar = NULL;
         m->correlation = NULL;
@@ -17731,9 +17885,16 @@ int SetModelInfo (void)
         else
             m->parsModelId = NO;
 
-        /* number of gamma categories */
+        /* number of rate categories */
         if (activeParams[P_SHAPE][i] > 0)
-            m->numRateCats = mp->numGammaCats;
+            {
+            if (!strcmp(mp->ratesModel, "Lnorm"))
+                m->numRateCats = mp->numLnormCats;
+            else
+                m->numRateCats = mp->numGammaCats;
+            }
+        else if (activeParams[P_MIXTURE_RATES] > 0)
+            m->numRateCats = mp->numMixtCats;
         else
             m->numRateCats = 1;
 
@@ -18627,12 +18788,43 @@ int SetModelParams (void)
                     }
                 }
             }
+        else if (j == P_MIXTURE_RATES)
+        {
+            /* Set up mixture of site rates *****************************************************************/
+            p->paramType = P_MIXTURE_RATES;
+            p->nValues = mp->numMixtCats;   /* used for the Dirichlet prior parameters */
+            p->nSubValues = mp->numMixtCats;
+            p->min = 1E-5;
+            p->max = 100;
+            for (i=0; i<numCurrentDivisions; i++)
+                if (isPartTouched[i] == YES)
+                    modelSettings[i].mixtureRates = p;
+            p->paramTypeName = "Rates of site rate mixture";
+            SafeStrcpy(&p->name, "Mixturerates");
+            SafeStrcat(&p->name, partString);
+            for (i=0; i<p->nValues; ++i)
+                {
+                if (i!=0)
+                    SafeStrcat(&p->paramHeader, "\t");
+                SafeSprintf(&tempStr, &tempStrSize, "mixturerates%s[%d]", partString, i+1);
+                SafeStrcat(&p->paramHeader, tempStr);
+                }
+            
+            /* find the parameter x prior type */
+            p->paramId = MIXTURE_RATES;
+            
+            /* always print */
+            p->printParam = YES;
+        }
         else if (j == P_SHAPE)
             {
             /* Set up shape parameter of gamma/lnorm *****************************************************************/
             p->paramType = P_SHAPE;
             p->nValues = 1;
-            p->nSubValues = mp->numGammaCats;
+            if(!strcmp(mp->ratesModel, "Lnorm"))
+                p->nSubValues = mp->numLnormCats;
+            else
+                p->nSubValues = mp->numGammaCats;
             p->min = 1E-5;
             p->max = 100;
             for (i=0; i<numCurrentDivisions; i++)
@@ -18665,7 +18857,7 @@ int SetModelParams (void)
             if (p->paramId != SHAPE_FIX)
                 p->printParam = YES;
             }
-        else if (j == P_PINVAR)
+       else if (j == P_PINVAR)
             {
             /* Set up proportion of invariable sites ****************************************************************/
             p->paramType = P_PINVAR;
@@ -20584,26 +20776,6 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_RateShape_M */
-    mt = &moveTypes[i++];
-    mt->name = "Multiplier";
-    mt->shortName = "Multiplier";
-    mt->tuningName[0] = "Multiplier tuning parameter";
-    mt->shortTuningName[0] = "lambda";
-    mt->applicableTo[0] = SHAPE_UNI;
-    mt->applicableTo[1] = SHAPE_EXP;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_RateShape_M;
-    mt->relProposalProb = 1.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
-    mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 10.0;                 /* smaller */
-    mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
-
     /* Move_GeneRate_Dir */
     mt = &moveTypes[i++];
     mt->name = "Dirichlet proposal";
@@ -20743,6 +20915,44 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
+    /* Move_MixtureRates */
+    mt = &moveTypes[i++];
+    mt->name = "Dirichlet proposal";
+    mt->shortName = "Dirichlet";
+    mt->tuningName[0] = "Dirichlet parameter";
+    mt->shortTuningName[0] = "alpha";
+    mt->applicableTo[0] = MIXTURE_RATES;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_MixtureRates;
+    mt->relProposalProb = 0.5;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 100.0; /* alphaPi per rate */
+    mt->minimum[0] = 0.001;
+    mt->maximum[0] = 10000.0;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneDirichlet;
+    mt->targetRate = 0.25;
+    
+    /* Move_MixtureRates_Slider */
+    mt = &moveTypes[i++];
+    mt->name = "Sliding window";
+    mt->shortName = "Slider";
+    mt->tuningName[0] = "Sliding window size";
+    mt->shortTuningName[0] = "delta";
+    mt->applicableTo[0] = MIXTURE_RATES;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_MixtureRates_Slider;
+    mt->relProposalProb = 0.5;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 1.0;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+    
     /* Move_NNI */
     mt = &moveTypes[i++];
     mt->name = "NNI move for parsimony trees";
@@ -21432,6 +21642,26 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
+    /* Move_RateShape_M */
+    mt = &moveTypes[i++];
+    mt->name = "Multiplier";
+    mt->shortName = "Multiplier";
+    mt->tuningName[0] = "Multiplier tuning parameter";
+    mt->shortTuningName[0] = "lambda";
+    mt->applicableTo[0] = SHAPE_UNI;
+    mt->applicableTo[1] = SHAPE_EXP;
+    mt->nApplicable = 2;
+    mt->moveFxn = &Move_RateShape_M;
+    mt->relProposalProb = 1.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+    mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 10.0;                 /* smaller */
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneMultiplier;
+    mt->targetRate = 0.25;
+    
     /* Move_Revmat_Dir */
     mt = &moveTypes[i++];
     mt->name = "Dirichlet proposal";
@@ -22854,6 +23084,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             {
             MrBayesPrint ("%s      Statefreq         ", spacer);
             }
+        else if (j == P_MIXTURE_RATES)
+        {
+            MrBayesPrint ("%s      Mixturerates      ", spacer);
+        }
         else if (j == P_SHAPE)
             {
             MrBayesPrint ("%s      Shape             ", spacer);
@@ -23179,6 +23413,10 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 else
                     MrBayesPrint ("%s            Prior      = Fixed\n", spacer);
                 }
+            }
+        else if (j == P_MIXTURE_RATES)
+            {
+            MrBayesPrint ("%s            Prior      = Ordered flat Dirichlet distribution\n", spacer);
             }
         else if (j == P_SHAPE)
             {
