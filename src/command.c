@@ -8950,6 +8950,7 @@ char *command_generator(const char *text, int state)
 {
     static int list_index, len;
     char *command;
+    char *dupstring;
 
     if (state==0) 
         {
@@ -8961,7 +8962,9 @@ char *command_generator(const char *text, int state)
         list_index++;
         if (StrCmpCaseInsensitiveLen(command, text, len) == 0)
             /* memory is freed by the readline library so we need a strdup here */
-            return strdup(command);
+            dupstring = SafeMalloc(strlen(command) + 1);
+            strcpy(dupstring, command);
+            return dupstring;
         }
     return (char *)NULL;
 }
