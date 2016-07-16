@@ -8946,27 +8946,32 @@ BitsLong Expecting (int y)
 
 #ifdef HAVE_LIBREADLINE
 /* This function is for commandline substitution: first word is always a command */
-char *command_generator(const char *text, int state)
+char *command_generator (const char *text, int state)
 {
-    static int list_index, len;
-    char *command;
-    char *dupstring;
+    static int      list_index, len;
+    char           *command;
+    char           *dupstring;
 
-    if (state==0) 
+    if (state == 0)
         {
-        list_index=0;
-        len= (int) strlen(text);
+        list_index = 0;
+        len = (int) strlen (text);
         }
-    while ((command=commands[list_index].string)!=NULL) 
+
+    while ((command = commands[list_index].string) != NULL)
         {
         list_index++;
-        if (StrCmpCaseInsensitiveLen(command, text, len) == 0)
+
+        if (StrCmpCaseInsensitiveLen (command, text, len) == 0)
+            {
             /* memory is freed by the readline library so we need a strdup here */
-            dupstring = SafeMalloc(strlen(command) + 1);
-            strcpy(dupstring, command);
+            dupstring = SafeMalloc (strlen (command) + 1);
+            strcpy (dupstring, command);
             return dupstring;
+            }
         }
-    return (char *)NULL;
+
+    return NULL;
 }
 #endif
 
