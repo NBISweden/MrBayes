@@ -4,13 +4,23 @@ This is the GitHub repository for MrBayes, a program used for Bayesian
 inference of phylogeny.
 
 
-    Build instructions, very very short version:
+Build instructions, very very short version:
 
     1. Clone the Git repository.
     2. Refer to the document called "INSTALL" for further information.
 
 
-Currently, we are in the process of moving everything over from
+Current repository directory layout:
+
+    .
+    ├── doc                     : Manual
+    │   └── tutorial            : A tutorial
+    ├── examples                : Example input data sets
+    ├── src                     : C source code
+    └── test                    : Scripts and data for testing
+
+
+We are currently in the process of moving everything over from
 Subversion to Git, and from SourceForge to GitHub.  The code, web
 pages and PDF manuals are already available here, but the bug tracking
 database and mailing list are still to be processed.  Also, the MrBayes
@@ -23,14 +33,17 @@ pages.
 
 
 Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0
-onwards.  As soon as issue #1 has been resolved, the 'master' branch
-should only contain releasable (stable, working) code.  The 'develop'
-branch should hopefully, at all times, contain working development
-code that at least compiles.  Apart from simple fixes, new development
-happens on feature branches off the 'develop' branch, and are merged
-back into 'develop' when finished.  This more or less follows the
-"git-flow" branching model.  The orphaned 'gh-pages' branch contains the
-web site (only).
+onwards.
+
+The 'master' branch contains releases.
+
+The 'develop' branch should hopefully, at all times, contain working
+development code that at least compiles.  Apart from simple fixes, new
+development happens on feature branches off the 'develop' branch, and
+are merged back into 'develop' when finished.  This more or less follows
+the "git-flow" branching model.
+
+The orphaned 'gh-pages' branch contains the web site (only).
 
 After release 3.2.6 (November 2015), MrBayes entered "maintenance mode",
 and its care has been passed over to NBIS (National Bioinformatics
