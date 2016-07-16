@@ -1926,7 +1926,7 @@ int DoCharStat (void)
                 fflush (stdin);
                 if (fgets (tempName, 100, stdin) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 }
             }
