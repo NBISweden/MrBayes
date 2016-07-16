@@ -15,15 +15,15 @@ AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"], [Host triplet])
 AC_DEFINE_UNQUOTED([HOST_CPU], ["$host_cpu"], [Host CPU type])
 
 # NB: DEFAULT CFLAGS:
-#     Using --enable-debug sets CFLAGS to "-g -O2"  ($DEBUG_CFLAGS)
-#     Not using --enable-debug sets CFLAGS to "-O3 -DNDEBUG" ($RELEASE_CFLAGS)
-#     "-std=c99 -pedantic" will always be added ($DEFAULT_CFLAGS)
+#     Using --enable-debug sets CFLAGS to "-g -O2"  ($debug_cflags)
+#     Not using --enable-debug sets CFLAGS to "-O3 -DNDEBUG" ($release_cflags)
+#     "-std=c99 -pedantic" will always be added ($default_cflags)
 #
 # (warning flags are added by the AX_CFLAGS_WARN_ALL macro further down)
 
-DEBUG_CFLAGS="-g -O2"
-RELEASE_CFLAGS="-O3 -DNDEBUG"
-DEFAULT_CFLAGS="-std=c99 -pedantic"
+debug_cflags="-g -O2"
+release_cflags="-O3 -DNDEBUG"
+default_cflags="-std=c99 -pedantic"
 
 # Optional feature: debug
 
@@ -36,11 +36,12 @@ AC_ARG_ENABLE([debug],
 # Handle CFLAGS at once, before AX_PROG_CC_MPI further down.
 
 AS_IF([test "x$enable_debug" = "xyes"],
-    [CFLAGS="$DEBUG_CFLAGS"],
-    [CFLAGS="$RELEASE_CFLAGS"])
+    [our_cflags="$debug_cflags"],
+    [our_cflags="$release_cflags"])
 
-# Add DEFAULT_CFLAGS to the end of CFLAGS.
-CFLAGS="$CFLAGS $DEFAULT_CFLAGS"
+# Use our_cflags, the default_cflags,
+# plus any CFLAGS given to us by the user.
+CFLAGS="$our_cflags $default_cflags $CFLAGS"
 
 # Optional features: SSE, AVX, FMA
 
