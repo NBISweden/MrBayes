@@ -47,7 +47,7 @@
 #endif
 
 #define NUMCOMMANDS                     62    /* The total number of commands in the program  */
-#define NUMPARAMS                       276   /* The total number of parameters  */
+#define NUMPARAMS                       278   /* The total number of parameters  */
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -313,7 +313,7 @@ CmdType     commands[] =
             { 22,            "Link",  NO,            DoLink, 30,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,
                                                                                                                                                      270,273,274},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
-            { 24,            "Lset",  NO,            DoLset, 16,                                             {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
+            { 24,            "Lset",  NO,            DoLset, 18,                                     {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189,276,277},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,          "Manual",  NO,          DoManual,  1,                                                                                            {126},       36,                  "Prints a command reference to a text file",  IN_CMD, SHOW },
             { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},649252640,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
             { 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
@@ -10367,7 +10367,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                              at a site is drawn from a gamma distribution.      \n");
         MrBayesPrint ("                              The gamma distribution has a single parameter      \n");
         MrBayesPrint ("                              that describes how much rates vary.                \n");
-        MrBayesPrint ("                * lnorm    -- Log Normal-distributed rates across sites. The     \n");
+        MrBayesPrint ("                * lnorm    -- Lognormal-distributed rates across sites. The      \n");
         MrBayesPrint ("                              rate at a site is drawn from a lognormal           \n");
         MrBayesPrint ("                              distribution. the lognormal distribiton has a      \n");
         MrBayesPrint ("                              single parameter, sigma (SD) that describes how    \n");
@@ -10379,6 +10379,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                * invgamma -- A proportion of the sites are invariable while     \n");
         MrBayesPrint ("                              the rate for the remaining sites are drawn from    \n");
         MrBayesPrint ("                              a gamma distribution.                              \n");
+        MrBayesPrint ("                * kmixture -- Site rates come from a mixture with k categories.  \n");
+        MrBayesPrint ("                              Category rates are drawn from an ordered flat      \n");
+        MrBayesPrint ("                              Dirichlet distribution with mean rather than sum   \n");
+        MrBayesPrint ("                              equal to 1.0.                                      \n");
         MrBayesPrint ("                Note that MrBayes versions 2.0 and earlier supported options     \n");
         MrBayesPrint ("                that allowed site specific rates (e.g., ssgamma). In versions    \n");
         MrBayesPrint ("                3.0 and later, site specific rates are allowed, but set using    \n");
@@ -10394,9 +10398,12 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
         MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
         MrBayesPrint ("                approximating the continuous gamma.                              \n");
-        MrBayesPrint ("                It is also used to set the number of rate categories for the     \n");
-        MrBayesPrint ("                lognormal distribution to avoid changing too much of the code,   \n");
-        MrBayesPrint ("                although the name is bad (should add Nlnormcat in future).       \n");
+        MrBayesPrint ("   Nlnormcat -- Used to set the number of discrete categories used for the ap-   \n");
+        MrBayesPrint ("                proximation of the lognormal distribution, in the same way as    \n");
+        MrBayesPrint ("                the Ngammacat setting for the discrete gamma approximation.      \n");
+        MrBayesPrint ("                Default value is 4.                                              \n");
+        MrBayesPrint ("   Nmixtcat  -- Used to set the number of components in the k-mixture model of   \n");
+        MrBayesPrint ("                rate variation across sites. Default value is 4.                 \n");
 #if 0
         /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
         MrBayesPrint ("   Usegibbs  -- Specifies whether site probabilities under the discrete gamma    \n");
@@ -10499,8 +10506,10 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("                Ciliate/Echinoderm/Euplotid/Metmt       %s                       \n", mp->geneticCode);
             MrBayesPrint ("   Ploidy       Haploid/Diploid/Zlinked                 %s                       \n", mp->ploidy);
             MrBayesPrint ("   Rates        Equal/Gamma/LNorm/Propinv/                                       \n");
-            MrBayesPrint ("                Invgamma/Adgamma                        %s                       \n", mp->ratesModel);
+            MrBayesPrint ("                Invgamma/Adgamma/Kmixture               %s                       \n", mp->ratesModel);
             MrBayesPrint ("   Ngammacat    <number>                                %d                       \n", mp->numGammaCats);
+            MrBayesPrint ("   Nlnormcat    <number>                                %d                       \n", mp->numLnormCats);
+            MrBayesPrint ("   Nmixtcat     <number>                                %d                       \n", mp->numMixtCats);
 #if 0
 /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
             MrBayesPrint ("   Usegibbs     Yes/No                                  %s                       \n", mp->useGibbs);
@@ -14341,7 +14350,7 @@ void SetUpParms (void)
     PARAM  (49, "Xxxxxxxxxx",     DoTaxasetParm,     "\0");
     PARAM  (50, "Xxxxxxxxxx",     DoHelpParm,        "\0");
     PARAM  (51, "Applyto",        DoLsetParm,        "\0");
-    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|LNorm|Propinv|Invgamma|Adgamma|\0");
+    PARAM  (52, "Rates",          DoLsetParm,        "Equal|Gamma|LNorm|Propinv|Invgamma|Adgamma|Kmixture|\0");
     PARAM  (53, "Covarion",       DoLsetParm,        "Yes|No|\0");
     PARAM  (54, "Applyto",        DoPrsetParm,       "\0");
     PARAM  (55, "Tratio",         DoLinkParm,        "\0");
@@ -14565,9 +14574,11 @@ void SetUpParms (void)
     PARAM (273, "Mixedvar",       DoLinkParm,        "\0");
     PARAM (274, "Mixedbrchrates", DoLinkParm,        "\0");
     PARAM (275, "Beagleresource", DoSetParm,         "\0");
+    PARAM (276, "Nlnormcat",      DoLsetParm,        "\0");
+    PARAM (277, "Nmixtcat",       DoLsetParm,        "\0");
 
     /* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 276; one more than last index) at the top of this file. */
+            NUMPARAMS (now 278; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 
