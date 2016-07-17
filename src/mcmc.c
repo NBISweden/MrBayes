@@ -4103,7 +4103,7 @@ int ExtendChainQuery ()
 
                 if (fgets (s, 100, stdin) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 sscanf (s, "%d", &additionalCycles);
 
@@ -4132,7 +4132,7 @@ int ExtendChainQuery ()
 
             if (fgets (s, 20, stdin) == NULL)
                 {
-                printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                 }
             sscanf (s, "%d", &additionalCycles);
 
@@ -15460,7 +15460,7 @@ int ConfirmAbortRun(void)
     MrBayesPrint("   Do you really want to stop the run (y/n)?");
     if (fgets (line,98,stdin) == NULL)
         {
-        printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+        printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
         }
     for (i=0; (c=line[i])!='\0' && !isgraph(c); i++)
         ;

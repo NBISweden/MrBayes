@@ -3785,7 +3785,7 @@ int DoCompareTree (void)
         {
         if (fgets (s, longestLineLength, fp) == NULL)
             {
-            printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+            printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
             }
         }
         
@@ -3823,7 +3823,7 @@ int DoCompareTree (void)
         {
         if (fgets (s, longestLineLength, fp) == NULL)
             {
-            printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+            printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
             }
         /*MrBayesPrint ("%s", s);*/
         if (ParseCommand (s) == ERROR)
@@ -3851,7 +3851,7 @@ int DoCompareTree (void)
         {
         if (fgets (s, longestLineLength, fp) == NULL)
             {
-            printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+            printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
             }
         }
         
@@ -3873,7 +3873,7 @@ int DoCompareTree (void)
         {
         if (fgets (s, longestLineLength, fp) == NULL)
             {
-            printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+            printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
             }
         /*MrBayesPrint ("%s", s);*/
         if (ParseCommand (s) == ERROR)
@@ -5042,7 +5042,7 @@ int DoSumt (void)
                 {
                 if (fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 }
 
@@ -5079,7 +5079,7 @@ int DoSumt (void)
                 {
                 if (fgets (s, sumtFileInfo.longestLineLength-2, fp) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 /*MrBayesPrint ("%s", s);*/
                 if (ParseCommand (s) == ERROR)

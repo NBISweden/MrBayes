@@ -1926,7 +1926,7 @@ int DoCharStat (void)
                 fflush (stdin);
                 if (fgets (tempName, 100, stdin) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 }
             }
@@ -8946,24 +8946,32 @@ BitsLong Expecting (int y)
 
 #ifdef HAVE_LIBREADLINE
 /* This function is for commandline substitution: first word is always a command */
-char *command_generator(const char *text, int state)
+char *command_generator (const char *text, int state)
 {
-    static int list_index, len;
-    char *command;
+    static int      list_index, len;
+    char           *command;
+    char           *dupstring;
 
-    if (state==0) 
+    if (state == 0)
         {
-        list_index=0;
-        len= (int) strlen(text);
+        list_index = 0;
+        len = (int) strlen (text);
         }
-    while ((command=commands[list_index].string)!=NULL) 
+
+    while ((command = commands[list_index].string) != NULL)
         {
         list_index++;
-        if (StrCmpCaseInsensitiveLen(command, text, len) == 0)
+
+        if (StrCmpCaseInsensitiveLen (command, text, len) == 0)
+            {
             /* memory is freed by the readline library so we need a strdup here */
-            return strdup(command);
+            dupstring = SafeMalloc (strlen (command) + 1);
+            strcpy (dupstring, command);
+            return dupstring;
+            }
         }
-    return (char *)NULL;
+
+    return NULL;
 }
 #endif
 
