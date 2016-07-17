@@ -267,4 +267,7 @@ MrBFlt    QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int       DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt    LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
+/* qsort utility function */
+int       cmpMrBFlt(const void *a, const void *b);
+
 #endif  /* __UTILS_H__ */

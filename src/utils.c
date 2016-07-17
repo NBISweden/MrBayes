@@ -42,7 +42,7 @@
 #include "model.h"
 #include "utils.h"
 
-#define MAX_GAMMA_CATS                      20
+#define MAX_RATE_CATS                      20
 #define POINTGAMMA(prob,alpha,beta)         PointChi2(prob,2.0*(alpha))/(2.0*(beta))
 #define PAI2                                6.283185307
 #define TINY                                1.0e-20
@@ -130,6 +130,22 @@ void    TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBF
 MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
+
+
+/* qsort compare function for MrBFlt */
+int cmpMrBFlt(const void *a, const void *b)
+{
+    MrBFlt  x = *((MrBFlt *)(a));
+    MrBFlt  y = *((MrBFlt *)(b));
+    
+    if ( x < y )
+        return -1;
+    else if ( x == y )
+        return 0;
+    else
+        return 1;
+}
+
 
 /* AddBitfield: Add bitfield to list of bitfields. The function uses global variable nLongsNeeded. */
 int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
@@ -8818,7 +8834,7 @@ int **AllocateSquareIntegerMatrix (int dim)
 int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
 {
     int         i, j, i1, i2;
-    MrBFlt      point[MAX_GAMMA_CATS], x, y, large = 20.0, sum;
+    MrBFlt      point[MAX_RATE_CATS], x, y, large = 20.0, sum;
 
     for (i=0; i<K-1; i++) 
         point[i] = PointNormal ((i + 1.0) / K);

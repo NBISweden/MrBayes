@@ -315,8 +315,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define MIN_SHAPE_PARAM         0.00001f
 #define MAX_SHAPE_PARAM         100.0f
 #define MAX_SITE_RATE           10.0f
-#define MAX_GAMMA_CATS          20
-#define MAX_GAMMA_CATS_SQUARED  400
+#define MAX_RATE_CATS           20
+#define MAX_RATE_CATS_SQUARED   400
 #define BRLENS_MIN              0.00000001f  // 1E-8f
 #define BRLENS_MAX              100.0f
 /* BRLENS_MIN must be bigger than TIME_MIN */
@@ -430,7 +430,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              31
+#define NUM_LINKED              32
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -462,6 +462,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_GENETREERATE          28
 #define P_MIXEDVAR              29
 #define P_MIXEDBRCHRATES        30
+#define P_MIXTURE_RATES         31
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
@@ -867,6 +868,7 @@ typedef struct s_launch_struct
 #define MIXEDVAR_EXP                    144
 #define MIXEDVAR_UNI                    145
 #define MIXEDBRCHRATES                  146
+#define MIXTURE_RATES                   147
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -987,6 +989,8 @@ typedef struct model
     char        omegaVar[100];     /* type of omega variation model                */
     char        ratesModel[100];   /* rates across sites model                     */
     int         numGammaCats;      /* number of categories for gamma approximation */
+    int         numLnormCats;      /* number of categories for lnorm approximation */
+    int         numMixtCats;       /* number of components of rate mixture         */
     char        useGibbs[100];     /* flags whether Gibbs sampling of discrete gamma is used */
     int         gibbsFreq;         /* frequency of Gibbs resampling of discrete gamma */
 
@@ -1220,7 +1224,7 @@ typedef struct modelinfo
     int         parsModelId;                /* is parsimony model used YES/NO           */
 
     /* Specific model information */
-    int         numGammaCats;               /* number of gamma cats (1 if inapplic.)    */
+    int         numRateCats;                /* number of rate cats (1 if inapplic.)    */
     int         numBetaCats;                /* number of beta cats (1 if inapplic.)     */
     int         numOmegaCats;               /* number of omega cats (1 if inapplic.)    */
     int         numTiCats;                  /* number of cats needing different tis     */
@@ -1232,6 +1236,7 @@ typedef struct modelinfo
     Param       *revMat;                    /* ptr to revMat used in model              */
     Param       *omega;                     /* ptr to omega used in model               */
     Param       *stateFreq;                 /* ptr to statFreq used in model            */
+    Param       *mixtureRates;              /* ptr to site rate mixture used in model   */
     Param       *shape;                     /* ptr to shape used in model               */
     Param       *pInvar;                    /* ptr to pInvar used in model              */
     Param       *correlation;               /* ptr to correlation used in model         */

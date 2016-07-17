@@ -567,6 +567,8 @@ int InitializeMrBayes (void)
     strcpy(defaultModel.omegaVar, "Equal");             /* omega variation                              */
     strcpy(defaultModel.ratesModel, "Equal");           /* rates across sites model                     */
     defaultModel.numGammaCats = 4;                      /* number of categories for gamma approximation */
+    defaultModel.numLnormCats = 4;                      /* number of categories for lnorm approximation */
+    defaultModel.numMixtCats = 4;                       /* number of components in rate mixture         */
     strcpy(defaultModel.useGibbs,"No");                 /* do not use Gibbs sampling of rate cats by default */
     defaultModel.gibbsFreq = 100;                       /* default Gibbs sampling frequency of rate cats*/
     defaultModel.numBetaCats = 5;                       /* number of categories for beta approximation  */
