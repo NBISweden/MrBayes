@@ -8380,22 +8380,15 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |
  |   LnBirthDeathPriorPrDiversity
  |
- |   Eq.5 in Hohna et al. 2011 MBE
+ |   Eq.A1 in Hohna et al. 2011 MBE
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu, nt_min;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, nt_min, tmrca, ln_p0_t1;
     TreeNode        *p;
-    
-    /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
-    if (!nt)
-        {
-        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
-        return (ERROR);
-        }
+    Model           *mp;
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -8404,13 +8397,28 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     n      = t->nIntNodes+1;
     m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for diversity sampling not implemented\n");
+        return (ERROR);
+        }
+
+    /* allocate space for the speciation times */
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
+    if (!nt)
+        {
+        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
+        return (ERROR);
+        }
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
 
     /* find the youngest interal node */
     nt_min = nt[0];
@@ -8419,26 +8427,22 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         if (nt_min > nt[i])
             nt_min = nt[i];
         }
-    
-    /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate
-        MrBFlt p0_t1;
-        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
-        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - p0_t1);
-        for (i=0; i<t->nIntNodes-1; i++)
-            (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        MrBayesPrint ("\n   ERROR: Critical branchin process for diversity sampling not implemented\n");
-        return (ERROR);
-        }
 
-    /* condition on tmrca ??? */
+    ln_p0_t1 = LnP0(tmrca, lambda, mu);
+    (*prob) = LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant, the binomial coefficient
+    (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
+    (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - ln_p0_t1);
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
+    
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
@@ -8451,22 +8455,15 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  |   LnBirthDeathPriorPrCluster
  |
- |   Eq.7 in Hohna et al. 2011 MBE
+ |   Eq.A2 in Hohna et al. 2011 MBE
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu, nt_max;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, nt_2, tmrca, ln_p0_t1;
     TreeNode        *p;
-    
-    /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
-    if (!nt)
-        {
-        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
-        return (ERROR);
-        }
+    Model           *mp;
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -8475,41 +8472,52 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     n      = t->nIntNodes+1;
     m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for cluster sampling not implemented\n");
+        return (ERROR);
+        }
+
+    /* allocate space for the speciation times */
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
+    if (!nt)
+        {
+        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
+        return (ERROR);
+        }
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
-    
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
+
     /* find the second oldest interal node */
-    nt_max = nt[0];
+    nt_2 = nt[0];
     for (i=0; i<t->nIntNodes-1; i++)
         {
-        if (nt_max < nt[i])
-            nt_max = nt[i];
+        if (nt_2 < nt[i])
+            nt_2 = nt[i];
         }
 
-    /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate
-        MrBFlt p0_t1;
-        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
-        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt_max, lambda, mu) - p0_t1);
-        for (i=0; i<t->nIntNodes-1; i++)
-            (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        MrBayesPrint ("\n   ERROR: Critical branchin process for cluster sampling not implemented\n");
-        return (ERROR);
-        }
-
-    /* condition on tmrca ??? */
+    ln_p0_t1 = LnP0(tmrca, lambda, mu);
+    (*prob) = LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant, the binomial coefficient
+    (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
+    (*prob) += (m-n) * log(1.0 - exp(LnP0(nt_2, lambda, mu))/exp(ln_p0_t1));
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
+    
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
