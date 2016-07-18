@@ -1008,7 +1008,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
             nSitesOfPat_Beagle[c] = numSitesOfPat[m->compCharStart + c];
         beagleSetPatternWeights(m->beagleInstance,
                                 nSitesOfPat_Beagle);
-        SafeFree ((void **)(&nSitesOfPat_Beagle));
+        SafeFree ((void *)(&nSitesOfPat_Beagle));
         }
 
     /* find root log likelihoods and scalers */

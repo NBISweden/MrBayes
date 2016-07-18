@@ -1849,8 +1849,8 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
             {
             MrBayesPrint ("%s   Expected %d headers but found %d headers\n", spacer, fileInfo->numColumns, *nHeaders);
             for (i=0; i<*nHeaders; i++)
-                SafeFree ((void **) &((*headerNames)[i]));
-            SafeFree ((void **) &(*headerNames));
+                SafeFree ((void *) &((*headerNames)[i]));
+            SafeFree ((void *) &(*headerNames));
             *nHeaders=0;
             goto errorExit;
             }
@@ -2623,7 +2623,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     fclose (fp);
     free (sampleCounts);
-    SafeFree ((void **)&temp);
+    SafeFree ((void *)&temp);
 
     return (NO_ERROR);
 }
@@ -5789,7 +5789,7 @@ int DoSumt (void)
 
     expecting = Expecting(COMMAND);
     inSumtCommand = NO;
-    SafeFree ((void **)&tempStr);
+    SafeFree ((void *)&tempStr);
 
     return (NO_ERROR);
     
@@ -5823,7 +5823,7 @@ int DoSumt (void)
 
         expecting = Expecting(COMMAND);
         inSumtCommand = NO;
-        SafeFree ((void **)&tempStr);
+        SafeFree ((void *)&tempStr);
 
         return (ERROR);
 }

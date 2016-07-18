@@ -4390,8 +4390,8 @@ int DoPropsetParm (char *parmName, char *tkn)
     else
         return (ERROR);
 
-    SafeFree ((void **)&temp);
-    SafeFree ((void **)&localTkn);
+    SafeFree ((void *)&temp);
+    SafeFree ((void *)&localTkn);
     return (NO_ERROR);
 }
 
@@ -10663,7 +10663,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
     else
         return (ERROR);
 
-    SafeFree ((void **)&temp);
+    SafeFree ((void *)&temp);
     return (NO_ERROR);
 }
 
@@ -12318,7 +12318,7 @@ int FreeModel (void)
         {
         for (i=0; i<numParams; i++)
             {
-            SafeFree ((void **)&params[i].name);
+            SafeFree ((void *)&params[i].name);
             if (params[i].paramHeader)
                 {
                 free (params[i].paramHeader);
@@ -18112,7 +18112,7 @@ int SetModelParams (void)
         {
         for (i=0; i<numParams; i++)
             {
-            SafeFree ((void **)&params[i].name);
+            SafeFree ((void *)&params[i].name);
             if (params[i].paramHeader)
                 {
                 free (params[i].paramHeader);
@@ -19837,7 +19837,7 @@ int SetModelParams (void)
         }
     free (tempStr);
     free (isPartTouched);
-    SafeFree ((void **)&partString);
+    SafeFree ((void *)&partString);
 
     return (NO_ERROR);
 }
