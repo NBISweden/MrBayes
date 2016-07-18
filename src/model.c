@@ -10244,8 +10244,9 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             }
                         if (theTree->isClock == YES && modelParams[theTree->relParts[0]].treeAgePr.prior == fixed)
                             {
-                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform")
-                                || !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
+                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform") ||
+                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") ||
+                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
                                 ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgePr.priorParams[0]);
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
@@ -11730,12 +11731,13 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 }
             }
         else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
+                                                                        !strcmp(modelParams[tree->relParts[0]].clockPr,"Birthdeath") ||
                                                                         !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
             {
             assert (tree->isClock == YES);
             clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state);
             returnVal = InitCalibratedBrlens (tree, clockRate, seed);
-            if (IsClockSatisfied (tree,0.0001) == NO)
+            if (IsClockSatisfied (tree, 0.0001) == NO)
                 {
                 MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
                 return (ERROR);
@@ -14365,7 +14367,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
             *isApplic2 = NO;
         
-        /* Check that the branch length prior is a clock:birthdeath or clock:fossilization for both partitions. */
+        /* Check that the branch length prior is a clock:fossilization for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
             *isApplic1 = NO;
         if (strcmp(modelParams[part2].brlensPr, "Clock"))
@@ -23571,13 +23573,11 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 else if (!strcmp(mp->brlensPr, "Clock"))
                     {
                     MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
-                    if ((!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) && !strcmp(mp->nodeAgePr,"Unconstrained"))
+                    if ((!strcmp(mp->clockPr, "Uniform") ||
+                         !strcmp(mp->clockPr, "Birthdeath") ||
+                         !strcmp(mp->clockPr, "Fossilization")) && !strcmp(mp->nodeAgePr, "Unconstrained"))
                         {
                         MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
-                        }
-                    else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
-                        {
-                        MrBayesPrint ("%s                         Tree age has a Uniform(0,infinity) distribution\n", spacer);
                         }
                     if (!strcmp(mp->nodeAgePr,"Calibrated"))
                         {
@@ -23619,13 +23619,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             }
                         if (b == 0) /* we need to use default calibration for root for uniform and birthdeath */
                             {
-                            if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))
+                            if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr, "Birthdeath") || !strcmp(mp->clockPr,"Fossilization"))
                                 {
                                 MrBayesPrint ("%s                         -- Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
-                                }
-                            else if (!strcmp(mp->clockPr,"Birthdeath"))
-                                {
-                                MrBayesPrint ("%s                         -- Tree age has a Uniform(0,infinity) distribution\n", spacer);
                                 }
                             }
                         }

@@ -4066,7 +4066,9 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
         treeAgeMin = t->root->left->calibration->min;
         treeAgeMax = t->root->left->calibration->max;
         }
-    else if (!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization"))
+    else if (!strcmp(mp->clockPr, "Uniform") ||
+             !strcmp(mp->clockPr, "Birthdeath") ||
+             !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
             treeAgeMin = mp->treeAgePr.min;
@@ -4101,7 +4103,9 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                     p->nodeDepth = p->left->nodeDepth;
                 else
                     p->nodeDepth = p->right->nodeDepth;
-                if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))))
+                if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr, "Uniform") ||
+                                                                  !strcmp(mp->clockPr, "Birthdeath") ||
+                                                                  !strcmp(mp->clockPr, "Fossilization"))))
                     {
                     if (p->isDated == NO)
                         calibrationPtr = &mp->treeAgePr;
