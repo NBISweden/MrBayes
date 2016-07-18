@@ -8538,23 +8538,12 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d)
     return (log(p0t));
 }
 
-/*
- |
- | The probability of having zero lineages remaining after time t in the
- | birth-death process.
- |
- | param: t - speciation time
- | param: b - birth rate
- | param: d - death rate
- | param: f - sample frequency
- | return: log probability of zero remaining lineages
- |
- */
+/* The probability that a lineage at time t has 0 sampled descendants at time 0 */
 MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
     MrBFlt      p0t;
     
-    p0t = (f*d + (b*(1.0-f) - d)*exp((d-b)*t)) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+    p0t = (f*d + (b*(1.0-f) -d)*exp((d-b)*t)) / (f*b + (b*(1.0-f) -d)*exp((d-b)*t));
     
     return (log(p0t));
 }
@@ -8572,34 +8561,23 @@ MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
  */
 MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
 {
-    MrBFlt      p0t;
+    MrBFlt      p1t;
     
-    p0t = 2.0 * log(b-d) - (b-d)*t;
+    p1t = 2.0*log(b-d) - (b-d)*t;
     
-    p0t -= 2.0 * log(b - d*exp((d-b)*t));
+    p1t -= 2.0*log(b -d*exp((d-b)*t));
     
-    return p0t;
+    return p1t;
 }
 
-/*
- |
- | The probability of having one lineage remaining after time t
- | in the birth-death process.
- |
- | param: t - speciation time
- | param: b - birth rate
- | param: d - death rate
- | param: f - sample frequency
- | return: log probability of one remaining lineage
- |
- */
+/* The probability that a lineage at time t has 1 sampled descendants at time 0 */
 MrBFlt LnP1Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
-    MrBFlt      p0t;
+    MrBFlt      p1t;
     
-    p0t = (b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+    p1t = (b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
     
-    return (2.0*log(p0t) + (d-b)*t);
+    return (2.0*log(p1t) + log(f) - (b-d)*t);
 }
 
 
