@@ -7697,34 +7697,42 @@ int DoPrsetParm (char *parmName, char *tkn)
                         if (foundFSNum[i] == NO)  // fossil sampling rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of fossil sampling shift must be > 0 and < 100\n", spacer);
+                                MrBayesPrint ("%s   Number of fossil sampling rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilSamplingNum = tempInt;
                             foundFSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundFSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundFSTime[i] == NO)
                             {
                             sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
-                                MrBayesPrint ("%s   Time of fossil sampling shift must be > 0.\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling rate shift must be > 0.\n", spacer);
                                 return (ERROR);
                                 }
                             if (numVars[i] > 0 && modelParams[i].fossilSamplingTime[numVars[i]-1] < tempD)
                                 {
-                                MrBayesPrint ("%s   Time of fossil sampling shift must be in decreasing order\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling rate shift must be in decreasing order\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilSamplingTime[numVars[i]] = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d fossil sampling rate shift time to %1.2lf\n", spacer, numVars[i]+1,
                                               modelParams[i].fossilSamplingTime[numVars[i]]);
                             else
-                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d fossil sampling rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].fossilSamplingTime[numVars[i]], i+1);
                             numVars[i]++;
                             expecting = Expecting(NUMBER);
@@ -7739,14 +7747,22 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (foundBSNum[i] == NO)  // birth rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of birth rate shift must be > 0 and <100\n", spacer);
+                                MrBayesPrint ("%s   Number of birth rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].birthRateShiftNum = tempInt;
                             foundBSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundBSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundBSTime[i] == NO)
                             {
@@ -7773,20 +7789,30 @@ int DoPrsetParm (char *parmName, char *tkn)
                             if (numVars[i] == modelParams[i].birthRateShiftNum) {
                                 foundBSTime[i] = YES;
                                 numVars[i] = 0;
-                                expecting = Expecting(COMMA);
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
                                 }
                             }
                         else if (foundDSNum[i] == NO)  // death rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of death rate shift must be > 0 and < 100\n", spacer);
+                                MrBayesPrint ("%s   Number of death rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].deathRateShiftNum = tempInt;
                             foundDSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundDSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundDSTime[i] == NO)
                             {

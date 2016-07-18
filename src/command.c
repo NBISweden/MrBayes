@@ -3648,7 +3648,7 @@ int DoExecute (void)
 
     /* read lines into s until end of file */
     while ( fgets(s, longestLineLength, fp) != NULL)
-    {
+        {
         foundNewLine = YES;
         cmdLine++;
 
