@@ -8245,9 +8245,6 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |
 |   LnBirthDeathPriorPrRandom
 |
-|   We assume a rooted tree that satisfies the molecular clock constraint. The
-|   tree is labelled as follows:
-|
 |                                      t_4 (age of tips)
 |     \         \         \        /            
 |      \         \         \      /              
@@ -8266,11 +8263,10 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |                   \/                 t_1 (age of most recent common ancestor)
 |    
 |
-|   This function calculates the probability of such a tree under the neutral
-|   birth death prior with constant birth and death rates, conditioned on
-|   a particular time of the first split, t_1, and a particular number of
-|   species, n. We assume rho-sampling, that is, a constant sampling pro-
-|   bability rho, which is known, across tips of the tree. Variables:
+|   This function calculates the probability of a rooted tree under the neutral
+|   birth death prior with constant birth and death rates, conditioned on t_1,
+|   the most recent common ancestor. We assume rho-sampling, that is, a constant
+|   sampling probability rho on extant taxa, which is known.
 |
 |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
 |        speciation times from a point process
@@ -8278,56 +8274,30 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |   b:   birth (speciation) rate
 |   d:   death (extintion) rate
 |   f:   sampling fraction
-|   n:   number of species in the sampled tree
+|   n:   number of (extant) taxa in the sampled tree
 |
-|   See:
-|   Tanja Stadler (2009) On incomplete sampling under birth-death models and
-|   connections to the sampling-based coalescent. Journal of Theoretical Biology
-|   261: 58-66.
-|
-|   We use f(T|n), which is derived from f(T|n,t_or) using Stadler's approach,
-|   in which the time of origin of the tree is associated with a uniform prior
-|   and integrated out of the density. We then have:
-|
-|   We have the following distribution for ordered bifurcation times (cf.
-|   equation 5 in Stadler, 2009, simplified here using the p0 and p1 functions):
-|
-|
-|              n! * p1(t_1)    n-1
-|   f(T|n) = --------------- * prod (b * p1(t_i))
-|             (1 - p0(t_1))    i=1
-|
-|
-|   where   t_1   = time of most recent common ancestor
-|           p0(t) = prob. of no descendants surviving and being sampled after time t (see LnP0 function below)
-|           p1(t) = prob. of one descendant surviving and being sampled after time t (see LnP1 function below)
-|
-|   To get the distribution on oriented trees, this density needs to be divided by the
-|   number of ways of ordering n-1 bifurcation times, (n-1)!, since each way of ordering
-|   the bifurcation times corresponds to a distinct oriented tree. The result is the following
-|   density on oritented trees:
-|
-|              n * p1(t_1)     n-1
-|   f(T|n) = --------------- * prod (b * p1(t_i))
-|             (1 - p0(t_1))    i=1
-|
-|
-|   To translate this to a density on distinct labeled trees, the density needs to be multiplied by
-|   (2^(n-1) / n!).
-|
-|   For the critical process where the speciation and extinction rates are equal, we obtain the
-|   following result in the limit (cf. equation 6 in Stadler (2009)):
-|
-|                  n          n-1          f*b      
-|   f(T|n) = -------------- * prod -----------------
-|            (1 + f*b*t_1)    i=1   (1 + f*b*t_i)^2
+|   Eq.3 * Eq.A0 in Hohna et al. 2011 MBE
 |
 ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa;
-    MrBFlt          *nt, lambda, mu, rho;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, tmrca;
     TreeNode        *p;
+    Model           *mp;
+    
+    /* transform to standard variables */
+    lambda = sR / (1.0 - eR);
+    mu     = eR * lambda;
+    
+    n      = t->nIntNodes+1;
+    m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
+    
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for random sampling not implemented\n");
+        return (ERROR);
+        }
 
     /* allocate space for the speciation times */
     nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
@@ -8336,38 +8306,31 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
         return (ERROR);
         }
-
-    /* transform to standard variables */
-    rho    = sF;
-    lambda = sR / (1.0 - eR);
-    mu     = eR * lambda;
-
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
 
     /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate, see equation (5) in Stadler (2009) and above
-        (*prob) = log(nTaxa) + log(lambda - mu) - (lambda - mu) * nt[t->nIntNodes-1];
-        (*prob) -= log(rho*lambda + (lambda*(1.0 - rho) - mu)*exp((mu - lambda)*nt[t->nIntNodes-1]));
-        for (i=0; i<t->nIntNodes; i++)
-            (*prob) += log(rho*lambda) + LnP1Subsample(nt[i], lambda, mu, rho);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        // birth rate == death rate -> the critical branching process
-        (*prob) = log(nTaxa/(1.0 + rho*lambda*nt[t->nIntNodes-1]));
-        for (i=0; i<t->nIntNodes; i++)
-            (*prob) += log(rho*lambda) - 2.0 * log(1.0 + rho*lambda*nt[i]);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        }
+    (*prob) = log(m-1) - log(n-1);  // constant
+    (*prob) += (m-2.0) * (LnP0(tmrca, lambda, mu) + log(lambda) - log(mu));
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(LnP0(tmrca, lambda, mu))));
+    (*prob) += (n-2.0) * (log(lambda*sF + (lambda-lambda*sF-mu)*exp((mu-lambda)*tmrca)) - log(sF*(1-exp((mu-lambda)*tmrca))));
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1Subsample(nt[i], lambda, mu, sF);
+    
+    /* conversion to labeled tree from oriented tree */
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
@@ -8429,7 +8392,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         }
 
     ln_p0_t1 = LnP0(tmrca, lambda, mu);
-    (*prob) = LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant, the binomial coefficient
+    (*prob) = 0;  // LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant
     (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
     (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
     (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - ln_p0_t1);
@@ -8437,7 +8400,7 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
     
     /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
@@ -8504,7 +8467,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
         }
 
     ln_p0_t1 = LnP0(tmrca, lambda, mu);
-    (*prob) = LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant, the binomial coefficient
+    (*prob) = 0;  // LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant
     (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
     (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
     (*prob) += (m-n) * log(1.0 - exp(LnP0(nt_2, lambda, mu))/exp(ln_p0_t1));
@@ -8512,7 +8475,7 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
         (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
     
     /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
@@ -8770,8 +8733,8 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-    /* conversion to labeled tree from oriented tree, constant for a given dataset */
-    (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
+    /* conversion to labeled tree from oriented tree, constant */
+    // (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
     return (NO_ERROR);
 }
@@ -9023,7 +8986,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
@@ -9244,8 +9207,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
     /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
-    
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
+
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
     printf ("prob=%lf\n", *prob);
