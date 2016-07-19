@@ -42,7 +42,7 @@ In this tutorial, I demonstrate the molecular clock dating functionalities in Mr
 %%%%%%%%%
 \section{Getting Started}
 
-The program MrBayes is available from \url{http://mrbayes.net} (current version 3.2.6).
+The program MrBayes is available from \url{http://mrbayes.net} (latest version 3.2.7).
 After downloading and installing MrBayes by following the manual, we execute the program from terminal (or command prompt) by typing {\tt \color{blue} mb}
 (assuming the executable is in the user path and is named {\tt \color{blue} mb} on Mac OSX/Linux or {\tt \color{blue} mb.exe} on Windows).
 
@@ -326,7 +326,7 @@ prset brlenspr = clock:fossilization
 }
 \medskip
 
-\noindent The sampling probability/proportion $\rho$ is fixed to 0.0001, based on the living number of hymenopteran species at about $10/0.0001=100,000$.
+\noindent The sampling proportion $\rho$ is fixed to 0.0001, based on the living number of hymenopteran species at about $10/0.0001=100,000$.
 
 \medskip
 {\tt \color{red} \noindent
@@ -515,6 +515,8 @@ prset nodeagepr = calibrated
 }
 \medskip
 
+\noindent Note that the root age calibration here is equivalent to {\tt prset treeagepr \\ = offsetexp(300,390)} (see above), thus either of them is sufficient.
+
 \begin{figure}[h]
 \includegraphics[width=0.7\textwidth]{figures/nodecali.pdf}
 \caption{Probability density functions of offsetexp(300, 0.011) (offsetexp(300, 390) in MrBayes), offsetgamma(100, 4, 0.08) (offsetgamma(100, 150, 25) in MrBayes), and truncatednormal(140, 175, 25).
@@ -522,8 +524,7 @@ prset nodeagepr = calibrated
 \label{fig_nodecali}
 \end{figure}
 
-We still use the FBD prior but fix the fossilization rate to 0 (no fossil sampling).
-The sampling strategy (diversified) and sampling proportion (0.0001) are not changed.
+We can still use the FBD prior but fix the fossilization rate to 0 (no fossil sampling).
 
 \medskip
 {\tt \color{red} \noindent
@@ -531,8 +532,18 @@ prset fossilizationpr = fixed(0)
 }
 \medskip
 
-\noindent Alternatively, we can use the uniform tree prior: {\tt clock:uniform}.
-Then we do not need to specify the speciation-extinction-fossilization-sampling priors.
+\noindent Alternatively, we can use the birth-death prior.
+
+\medskip
+{\tt \color{red} \noindent
+prset brlenspr = clock:birthdeath
+}
+\medskip
+
+\noindent Comparing to the FBD prior, the birth-death prior does not assume fossil sampling, thus {\tt fossilizationpr} is irrelevant. 
+The priors for the root age, speciation rate, extinction rate, sampling strategy (diversified) and sampling proportion (0.0001) are not changed (see above).
+
+The uniform tree prior ({\tt clock:uniform}) is also applicable, then the speciation-extinction-fossilization-sampling priors are irrelevant.
 
 It is important to force the calibrated node to be monophyletic, and enable the constraints using
 

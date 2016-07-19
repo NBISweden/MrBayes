@@ -148,7 +148,7 @@ Begin mrbayes;
 	calibrate root = offsetexp(300,390) Tenthredinidae = offsetgamma(100,150,25) CepSirOruApo = truncatednormal(140,175,25);
 	prset nodeagepr = calibrated;
 	
-	prset brlenspr = clock:fossilization [clock:uniform];
+	prset brlenspr = clock:fossilization [clock:birthdeath] [clock:uniform];
 	prset fossilizationpr = fixed(0);
 	prset sampleprob = 0.0001;
 	prset samplestrat = diversity [random];
