@@ -1,4 +1,3 @@
-*.xcodeproj
 *.tar.gz
 Makefile
 autom4te.cache
@@ -10,3 +9,14 @@ src/*~
 src/.deps
 src/mb
 src/stamp-h1
+
+# hidden files
+.gitignore
+Thumbs.db
+.DS_Store
+
+# latex temps
+.texpadtmp
+
+# xcode project
+*.xcodeproj
