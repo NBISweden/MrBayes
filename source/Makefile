@@ -43,6 +43,7 @@ all: $(GENERATED_FILES)
 	@echo '<a href="http://www.vr.se/"><img src="./img/vr.png" alt="Vetenskapsradet"></a>' >> $@
 	@echo '<a href="http://www.nih.gov/"><img src="./img/nih.gif" alt="National Institutes of Health"></a>' >> $@
 	@echo '<a href="http://www.nsf.gov/"><img src="./img/nsf.gif" alt="National Science Foundation"></a>' >> $@
+	@echo '<a href="http://www.nrm.se/"><img src="./img/nrm.gif" alt="Naturhistoriska Riksmuseet"></a>' >> $@
 	@echo '<a href="http://nbis.se/"><img src="./img/nbis.svg" alt="National Bioinformatics Infrastructure Sweden (NBIS)"></a>' >> $@
 	@echo '</aside>' >> $@
 	@echo '</header>' >> $@
