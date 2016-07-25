@@ -10,7 +10,7 @@ GENERATED_FILES := $(CONTENT_FILES:%.html=../%.html)
 
 all: $(GENERATED_FILES)
 
-../%.html: %.html
+../%.html: %.html Makefile
 	@echo "Creating the $* page [in $@]"
 	@echo '<!DOCTYPE html>' > $@
 	@echo '<html lang=en><head><meta charset="utf-8"><title>MrBayes | $*</title>' >> $@
