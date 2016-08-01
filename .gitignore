@@ -1,5 +1,6 @@
-*.xcodeproj
+*.dSYM
 *.tar.gz
+*.xcodeproj
 Makefile
 autom4te.cache
 config.h
