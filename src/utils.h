@@ -21,10 +21,18 @@ typedef struct
     }
     Stat;
 
+
+/* For explanantion why the following two macros exists, see
+ * http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
+ */
+
+#define SAFEFREE(ptr) (ptr = SafeFree(ptr))
+#define ALIGNEDSAFEFREE(ptr) (ptr = AlignedSafeFree(ptr))
+
 int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
 void    *AlignedMalloc (size_t size, size_t alignment);
-void     AlignedSafeFree (void **ptr);
+void    *AlignedSafeFree (void *ptr);
 #endif
 int      AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length);
 int      Bit (int n, BitsLong *p);
@@ -73,7 +81,7 @@ MrBFlt   PotentialScaleReduction (MrBFlt **vals, int nRows, int *count);
 void     EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS);
 void    *SafeCalloc (size_t n, size_t s);
 int      SafeFclose (FILE **fp);
-void     SafeFree (void **ptr);
+void    *SafeFree (void *ptr);
 void    *SafeMalloc (size_t s);
 void    *SafeRealloc (void *ptr, size_t s);
 char    *SafeStrcat (char **target, const char *source);
