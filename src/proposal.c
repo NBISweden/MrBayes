@@ -1646,14 +1646,14 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
         *valPtr = newM;  // update with new value
         // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newM;
-        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
@@ -1741,13 +1741,13 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     sS = mp->sampleStrat;
     clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
 
-    if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
+    if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, fR, sF, sS) == ERROR)
         {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
         }
     *valPtr = newM;  // update with new value
-    if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
+    if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
         {
         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
         return (ERROR);
@@ -8059,7 +8059,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
 
     /* check whether or not we can change root */
     if ((t->root->left->isDated == YES && t->root->left->calibration->prior == fixed) ||
-        ((!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization")) && mp->treeAgePr.prior == fixed))
+        ((!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Birthdeath") || !strcmp(mp->clockPr, "Fossilization")) && mp->treeAgePr.prior == fixed))
         i = t->nNodes - 2;
     else
         i = t->nNodes - 1;
@@ -8135,7 +8135,9 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     
     if (p->isDated == YES)
         calibrationPtr = p->calibration;
-    else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr, "Fossilization")))
+    else if (p->anc->anc == NULL && (!strcmp(mp->clockPr, "Uniform") ||
+                                     !strcmp(mp->clockPr, "Birthdeath")||
+                                     !strcmp(mp->clockPr, "Fossilization")))
         calibrationPtr = &mp->treeAgePr;
     else
         calibrationPtr = NULL;
@@ -15138,14 +15140,14 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
         *valPtr = newL;  // update with new value
         // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newL;
-        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
@@ -15248,14 +15250,13 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     else if (!strcmp(mp->clockPr,"Fossilization"))
         {
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
-        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &oldLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
         *valPtr = newL;  // update with new value
-        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newL;
-        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
@@ -16041,7 +16042,9 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             continue;
         if (p->isDated == YES)
             calibrationPtr = p->calibration;
-        else if (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")))
+        else if (p->anc->anc == NULL && (!strcmp(mp->clockPr, "Uniform") ||
+                                         !strcmp(mp->clockPr, "Birthdeath") ||
+                                         !strcmp(mp->clockPr, "Fossilization")))
             calibrationPtr = &mp->treeAgePr;
         else
             calibrationPtr = NULL;

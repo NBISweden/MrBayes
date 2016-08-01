@@ -7697,34 +7697,42 @@ int DoPrsetParm (char *parmName, char *tkn)
                         if (foundFSNum[i] == NO)  // fossil sampling rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of fossil sampling shift must be > 0 and < 100\n", spacer);
+                                MrBayesPrint ("%s   Number of fossil sampling rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilSamplingNum = tempInt;
                             foundFSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundFSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundFSTime[i] == NO)
                             {
                             sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
-                                MrBayesPrint ("%s   Time of fossil sampling shift must be > 0.\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling rate shift must be > 0.\n", spacer);
                                 return (ERROR);
                                 }
                             if (numVars[i] > 0 && modelParams[i].fossilSamplingTime[numVars[i]-1] < tempD)
                                 {
-                                MrBayesPrint ("%s   Time of fossil sampling shift must be in decreasing order\n", spacer);
+                                MrBayesPrint ("%s   Time of fossil sampling rate shift must be in decreasing order\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilSamplingTime[numVars[i]] = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d fossil sampling rate shift time to %1.2lf\n", spacer, numVars[i]+1,
                                               modelParams[i].fossilSamplingTime[numVars[i]]);
                             else
-                                MrBayesPrint ("%s   Setting %d fossil sampling time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
+                                MrBayesPrint ("%s   Setting %d fossil sampling rate shift time to %1.2lf for partition %d\n", spacer, numVars[i]+1,
                                               modelParams[i].fossilSamplingTime[numVars[i]], i+1);
                             numVars[i]++;
                             expecting = Expecting(NUMBER);
@@ -7739,14 +7747,22 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (foundBSNum[i] == NO)  // birth rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of birth rate shift must be > 0 and <100\n", spacer);
+                                MrBayesPrint ("%s   Number of birth rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].birthRateShiftNum = tempInt;
                             foundBSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundBSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundBSTime[i] == NO)
                             {
@@ -7773,20 +7789,30 @@ int DoPrsetParm (char *parmName, char *tkn)
                             if (numVars[i] == modelParams[i].birthRateShiftNum) {
                                 foundBSTime[i] = YES;
                                 numVars[i] = 0;
-                                expecting = Expecting(COMMA);
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
                                 }
                             }
                         else if (foundDSNum[i] == NO)  // death rate shift times
                             {
                             sscanf (tkn, "%d", &tempInt);
-                            if (tempInt <= 0 || tempInt > 99)
+                            if (tempInt < 0 || tempInt > 99)
                                 {
-                                MrBayesPrint ("%s   Number of death rate shift must be > 0 and < 100\n", spacer);
+                                MrBayesPrint ("%s   Number of death rate shift must be between 0 and 100\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].deathRateShiftNum = tempInt;
                             foundDSNum[i] = YES;
-                            expecting = Expecting(COLON);
+                            if (tempInt == 0)
+                                {
+                                foundDSTime[i] = YES;
+                                expecting  = Expecting(COMMA);
+                                expecting |= Expecting(PARAMETER);
+                                expecting |= Expecting(SEMICOLON);
+                                }
+                            else
+                                expecting = Expecting(COLON);
                             }
                         else if (foundDSTime[i] == NO)
                             {
@@ -9583,7 +9609,7 @@ int DoQuit (void)
                 fflush (stdin);
                 if (fgets (tempName, 100, stdin) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 }
             }
@@ -10218,8 +10244,9 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             }
                         if (theTree->isClock == YES && modelParams[theTree->relParts[0]].treeAgePr.prior == fixed)
                             {
-                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform")
-                                || !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
+                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform") ||
+                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") ||
+                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
                                 ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgePr.priorParams[0]);
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
@@ -11704,12 +11731,13 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 }
             }
         else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
+                                                                        !strcmp(modelParams[tree->relParts[0]].clockPr,"Birthdeath") ||
                                                                         !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
             {
             assert (tree->isClock == YES);
             clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state);
             returnVal = InitCalibratedBrlens (tree, clockRate, seed);
-            if (IsClockSatisfied (tree,0.0001) == NO)
+            if (IsClockSatisfied (tree, 0.0001) == NO)
                 {
                 MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
                 return (ERROR);
@@ -14339,7 +14367,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
             *isApplic2 = NO;
         
-        /* Check that the branch length prior is a clock:birthdeath or clock:fossilization for both partitions. */
+        /* Check that the branch length prior is a clock:fossilization for both partitions. */
         if (strcmp(modelParams[part1].brlensPr, "Clock"))
             *isApplic1 = NO;
         if (strcmp(modelParams[part2].brlensPr, "Clock"))
@@ -23545,13 +23573,11 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 else if (!strcmp(mp->brlensPr, "Clock"))
                     {
                     MrBayesPrint ("%s            Prior      = Clock:%s\n", spacer, mp->clockPr);
-                    if ((!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization")) && !strcmp(mp->nodeAgePr,"Unconstrained"))
+                    if ((!strcmp(mp->clockPr, "Uniform") ||
+                         !strcmp(mp->clockPr, "Birthdeath") ||
+                         !strcmp(mp->clockPr, "Fossilization")) && !strcmp(mp->nodeAgePr, "Unconstrained"))
                         {
                         MrBayesPrint ("%s                         Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
-                        }
-                    else if (!strcmp(mp->clockPr, "Birthdeath") && !strcmp(mp->nodeAgePr,"Unconstrained"))
-                        {
-                        MrBayesPrint ("%s                         Tree age has a Uniform(0,infinity) distribution\n", spacer);
                         }
                     if (!strcmp(mp->nodeAgePr,"Calibrated"))
                         {
@@ -23593,13 +23619,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             }
                         if (b == 0) /* we need to use default calibration for root for uniform and birthdeath */
                             {
-                            if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))
+                            if (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr, "Birthdeath") || !strcmp(mp->clockPr,"Fossilization"))
                                 {
                                 MrBayesPrint ("%s                         -- Tree age has a %s distribution\n", spacer, mp->treeAgePr.name);
-                                }
-                            else if (!strcmp(mp->clockPr,"Birthdeath"))
-                                {
-                                MrBayesPrint ("%s                         -- Tree age has a Uniform(0,infinity) distribution\n", spacer);
                                 }
                             }
                         }

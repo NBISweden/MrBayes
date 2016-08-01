@@ -21,7 +21,7 @@ MrBFlt  GetRate (int division, int chain);
 int     LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, char *sS, MrBFlt sF);
 int     LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth);
 MrBFlt  LnUniformPriorPr (Tree *t, MrBFlt clockRate);
-int     LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS);
+int     LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF, char *sS);
 int     LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio);
 MrBFlt  LogDirPrior (Tree *t, ModelParams *mp, int PV);
 MrBFlt  LogOmegaPrior (MrBFlt w1, MrBFlt w2, MrBFlt w3);
