@@ -4492,7 +4492,7 @@ void FreeChainMemory (void)
                 {
 #   if defined (SSE_ENABLED)
                 if (m->useVec != NO)
-                    AlignedSafeFree ((void *)(&m->condLikes[j]));
+                    ALIGNEDSAFEFREE (m->condLikes[j]);
                 else
                     free (m->condLikes[j]);
 #   else
@@ -4508,7 +4508,7 @@ void FreeChainMemory (void)
             for (j=0; j<m->numScalers; j++)
 #   if defined (SSE_ENABLED)
             if (m->useVec != VEC_NONE)
-                AlignedSafeFree ((void *)(&m->scalers[j]));
+                ALIGNEDSAFEFREE (m->scalers[j]);
             else
                 free (m->scalers[j]);
 #   else
@@ -4540,9 +4540,9 @@ void FreeChainMemory (void)
                 }
 #endif
             if (m->lnL_Vec)
-                AlignedSafeFree ((void *)(&m->lnL_Vec));
+                ALIGNEDSAFEFREE (m->lnL_Vec);
             if (m->lnLI_Vec)
-                AlignedSafeFree ((void *)(&m->lnLI_Vec));
+                ALIGNEDSAFEFREE (m->lnLI_Vec);
             }
 #   endif
 
@@ -4633,29 +4633,29 @@ void FreeChainMemory (void)
             continue;
 
         beagleFinalizeInstance(m->beagleInstance);
-        SafeFree((void *)(&m->logLikelihoods));
-        SafeFree((void *)(&m->inRates));
-        SafeFree((void *)(&m->branchLengths));
-        SafeFree((void *)(&m->tiProbIndices));
-        SafeFree((void *)(&m->inWeights));
-        SafeFree((void *)(&m->bufferIndices));
-        SafeFree((void *)(&m->eigenIndices));
-        SafeFree((void *)(&m->childBufferIndices));
-        SafeFree((void *)(&m->childTiProbIndices));
-        SafeFree((void *)(&m->cumulativeScaleIndices));
+        SAFEFREE(m->logLikelihoods);
+        SAFEFREE(m->inRates);
+        SAFEFREE(m->branchLengths);
+        SAFEFREE(m->tiProbIndices);
+        SAFEFREE(m->inWeights);
+        SAFEFREE(m->bufferIndices);
+        SAFEFREE(m->eigenIndices);
+        SAFEFREE(m->childBufferIndices);
+        SAFEFREE(m->childTiProbIndices);
+        SAFEFREE(m->cumulativeScaleIndices);
 
         m->isScalerNodeScratch += numLocalTaxa;
-        SafeFree((void *)&(m->isScalerNodeScratch)); 
+        SAFEFREE(m->isScalerNodeScratch); 
         for (j=0; j<numLocalChains; j++)
             {
             m->isScalerNode[j] += numLocalTaxa;
-            SafeFree((void *)&(m->isScalerNode[j]));
+            SAFEFREE(m->isScalerNode[j]);
             }
-        SafeFree((void *)(&m->isScalerNode));
+        SAFEFREE(m->isScalerNode);
 
-        SafeFree((void *)(&m->beagleComputeCount));
-        SafeFree((void *)(&m->succesCount));
-        SafeFree((void *)(&m->rescaleFreq));
+        SAFEFREE(m->beagleComputeCount);
+        SAFEFREE(m->succesCount);
+        SAFEFREE(m->rescaleFreq);
 
 #   endif
         }
@@ -13116,7 +13116,7 @@ int PrintStates (int curGen, int coldId)
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
     
     free (tempStr);
-    SafeFree ((void *)&partString);
+    SAFEFREE (partString);
     
     return (NO_ERROR);
     
@@ -13127,7 +13127,7 @@ int PrintStates (int curGen, int coldId)
             free (posSelProbs);
         memAllocs[ALLOC_POSSELPROBS] = NO;
         free (tempStr);
-        SafeFree ((void *)&partString);
+        SAFEFREE (partString);
         return (ERROR);
 }
 
