@@ -191,18 +191,20 @@ void * AlignedMalloc (size_t size, size_t alignment)
 }
 
 
-void AlignedSafeFree (void **ptr)
+void *AlignedSafeFree (void *ptr)
 {
 
-    #if defined ICC_VEC     /* icc compiler */
-    _mm_free (*ptr);
-    #elif defined MS_VCPP_VEC  /* ms visual */
-    _aligned_free (*ptr);
-    #else
-    free (*ptr);
-    #endif
-    
-    (*ptr) = NULL;
+#if defined ICC_VEC             /* icc compiler */
+    _mm_free (ptr);
+#elif defined MS_VCPP_VEC       /* ms visual */
+    _aligned_free (ptr);
+#else
+    free (ptr);
+#endif
+
+    ptr = NULL;
+
+    return ptr;
 }
 #endif
 
@@ -1476,11 +1478,23 @@ int SafeFclose(FILE **fp) {
 
 
 /* SafeFree: Set pointer to freed space to NULL */
-void SafeFree (void **ptr)
+/* Calls to be made like this:
+ *
+ *   ptr = SafeFree(ptr);
+ *
+ * or using the SAFEFREE() macro defined in utils.h:
+ *
+ *   SAFEFREE(ptr);
+ *
+ * See http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
+ *
+ */
+void *SafeFree (void *ptr)
 {
-    free (*ptr);
+    free (ptr);
+    ptr = NULL;
 
-    (*ptr) = NULL;
+    return ptr;
 }
 
 
