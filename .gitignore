@@ -30,3 +30,7 @@ Thumbs.db
 
 # XCode project
 *.xcodeproj
+
+# Tags files
+TAGS
+tags
