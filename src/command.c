@@ -9177,11 +9177,8 @@ int FreeTaxa (void)
             }
 
         SAFEFREE (taxaNames);
-        taxaNames = NULL;
         SAFEFREE (taxaInfo);
-        taxaInfo = NULL;
         SAFEFREE (tipCalibration);
-        tipCalibration = NULL;
         numTaxa = 0;
         memAllocs[ALLOC_TAXA] = NO;
         memoryLetFree = YES;
@@ -9190,9 +9187,7 @@ int FreeTaxa (void)
     if (memAllocs[ALLOC_TMPSET] == YES)
         {
         SAFEFREE (tempSet);
-        tempSet = NULL;
         SAFEFREE (tempSetNeg);
-        tempSetNeg = NULL;
         memAllocs[ALLOC_TMPSET] = NO;
         memoryLetFree = YES;
         }
@@ -9206,9 +9201,7 @@ int FreeTaxa (void)
             }
 
         SAFEFREE (taxaSetNames);
-        taxaSetNames = NULL;
         SAFEFREE (taxaSet);
-        taxaSet = NULL;
         numTaxaSets = 0;
         memAllocs[ALLOC_TAXASETS] = NO;
         memoryLetFree = YES;
@@ -9220,13 +9213,11 @@ int FreeTaxa (void)
             SAFEFREE (speciespartitionNames[i]);
 
         SAFEFREE (speciespartitionNames);
-        speciespartitionNames = NULL;
 
         for (i = 0; i < numTaxa; i++)
             SAFEFREE (speciespartitionId[i]);
 
         SAFEFREE (speciespartitionId);
-        speciespartitionId = NULL;
         numDefinedSpeciespartitions = 0;
         memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
         memoryLetFree = YES;
@@ -9244,18 +9235,12 @@ int FreeTaxa (void)
             }
 
         SAFEFREE (definedConstraint);
-        definedConstraint = NULL;
         SAFEFREE (definedConstraintTwo);
-        definedConstraintTwo = NULL;
         SAFEFREE (definedConstraintsType);
-        definedConstraintsType = NULL;
         SAFEFREE (constraintNames);
-        constraintNames = NULL;
         SAFEFREE (nodeCalibration);
-        nodeCalibration = NULL;
         numDefinedConstraints = 0;
         SAFEFREE (tempActiveConstraints);
-        tempActiveConstraints = NULL;
         memAllocs[ALLOC_CONSTRAINTS] = NO;
         memoryLetFree = YES;
         }
