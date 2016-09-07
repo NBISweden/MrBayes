@@ -9173,14 +9173,14 @@ int FreeTaxa (void)
         if (taxaNames)
             {
             for (i = 0; i < taxonCount; i++)
-                free (taxaNames[i]);
+                SAFEFREE (taxaNames[i]);
             }
 
-        free (taxaNames);
+        SAFEFREE (taxaNames);
         taxaNames = NULL;
-        free (taxaInfo);
+        SAFEFREE (taxaInfo);
         taxaInfo = NULL;
-        free (tipCalibration);
+        SAFEFREE (tipCalibration);
         tipCalibration = NULL;
         numTaxa = 0;
         memAllocs[ALLOC_TAXA] = NO;
@@ -9189,9 +9189,9 @@ int FreeTaxa (void)
 
     if (memAllocs[ALLOC_TMPSET] == YES)
         {
-        free (tempSet);
+        SAFEFREE (tempSet);
         tempSet = NULL;
-        free (tempSetNeg);
+        SAFEFREE (tempSetNeg);
         tempSetNeg = NULL;
         memAllocs[ALLOC_TMPSET] = NO;
         memoryLetFree = YES;
@@ -9201,13 +9201,13 @@ int FreeTaxa (void)
         {
         for (i = 0; i < numTaxaSets; i++)
             {
-            free (taxaSetNames[i]);
-            free (taxaSet[i]);
+            SAFEFREE (taxaSetNames[i]);
+            SAFEFREE (taxaSet[i]);
             }
 
-        free (taxaSetNames);
+        SAFEFREE (taxaSetNames);
         taxaSetNames = NULL;
-        free (taxaSet);
+        SAFEFREE (taxaSet);
         taxaSet = NULL;
         numTaxaSets = 0;
         memAllocs[ALLOC_TAXASETS] = NO;
@@ -9217,15 +9217,15 @@ int FreeTaxa (void)
     if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
         {
         for (i = 0; i < numDefinedSpeciespartitions; i++)
-            free (speciespartitionNames[i]);
+            SAFEFREE (speciespartitionNames[i]);
 
-        free (speciespartitionNames);
+        SAFEFREE (speciespartitionNames);
         speciespartitionNames = NULL;
 
         for (i = 0; i < numTaxa; i++)
-            free (speciespartitionId[i]);
+            SAFEFREE (speciespartitionId[i]);
 
-        free (speciespartitionId);
+        SAFEFREE (speciespartitionId);
         speciespartitionId = NULL;
         numDefinedSpeciespartitions = 0;
         memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
@@ -9236,25 +9236,25 @@ int FreeTaxa (void)
         {
         for (i = 0; i < numDefinedConstraints; i++)
             {
-            free (definedConstraint[i]);
-            free (definedConstraintTwo[i]);
-            free (definedConstraintPruned[i]);
-            free (definedConstraintTwoPruned[i]);
-            free (constraintNames[i]);
+            SAFEFREE (definedConstraint[i]);
+            SAFEFREE (definedConstraintTwo[i]);
+            SAFEFREE (definedConstraintPruned[i]);
+            SAFEFREE (definedConstraintTwoPruned[i]);
+            SAFEFREE (constraintNames[i]);
             }
 
-        free (definedConstraint);
+        SAFEFREE (definedConstraint);
         definedConstraint = NULL;
-        free (definedConstraintTwo);
+        SAFEFREE (definedConstraintTwo);
         definedConstraintTwo = NULL;
-        free (definedConstraintsType);
+        SAFEFREE (definedConstraintsType);
         definedConstraintsType = NULL;
-        free (constraintNames);
+        SAFEFREE (constraintNames);
         constraintNames = NULL;
-        free (nodeCalibration);
+        SAFEFREE (nodeCalibration);
         nodeCalibration = NULL;
         numDefinedConstraints = 0;
-        free (tempActiveConstraints);
+        SAFEFREE (tempActiveConstraints);
         tempActiveConstraints = NULL;
         memAllocs[ALLOC_CONSTRAINTS] = NO;
         memoryLetFree = YES;
@@ -9282,7 +9282,7 @@ int FreeTaxa (void)
     ResetTaxaFlags();
 
     return NO_ERROR;
-    }
+}
 
 
 int GetNumPartDivisions (int n)
