@@ -9164,16 +9164,18 @@ int FreeMatrix (void)
 
 int FreeTaxa (void)
 {
-    int i, memoryLetFree;
+    int             i, memoryLetFree;
 
     memoryLetFree = NO;
+
     if (memAllocs[ALLOC_TAXA] == YES)
         {
         if (taxaNames)
             {
-            for (i=0; i<taxonCount; i++)
+            for (i = 0; i < taxonCount; i++)
                 free (taxaNames[i]);
             }
+
         free (taxaNames);
         taxaNames = NULL;
         free (taxaInfo);
@@ -9184,6 +9186,7 @@ int FreeTaxa (void)
         memAllocs[ALLOC_TAXA] = NO;
         memoryLetFree = YES;
         }
+
     if (memAllocs[ALLOC_TMPSET] == YES)
         {
         free (tempSet);
@@ -9193,13 +9196,15 @@ int FreeTaxa (void)
         memAllocs[ALLOC_TMPSET] = NO;
         memoryLetFree = YES;
         }
+
     if (memAllocs[ALLOC_TAXASETS] == YES)
         {
-        for (i=0; i<numTaxaSets; i++)
+        for (i = 0; i < numTaxaSets; i++)
             {
             free (taxaSetNames[i]);
             free (taxaSet[i]);
             }
+
         free (taxaSetNames);
         taxaSetNames = NULL;
         free (taxaSet);
@@ -9208,30 +9213,36 @@ int FreeTaxa (void)
         memAllocs[ALLOC_TAXASETS] = NO;
         memoryLetFree = YES;
         }
+
     if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
         {
-        for (i=0; i<numDefinedSpeciespartitions; i++)
+        for (i = 0; i < numDefinedSpeciespartitions; i++)
             free (speciespartitionNames[i]);
+
         free (speciespartitionNames);
         speciespartitionNames = NULL;
-        for (i=0; i<numTaxa; i++)
+
+        for (i = 0; i < numTaxa; i++)
             free (speciespartitionId[i]);
+
         free (speciespartitionId);
         speciespartitionId = NULL;
         numDefinedSpeciespartitions = 0;
         memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
         memoryLetFree = YES;
         }
+
     if (memAllocs[ALLOC_CONSTRAINTS] == YES)
         {
-        for (i=0; i<numDefinedConstraints; i++)
+        for (i = 0; i < numDefinedConstraints; i++)
             {
-            free(definedConstraint[i]);
-            free(definedConstraintTwo[i]);
-            free(definedConstraintPruned[i]);
-            free(definedConstraintTwoPruned[i]);
+            free (definedConstraint[i]);
+            free (definedConstraintTwo[i]);
+            free (definedConstraintPruned[i]);
+            free (definedConstraintTwoPruned[i]);
             free (constraintNames[i]);
             }
+
         free (definedConstraint);
         definedConstraint = NULL;
         free (definedConstraintTwo);
@@ -9248,14 +9259,17 @@ int FreeTaxa (void)
         memAllocs[ALLOC_CONSTRAINTS] = NO;
         memoryLetFree = YES;
         }
+
     if (numUserTrees > 0)
         {
         MrBayesPrint ("%s   Deleting user trees\n", spacer);
-        for (i=0; i<numUserTrees; i++)
+
+        for (i = 0; i < numUserTrees; i++)
             {
-            FreePolyTree(userTree[i]);
+            FreePolyTree (userTree[i]);
             userTree[i] = NULL;
             }
+
         numUserTrees = 0;
         }
 
@@ -9268,7 +9282,7 @@ int FreeTaxa (void)
     ResetTaxaFlags();
 
     return NO_ERROR;
-}
+    }
 
 
 int GetNumPartDivisions (int n)
