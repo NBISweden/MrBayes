@@ -708,17 +708,6 @@ typedef struct param
     LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function                   */
     } Param;
 
-#if defined(THREADS_ENABLED)
-#include <pthread.h>
-
-typedef struct s_launch_struct 
-    {
-    int chain;
-    int division;
-    MrBFlt* lnL;                    
-    } LaunchStruct; 
-#endif
-
 /* parameter ID values */
 /* identifies unique model parameter x prior combinations */
 #define TRATIO_DIR                      1
@@ -1733,9 +1722,6 @@ extern int              beagleInstanceCount;                    /* total number 
 extern int              beagleScalingScheme;                    /* BEAGLE dynamic scaling                        */
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
 extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
-#endif
-#if defined (THREADS_ENABLED)
-extern int              tryToUseThreads;                        /* try to use pthreads with BEAGLE library       */
 #endif
 
 /* Aamodel parameters */

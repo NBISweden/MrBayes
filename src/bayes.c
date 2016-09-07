@@ -498,9 +498,6 @@ int InitializeMrBayes (void)
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
     beagleScalingFrequency = 1000;  
 #   endif
-#   if defined (THREADS_ENABLED)
-    tryToUseThreads = NO;                            /* try to use pthread with BEAGLE library        */
-#   endif
 
     /* set the proposal information */
     SetUpMoveTypes ();

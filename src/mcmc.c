@@ -7357,17 +7357,6 @@ MrBFlt LogLike (int chain)
     return (chainLnLike);
 #   endif
 
-#   if defined (THREADS_ENABLED)
-    if (tryToUseThreads && ScheduleLogLikeForAllDivisions()) 
-        {
-        /* Launch all divisions that require updating simultaneously */
-        chainLnLike = LaunchLogLikeForAllDivisionsInParallel(chain);
-        } 
-    else 
-        {
-        /* Launch divisions in series */
-#   endif
-        
     /* Cycle through divisions and recalculate tis and cond likes as necessary. */
     /* Code below does not try to avoid recalculating ti probs for divisions    */
     /* that could share ti probs with other divisions.                          */
@@ -7390,9 +7379,6 @@ MrBFlt LogLike (int chain)
         chainLnLike += m->lnLike[2*chain + state[chain]];   
         }
         
-#   if defined (THREADS_ENABLED)
-        }
-#   endif
 
     /* unmark all divisions */
     if (chainHasAdgamma == YES)
@@ -18318,18 +18304,6 @@ int SetLocalChainsAndDataSplits(void)
 
     numLocalChains = numGlobalChains;
 
-#   endif
-
-#   if defined (THREADS_ENABLED)
-
-    if (numLocalChains > 1)
-        {
-        /* Use pthreads to divide chains and possibly do data splits */
-        }
-    else
-        {
-        /* Use pthreads for data splits */
-        }
 #   endif
 
     return (NO_ERROR);
