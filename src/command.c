@@ -587,13 +587,14 @@ int AllocMatrix (void)
 
 int AllocTaxa (void)
 {
-    int i;
+    int             i;
 
-    if (defTaxa==NO)
+    if (defTaxa == NO)
         {
         MrBayesPrint ("%s   Number of taxa not defined\n", spacer);
         return (ERROR);
         }
+
     if (numTaxa == 0)
         {
         MrBayesPrint ("%s   Number of taxa is 0\n", spacer);
@@ -603,29 +604,37 @@ int AllocTaxa (void)
     /* allocate space for taxa */
     if (memAllocs[ALLOC_TAXA] == YES)
         goto errorExit;
-    taxaNames = NULL;   /* This variable is allocated in AddString */
-    taxaInfo = (TaxaInformation *) SafeMalloc ((size_t)numTaxa * sizeof(TaxaInformation));
+
+    taxaNames = NULL;           /* This variable is allocated in AddString */
+    taxaInfo =
+        (TaxaInformation *) SafeMalloc ((size_t) numTaxa *
+                                        sizeof (TaxaInformation));
+
     if (!taxaInfo)
-        {
         goto errorExit;
-        }
-    tipCalibration = (Calibration *) SafeMalloc ((size_t)numTaxa * sizeof(Calibration));
+
+    tipCalibration =
+        (Calibration *) SafeMalloc ((size_t) numTaxa * sizeof (Calibration));
+
     if (!tipCalibration)
         {
         free (taxaInfo);
         taxaInfo = NULL;
         goto errorExit;
         }
-    for (i=0; i<numTaxa; i++)
+
+    for (i = 0; i < numTaxa; i++)
         {
         taxaInfo[i].isDeleted = NO;
         taxaInfo[i].charCount = 0;
         }
+
     memAllocs[ALLOC_TAXA] = YES;
 
     /* taxa sets */
     if (memAllocs[ALLOC_TAXASETS] == YES)
         goto errorExit;
+
     taxaSetNames = NULL;
     taxaSet = NULL;
     numTaxaSets = 0;
@@ -634,29 +643,34 @@ int AllocTaxa (void)
     /* species partitions; allocate space and set default species partition */
     if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
         goto errorExit;
+
     speciespartitionNames = NULL;
     speciesNameSets = NULL;
-    speciespartitionId = (int**) SafeMalloc ((size_t)numTaxa * sizeof(int*));
-    for (i=0; i<numTaxa; i++)
+    speciespartitionId =
+        (int **) SafeMalloc ((size_t) numTaxa * sizeof (int *));
+
+    for (i = 0; i < numTaxa; i++)
         {
-        speciespartitionId[i] = (int *) SafeMalloc (sizeof(int));
+        speciespartitionId[i] = (int *) SafeMalloc (sizeof (int));
         speciespartitionId[i][0] = i + 1;   /* 1-based taxon index, do not ask me why */
         }
-    numDefinedSpeciespartitions = 0;   /* number of defined species partitions */
-    memAllocs[ALLOC_SPECIESPARTITIONS] = YES;  /* safe to do free */
+
+    numDefinedSpeciespartitions = 0;    /* number of defined species partitions */
+    memAllocs[ALLOC_SPECIESPARTITIONS] = YES;   /* safe to do free */
 
     /* constraints */
     if (memAllocs[ALLOC_CONSTRAINTS] == YES)
         goto errorExit;
+
     constraintNames = NULL;
-    definedConstraintsType = NULL; 
+    definedConstraintsType = NULL;
     definedConstraint = NULL;
     definedConstraintTwo = NULL;
     definedConstraintPruned = NULL;
-    definedConstraintTwoPruned = NULL;   
+    definedConstraintTwoPruned = NULL;
     numDefinedConstraints = 0;
     tempActiveConstraints = NULL;
-    memAllocs[ALLOC_CONSTRAINTS] = YES;     /* safe to free */
+    memAllocs[ALLOC_CONSTRAINTS] = YES; /* safe to free */
 
     /* translate table */
     transFrom = NULL;
@@ -666,10 +680,13 @@ int AllocTaxa (void)
     /* tempSet */
     if (memAllocs[ALLOC_TMPSET] == YES)
         goto errorExit;
-    tempSet = (int *) SafeMalloc ((size_t)numTaxa * sizeof(int));
-    tempSetNeg = (int *) SafeMalloc ((size_t)numTaxa * sizeof(int));
+
+    tempSet = (int *) SafeMalloc ((size_t) numTaxa * sizeof (int));
+    tempSetNeg = (int *) SafeMalloc ((size_t) numTaxa * sizeof (int));
+
     if (!tempSet || !tempSetNeg)
         goto errorExit;
+
     memAllocs[ALLOC_TMPSET] = YES;
 
     /* make sure previous user trees are freed */
