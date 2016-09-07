@@ -28,7 +28,6 @@
 #   undef  FMA_ENABLED
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
-#   undef  FAST_LOG
 #endif
 
 /* Set SSE_ENABLED if SSE SIMD extensions available. */
@@ -1770,11 +1769,6 @@ extern int              proc_id;                                /* process ID (0
 extern int              num_procs;                              /* number of active processors                                */
 extern MrBFlt           myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
 extern MrBFlt           partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
-#endif
-
-#if defined (FAST_LOG)
-extern CLFlt            scalerValue[];
-extern CLFlt            logValue[];
 #endif
 
 #endif  /* __BAYES_H__ */

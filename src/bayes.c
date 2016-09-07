@@ -98,13 +98,6 @@ MrBFlt      myStateInfo[7];              /* likelihood/prior/heat/ran/moveInfo v
 MrBFlt      partnerStateInfo[7];         /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #endif
 
-#if defined (FAST_LOG)
-CLFlt       scalerValue[400];
-CLFlt       logValue[400];
-#endif
-/* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
-
-
 int main (int argc, char *argv[])
 {
     int i;
@@ -533,15 +526,6 @@ int InitializeMrBayes (void)
     doublet[13].first  = 8;   doublet[13].second = 2;
     doublet[14].first  = 8;   doublet[14].second = 4;
     doublet[15].first  = 8;   doublet[15].second = 8;
-
-#   if defined (FAST_LOG)
-    /* set up log table */
-    for (i=0; i<400; i++)
-        {
-        scalerValue[i] = (CLFlt) ldexp (1.0, 1-i);  /* offset 1 needed to deal with scaler == 1.0 */
-        logValue[i] = (CLFlt) log (scalerValue[i]);     
-        }
-#   endif
 
     /* user trees */
     for (i=0; i<MAX_NUM_USERTREES; i++)
