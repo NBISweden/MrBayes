@@ -12881,96 +12881,114 @@ int GetUserTreeFromName (int *index, char *treeName)
  -----------------------------------------------------------------------*/
 int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 {
-    int     i, st, isCalibrated, isClock, nTaxa, numActiveHardConstraints=0;
-    Tree    *tree, **treeHandle;
-    Model   *mp;
-    
+    int             i, st, isCalibrated, isClock, nTaxa,
+                    numActiveHardConstraints = 0;
+    Tree           *tree, **treeHandle;
+    Model          *mp;
+
     mp = &modelParams[p->relParts[0]];
-    
+
     if (p->paramType == P_SPECIESTREE)
         nTaxa = numSpecies;
     else
         nTaxa = numLocalTaxa;
-    
+
     /* figure out whether the trees are clock */
-    if (!strcmp(mp->brlensPr,"Clock"))
+    if (!strcmp (mp->brlensPr, "Clock"))
         isClock = YES;
     else
         isClock = NO;
-    
+
     /* figure out whether the trees are calibrated */
-    if (!strcmp(mp->brlensPr,"Clock") && (strcmp(mp->nodeAgePr,"Calibrated") == 0 || strcmp(mp->clockRatePr,"Fixed") != 0 ||
-                                          (strcmp(mp->clockRatePr, "Fixed") == 0 && AreDoublesEqual(mp->clockRateFix, 1.0, 1E-6) == NO)))
+    if (!strcmp (mp->brlensPr, "Clock")
+            && (strcmp (mp->nodeAgePr, "Calibrated") == 0
+                || strcmp (mp->clockRatePr, "Fixed") != 0
+                || (strcmp (mp->clockRatePr, "Fixed") == 0
+                    && AreDoublesEqual (mp->clockRateFix, 1.0, 1E-6) == NO)))
         isCalibrated = YES;
     else
         isCalibrated = NO;
-    
+
     if (p->checkConstraints == YES)
         {
-        for (i=0; i<numDefinedConstraints; i++)
+        for (i = 0; i < numDefinedConstraints; i++)
             {
-            if (mp->activeConstraints[i] == YES && definedConstraintsType[i] == HARD)
+            if (mp->activeConstraints[i] == YES
+                    && definedConstraintsType[i] == HARD)
                 numActiveHardConstraints++;
             }
         }
-    
+
     /* allocate space for and construct the trees */
-    /* NOTE: The memory allocation scheme used here must match GetTree and GetTreeFromIndex */
-    for (i=from; i<to; i++)
+    /* NOTE: The memory allocation scheme used here must match GetTree
+             and GetTreeFromIndex */
+    for (i = from; i < to; i++)
         {
-        treeHandle = mcmcTree + p->treeIndex + 2*i*numTrees;
+        treeHandle = mcmcTree + p->treeIndex + 2 * i * numTrees;
+
         if (*treeHandle)
-            free(*treeHandle);
+            free (*treeHandle);
+
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
             {
-            MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
+            MrBayesPrint ("%s   Problem allocating mcmc trees\n",
+                          spacer);
             return (ERROR);
             }
-        treeHandle = mcmcTree + p->treeIndex + (2*i + 1)*numTrees;
+
+        treeHandle = mcmcTree + p->treeIndex + (2 * i + 1) * numTrees;
+
         if (*treeHandle)
-            free(*treeHandle);
+            free (*treeHandle);
+
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
             {
-            MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
+            MrBayesPrint ("%s   Problem allocating mcmc trees\n",
+                          spacer);
             return (ERROR);
             }
         }
-    
+
     /* initialize the trees */
-    for (i=from; i<to; i++)
+    for (i = from; i < to; i++)
         {
-        for (st=0; st<2; st++)
+        for (st = 0; st < 2; st++)
             {
             tree = GetTree (p, i, st);
+
             if (numTrees > 1)
-                sprintf (tree->name, "mcmc.tree%d_%d", p->treeIndex+1, i+1);
-            else /* if (numTrees == 1) */
-                sprintf (tree->name, "mcmc.tree_%d", i+1);
+                sprintf (tree->name, "mcmc.tree%d_%d",
+                         p->treeIndex + 1, i + 1);
+            else        /* if (numTrees == 1) */
+                sprintf (tree->name, "mcmc.tree_%d", i + 1);
+
             tree->nRelParts = p->nRelParts;
             tree->relParts = p->relParts;
             tree->isRooted = isRooted;
             tree->isClock = isClock;
             tree->isCalibrated = isCalibrated;
+
             if (p->paramType == P_SPECIESTREE)
                 {
-                tree->nNodes = 2*numSpecies;
+                tree->nNodes = 2 * numSpecies;
                 tree->nIntNodes = numSpecies - 1;
                 }
             else if (tree->isRooted == YES)
                 {
-                tree->nNodes = 2*numLocalTaxa;
+                tree->nNodes = 2 * numLocalTaxa;
                 tree->nIntNodes = numLocalTaxa - 1;
                 }
-            else /* if (tree->isRooted == NO) */
+            else        /* if (tree->isRooted == NO) */
                 {
-                tree->nNodes = 2*numLocalTaxa - 2;
+                tree->nNodes = 2 * numLocalTaxa - 2;
                 tree->nIntNodes = numLocalTaxa - 2;
                 }
+
             if (p->checkConstraints == YES)
                 {
                 tree->checkConstraints = YES;
-                tree->nLocks = NumInformativeHardConstraints(mp);
-                tree->nConstraints = mp->numActiveConstraints;  /* nConstraints is number of constraints to check */
+                tree->nLocks = NumInformativeHardConstraints (mp);
+                tree->nConstraints = mp->numActiveConstraints;      /* nConstraints is number of constraints to check */
                 tree->constraints = mp->activeConstraints;
                 }
             else
@@ -12981,7 +12999,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
                 }
             }
         }
-    
+
     return (NO_ERROR);
 }
 
