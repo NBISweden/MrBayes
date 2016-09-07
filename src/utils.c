@@ -1969,17 +1969,18 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 /* AllocateTree: Allocate memory space for a tree (unrooted or rooted) */
 Tree *AllocateTree (int numTaxa)
 {
-    int     i;
-    Tree    *t;
-    
+    int             i;
+    Tree           *t;
+
     t = (Tree *) SafeCalloc (1, sizeof (Tree));
+
     if (t == NULL)
         return NULL;
 
     /* initialize basic tree properties */
-    t->memNodes = 2*numTaxa;
+    t->memNodes = 2 * numTaxa;
     strcpy (t->name, "");
-    
+
     t->isRooted = NO;
     t->isClock = NO;
 
@@ -1999,23 +2000,28 @@ Tree *AllocateTree (int numTaxa)
     /* allocate and initialize nodes and node arrays (enough for both rooted and unrooted trees) */
     t->nNodes = 0;
     t->nIntNodes = 0;
-    if ((t->nodes = (TreeNode *) SafeCalloc (2*numTaxa, sizeof (TreeNode))) == NULL)
+
+    if ((t->nodes =
+                (TreeNode *) SafeCalloc (2 * numTaxa, sizeof (TreeNode))) == NULL)
         {
         free (t);
         return NULL;
         }
-    if ((t->allDownPass = (TreeNode **) SafeCalloc (3*numTaxa, sizeof (TreeNode *))) == NULL)
+
+    if ((t->allDownPass =
+                (TreeNode **) SafeCalloc (3 * numTaxa, sizeof (TreeNode *))) == NULL)
         {
         free (t->nodes);
         free (t);
         return NULL;
         }
+
     t->intDownPass = t->allDownPass + t->memNodes;
-    
+
     /* initialize nodes and set index and memoryIndex */
-    for (i=0; i<t->memNodes; i++)
+    for (i = 0; i < t->memNodes; i++)
         {
-        ResetTreeNode(&t->nodes[i]);
+        ResetTreeNode (&t->nodes[i]);
         t->nodes[i].memoryIndex = i;
         t->nodes[i].index = i;
         }
