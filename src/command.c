@@ -9185,6 +9185,22 @@ int FreeTaxa (void)
 
     memoryLetFree = NO;
 
+    if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
+        {
+        for (i = 0; i < numDefinedSpeciespartitions; i++)
+            SAFEFREE (speciespartitionNames[i]);
+
+        SAFEFREE (speciespartitionNames);
+
+        for (i = 0; i < numTaxa; i++)
+            SAFEFREE (speciespartitionId[i]);
+
+        SAFEFREE (speciespartitionId);
+        numDefinedSpeciespartitions = 0;
+        memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
+        memoryLetFree = YES;
+        }
+
     if (memAllocs[ALLOC_TAXA] == YES)
         {
         if (taxaNames)
@@ -9221,22 +9237,6 @@ int FreeTaxa (void)
         SAFEFREE (taxaSet);
         numTaxaSets = 0;
         memAllocs[ALLOC_TAXASETS] = NO;
-        memoryLetFree = YES;
-        }
-
-    if (memAllocs[ALLOC_SPECIESPARTITIONS] == YES)
-        {
-        for (i = 0; i < numDefinedSpeciespartitions; i++)
-            SAFEFREE (speciespartitionNames[i]);
-
-        SAFEFREE (speciespartitionNames);
-
-        for (i = 0; i < numTaxa; i++)
-            SAFEFREE (speciespartitionId[i]);
-
-        SAFEFREE (speciespartitionId);
-        numDefinedSpeciespartitions = 0;
-        memAllocs[ALLOC_SPECIESPARTITIONS] = NO;
         memoryLetFree = YES;
         }
 
