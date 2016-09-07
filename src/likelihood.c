@@ -4957,9 +4957,6 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -4992,11 +4989,6 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5004,13 +4996,8 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
             clP[k] += n;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];              /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5032,9 +5019,6 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     CLFlt           *scP, *lnScaler;
     __m128          *clPtr, **clP, m1;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5070,11 +5054,6 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps (scP,  m1);
         scP += m->numFloatsPerVec;
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5089,13 +5068,8 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     scP = m->scalers[m->nodeScalerIndex[chain][p->index]];
     for (c=0; c<m->numChars; c++)
         {
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scP[c]);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5116,9 +5090,6 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
     int             c, i, j, n, nStates, *rateCat, nRateCats;
     CLFlt           scaler, *clP, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5150,22 +5121,12 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
                 i++;
                 }
 
-#   if defined (FAST_LOG)
-            frexp (scaler, &index);
-            index = 1-index;
-            scaler = scalerValue[index];
-#   endif
 
             for (n=0; n<nStates; n++)
                 clP[j++] /= scaler;
 
-#   if defined (FAST_LOG)
-            scP[c]       = logValue[index];         /* store node scaler */
-            lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
             scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
             lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
 
             }
         else
@@ -5194,10 +5155,6 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     int             c, k;
     CLFlt           scaler, *scP, *lnScaler, *clPtr, **clP;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
@@ -5232,11 +5189,6 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
                 scaler = clP[k][T];
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numRateCats; k++)
             {
             clP[k][A] /= scaler;
@@ -5246,13 +5198,8 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
             clP[k] += 4;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];     /* store node scaler */
-        lnScaler[c] += scP[c];              /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log(scaler); /* store node scaler */
         lnScaler[c] += scP[c];  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;   /* set unscaled nodes to 0 */
@@ -5415,10 +5362,6 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
     int             c, i, j, nRateCats, *rateCat;
     CLFlt           scaler, *clP, *scP, *lnScaler;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
@@ -5455,24 +5398,13 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
                 scaler = clP[i];
             i++;
 
-#   if defined (FAST_LOG)
-            frexp (scaler, &index);
-            index = 1-index;
-            scaler = scalerValue[index];
-#   endif
-
             clP[j++] /= scaler;
             clP[j++] /= scaler;
             clP[j++] /= scaler;
             clP[j++] /= scaler;
 
-#   if defined (FAST_LOG)
-            scP[c]       = logValue[index];         /* store node scaler */
-            lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
             scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
             lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
             }
         else
             {
@@ -5500,9 +5432,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5535,11 +5464,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numOmegaCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5549,13 +5473,8 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
             clP[k] += n;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5577,9 +5496,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     CLFlt           *scP, *lnScaler;
     __m128          *clPtr, **clP, m1;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5615,11 +5531,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps (scP,  m1);
         scP += m->numFloatsPerVec;
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numOmegaCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5634,13 +5545,8 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     scP = m->scalers[m->nodeScalerIndex[chain][p->index]];
     for (c=0; c<m->numChars; c++)
         {
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scP[c]);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5661,9 +5567,6 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     int             c, n, k, nStates, numReps;
     CLFlt           scaler, *clPtr, **clP, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
@@ -5708,11 +5611,6 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5720,13 +5618,8 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
             clP[k] += nStates;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -6338,11 +6231,6 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat, *clInvar=NULL;
     ModelInfo       *m;
 
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -6408,15 +6296,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -6463,22 +6343,11 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }       
         }
         
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }
@@ -6496,11 +6365,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
     MrBFlt          *bs, like;
     CLFlt           *clP, *lnScaler, *nSitesOfPat, *clInvar;
     ModelInfo       *m;
-
-#   if defined (FAST_LOG)
-    int             k, index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
 
     /* find model settings and invar cond likes */
     m = &modelSettings[division];
@@ -6545,15 +6409,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -6586,10 +6442,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
                 }
             }       
         }
-        
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }
@@ -6754,12 +6606,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     __m256          *clPtr, **clP, *clInvar=NULL;
     __m256          mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-    
+
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -6859,15 +6706,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
@@ -6906,22 +6745,10 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
-    
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
     
     return NO_ERROR;
 }
@@ -6943,11 +6770,6 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     __m256          *clPtr, **clP, *clInvar=NULL;
     __m256          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
     
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
@@ -7056,15 +6878,7 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
@@ -7103,22 +6917,10 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
-    
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
     
     return NO_ERROR;
 }
@@ -7140,11 +6942,6 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     __m128          *clPtr, **clP, *clInvar=NULL;
     __m128          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm_set1_ps(0.0f), mLike;
     ModelInfo       *m;
-
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
 
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
@@ -7253,15 +7050,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -7300,22 +7089,10 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
-
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }

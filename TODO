@@ -1,0 +1,33 @@
+TODO:
+
+* Data parallelization
+
+    MrBayes currently uses MPI to run different chains in parallel
+    on different processors.  However, data sets are becoming a lot
+    larger now with respect to number of sites, so it is becoming
+    important also to distribute likelihood computations on data across
+    processors.  This would require some programming but it is not a
+    huge challenge.
+
+* Native AVX and FMA code
+
+    I have added native AVX and FMA code for the 4by4 nucleotide models.
+    It would be straightforward to add native AVX and FMA code for the
+    other models.  Particularly the AA-model would probably benefit from
+    this code (when not using the beagle library).
+
+* Dynamic scaling
+
+    Scaling of likelihoods take a surprisingly large amount of time when
+    using the standard 4by4 nucleotide models.  Maxim added dynamic
+    scaling code for the Beagle implementation but not for the native
+    likelihoood calculators, which are faster.  The dynamic scaling
+    code adjusts the rescaling frequency so that you do not rescale
+    likelihoods more often than needed to avoid numerical exceptions and
+    achieve a reasonable level of precision.  For typical-size trees
+    and the 4by4 model, no rescaling is often needed.  I added the
+    infrastructure needed to support dynamic scaling for both Beagle and
+    native calculators in December 2015.  In principle, it should be
+    straightforward now to rewrite Maxim's dynamic scaling code (which
+    is not so pretty C code) so that it works for both Beagle and native
+    likelihood calculators.

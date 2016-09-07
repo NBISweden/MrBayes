@@ -28,7 +28,6 @@
 #   undef  FMA_ENABLED
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
-#   undef  FAST_LOG
 #endif
 
 /* Set SSE_ENABLED if SSE SIMD extensions available. */
@@ -708,17 +707,6 @@ typedef struct param
     LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                         */
     LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function                   */
     } Param;
-
-#if defined(THREADS_ENABLED)
-#include <pthread.h>
-
-typedef struct s_launch_struct 
-    {
-    int chain;
-    int division;
-    MrBFlt* lnL;                    
-    } LaunchStruct; 
-#endif
 
 /* parameter ID values */
 /* identifies unique model parameter x prior combinations */
@@ -1735,9 +1723,6 @@ extern int              beagleScalingScheme;                    /* BEAGLE dynami
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
 extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
 #endif
-#if defined (THREADS_ENABLED)
-extern int              tryToUseThreads;                        /* try to use pthreads with BEAGLE library       */
-#endif
 
 /* Aamodel parameters */
 extern MrBFlt           aaJones[20][20];             /* rates for Jones model                        */
@@ -1770,11 +1755,6 @@ extern int              proc_id;                                /* process ID (0
 extern int              num_procs;                              /* number of active processors                                */
 extern MrBFlt           myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
 extern MrBFlt           partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
-#endif
-
-#if defined (FAST_LOG)
-extern CLFlt            scalerValue[];
-extern CLFlt            logValue[];
 #endif
 
 #endif  /* __BAYES_H__ */
