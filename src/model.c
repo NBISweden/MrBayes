@@ -12269,72 +12269,83 @@ void FreeCppEvents (Param *p)
 
 int FreeModel (void)
 {
-    int     i, j;
-    Param   *p;
-    
+    int             i, j;
+    Param          *p;
+
     if (memAllocs[ALLOC_MODEL] == YES)
         {
-        for (i=0; i<numCurrentDivisions; i++)
-            {
+        for (i = 0; i < numCurrentDivisions; i++)
             free (modelParams[i].activeConstraints);
-            }
+
         free (modelParams);
         free (modelSettings);
         memAllocs[ALLOC_MODEL] = NO;
         }
+
     if (memAllocs[ALLOC_MOVES] == YES)
         {
-        for (i=0; i<numApplicableMoves; i++)
+        for (i = 0; i < numApplicableMoves; i++)
             FreeMove (moves[i]);
+
         free (moves);
         moves = NULL;
         numApplicableMoves = 0;
         memAllocs[ALLOC_MOVES] = NO;
         }
+
     if (memAllocs[ALLOC_COMPMATRIX] == YES)
         {
         free (compMatrix);
         memAllocs[ALLOC_COMPMATRIX] = NO;
         }
+
     if (memAllocs[ALLOC_NUMSITESOFPAT] == YES)
         {
         free (numSitesOfPat);
         memAllocs[ALLOC_NUMSITESOFPAT] = NO;
         }
+
     if (memAllocs[ALLOC_COMPCOLPOS] == YES)
         {
         free (compColPos);
         memAllocs[ALLOC_COMPCOLPOS] = NO;
         }
+
     if (memAllocs[ALLOC_COMPCHARPOS] == YES)
         {
         free (compCharPos);
         memAllocs[ALLOC_COMPCHARPOS] = NO;
         }
+
     if (memAllocs[ALLOC_ORIGCHAR] == YES)
         {
         free (origChar);
         memAllocs[ALLOC_ORIGCHAR] = NO;
         }
+
     if (memAllocs[ALLOC_STDTYPE] == YES)
         {
         free (stdType);
         memAllocs[ALLOC_STDTYPE] = NO;
         }
+
     if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
         {
         free (stdStateFreqs);
         stdStateFreqs = NULL;
         memAllocs[ALLOC_STDSTATEFREQS] = NO;
         }
+
     if (memAllocs[ALLOC_PARAMVALUES] == YES)
         {
-        for (i=0; i<numParams; i++)
+        for (i = 0; i < numParams; i++)
             {
             p = &params[i];
+
             if (p->paramType == P_CPPEVENTS)
-                FreeCppEvents(p);
+                FreeCppEvents (p);
             }
+
         free (paramValues);
         paramValues = NULL;
         free (intValues);
@@ -12342,17 +12353,20 @@ int FreeModel (void)
         paramValsRowSize = intValsRowSize = 0;
         memAllocs[ALLOC_PARAMVALUES] = NO;
         }
+
     if (memAllocs[ALLOC_PARAMS] == YES)
         {
-        for (i=0; i<numParams; i++)
+        for (i = 0; i < numParams; i++)
             {
             SAFEFREE (params[i].name);
+
             if (params[i].paramHeader)
                 {
                 free (params[i].paramHeader);
                 params[i].paramHeader = NULL;
                 }
             }
+
         free (params);
         free (relevantParts);
         params = NULL;
@@ -12360,28 +12374,34 @@ int FreeModel (void)
         numParams = 0;
         memAllocs[ALLOC_PARAMS] = NO;
         }
+
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
         for (i = 0; i < numParams; ++i)
             {
             p = &params[i];
+
             for (j = 0; i < numGlobalChains; ++j)
-                free(mcmcTree + p->treeIndex + 2 * j * numTrees);
+                free (mcmcTree + p->treeIndex + 2 * j * numTrees);
             }
+
         SAFEFREE (mcmcTree);
         SAFEFREE (subParamPtrs);
         memAllocs[ALLOC_MCMCTREES] = NO;
         }
+
     if (memAllocs[ALLOC_SYMPIINDEX] == YES)
         {
         free (sympiIndex);
         memAllocs[ALLOC_SYMPIINDEX] = NO;
         }
+
     if (memAllocs[ALLOC_LOCTAXANAMES] == YES)
         {
         free (localTaxonNames);
         memAllocs[ALLOC_LOCTAXANAMES] = NO;
         }
+
     if (memAllocs[ALLOC_LOCALTAXONCALIBRATION] == YES)
         {
         free (localTaxonCalibration);
