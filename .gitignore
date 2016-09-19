@@ -34,3 +34,6 @@ Thumbs.db
 # Tags files
 TAGS
 tags
+
+# cscope output
+cscope.out
