@@ -159,7 +159,7 @@ DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/build/compile \
 	$(top_srcdir)/build/config.guess \
 	$(top_srcdir)/build/config.sub $(top_srcdir)/build/install-sh \
-	$(top_srcdir)/build/missing COPYING INSTALL README \
+	$(top_srcdir)/build/missing COPYING INSTALL README TODO \
 	build/compile build/config.guess build/config.sub \
 	build/depcomp build/install-sh build/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)

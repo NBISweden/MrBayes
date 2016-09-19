@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([MrBayes],[3.2.7-dev])
+AC_INIT([MrBayes],[pre-3.2.7])
 
 AC_CONFIG_AUX_DIR([build])
 
