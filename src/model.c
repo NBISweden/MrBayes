@@ -12269,7 +12269,7 @@ void FreeCppEvents (Param *p)
 
 int FreeModel (void)
 {
-    int     i;
+    int     i, j;
     Param   *p;
     
     if (memAllocs[ALLOC_MODEL] == YES)
@@ -12362,10 +12362,14 @@ int FreeModel (void)
         }
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
-        free (mcmcTree);
-        free (subParamPtrs);
-        mcmcTree = NULL;
-        subParamPtrs = NULL;
+        for (i = 0; i < numParams; ++i)
+            {
+            p = &params[i];
+            for (j = 0; i < numGlobalChains; ++j)
+                free(mcmcTree + p->treeIndex + 2 * j * numTrees);
+            }
+        SAFEFREE (mcmcTree);
+        SAFEFREE (subParamPtrs);
         memAllocs[ALLOC_MCMCTREES] = NO;
         }
     if (memAllocs[ALLOC_SYMPIINDEX] == YES)
