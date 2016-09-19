@@ -12373,7 +12373,7 @@ int FreeModel (void)
             p = &params[i];
 
             for (j = 0; i < numGlobalChains; ++j)
-                free (mcmcTree + p->treeIndex + 2 * j * numTrees);
+                FreeTree (GetTree (p, j, 0));
             }
 
         SAFEFREE (mcmcTree);
