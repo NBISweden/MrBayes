@@ -12287,8 +12287,7 @@ int FreeModel (void)
         for (i = 0; i < numApplicableMoves; i++)
             FreeMove (moves[i]);
 
-        free (moves);
-        moves = NULL;
+        SAFEFREE (moves);
         numApplicableMoves = 0;
         memAllocs[ALLOC_MOVES] = NO;
         }
@@ -12331,8 +12330,7 @@ int FreeModel (void)
 
     if (memAllocs[ALLOC_STDSTATEFREQS] == YES)
         {
-        free (stdStateFreqs);
-        stdStateFreqs = NULL;
+        SAFEFREE (stdStateFreqs);
         memAllocs[ALLOC_STDSTATEFREQS] = NO;
         }
 
@@ -12346,10 +12344,8 @@ int FreeModel (void)
                 FreeCppEvents (p);
             }
 
-        free (paramValues);
-        paramValues = NULL;
-        free (intValues);
-        intValues = NULL;
+        SAFEFREE (paramValues);
+        SAFEFREE (intValues);
         paramValsRowSize = intValsRowSize = 0;
         memAllocs[ALLOC_PARAMVALUES] = NO;
         }
@@ -12361,16 +12357,11 @@ int FreeModel (void)
             SAFEFREE (params[i].name);
 
             if (params[i].paramHeader)
-                {
-                free (params[i].paramHeader);
-                params[i].paramHeader = NULL;
-                }
+                SAFEFREE (params[i].paramHeader);
             }
 
-        free (params);
-        free (relevantParts);
-        params = NULL;
-        relevantParts = NULL;
+        SAFEFREE (params);
+        SAFEFREE (relevantParts);
         numParams = 0;
         memAllocs[ALLOC_PARAMS] = NO;
         }
