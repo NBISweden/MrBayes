@@ -8889,7 +8889,7 @@ int DoVersion (void)
     MrBayesPrint ("   ---------------------------------------------------------------------------\n");
     MrBayesPrint ("   Version\n");
     MrBayesPrint ("\n");
-    MrBayesPrint ("   MrBayes v%s\n", VERSION_NUMBER);
+    MrBayesPrint ("   MrBayes %s\n", VERSION_NUMBER);
     MrBayesPrint("\n");
     MrBayesPrint("   Features: ");
 #ifdef SSE_ENABLED

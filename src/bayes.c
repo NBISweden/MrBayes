@@ -821,7 +821,7 @@ int InitializeMrBayes (void)
 void PrintHeader (void)
 {
     MrBayesPrint ("\n\n");
-    MrBayesPrint ("                            MrBayes v%s %s\n\n", VERSION_NUMBER, HOST_CPU);
+    MrBayesPrint ("                            MrBayes %s %s\n\n", VERSION_NUMBER, HOST_CPU);
     MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #   if defined (MPI_ENABLED)
     MrBayesPrint ("                             (Parallel version)\n");
