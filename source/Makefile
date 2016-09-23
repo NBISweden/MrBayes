@@ -16,6 +16,7 @@ all: $(GENERATED_FILES)
 	@echo '<html lang=en><head><meta charset="utf-8"><title>MrBayes | $*</title>' >> $@
 	@echo '<link rel=stylesheet href="css/style.css"/>' >> $@
 	@echo '<link rel=stylesheet href="css/handheld.css" media="only screen and (min-device-width:320px) and (max-device-width:568px)" />' >> $@
+	@echo '<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>' >> $@
 	@echo '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' >> $@
 	@echo '</head><body>' >> $@
 	@echo '<header><h1>MrBayes: Bayesian Inference of Phylogeny</h1>' >> $@
