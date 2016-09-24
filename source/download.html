@@ -68,15 +68,12 @@
   announcements of new versions or bugfixes. We, therefore, recommend
   that you subscribe to the list if you are a regular MrBayes user.</p>
   
-  <!-- Extract download info from github with github-api -->
-  <script type="text/javascript">
+  <!-- Extract download info from github with github-api --> 
+  <script>
   function callbackRelease(response) {
-     // wait until document is ready before setting links
-     $( document ).ready(function() {
-       //alert('callback');
        var meta = response.meta;
        var objRelease = response.data[0];
-       console.log(meta);
+  
        var latest_url = objRelease.assets[0].browser_download_url;
        var latest_name = objRelease.assets[0].name;
        var latest_download_count = objRelease.assets[0].download_count;
@@ -84,9 +81,7 @@
        $( '#anchor_latest' ).attr("href", latest_url);
        $( '#anchor_latest' ).text(latest_name);
        $( '#download_count' ).text(latest_download_count);
-     
-     });
   }
-
   </script>
   <script src="https://api.github.com/repos/NBISweden/MrBayes/releases?callback=callbackRelease" type="text/javascript"></script>
+  
