@@ -5314,7 +5314,7 @@ int DoMatrixParm (char *parmName, char *tkn)
         }
     
     if (taxaInfo[0].charCount > 4010)
-        i = 1;
+        i = 1;  /* FIXME: Not used (from clang static analyzer) */
 
     if (foundNewLine == YES)
         {
@@ -8184,6 +8184,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
+            /* FIXME: t == NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             qq->anc = pp;
             pp->left = qq;
@@ -8349,6 +8350,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
+                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8370,6 +8372,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
+                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tkn);
                 pp->index = index;
                 }
@@ -8499,6 +8502,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
+            /* FIXME: t is NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             pp->sib = qq;
             qq->anc = pp->anc;
@@ -8671,6 +8675,7 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
+                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8717,6 +8722,7 @@ int DoTreeParm (char *parmName, char *tkn)
                         }
                     }
                 tempSet[index] = YES;
+                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, taxaNames[index]);
                 pp->index = index;
                 }
@@ -8760,6 +8766,7 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         else
             {
+            /* FIXME: pp is NULL here (from clang static analyzer) */
             if (pp->anc == NULL)
                 {
                 if (pp->left == NULL)
@@ -9450,7 +9457,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
             else if (allNumbers == TRUE && IsIn(**sourceH,"+-") && IsIn((*sourceH)[-1],"Ee"))
-                foundExpSign = TRUE;
+                foundExpSign = TRUE; /* FIXME: Not used (from clang static analyzer) */
             else if (!IsIn(**sourceH,"0123456789."))
                 allNumbers = FALSE;
             *temp++ = *(*sourceH)++;

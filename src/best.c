@@ -241,7 +241,6 @@ int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         {
         AllocateTreePartitions(speciesTree);
@@ -305,7 +304,6 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         {
         AllocateTreePartitions(speciesTree);
@@ -647,8 +645,6 @@ int IsSpeciesTreeConsistent (Tree *speciesTree, int chain)
     double  *speciesTreeDepthMatrix;
     Tree    **geneTrees;
 
-    answer = NO;
-
     freeBestVars = NO;
     if (memAllocs[ALLOC_BEST] == NO)
         {
@@ -915,7 +911,10 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
             if (nEvents == 0)
                 timeInterval = p->anc->nodeDepth - p->nodeDepth;
             else
+                {
+                /* FIXME: q == NULL if above loop not run (from clang static analyzer) */
                 timeInterval = p->anc->nodeDepth - q->nodeDepth;
+                }
 
             assert (p->anc->anc != NULL);
             assert (timeInterval >= 0.0);
@@ -959,7 +958,6 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         freeBitsets = YES;
     else
@@ -1489,6 +1487,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     assert (q != NULL && p->x == q->index);
 
     /* determine lower and upper bound */
+    /* FIXME: p->left == NULL?  (from clang static analyzer) */
     minDepth = p->left->nodeDepth + POS_MIN;
     if (p->right->nodeDepth + POS_MIN > minDepth)
         minDepth = p->right->nodeDepth + POS_MIN;

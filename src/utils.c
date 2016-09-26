@@ -296,7 +296,10 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -332,7 +335,10 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -401,7 +407,10 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -1578,15 +1587,18 @@ void *SafeRealloc (void *ptr, size_t s)
 
 
 /* SafeStrcat: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
-char *SafeStrcat (char **target, const char *source)
+char           *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) SafeCalloc (strlen(source)+1, sizeof(char));
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
     else
-        *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+strlen(*target)+1)*sizeof(char));
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + strlen (*target) +
+                                   1) * sizeof (char));
 
     if (*target)
-        strcat(*target, source);
+        strcat (*target, source);
 
     return (*target);
 }
@@ -1595,10 +1607,15 @@ char *SafeStrcat (char **target, const char *source)
 /* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcpy (char **target, const char *source)
 {
-    *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+1)*sizeof(char));
+    if (*target == NULL)
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
+    else
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + 1) * sizeof (char));
 
     if (*target)
-        strcpy(*target,source);
+        strcpy (*target, source);
 
     return (*target);
 }
@@ -4083,7 +4100,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     treeAgeMax = POS_INFINITY;
     if (t->root->left->isDated == YES)
         {
-        treeAgeMin = t->root->left->calibration->min;
+        treeAgeMin = t->root->left->calibration->min;   /* FIXME: Not used (from clang static analyzer) */
         treeAgeMax = t->root->left->calibration->max;
         }
     else if (!strcmp(mp->clockPr, "Uniform") ||
@@ -4091,7 +4108,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
              !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
-            treeAgeMin = mp->treeAgePr.min;
+            treeAgeMin = mp->treeAgePr.min; /* FIXME: Not used (from clang static analyzer) */
         if (mp->treeAgePr.max < treeAgeMax)
             treeAgeMax = mp->treeAgePr.max;
         }
@@ -9450,7 +9467,6 @@ void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
     int             i;
     MrBFlt          r, quantile, lower, upper;
             
-    r = (1.0 / K) * 0.5;
     lower = 0.0;
     upper = (1.0 / K);
     r = (upper - lower) * 0.5 + lower;

@@ -883,7 +883,7 @@ int AllocateTreeParams (void)
                 {
                 /* there is no brlen subparam */
                 /* so let subparam point to the param itself */
-                q = p->subParams[0] = p;
+                q = p->subParams[0] = p; /* FIXME: Not used (from clang static anasyzer) */
                 /* p->tree and p->treeIndex have been set above */
                 }
             else
@@ -2213,7 +2213,7 @@ int CheckExpandedModels (void)
                 /* everything checks out. Now we can initialize charId */
                 for (c=0; c<numChar; c++)
                     {
-                    nuc1 = nuc2 = -1;
+                    nuc2 = -1;
                     if (partitionId[c][partitionNum] == d+1 && charInfo[c].charId == 0)
                         {
                         nuc1 = c;
@@ -10548,6 +10548,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 return (ERROR);
                 }
             /* Post processing needed for some parameters */
+            /* FIXME: param is NULL here (from clang static analyzer) */
             if (param->paramType == P_SHAPE || param->paramType == P_CORREL)
                 {
                 for (i=0; i<chainParams.numRuns; i++)
@@ -10587,6 +10588,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
         foundName = YES;
 
         /* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
+        /* FIXME: tempName is NULL? (from clang static analyzer) */
         for (i=0; i<(int)strlen(tempName); i++)
             tempName[i] = (char)(tolower(tempName[i]));
         
@@ -19315,11 +19317,11 @@ int SetModelParams (void)
             SafeStrcat(&p->name, partString);
                     
             /* check that the model is not parsimony for all of the relevant partitions */
-            areAllPartsParsimony = YES;
+            areAllPartsParsimony = YES; /* FIXME: Not used (from clang static analyzer) */
             for (i=0; i<p->nRelParts; i++)
                 {
                 if (modelSettings[p->relParts[i]].parsModelId == NO)
-                    areAllPartsParsimony = NO;
+                    areAllPartsParsimony = NO; /* FIXME: Not used (from clang static analyzer) */
                 }
             
             /* find the parameter x prior type */
@@ -22834,8 +22836,7 @@ int ShowMoves (int used)
 {
     int             i, k, run, chain, chainIndex, areRunsSame, areChainsSame, numPrintedMoves;
     MCMCMove        *mv;
-    
-    chainIndex = 0;
+
     numPrintedMoves = 0;
     for (i=0; i<numApplicableMoves; i++)
         {

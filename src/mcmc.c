@@ -6834,7 +6834,6 @@ int InitParsSets (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        mp = &modelParams[d];
 
         m->parsSets = (BitsLong **) SafeCalloc (m->numParsSets, sizeof(BitsLong*));
         if (!m->parsSets)
@@ -7940,7 +7939,7 @@ MrBFlt LogPrior (int chain)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
                         }
-                    lnPrior += x;
+                    lnPrior += x; /* FIXME: x undefined? (from clang static analyzer) */
                     }
                 else if (p->paramId == BRLENS_CLOCK_SPCOAL)
                     {
@@ -9317,7 +9316,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
         for (i=0, k=numLocalTaxa; i<nNodes; i++)
             {
             coalescenceTime = ct[i];
-            intervalLength = coalescenceTime - lastCoalescenceTime;
+            intervalLength = coalescenceTime - lastCoalescenceTime; /* FIXME: Not used (from clang static analyzer) */
             tempD += growth * coalescenceTime + (((k * (k-1)) / (theta * growth)) * (exp(growth * lastCoalescenceTime) - exp(growth * coalescenceTime)));
             lastCoalescenceTime = ct[i];
             k--;
@@ -10030,6 +10029,8 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10112,6 +10113,8 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
 
@@ -10185,6 +10188,8 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10267,6 +10272,8 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
     
@@ -10698,6 +10705,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
                 {
                 for (i=0; i<nStates; i++)
                     {
+                    /* FIXME: clInvar == NULL if hasPInvar != YES (from clang static analyzer) */
                     cL[i] = *(clInvar++) * bs[i];
                     sum += cL[i];
                     }
@@ -12479,7 +12487,7 @@ int PrintStates (int curGen, int coldId)
                     continue;
                 d = partitionId[i][partitionNum] - 1;
                 m = &modelSettings[d];
-                mp = &modelParams[d];
+
                 if (m->printSiteRates == YES)
                     {
                     if (m->nCharsPerSite == 1)
@@ -12915,7 +12923,6 @@ int PrintStates (int curGen, int coldId)
             m = &modelSettings[d];
             if (m->printSiteRates == YES)
                 {
-                mp = &modelParams[d];
                 tree = GetTree (m->brlens, coldId, state[coldId]);
                 node = tree->root->left;
                 m->PrintSiteRates (node, d, coldId);
@@ -16514,10 +16521,6 @@ int RunChain (RandLong *seed)
         }
 #   endif
 
-    if (chainParams.relativeBurnin == NO)
-        lastDiagnostics = chainParams.chainBurnIn;
-    else
-        lastDiagnostics = 0;
     stopChain = NO;
 
     for (i=0; i<chainParams.numRuns; i++)
@@ -17097,7 +17100,6 @@ int RunChain (RandLong *seed)
             stoppingT1 = time(0);
             currentCPUTime = clock();
             CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
-            previousCPUTime = currentCPUTime;
             chainParams.numGen += ExtendChainQuery ();
             stoppingT2 = time(0);
             startingT += (stoppingT2-stoppingT1);
@@ -18442,8 +18444,8 @@ int SetUpPartitionCounters (void)
     partFreqTreeRoot = (PFNODE **) SafeCalloc (numTopologies, sizeof (PFNODE *));
     if (partFreqTreeRoot == NULL)
         {
-        free (partition);
         free (partition[0]);
+        free (partition);
         MrBayesPrint ("%s   Failed to allocate partFreqTreeRoot in SetUpPartitionCounters\n", spacer);
         return ERROR;
         }

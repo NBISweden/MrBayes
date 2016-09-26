@@ -2044,7 +2044,6 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
     for (i=0; i<nHeaders; i++)
         {
         strcpy (temp, headerNames[i]);
-        len = (int) strlen(temp);
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
@@ -2543,7 +2542,6 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
     for (i=0; i<nHeaders; i++)
         {
         SafeStrcpy(&temp, headerNames[i]);
-        len = (int) strlen(temp);
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
@@ -3304,7 +3302,6 @@ treeConstruction:
         /* count bits in this partition */
         for (j=nBits=0; j<sumtParams.BitsLongsNeeded; j++)
             {
-            x = partition[j];
             for (x = partition[j]; x != 0; x &= (x - 1))
                 nBits++;
             }
@@ -5578,7 +5575,6 @@ int DoSumt (void)
                 x = treeParts[i];
                 tempStrLength=(int)strlen(tempStr);
                 SafeSprintf (&tempStr,&tempStrLength, "length%s[%d]", divString, i);
-                len = (int) strlen(tempStr);
 
                 GetSummary (x->length, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5598,7 +5594,6 @@ int DoSumt (void)
                     x = treeParts[i];
                     tempStrLength=(int)strlen(tempStr);
                     SafeSprintf (&tempStr,&tempStrLength, "height%s[%d]", divString, i);
-                    len = (int) strlen(tempStr);
 
                     GetSummary (x->height, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5618,7 +5613,6 @@ int DoSumt (void)
                     x = treeParts[i];
                     tempStrLength=(int)strlen(tempStr);
                     SafeSprintf (&tempStr,&tempStrLength, "age%s[%d]", divString, i);
-                    len = (int) strlen(tempStr);
 
                     GetSummary (x->age, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5639,7 +5633,6 @@ int DoSumt (void)
                         x = treeParts[j];
                         tempStrLength=(int)strlen(tempStr);
                         SafeSprintf (&tempStr,&tempStrLength, "%s_length[%d]", sumtParams.bSetName[i], j);
-                        len = (int) strlen(tempStr);
 
                         GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5653,7 +5646,6 @@ int DoSumt (void)
                         x = treeParts[j];
                         tempStrLength=(int)strlen(tempStr);
                         SafeSprintf (&tempStr,&tempStrLength, "%s_rate[%d]", sumtParams.bSetName[i], j);
-                        len = (int) strlen(tempStr);
 
                         GetSummary (x->bRate[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5670,7 +5662,6 @@ int DoSumt (void)
                         x = treeParts[j];
                         tempStrLength=(int)strlen(tempStr);
                         SafeSprintf (&tempStr,&tempStrLength, "%s_nEvents[%d]", sumtParams.eSetName[i], j);
-                        len = (int) strlen(tempStr);
 
                         GetIntSummary (x->nEvents[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
@@ -5690,7 +5681,6 @@ int DoSumt (void)
                     x = treeParts[j];
                     tempStrLength=(int)strlen(tempStr);
                     SafeSprintf (&tempStr,&tempStrLength, "%s[%d]", sumtParams.popSizeSetName, j);
-                    len = (int) strlen(tempStr);
 
                     GetSummary (x->popSize, sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
 
