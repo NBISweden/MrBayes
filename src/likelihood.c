@@ -5650,7 +5650,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
        we properly calculate likelihoods when some site patterns have increased or decreased weight. For
        now, we do not allow MCMCMC with character reweighting with this HMM; we bail out in the function
        FillNumSitesOfPat if we have Adgamma rate variation and reweighting. */
-    k = whichSitePats;
+    k = whichSitePats;  /* FIXME: Not used (from clang static analyzer) */
     
     /* find model settings */
     m = &modelSettings[division];
@@ -10538,7 +10538,6 @@ int UpDateCijk (int whichPart, int whichChain)
             numQAllocated = m->nCijkParts;
             sizeOfSingleCijk = m->cijkLength / m->nCijkParts;
             n = m->numModelStates;
-            n3 = n * n * n;
 #   if defined (BEAGLE_ENABLED)
             if (m->useBeagle == YES)
                 eigenValues = m->cijks[m->cijkIndex[whichChain]/m->nCijkParts];
@@ -10555,7 +10554,6 @@ int UpDateCijk (int whichPart, int whichChain)
             inverseEigvecs = AllocateSquareDoubleMatrix (n);
             Ceigvecs = AllocateSquareComplexMatrix (n);
             CinverseEigvecs = AllocateSquareComplexMatrix (n);
-            bs = GetParamSubVals (m->stateFreq, whichChain, state[whichChain]);
             
             if (m->nCijkParts == 1)
                 {
