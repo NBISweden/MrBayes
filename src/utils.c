@@ -296,7 +296,10 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -332,7 +335,10 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -401,7 +407,10 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
