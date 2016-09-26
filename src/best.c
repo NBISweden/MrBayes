@@ -241,7 +241,6 @@ int GetDepthMatrix (Tree *speciesTree, double *depthMatrix) {
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         {
         AllocateTreePartitions(speciesTree);
@@ -305,7 +304,6 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         {
         AllocateTreePartitions(speciesTree);
@@ -647,8 +645,6 @@ int IsSpeciesTreeConsistent (Tree *speciesTree, int chain)
     double  *speciesTreeDepthMatrix;
     Tree    **geneTrees;
 
-    answer = NO;
-
     freeBestVars = NO;
     if (memAllocs[ALLOC_BEST] == NO)
         {
@@ -959,7 +955,6 @@ double LnProposalProbSpeciesTree (Tree *speciesTree, double *depthMatrix, double
     TreeNode    *p;
 
     // Make sure we have bitfields allocated and set
-    freeBitsets = NO;
     if (speciesTree->bitsets == NULL)
         freeBitsets = YES;
     else
