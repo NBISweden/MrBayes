@@ -4091,7 +4091,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     treeAgeMax = POS_INFINITY;
     if (t->root->left->isDated == YES)
         {
-        treeAgeMin = t->root->left->calibration->min;
+        treeAgeMin = t->root->left->calibration->min;   /* FIXME: Not used (from clang static analyzer) */
         treeAgeMax = t->root->left->calibration->max;
         }
     else if (!strcmp(mp->clockPr, "Uniform") ||
@@ -4099,7 +4099,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
              !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
-            treeAgeMin = mp->treeAgePr.min;
+            treeAgeMin = mp->treeAgePr.min; /* FIXME: Not used (from clang static analyzer) */
         if (mp->treeAgePr.max < treeAgeMax)
             treeAgeMax = mp->treeAgePr.max;
         }
@@ -9458,7 +9458,6 @@ void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
     int             i;
     MrBFlt          r, quantile, lower, upper;
             
-    r = (1.0 / K) * 0.5;
     lower = 0.0;
     upper = (1.0 / K);
     r = (upper - lower) * 0.5 + lower;
