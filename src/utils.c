@@ -1578,15 +1578,18 @@ void *SafeRealloc (void *ptr, size_t s)
 
 
 /* SafeStrcat: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
-char *SafeStrcat (char **target, const char *source)
+char           *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) SafeCalloc (strlen(source)+1, sizeof(char));
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
     else
-        *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+strlen(*target)+1)*sizeof(char));
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + strlen (*target) +
+                                   1) * sizeof (char));
 
     if (*target)
-        strcat(*target, source);
+        strcat (*target, source);
 
     return (*target);
 }
@@ -1595,10 +1598,15 @@ char *SafeStrcat (char **target, const char *source)
 /* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcpy (char **target, const char *source)
 {
-    *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+1)*sizeof(char));
+    if (*target == NULL)
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
+    else
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + 1) * sizeof (char));
 
     if (*target)
-        strcpy(*target,source);
+        strcpy (*target, source);
 
     return (*target);
 }
