@@ -7939,7 +7939,7 @@ MrBFlt LogPrior (int chain)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
                         }
-                    lnPrior += x;
+                    lnPrior += x; /* FIXME: x undefined? (from clang static analyzer) */
                     }
                 else if (p->paramId == BRLENS_CLOCK_SPCOAL)
                     {
@@ -10697,6 +10697,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
                 {
                 for (i=0; i<nStates; i++)
                     {
+                    /* FIXME: clInvar == NULL if hasPInvar != YES (from clang static analyzer) */
                     cL[i] = *(clInvar++) * bs[i];
                     sum += cL[i];
                     }
