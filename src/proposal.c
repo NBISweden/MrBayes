@@ -2255,6 +2255,7 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     
     if (numMovableNodesNew!=numMovableNodesOld)
     {
+        /* FIXME: numMovableNodesNew may be zero (from clang static analyzer) */
         (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
     }
     
