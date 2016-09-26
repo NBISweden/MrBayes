@@ -18442,8 +18442,8 @@ int SetUpPartitionCounters (void)
     partFreqTreeRoot = (PFNODE **) SafeCalloc (numTopologies, sizeof (PFNODE *));
     if (partFreqTreeRoot == NULL)
         {
-        free (partition);
         free (partition[0]);
+        free (partition);
         MrBayesPrint ("%s   Failed to allocate partFreqTreeRoot in SetUpPartitionCounters\n", spacer);
         return ERROR;
         }
