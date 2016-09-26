@@ -5314,7 +5314,7 @@ int DoMatrixParm (char *parmName, char *tkn)
         }
     
     if (taxaInfo[0].charCount > 4010)
-        i = 1;
+        i = 1;  /* FIXME: Not used (from clang static analyzer) */
 
     if (foundNewLine == YES)
         {
@@ -9450,7 +9450,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
             else if (allNumbers == TRUE && IsIn(**sourceH,"+-") && IsIn((*sourceH)[-1],"Ee"))
-                foundExpSign = TRUE;
+                foundExpSign = TRUE; /* FIXME: Not used (from clang static analyzer) */
             else if (!IsIn(**sourceH,"0123456789."))
                 allNumbers = FALSE;
             *temp++ = *(*sourceH)++;
