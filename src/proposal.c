@@ -9458,12 +9458,18 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
 errorExit:
 
-    free (subtree->allDownPass);
-    free (subtree->intDownPass);
-    free (subtree->nodes);
-    free (subtree1->allDownPass);
-    free (subtree1->intDownPass);
-    free (subtree1->nodes);
+    if (subtree != NULL)
+        {
+        free (subtree->allDownPass);
+        free (subtree->intDownPass);
+        free (subtree->nodes);
+        }
+    if (subtree1 != NULL)
+        {
+        free (subtree1->allDownPass);
+        free (subtree1->intDownPass);
+        free (subtree1->nodes);
+        }
     free (brlensCur);
     free (tInfo.leaf);
 
