@@ -10029,6 +10029,8 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10111,6 +10113,8 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
 
@@ -10184,6 +10188,8 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10266,6 +10272,8 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
     
