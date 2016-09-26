@@ -9488,7 +9488,7 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
     v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
     igrvar, *igrRate=NULL, nu, *tk02Rate=NULL, minLength=0.0, length=0.0,
     cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
-    divFactor, nStates, rateMult, v_approx, minV;
+    divFactor, nStates, v_approx, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
     Tree        *t;
@@ -11888,7 +11888,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
                 igrvar, *igrRate=NULL, nu, *tk02Rate=NULL, minLength=0.0, length=0.0,
-                cumulativeProb, warpFactor, sum1, sum2, ran, divFactor, nStates, rateMult, v_approx, minV;
+                cumulativeProb, warpFactor, sum1, sum2, ran, divFactor, nStates, v_approx, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
     Tree        *t;
