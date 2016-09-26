@@ -10548,6 +10548,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 return (ERROR);
                 }
             /* Post processing needed for some parameters */
+            /* FIXME: param is NULL here (from clang static analyzer) */
             if (param->paramType == P_SHAPE || param->paramType == P_CORREL)
                 {
                 for (i=0; i<chainParams.numRuns; i++)
@@ -10587,6 +10588,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
         foundName = YES;
 
         /* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
+        /* FIXME: tempName is NULL? (from clang static analyzer) */
         for (i=0; i<(int)strlen(tempName); i++)
             tempName[i] = (char)(tolower(tempName[i]));
         
