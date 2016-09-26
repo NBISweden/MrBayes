@@ -87,7 +87,7 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     subValue = GetParamSubVals(param, chain, state[chain]);
 
     /* get old value of model */
-    newM = oldM = (int)*GetParamVals(param, chain, state[chain]);
+    oldM = (int)*GetParamVals(param, chain, state[chain]);
     
     /* get a new model ID */
     do
@@ -343,7 +343,7 @@ int Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     markovTiValues = GetParamSubVals (param, chain, state[chain]);
 
     /* get old value of rho */
-    newP = oldP = *GetParamVals(param, chain, state[chain]);
+    oldP = *GetParamVals(param, chain, state[chain]);
 
     /* change value for rho */
     ran = RandomNumber(seed);
@@ -2398,7 +2398,6 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         (*lnPriorRatio) += brlensExp * (m - x);
 
     /* move around in root subtree */
-    nRootNodes = 0;
     if (moveInRoot == YES)
         {
         /* mark nodes in root part */
@@ -2557,7 +2556,6 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
 
     /* move around in crown subtree */
-    nCrownNodes = 0;
     if (moveInRoot == NO)
         {
         /* set up pointers for crown part */
@@ -4225,13 +4223,13 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* set up pointers for nodes around the picked branch */
     a = p;
     if (p->anc->left == p)
-        q = p->anc->right;
+        q = p->anc->right;  /* FIXME: Not used? (from clang static analyzer) */
     else
-        q = p->anc->left;
+        q = p->anc->left;   /* FIXME: Not used? (from clang static analyzer) */
     if (p->anc->anc->left == p->anc)
-        c = p->anc->anc->right;
+        c = p->anc->anc->right; /* FIXME: Not used? (from clang static analyzer) */
     else
-        c = p->anc->anc->left;
+        c = p->anc->anc->left;  /* FIXME: Not used? (from clang static analyzer) */
 
     /* record branch length */
     oldALength = a->length;
@@ -4476,7 +4474,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     (*lnProposalRatio) += log (backwardProb / forwardProb);
 
     /* adjust for number of free nodes */
-    numFreeNew = t->nNodes-2;
+    numFreeNew = t->nNodes-2;   /* FIXME: Not used? (from clang static analyzer) */
     if (t->nConstraints > 1)
         {
         numFreeNew = 0;
@@ -5181,7 +5179,7 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* get old value of theta */
     newG = oldG = *GetParamVals(param, chain, state[chain]);
     if (newG < minG)
-        newG = oldG = minG;
+        oldG = minG;
 
     /* change value of growth */
     ran = RandomNumber(seed);
@@ -6135,7 +6133,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     }
 #endif
 
-    topologyHasChanged = NO;
+    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
 
 #   if defined (DEBUG_LOCAL)
     printf ("Before:\n");
@@ -8937,7 +8935,7 @@ int Move_OmegaNeu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get old value of omega */
     value = GetParamVals(param, chain, state[chain]);
-    newO = oldO = value[1];
+    oldO = value[1];
 
     /* get minimum and maximum values for omega */
     minO = value[0];
@@ -9018,7 +9016,7 @@ int Move_OmegaPos (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get old value of omega */
     value = GetParamVals(param, chain, state[chain]);
-    newO = oldO = value[2];
+    oldO = value[2];
     
     /* determine prior for omega */
     omegaUni = omegaExp1 = omegaExp2 = NO;
@@ -9116,7 +9114,7 @@ int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get old value of omega */
     value = GetParamVals(param, chain, state[chain]);
-    newO = oldO = value[0];
+    oldO = value[0];
     
     /* get minimum and maximum values for omega */
     minO = 0.0;
@@ -9217,11 +9215,11 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     tInfo.leaf = NULL;
 
     /* Set alpha Pi for Dirichlet p generator */
-    alphaPi = mvp[0];
+    alphaPi = mvp[0];   /* FIXME: Not used (from clang static analyzer) */
     alphaPi = 0.05;
     
     /* Set the parsimony warp factor */
-    warp = mvp[1];
+    warp = mvp[1];  /* FIXME: Not used (from clang static analyzer) */
     warp = 0.2;
     
     /* Set the number of terminals (nSubTerminals, column 3) in erased tree */
@@ -9231,7 +9229,7 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                   4 => 5      => 6         => 14             => 24 = 4!            => 105 = 1*3*5*7
                   5 => 6      => 7         => 42             => 120 = 5!           => 945 = 1*3*5*7*9
                   etc               */  
-    nSubTerminals = (int) (RandomNumber(seed) * 4) + 4;
+    nSubTerminals = (int) (RandomNumber(seed) * 4) + 4; /* FIXME: Not used (from clang static analyzer) */
     nSubTerminals = 7;
 
     /* initialize log prior and log proposal probabilities */
@@ -9759,12 +9757,6 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
             /* Find model settings */
             m = &modelSettings[division];
             
-            /* find nStates and ratemult */
-            nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
-                nStates = 2;
-            rateMult = GetRate(division, chain);
-            
             /* find nSitesOfPat */
             nSites = nSitesOfPat + m->compCharStart;
             
@@ -10171,7 +10163,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #   endif
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;
+    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -10626,7 +10618,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;
+    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
     
     /* pick a random branch */
     do  {
@@ -11275,7 +11267,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;
+    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
     
     /* pick a random branch */
     do  {
@@ -12141,12 +12133,6 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             /* Find model settings */
             m = &modelSettings[division];
 
-            /* find nStates and ratemult */
-            nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
-                nStates = 2;
-            rateMult = GetRate(division, chain);
-
             /* find nSitesOfPat */
             nSites = nSitesOfPat + m->compCharStart;
 
@@ -12525,7 +12511,7 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;
+    topologyHasChanged = NO; /* FIXME: Not used (from clang static analyzer) */
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -12986,7 +12972,6 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
 //  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
-    v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     tuning = mvp[3];                      /* multiplier tuning parameter */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
 
@@ -13037,7 +13022,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;
+    topologyHasChanged = NO; /* FIXME: Not used (from clang static analyzer) */
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -13511,7 +13496,7 @@ int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     maxP = mp->pInvarUni[1];
 
     /* get old value of pInvar */
-    newP = oldP = *GetParamVals(param, chain, state[chain]);
+    oldP = *GetParamVals(param, chain, state[chain]);
 
     /* change value for pInvar */
     ran = RandomNumber(seed);
@@ -13699,7 +13684,7 @@ int Move_PosRealLognormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
     maxX = param->max;
 
     /* get old value of X */
-    newX = oldX = *GetParamVals(param, chain, state[chain]);
+    oldX = *GetParamVals(param, chain, state[chain]);
 
     /* change value of X */
     u = RandomNumber(seed);
@@ -13747,7 +13732,7 @@ int Move_PosRealMultiplier (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     maxX = param->max;
 
     /* get old value of X */
-    newX = oldX = *GetParamVals(param, chain, state[chain]);
+    oldX = *GetParamVals(param, chain, state[chain]);
 
     /* change value of X */
     ran = RandomNumber(seed);
@@ -14466,7 +14451,6 @@ int Move_Revmat_SplitMerge1 (Param *param, int chain, RandLong *seed, MrBFlt *ln
         merge = NO;
 
     /* now split or merge */
-    R = R_i = R_j = 0.0;
     if (merge == YES)
         {
         /* merge two rates */
@@ -15567,7 +15551,7 @@ int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* get old value of switching rate */
     value = GetParamVals(param, chain, state[chain]);
-    newS = oldS = value[whichRate];
+    oldS = value[whichRate];
 
     /* change value for switching rate */
     ran = RandomNumber(seed);
@@ -15654,7 +15638,7 @@ int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
     /* get old value of switching rate */
     value = GetParamVals(param, chain, state[chain]);
-    newS = oldS = value[whichRate];
+    oldS = value[whichRate];
 
     /* change value for switching rate */
     ran = RandomNumber(seed);
@@ -16250,7 +16234,7 @@ int Move_RealNormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     maxX = param->max;
 
     /* get old value of X */
-    newX = oldX = *GetParamVals(param, chain, state[chain]);
+    oldX = *GetParamVals(param, chain, state[chain]);
 
     /* change value */
     u = RandomNumber(seed);
@@ -16298,7 +16282,7 @@ int Move_RealSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     maxX = param->max;
 
     /* get old value of X */
-    newX = oldX = *GetParamVals(param, chain, state[chain]);
+    oldX = *GetParamVals(param, chain, state[chain]);
 
     /* change value */
     u = RandomNumber(seed);
