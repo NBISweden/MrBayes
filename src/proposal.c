@@ -1593,7 +1593,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     
     /* get minimum and maximum values */
     minM = 0.0;
-    maxM = 0.99999;
+    maxM = 0.999999;
 
     /* get pointer to value to be changed */
     valIndex = (int)(RandomNumber(seed) * param->nValues);
@@ -1703,7 +1703,7 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     m = &modelSettings[param->relParts[0]];
     
     /* get minimum and maximum values */
-    minM = 0.00001;
+    minM = 0.000001;
     maxM = 1.0;
     
     /* get pointer to value to be changed */
