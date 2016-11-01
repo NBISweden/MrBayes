@@ -9081,8 +9081,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
         rho[i] = 0.0;
         }
-    lambda[sl] = lambda[sl-1];
-    mu[sl]  = mu[sl-1];
+    lambda[sl] = lambda[sl-1];  netDiver[sl] = netDiver[sl-1];
+    mu[sl]  = mu[sl-1];         turnOver[sl] = turnOver[sl-1];
     psi[sl] = 0.0;   // psi = 0 in [0, x_cut]
     rho[sl] = 1.0;   // not sF
 
