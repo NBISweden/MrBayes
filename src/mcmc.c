@@ -8883,15 +8883,13 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         else
             p_t[i] = (lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
-        }
-    
+        
 #   ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl; i++)
         printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
-                i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
-    for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i, c1[i], c2[i], i+1, i, p_t[i]);
+                    i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+        printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
+        }
     
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
@@ -9101,16 +9099,14 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         else
             p_t[i] = (lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
-        }
-    
+
 #   ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl; i++)
-        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
-                i, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
-    for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i, c1[i], c2[i], i+1, i, p_t[i]);
+            printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+                    i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+            printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
-    
+        }
+
     /* first calculate prob of the fbd tree assuming complete sampling */
     (*prob) = 0.0;
     
