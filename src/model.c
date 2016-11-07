@@ -12374,7 +12374,7 @@ int FreeModel (void)
             {
             p = &params[i];
 
-            for (j = 0; i < numGlobalChains; ++j)
+            for (j = 0; j < numGlobalChains; ++j)
                 FreeTree (GetTree (p, j, 0));
             }
 
