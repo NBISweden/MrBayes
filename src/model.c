@@ -12370,6 +12370,11 @@ int FreeModel (void)
 
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
+            /* FIXME: Trees needs to be deallocated, but I can't figure
+                out how many there are.  The loop below tries te free
+                unallocated memory...
+             */
+            /*
         for (i = 0; i < numParams; ++i)
             {
             p = &params[i];
@@ -12377,6 +12382,7 @@ int FreeModel (void)
             for (j = 0; j < numGlobalChains; ++j)
                 FreeTree (GetTree (p, j, 0));
             }
+            */
 
         SAFEFREE (mcmcTree);
         SAFEFREE (subParamPtrs);
