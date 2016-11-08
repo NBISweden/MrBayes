@@ -8885,9 +8885,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
         
 #   ifdef DEBUG_FBDPR
-        printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
-                    i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
-        printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
+    printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+            i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+    printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
         }
     
@@ -8962,14 +8962,15 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
             }
         }
     
+    /* condition on sampling a fossil OR a extant taxa */
     (*prob) += 2.0 * (LnQi_fossil(tmrca, t_f, sl, c1,c2) - log(1- p_t[0]));
+    
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
     
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
-    
-    /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
@@ -9101,9 +9102,9 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
 
 #   ifdef DEBUG_FBDPR
-            printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
-                    i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
-            printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
+    printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+            i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+    printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
         }
 
@@ -9175,6 +9176,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             }
         }
     
+    /* condition on sampling a fossil OR a extant taxa */
     (*prob) += 2.0 * (LnQi_fossil(tmrca, t_f, sl, c1,c2) - log(1- p_t[0]));
     
     /* number of extant taxa not sampled */
@@ -9183,13 +9185,13 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* then calculate the prob of the fbd tree assuming diversified sampling of extant */
     (*prob) += M_x * (log(lambda[sl] * (1.0 - exp((mu[sl]-lambda[sl])*t_f[sl-1]))) - log(lambda[sl] - mu[sl] * exp((mu[sl]-lambda[sl])*t_f[sl-1])));
     
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
+
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-    /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
-
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
     printf ("prob=%lf\n", *prob);

@@ -11308,7 +11308,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == EXTRATE_FIX)
                         value[j] = mp->extinctionFix;
                     else
-                        value[j] = 0.8;
+                        value[j] = 0.5;
                     }
                 }
             else if (p->paramType == P_FOSLRATE)
@@ -12271,7 +12271,7 @@ void FreeCppEvents (Param *p)
 
 int FreeModel (void)
 {
-    int             i, j;
+    int             i;
     Param          *p;
 
     if (memAllocs[ALLOC_MODEL] == YES)
