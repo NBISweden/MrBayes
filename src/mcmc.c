@@ -8866,9 +8866,9 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 0.0;
+        rho[i] = 1E-20;  // to avoid prob being -inf
         }
-    rho[sl] = sF;
+    rho[sl] = sF;  // 0 < sF <= 1
 
     for (i = sl; i >= 0; i--)
         {
@@ -8883,14 +8883,14 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         else
             p_t[i] = (lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
-        
+
 #   ifdef DEBUG_FBDPR
     printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
             i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
     printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
         }
-    
+
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
     
@@ -8915,7 +8915,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
-                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -8930,35 +8929,28 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/5) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
-                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
-                             - LnQi_fossil(x, t_f, sl, c1,c2);
+                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil tip at silice time t[j] */
                     {
-                    (*prob) += log(p_t[j+1]);
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
                 M++;              /* number of fossil tips */
                 }
             else
                 {
-                if (rho[sl] > 0.0)
-                    {
-                    (*prob) += log(rho[sl]);
-                    }
+                (*prob) += log(rho[sl]);  // 0 < rho[sl] <= 1
                 E++;              /* number of extant taxa */
                 }
             }
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (p->length > 0.0)
-                if ((p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
-                    {
-                    (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
-                    if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
-                    }
+            if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
+                {
+                (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2) + log(1 - rho[j]);
+                }
             }
         }
     
@@ -8967,7 +8959,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     
     /* conversion to labeled tree from oriented tree */
     (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
-    
+
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
@@ -8999,7 +8991,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
        Extant taxa are sampled with prop sF to maximize diversity. */
     
     int         i, j, i1, i2, i3,  sl,  K, M, E;
-    MrBFlt      x, tmrca, *t_f, x_min, t_min, M_x, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
+    MrBFlt      x, tmrca, *t_f, x_cut, M_x, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
@@ -9019,27 +9011,25 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     sl = GetTotalRateShifts(mp, t_f) + 1;
     
     /* get time of youngest fossil and internal node */
-    t_min = x_min = tmrca;
+    x_cut = tmrca;
     for (i = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         if (p->left == NULL && p->nodeDepth > 0.0)  //fossil
-            if (t_min > p->nodeDepth / clockRate)
-                t_min = p->nodeDepth / clockRate;
+            if (x_cut > p->nodeDepth / clockRate)
+                x_cut = p->nodeDepth / clockRate;
         if (p->left != NULL && p->right != NULL &&
-            p->left->length > 0.0 && p->right->length > 0.0)
-            if (x_min > p->nodeDepth / clockRate)
-                x_min = p->nodeDepth / clockRate;
+            p->left->length > 0.0 && p->right->length > 0.0)  // internal
+            if (x_cut > p->nodeDepth / clockRate)
+                x_cut = p->nodeDepth / clockRate;
         }
 
     /* lower the cutoff time if not compatible */
-    if (x_min > t_min)
-        x_min = t_min;
-    if (sl > 1 && t_f[sl-2] < x_min)
-        x_min = t_f[sl-2];
+    if (sl > 1 && x_cut > t_f[sl-2])
+        x_cut = t_f[sl-2];
     
     t_f[sl] = 0.0;
-    t_f[sl-1] = x_min * 0.95; // x_cut
+    t_f[sl-1] = x_cut * 0.95;  // x_cut
     assert (t_f[0] < tmrca);
 
     /* alloc memory for the other parameters */
@@ -9080,7 +9070,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 0.0;
+        rho[i] = 1E-20;  // to avoid prob being -inf
         }
     lambda[sl] = lambda[sl-1];  netDiver[sl] = netDiver[sl-1];
     mu[sl]  = mu[sl-1];         turnOver[sl] = turnOver[sl-1];
@@ -9132,7 +9122,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
-                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -9147,32 +9136,28 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/5) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
-                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
-                             - LnQi_fossil(x, t_f, sl, c1,c2);
+                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil tip at silice time t[j] */
                     {
-                    (*prob) += log(p_t[j+1]);
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
                 M++;              /* number of fossil tips */
                 }
             else
                 {
-                //  (*prob) += log(rho[sl]);  // rho[sl] == 1
+                // (*prob) += log(rho[sl]);  // rho[sl] = 1
                 E++;              /* number of extant taxa */
                 }
             }
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (p->length > 0.0)
-                if ((p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
-                    {
-                    (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
-                    if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
-                    }
+            if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
+                {
+                (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2) + log(1 - rho[j]);
+                }
             }
         }
     
