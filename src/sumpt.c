@@ -4567,7 +4567,7 @@ int DoCompRefTree (void)
     
     char         outName[130], inName[130], inRefName[130], treeName[100], *lineBuf=NULL, *s;
     FILE         *fpTre=NULL, *fpOut=NULL;
-    int          i, n, longestL=0, burnin, gen, nRefRun, nTre[100]={0};
+    int          i, n, longestL=0, burnin, gen, nRefRun, nTre[2]={0}, skip;
     SumtFileInfo tFileInfo;
     Tree         *t;
 
@@ -4583,10 +4583,10 @@ int DoCompRefTree (void)
         return (ERROR);
         }
 
-    /* this is a hack to account for the additional comparing tree sample 
+    /* this is a hack to account for the comparing (0) and the reference (1) tree samples
        chainParams.numRuns is used in AddTreeToPartitionCounters to alloc mem correctly */
     nRefRun = chainParams.numRuns;
-    chainParams.numRuns += 1;
+    chainParams.numRuns = 2;
 
     /* initialize */
     if ((t = AllocateTree (numLocalTaxa)) == NULL)
@@ -4609,7 +4609,8 @@ int DoCompRefTree (void)
             sprintf (inRefName, "%s.t", comptreeParams.comptFileName2);
         else
             sprintf (inRefName, "%s.run%d.t", comptreeParams.comptFileName2, n+1);
-        
+        MrBayesPrint ("%s   Processing run %d in the reference trees\n", spacer, n+1);
+            
         /* Examine each ref tree file, save info to tFileInfo */
         if (ExamineSumtFile(inRefName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
             goto errorExit;
@@ -4646,7 +4647,7 @@ int DoCompRefTree (void)
             }
         
         /* process each ref tree */
-        for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
+        for (i=0; i < tFileInfo.numTreesInLastBlock; i++)
             {
             do {
                 if (fgets (lineBuf, longestL-2, fpTre) == NULL)
@@ -4656,26 +4657,27 @@ int DoCompRefTree (void)
             while (strcmp (s, "tree") != 0);
             
             /* add reference trees to partition counters, discarding burnin */
-            if (i > burnin)
-                {
-                s = strtok (NULL, ";");
-                while (*s != '(')
-                    s++;
-                StripComments(s);
+            if (i < burnin) continue;
+    
+            s = strtok (NULL, ";");
+            while (*s != '(')
+                s++;
+            StripComments(s);
 
-                if (ResetTopology (t, s) == ERROR)
-                    goto errorExit;
-                if (AddTreeToPartitionCounters (t, 0, n) == ERROR)
-                    goto errorExit;
-                nTre[n]++;
-                }
+            if (ResetTopology (t, s) == ERROR)
+                goto errorExit;
+            if (AddTreeToPartitionCounters (t, 0, 0) == ERROR)
+                goto errorExit;
+            nTre[0]++;
             }
+        MrBayesPrint ("%s   \t%d trees processed, %d trees discarded as burnin\n", spacer, tFileInfo.numTreesInLastBlock, burnin);
 
         /* close the tree file */
         SafeFclose (&fpTre);
         }
     /* end reference tree files */
-    
+    MrBayesPrint ("%s   %d reference trees in total\n", spacer, nTre[0]);
+
     /* open output file */
     strcpy (outName, comptreeParams.comptOutfile);
     strcat (outName, ".sdsf");
@@ -4715,7 +4717,8 @@ int DoCompRefTree (void)
         }
 
     /* process each tree to be compared and print SDSF to file */
-    for (i=1; i <= tFileInfo.numTreesInLastBlock; i++)
+    skip = 1; // skip the first few trees (default 1)
+    for (i=0; i < tFileInfo.numTreesInLastBlock; i++)
         {
         do {
             if (fgets (lineBuf, longestL-2, fpTre) == NULL)
@@ -4724,6 +4727,8 @@ int DoCompRefTree (void)
             }
         while (strcmp (s, "tree") != 0);
         
+        if (i < skip) continue;
+            
         s = strtok (NULL, ";");
         gen = atoi(s+4);  // 4 is offset to get rid of "rep." in tree name
         while (*s != '(')
@@ -4733,9 +4738,9 @@ int DoCompRefTree (void)
         /* add the tree to partition counters */
         if (ResetTopology (t, s) == ERROR)
             goto errorExit;
-        if (AddTreeToPartitionCounters (t, 0, nRefRun) == ERROR)
+        if (AddTreeToPartitionCounters (t, 0, 1) == ERROR)
             goto errorExit;
-        nTre[nRefRun]++;
+        nTre[1]++;
             
         /* calculate and write stdev of split freq */
         CalcTopoConvDiagn2 (nTre);
@@ -4752,9 +4757,10 @@ int DoCompRefTree (void)
             MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].max);
             }
         }
+    MrBayesPrint ("%s   %d comparing trees processed\n", spacer, nTre[1]);
     
     /* change back to the actual numRuns, end of hack */
-    chainParams.numRuns -= 1;
+    chainParams.numRuns = nRefRun;
     
     /* close tree file */
     SafeFclose (&fpTre);
@@ -4771,7 +4777,7 @@ int DoCompRefTree (void)
 errorExit:
     MrBayesPrint ("%s   Error in DoCompRefTree\n", spacer);
     
-    chainParams.numRuns -= 1;
+    chainParams.numRuns = nRefRun;
     SafeFclose (&fpTre);
     SafeFclose (&fpOut);
     
