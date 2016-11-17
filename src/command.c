@@ -10131,7 +10131,7 @@ int GetUserHelp (char *helpTkn)
                 k = NumBits (definedConstraintTwo[i], numTaxa/nBitsInALong + 1);
                 MrBayesPrint (":%d", k);
                 }
-        MrBayesPrint ("\n");
+            MrBayesPrint ("\n");
             }
         MrBayesPrint ("                                                                                \n");
         MrBayesPrint ("   --------------------------------------------------------------------------   \n");
@@ -10518,8 +10518,8 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("                Nosingletonabsence/Nosingletonpresence  %s                       \n", mp->codingString);
             MrBayesPrint ("   Parsmodel    No/Yes                                  %s                       \n", mp->parsModel);
         /*  MrBayesPrint ("   Augment      No/Yes                                  %s                       \n", mp->augmentData); */
-            MrBayesPrint ("   ------------------------------------------------------------------            \n");       
             MrBayesPrint ("                                                                                 \n");
+            MrBayesPrint ("   ------------------------------------------------------------------            \n");
             }
         }
     else if (!strcmp(helpTkn, "Prset"))
@@ -11609,8 +11609,8 @@ int GetUserHelp (char *helpTkn)
             else
                 MrBayesPrint ("\n");
 
-            MrBayesPrint ("   ------------------------------------------------------------------            \n");
             MrBayesPrint ("                                                                                 \n");
+            MrBayesPrint ("   ------------------------------------------------------------------            \n");
             }
         }
     else if (!strcmp(helpTkn, "Ctype"))
