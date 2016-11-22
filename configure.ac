@@ -7,6 +7,8 @@ AC_INIT([MrBayes],[pre-3.2.7])
 AC_CONFIG_AUX_DIR([build])
 
 AM_INIT_AUTOMAKE([foreign])
+AM_MAINTAINER_MODE
+
 AC_CONFIG_SRCDIR([src/bayes.c])
 AC_CONFIG_HEADERS([src/config.h])
 
