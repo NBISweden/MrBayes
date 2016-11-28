@@ -5,6 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([MrBayes],[pre-3.2.7])
 
 AC_CONFIG_AUX_DIR([build])
+AC_CONFIG_MACRO_DIRS([m4])
 
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
@@ -116,39 +117,49 @@ AC_CHECK_LIB([m], [sqrt])
 # was given, and if that fails use PKG_CHECK_MODULES (and trust its
 # result).
 
+# Note: Beagle is at API version 1, however, there was a version 2
+# available up until November 2013.  This was then renamed "1" again.
+# Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
+# over both versions in our Beagle checks below.
+
 AS_IF([test "x$with_beagle" != "xno"], [
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
 
-    beagle_subinc="include/libhmsbeagle-1"
-    beagle_sublib="lib"
+    for beagle_api_version in 1 2; do
+        beagle_subinc="include/libhmsbeagle-$beagle_api_version"
+        beagle_sublib="lib"
 
-    AS_IF([test -d "$with_beagle"],
-          [beagle_prefix="$with_beagle"],
-          [beagle_prefix="/usr/local"])
+        AS_IF([test -d "$with_beagle"],
+              [beagle_prefix="$with_beagle"],
+              [beagle_prefix="/usr/local"])
 
-    AC_MSG_NOTICE([Trying to locate Beagle in '$beagle_prefix'])
+        AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
 
-    CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-    LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
 
-    AC_CHECK_HEADER([libhmsbeagle/beagle.h],
-        [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
-    AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
-        [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
+        AC_CHECK_HEADER([libhmsbeagle/beagle.h],
+            [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
+        AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+            [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
 
-    CPPFLAGS="$old_cppflags"
-    LDFLAGS="$old_ldflags"
+        CPPFLAGS="$old_cppflags"
+        LDFLAGS="$old_ldflags"
 
-    AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
-        [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
-         beagle_found="yes"],
-        [AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
-         PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-1],
-            [AC_MSG_NOTICE([Found Beagle with pkg-config])
+        AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
+            [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
              beagle_found="yes"],
-            [beagle_found="no"])
-    ]) dnl AS_IF
+            [AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
+             PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-$beagle_api_version],
+                [AC_MSG_NOTICE([Found Beagle with pkg-config])
+                 beagle_found="yes"],
+                [beagle_found="no"])
+        ]) dnl AS_IF
+
+        AS_IF([test "x$beagle_found" = "xyes" ], [break],
+              [AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
+    done
 
     AS_IF([test "x$beagle_found" != "xyes"],
         [AS_IF([test "x$with_beagle" != "xcheck"],
