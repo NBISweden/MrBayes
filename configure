@@ -2470,6 +2470,7 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 
+
 am__api_version='1.15'
 
 # Find a good install program.  We prefer a C program (faster),
@@ -4590,6 +4591,11 @@ fi
 # was given, and if that fails use PKG_CHECK_MODULES (and trust its
 # result).
 
+# Note: Beagle is at API version 1, however, there was a version 2
+# available up until November 2013.  This was then renamed "1" again.
+# Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
+# over both versions in our Beagle checks below.
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -5112,29 +5118,30 @@ if test "x$with_beagle" != "xno"; then :
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
 
-    beagle_subinc="include/libhmsbeagle-1"
-    beagle_sublib="lib"
+    for beagle_api_version in 1 2; do
+        beagle_subinc="include/libhmsbeagle-$beagle_api_version"
+        beagle_sublib="lib"
 
-    if test -d "$with_beagle"; then :
+        if test -d "$with_beagle"; then :
   beagle_prefix="$with_beagle"
 else
   beagle_prefix="/usr/local"
 fi
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle in '$beagle_prefix'" >&5
-$as_echo "$as_me: Trying to locate Beagle in '$beagle_prefix'" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&5
+$as_echo "$as_me: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&6;}
 
-    CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-    LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
 
-    ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
+        ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
 if test "x$ac_cv_header_libhmsbeagle_beagle_h" = xyes; then :
   BEAGLE_CFLAGS=$CPPFLAGS
 
 fi
 
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
 $as_echo_n "checking for beagleCreateInstance in -lhmsbeagle... " >&6; }
 if ${ac_cv_lib_hmsbeagle_beagleCreateInstance+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5176,13 +5183,13 @@ if test "x$ac_cv_lib_hmsbeagle_beagleCreateInstance" = xyes; then :
 fi
 
 
-    CPPFLAGS="$old_cppflags"
-    LDFLAGS="$old_ldflags"
+        CPPFLAGS="$old_cppflags"
+        LDFLAGS="$old_ldflags"
 
-    if test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"; then :
+        if test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
 $as_echo "$as_me: Found Beagle in '$beagle_prefix'" >&6;}
-         beagle_found="yes"
+             beagle_found="yes"
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
 $as_echo "$as_me: WARNING: Failed to locate Beagle, falling back on pkg-config" >&2;}
@@ -5195,12 +5202,12 @@ if test -n "$BEAGLE_CFLAGS"; then
     pkg_cv_BEAGLE_CFLAGS="$BEAGLE_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-\$beagle_api_version\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "hmsbeagle-$beagle_api_version") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "hmsbeagle-1" 2>/dev/null`
+  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "hmsbeagle-$beagle_api_version" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -5212,12 +5219,12 @@ if test -n "$BEAGLE_LIBS"; then
     pkg_cv_BEAGLE_LIBS="$BEAGLE_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-1\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-1") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-\$beagle_api_version\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "hmsbeagle-$beagle_api_version") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "hmsbeagle-1" 2>/dev/null`
+  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "hmsbeagle-$beagle_api_version" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -5238,9 +5245,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hmsbeagle-$beagle_api_version" 2>&1`
         else
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hmsbeagle-1" 2>&1`
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hmsbeagle-$beagle_api_version" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$BEAGLE_PKG_ERRORS" >&5
@@ -5257,10 +5264,27 @@ else
 $as_echo "yes" >&6; }
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle with pkg-config" >&5
 $as_echo "$as_me: Found Beagle with pkg-config" >&6;}
-             beagle_found="yes"
+                 beagle_found="yes"
 fi
 
 fi
+        if test "x$beagle_found" = "xyes" ; then :
+  break
+else
+
+    for ax_var in libhmsbeagle_beagle_h
+do :
+
+                as_ax_Var=`$as_echo "ac_cv_header_${ax_var}" | $as_tr_sh`
+
+        { eval $as_ax_Var=; unset $as_ax_Var;}
+
+
+done
+
+fi
+    done
+
     if test "x$beagle_found" != "xyes"; then :
   if test "x$with_beagle" != "xcheck"; then :
   as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
