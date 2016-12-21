@@ -4676,8 +4676,9 @@ int DoCompRefTree (void)
         SafeFclose (&fpTre);
         }
     /* end reference tree files */
-    MrBayesPrint ("%s   %d reference trees in total\n", spacer, nTre[0]);
+    MrBayesPrint ("%s   \t%d reference trees in total from %d runs\n", spacer, nTre[0], nRefRun);
 
+    MrBayesPrint ("%s   Processing the test run ...\n", spacer, n+1);
     /* open output file */
     strcpy (outName, comptreeParams.comptOutfile);
     strcat (outName, ".sdsf");
@@ -4718,6 +4719,7 @@ int DoCompRefTree (void)
 
     /* process each tree to be compared and print SDSF to file */
     skip = 1; // skip the first few trees (default 1)
+    // skip = (int) (0.5 * tFileInfo.numTreesInLastBlock);
     for (i=0; i < tFileInfo.numTreesInLastBlock; i++)
         {
         do {
@@ -4757,8 +4759,8 @@ int DoCompRefTree (void)
             MrBayesPrintf (fpOut, "%d\t%lf\n", gen, chainParams.stat[0].max);
             }
         }
-    MrBayesPrint ("%s   %d comparing trees processed\n", spacer, nTre[1]);
-    
+    MrBayesPrint ("%s   \t%d trees discarded, the last %d trees compared to the reference\n", spacer, skip, nTre[1]);
+
     /* change back to the actual numRuns, end of hack */
     chainParams.numRuns = nRefRun;
     
