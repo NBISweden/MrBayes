@@ -4595,6 +4595,8 @@ fi
 # available up until November 2013.  This was then renamed "1" again.
 # Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
 # over both versions in our Beagle checks below.
+# To complicate things, version 2 reports the wrong include path with
+# pkg-config.
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5190,9 +5192,31 @@ fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
 $as_echo "$as_me: Found Beagle in '$beagle_prefix'" >&6;}
              beagle_found="yes"
+fi
+
+        if test "x$beagle_found" = "xyes"; then :
+  break
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
+
+    for ax_var in libhmsbeagle_beagle_h
+do :
+
+                as_ax_Var=`$as_echo "ac_cv_header_${ax_var}" | $as_tr_sh`
+
+        { eval $as_ax_Var=; unset $as_ax_Var;}
+
+
+done
+
+fi
+    done
+
+    if test "x$beagle_found" != "xyes"; then :
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
 $as_echo "$as_me: WARNING: Failed to locate Beagle, falling back on pkg-config" >&2;}
+
+        for beagle_api_version in 1 2; do
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for BEAGLE" >&5
@@ -5266,25 +5290,12 @@ $as_echo "yes" >&6; }
 $as_echo "$as_me: Found Beagle with pkg-config" >&6;}
                  beagle_found="yes"
 fi
-
-fi
-        if test "x$beagle_found" = "xyes" ; then :
+            if test "x$beagle_found" = "xyes"; then :
   break
-else
-
-    for ax_var in libhmsbeagle_beagle_h
-do :
-
-                as_ax_Var=`$as_echo "ac_cv_header_${ax_var}" | $as_tr_sh`
-
-        { eval $as_ax_Var=; unset $as_ax_Var;}
-
-
-done
+fi
+        done
 
 fi
-    done
-
     if test "x$beagle_found" != "xyes"; then :
   if test "x$with_beagle" != "xcheck"; then :
   as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
