@@ -121,6 +121,8 @@ AC_CHECK_LIB([m], [sqrt])
 # available up until November 2013.  This was then renamed "1" again.
 # Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
 # over both versions in our Beagle checks below.
+# To complicate things, version 2 reports the wrong include path with
+# pkg-config.
 
 AS_IF([test "x$with_beagle" != "xno"], [
     old_cppflags="$CPPFLAGS"
@@ -149,17 +151,23 @@ AS_IF([test "x$with_beagle" != "xno"], [
 
         AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
             [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
-             beagle_found="yes"],
-            [AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
+             beagle_found="yes"])
+
+        AS_IF([test "x$beagle_found" = "xyes"], [break],
+              [AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
+    done
+
+    AS_IF([test "x$beagle_found" != "xyes"], [
+        AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
+
+        for beagle_api_version in 1 2; do
              PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-$beagle_api_version],
                 [AC_MSG_NOTICE([Found Beagle with pkg-config])
                  beagle_found="yes"],
                 [beagle_found="no"])
-        ]) dnl AS_IF
-
-        AS_IF([test "x$beagle_found" = "xyes" ], [break],
-              [AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
-    done
+            AS_IF([test "x$beagle_found" = "xyes"], [break])
+        done
+    ]) dnl AS_IF
 
     AS_IF([test "x$beagle_found" != "xyes"],
         [AS_IF([test "x$with_beagle" != "xcheck"],
