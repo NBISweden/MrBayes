@@ -118,8 +118,8 @@ of telling the "configure" script how to find it:
 
 1.  Use the flag "--with-beagle=PATH" where "PATH" is the prefix path
     where the Beagle headers and libraries may be found.  For example
-    "$HOME/local", "/opt" etc.  The path "/usr/local" is tested if no
-    path is specified.
+    "$HOME/local", "/opt" etc.  The paths "/usr/local" and "/usr" are
+    tested if no path is specified.
 
 2.  Point the "PKG_CONFIG_PATH" environment variable to the "pkgconfig"
     directory that Beagle installed its "hmsbeagle-1.pc" file into.
