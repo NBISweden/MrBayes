@@ -88,7 +88,7 @@ AC_ARG_WITH([beagle],
         [Build with the Beagle library @<:@default=check@:>@.
         The PATH argument should be the prefix path where Beagle
         was installed, e.g. @S|@HOME/local, /opt/local etc.
-        The path /usr/local is checked if no path is specified.])],
+        The paths /usr/local and /usr are checked if no path is specified.])],
     [],
     [with_beagle=check])
 
@@ -133,29 +133,32 @@ AS_IF([test "x$with_beagle" != "xno"], [
         beagle_sublib="lib"
 
         AS_IF([test -d "$with_beagle"],
-              [beagle_prefix="$with_beagle"],
-              [beagle_prefix="/usr/local"])
+              [beagle_prefix_list="$with_beagle"],
+              [beagle_prefix_list="/usr/local /usr"])
 
-        AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
+        for beagle_prefix in $beagle_prefix_list; do
 
-        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+            AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
 
-        AC_CHECK_HEADER([libhmsbeagle/beagle.h],
-            [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
-        AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
-            [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
+            CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
 
-        CPPFLAGS="$old_cppflags"
-        LDFLAGS="$old_ldflags"
+            AC_CHECK_HEADER([libhmsbeagle/beagle.h],
+                [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
+            AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+                [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
 
-        AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
-            [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
-             beagle_found="yes"])
+            CPPFLAGS="$old_cppflags"
+            LDFLAGS="$old_ldflags"
 
-        AS_IF([test "x$beagle_found" = "xyes"], [break],
-              [unset BEAGLE_LIBS BEAGLE_CFLAGS
-               AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
+            AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
+                [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
+                 beagle_found="yes"])
+
+            AS_IF([test "x$beagle_found" = "xyes"], [break 2],
+                  [unset BEAGLE_LIBS BEAGLE_CFLAGS
+                   AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
+        done
     done
 
     AS_IF([test "x$beagle_found" != "xyes"], [
