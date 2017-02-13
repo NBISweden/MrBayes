@@ -9072,8 +9072,10 @@ int FreeCharacters (void)
     if (memAllocs[ALLOC_TMPSET] == YES)
         {
         if (numChar > numTaxa)
+            {
             tempSet = (int *) SafeRealloc ((void *)tempSet, (size_t)numTaxa*sizeof(int));
             tempSetNeg = (int *) SafeRealloc ((void *)tempSetNeg, (size_t)numTaxa*sizeof(int));
+            }
         }
     if (memAllocs[ALLOC_MATRIX] == YES)
         {

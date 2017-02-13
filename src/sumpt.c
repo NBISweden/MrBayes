@@ -7606,6 +7606,7 @@ void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numP
     if (numRuns > 1)
         {
         for (j=k=0; j<numRuns; j++)
+            {
             if (rowCount[j] > 0)
                 k++;
             if (theStats->PSRF < 0.0)
@@ -7632,8 +7633,9 @@ void PrintSumtTableLine(int numRuns, int *rowCount, Stat *theStats, MrBFlt *numP
                     }
                 }
 
-                if (k != numRuns)
-                    MrBayesPrint (" *");
+            if (k != numRuns)
+                MrBayesPrint (" *");
+            }
         }
 
         MrBayesPrintf (fpVstat, "\n");

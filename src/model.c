@@ -19561,7 +19561,6 @@ int SetModelParams (void)
                 p->LnPriorProb = &LnPriorProbTruncatedNormal;
                 }
             else
-                p->paramId = GROWTH_FIX;
                 {
                 p->paramId = GROWTH_FIX;
                 p->priorParams = &mp->growthFix;
