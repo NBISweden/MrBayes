@@ -14667,6 +14667,30 @@ int StandID (char nuc)
         {
         return 512;
         }
+    else if (n == 'A' || n == 'a')
+        {
+        return 1024;
+        }
+    else if (n == 'B' || n == 'b')
+        {
+        return 2048;
+        }
+    else if (n == 'C' || n == 'c')
+        {
+        return 4096;
+        }
+    else if (n == 'D' || n == 'd')
+        {
+        return 8192;
+        }
+    else if (n == 'E' || n == 'e')
+        {
+        return 16384;
+        }
+    else if (n == 'F' || n == 'f')
+        {
+        return 32768;
+        }
     else if (n == missingId)
         {
         return MISSING;
