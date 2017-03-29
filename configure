@@ -6837,23 +6837,23 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   case $host_cpu in
     powerpc*)
-      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether altivec is supported" >&5
-$as_echo_n "checking whether altivec is supported... " >&6; }
-if ${ax_cv_have_altivec_ext+:} false; then :
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether altivec is supported for old distros" >&5
+$as_echo_n "checking whether altivec is supported for old distros... " >&6; }
+if ${ax_cv_have_altivec_old_ext+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
             if test `/usr/sbin/sysctl -a 2>/dev/null| grep -c hw.optional.altivec` != 0; then
                 if test `/usr/sbin/sysctl -n hw.optional.altivec` = 1; then
-                  ax_cv_have_altivec_ext=yes
+                  ax_cv_have_altivec_old_ext=yes
                 fi
             fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_have_altivec_ext" >&5
-$as_echo "$ax_cv_have_altivec_ext" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_have_altivec_old_ext" >&5
+$as_echo "$ax_cv_have_altivec_old_ext" >&6; }
 
-          if test "$ax_cv_have_altivec_ext" = yes; then
+          if test "$ax_cv_have_altivec_old_ext" = yes; then
 
 $as_echo "#define HAVE_ALTIVEC /**/" >>confdefs.h
 
@@ -6888,6 +6888,116 @@ fi
 $as_echo "$ax_cv_check_cflags___faltivec" >&6; }
 if test "x$ax_cv_check_cflags___faltivec" = xyes; then :
   SIMD_FLAGS="$SIMD_FLAGS -faltivec"
+else
+  :
+fi
+
+          fi
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether altivec is supported" >&5
+$as_echo_n "checking whether altivec is supported... " >&6; }
+if ${ax_cv_have_altivec_ext+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+            if test `LD_SHOW_AUXV=1 /bin/true 2>/dev/null|grep -c altivec` != 0; then
+              ax_cv_have_altivec_ext=yes
+            fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_have_altivec_ext" >&5
+$as_echo "$ax_cv_have_altivec_ext" >&6; }
+
+          if test "$ax_cv_have_altivec_ext" = yes; then
+
+$as_echo "#define HAVE_ALTIVEC /**/" >>confdefs.h
+
+            { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -maltivec" >&5
+$as_echo_n "checking whether C compiler accepts -maltivec... " >&6; }
+if ${ax_cv_check_cflags___maltivec+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -maltivec"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___maltivec=yes
+else
+  ax_cv_check_cflags___maltivec=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___maltivec" >&5
+$as_echo "$ax_cv_check_cflags___maltivec" >&6; }
+if test "x$ax_cv_check_cflags___maltivec" = xyes; then :
+  SIMD_FLAGS="$SIMD_FLAGS -maltivec"
+else
+  :
+fi
+
+          fi
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether vsx is supported" >&5
+$as_echo_n "checking whether vsx is supported... " >&6; }
+if ${ax_cv_have_vsx_ext+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+            if test `LD_SHOW_AUXV=1 /bin/true 2>/dev/null|grep -c vsx` != 0; then
+                ax_cv_have_vsx_ext=yes
+            fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_have_vsx_ext" >&5
+$as_echo "$ax_cv_have_vsx_ext" >&6; }
+
+          if test "$ax_cv_have_vsx_ext" = yes; then
+
+$as_echo "#define HAVE_VSX /**/" >>confdefs.h
+
+            { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -mvsx" >&5
+$as_echo_n "checking whether C compiler accepts -mvsx... " >&6; }
+if ${ax_cv_check_cflags___mvsx+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -mvsx"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___mvsx=yes
+else
+  ax_cv_check_cflags___mvsx=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___mvsx" >&5
+$as_echo "$ax_cv_check_cflags___mvsx" >&6; }
+if test "x$ax_cv_check_cflags___mvsx" = xyes; then :
+  SIMD_FLAGS="$SIMD_FLAGS -mvsx"
 else
   :
 fi

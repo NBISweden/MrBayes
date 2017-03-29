@@ -189,6 +189,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Support VSX instructions */
+#undef HAVE_VSX
+
 /* Define to 1 to support eXtended Operations Extensions */
 #undef HAVE_XOP
 

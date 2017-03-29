@@ -21,7 +21,7 @@ If you have problems, you may need to regenerate the build system entirely.
 To do so, use the procedure documented by the package, typically 'autoreconf'.])])
 
 # ===========================================================================
-#      http://www.gnu.org/software/autoconf-archive/ax_append_flag.html
+#      https://www.gnu.org/software/autoconf-archive/ax_append_flag.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -56,7 +56,7 @@ To do so, use the procedure documented by the package, typically 'autoreconf'.])
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -71,7 +71,7 @@ To do so, use the procedure documented by the package, typically 'autoreconf'.])
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 6
+#serial 7
 
 AC_DEFUN([AX_APPEND_FLAG],
 [dnl
@@ -93,7 +93,7 @@ AS_VAR_POPDEF([FLAGS])dnl
 ])dnl AX_APPEND_FLAG
 
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_cflags_warn_all.html
+#    https://www.gnu.org/software/autoconf-archive/ax_cflags_warn_all.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -137,7 +137,7 @@ AS_VAR_POPDEF([FLAGS])dnl
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -152,7 +152,7 @@ AS_VAR_POPDEF([FLAGS])dnl
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 15
+#serial 16
 
 AC_DEFUN([AX_FLAGS_WARN_ALL],[dnl
 AS_VAR_PUSHDEF([FLAGS],[_AC_LANG_PREFIX[]FLAGS])dnl
@@ -216,7 +216,7 @@ AC_LANG_POP([Fortran])
 ])
 
 # ===========================================================================
-#   http://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
+#  https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -257,7 +257,7 @@ AC_LANG_POP([Fortran])
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -272,7 +272,7 @@ AC_LANG_POP([Fortran])
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 4
+#serial 5
 
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
 [AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
@@ -291,7 +291,7 @@ AS_VAR_POPDEF([CACHEVAR])dnl
 ])dnl AX_CHECK_COMPILE_FLAGS
 
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_compiler_vendor.html
+#    https://www.gnu.org/software/autoconf-archive/ax_compiler_vendor.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -321,7 +321,7 @@ AS_VAR_POPDEF([CACHEVAR])dnl
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -336,7 +336,7 @@ AS_VAR_POPDEF([CACHEVAR])dnl
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 15
+#serial 16
 
 AC_DEFUN([AX_COMPILER_VENDOR],
 [AC_CACHE_CHECK([for _AC_LANG compiler vendor], ax_cv_[]_AC_LANG_ABBREV[]_compiler_vendor,
@@ -379,7 +379,7 @@ AC_DEFUN([AX_COMPILER_VENDOR],
 ])
 
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_compiler_version.html
+#   https://www.gnu.org/software/autoconf-archive/ax_compiler_version.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -416,7 +416,7 @@ AC_DEFUN([AX_COMPILER_VENDOR],
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 4
+#serial 5
 
 # for intel
 AC_DEFUN([_AX_COMPILER_VERSION_INTEL],
@@ -872,7 +872,7 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 ])
 
 # ===========================================================================
-#          http://www.gnu.org/software/autoconf-archive/ax_ext.html
+#          https://www.gnu.org/software/autoconf-archive/ax_ext.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -904,19 +904,20 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 #     HAVE_SHA / HAVE_AES / HAVE_AVX / HAVE_FMA3 / HAVE_FMA4 / HAVE_XOP
 #     HAVE_AVX2 / HAVE_AVX512_F / HAVE_AVX512_CD / HAVE_AVX512_PF
 #     HAVE_AVX512_ER / HAVE_AVX512_VL / HAVE_AVX512_BW / HAVE_AVX512_DQ
-#     HAVE_AVX512_IFMA / HAVE_AVX512_VBMI
+#     HAVE_AVX512_IFMA / HAVE_AVX512_VBMI / HAVE_ALTIVEC / HAVE_VSX
 #
 # LICENSE
 #
 #   Copyright (c) 2007 Christophe Tournayre <turn3r@users.sourceforge.net>
 #   Copyright (c) 2013,2015 Michael Petch <mpetch@capp-sysware.com>
+#   Copyright (c) 2017 Rafael de Lucena Valle <rafaeldelucena@gmail.com>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 15
+#serial 17
 
 AC_DEFUN([AX_EXT],
 [
@@ -928,18 +929,42 @@ AC_DEFUN([AX_EXT],
 
   case $host_cpu in
     powerpc*)
-      AC_CACHE_CHECK([whether altivec is supported], [ax_cv_have_altivec_ext],
+      AC_CACHE_CHECK([whether altivec is supported for old distros], [ax_cv_have_altivec_old_ext],
           [
             if test `/usr/sbin/sysctl -a 2>/dev/null| grep -c hw.optional.altivec` != 0; then
                 if test `/usr/sbin/sysctl -n hw.optional.altivec` = 1; then
-                  ax_cv_have_altivec_ext=yes
+                  ax_cv_have_altivec_old_ext=yes
                 fi
+            fi
+          ])
+
+          if test "$ax_cv_have_altivec_old_ext" = yes; then
+            AC_DEFINE(HAVE_ALTIVEC,,[Support Altivec instructions])
+            AX_CHECK_COMPILE_FLAG(-faltivec, SIMD_FLAGS="$SIMD_FLAGS -faltivec", [])
+          fi
+
+      AC_CACHE_CHECK([whether altivec is supported], [ax_cv_have_altivec_ext],
+          [
+            if test `LD_SHOW_AUXV=1 /bin/true 2>/dev/null|grep -c altivec` != 0; then
+              ax_cv_have_altivec_ext=yes
             fi
           ])
 
           if test "$ax_cv_have_altivec_ext" = yes; then
             AC_DEFINE(HAVE_ALTIVEC,,[Support Altivec instructions])
-            AX_CHECK_COMPILE_FLAG(-faltivec, SIMD_FLAGS="$SIMD_FLAGS -faltivec", [])
+            AX_CHECK_COMPILE_FLAG(-maltivec, SIMD_FLAGS="$SIMD_FLAGS -maltivec", [])
+          fi
+
+      AC_CACHE_CHECK([whether vsx is supported], [ax_cv_have_vsx_ext],
+          [
+            if test `LD_SHOW_AUXV=1 /bin/true 2>/dev/null|grep -c vsx` != 0; then
+                ax_cv_have_vsx_ext=yes
+            fi
+          ])
+
+          if test "$ax_cv_have_vsx_ext" = yes; then
+            AC_DEFINE(HAVE_VSX,,[Support VSX instructions])
+            AX_CHECK_COMPILE_FLAG(-mvsx, SIMD_FLAGS="$SIMD_FLAGS -mvsx", [])
           fi
     ;;
 
@@ -1176,7 +1201,7 @@ AC_DEFUN([AX_EXT],
 ])
 
 # ===========================================================================
-#   http://www.gnu.org/software/autoconf-archive/ax_gcc_x86_avx_xgetbv.html
+#  https://www.gnu.org/software/autoconf-archive/ax_gcc_x86_avx_xgetbv.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -1216,7 +1241,7 @@ AC_DEFUN([AX_EXT],
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -1231,7 +1256,7 @@ AC_DEFUN([AX_EXT],
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 2
+#serial 3
 
 AC_DEFUN([AX_GCC_X86_AVX_XGETBV],
 [AC_REQUIRE([AC_PROG_CC])
@@ -1256,7 +1281,7 @@ AC_LANG_POP([C])
 ])
 
 # ===========================================================================
-#     http://www.gnu.org/software/autoconf-archive/ax_gcc_x86_cpuid.html
+#     https://www.gnu.org/software/autoconf-archive/ax_gcc_x86_cpuid.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -1300,7 +1325,7 @@ AC_LANG_POP([C])
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -1315,7 +1340,7 @@ AC_LANG_POP([C])
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 9
+#serial 10
 
 AC_DEFUN([AX_GCC_X86_CPUID],
 [AX_GCC_X86_CPUID_COUNT($1, 0)
@@ -1346,7 +1371,7 @@ AC_LANG_POP([C])
 ])
 
 # ===========================================================================
-#      http://www.gnu.org/software/autoconf-archive/ax_lib_readline.html
+#     https://www.gnu.org/software/autoconf-archive/ax_lib_readline.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -1405,7 +1430,7 @@ AC_LANG_POP([C])
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 6
+#serial 7
 
 AU_ALIAS([VL_LIB_READLINE], [AX_LIB_READLINE])
 AC_DEFUN([AX_LIB_READLINE], [
@@ -1454,7 +1479,7 @@ AC_DEFUN([AX_LIB_READLINE], [
 ])dnl
 
 # ===========================================================================
-#      http://www.gnu.org/software/autoconf-archive/ax_prog_cc_mpi.html
+#      https://www.gnu.org/software/autoconf-archive/ax_prog_cc_mpi.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -1512,7 +1537,7 @@ AC_DEFUN([AX_LIB_READLINE], [
 #   Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 #   As a special exception, the respective Autoconf Macro's copyright owner
 #   gives unlimited permission to copy, distribute and modify the configure
@@ -1527,7 +1552,7 @@ AC_DEFUN([AX_LIB_READLINE], [
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 1
+#serial 2
 
 AC_DEFUN([AX_PROG_CC_MPI], [
 AC_PREREQ(2.50)
@@ -1626,7 +1651,7 @@ AC_DEFUN([_AX_PROG_CC_MPI], [
 ])dnl _AX_PROG_CC_MPI
 
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_require_defined.html
+#    https://www.gnu.org/software/autoconf-archive/ax_require_defined.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -1657,7 +1682,7 @@ AC_DEFUN([_AX_PROG_CC_MPI], [
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 2
 
 AC_DEFUN([AX_REQUIRE_DEFINED], [dnl
   m4_ifndef([$1], [m4_fatal([macro ]$1[ is not defined; is a m4 file missing?])])
