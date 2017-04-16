@@ -3734,7 +3734,11 @@ int DoLsetParm (char *parmName, char *tkn)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
                             {
-                            if(!strcmp(tempStr, "Nosingletons"))
+                            if(!strcmp(tempStr, "All"))
+                                {
+                                modelParams[i].coding |= ALL; // Does nothing
+                                }
+                            else if(!strcmp(tempStr, "Nosingletons"))
                                 {
                                 modelParams[i].coding |= NOSINGLETONS;
                                 }
