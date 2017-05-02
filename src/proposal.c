@@ -6762,7 +6762,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
         }
 
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)
         {
@@ -10233,7 +10233,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
 
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)
         {
@@ -10750,7 +10750,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)  goto errorExit;
     for (i=0; i<numCompressedChars; i++)
@@ -11415,7 +11415,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)  goto errorExit;
     for (i=0; i<numCompressedChars; i++)
@@ -12099,7 +12099,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         }
     
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)
         {
@@ -12623,7 +12623,7 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     GetParsFP (t, d, chain);
 
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)  goto errorExit;
     for (i=0; i<numCompressedChars; i++)
@@ -13134,7 +13134,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     GetParsFP (t, d, chain);
 
     /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars + m->compCharStart;
+    globalNSitesOfPat = numSitesOfPat + (chainId[chain] % chainParams.numChains) * numCompressedChars;
     nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     if (!nSitesOfPat)  goto errorExit;
     for (i=0; i<numCompressedChars; i++)
