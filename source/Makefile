@@ -13,30 +13,30 @@ all: $(GENERATED_FILES)
 ../%.html: %.html Makefile
 	@echo "Creating the $* page [in $@]"
 	@echo '<!DOCTYPE html>' > $@
-	@echo '<html lang=en><head><meta charset="utf-8"><title>MrBayes | $*</title>' >> $@
-	@echo '<link rel=stylesheet href="css/style.css"/>' >> $@
-	@echo '<link rel=stylesheet href="css/handheld.css" media="only screen and (min-device-width:320px) and (max-device-width:568px)" />' >> $@
+	@echo '<html lang="en"><head><meta charset="UTF-8"><title>MrBayes | $*</title>' >> $@
+	@echo '<link rel="stylesheet" href="css/style.css"/>' >> $@
+	@echo '<link rel="stylesheet" href="css/handheld.css" media="only screen and (min-device-width:320px) and (max-device-width:568px)" />' >> $@
 	@echo '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' >> $@
 	@echo '</head><body>' >> $@
 	@echo '<header><h1>MrBayes: Bayesian Inference of Phylogeny</h1>' >> $@
 	@echo '<nav>' >> $@
 	@echo '<a href="./index.html"' >> $@
-	@if [ "$*" = "index" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "index" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Home</a>' >> $@
 	@echo '<a href="./download.html"' >> $@
-	@if [ "$*" = "download" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "download" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Download</a>' >> $@
 	@echo '<a href="./manual.html"' >> $@
-	@if [ "$*" = "manual" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "manual" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Manual</a>' >> $@
 	@echo '<a href="./issues.html"' >> $@
-	@if [ "$*" = "issues" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "issues" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Bug Report</a>' >> $@
 	@echo '<a href="./authors.html"' >> $@
-	@if [ "$*" = "authors" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "authors" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Authors</a>' >> $@
 	@echo '<a href="./links.html"' >> $@
-	@if [ "$*" = "links" ]; then echo 'class=selected' >> $@;fi
+	@if [ "$*" = "links" ]; then echo 'class="selected"' >> $@;fi
 	@echo '>Links</a>' >> $@
 	@echo '</nav>' >> $@
 	@echo '<aside>' >> $@
@@ -47,11 +47,11 @@ all: $(GENERATED_FILES)
 	@echo '<a href="http://www.nsf.gov/"><img src="./img/nsf.gif" alt="National Science Foundation"></a>' >> $@
 	@echo '</aside>' >> $@
 	@echo '</header>' >> $@
-	@echo '<main id=$*>' >> $@
+	@echo '<main id="$*">' >> $@
 	@cat $< >> $@
 	@echo '</main>' >> $@
 	@echo '</body></html>' >> $@
-#@tidy -config tidy.conf $@
+	tidy -config tidy.conf $@
 
 echo:
 	@echo $(GENERATED_FILES)
