@@ -51,7 +51,7 @@ all: $(GENERATED_FILES)
 	@cat $< >> $@
 	@echo '</main>' >> $@
 	@echo '</body></html>' >> $@
-	tidy -config tidy.conf $@
+	tidy -config tidy.conf $@ || true
 
 echo:
 	@echo $(GENERATED_FILES)
