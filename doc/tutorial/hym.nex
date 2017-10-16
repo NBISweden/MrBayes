@@ -1,6 +1,6 @@
 #NEXUS
 
-[ Truncated data from: Ronquist F, Klopfstein S, Vilhelmsen L, Schulmeister S, Murray DL, Rasnitsyn AP. 2012. A total-evidence approach to dating with fossils, applied to the early radiation of the Hymenoptera. Systematic Biology 61:973-999. ]
+[I am a comment. Truncated data from: Ronquist et al. 2012. and Zhang et al. 2016. Sys Biol.]
 
 Begin data;
 	Dimensions ntax = 20 nchar = 510;
@@ -80,7 +80,7 @@ End;
 
 Begin mrbayes;
 
-	[partition: I am a comment]
+	[partition]
 	charset MV = 1-200;
 	charset 16S = 201-300;
 	charset Ef1a = 301-510;
@@ -90,9 +90,8 @@ Begin mrbayes;
 	partition four = 4: MV, 16S, Ef1a12, Ef1a3;
 	set partition = four;
 
-	exclude 7 31 61 83 107 121 122 133 182 183 198; [constant]
-
 	[substitution model]
+	exclude 7 31 61 83 107 121 122 133 182 183 198; [constant]
 	ctype ordered: 20 23 27 30 36 41 42 44 46 48 59 65 75 78 79 89 99 112 117 134 146 157 159 171 185 191 193 196;
 
 	lset applyto = (1) coding = variable rates = gamma; [morphology]
@@ -110,7 +109,6 @@ Begin mrbayes;
 	taxset fossils = Asioxyela Nigrimonticola Xyelotoma Undatoma Dahuratoma Cleistogaster Ghilarella Mesorussus Prosyntexis Pseudoxyelocerus;
 
 	[constraints]
-	constraint root = 1-.;
 	constraint HymenFossil = 2-.;
 	constraint Hymenoptera = 2-10;
 	constraint Holometabola = 1-10;
@@ -122,8 +120,8 @@ Begin mrbayes;
 	prset nodeagepr = calibrated;
 
 	prset brlenspr = clock:fossilization [clock:uniform];
-	prset sampleprob = 0.0001;
 	prset samplestrat = diversity [random];
+	prset sampleprob = 0.0001;
 	prset speciationpr = exp(10);
 	prset extinctionpr = beta(1,1);
 	prset fossilizationpr = beta(1,1);
@@ -145,13 +143,14 @@ Begin mrbayes;
 	delete fossils;
 	exclude 24 130 168; [constant]
 
-	calibrate root = offsetexp(300,390) Tenthredinidae = offsetgamma(100,150,25) CepSirOruApo = truncatednormal(140,175,25);
+	calibrate Tenthredinidae = offsetgamma(100,150,25) CepSirOruApo = truncatednormal(140,175,25);
 	prset nodeagepr = calibrated;
 	
-	prset brlenspr = clock:fossilization [clock:birthdeath] [clock:uniform];
-	prset fossilizationpr = fixed(0);
-	prset sampleprob = 0.0001;
+	prset brlenspr = clock:birthdeath [clock:uniform];
 	prset samplestrat = diversity [random];
+	prset sampleprob = 0.0001;
+	prset speciationpr = exp(10);
+	prset extinctionpr = beta(1,1);
 	prset treeagepr = offsetexp(300,390);
 	prset topologypr = constraint(Hymenoptera,Tenthredinidae,CepSirOruApo);
 
