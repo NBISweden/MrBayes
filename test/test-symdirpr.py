@@ -1,7 +1,6 @@
 # by Paul O. Lewis
 # paul.lewis@uconn.edu
 
-import sys
 from math import log,exp,lgamma,pow
 import scipy.stats, scipy.optimize
 
