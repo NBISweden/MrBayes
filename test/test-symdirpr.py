@@ -1,8 +1,7 @@
 # by Paul O. Lewis
 # paul.lewis@uconn.edu
 
-import sys
-from math import log,exp,lgamma,pow
+from math import log,exp,lgamma
 import scipy.stats, scipy.optimize
 
 def Pr(from_state, to_state, pi0, exp_minus_mu_t):
@@ -87,7 +86,7 @@ if __name__ == '__main__':
 #     D 1
 #   ;
 # end;
-# 
+#
 # begin trees;
 #   translate
 #     1 A,
@@ -96,7 +95,7 @@ if __name__ == '__main__':
 #     4 D;
 #   tree only = (1:0.1,2:0.1,(3:0.1,4:0.1):0.1);
 # end;
-# 
+#
 # begin mrbayes;
 #   lset nbetacat=5 coding=all;
 #   prset brlenspr = unconstrained:exponential(1.0);
@@ -105,4 +104,3 @@ if __name__ == '__main__':
 #   startvals Tau=only V=only;
 #   mcmc;
 # end;
-
