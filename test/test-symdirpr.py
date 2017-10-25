@@ -1,7 +1,7 @@
 # by Paul O. Lewis
 # paul.lewis@uconn.edu
 
-from math import log,exp,lgamma
+from math import log,exp
 import scipy.stats, scipy.optimize
 
 def Pr(from_state, to_state, pi0, exp_minus_mu_t):
