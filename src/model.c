@@ -1659,8 +1659,8 @@ int ChangeNumRuns (int from, int to)
 -----------------------------------------------------------*/
 void CheckCharCodingType (Matrix *m, CharInfo *ci)
 {
-    int         i, j, k, x, n1[10], n2[10], largest, smallest, numPartAmbig,
-                numConsidered, numInformative, lastInformative=0, uniqueBits,
+    int         i, j, k, x, n1[MAX_CHAR_STATES], n2[MAX_CHAR_STATES], largest, smallest,
+                numPartAmbig, numConsidered, numInformative, lastInformative=0, uniqueBits,
                 newPoss, oldPoss;
     BitsLong    combinations[2048], *tempComb, *newComb, *oldComb, bitsLongOne=1;
 
@@ -1675,7 +1675,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     ci->variable = ci->informative = YES;
 
     /* set constant to no and state counters to 0 for all states */
-    for (i=0; i<10; i++)
+    for (i=0; i<MAX_CHAR_STATES; i++)
         {
         ci->constant[i] = ci->singleton[i] = NO;
         n1[i] = n2[i] = 0;
@@ -1692,7 +1692,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
             numConsidered++;
             if (NBits(x) > 1)
                 numPartAmbig++;
-            for (j=0; j<10; j++)
+            for (j=0; j<MAX_CHAR_STATES; j++)
                 {
                 if (((bitsLongOne<<j) & x) != 0)
                     {   
@@ -1706,7 +1706,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 
     /* if the ambig counter for any state is equal to the number of considered
        states, then set constant for that state and set variable and informative to no */
-    for (i=0; i<10; i++)
+    for (i=0; i<MAX_CHAR_STATES; i++)
         {
         if (n1[i] == numConsidered)
             {
@@ -1727,9 +1727,9 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     
     /* first consider unambiguous characters */
     /* find smallest and largest unambiguous state for this character */
-    smallest = 9;
+    smallest = MAX_CHAR_STATES-1;
     largest = 0;
-    for (i=0; i<10; i++)
+    for (i=0; i<MAX_CHAR_STATES; i++)
         {
         if (n2[i] > 0)
             {
@@ -1741,7 +1741,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
         }
         
     /* count the number of informative states in the unambiguous codings */
-    for (i=numInformative=0; i<10; i++)
+    for (i=numInformative=0; i<MAX_CHAR_STATES; i++)
         {
         if (ci->cType == ORD && n2[i] > 0 && i != smallest && i != largest)
             {   
@@ -1771,7 +1771,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     
     /* first set the bits for the taken states */
     x = 0;
-    for (i=0; i<10; i++)
+    for (i=0; i<MAX_CHAR_STATES; i++)
         {
         if (n2[i] > 0 && i != lastInformative)
             x |= (bitsLongOne<<i);
@@ -1795,7 +1795,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
             for (j=0; j<oldPoss; j++)
                 {
                 uniqueBits = x & (!oldComb[j]);
-                for (k=0; k<10; k++)
+                for (k=0; k<MAX_CHAR_STATES; k++)
                     {
                     if (((bitsLongOne<<k) & uniqueBits) != 0)
                         newComb[newPoss++] = oldComb[j] | (bitsLongOne<<k);
@@ -10072,11 +10072,11 @@ int DoStartvals (void)
 
 int DoStartvalsParm (char *parmName, char *tkn)
 {
-    int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
-    MrBFlt              tempFloat, *value, *subValue;
+    int                 i, j, k, nMatches, tempInt=0, treeIndex, chainId, ret;
+    MrBFlt              tempFloat=0.0, *value, *subValue;
     Tree                *theTree, *usrTree;
     PolyTree            *thePolyTree;
-    MrBFlt              minRate, maxRate, clockRate;
+    MrBFlt              minRate=0.0, maxRate=0.0, clockRate;
     static Param        *param = NULL;
     static MrBFlt       *theValue, theValueMin, theValueMax;
     static int          useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
@@ -11424,7 +11424,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                         for (i=0; i<mp->nStates; i++)
                             bs[i] = blosPi[i];
                         }
-                        
+
                     for (i=0; i<p->nSubValues; i++)
                         {
                         subValue[i] = mp->aaModelPrProbs[i];
@@ -11662,7 +11662,7 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
     Param       *q;
     MrBFlt      clockRate;
     PolyTree    *sourceTree;
-    MrBFlt      minRate,maxRate;
+    MrBFlt      minRate=0.0, maxRate=0.0;
 
     tree = GetTree (param, chn, state);
     
@@ -15359,7 +15359,7 @@ int NumStates (int part)
         }
     else if (modelParams[part].dataType == STANDARD)
         {
-        return (10);
+        return (MAX_CHAR_STATES);
         }
         
     return (-1);
@@ -18019,7 +18019,7 @@ int SetModelInfo (void)
         else if (mp->dataType == STANDARD)
             {
             /* use max possible for now; we don't know what chars will be included */
-            m->numModelStates = 10;
+            m->numModelStates = MAX_CHAR_STATES;
             }
         else
             m->numModelStates = m->numStates;
@@ -22309,7 +22309,7 @@ int ShowModel (void)
         else if (modelParams[i].dataType == STANDARD)
             {
             MrBayesPrint ("%s         Datatype  = Standard\n", spacer);
-            ns = 10;
+            ns = MAX_CHAR_STATES;
             }
         else if (modelParams[i].dataType == CONTINUOUS)
             {
@@ -22601,7 +22601,7 @@ int ShowModel (void)
                 if (modelParams[i].dataType != CONTINUOUS)
                     {
                     if (modelParams[i].dataType == STANDARD)
-                        MrBayesPrint ("%s         # States  = Variable, up to 10\n", spacer);
+                        MrBayesPrint ("%s         # States  = Variable, up to %d\n", spacer, MAX_CHAR_STATES);
                     else if (modelSettings[i].numStates != modelSettings[i].numModelStates)
                         MrBayesPrint ("%s         # States  = %d (in the model)\n", spacer, modelSettings[i].numModelStates);
                     else

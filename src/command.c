@@ -10776,8 +10776,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    both rates. (The first number is off->on and the second      \n");
         MrBayesPrint ("                    is on->off).                                                 \n");
         MrBayesPrint ("   Symdirihyperpr - This option sets the prior for the stationary frequencies    \n");
-        MrBayesPrint ("                    of the states for morphological (standard) data. There can   \n");
-        MrBayesPrint ("                    be as many as 10 states for standard data. However, the      \n");
+        MrBayesPrint ("                    of the states for morphological (standard) data. The         \n");
         MrBayesPrint ("                    labelling of the states is somewhat arbitrary. For example,  \n");
         MrBayesPrint ("                    the state \"1\" for different characters does not have the   \n");
         MrBayesPrint ("                    same meaning. This is not true for DNA characters, for ex-   \n");
@@ -11625,7 +11624,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   defines charactes 10, 23, and 45 to be of type ordered. Similarly,            \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      ctype irreversible: 54 - 67  71-92                                         \n");
+        MrBayesPrint ("      ctype irreversible: 54-67  71-92                                           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   defines characters 54 to 67 and characters 71 to 92 to be of type             \n");
         MrBayesPrint ("   irreversible. You can use the \".\" to denote the last character, and         \n");
@@ -15186,10 +15185,62 @@ char WhichStand (int x)
         return ('8');
     else if (x == 512)
         return ('9');
-    else if (x > 0 && x < 512)
+    else if (x == 1001)
+        return ('a');
+    else if (x == 1002)
+        return ('b');
+    else if (x == 1003)
+        return ('c');
+    else if (x == 1004)
+        return ('d');
+    else if (x == 1005)
+        return ('e');
+    else if (x == 1006)
+        return ('f');
+    else if (x == 1007)
+        return ('g');
+    else if (x == 1008)
+        return ('h');
+    else if (x == 1009)
+        return ('i');
+    else if (x == 1010)
+        return ('j');
+    else if (x == 1011)
+        return ('k');
+    else if (x == 1012)
+        return ('l');
+    else if (x == 1013)
+        return ('m');
+    else if (x == 1014)
+        return ('n');
+    else if (x == 1015)
+        return ('o');
+    else if (x == 1016)
+        return ('p');
+    else if (x == 1017)
+        return ('q');
+    else if (x == 1018)
+        return ('r');
+    else if (x == 1019)
+        return ('s');
+    else if (x == 1020)
+        return ('t');
+    else if (x == 1021)
+        return ('u');
+    else if (x == 1022)
+        return ('v');
+    else if (x == 1023)
+        return ('w');
+    else if (x == 1024)
+        return ('x');
+    else if (x == 1025)
+        return ('y');
+    else if (x == 1026)
+        return ('z');
+    else if (x > 0 && x < 1000000)
         return ('*');
     else if (x == MISSING)
-        return ('N');
+        return ('?');
     else if (x == GAP)
         return ('-');
     else 

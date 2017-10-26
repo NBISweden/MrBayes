@@ -1276,7 +1276,7 @@ typedef struct modelinfo
     int         *nStates;                   /* # states of each compressed char             */
     int         *cType;                     /* whether char is ord, unord or irrev          */
     int         *weight;                    /* prior weight of each compressed char         */
-    int         isTiNeeded[20];             /* marks whether a trans prob matrix is needed  */
+    int         isTiNeeded[100];            /* marks whether a trans prob matrix is needed  */
 
     /* Gibbs sampling of gamma site rate parameters */
     CLFlt       ***catLike;                 /* likelihood for Gibbs sampling of gamma       */
@@ -1495,13 +1495,14 @@ typedef struct matrix
     int row;
     } Matrix;
 
+#define MAX_CHAR_STATES 36  // 0-9 a-z
 typedef struct charinfo
     {
     int dType;
     int cType;
     int nStates;
-    int constant[10];
-    int singleton[10];
+    int constant[MAX_CHAR_STATES];
+    int singleton[MAX_CHAR_STATES];
     int variable;
     int informative;
     } CharInfo;

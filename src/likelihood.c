@@ -4840,7 +4840,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 {
     int             a, c, i, j, k, t, nStates, nCats, coppySize,tmp;
-    CLFlt           *clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[10], sum;
+    CLFlt           *clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[MAX_CHAR_STATES], sum;
     ModelInfo       *m;
     
     /* find model settings for this division */
@@ -10091,7 +10091,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 #   if defined (DEBUG_TIPROBS_STD)
         index3 = 0;
 #   endif
-        for (nStates=2; nStates<=10; nStates++)
+        for (nStates=2; nStates<=MAX_CHAR_STATES; nStates++)
             {
             if (m->isTiNeeded[nStates-2] == NO)
                 continue;
@@ -10124,7 +10124,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* fill in values for 3-state ordered character */
-        if (m->isTiNeeded[9] == YES)
+        if (m->isTiNeeded[MAX_CHAR_STATES-1] == YES)
             {
             nStates = 3;
             for (k=0; k<m->numRateCats; k++)
@@ -10165,7 +10165,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 4-state ordered character */
-        if (m->isTiNeeded[10] == YES)
+        if (m->isTiNeeded[MAX_CHAR_STATES] == YES)
             {
             nStates = 4;
             pi = 1.0 / 4.0;
@@ -10215,7 +10215,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 5-state ordered character */
-        if (m->isTiNeeded[11] == YES)
+        if (m->isTiNeeded[MAX_CHAR_STATES+1] == YES)
             {
             nStates = 5;
             pi = 1.0 / 5.0;
@@ -10283,7 +10283,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 6-state ordered character */
-        if (m->isTiNeeded[12] == YES)
+        if (m->isTiNeeded[MAX_CHAR_STATES+2] == YES)
             {
             nStates = 6;
             pi =  1.0 /  6.0;
@@ -10498,11 +10498,11 @@ int UpDateCijk (int whichPart, int whichChain)
             numQAllocated = 1;
             p = m->stateFreq;
             eigenValues = m->cijks[m->cijkIndex[whichChain]];
-            q[0] = AllocateSquareDoubleMatrix (10);
-            eigvecs = AllocateSquareDoubleMatrix (10);
-            inverseEigvecs = AllocateSquareDoubleMatrix (10);
-            Ceigvecs = AllocateSquareComplexMatrix (10);
-            CinverseEigvecs = AllocateSquareComplexMatrix (10);
+            q[0] = AllocateSquareDoubleMatrix (MAX_CHAR_STATES);
+            eigvecs = AllocateSquareDoubleMatrix (MAX_CHAR_STATES);
+            inverseEigvecs = AllocateSquareDoubleMatrix (MAX_CHAR_STATES);
+            Ceigvecs = AllocateSquareComplexMatrix (MAX_CHAR_STATES);
+            CinverseEigvecs = AllocateSquareComplexMatrix (MAX_CHAR_STATES);
             bsBase = GetParamStdStateFreqs (m->stateFreq, whichChain, state[whichChain]);
             
             /* cycle over characters needing cijks */
