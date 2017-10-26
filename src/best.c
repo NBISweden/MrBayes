@@ -198,7 +198,6 @@ int FillSpeciesTreeParams (RandLong *seed, int fromChain, int toChain)
         FreeBestChainVariables();
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -351,7 +350,6 @@ int GetMeanDist (Tree *speciesTree, double *minDepthMatrix, double *mean) {
         ResetTreePartitions(speciesTree);
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *minDepthMatrix); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

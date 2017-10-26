@@ -7354,7 +7354,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #if defined (SSE_ENABLED)
 /*------------------------------------------------------------------
 |
-|   Likelihood_Res_SSE: 4by4 nucleotide models with or without rate
+|   Likelihood_Res_SSE: restriction site model with or without rate
 |       variation
 |
 -------------------------------------------------------------------*/

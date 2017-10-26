@@ -167,7 +167,6 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -317,7 +316,6 @@ int Move_AddDeleteCPPEvent (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         }
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -864,7 +862,6 @@ int Move_CPPEventPosition (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
         }
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1108,7 +1105,6 @@ int Move_CPPRateMultiplierRnd (Param *param, int chain, RandLong *seed, MrBFlt *
         }
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1340,7 +1336,6 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
     
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -1568,7 +1563,6 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

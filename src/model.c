@@ -1294,7 +1294,7 @@ int ChangeNumChains (int from, int to)
         }
 
     /* fix stationary frequencies for standard data */
-    if   (stdStateFreqsRowSize > 0)
+    if (stdStateFreqsRowSize > 0)
         {
         assert (memAllocs[ALLOC_STDSTATEFREQS] == YES);
         stdStateFreqsOld=stdStateFreqs;
@@ -10443,10 +10443,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 sscanf (tkn, "%lf", &tempFloat);
             if (foundDash == YES)
                 {
-                if (useIntValues == NO)
-                    tempFloat = -tempFloat;
-                else
+                if (useIntValues == YES)
                     tempInt = -tempInt;
+                else
+                    tempFloat = -tempFloat;
                 foundDash = NO;
                 }
             if (useIntValues == NO && (tempFloat < theValueMin || tempFloat > theValueMax))
@@ -23741,8 +23741,8 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 isSame = YES;
                 for (a=0; a<9; a++)
                     for (b=a+1; b<10; b++)
-                            /* mp->aaModelPrProbs[a] != mp->aaModelPrProbs[b] */
-                    if (AreDoublesEqual(mp->aaModelPrProbs[a], mp->aaModelPrProbs[b], ETA)==FALSE)
+                        /* mp->aaModelPrProbs[a] != mp->aaModelPrProbs[b] */
+                        if (AreDoublesEqual(mp->aaModelPrProbs[a], mp->aaModelPrProbs[b], ETA)==FALSE)
                             isSame = NO;
                 MrBayesPrint ("%s            Prior      = Poisson, Jones, Dayhoff, Mtrev, Mtmam, Wag, Rtrev,\n", spacer);
                 if (isSame == YES)

@@ -3580,7 +3580,6 @@ treeConstruction:
     FreePolyTree (t);
 
     return (NO_ERROR);
-    MrBayesPrint ("%d", numTreeParts); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

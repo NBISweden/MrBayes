@@ -1366,9 +1366,9 @@ FILE *OpenTextFileW (char *name)
 
 
 /*!
-\param vals[0..nRuns][count[]]   All records for all runs 
+\param vals [0..nRuns][count[]]  All records for all runs
 \param nRuns                     Number of runs
-\param count[0..nRuns]           Number of records in each run
+\param count [0..nRuns]          Number of records in each run
 \return PSRF
 */
 MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
@@ -1416,10 +1416,10 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 
 
 /*!
-\param vals[0..nRuns][count[]]   All records for all runs 
+\param vals [0..nRuns][count[]]  All records for all runs
 \param nRuns                     Number of runs
-\param count[0..nRuns]           Number of records in each run
-\param returnESS[0..nRuns]       Is an arry in which the routine returns ESS values for each run.
+\param count [0..nRuns]          Number of records in each run
+\param returnESS [0..nRuns]      Is an arry in which the routine returns ESS values for each run.
 */
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
@@ -4222,7 +4222,6 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 #   endif
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -12748,7 +12747,6 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
 MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
     return - log(params[1] - params[0]);
-    MrBayesPrint ("%lf", val); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -12947,8 +12945,6 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     return 0.0;
-    MrBayesPrint ("%lf %lf", newX, oldX); /* just because I am tired of seeing the unused parameter error msg */
-    MrBayesPrint ("%lf", *params);
 }
 
 
@@ -13699,10 +13695,16 @@ MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
     for (;;) 
         {
         r = RandomNumber(seed);
-        if (r > p)        
-            x = a - log((1.0 - r) / (1.0 - p)), w = a * log(x) - d;
-        else if (r>uf)  
-            x = a * pow(r / p, 1.0 / s), w = x;
+        if (r > p)
+            {
+            x = a - log((1.0 - r) / (1.0 - p));
+            w = a * log(x) - d;
+            }
+        else if (r > uf)
+            {
+            x = a * pow(r / p, 1.0 / s);
+            w = x;
+            }
         else            
             return (0.0);
         r = RandomNumber(seed);

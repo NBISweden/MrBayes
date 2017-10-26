@@ -4861,7 +4861,6 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
         }
 
     return length;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -5171,7 +5170,6 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
         }
 
     return;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -18919,7 +18917,6 @@ void TouchAllCijks (int chain)
         }
 
     return;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
