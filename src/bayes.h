@@ -268,8 +268,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 #define NST_MIXED              -1  /* anything other than 1, 2, or 6 */
 
-#define MISSING                 10000000
-#define GAP                     10000001
+#define MISSING                1999999998
+#define GAP                    1999999999
 
 #define UNORD                   0
 #define ORD                     1
@@ -1495,7 +1495,7 @@ typedef struct matrix
     int row;
     } Matrix;
 
-#define MAX_CHAR_STATES 36  // 0-9 a-z
+#define MAX_CHAR_STATES 20  // 0-9 a-j
 typedef struct charinfo
     {
     int dType;

@@ -1744,7 +1744,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     for (i=numInformative=0; i<MAX_CHAR_STATES; i++)
         {
         if (ci->cType == ORD && n2[i] > 0 && i != smallest && i != largest)
-            {   
+            {
             numInformative++;
             lastInformative = i;
             }
