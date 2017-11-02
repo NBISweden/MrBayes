@@ -11588,7 +11588,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                         {
                         for (j=0; j<(n+2); j++)
                             {
-                            subValue[index++] = 1.0 / (n + 2);
+                            subValue[index++] = 1.0 / (n+2);
                             }
                         }
                     }
@@ -15646,15 +15646,15 @@ int ProcessStdChars (RandLong *seed)
             /* check ctype settings */
             if (m->nStates[c] < 2)
                 {
-                MrBayesPrint ("%s   WARNING: Compressed character %d (original character %d) of division %d has less \n", spacer, c+m->compCharStart,origChar[c+m->compCharStart]+1, d+1);
-                MrBayesPrint ("%s            than two observed states; it will be assumed to have two states.\n", spacer);
+                MrBayesPrint ("%s   WARNING: Compressed character %d (original character %d) of division %d has \n", spacer, c+m->compCharStart,origChar[c+m->compCharStart]+1, d+1);
+                MrBayesPrint ("%s            less than two observed states; it will be assumed to have two states.\n", spacer);
                 m->nStates[c] = 2;
                 }
-            if (m->nStates[c] > 6 && m->cType[c] != UNORD)
+            /* if (m->nStates[c] > 6 && m->cType[c] != UNORD)
                 {
                 MrBayesPrint ("%s   Only unordered model supported for characters with more than 6 states\n", spacer);
                 return ERROR;
-                }
+                } */
             if (m->nStates[c] == 2 && m->cType[c] == ORD)
                 m->cType[c] = UNORD;
             if (m->cType[c] == IRREV)
@@ -15686,9 +15686,9 @@ int ProcessStdChars (RandLong *seed)
                 if (m->cType[c] == UNORD)
                     m->isTiNeeded[m->nStates[c]-2] = YES;
                 if (m->cType[c] == ORD)
-                    m->isTiNeeded[m->nStates[c]+6] = YES;
+                    m->isTiNeeded[m->nStates[c]+MAX_CHAR_STATES-4] = YES;
                 if (m->cType[c] == IRREV)
-                    m->isTiNeeded[m->nStates[c]+11] = YES;
+                    m->isTiNeeded[m->nStates[c]+2*MAX_CHAR_STATES-5] = YES;
                 }
             }
 
@@ -15696,12 +15696,13 @@ int ProcessStdChars (RandLong *seed)
         /* set bs index later (below)                               */
 
         /* set base index, valid for binary chars */
-        m->tiIndex[c] = 0;
+        for (c=0; c<m->numChars; c++)
+            m->tiIndex[c] = 0;
 
         /* first adjust for unordered characters */
-        for (k=0; k<9; k++)
+        for (k = 0; k < MAX_CHAR_STATES-1; k++)
             {
-            if (m->isTiNeeded [k] == NO)
+            if (m->isTiNeeded[k] == NO)
                 continue;
 
             for (c=0; c<m->numChars; c++)
@@ -15714,31 +15715,16 @@ int ProcessStdChars (RandLong *seed)
             }
 
         /* second for ordered characters */
-        for (k=9; k<13; k++)
+        for (k = MAX_CHAR_STATES-1; k < 2*MAX_CHAR_STATES-3; k++)
             {
             if (m->isTiNeeded [k] == NO)
                 continue;
 
             for (c=0; c<m->numChars; c++)
                 {
-                if (m->cType[c] == IRREV || (m->cType[c] == ORD && m->nStates[c] > k - 6))
+                if (m->cType[c] == ORD && m->nStates[c] > k-MAX_CHAR_STATES+4)
                     {
-                    m->tiIndex[c] += (k - 6) * (k - 6) * m->numRateCats;
-                    }
-                }
-            }
-
-        /* third for irrev characters */
-        for (k=13; k<18; k++)
-            {
-            if (m->isTiNeeded [k] == NO)
-                continue;
-
-            for (c=0; c<m->numChars; c++)
-                {
-                if (m->cType[c] == IRREV && m->nStates[c] > k - 11)
-                    {
-                    m->tiIndex[c] += (k - 11) * (k - 11) * m->numRateCats;
+                    m->tiIndex[c] += (k-MAX_CHAR_STATES+4) * (k-MAX_CHAR_STATES+4) * m->numRateCats;
                     }
                 }
             }

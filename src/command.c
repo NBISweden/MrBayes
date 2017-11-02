@@ -14689,6 +14689,22 @@ int StandID (char nuc)
         {
         return 524288;
         }
+    else if (n == 'K' || n == 'k')
+        {
+        return 1048576;
+        }
+    else if (n == 'L' || n == 'l')
+        {
+        return 2097152;
+        }
+    else if (n == 'M' || n == 'm')
+        {
+        return 4194304;
+        }
+    else if (n == 'N' || n == 'n')
+        {
+        return 8388608;
+        }
     else if (n == missingId)
         {
         return MISSING;
@@ -15121,59 +15137,35 @@ char WhichStand (int x)
         return ('8');
     else if (x == 512)
         return ('9');
-    else if (x == 1001)
-        return ('a');
-    else if (x == 1002)
-        return ('b');
-    else if (x == 1003)
-        return ('c');
-    else if (x == 1004)
-        return ('d');
-    else if (x == 1005)
-        return ('e');
-    else if (x == 1006)
-        return ('f');
-    else if (x == 1007)
-        return ('g');
-    else if (x == 1008)
-        return ('h');
-    else if (x == 1009)
-        return ('i');
-    else if (x == 1010)
-        return ('j');
-    else if (x == 1011)
-        return ('k');
-    else if (x == 1012)
-        return ('l');
-    else if (x == 1013)
-        return ('m');
-    else if (x == 1014)
-        return ('n');
-    else if (x == 1015)
-        return ('o');
-    else if (x == 1016)
-        return ('p');
-    else if (x == 1017)
-        return ('q');
-    else if (x == 1018)
-        return ('r');
-    else if (x == 1019)
-        return ('s');
-    else if (x == 1020)
-        return ('t');
-    else if (x == 1021)
-        return ('u');
-    else if (x == 1022)
-        return ('v');
-    else if (x == 1023)
-        return ('w');
     else if (x == 1024)
-        return ('x');
-    else if (x == 1025)
-        return ('y');
-    else if (x == 1026)
-        return ('z');
-    else if (x > 0 && x < 1000000)
+        return ('a');
+    else if (x == 2048)
+        return ('b');
+    else if (x == 4096)
+        return ('c');
+    else if (x == 8192)
+        return ('d');
+    else if (x == 16384)
+        return ('e');
+    else if (x == 32768)
+        return ('f');
+    else if (x == 65536)
+        return ('g');
+    else if (x == 131072)
+        return ('h');
+    else if (x == 262144)
+        return ('i');
+    else if (x == 524288)
+        return ('j');
+    else if (x == 1048576)
+        return ('k');
+    else if (x == 2097152)
+        return ('l');
+    else if (x == 4194304)
+        return ('m');
+    else if (x == 8388608)
+        return ('n');
+    else if (x > 0 && x < 8388608)
         return ('*');
     else if (x == MISSING)
         return ('?');
