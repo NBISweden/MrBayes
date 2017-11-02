@@ -11560,13 +11560,13 @@ int FillRelPartsString (Param *p, char **relPartString)
 
 /*--------------------------------------------------------------
  |
- |  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains  in range [chfrom, chto)
+ |  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains in range [chfrom, chto)
  |
  ---------------------------------------------------------------*/
 void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
 {
     int     chn, n, i, j, k, b, c, nb, index;
-    MrBFlt  *subValue, sum, symDir[10];
+    MrBFlt  *subValue, sum, symDir[MAX_CHAR_STATES];
     Param   *p;
     
     for (chn=chfrom; chn<chto; chn++)
@@ -11579,7 +11579,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
             subValue = GetParamStdStateFreqs (p, chn, 0);
             if (p->paramId == SYMPI_EQUAL)
                 {
-                for (n=index=0; n<9; n++)
+                for (n = index = 0; n < MAX_CHAR_STATES-1; n++)
                     {
                     for (i=0; i<p->nRelParts; i++)
                         if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
@@ -11588,20 +11588,20 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                         {
                         for (j=0; j<(n+2); j++)
                             {
-                            subValue[index++] = (1.0 / (n + 2));
+                            subValue[index++] = 1.0 / (n + 2);
                             }
                         }
                     }
-                for (n=9; n<13; n++)
+                for (n = MAX_CHAR_STATES-1; n < 2*MAX_CHAR_STATES-3; n++)
                     {
                     for (i=0; i<p->nRelParts; i++)
                         if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
                             break;
                     if (i < p->nRelParts)
                         {
-                        for (j=0; j<(n-6); j++)
+                        for (j = 0; j < n-MAX_CHAR_STATES+4; j++)
                             {
-                            subValue[index++] = (1.0 / (n - 6));
+                            subValue[index++] = 1.0 / (n-MAX_CHAR_STATES+4);
                             }
                         }
                     }
@@ -11630,7 +11630,7 @@ void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
                     }
                 
                 /* Then fill in state frequencies for multistate chars, one set for each */
-                for (i=0; i<10; i++)
+                for (i=0; i<MAX_CHAR_STATES; i++)
                     symDir[i] = p->values[0];
                 
                 for (c=0; c<p->nSympi; c++)
