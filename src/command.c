@@ -11625,7 +11625,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   defines charactes 10, 23, and 45 to be of type ordered. Similarly,            \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      ctype irreversible: 54 - 67  71-92                                         \n");
+        MrBayesPrint ("      ctype irreversible: 54-67  71-92                                           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   defines characters 54 to 67 and characters 71 to 92 to be of type             \n");
         MrBayesPrint ("   irreversible. You can use the \".\" to denote the last character, and         \n");
@@ -14650,110 +14650,6 @@ int StandID (char nuc)
         {
         return 512;
         }
-    else if (n == 'A' || n == 'a')
-        {
-        return 1001;
-        }
-    else if (n == 'B' || n == 'b')
-        {
-        return 1002;
-        }
-    else if (n == 'C' || n == 'c')
-        {
-        return 1003;
-        }
-    else if (n == 'D' || n == 'd')
-        {
-        return 1004;
-        }
-    else if (n == 'E' || n == 'e')
-        {
-        return 1005;
-        }
-    else if (n == 'F' || n == 'f')
-        {
-        return 1006;
-        }
-    else if (n == 'G' || n == 'g')
-        {
-        return 1007;
-        }
-    else if (n == 'H' || n == 'h')
-        {
-        return 1008;
-        }
-    else if (n == 'I' || n == 'i')
-        {
-        return 1009;
-        }
-    else if (n == 'J' || n == 'j')
-        {
-        return 1010;
-        }
-    else if (n == 'K' || n == 'k')
-        {
-        return 1011;
-        }
-    else if (n == 'L' || n == 'l')
-        {
-        return 1012;
-        }
-    else if (n == 'M' || n == 'm')
-        {
-        return 1013;
-        }
-    else if (n == 'N' || n == 'n')
-        {
-        return 1014;
-        }
-    else if (n == 'O' || n == 'o')
-        {
-        return 1015;
-        }
-    else if (n == 'P' || n == 'p')
-        {
-        return 1016;
-        }
-    else if (n == 'Q' || n == 'q')
-        {
-        return 1017;
-        }
-    else if (n == 'R' || n == 'r')
-        {
-        return 1018;
-        }
-    else if (n == 'S' || n == 's')
-        {
-        return 1019;
-        }
-    else if (n == 'T' || n == 't')
-        {
-        return 1020;
-        }
-    else if (n == 'U' || n == 'u')
-        {
-        return 1021;
-        }
-    else if (n == 'V' || n == 'v')
-        {
-        return 1022;
-        }
-    else if (n == 'W' || n == 'w')
-        {
-        return 1023;
-        }
-    else if (n == 'X' || n == 'x')
-        {
-        return 1024;
-        }
-    else if (n == 'Y' || n == 'y')
-        {
-        return 1025;
-        }
-    else if (n == 'Z' || n == 'z')
-        {
-        return 1026;
-        }
     else if (n == missingId)
         {
         return MISSING;
@@ -15189,7 +15085,7 @@ char WhichStand (int x)
     else if (x > 0 && x < 512)
         return ('*');
     else if (x == MISSING)
-        return ('N');
+        return ('?');
     else if (x == GAP)
         return ('-');
     else 

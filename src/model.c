@@ -1744,7 +1744,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
     for (i=numInformative=0; i<10; i++)
         {
         if (ci->cType == ORD && n2[i] > 0 && i != smallest && i != largest)
-            {   
+            {
             numInformative++;
             lastInformative = i;
             }
@@ -10072,11 +10072,11 @@ int DoStartvals (void)
 
 int DoStartvalsParm (char *parmName, char *tkn)
 {
-    int                 i, j, k, nMatches, tempInt, treeIndex, chainId, ret;
-    MrBFlt              tempFloat, *value, *subValue;
+    int                 i, j, k, nMatches, tempInt=0, treeIndex, chainId, ret;
+    MrBFlt              tempFloat=0.0, *value, *subValue;
     Tree                *theTree, *usrTree;
     PolyTree            *thePolyTree;
-    MrBFlt              minRate, maxRate, clockRate;
+    MrBFlt              minRate=0.0, maxRate=0.0, clockRate;
     static Param        *param = NULL;
     static MrBFlt       *theValue, theValueMin, theValueMax;
     static int          useSubvalues, useStdStateFreqs, useIntValues, numExpectedValues, nValuesRead, runIndex, chainIndex, foundName, foundDash;
@@ -11560,7 +11560,7 @@ int FillRelPartsString (Param *p, char **relPartString)
 
 /*--------------------------------------------------------------
  |
- |  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains  in range [chfrom, chto)
+ |  FillStdStateFreqs: fills stationary frequencies for standard data divisions of chains in range [chfrom, chto)
  |
  ---------------------------------------------------------------*/
 void FillStdStateFreqs (int chfrom, int chto, RandLong *seed)
@@ -11662,7 +11662,7 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
     Param       *q;
     MrBFlt      clockRate;
     PolyTree    *sourceTree;
-    MrBFlt      minRate,maxRate;
+    MrBFlt      minRate=0.0, maxRate=0.0;
 
     tree = GetTree (param, chn, state);
     

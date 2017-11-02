@@ -90,10 +90,10 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     oldM = (int)*GetParamVals(param, chain, state[chain]);
     
     /* get a new model ID */
-    do
-        {
+    do {
         newM = (int)(RandomNumber(seed) * 10);
-        } while (newM == oldM);
+        }
+    while (newM == oldM);
 
     /* set proposal ratio */
     *lnProposalRatio = 0.0;
@@ -1772,7 +1772,7 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     
     int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
                 n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
-    MrBFlt      x, y, oldBrlen=0.0, newBrlen=0.0, extensionProb, igrvar, *igrRate=NULL,
+    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, igrvar, *igrRate=NULL,
     v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda, *tk02Rate=NULL,
     **position=NULL, **rateMultiplier=NULL, *brlens, nu, minV, clockRate;
     TreeNode    *p, *a, *b, *u, *v, *oldA;
@@ -3243,7 +3243,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     
     int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
                 n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
-    MrBFlt      x, y, oldBrlen=0.0, newBrlen=0.0, extensionProb, igrvar, *igrRate=NULL,
+    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, igrvar, *igrRate=NULL,
                 v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda, *tk02Rate=NULL,
                 **position=NULL, **rateMultiplier=NULL, *brlens, nu, minV, clockRate;
     TreeNode    *p, *a, *b, *u, *v, *oldA;
@@ -5759,7 +5759,6 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     TouchAllTreeNodes(m, chain);
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -6580,7 +6579,6 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 #endif
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -7597,7 +7595,6 @@ int Move_NNI (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrB
     GetDownPass (t);
     
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -7798,7 +7795,6 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 #   endif
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -7890,7 +7886,6 @@ int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
     
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *mvp); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -13562,7 +13557,7 @@ int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 int Move_PopSize_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int             isValidN, valIndex;
-    MrBFlt          *valPtr, oldN, newN, tuning, minN, maxN, ran, oldLnPrior, newLnPrior, growth,
+    MrBFlt          *valPtr, oldN, newN, tuning, minN, maxN, ran, oldLnPrior=0.0, newLnPrior=0.0, growth,
                     oldT, newT, clockRate;
     ModelParams     *mp;
     ModelInfo       *m;
