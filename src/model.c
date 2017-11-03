@@ -15764,7 +15764,7 @@ int ProcessStdChars (RandLong *seed)
             {
             /* calculate the number of state frequencies needed */
             /* also set bsIndex appropriately                   */
-            for (n=index=0; n<9; n++)
+            for (n = index = 0; n < MAX_CHAR_STATES-1; n++)
                 {
                 for (i=0; i<p->nRelParts; i++)
                     if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
@@ -15785,7 +15785,7 @@ int ProcessStdChars (RandLong *seed)
                     index += (n + 2);
                     }
                 }
-            for (n=9; n<13; n++)
+            for (n = MAX_CHAR_STATES-1; n < 2*MAX_CHAR_STATES-3; n++)
                 {
                 for (i=0; i<p->nRelParts; i++)
                     if (modelSettings[p->relParts[i]].isTiNeeded[n] == YES)
@@ -15797,13 +15797,13 @@ int ProcessStdChars (RandLong *seed)
                         m = &modelSettings[p->relParts[i]];
                         for (c=0; c<m->numChars; c++)
                             {
-                            if (m->cType[c] == ORD && m->nStates[c] > n - 6)
+                            if (m->cType[c] == ORD && m->nStates[c] > n-MAX_CHAR_STATES+4)
                                 {
-                                m->bsIndex[c] += (n - 6);
+                                m->bsIndex[c] += n-MAX_CHAR_STATES+4;
                                 }
                             }
                         }
-                    index += (n - 6);
+                    index += n-MAX_CHAR_STATES+4;
                     }
                 }
             p->nStdStateFreqs = index;
@@ -15832,8 +15832,7 @@ int ProcessStdChars (RandLong *seed)
         p->nStdStateFreqs = index;
         }
     
-    /* allocate space for bsIndex, sympiIndex, stdStateFreqs; then fill */
-
+    /* allocate space for sympiIndex, stdStateFreqs; then fill */
     /* first count number of sympis needed */
     for (k=n=i=0; k<numParams; k++)
         {

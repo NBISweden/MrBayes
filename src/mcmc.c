@@ -5813,21 +5813,21 @@ int InitChainCondLikes (void)
             m->numTiCats = 0;   /* We do not have repeated similar transition probability matrices */
             if (m->stateFreq->paramId == SYMPI_EQUAL)
                 {
-                for (k=0; k<9; k++)
+                for (k = 0; k < MAX_CHAR_STATES-1; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
                         m->tiProbLength += (k + 2) * (k + 2) * m->numRateCats;
                     }
-                for (k=9; k<13; k++)
+                for (k = MAX_CHAR_STATES-1; k < 2*MAX_CHAR_STATES-3; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k - 6) * (k - 6) * m->numRateCats;
+                        m->tiProbLength += (k-MAX_CHAR_STATES+4) * (k-MAX_CHAR_STATES+4) * m->numRateCats;
                     }
-                for (k=13; k<18; k++)
+                /* for (k=13; k<18; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
                          m->tiProbLength += (k - 11) * (k - 11) * m->numRateCats;
-                    }
+                    } */
                 }
             else
                 {
@@ -6059,7 +6059,6 @@ int InitChainCondLikes (void)
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
         nNodes = GetTree(m->brlens,0,0)->nNodes;
 
-            
         /* allocate and set indices from tree nodes to cond like arrays */
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
@@ -6257,8 +6256,7 @@ int InitChainCondLikes (void)
                 nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
                 for (c=0; c<m->numChars; c++)
                     nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                beagleSetPatternWeights(m->beagleInstance,
-                                        nSitesOfPat);
+                beagleSetPatternWeights(m->beagleInstance, nSitesOfPat);
                 free (nSitesOfPat);
                 nSitesOfPat = NULL;
 
