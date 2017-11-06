@@ -10149,9 +10149,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         /* first fill in for binary characters using beta categories if needed */
         if (m->isTiNeeded[0] == YES)
             {
-            /* find base frequencies */
-            bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
-
             /* cycle through beta and gamma cats */
             for (b=0; b<m->numBetaCats; b++)
                 {
