@@ -16848,16 +16848,17 @@ int RunChain (RandLong *seed)
             {
             for (i = 0; i<chainParams.numRuns; i++)
                 {
-                for (j = 0; j<chainParams.numSwaps; j++)
+                for (j = 0; j<chainParams.numSwaps; j++) {
                     GetSwappers (&swapA, &swapB, i);
-                if (AttemptSwap (swapA, swapB, seed) == ERROR)
-                    {
-                    MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
+                    if (AttemptSwap (swapA, swapB, seed) == ERROR)
+                        {
+                        MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
 #   if defined (MPI_ENABLED)
-                    nErrors++;
+                        nErrors++;
 #   else
-                    return ERROR;
+                        return ERROR;
 #   endif
+                        }
                     }
                 }
             }
