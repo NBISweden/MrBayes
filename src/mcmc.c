@@ -6059,7 +6059,6 @@ int InitChainCondLikes (void)
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
         nNodes = GetTree(m->brlens,0,0)->nNodes;
 
-            
         /* allocate and set indices from tree nodes to cond like arrays */
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
@@ -6257,8 +6256,7 @@ int InitChainCondLikes (void)
                 nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
                 for (c=0; c<m->numChars; c++)
                     nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                beagleSetPatternWeights(m->beagleInstance,
-                                        nSitesOfPat);
+                beagleSetPatternWeights(m->beagleInstance, nSitesOfPat);
                 free (nSitesOfPat);
                 nSitesOfPat = NULL;
 
@@ -16850,16 +16848,17 @@ int RunChain (RandLong *seed)
             {
             for (i = 0; i<chainParams.numRuns; i++)
                 {
-                for (j = 0; j<chainParams.numSwaps; j++)
+                for (j = 0; j<chainParams.numSwaps; j++) {
                     GetSwappers (&swapA, &swapB, i);
-                if (AttemptSwap (swapA, swapB, seed) == ERROR)
-                    {
-                    MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
+                    if (AttemptSwap (swapA, swapB, seed) == ERROR)
+                        {
+                        MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
 #   if defined (MPI_ENABLED)
-                    nErrors++;
+                        nErrors++;
 #   else
-                    return ERROR;
+                        return ERROR;
 #   endif
+                        }
                     }
                 }
             }
