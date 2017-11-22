@@ -7731,7 +7731,7 @@ MrBFlt LogPrior (int chain)
             x += LnFactorial(nStates);
 
             lnPrior += x;
-        }
+            }
         else if (p->paramType == P_SHAPE)
             {
             /* gamma/lnorm shape parameter */

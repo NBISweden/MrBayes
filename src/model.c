@@ -3223,70 +3223,70 @@ int DoLsetParm (char *parmName, char *tkn)
             }
         /* set Nlnormcat (numLnormCats) ************************************************************/
         else if (!strcmp(parmName, "Nlnormcat"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
-            {
+                {
                 sscanf (tkn, "%d", &tempInt);
                 if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
-                {
+                    {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
-                    {
-                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
                         {
+                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                            {
                             modelParams[i].numLnormCats = tempInt;
                             if (nApplied == 0 && numCurrentDivisions == 1)
                                 MrBayesPrint ("%s   Setting Nlnormcat to %d\n", spacer, modelParams[i].numLnormCats);
                             else
                                 MrBayesPrint ("%s   Setting Nlnormcat to %d for partition %d\n", spacer, modelParams[i].numLnormCats, i+1);
+                            }
                         }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid Nlnormcat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
-                }
+                    }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         /* set Nmixtcat (numMixtCats) ************************************************************/
         else if (!strcmp(parmName, "Nmixtcat"))
-        {
+            {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
-            {
+                {
                 sscanf (tkn, "%d", &tempInt);
                 if (tempInt >= 2 && tempInt < MAX_RATE_CATS)
-                {
+                    {
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
-                    {
-                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
                         {
+                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                            {
                             modelParams[i].numMixtCats = tempInt;
                             if (nApplied == 0 && numCurrentDivisions == 1)
                                 MrBayesPrint ("%s   Setting Nmixtcat to %d\n", spacer, modelParams[i].numMixtCats);
                             else
                                 MrBayesPrint ("%s   Setting Nmixtcat to %d for partition %d\n", spacer, modelParams[i].numLnormCats, i+1);
+                            }
                         }
                     }
-                }
                 else
-                {
+                    {
                     MrBayesPrint ("%s   Invalid Nmixtcat argument (should be between 2 and %d)\n", spacer, MAX_RATE_CATS);
                     return (ERROR);
-                }
+                    }
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-            }
+                }
             else
                 return (ERROR);
-        }
+            }
         /* set Usegibbs (useGibbs) *************************************************************/
         else if (!strcmp(parmName, "Usegibbs"))
             {
@@ -11188,7 +11188,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     }
                 }
             else if (p->paramType == P_MIXTURE_RATES)
-            {
+                {
                 /* Fill in rates of site rate mixture ****************************************************************************/
                 
                 /* We use value array for dirichlet prior parameters. We use a flat prior, so this will be a series of 1.0 values */
@@ -11198,7 +11198,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 /* Now fill in subvalues by setting them to be equal, Note that we use rates and not rate proportions. */
                 for (i=0; i<m->numRateCats; ++i)
                     subValue[i] = 1.0;
-            }
+                }
             else if (p->paramType == P_SHAPE)
                 {
                 /* Fill in shape values ********************************************************************************/
@@ -13645,7 +13645,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             isSame = NO; /* if the state frequencies are inapplicable for either partition, then the parameter cannot be the same */
         }
     else if (whichParam == P_MIXTURE_RATES)
-    {
+        {
         /* Check the mixture rate parameter for partitions 1 and 2. */
         
         /* Check if the model is parsimony for either partition */
@@ -13699,7 +13699,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the rate mixture parameter is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the rate mixture parameter is inapplicable for either partition, then the parameter cannot be the same */
-    }
+        }
     else if (whichParam == P_SHAPE)
         {
         /* Check the shape parameter for partitions 1 and 2 (this applies to the lnorm as well as various gamma models of rate variation across sites) */
@@ -17951,7 +17951,7 @@ int SetModelInfo (void)
             else
                 m->numRateCats = mp->numGammaCats;
             }
-        else if (activeParams[P_MIXTURE_RATES] > 0)
+        else if (activeParams[P_MIXTURE_RATES][i] > 0)
             m->numRateCats = mp->numMixtCats;
         else
             m->numRateCats = 1;
@@ -18847,7 +18847,7 @@ int SetModelParams (void)
                 }
             }
         else if (j == P_MIXTURE_RATES)
-        {
+            {
             /* Set up mixture of site rates *****************************************************************/
             p->paramType = P_MIXTURE_RATES;
             p->nValues = mp->numMixtCats;   /* used for the Dirichlet prior parameters */
@@ -18873,7 +18873,7 @@ int SetModelParams (void)
             
             /* always print */
             p->printParam = YES;
-        }
+            }
         else if (j == P_SHAPE)
             {
             /* Set up shape parameter of gamma/lnorm *****************************************************************/

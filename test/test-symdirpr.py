@@ -99,7 +99,7 @@ if __name__ == '__main__':
 # begin mrbayes;
 #   lset nbetacat=5 coding=all;
 #   prset brlenspr = unconstrained:exponential(1.0);
-#   prset Symdirihyperpr = Exponential(0.5);
+#   prset symdirihyperpr = fixed(1.0);
 #   mcmcp ngen=1 nchain=1 nrun=1;
 #   startvals Tau=only V=only;
 #   mcmc;
