@@ -9,11 +9,11 @@ website pages:
 
 Create (or update after changing) them using
 
-    $ make -C build         # alternatively: ( cd build && make )
+    $ make -C source            # alternatively: ( cd source && make )
 
 Clean (remove) them with
 
-    $ make -C build clean   # alternatively:  ( cd build && make clean )
+    $ make -C source clean      # alternatively:  ( cd source && make clean )
 
 After committing changes to the HTML files in the top directory (or any
 of the assets), the changes will be live immediately or after a short
