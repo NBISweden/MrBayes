@@ -13580,7 +13580,7 @@ int Move_PopSize_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
     else
         {
-        minN = 0.00001;
+        minN = 0.00000001;
         maxN = 10000000;
         }
 
@@ -13635,8 +13635,8 @@ int Move_PopSize_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             clockRate *= 3.0;
         else
             clockRate *= 2.0;
-        newT = oldN * clockRate;
-        oldT = newN * clockRate;
+        newT = newN * clockRate;
+        oldT = oldN * clockRate;
         if (!strcmp(mp->growthPr, "Fixed"))
             growth = mp->growthFix;
         else
