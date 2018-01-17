@@ -5415,7 +5415,7 @@ void PrintPolyNodes (PolyTree *pt)
             printf ("Cpp event set '%s'\n", pt->eSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
-                if (pt->nEvents[i*pt->nNodes+j] > 0)
+                if (pt->nEvents[i][j] > 0)
                     {
                     printf ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
                     for (k=0; k<pt->nEvents[i][j]; k++)
