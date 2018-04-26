@@ -20594,7 +20594,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[3] = CLOCKRATE_EXP;
     mt->nApplicable = 4;
     mt->moveFxn = &Move_ClockRate_M;
-    mt->relProposalProb = 4.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22155,7 +22155,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = TK02BRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_TK02BranchRate;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22194,7 +22194,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = IGRBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IgrBranchRate;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22233,7 +22233,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_MixedBranchRate;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22267,7 +22267,7 @@ void SetUpMoveTypes (void)
     
     numMoveTypes = i;
     
-    assert( numMoveTypes < NUM_MOVE_TYPES);
+    assert(numMoveTypes < NUM_MOVE_TYPES);
 }
 
 
