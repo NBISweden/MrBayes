@@ -7080,7 +7080,7 @@ int OpenComptFiles (void)
 int OpenSumtFiles (int treeNo)
 {
     int         i, len,  oldNoWarn, oldAutoOverwrite, previousFiles;
-    char        pFilename[120], sFilename[120], vFilename[120], cFilename[120], tFilename[120];
+    char        pFilename[130], sFilename[130], vFilename[130], cFilename[130], tFilename[130];
     FILE        *fpTemp;
 
     oldNoWarn = noWarn;
