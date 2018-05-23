@@ -400,8 +400,8 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a, b, catStart;
@@ -1747,8 +1747,8 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
 #   endif
@@ -2424,9 +2424,9 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int a, b, catStart;
@@ -4247,9 +4247,9 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
