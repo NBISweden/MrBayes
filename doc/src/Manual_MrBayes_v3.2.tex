@@ -3832,7 +3832,7 @@ A good way of improving convergence is to start the analysis from a good tree in
 starting it from a randomly chosen tree. To do this, you first define a good tree, with or
 without branch lengths, and put it in the tree block of a Nexus file. Say you name the
 tree \ttt{usertree}. Then start the chains from this tree using \ttt{startvals tau=usertree} just
-before you issue your \{mcmc} command. Note that changing the number of chains or runs
+before you issue your \ttt{mcmc} command. Note that changing the number of chains or runs
 after you have set the starting tree will cause the starting trees to be changed. Therefore,
 set the number of runs and chains with \ttt{mcmcp} before you set the starting tree and
 run your analysis with the \ttt{mcmc} command.
