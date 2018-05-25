@@ -66,6 +66,18 @@ architecture-dependent compiler flags.  Therefore,
         $ export AUTOCONF_VERSION=2.69
         $ export AUTOMAKE_VERSION=1.15
 
+* On Ubuntu Linux, installing the following packages installs all of the
+  above prerequisites:
+
+    1. automake
+    2. autoconf
+    3. pkg-config
+    4. autoconf-archive
+
+  These may be installed through
+
+    sudo apt-get install automake autoconf pkg-config autoconf-archive
+
 When all the prerequisites are in place:
 
 * Run "autoreconf" to generate the "configure" script:
