@@ -1961,8 +1961,8 @@ int DoCitations (void)
     MrBayesPrint ("      Ronquist, F. and J. P. Huelsenbeck. 2003. MRBAYES 3: Bayesian phylogenetic \n");
     MrBayesPrint ("         inference under mixed models. Bioinformatics 19:1572-1574.              \n");
     MrBayesPrint ("      Ronquist, F. et al. 2012. MRBAYES 3.2: Efficient Bayesian phylogenetic     \n");
-    MrBayesPrint ("         inference and model selection across a large model space. Systematic    \n");
-    MrBayesPrint ("         Biology 61 (in press).                                                  \n");
+    MrBayesPrint ("         inference and model selection across a large model space.               \n");
+    MrBayesPrint ("         Syst. Biol. 61:539-542.                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   If you use the parallel abilities of the program, you may also want to cite   \n");
     MrBayesPrint ("                                                                                 \n");
