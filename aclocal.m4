@@ -336,7 +336,7 @@ AS_VAR_POPDEF([CACHEVAR])dnl
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 16
+#serial 17
 
 AC_DEFUN([AX_COMPILER_VENDOR],
 [AC_CACHE_CHECK([for _AC_LANG compiler vendor], ax_cv_[]_AC_LANG_ABBREV[]_compiler_vendor,
@@ -348,6 +348,7 @@ AC_DEFUN([AX_COMPILER_VENDOR],
            clang:     __clang__
            cray:      _CRAYC
            fujitsu:   __FUJITSU
+           sdcc:      SDCC, __SDCC
            gnu:       __GNUC__
            sun:       __SUNPRO_C,__SUNPRO_CC
            hp:        __HP_cc,__HP_aCC
@@ -400,8 +401,8 @@ AC_DEFUN([AX_COMPILER_VENDOR],
 #   Epoch use: * borland compiler use chronologically 0turboc for turboc
 #   era,
 #
-#     1borlanc BORLANC++ before 5, 2cppbuilder for cppbuilder era,
-#     3borlancpp for return of BORLANC++ (after version 5.5),
+#     1borlanc BORLANDC++ before 5, 2cppbuilder for cppbuilder era,
+#     3borlancpp for return of BORLANDC++ (after version 5.5),
 #     4cppbuilder for cppbuilder with year version,
 #     and 5xe for XE era.
 #
@@ -416,7 +417,7 @@ AC_DEFUN([AX_COMPILER_VENDOR],
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 5
+#serial 12
 
 # for intel
 AC_DEFUN([_AX_COMPILER_VERSION_INTEL],
@@ -679,7 +680,7 @@ AC_DEFUN([_AX_COMPILER_VERSION_BORLAND],[dnl
       _AX_COMPILER_VERSION_BORLANDC_NUMBER,,
       AC_MSG_FAILURE([[[$0]] unknown borlandc version]))
     AS_CASE([$_ax_[]_AC_LANG_ABBREV[]_compiler_version_borlandc_raw],
-      dnl BORLANC++ before 5.5
+      dnl BORLANDC++ before 5.5
       [512] ,[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="1borlanc:2.00"],
       [1024],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="1borlanc:3.00"],
       [1024],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="1borlanc:3.00"],
@@ -690,7 +691,7 @@ AC_DEFUN([_AX_COMPILER_VERSION_BORLAND],[dnl
       dnl C++ Builder era
       [1328],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="2cppbuilder:3.0"],
       [1344],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="2cppbuilder:4.0"],
-      dnl BORLANC++ after 5.5
+      dnl BORLANDC++ after 5.5
       [1360],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="3borlancpp:5.5"],
       [1361],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="3borlancpp:5.51"],
       [1378],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="3borlancpp:5.6.4"],
@@ -705,7 +706,7 @@ AC_DEFUN([_AX_COMPILER_VERSION_BORLAND],[dnl
       [1616],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="5xe:3"],
       [1632],[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="5xe:4"],
       [
-      AC_MSG_WARN([[[$0]] Unknow borlanc compiler version $_ax_[]_AC_LANG_ABBREV[]_compiler_version_borlandc_raw please report bug])
+      AC_MSG_WARN([[[$0]] Unknown borlandc compiler version $_ax_[]_AC_LANG_ABBREV[]_compiler_version_borlandc_raw please report bug])
       ])
     ])
   ])
@@ -769,7 +770,7 @@ AC_DEFUN([_AX_COMPILER_VERSION_MICROSOFT],[
   AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
     (_MSC_VER/100)%100,,
     AC_MSG_FAILURE([[[$0]] unknown microsoft compiler major version]))
-  dnl could be overriden
+  dnl could be overridden
   _ax_[]_AC_LANG_ABBREV[]_compiler_version_patch=0
   _ax_[]_AC_LANG_ABBREV[]_compiler_version_build=0
   # special case for version 6
@@ -840,6 +841,42 @@ AC_DEFUN([_AX_COMPILER_VERSION_PORTLAND],[
 AC_DEFUN([_AX_COMPILER_VERSION_TCC],[
   ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=[`tcc -v | $SED 's/^[ ]*tcc[ ]\+version[ ]\+\([0-9.]\+\).*/\1/g'`]
   ])
+
+# for GNU
+AC_DEFUN([_AX_COMPILER_VERSION_SDCC],[
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MAJOR))
+	__SDCC_VERSION_MAJOR
+    #else
+	SDCC/100
+    #endif
+    ,,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc major]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor,
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MINOR))
+	__SDCC_VERSION_MINOR
+    #else
+	(SDCC%100)/10
+    #endif
+    ,,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc minor]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch,
+    [
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_PATCH))
+	__SDCC_VERSION_PATCH
+    #elsif(defined(_SDCC_VERSION_PATCHLEVEL))
+	__SDCC_VERSION_PATCHLEVEL
+    #else
+	SDCC%10
+    #endif
+    ],,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc patch level]))
+  ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="$_ax_[]_AC_LANG_ABBREV[]_compiler_version_major.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch"
+  ])
+
 # main entry point
 AC_DEFUN([AX_COMPILER_VERSION],[dnl
   AC_REQUIRE([AX_COMPILER_VENDOR])
@@ -867,6 +904,7 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 	[watcom],[_AX_COMPILER_VERSION_WATCOM],
 	[portland],[_AX_COMPILER_VERSION_PORTLAND],
 	[tcc],[_AX_COMPILER_VERSION_TCC],
+	[sdcc],[_AX_COMPILER_VERSION_SDCC],
   	[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=""])
     ])
 ])
