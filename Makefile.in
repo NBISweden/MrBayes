@@ -87,6 +87,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@BUILD_DOC_TRUE@am__append_1 = doc
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_reset_header_cache.m4 \
@@ -156,7 +157,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = src examples doc
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/build/compile \
 	$(top_srcdir)/build/config.guess \
 	$(top_srcdir)/build/config.sub $(top_srcdir)/build/install-sh \
@@ -214,6 +215,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BEAGLE_CFLAGS = @BEAGLE_CFLAGS@
 BEAGLE_LIBS = @BEAGLE_LIBS@
+BIBTEX = @BIBTEX@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -251,6 +253,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PDFLATEX = @PDFLATEX@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -310,8 +313,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = COPYING INSTALL README doc examples
-SUBDIRS = src doc examples
+EXTRA_DIST = COPYING INSTALL README
+SUBDIRS = src examples $(am__append_1)
 all: all-recursive
 
 .SUFFIXES:
