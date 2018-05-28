@@ -1,3 +1,7 @@
-EXTRA_DIST=	COPYING INSTALL README doc examples
+EXTRA_DIST=	COPYING INSTALL README
 
-SUBDIRS=	src doc examples
+SUBDIRS=	src examples
+
+if BUILD_DOC
+SUBDIRS+=	doc
+endif
