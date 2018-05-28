@@ -5418,7 +5418,7 @@ $as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
 fi
 
 fi
-# Check for readline, but only if we don't have MPI, because aparantly
+# Check for readline, but only if we don't have MPI, because apparently
 # it won't work.
 
 if test "x$use_mpi" = "xno"; then :

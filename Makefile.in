@@ -87,6 +87,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+
+# Only build things in doc if we have the tools for it.
 @BUILD_DOC_TRUE@am__append_1 = doc
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
