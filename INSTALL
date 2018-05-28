@@ -1,19 +1,6 @@
 MrBayes 3.2.7-dev (development not-yet-3.2.7 version)
 ========================================================================
 
-Compilation of MrBayes has been tested on the following systems (and
-compilers):
-
-    x86_64-apple-darwin15.4.0   clang 7.3.0
-
-    x86_64-unknown-openbsd5.9   gnu 4.2.1, clang 3.7.1
-    x86_64-unknown-openbsd6.0   gnu 4.2.1, clang 3.8.0, clang 3.9.1
-
-    x86_64-unknown-linux-gnu    gnu 4.4.7, gnu 4.9.3, gnu 5.3.0, gnu 5.3.1,
-                                gnu 5.4.0, gnu 6.2.0,
-                                intel 14.0.0, portland 14.7.0
-
-
 Building MrBayes using the supplied "configure" script:
 ------------------------------------------------------------------------
 
@@ -78,6 +65,18 @@ architecture-dependent compiler flags.  Therefore,
 
         $ export AUTOCONF_VERSION=2.69
         $ export AUTOMAKE_VERSION=1.15
+
+* On Ubuntu Linux, installing the following packages installs all of the
+  above prerequisites:
+
+    1. automake
+    2. autoconf
+    3. pkg-config
+    4. autoconf-archive
+
+  These may be installed through
+
+    sudo apt-get install automake autoconf pkg-config autoconf-archive
 
 When all the prerequisites are in place:
 
