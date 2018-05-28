@@ -1,9 +1,31 @@
 dist_doc_DATA=	hym.nex
 dist_pdf_DATA=	MBDating.pdf
 
-SUBDIRS=	src
+EXTRA_DIST=	src
+
+CLEANFILES=	MBDating.aux \
+		MBDating.bbl \
+		MBDating.blg \
+		MBDating.log \
+		MBDating.out
 
 DISTCLEANFILES=	MBDating.pdf
 
-MBDating.pdf: src/MBDating.pdf
-	cp src/MBDating.pdf .
+MBDating.pdf: \
+    src/MBDating.tex \
+    src/master_refs.bib \
+    src/figures/ccby.pdf \
+    src/figures/clockr.pdf \
+    src/figures/cltree.pdf \
+    src/figures/distribution.r \
+    src/figures/fbdtree.pdf \
+    src/figures/gamdir.pdf \
+    src/figures/gamma.pdf \
+    src/figures/nctree.pdf \
+    src/figures/nodecali.pdf \
+    src/figures/relaxcl.pdf \
+    src/figures/treeage.pdf
+	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
+	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
