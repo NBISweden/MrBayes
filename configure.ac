@@ -248,7 +248,6 @@ AC_CONFIG_FILES([
                  Makefile
                  doc/Makefile
                  doc/manual/Makefile
-                 doc/manual/src/Makefile
                  doc/tutorial/Makefile
                  examples/Makefile
                  src/Makefile

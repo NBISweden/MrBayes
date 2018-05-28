@@ -7976,7 +7976,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile doc/Makefile doc/manual/Makefile doc/manual/src/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile doc/Makefile doc/manual/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8716,7 +8716,6 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/manual/Makefile") CONFIG_FILES="$CONFIG_FILES doc/manual/Makefile" ;;
-    "doc/manual/src/Makefile") CONFIG_FILES="$CONFIG_FILES doc/manual/src/Makefile" ;;
     "doc/tutorial/Makefile") CONFIG_FILES="$CONFIG_FILES doc/tutorial/Makefile" ;;
     "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
