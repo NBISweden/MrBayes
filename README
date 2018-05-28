@@ -13,17 +13,17 @@ Build instructions, very very short version:
 Current repository directory layout:
 
     .
-    ├── doc                     : Manual
-    │   └── tutorial            : A tutorial
-    ├── examples                : Example input data sets
-    ├── src                     : C source code
-    └── test                    : Scripts and data for testing
+    ├ doc
+    │   ├ manual                : The manual
+    │   └ tutorial              : A tutorial
+    ├ examples                  : Example input data sets
+    └ src                       : C source code
 
 
 We are currently in the process of moving everything over from
 Subversion to Git, and from SourceForge to GitHub.  The code, web
-pages and PDF manuals are already available here, but the bug tracking
-database and mailing list are still to be processed.  Also, the MrBayes
+pages and PDF manuals are already available here, and the bug tracking
+database and mailing list are very nearly sorted too.  Also, the MrBayes
 home page link at http://mrbayes.net/ is still pointing to the old web
 pages.
 
