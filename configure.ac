@@ -96,6 +96,15 @@ AC_ARG_WITH([beagle],
 
 AC_PROG_INSTALL
 
+# Test whether we can rebuild the documentation.
+# This does not affect the pre-built PDF documents unless these are deleted.
+AC_PATH_PROG(PDFLATEX, [pdflatex])
+AC_PATH_PROG(BIBTEX, [bibtex])
+
+AM_CONDITIONAL([BUILD_DOC], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
+AM_COND_IF([BUILD_DOC], [],
+           [AC_MSG_WARN([pdflatex or bibtex is missing, documentation will not be rebuilt])])
+
 # Determine if we can (and want) to use an MPI C compiler.
 
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
@@ -235,7 +244,14 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 
-AC_CONFIG_FILES([Makefile doc/Makefile doc/manual/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile])
+AC_CONFIG_FILES([
+                 Makefile
+                 doc/Makefile
+                 doc/manual/Makefile
+                 doc/tutorial/Makefile
+                 examples/Makefile
+                 src/Makefile
+])
 AC_OUTPUT
 m4_unquote(
   _m4_defn([_m4_wrap_text])_m4_popdef([_m4_wrap_text]))

@@ -220,6 +220,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BEAGLE_CFLAGS = @BEAGLE_CFLAGS@
 BEAGLE_LIBS = @BEAGLE_LIBS@
+BIBTEX = @BIBTEX@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -257,6 +258,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PDFLATEX = @PDFLATEX@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -317,11 +319,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_doc_DATA = \
-	Manual_MrBayes_v3.2.pdf \
 	commref_mb3.2.txt \
-	release_note.txt
+	release_note.txt \
+	MrBayes3.2_DirichletPr.Notes.doc \
+	MrBayes3.2_TODO.txt
 
-SUBDIRS = tutorial
+SUBDIRS = manual tutorial
 all: all-recursive
 
 .SUFFIXES:
