@@ -19,6 +19,11 @@ compile and optionally install MrBayes:
 
         $ make
 
+  Note that if "pdflatex" or "bibtex" could not be found by the
+  "configure" script, the PDF documentation in doc/manual and
+  doc/tutorial will not be rebuilt, even if the PDF documents are
+  outdated or missing.
+
 * Install it on the system (optional).  This will install
   the executable "mb" in /usr/local/bin, the documentation
   in /usr/local/share/doc/mrbayes, and the example files in
@@ -53,12 +58,11 @@ of external libraries (Beagle) and also uses m4 macros from the
 autoconf-archive collection for detection of MPI, Readline, and some
 architecture-dependent compiler flags.  Therefore,
 
-* Make sure pkg-config
-  (https://www.freedesktop.org/wiki/Software/pkg-config/) is installed.
+* Make sure pkg-config (https://www.freedesktop.org/wiki/Software/pkg-config/)
+  is installed.
 
-* Make sure autoconf-archive 2016.03.20
-  (http://www.gnu.org/software/autoconf-archive/) (or later) is
-  installed.
+* Make sure autoconf-archive 2016.03.20 (or later)
+  (http://www.gnu.org/software/autoconf-archive/) is installed.
 
 * On some systems that uses metaauto for wrapping multiple versions of
   the GNU autotools (OpenBSD for example):
@@ -165,7 +169,7 @@ MPI implementations (OpenMPI (https://www.open-mpi.org/) and MPICH
 (https://www.mpich.org/)), so if MrBayes is configured with support for
 MPI parallelization, Readline support will be automatically disabled.
 
-A possible workaround is to use a "Readline wrapper", such as rlwrap
+A possible workaround is to use a "Readline wrapper", such as "rlwrap"
 (https://github.com/hanslub42/rlwrap), which gives you persistent
 command line history between sessions, but no command tab-completion.
 To use rlwrap with an MPI-enabled MrBayes, simply start MrBayes like
