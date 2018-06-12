@@ -11,6 +11,7 @@ CLEANFILES=	MBDating.aux \
 
 DISTCLEANFILES=	MBDating.pdf
 
+if BUILD_DOC
 MBDating.pdf: \
     src/MBDating.tex \
     src/master_refs.bib \
@@ -29,3 +30,4 @@ MBDating.pdf: \
 	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+endif
