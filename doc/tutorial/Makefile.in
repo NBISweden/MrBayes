@@ -502,24 +502,24 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 .PRECIOUS: Makefile
 
 
-MBDating.pdf: \
-    src/MBDating.tex \
-    src/master_refs.bib \
-    src/figures/ccby.pdf \
-    src/figures/clockr.pdf \
-    src/figures/cltree.pdf \
-    src/figures/distribution.r \
-    src/figures/fbdtree.pdf \
-    src/figures/gamdir.pdf \
-    src/figures/gamma.pdf \
-    src/figures/nctree.pdf \
-    src/figures/nodecali.pdf \
-    src/figures/relaxcl.pdf \
-    src/figures/treeage.pdf
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@BUILD_DOC_TRUE@MBDating.pdf: \
+@BUILD_DOC_TRUE@    src/MBDating.tex \
+@BUILD_DOC_TRUE@    src/master_refs.bib \
+@BUILD_DOC_TRUE@    src/figures/ccby.pdf \
+@BUILD_DOC_TRUE@    src/figures/clockr.pdf \
+@BUILD_DOC_TRUE@    src/figures/cltree.pdf \
+@BUILD_DOC_TRUE@    src/figures/distribution.r \
+@BUILD_DOC_TRUE@    src/figures/fbdtree.pdf \
+@BUILD_DOC_TRUE@    src/figures/gamdir.pdf \
+@BUILD_DOC_TRUE@    src/figures/gamma.pdf \
+@BUILD_DOC_TRUE@    src/figures/nctree.pdf \
+@BUILD_DOC_TRUE@    src/figures/nodecali.pdf \
+@BUILD_DOC_TRUE@    src/figures/relaxcl.pdf \
+@BUILD_DOC_TRUE@    src/figures/treeage.pdf
+@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@BUILD_DOC_TRUE@	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
+@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
