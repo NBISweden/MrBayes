@@ -490,7 +490,7 @@ uninstall-am: uninstall-dist_pdfDATA
 @BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 @BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 @BUILD_DOC_FALSE@Manual_MrBayes_v3.2.pdf:
-@BUILD_DOC_FALSE@	echo 'Can not build the manual PDF since LaTeX was not detected'
+@BUILD_DOC_FALSE@	echo 'Can not build the manual PDF since LaTeX was not detected' >&2
 @BUILD_DOC_FALSE@	exit 1
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

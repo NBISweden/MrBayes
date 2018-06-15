@@ -23,6 +23,6 @@ Manual_MrBayes_v3.2.pdf: \
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 else
 Manual_MrBayes_v3.2.pdf:
-	echo 'Can not build the manual PDF since LaTeX was not detected'
+	echo 'Can not build the manual PDF since LaTeX was not detected' >&2
 	exit 1
 endif
