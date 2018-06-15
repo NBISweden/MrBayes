@@ -30,4 +30,8 @@ MBDating.pdf: \
 	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+else
+MBDating.pdf:
+	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+	exit 1
 endif

@@ -21,4 +21,8 @@ Manual_MrBayes_v3.2.pdf: \
 	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) Manual_MrBayes_v3.2
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
+else
+Manual_MrBayes_v3.2.pdf:
+	echo 'Can not build the manual PDF since LaTeX was not detected'
+	exit 1
 endif
