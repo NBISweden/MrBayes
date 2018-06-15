@@ -520,6 +520,9 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 @BUILD_DOC_TRUE@	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
 @BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 @BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@BUILD_DOC_FALSE@MBDating.pdf:
+@BUILD_DOC_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+@BUILD_DOC_FALSE@	exit 1
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
