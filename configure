@@ -5221,6 +5221,7 @@ if test "x$with_beagle" != "xno"; then :
 
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
+    old_ldlibs="$LDLIBS"
 
     for beagle_api_version in 1 2; do
         beagle_subinc="include/libhmsbeagle-$beagle_api_version"
@@ -5238,7 +5239,8 @@ fi
 $as_echo "$as_me: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&6;}
 
             CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+            LDLIBS="-lhmsbeagle"
 
             ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
 if test "x$ac_cv_header_libhmsbeagle_beagle_h" = xyes; then :
@@ -5291,6 +5293,7 @@ fi
 
             CPPFLAGS="$old_cppflags"
             LDFLAGS="$old_ldflags"
+            LDLIBS="$old_ldlibs"
 
             if test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
