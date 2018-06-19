@@ -136,6 +136,7 @@ AC_CHECK_LIB([m], [sqrt])
 AS_IF([test "x$with_beagle" != "xno"], [
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
+    old_ldlibs="$LDLIBS"
 
     for beagle_api_version in 1 2; do
         beagle_subinc="include/libhmsbeagle-$beagle_api_version"
@@ -150,7 +151,8 @@ AS_IF([test "x$with_beagle" != "xno"], [
             AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
 
             CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+            LDLIBS="-lhmsbeagle"
 
             AC_CHECK_HEADER([libhmsbeagle/beagle.h],
                 [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
@@ -159,6 +161,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
 
             CPPFLAGS="$old_cppflags"
             LDFLAGS="$old_ldflags"
+            LDLIBS="$old_ldlibs"
 
             AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
                 [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
