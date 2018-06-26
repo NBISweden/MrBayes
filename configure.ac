@@ -157,7 +157,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
             AC_CHECK_HEADER([libhmsbeagle/beagle.h],
                 [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
             AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
-                [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
+                [AC_SUBST([BEAGLE_LIBS], ["$LDFLAGS $LDLIBS"])], [])
 
             CPPFLAGS="$old_cppflags"
             LDFLAGS="$old_ldflags"

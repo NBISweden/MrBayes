@@ -5286,7 +5286,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleCreateInstance" >&5
 $as_echo "$ac_cv_lib_hmsbeagle_beagleCreateInstance" >&6; }
 if test "x$ac_cv_lib_hmsbeagle_beagleCreateInstance" = xyes; then :
-  BEAGLE_LIBS=$LDFLAGS
+  BEAGLE_LIBS="$LDFLAGS $LDLIBS"
 
 fi
 
