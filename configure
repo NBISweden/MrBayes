@@ -5239,7 +5239,7 @@ fi
 $as_echo "$as_me: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&6;}
 
             CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath=$beagle_prefix/$beagle_sublib"
             LDLIBS="-lhmsbeagle"
 
             ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"

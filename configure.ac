@@ -151,7 +151,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
             AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
 
             CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath=$beagle_prefix/$beagle_sublib"
             LDLIBS="-lhmsbeagle"
 
             AC_CHECK_HEADER([libhmsbeagle/beagle.h],
