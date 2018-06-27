@@ -1037,7 +1037,7 @@ MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
 }
 
 
-/* NOTE!!!! The result of this function should be used before consequtive call to it again.
+/* NOTE!!!! The result of this function should be used before consecutive call to it again.
    It means NEVER use it like this:  printf ("%s %s", MbPrintNum (a),MbPrintNum (b)) */
 char *MbPrintNum (MrBFlt num)
 {
@@ -1080,9 +1080,9 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 /*  Compute mean and variance of log scaled values.
 @param vals    pointer to values in log scale
 @param nVals   number of "vals", minimum 1
-@param mean    adress of variable where computed mean is returned by the function
-@param var     adress of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
-@param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
+@param mean    address of variable where computed mean is returned by the function
+@param var     address of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
+@param varEst  address of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
                Could be set to NULL if this value need not to be returened.
 Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
 void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst)
@@ -3672,8 +3672,8 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
 |   findAllowedClockrate: Finds the range of clock rates allowed for the tree.
 |
 |   @param t        - tree to check (IN)  
-|   @minClockRate   - adress where minimum allowed clock rate is stored (OUT)
-|   @maxClockRate   - adress where maximum allowed clock rate is stored (OUT)
+|   @minClockRate   - address where minimum allowed clock rate is stored (OUT)
+|   @maxClockRate   - address where maximum allowed clock rate is stored (OUT)
 |
 ----------------------------------------------------------------*/
 void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
@@ -4201,12 +4201,12 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                 p->length = p->anc->nodeDepth - p->nodeDepth;
                 if (p->length < BRLENS_MIN)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too small.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too small.\n", spacer);
                     //return (ERROR);
                     }
                 if (p->length > BRLENS_MAX)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too long.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too long.\n", spacer);
                     //return (ERROR);
                     }
                 }
@@ -4408,7 +4408,7 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengthes
+| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengths
 |     and checks that user defined brlens satisfy the specified calibration(s) up to tolerance tol
 | TODO: clock rate is devived here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistancy)
 |
@@ -5995,7 +5995,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
     assert (tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
     nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
     assert (nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
-    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated length of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
@@ -6076,7 +6076,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
             if (nodeArraySize==0)
                 return ABORT; /* Potentaily here we could instead revert by removing last added node and try again. */
 
-            /* Move all nodes in nodeArray which can be paired with w to the begining of array */
+            /* Move all nodes in nodeArray which can be paired with w to the beginning of array */
             nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
             /* TODO optimization for Maxim (if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
             } while (nodeArrayAllowedSize == 0);

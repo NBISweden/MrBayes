@@ -662,7 +662,7 @@ int DoSumSs (void)
     numSamplesInStepSS = (numRows - stepBeginSS)/chainParams.numStepsSS;
     if ((numRows - stepBeginSS)%chainParams.numStepsSS!=0)
         {
-        MrBayesPrint ("%s   Error:  Number of samples could not be evenly devided among steps (%d samples among %d steps). \n", spacer,(numRows - stepBeginSS),chainParams.numStepsSS);
+        MrBayesPrint ("%s   Error:  Number of samples could not be evenly divided among steps (%d samples among %d steps). \n", spacer,(numRows - stepBeginSS),chainParams.numStepsSS);
         goto errorExit;
         }
 
@@ -718,7 +718,7 @@ sumssTable:
         MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples  (%d%%)    \n", spacer, stepBurnin,(int)(100*chainParams.burninFraction));
     else
         MrBayesPrint ("%s   The table entrances are based on samples excluding burn-in %d samples      \n", spacer, stepBurnin);
-    MrBayesPrint ("%s   discarded at the begining of each step.  \n\n", spacer);
+    MrBayesPrint ("%s   discarded at the beginning of each step.  \n\n", spacer);
 
     //MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
     //MrBayesPrint ("%s       ------------------------------\n",spacer);
@@ -820,7 +820,7 @@ sumssTable:
             {
             beginPrint=(int)(sumssParams.discardFraction*stepBeginSS);
             countPrint=stepBeginSS-beginPrint;
-            MrBayesPrint ("%s   Ploting step 0, i.e initial burn-in phase consisting of %d samples.\n", spacer,stepBeginSS);
+            MrBayesPrint ("%s   Plotting step 0, i.e initial burn-in phase consisting of %d samples.\n", spacer,stepBeginSS);
             MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,beginPrint);
             }
         else
@@ -832,7 +832,7 @@ sumssTable:
                 }
             beginPrint=stepBeginSS+(sumssParams.stepToPlot-1)*numSamplesInStepSS + (int)(sumssParams.discardFraction*numSamplesInStepSS);
             countPrint=numSamplesInStepSS-(int)(sumssParams.discardFraction*numSamplesInStepSS);
-            MrBayesPrint ("%s   Ploting step %d consisting of %d samples.\n", spacer,sumssParams.stepToPlot,numSamplesInStepSS);
+            MrBayesPrint ("%s   Plotting step %d consisting of %d samples.\n", spacer,sumssParams.stepToPlot,numSamplesInStepSS);
             MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,(int)(sumssParams.discardFraction*numSamplesInStepSS));
             }
 
@@ -1874,7 +1874,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
                 {
                 MrBayesPrint ("%s   Expected header '%s' for column %d but the header for this column was '%s' in file '%s'\n", spacer, (*headerNames)[i], i+1, t, fileName);
                 MrBayesPrint ("%s   It could be that some parameter values are not numbers and the whole string containing \n",spacer); 
-                MrBayesPrint ("%s   this wrongly formated parameter is treated as a header.\n",spacer);
+                MrBayesPrint ("%s   this wrongly formatted parameter is treated as a header.\n",spacer);
                 goto errorExit;
                 }
             }

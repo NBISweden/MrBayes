@@ -10256,7 +10256,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isClock == YES && IsClockSatisfied (theTree,0.001) == NO)
                             {
-                            MrBayesPrint ("%s   Non-calibrated tips are not at the same level after setting up starting tree branch lengthes(%s) from user tree '%s'.\n",
+                            MrBayesPrint ("%s   Non-calibrated tips are not at the same level after setting up starting tree branch lengths(%s) from user tree '%s'.\n",
                                           spacer, param->name, userTree[treeIndex]->name);
                             ShowNodes(theTree->root,0,YES);
                             return (ERROR);
@@ -10288,9 +10288,9 @@ int DoStartvalsParm (char *parmName, char *tkn)
                              param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES)
                         {
                         if (theTree->isCalibrated == YES && theTree->fromUserTree == NO)
-                            { /* if theTree is not set from user tree then we can not garanty that branch lenghts will stay the same
+                            { /* if theTree is not set from user tree then we can not garanty that branch lengths will stay the same
                                  by the time we start mcmc run because of clockrate adjustment. */
-                            MrBayesPrint ("%s    Set starting values for branch lengthes first before setting starting values of relaxed parameters!\n", spacer);
+                            MrBayesPrint ("%s    Set starting values for branch lengths first before setting starting values of relaxed parameters!\n", spacer);
                             return (ERROR);
                             }
                         if (theTree->isCalibrated == NO && IsClockSatisfied (usrTree, 0.001) == NO) // user tree is not calibrated so do not check it if calibration is in place

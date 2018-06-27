@@ -480,7 +480,7 @@ int AddTreeSamples (int from, int to, int saveToList)
 
             if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
-                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
+                MrBayesPrint ("%s   Problem opening file %s.\n", spacer, tempStr);
                 free (tempStr);
                 return (ERROR);
                 }
@@ -2279,7 +2279,7 @@ int DoMcmc (void)
     if (setUpAnalysisSuccess == NO)
         {
         MrBayesPrint ("%s   The analysis could not be started because there was an error during its setup.\n", spacer);
-        MrBayesPrint ("%s   Refer to error messages printed during model set up to adress the problem.\n", spacer);
+        MrBayesPrint ("%s   Refer to error messages printed during model set up to address the problem.\n", spacer);
         goto errorExit;
         }
 
@@ -2807,7 +2807,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Seed (globalSeed) ***************************************************************/
         if (!strcmp(parmName, "Seed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -2831,7 +2831,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Swapseed (global variable swapSeed) ***************************************************************/
         else if (!strcmp(parmName, "Swapseed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -16246,7 +16246,7 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   Total of %d generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq);
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as initial burnin.          \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
-        MrBayesPrint ("%s   Additionally at the begining of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   Additionally at the beginning of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if (chainParams.startFromPriorSS==YES)
             MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior.   \n", spacer);
@@ -17734,7 +17734,7 @@ int SetFilePositions (int samplePos)
 
             if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
-                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
+                MrBayesPrint ("%s   Problem opening file %s.\n", spacer, tempStr);
                 free (tempStr);
                 return (ERROR);
                 }
