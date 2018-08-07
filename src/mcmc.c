@@ -8544,7 +8544,7 @@ MrBFlt LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, M
     // c2 = (-lambda + mu + 2*lambda*rho + psi) / c1;
     other = (exp(-c1 *t) * (1 - c2) - (1 + c2)) / (exp(-c1 *t) * (1 - c2) + (1 + c2));
     
-    return log(0.5) + log(lambda + mu + psi + c1 * other) - log(lambda);
+    return log(lambda + mu + psi + c1 * other) - log(2.0*lambda);
 }
 
 /* probability that an individual alive at time t before today has
@@ -8648,15 +8648,15 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
  |   T:   oriented tree
  |   b:   birth (speciation) rate
  |   d:   death (extintion) rate
- |   p:   extant sampling rate
+ |   p:   extant sampling prob
  |   q:   fossil sampling rate
  |   n:   number of extant taxa
  |   m:   number of fossil tips
  |
  |
- |                     [p1(x1)]^2    n+m-1            m    q
+ |                    [p1(x1)]^2     n+m-1            m    q
  |   f(T|tmrca) = ---------------- * prod b*p1(xi) * prod -----  .
- |                [1 - ^p0(x1)]^2    i=2             i=1  p1(yi)
+ |                 [1 - p0(x1)]^2    i=2             i=1  p1(yi)
  |
  |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
  |
@@ -8666,12 +8666,13 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
     int         i, n, m;
-    MrBFlt      x, lambda, rho, psi, tmrca, c1, c2, hatP0;
+    MrBFlt      x, lambda, mu, rho, psi, tmrca, c1, c2;
     TreeNode    *p;
     Model       *mp;
     
     /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
     lambda = sR[0] / (1.0 - eR[0]);
+    mu     = lambda * eR[0] * (1.0 - fR[0]);
     psi    = lambda * eR[0] * fR[0];
     rho    = sF;
     
@@ -8704,10 +8705,10 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             }
         }
 
-    /* p_0 (t |psi=0, mu->mu+psi) */
-    hatP0 = 1.0 - rho*sR[0] / (rho*lambda + (sR[0] - rho*lambda) * exp(-sR[0]*tmrca));
-    
-    (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0));
+    (*prob) += 2.0 * LnP1_fossil(tmrca, rho, c1, c2);
+
+    /* condition on sampling at least one individual in both subtrees leading to the root */
+    (*prob) -= 2.0 * log(1 - exp(LnP0_fossil(tmrca, lambda, mu, psi, c1, c2)));
     
     /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
