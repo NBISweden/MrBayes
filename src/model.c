@@ -7868,9 +7868,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if ((activeParts[i] == YES || nApplied == 0))
                         {
                         sscanf (tkn, "%lf", &tempD);
-                        if (tempD <= 0.0 || tempD > 1.0)
+                        if (tempD < 0.0 || tempD > 1.0)
                             {
-                            MrBayesPrint ("%s   Sampleprob should be in range (0,1]\n", spacer);
+                            MrBayesPrint ("%s   Sampleprob should be in range [0,1]\n", spacer);
                             return (ERROR);
                             }
                         modelParams[i].sampleProb = tempD;
