@@ -20650,7 +20650,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_AddBranch;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
@@ -20664,7 +20664,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_DelBranch;
-    mt->relProposalProb = 10.0;
+    mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
