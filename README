@@ -1,6 +1,4 @@
-This website is work in progress!
-
-It is currently being moved over from its old home at SourceForge.
+README for web pages (gh-pages) http://nbisweden.github.io/MrBayes
 
 It is a set of static pages.  Do not change the HTML documents in the
 top directory, instead modify the source HTML templates in the "source"
@@ -19,10 +17,3 @@ After committing changes to the HTML files in the top directory (or any
 of the assets), the changes will be live immediately or after a short
 delay.
 
-
-TODO:
-
-    * When the bugs in the SourceForge bug tracking database are
-      migrated to GitHub issues, update issues links.
-
-    * Mailing list, likewise.
