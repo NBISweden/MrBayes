@@ -236,9 +236,23 @@ int CommandLine (int argc, char **argv)
     while ((ch = getopt(argc, argv, "hiIv")) != -1) {
         switch (ch) {
         case 'h': /* help */
-            break;
-        case 'i': /* interactive */
-        case 'I': /* interactive */
+            /* Display (very short) command synopsis and terminate
+             * succesfully */
+            puts("Usage:");
+            printf("\t%s [-i] [filename ...]\n", argv[0]);
+            printf("\t%s -v\n", argv[0]);
+            printf("\t%s -h\n", argv[0]);
+            putchar('\n');
+            puts("Options:");
+            puts("\t-i\tInteractive mode");
+            puts("\t\t(non-interactive mode is the default when a "
+                 "filename is given)");
+            puts("\t-v\tDisplay version information and exit");
+            puts("\t-h\tDisplay this short help text and exit");
+            return NO_ERROR;
+            break; /* NOTREACHED */
+        case 'i':  /* interactive */
+        case 'I':  /* interactive */
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
