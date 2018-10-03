@@ -243,7 +243,6 @@ int CommandLine (int argc, char **argv)
         case 'v': /* version */
                   /* Display the same information that is displayed by the
                    * "Version" interactive command and terminate succesfully. */
-            printf("MrBayes %s\n", VERSION_NUMBER);
             fputs("Features: ", stdout);
 #ifdef SSE_ENABLED
             fputs(" SSE", stdout);
@@ -268,14 +267,20 @@ int CommandLine (int argc, char **argv)
             printf("Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
 #endif
 #if defined(COMPILER_VENDOR) && defined(COMPILER_VERSION)
-            printf("Compiler: %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
+            printf(
+                "Compiler:  %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
 #endif
-            exit(EXIT_SUCCESS);
+            return NO_ERROR;
             break; /* NOTREACHED */
         case '?':  /* unknown */
         default:   /* unknown */
+            fprintf(stderr,
+                "Error in command line parsing (see '%s -h')\n", argv[0]);
+            return ERROR;
         }
     }
+
+    nProcessedArgs = optind;
 }
 #else /* !HAVE_UNISTD_H */
     /* wait for user-input commands */
