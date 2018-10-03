@@ -44,6 +44,7 @@
 /* We only do proper command line parsing if we're on a system where the
    unistd.h header is available */
 #ifdef HAVE_UNISTD_H
+#define UNIX_COMMAND_LINE_PARSING 1
 #include <unistd.h> /* getopt() */
 #endif
 
@@ -229,10 +230,10 @@ int CommandLine (int argc, char **argv)
 
     for (i = 0; i < CMD_STRING_LENGTH; i++) cmdStr[i] = '\0';
 
-#ifdef HAVE_UNISTD_H
+#ifdef UNIX_COMMAND_LINE_PARSING
 {
-    int ch;
-    int interactive = 0;
+    int ch;              /* the option character */
+    int interactive = 0; /* enable/disable interactive mode */
 
     /* Do command line parsing on Unix-like systems */
     while ((ch = getopt(argc, argv, "hiIv")) != -1) {
@@ -255,11 +256,12 @@ int CommandLine (int argc, char **argv)
             break; /* NOTREACHED */
         case 'i':  /* interactive */
         case 'I':  /* interactive */
+            /* Force enable interactive mode */
             interactive = 1;
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
-                   * "Version" interactive command and terminate succesfully. */
+                   * "Version" interactive command and terminate succesfully */
             fputs("Features: ", stdout);
 #ifdef SSE_ENABLED
             fputs(" SSE", stdout);
@@ -298,8 +300,8 @@ int CommandLine (int argc, char **argv)
     }
 
     if (optind == argc) {
-        /* If no further operands are available (i.e. no files to process),
-         * switch to interactive mode. */
+        /* If no further operands are available (i.e. there are no files to
+         * process), switch to interactive mode */
         interactive = 1;
     }
 
@@ -319,7 +321,7 @@ int CommandLine (int argc, char **argv)
 
     nProcessedArgs = optind;
 }
-#else /* !HAVE_UNISTD_H */
+#else /* !UNIX_COMMAND_LINE_PARSING */
     /* wait for user-input commands */
     nProcessedArgs = 1; /* first argument is program name and needs not be processed */
     if (nProcessedArgs < argc)
@@ -336,7 +338,7 @@ int CommandLine (int argc, char **argv)
         {
         if (nProcessedArgs < argc) 
             {
-#ifdef HAVE_UNISTD_H
+#ifdef UNIX_COMMAND_LINE_PARSING
             /* we are here only if a command that has been passed
                into the program remains to be processed */
             if (nProcessedArgs == 1 && (strcmp(argv[1],"-i") == 0 || strcmp(argv[1],"-I") == 0))
