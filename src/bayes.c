@@ -232,6 +232,8 @@ int CommandLine (int argc, char **argv)
 #ifdef HAVE_UNISTD_H
 {
     int ch;
+    int interactive = 0;
+
     /* Do command line parsing on Unix-like systems */
     while ((ch = getopt(argc, argv, "hiIv")) != -1) {
         switch (ch) {
@@ -253,6 +255,7 @@ int CommandLine (int argc, char **argv)
             break; /* NOTREACHED */
         case 'i':  /* interactive */
         case 'I':  /* interactive */
+            interactive = 1;
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
@@ -294,6 +297,26 @@ int CommandLine (int argc, char **argv)
         }
     }
 
+    if (optind == argc) {
+        /* If no further operands are available (i.e. no files to process),
+         * switch to interactive mode. */
+        interactive = 1;
+    }
+
+    if (interactive) {
+        mode = INTERACTIVE;
+        autoClose = NO;
+        autoOverwrite = YES;
+        noWarn = NO;
+        quitOnError = NO;
+    } else {
+        mode = NONINTERACTIVE;
+        autoClose = YES;
+        autoOverwrite = YES;
+        noWarn = YES;
+        quitOnError = YES;
+    }
+
     nProcessedArgs = optind;
 }
 #else /* !HAVE_UNISTD_H */
@@ -313,6 +336,7 @@ int CommandLine (int argc, char **argv)
         {
         if (nProcessedArgs < argc) 
             {
+#ifdef HAVE_UNISTD_H
             /* we are here only if a command that has been passed
                into the program remains to be processed */
             if (nProcessedArgs == 1 && (strcmp(argv[1],"-i") == 0 || strcmp(argv[1],"-I") == 0))
@@ -324,6 +348,7 @@ int CommandLine (int argc, char **argv)
                 quitOnError = NO;
                 }
             else
+#endif
                 sprintf (cmdStr, "Execute %s", argv[nProcessedArgs]);
             nProcessedArgs++;
             }
