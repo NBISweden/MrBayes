@@ -247,9 +247,11 @@ int CommandLine (int argc, char **argv)
             printf("\t%s -h\n", argv[0]);
             putchar('\n');
             puts("Options:");
-            puts("\t-i\tInteractive mode");
-            puts("\t\t(non-interactive mode is the default when a "
-                 "filename is given)");
+            puts("\t-i\tForce interactive mode");
+            puts("\t\tNon-interactive mode is the default when a "
+                 "filename is given");
+            puts("\t\tInteractive mode is the default when no filename is "
+                 "given");
             puts("\t-v\tDisplay version information and exit");
             puts("\t-h\tDisplay this short help text and exit");
             return NO_ERROR;
@@ -338,7 +340,7 @@ int CommandLine (int argc, char **argv)
         {
         if (nProcessedArgs < argc) 
             {
-#ifdef UNIX_COMMAND_LINE_PARSING
+#ifndef UNIX_COMMAND_LINE_PARSING
             /* we are here only if a command that has been passed
                into the program remains to be processed */
             if (nProcessedArgs == 1 && (strcmp(argv[1],"-i") == 0 || strcmp(argv[1],"-I") == 0))
