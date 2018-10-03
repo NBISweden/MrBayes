@@ -5922,7 +5922,7 @@ int InitChainCondLikes (void)
                         numReps = m->numRateCats * m->numOmegaCats;
                     k = m->numVecChars * m->numFloatsPerVec * m->numModelStates * numReps;
                     
-                    if (m->useVec == VEC_AVX)
+                    if (m->useVec == VEC_AVX || m->useVec == VEC_FMA)
                         m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 32);
                     else
                         m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 16);
@@ -6608,7 +6608,7 @@ int InitInvCondLikes (void)
         if ( m->useVec != VEC_NONE )
             {
             c1 = m->numVecChars * m->numFloatsPerVec * m->numModelStates;
-            if (m->useVec == VEC_AVX)
+            if (m->useVec == VEC_AVX || m->useVec == VEC_FMA)
                 m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 32);
             else
                 m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 16);
