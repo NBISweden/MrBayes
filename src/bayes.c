@@ -41,6 +41,12 @@
 #include "sumpt.h"
 #include "utils.h"
 
+/* We only do proper command line parsing if we're on a system where the
+   unistd.h header is available */
+#ifdef HAVE_UNISTD_H
+#include <unistd.h> /* getopt() */
+#endif
+
 #ifdef HAVE_LIBREADLINE
 #  if defined(HAVE_READLINE_READLINE_H)
 #    include <readline/readline.h>
@@ -221,8 +227,27 @@ int CommandLine (int argc, char **argv)
     int     ierror;
 #   endif
 
-    for (i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
-    
+    for (i = 0; i < CMD_STRING_LENGTH; i++) cmdStr[i] = '\0';
+
+#ifdef HAVE_UNISTD_H
+    {
+        int ch;
+        /* Do command line parsing on Unix-like systems */
+        while ((ch = getopt(argc, argv, "hiIv")) != -1) {
+            switch (ch) {
+            case 'h': /* help */
+                break;
+            case 'i': /* interactive */
+            case 'I': /* interactive */
+                break;
+            case 'v': /* version */
+                break;
+            case '?': /* unknown */
+            default:  /* unknown */
+            }
+        }
+    }
+#else /* !HAVE_UNISTD_H */
     /* wait for user-input commands */
     nProcessedArgs = 1; /* first argument is program name and needs not be processed */
     if (nProcessedArgs < argc)
@@ -233,6 +258,8 @@ int CommandLine (int argc, char **argv)
         noWarn = YES;
         quitOnError = YES;
         }
+#endif
+
     for (;;)
         {
         if (nProcessedArgs < argc) 
