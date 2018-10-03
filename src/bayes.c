@@ -230,23 +230,53 @@ int CommandLine (int argc, char **argv)
     for (i = 0; i < CMD_STRING_LENGTH; i++) cmdStr[i] = '\0';
 
 #ifdef HAVE_UNISTD_H
-    {
-        int ch;
-        /* Do command line parsing on Unix-like systems */
-        while ((ch = getopt(argc, argv, "hiIv")) != -1) {
-            switch (ch) {
-            case 'h': /* help */
-                break;
-            case 'i': /* interactive */
-            case 'I': /* interactive */
-                break;
-            case 'v': /* version */
-                break;
-            case '?': /* unknown */
-            default:  /* unknown */
-            }
+{
+    int ch;
+    /* Do command line parsing on Unix-like systems */
+    while ((ch = getopt(argc, argv, "hiIv")) != -1) {
+        switch (ch) {
+        case 'h': /* help */
+            break;
+        case 'i': /* interactive */
+        case 'I': /* interactive */
+            break;
+        case 'v': /* version */
+                  /* Display the same information that is displayed by the
+                   * "Version" interactive command and terminate succesfully. */
+            printf("MrBayes %s\n", VERSION_NUMBER);
+            fputs("Features: ", stdout);
+#ifdef SSE_ENABLED
+            fputs(" SSE", stdout);
+#endif
+#ifdef AVX_ENABLED
+            fputs(" AVX", stdout);
+#endif
+#ifdef FMA_ENABLED
+            fputs(" FMA", stdout);
+#endif
+#ifdef BEAGLE_ENABLED
+            fputs(" Beagle", stdout);
+#endif
+#ifdef MPI_ENABLED
+            fputs(" MPI", stdout);
+#endif
+#ifdef HAVE_LIBREADLINE
+            fputs(" readline", stdout);
+#endif
+            putchar('\n');
+#if defined(HOST_TYPE) && defined(HOST_CPU)
+            printf("Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
+#endif
+#if defined(COMPILER_VENDOR) && defined(COMPILER_VERSION)
+            printf("Compiler: %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
+#endif
+            exit(EXIT_SUCCESS);
+            break; /* NOTREACHED */
+        case '?':  /* unknown */
+        default:   /* unknown */
         }
     }
+}
 #else /* !HAVE_UNISTD_H */
     /* wait for user-input commands */
     nProcessedArgs = 1; /* first argument is program name and needs not be processed */
