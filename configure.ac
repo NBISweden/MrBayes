@@ -253,3 +253,5 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
 ])
 AC_OUTPUT
+m4_unquote(
+  _m4_defn([_m4_wrap_text])_m4_popdef([_m4_wrap_text]))
