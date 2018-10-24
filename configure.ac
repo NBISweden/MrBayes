@@ -243,8 +243,6 @@ AS_IF([test "x$enable_fma" = "xno"],
         [FMA code path should not be compiled.])])
 
 # Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 
 AC_CONFIG_FILES([Makefile
