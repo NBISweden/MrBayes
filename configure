@@ -5431,7 +5431,7 @@ $as_echo "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
 $as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
 
 fi
-        LDFLAGS="$BEAGLE_LIBS"
+         LDFLAGS="$BEAGLE_LIBS"
          { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleSetCPUThreadCount in -lhmsbeagle" >&5
 $as_echo_n "checking for beagleSetCPUThreadCount in -lhmsbeagle... " >&6; }
 if ${ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount+:} false; then :
@@ -5472,9 +5472,10 @@ if test "x$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" = xyes; then :
 
 $as_echo "#define BEAGLE_V3_ENABLED 1" >>confdefs.h
 
+	     BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"
 fi
 
-        LDFLAGS="$old_ldflags"
+         LDFLAGS="$old_ldflags"
 
 fi
 # Check for readline, but only if we don't have MPI, because apparently
