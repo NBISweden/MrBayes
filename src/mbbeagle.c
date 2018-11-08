@@ -330,12 +330,16 @@ MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
         beagleInstanceCount++;
         }
 
+#if defined (BEAGLE_V3_ENABLED)
     /* use level-order traversal with CUDA implementation or OpenCL with multi-partition */
     if((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) ||
         ((details.flags & BEAGLE_FLAG_FRAMEWORK_OPENCL) && division < 0))
         {
-        GetTree(m->brlens, 0, 0)->levelPassEnabled = 1;
+        Tree *t = GetTree(m->brlens, 0, 0);
+        t->levelPassEnabled = 1;
+        GetDownPass(t);
         }
+#endif /* BEAGLE_V3_ENABLED */
 
     return beagleInstance;
 }
