@@ -194,9 +194,11 @@ AS_IF([test "x$with_beagle" != "xno"], [
          AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
          AC_DEFINE([BEAGLE_ENABLED], [1],
             [Define if you want to enable Beagle])])
+        LDFLAGS="$BEAGLE_LIBS"
          AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
             [AC_DEFINE([BEAGLE_V3_ENABLED],[1],
                 [Define to enable Beagle v3.1 extensions])], [])
+        LDFLAGS="$old_ldflags"
 ]) dnl AS_IF
 
 # Check for readline, but only if we don't have MPI, because apparently
