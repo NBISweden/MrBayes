@@ -318,9 +318,23 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
     else 
         {
         if (division < 0)
-            MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for %d division%s:", spacer, beagleGetVersion(), details.resourceNumber, numCurrentDivisions, (numCurrentDivisions > 1 ? "s" : ""));
+            {
+            /* do not use multipartition mode (division < 0) for CPU resource */
+            if (details.flags & BEAGLE_FLAG_FRAMEWORK_CPU)
+                {
+                MrBayesPrint ("\n%s   Fastest resource is the CPU, changing to multi-instance BEAGLE mode\n", spacer);
+                beagleFinalizeInstance(beagleInstance);
+                return -1;
+                }
+            else
+                {
+                MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for %d division%s:", spacer, beagleGetVersion(), details.resourceNumber, numCurrentDivisions, (numCurrentDivisions > 1 ? "s" : ""));
+                }
+            }
         else
+            {
             MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for division %d:", spacer, beagleGetVersion(), details.resourceNumber, division+1);
+            }
         MrBayesPrint ("%s      Rsrc Name : %s\n", spacer, details.resourceName);
         MrBayesPrint ("%s      Impl Name : %s\n", spacer, details.implName);
         MrBayesPrint ("%s      Flags:", spacer);
@@ -338,6 +352,12 @@ MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
         Tree *t = GetTree(m->brlens, 0, 0);
         t->levelPassEnabled = 1;
         GetDownPass(t);
+        }
+
+    /* set max number of CPU threads to be used by BEAGLE with CPU implementation */
+    if ((details.flags & BEAGLE_FLAG_FRAMEWORK_CPU) && beagleThreadCount > 1 && beagleThreadCount != 99)
+        {
+        beagleSetCPUThreadCount(beagleInstance, beagleThreadCount);
         }
 #endif /* BEAGLE_V3_ENABLED */
 

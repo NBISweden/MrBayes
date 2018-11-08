@@ -1739,6 +1739,9 @@ extern int              beagleInstanceCount;                    /* total number 
 extern int              beagleScalingScheme;                    /* BEAGLE dynamic scaling                        */
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
 extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
+#if defined (BEAGLE_V3_ENABLED)
+extern int              beagleThreadCount;                      /* max number of BEAGLE CPU threads  */
+#endif
 #endif
 
 /* Aamodel parameters */
