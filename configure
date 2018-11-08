@@ -5419,9 +5419,9 @@ $as_echo "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
 $as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
 
 fi
-         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleSetPatternPartitions in -lhmsbeagle" >&5
-$as_echo_n "checking for beagleSetPatternPartitions in -lhmsbeagle... " >&6; }
-if ${ac_cv_lib_hmsbeagle_beagleSetPatternPartitions+:} false; then :
+         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleSetCPUThreadCount in -lhmsbeagle" >&5
+$as_echo_n "checking for beagleSetCPUThreadCount in -lhmsbeagle... " >&6; }
+if ${ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -5435,29 +5435,29 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char beagleSetPatternPartitions ();
+char beagleSetCPUThreadCount ();
 int
 main ()
 {
-return beagleSetPatternPartitions ();
+return beagleSetCPUThreadCount ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_hmsbeagle_beagleSetPatternPartitions=yes
+  ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount=yes
 else
-  ac_cv_lib_hmsbeagle_beagleSetPatternPartitions=no
+  ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleSetPatternPartitions" >&5
-$as_echo "$ac_cv_lib_hmsbeagle_beagleSetPatternPartitions" >&6; }
-if test "x$ac_cv_lib_hmsbeagle_beagleSetPatternPartitions" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" >&5
+$as_echo "$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" >&6; }
+if test "x$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" = xyes; then :
 
-$as_echo "#define BEAGLE_MULTIPART_ENABLED 1" >>confdefs.h
+$as_echo "#define BEAGLE_V3_ENABLED 1" >>confdefs.h
 
 fi
 

@@ -493,6 +493,7 @@ int InitializeMrBayes (void)
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment
     // beagleFlags |= BEAGLE_FLAG_VECTOR_SSE;        /* default to SSE code                           */
+    beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
     beagleResource = NULL;
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */

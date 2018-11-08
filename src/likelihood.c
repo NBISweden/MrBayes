@@ -7925,7 +7925,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     return (NO_ERROR);
 }
 
-#if defined(BEAGLE_MULTIPART_ENABLED)
+#if defined(BEAGLE_V3_ENABLED)
 /*-----------------------------------------------------------------
 |
 |   LaunchLogLikeForBeagleMultiPartition: calculate the log likelihood of the 

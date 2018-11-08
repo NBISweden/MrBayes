@@ -131,7 +131,7 @@ MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
 int     Height(TreeNode *p);
 void    ReverseLevelOrder(Tree *t, TreeNode *p, int *i);
 void    StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i);
@@ -2040,7 +2040,8 @@ Tree *AllocateTree (int numTaxa)
 
     t->intDownPass = t->allDownPass + t->memNodes;
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
     if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (numTaxa, sizeof (TreeNode *))) == NULL)
         {
         free (t->nodes);
@@ -2119,7 +2120,8 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
         }
     t->intDownPass = t->allDownPass + t->nNodes;
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
     if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (t->nIntNodes, sizeof (TreeNode *))) == NULL)
         {
         free (t->nodes);
@@ -3837,7 +3839,7 @@ void FreeTree (Tree *t)
         free (t->bitsets);
         free (t->flags);
         free (t->allDownPass);
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
         free (t->intDownPassLevel);
 #endif 
         free (t->nodes);
@@ -3909,9 +3911,12 @@ void GetDownPass (Tree *t)
 
     i = j = 0;
     GetNodeDownPass (t, t->root, &i, &j);
-#if defined (BEAGLE_LEVELPASS_ENABLED)
-    i = 0;
-    ReverseLevelOrder (t, t->root, &i);
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
+        i = 0;
+        ReverseLevelOrder (t, t->root, &i);
+        }
 #endif
 }
 
@@ -3939,7 +3944,7 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
         }
 }
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
  /* Compute the "height" of a tree -- the number of
     nodes along the longest path from the root node
     down to the farthest leaf node.*/

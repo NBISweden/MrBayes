@@ -17832,14 +17832,14 @@ int SetModelInfo (void)
         m->divisionIndex = i;                 /* division index number                        */
         m->operations = NULL;                 /* array of operations to be sent to Beagle     */
         m->opCount = 0;                       /* partial likelihood operations count          */
-#   if defined (BEAGLE_MULTIPART_ENABLED)
+#   if defined (BEAGLE_V3_ENABLED)
         m->numCharsAll               = 0;     /* number of compressed chars for all divisions */
         m->logLikelihoodsAll         = NULL;  /* array of log likelihoods for all divisions   */
         m->cijkIndicesAll            = NULL;  /* cijk array for all divisions                 */
         m->categoryRateIndicesAll    = NULL;  /* category rate array for all divisions        */  
         m->operationsAll             = NULL;  /* array of all operations across divisions     */
         m->operationsByPartition     = NULL;  /* array of division operations to be sent to Beagle */
-#   endif /* BEAGLE_MULTIPART_ENABLED */
+#   endif /* BEAGLE_V3_ENABLED */
 #   endif /* BEAGLE_ENABLED */
 
         /* likelihood calculator flags */

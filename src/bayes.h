@@ -56,7 +56,6 @@
 
 #if defined (BEAGLE_ENABLED)
 #include "libhmsbeagle/beagle.h"
-#define BEAGLE_LEVELPASS_ENABLED /* define to send operations to BEAGLE in reverse level order */
 #endif
 
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
@@ -603,7 +602,8 @@ typedef struct
     int             nLocks;             /*!< number of constrained (locked) nodes         */
     TreeNode        **allDownPass;      /*!< downpass array of all nodes                  */
     TreeNode        **intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    int             levelPassEnabled;   /*!< are we also doing a level-order traversal?   */
     TreeNode        **intDownPassLevel; /*!< level order downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
 #endif
     TreeNode        *root;              /*!< pointer to root (lower root in rooted trees) */
@@ -1390,14 +1390,14 @@ typedef struct modelinfo
     int         divisionIndex;              /* division index number                        */
     BeagleOperation* operations;            /* array of operations to be sent to Beagle     */
     int         opCount;                    /* partial likelihood operations count          */
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
     int         numCharsAll;                /* number of compressed chars for all divisions */
     MrBFlt*     logLikelihoodsAll;          /* array of log likelihoods for all divisions   */
     int*        cijkIndicesAll;             /* cijk array for all divisions                 */
     int*        categoryRateIndicesAll;     /* category rate array for all divisions        */
     BeagleOperationByPartition* operationsAll; /* array of all operations across divisions  */
     BeagleOperationByPartition* operationsByPartition; /* array of division operations to be sent to Beagle     */
-#endif /* BEAGLE_MULTIPART_ENABLED */
+#endif /* BEAGLE_V3_ENABLED */
 #endif /* BEAGLE_ENABLED */
 
     } ModelInfo;

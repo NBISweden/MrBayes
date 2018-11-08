@@ -111,7 +111,7 @@ int       CondLikeUp_Bin (TreeNode *p, int division, int chain);
 int       CondLikeUp_Gen (TreeNode *p, int division, int chain);
 int       CondLikeUp_NUC4 (TreeNode *p, int division, int chain);
 int       CondLikeUp_Std (TreeNode *p, int division, int chain);
-#if defined(BEAGLE_MULTIPART_ENABLED)
+#if defined(BEAGLE_V3_ENABLED)
 void      LaunchLogLikeForBeagleMultiPartition(int chain, MrBFlt* lnL);
 #endif
 void      LaunchLogLikeForDivision (int chain, int d, MrBFlt* lnL);

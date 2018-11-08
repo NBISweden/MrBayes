@@ -102,7 +102,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
         {
         for (i=0; i<numLocalTaxa; i++)
             {
-#if defined(BEAGLE_MULTIPART_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
+#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
             if (m->isPartAmbig[i] == YES || (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
 #else 
             if (m->isPartAmbig[i] == YES)
@@ -127,7 +127,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
         return ERROR;
     for (i=0; i<numLocalTaxa; i++)
         {
-#if defined(BEAGLE_MULTIPART_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
+#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
         if (m->isPartAmbig[i] == NO && !(beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
 #else
         if (m->isPartAmbig[i] == NO)
@@ -201,7 +201,7 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
       resource = beagleResource[beagleInstanceCount % beagleResourceCount];
 #   endif
         }
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
     else if (beagleResourceNumber == 99) {
         int numInstancePartitions = 1;
         if (division == -1) {
@@ -292,7 +292,7 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
             }
         }
     }
-#endif /* BEAGLE_MULTIPART_ENABLED */
+#endif /* BEAGLE_V3_ENABLED */
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
     /* create beagle instance */
@@ -328,6 +328,13 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
 MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
         MrBayesPrint ("\n");
         beagleInstanceCount++;
+        }
+
+    /* use level-order traversal with CUDA implementation or OpenCL with multi-partition */
+    if((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) ||
+        ((details.flags & BEAGLE_FLAG_FRAMEWORK_OPENCL) && division < 0))
+        {
+        GetTree(m->brlens, 0, 0)->levelPassEnabled = 1;
         }
 
     return beagleInstance;
@@ -487,7 +494,7 @@ void recalculateScalers(int chain)
     int         *isScalerNode;
     ModelInfo*  m;
     Tree        *tree;
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
     int         divisionCount;
     int         *divisions;
 #endif
@@ -514,7 +521,7 @@ void recalculateScalers(int chain)
                 }
             }
         }
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
     else 
         {
         divisions = (int *) SafeCalloc (numCurrentDivisions, sizeof(int));
@@ -647,7 +654,7 @@ void BeaglePrintFlags(long inFlags)
                       "VECTOR_NONE",
                       "VECTOR_SSE",
                       "THREADING_NONE",
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
                       "THREADING_CPP",
 #endif
                       "THREADING_OPENMP"
@@ -671,7 +678,7 @@ void BeaglePrintFlags(long inFlags)
                      BEAGLE_FLAG_VECTOR_NONE,
                      BEAGLE_FLAG_VECTOR_SSE,
                      BEAGLE_FLAG_THREADING_NONE,
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
                      BEAGLE_FLAG_THREADING_CPP,
 #endif
                      BEAGLE_FLAG_THREADING_OPENMP
@@ -679,7 +686,7 @@ void BeaglePrintFlags(long inFlags)
 
     int flagCount = 20;
 
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
     flagCount = 21;
 #endif
 
@@ -739,11 +746,16 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
     for (i=0; i<t->nIntNodes; i++)
         {
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
         p = t->intDownPassLevel[i];
-#else
-        p = t->intDownPass[i];
+        }
+    else
 #endif
+        {
+        p = t->intDownPass[i];
+        }
         
         /* check if conditional likelihoods need updating */
         if (p->upDateCl == YES)
@@ -835,11 +847,16 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
     for (i=0; i<t->nIntNodes; i++)
         {
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
         p = t->intDownPassLevel[i];
-#else
-        p = t->intDownPass[i];
+        }
+    else
 #endif
+        {
+        p = t->intDownPass[i];
+        }
 
         if (p->upDateCl == NO)
             {
@@ -941,11 +958,16 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
     for (i=0; i<t->nIntNodes; i++)
         {
 
-#if defined (BEAGLE_LEVELPASS_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
         p = t->intDownPassLevel[i];
-#else
-        p = t->intDownPass[i];
+        }
+    else
 #endif
+        {
+        p = t->intDownPass[i];
+        }
         
         /* check if conditional likelihoods need updating */
         if (p->upDateCl == YES)
@@ -1425,7 +1447,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
     return NO_ERROR;
 }
 
-#if defined (BEAGLE_MULTIPART_ENABLED)
+#if defined (BEAGLE_V3_ENABLED)
 
 /*------------------------------------------------------------------------
 |
@@ -1532,7 +1554,7 @@ int InitBeagleMultiPartitionInstance ()
         {
         for (i=0; i<numLocalTaxa; i++)
             {
-#if defined(BEAGLE_MULTIPART_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
+#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
             if (!(beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
 #else
             if (1)
@@ -2108,12 +2130,15 @@ int TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionC
 
         for (i=0; i<t->nIntNodes; i++)
             {
-#if defined (BEAGLE_LEVELPASS_ENABLED)
-            p = t->intDownPassLevel[i];
-#else
-            p = t->intDownPass[i];
-#endif
 
+            if (t->levelPassEnabled)
+                {
+                p = t->intDownPassLevel[i];
+                }
+            else
+                {
+                p = t->intDownPass[i];
+                }
             
             /* check if conditional likelihoods need updating */
             if (p->upDateCl == YES)
@@ -2248,11 +2273,15 @@ int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int division
         
         for (i=0; i<t->nIntNodes; i++)
             {
-#if defined (BEAGLE_LEVELPASS_ENABLED)
-            p = t->intDownPassLevel[i];
-#else
-            p = t->intDownPass[i];
-#endif
+
+            if (t->levelPassEnabled)
+                {
+                p = t->intDownPassLevel[i];
+                }
+            else
+                {
+                p = t->intDownPass[i];
+                }
             
             if (p->upDateCl == NO)
                 {
@@ -2390,11 +2419,15 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
 
         for (i=0; i<t->nIntNodes; i++)
             {
-#if defined (BEAGLE_LEVELPASS_ENABLED)
-            p = t->intDownPassLevel[i];
-#else
-            p = t->intDownPass[i];
-#endif
+
+            if (t->levelPassEnabled)
+                {
+                p = t->intDownPassLevel[i];
+                }
+            else
+                {
+                p = t->intDownPass[i];
+                }
 
             
             /* check if conditional likelihoods need updating */
@@ -2900,7 +2933,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
     return (NO_ERROR);
 }
 
-#endif /* BEAGLE_MULTIPART_ENABLED */
+#endif /* BEAGLE_V3_ENABLED */
 
 #endif /* BEAGLE_ENABLED */
 
@@ -2911,7 +2944,7 @@ void BeagleNotLinked()
 }
 
 
-void BeagleThreadsNotLinked()
+void BeagleThreadsNotAvailable()
 {
-    MrBayesPrint ("%s   Pthreads library is not linked to this executable.\n", spacer);
+    MrBayesPrint ("%s   BEAGLE CPU threading requires v3.1 and higher of the library.\n", spacer);
 }

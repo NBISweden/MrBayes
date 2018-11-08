@@ -6771,32 +6771,8 @@ int DoSetParm (char *parmName, char *tkn)
             else if (expecting == Expecting(ALPHA))
                 {
 #   if defined (BEAGLE_ENABLED)
-                if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                    {
-                    long oldFlags = beagleFlags;
-                    if (!strcmp(tempStr, "Yes"))
-                        {
-                        beagleFlags |= BEAGLE_FLAG_THREADING_OPENMP;
-                        }
-                    else
-                        {
-                        beagleFlags &= ~BEAGLE_FLAG_THREADING_OPENMP;                       
-                        }
-                    if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
-                        beagleFlags = oldFlags;
-                        }
-                    else {
-                        if (beagleFlags & BEAGLE_FLAG_THREADING_OPENMP)
-                            MrBayesPrint ("%s   Setting beagleopenmp to Yes\n", spacer);
-                        else
-                            MrBayesPrint ("%s   Setting beagleopenmp to No\n", spacer);
-                        }
-                    }
-                else
-                    {
-                    MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
-                    return (ERROR);
-                    }
+                MrBayesPrint ("%s   Setting beagleopenmp no longer supported\n", spacer);
+                return (ERROR);
 #   else
                 BeagleNotLinked();
 #   endif
@@ -6848,7 +6824,8 @@ int DoSetParm (char *parmName, char *tkn)
                         }
                     else
                         {
-                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;                     
+                        beagleFlags &= ~BEAGLE_FLAG_VECTOR_SSE;
+                        beagleFlags |= BEAGLE_FLAG_VECTOR_NONE;
                         }
                     if (BeagleCheckFlagCompatability(beagleFlags) == NO) {
                         beagleFlags = oldFlags;
@@ -6862,11 +6839,49 @@ int DoSetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid argument for beagleopenmp\n", spacer);
+                    MrBayesPrint ("%s   Invalid argument for beaglesse\n", spacer);
                     return (ERROR);
                     }
 #   else
                 BeagleNotLinked();
+#   endif
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
+        else if (!strcmp(parmName, "Beaglethreads"))
+            {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {
+#   if defined (BEAGLE_V3_ENABLED)
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+                    if (!strcmp(tempStr, "Yes"))
+                        {
+                        beagleFlags |= BEAGLE_FLAG_THREADING_CPP;
+                        }
+                    else
+                        {
+                        beagleFlags &= ~BEAGLE_FLAG_THREADING_CPP;
+                        beagleFlags |= BEAGLE_FLAG_THREADING_NONE;
+                        }
+                    if (beagleFlags & BEAGLE_FLAG_THREADING_CPP)
+                        MrBayesPrint ("%s   Setting beaglethreads to Yes\n", spacer);
+                    else
+                        MrBayesPrint ("%s   Setting beaglethreads to No\n", spacer);
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s   Invalid argument for beaglethreads\n", spacer);
+                    return (ERROR);
+                    }
+#   else
+                BeagleThreadsNotAvailable();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
@@ -6923,18 +6938,6 @@ int DoSetParm (char *parmName, char *tkn)
                 return (ERROR);
             }
 #endif
-        else if (!strcmp(parmName, "Beaglethreads"))
-            {
-            if (expecting == Expecting(EQUALSIGN))
-                expecting = Expecting(ALPHA);
-            else if (expecting == Expecting(ALPHA))
-                {
-                BeagleThreadsNotLinked();
-                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
-                    return ERROR;
-                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-                }
-            }
         else if (!strcmp(parmName, "Beaglescaling"))
             {
             if (expecting == Expecting(EQUALSIGN))
@@ -6964,7 +6967,7 @@ int DoSetParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
 #   else
-                BeagleThreadsNotLinked();
+                BeagleNotLinked();
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
@@ -12206,7 +12209,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Beaglescaling -- 'Always' rescales partial likelihoods at each evaluation.    \n");
         MrBayesPrint ("                    'Dynamic' rescales less frequently and should run faster.    \n");
         MrBayesPrint ("   Beaglesse    -- Use SSE instructions on Intel CPU processors.                 \n");
-        MrBayesPrint ("   Beagleopenmp -- Use OpenMP to parallelize across multi-core CPU processors.   \n");
+        MrBayesPrint ("   Beaglethreads -- Use threading to parallelize across multi-core CPU processors.   \n");
 #   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Current settings:                                                             \n");
@@ -12237,7 +12240,9 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Beagleprecision    Single/Double         %s                                   \n", beagleFlags & BEAGLE_FLAG_PRECISION_SINGLE ? "Single" : "Double");
         MrBayesPrint ("   Beaglescaling      Always/Dynamic        %s                                   \n", beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ? "Always" : "Dynamic");
         MrBayesPrint ("   Beaglesse          Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_VECTOR_SSE ? "Yes" : "No");
-        MrBayesPrint ("   Beagleopenmp       Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_OPENMP ? "Yes" : "No");        
+#   if defined (BEAGLE_V3_ENABLED)
+        MrBayesPrint ("   Beaglethreads      Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_CPP ? "Yes" : "No"); 
+#   endif       
 #   endif
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
