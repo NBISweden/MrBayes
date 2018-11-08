@@ -56,6 +56,7 @@
 
 #if defined (BEAGLE_ENABLED)
 #include "libhmsbeagle/beagle.h"
+#define BEAGLE_LEVELPASS_ENABLED /* define to send operations to BEAGLE in reverse level order */
 #endif
 
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
@@ -602,6 +603,9 @@ typedef struct
     int             nLocks;             /*!< number of constrained (locked) nodes         */
     TreeNode        **allDownPass;      /*!< downpass array of all nodes                  */
     TreeNode        **intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+    TreeNode        **intDownPassLevel; /*!< level order downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
+#endif
     TreeNode        *root;              /*!< pointer to root (lower root in rooted trees) */
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
@@ -1357,6 +1361,7 @@ typedef struct modelinfo
 
     /* likelihood calculator flags and variables */
     int         useBeagle;                  /* use Beagle for this partition?               */
+    int         useBeagleMultiPartitions;   /* use one Beagle instance for all partitions?  */
     int         useVec;                     /* use SSE for this partition?                  */
     int*        rescaleFreq;                /* rescale frequency for each chain             */
 
@@ -1376,12 +1381,24 @@ typedef struct modelinfo
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
     int         rescaleFreqOld;             /* holds rescale frequency of current state     */
+    int         rescaleFreqNew;             /* holds temporary new rescale frequency        */
     int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
-    int*        succesCount;                /* count number of succesful computation since last reset of scalers */
+    int*        successCount;               /* count of successful computations since last reset of scalers */
     int**       isScalerNode;               /* for each node and chain set to YES if scaled node */
     int*        isScalerNodeScratch;        /* scratch space to hold isScalerNode of proposed state*/
     long*       beagleComputeCount;         /* count of number of calls to likelihood       */
-#endif
+    int         divisionIndex;              /* division index number                        */
+    BeagleOperation* operations;            /* array of operations to be sent to Beagle     */
+    int         opCount;                    /* partial likelihood operations count          */
+#if defined (BEAGLE_MULTIPART_ENABLED)
+    int         numCharsAll;                /* number of compressed chars for all divisions */
+    MrBFlt*     logLikelihoodsAll;          /* array of log likelihoods for all divisions   */
+    int*        cijkIndicesAll;             /* cijk array for all divisions                 */
+    int*        categoryRateIndicesAll;     /* category rate array for all divisions        */
+    BeagleOperationByPartition* operationsAll; /* array of all operations across divisions  */
+    BeagleOperationByPartition* operationsByPartition; /* array of division operations to be sent to Beagle     */
+#endif /* BEAGLE_MULTIPART_ENABLED */
+#endif /* BEAGLE_ENABLED */
 
     } ModelInfo;
 

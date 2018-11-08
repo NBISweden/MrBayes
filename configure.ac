@@ -151,7 +151,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
             AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
 
             CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath=$beagle_prefix/$beagle_sublib"
+            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
             LDLIBS="-lhmsbeagle"
 
             AC_CHECK_HEADER([libhmsbeagle/beagle.h],
@@ -194,6 +194,9 @@ AS_IF([test "x$with_beagle" != "xno"], [
          AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
          AC_DEFINE([BEAGLE_ENABLED], [1],
             [Define if you want to enable Beagle])])
+         AC_CHECK_LIB(hmsbeagle, beagleSetPatternPartitions,
+            [AC_DEFINE([BEAGLE_MULTIPART_ENABLED],[1],
+                [Define to enable Beagle v3 extensions])], [])
 ]) dnl AS_IF
 
 # Check for readline, but only if we don't have MPI, because apparently

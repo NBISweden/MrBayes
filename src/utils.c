@@ -131,6 +131,11 @@ MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+int     Height(TreeNode *p);
+void    ReverseLevelOrder(Tree *t, TreeNode *p, int *i);
+void    StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i);
+#endif
 
 /* qsort compare function for MrBFlt */
 int cmpMrBFlt(const void *a, const void *b)
@@ -2035,6 +2040,16 @@ Tree *AllocateTree (int numTaxa)
 
     t->intDownPass = t->allDownPass + t->memNodes;
 
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+    if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (numTaxa, sizeof (TreeNode *))) == NULL)
+        {
+        free (t->nodes);
+        free (t->allDownPass);
+        free (t);
+        return NULL;
+        }
+#endif
+
     /* initialize nodes and set index and memoryIndex */
     for (i = 0; i < t->memNodes; i++)
         {
@@ -2103,6 +2118,16 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
         return NULL;
         }
     t->intDownPass = t->allDownPass + t->nNodes;
+
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+    if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (t->nIntNodes, sizeof (TreeNode *))) == NULL)
+        {
+        free (t->nodes);
+        free (t->allDownPass);
+        free (t);
+        return NULL;
+        }
+#endif
     
     /* initialize nodes and set index and memoryIndex */
     for (i=0; i<t->memNodes; i++)
@@ -3812,6 +3837,9 @@ void FreeTree (Tree *t)
         free (t->bitsets);
         free (t->flags);
         free (t->allDownPass);
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+        free (t->intDownPassLevel);
+#endif 
         free (t->nodes);
         free (t);
         }
@@ -3881,6 +3909,10 @@ void GetDownPass (Tree *t)
 
     i = j = 0;
     GetNodeDownPass (t, t->root, &i, &j);
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+    i = 0;
+    ReverseLevelOrder (t, t->root, &i);
+#endif
 }
 
 
@@ -3907,6 +3939,54 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
         }
 }
 
+#if defined (BEAGLE_LEVELPASS_ENABLED)
+ /* Compute the "height" of a tree -- the number of
+    nodes along the longest path from the root node
+    down to the farthest leaf node.*/
+int Height(TreeNode *p)
+{
+    if (p==NULL)
+        return 0;
+    else
+        {
+        /* compute the height of each subtree */
+        int lheight = Height(p->left);
+        int rheight = Height(p->right);
+ 
+        /* use the larger one */
+        if (lheight > rheight)
+            return(lheight+1);
+        else
+            return(rheight+1);
+        }
+}
+ /* Function to perform reverse level order traversal a tree*/
+void ReverseLevelOrder(Tree *t, TreeNode *p, int *i)
+{
+    int h = Height(p);
+    int l;
+    for (l=h; l>=1; l--) 
+        StoreGivenLevel(t, p, l, i);
+}
+ /* Store nodes at a given level */
+void StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i)
+{
+    if (p == NULL)
+        return;
+    if (level == 1)
+        {
+        if (p->left != NULL && p->right != NULL && p->anc != NULL)
+            {
+            t->intDownPassLevel[(*i)++] = p;
+            }
+        }
+    else if (level > 1)
+        {
+        StoreGivenLevel(t, p->left, level-1, i);
+        StoreGivenLevel(t, p->right, level-1, i);
+        }
+}
+#endif
 
 /* GetPolyAges: Get PolyTree node ages */
 void GetPolyAges (PolyTree *t)
