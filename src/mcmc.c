@@ -6703,9 +6703,12 @@ int InitInvCondLikes (void)
             for (i=0; i<c1; i++)
                 m->invCondLikes[i] = 0.0f;
             }
-#   else
-        m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+        else
 #   endif
+            {
+            m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+            }
+
         if (!m->invCondLikes)
             return ERROR;
         }
@@ -6753,80 +6756,85 @@ int InitInvCondLikes (void)
             {
             assert (m->numModelStates == m->numStates);
 #   if defined (SSE_ENABLED)
-             for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
+            if ( m->useVec != VEC_NONE )
                 {
-                for (s=0; s<m->numModelStates; s++)
+                for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
                     {
-                    for (c1=0; c1<m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
                         }
                     }
-                }
-             if (m->numChars % m->numFloatsPerVec != 0)
-                {
-                for (s=0; s<m->numModelStates; s++)
+                 if (m->numChars % m->numFloatsPerVec != 0)
                     {
-                    for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
-                        }
-                    for (; c1<m->numFloatsPerVec; c1++)
-                        {
-                        *cI = 1.0;
-                        cI++;
-                        }
-                    }
-                }
-#   else
-            for (c=0; c<m->numChars; c++)
-                {
-                for (s=0; s<m->numModelStates; s++)
-                    {
-                    isConstant = YES;
-                    for (i=0; i<numLocalTaxa; i++)
-                        {
-                        charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
-                        if (IsBitSet(s, charBits) == NO)
+                        for (; c1<m->numFloatsPerVec; c1++)
                             {
-                            isConstant = NO;
-                            break;
+                            *cI = 1.0;
+                            cI++;
                             }
                         }
-                    if (isConstant == YES)
-                        *cI = 1.0;
-                    cI++;
                     }
                 }
+            else
 #   endif
+                {
+                for (c=0; c<m->numChars; c++)
+                    {
+                    for (s=0; s<m->numModelStates; s++)
+                        {
+                        isConstant = YES;
+                        for (i=0; i<numLocalTaxa; i++)
+                            {
+                            charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
+                            if (IsBitSet(s, charBits) == NO)
+                                {
+                                isConstant = NO;
+                                break;
+                                }
+                            }
+                        if (isConstant == YES)
+                            *cI = 1.0;
+                        cI++;
+                        }
+                    }
+                }
             }
         }   /* next division */
 
