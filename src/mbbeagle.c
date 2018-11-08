@@ -2072,15 +2072,18 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
 
     /* TODO: only need to update branches that have changed */
     /* calculate transition probabilities */
-    if (count > 0) {
+    if (count > 0)
+        {
         for (i=1; i<m->nCijkParts; i++)
             {
             for (j=0; j<count; j++)
+                {
                 k = j + i*count;
                 branchLengthsAll[k]       = branchLengthsAll[j];
                 tiProbIndicesAll[k]       = tiProbIndicesAll[j] + i;
                 categoryRateIndicesAll[k] = categoryRateIndicesAll[j];
                 cijkIndicesAll[k]         = cijkIndicesAll[j] + i;
+                }
             }
 
         beagleUpdateTransitionMatricesWithMultipleModels(m->beagleInstance,
@@ -2091,6 +2094,7 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
                                                          NULL,
                                                          branchLengthsAll,
                                                          count * m->nCijkParts);
+
         }
 
     /* return success */
@@ -2116,9 +2120,8 @@ int TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionC
     int                        *isScalerNode;
     BeagleOperationByPartition *operationsAll;
 
-    
-    operationsAll = modelSettings[0].operationsAll;
-
+    m = &modelSettings[0];
+    operationsAll = m->operationsAll;
     opCountMax = 0;
 
     for (d=0; d<divisionCount; d++)
@@ -2261,9 +2264,12 @@ int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int division
     int                        *isScalerNode;
     BeagleOperationByPartition *operationsAll;
 
-    operationsAll = modelSettings[0].operationsAll;
-    
+    m = &modelSettings[0];
+    operationsAll = m->operationsAll;
     opCountMax = 0;
+
+    t = GetTree(m->brlens, chain, state[chain]);
+
     for (d=0; d<divisionCount; d++)
         {
         dIndex = divisions[d];
@@ -2406,9 +2412,10 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
     int                        *isScalerNode;
     BeagleOperationByPartition *operationsAll;
     
-    operationsAll = modelSettings[0].operationsAll;
-
+    m = &modelSettings[0];
+    operationsAll = m->operationsAll;
     opCountMax = 0;
+
     for (d=0; d<divisionCount; d++)
         {
         dIndex = divisions[d];
@@ -2596,6 +2603,8 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
 
     hasAnyPInvar = NO;
     hasAnyDataRestriction = NO;
+
+    m = &modelSettings[0];
 
     for (d=0; d<divisionCount; d++)
         {

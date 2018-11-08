@@ -16015,22 +16015,9 @@ int RunChain (RandLong *seed)
     char        ckpFileName[220], bkupFileName[220];
 
 #   if defined (BEAGLE_ENABLED)
-    int         ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
 #       ifdef DEBUG_BEAGLE
     int         beagleScalingSchemeOld;
 #       endif
-    ModelInfo   *m;
-    ResetScalersNeeded = NO;
-    
-    for (i=0; i<numCurrentDivisions; i++)
-        {
-        m = &modelSettings[i];
-        if (m->useBeagle == NO || beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
-            {
-            ResetScalersNeeded =YES;
-            break;
-            }
-        }
 #   endif
 
 #   if defined (MPI_ENABLED)
