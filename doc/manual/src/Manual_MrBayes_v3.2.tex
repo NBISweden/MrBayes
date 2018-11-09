@@ -247,22 +247,27 @@ should look like this:
 \begin{singlespacing}
 \small
 \begin{verbatim}
-   Parameter    Options                               Current Setting            
-   ------------------------------------------------------------------            
-   Nucmodel     4by4/Doublet/Codon/Protein            4by4                         
-   Nst          1/2/6/Mixed                           1                         
-   Code         Universal/Vertmt/Mycoplasma/                                     
-                Yeast/Ciliates/Metmt                  Universal                         
-   Ploidy       Haploid/Diploid/Zlinked               Diploid                         
-   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  Equal                         
-   Ngammacat    <number>                              4                         
-   Nbetacat     <number>                              5                         
-   Omegavar     Equal/Ny98/M3                         Equal                         
-   Covarion     No/Yes                                No                         
-   Coding       All/Variable/Noabsencesites/                                     
-                Nopresencesites                       All                         
-   Parsmodel    No/Yes                                No                         
-   ------------------------------------------------------------------            
+   Parameter    Options                               Current Setting
+   ------------------------------------------------------------------
+   Nucmodel     4by4/Doublet/Codon/Protein              4by4
+   Nst          1/2/6/Mixed                             1
+   Code         Universal/Vertmt/Invermt/Yeast/Mycoplasma/
+                Ciliate/Echinoderm/Euplotid/Metmt       Universal
+   Ploidy       Haploid/Diploid/Zlinked                 Diploid
+   Rates        Equal/Gamma/LNorm/Propinv/
+                Invgamma/Adgamma/Kmixture               Equal
+   Ngammacat    <number>                                4
+   Nlnormcat    <number>                                4
+   Nmixtcat     <number>                                4
+   Nbetacat     <number>                                5
+   Omegavar     Equal/Ny98/M3                           Equal
+   Covarion     No/Yes                                  No
+   Coding       All/Variable/Informative/Nosingletons
+                Noabsencesites/Nopresencesites/
+                Nosingletonabsence/Nosingletonpresence  All
+   Parsmodel    No/Yes                                  No
+
+   ------------------------------------------------------------------
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -333,7 +338,7 @@ In more detail, each of these steps is performed as described in the following p
 \textbf{1}. At the \texttt{MrBayes >} prompt, type \textbf{execute primates.nex}. This will bring the data
  into the program. When you only give the data file name (primates.nex), MrBayes assumes that the file is in
  the current directory. If this is not the case, you have to use the full or relative path to your data file,
- for example \texttt{execute ../taxa/primates.nex}. If you are running your own data file for this tutorial,
+ for example \texttt{execute ../examples/primates.nex}. If you are running your own data file for this tutorial,
  beware that it may contain some MrBayes commands that can change the behavior of the program; delete those
  commands or put them in square brackets to follow this tutorial. 
 
@@ -422,22 +427,27 @@ In general, a good start is to type \textbf{help lset}. Ignore the help informat
 \small
 \begin{verbatim}
    Model settings for partition 1:
- 
+
    Parameter    Options                               Current Setting
    ------------------------------------------------------------------
-   Nucmodel     4by4/Doublet/Codon/Protein            4by4                         
-   Nst          1/2/6/Mixed                           1                         
-   Code         Universal/Vertmt/Mycoplasma/                                     
-                Yeast/Ciliates/Metmt                  Universal                         
-   Ploidy       Haploid/Diploid/Zlinked               Diploid                         
-   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  Equal                         
-   Ngammacat    <number>                              4                         
-   Nbetacat     <number>                              5                         
-   Omegavar     Equal/Ny98/M3                         Equal                         
-   Covarion     No/Yes                                No                         
-   Coding       All/Variable/Noabsencesites/                                     
-                Nopresencesites                       All                         
-   Parsmodel    No/Yes                                No                         
+   Nucmodel     4by4/Doublet/Codon/Protein              4by4
+   Nst          1/2/6/Mixed                             1
+   Code         Universal/Vertmt/Invermt/Yeast/Mycoplasma/
+                Ciliate/Echinoderm/Euplotid/Metmt       Universal
+   Ploidy       Haploid/Diploid/Zlinked                 Diploid
+   Rates        Equal/Gamma/LNorm/Propinv/
+                Invgamma/Adgamma/Kmixture               Equal
+   Ngammacat    <number>                                4
+   Nlnormcat    <number>                                4
+   Nmixtcat     <number>                                4
+   Nbetacat     <number>                                5
+   Omegavar     Equal/Ny98/M3                           Equal
+   Covarion     No/Yes                                  No
+   Coding       All/Variable/Informative/Nosingletons
+                Noabsencesites/Nopresencesites/
+                Nosingletonabsence/Nosingletonpresence  All
+   Parsmodel    No/Yes                                  No
+
    ------------------------------------------------------------------
 \end{verbatim}
 \normalsize
@@ -483,23 +493,28 @@ Of the remaining settings, it is only \texttt{Covarion} and \texttt{Parsmodel} t
 \small
 \begin{verbatim}
    Model settings for partition 1:
- 
+
    Parameter    Options                               Current Setting
    ------------------------------------------------------------------
-   Nucmodel     4by4/Doublet/Codon/Protein            4by4                         
-   Nst          1/2/6/Mixed                           6                         
-   Code         Universal/Vertmt/Mycoplasma/                                     
-                Yeast/Ciliates/Metmt                  Universal                         
-   Ploidy       Haploid/Diploid/Zlinked               Diploid                         
-   Rates        Equal/Gamma/Propinv/Invgamma/Adgamma  Invgamma                         
-   Ngammacat    <number>                              4                         
-   Nbetacat     <number>                              5                         
-   Omegavar     Equal/Ny98/M3                         Equal                         
-   Covarion     No/Yes                                No                         
-   Coding       All/Variable/Noabsencesites/                                     
-                Nopresencesites                       All                         
-   Parsmodel    No/Yes                                No                         
-    ------------------------------------------------------------------
+   Nucmodel     4by4/Doublet/Codon/Protein              4by4
+   Nst          1/2/6/Mixed                             6
+   Code         Universal/Vertmt/Invermt/Yeast/Mycoplasma/
+                Ciliate/Echinoderm/Euplotid/Metmt       Universal
+   Ploidy       Haploid/Diploid/Zlinked                 Diploid
+   Rates        Equal/Gamma/LNorm/Propinv/
+                Invgamma/Adgamma/Kmixture               Invgamma
+   Ngammacat    <number>                                4
+   Nlnormcat    <number>                                4
+   Nmixtcat     <number>                                4
+   Nbetacat     <number>                                5
+   Omegavar     Equal/Ny98/M3                           Equal
+   Covarion     No/Yes                                  No
+   Coding       All/Variable/Informative/Nosingletons
+                Noabsencesites/Nopresencesites/
+                Nosingletonabsence/Nosingletonpresence  All
+   Parsmodel    No/Yes                                  No
+
+   ------------------------------------------------------------------
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -517,11 +532,10 @@ We now need to set the priors for our model. There are six types of parameters i
 \small
 \begin{verbatim}
    Model settings for partition 1:
- 
    Parameter        Options                      Current Setting
    ------------------------------------------------------------------
    Tratiopr         Beta/Fixed                   Beta(1.0,1.0)
-   Revmatpr         Dirichlet/Fixed              Dirichlet(1.0,1.0,...
+   Revmatpr         Dirichlet/Fixed              Dirichlet(1.0,1.0,1.0,1.0,1.0,1.0)
    Aamodelpr        Fixed/Mixed                  Fixed(Poisson)
    Aarevmatpr       Dirichlet/Fixed              Dirichlet(1.0,1.0,...)
    Omegapr          Dirichlet/Fixed              Dirichlet(1.0,1.0)
@@ -529,30 +543,39 @@ We now need to set the priors for our model. There are six types of parameters i
    Ny98omega3pr     Uniform/Exponential/Fixed    Exponential(1.0)
    M3omegapr        Exponential/Fixed            Exponential
    Codoncatfreqs    Dirichlet/Fixed              Dirichlet(1.0,1.0,1.0)
-   Statefreqpr      Dirichlet/Fixed              Dirichlet(1.0,1.0,...
-   Shapepr          Uniform/Exponential/Fixed    Uniform(0.0,200.0)
+   Statefreqpr      Dirichlet/Fixed              Dirichlet(1.0,1.0,1.0,1.0)
+   Shapepr          Uniform/Exponential/Fixed    Exponential(1.0)
    Ratecorrpr       Uniform/Fixed                Uniform(-1.0,1.0)
    Pinvarpr         Uniform/Fixed                Uniform(0.0,1.0)
    Covswitchpr      Uniform/Exponential/Fixed    Uniform(0.0,100.0)
    Symdirihyperpr   Uniform/Exponential/Fixed    Fixed(Infinity)
-   Topologypr       Uniform/Constraints/Fixed    Uniform
-   Brlenspr         Unconstrained/Clock/Fixed    Unconstrained:Exp(10.0)
-   Treeagepr        Exponential/Gamma/Fixed      Exponential(1.0)
-   Speciationpr     Uniform/Exponential/Fixed    Exponential(1.0)
+   Topologypr       Uniform/Constraints/Fixed/   Uniform
+                    Speciestree
+   Brlenspr         Unconstrained/Clock/Fixed    Unconstrained:GammaDir(1.0,0.100,1.0,1.0)
+   Treeagepr        Gamma/Uniform/Fixed/         Gamma(1.00,1.00)
+                    Truncatednormal/Lognormal/
+                    Offsetlognormal/Offsetgamma/
+                    Offsetexponential
+   Speciationpr     Uniform/Exponential/Fixed    Exponential(10.0)
    Extinctionpr     Beta/Fixed                   Beta(1.0,1.0)
-   SampleStrat      Random/Diversity/Cluster     Random
-   Sampleprob       <number>                     1.00
-   Popsizepr        Lognormal/Gamma/Uniform/     Lognormal(4.6,2.3)
-                    Normal/Fixed                   
+   Fossilizationpr  Beta/Fixed                   Beta(1.0,1.0)
+   SampleStrat      Random/Diversity/Cluster/    Random
+                    FossilTip
+   Sampleprob       <number>                     1.00000000
+   Popsizepr        Lognormal/Gamma/Uniform/     Gamma(1.0,10.0)
+                    Normal/Fixed
    Popvarpr         Equal/Variable               Equal
    Nodeagepr        Unconstrained/Calibrated     Unconstrained
-   Clockratepr      Fixed/Normal/Lognormal/
-                    Exponential/Gamma            Fixed
-   Clockvarpr       Strict/Cpp/TK02/Igr          Strict
+   Clockratepr      Fixed/Normal/Lognormal/      Fixed(1.00)
+                    Exponential/Gamma
+   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    Strict
    Cppratepr        Fixed/Exponential            Exponential(0.10)
    Cppmultdevpr     Fixed                        Fixed(0.40)
-   TK02varpr        Fixed/Exponential/Uniform    Exponential(10.00)
+   TK02varpr        Fixed/Exponential/Uniform    Exponential(1.00)
+   Igrvarpr         Fixed/Exponential/Uniform    Exponential(10.00)
    Ratepr           Fixed/Variable=Dirichlet     Fixed
+   Generatepr       Fixed/Variable=Dirichlet     Fixed
+
    ------------------------------------------------------------------
 \end{verbatim}
 \normalsize
@@ -589,8 +612,9 @@ In our analysis, we will be cautious and leave the prior on state frequencies at
  Dirichlet(1,1,1,1,1,1) distribution.
 
 The \texttt{Shapepr} parameter determines the prior for the $\alpha$ (shape) parameter of the gamma
- distribution of rate variation. We will leave it at its default setting, a uniform distribution spanning
- a wide range of $\alpha$ values. The prior for the proportion of invariable sites is set with
+ distribution of rate variation. We will leave it at its default setting, an Exponential distribution
+ with mean 1.0. This will put highest probability on low $\alpha$ values. XXXX See Figure ? XXXX
+ The prior for the proportion of invariable sites is set with
  \texttt{Pinvarpr}. The default setting is a uniform distribution between 0 and 1, an appropriate setting
  if we don't want to assume any prior knowledge about the proportion of invariable sites.
 
@@ -598,12 +622,15 @@ For topology, the default \texttt{Uniform} setting for the \texttt{Topologypr} p
  probability on all distinct, fully resolved topologies. The alternative is to introduce some constraints
  on the tree topology, but we will not attempt that in this analysis.
 
-The \texttt{Brlenspr} parameter can either be set to unconstrained or clock-constrained. For trees without
- a molecular clock (unconstrained) the branch length prior can be set either to exponential or uniform. The
- default exponential prior with parameter $10.0$ should work well for most analyses. It has an expectation
- of $1/10 = 0.1$ but allows a wide range of branch length values (theoretically from 0 to infinity).
- Because the likelihood values vary much more rapidly for short branches than for long branches, an
- exponential prior on branch lengths usually works better than a uniform prior.
+The \texttt{Brlenspr} parameter can either be set to unconstrained, clock-constrained, or fixed. If 
+ \texttt{Fixed} is chosen then branch lengths will not be updated by the program but will be fixed
+ to XXXX.
+ For trees without a molecular clock (unconstrained) there are currently five different branch length
+ priors that can be applied. The default is a compound Dirichlet prior, which essentially puts a
+ prior on the total length on the tree, and then assigns prior lengths on individual branches by
+ dividing the tree length using a Dirichlet prior. More details can be found from the build in
+ help documentation (\texttt{help prset}.
+ 
 
 \subsection{Checking the Model}
 
@@ -627,25 +654,24 @@ To check the model before we start the analysis, type \textbf{showmodel}. This w
                      State frequencies have a Dirichlet prior
                      (1.00,1.00,1.00,1.00)
          Rates     = Invgamma
-                     Gamma shape parameter is uniformly dist-
-                     ributed on the interval (0.00,200.00).
+                     The distribution is approximated using 4 categories.
+                     Shape parameter is exponentially
+                     distributed with parameter (1.00).
                      Proportion of invariable sites is uniformly dist-
                      ributed on the interval (0.00,1.00).
-                     Gamma distribution is approximated using 4 categ...
-                     Likelihood summarized over all rate categories ...
 
    Active parameters: 
 
       Parameters
-      ------------------
-      Revmat           1
-      Statefreq        2
-      Shape            3
-      Pinvar           4
-      Ratemultiplier   5
-      Topology         6
-      Brlens           7
-      ------------------
+      ---------------------
+      Revmat              1
+      Statefreq           2
+      Shape               3
+      Pinvar              4
+      Ratemultiplier      5
+      Topology            6
+      Brlens              7
+      ---------------------
 
       1 --  Parameter  = Revmat
             Type       = Rates of reversible rate matrix
@@ -657,7 +683,7 @@ To check the model before we start the analysis, type \textbf{showmodel}. This w
 
       3 --  Parameter  = Alpha
             Type       = Shape of scaled gamma distribution of site rates
-            Prior      = Uniform(0.00,200.00)
+            Prior      = Exponential(1.00)
 
       4 --  Parameter  = Pinvar
             Type       = Proportion of invariable sites
@@ -674,7 +700,8 @@ To check the model before we start the analysis, type \textbf{showmodel}. This w
 
       7 --  Parameter  = V
             Type       = Branch lengths
-            Prior      = Unconstrained:Exponential(10.0)
+            Prior      = Unconstrained:GammaDir(1.0,0.1000,1.0,1.0)
+
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -694,44 +721,45 @@ The analysis is started by issuing the \texttt{mcmc} command. However, before do
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-   Parameter       Options               Current Setting                         
-   -----------------------------------------------------                         
-   Ngen            <number>              1000000                                      
-   Nruns           <number>              2                                      
-   Nchains         <number>              4                                      
-   Temp            <number>              0.100000                                     
-   Reweight        <number>,<number>     0.00 v 0.00 ^                       
-   Swapfreq        <number>              1                                      
-   Nswaps          <number>              1                                      
-   Samplefreq      <number>              500                                      
-   Printfreq       <number>              500                                      
-   Printall        Yes/No                Yes                                      
-   Printmax        <number>              8                                      
-   Mcmcdiagn       Yes/No                Yes                                     
-   Diagnfreq       <number>              5000                                      
-   Diagnstat       Avgstddev/Maxstddev   Avgstddev                                     
-   Minpartfreq     <number>              0.10                                 
-   Allchains       Yes/No                No                                     
-   Allcomps        Yes/No                No                                     
-   Relburnin       Yes/No                Yes                                     
-   Burnin          <number>              0                                     
-   Burninfrac      <number>              0.25                                 
-   Stoprule        Yes/No                No                                     
-   Stopval         <number>              0.05                                 
-   Savetrees       Yes/No                No                                     
-   Checkpoint      Yes/No                Yes                                     
-   Checkfreq       <number>              100000                                     
-   Filename        <name>                primates.nex.<p/t>
-   Startparams     Current/Reset         Current                                     
-   Starttree       Current/Random/       Current                                     
-                   Parsimony                                                    
-   Nperts          <number>              0                                     
-   Data            Yes/No                Yes                                     
-   Ordertaxa       Yes/No                No                                     
-   Append          Yes/No                No                                     
-   Autotune        Yes/No                Yes                                     
-   Tunefreq        <number>              100                                       
-   ---------------------------------------------------------------------------   
+   Parameter       Options               Current Setting
+   -----------------------------------------------------
+   Ngen            <number>              1000000
+   Nruns           <number>              2
+   Nchains         <number>              4
+   Temp            <number>              0.100000
+   Reweight        <number>,<number>     0.00 v 0.00 ^
+   Swapfreq        <number>              1
+   Nswaps          <number>              1
+   Samplefreq      <number>              500
+   Printfreq       <number>              1000
+   Printall        Yes/No                Yes
+   Printmax        <number>              8
+   Mcmcdiagn       Yes/No                Yes
+   Diagnfreq       <number>              5000
+   Diagnstat       Avgstddev/Maxstddev   Avgstddev
+   Minpartfreq     <number>              0.10
+   Allchains       Yes/No                No
+   Allcomps        Yes/No                No
+   Relburnin       Yes/No                Yes
+   Burnin          <number>              0
+   Burninfrac      <number>              0.25
+   Stoprule        Yes/No                No
+   Stopval         <number>              0.05
+   Savetrees       Yes/No                No
+   Checkpoint      Yes/No                Yes
+   Checkfreq       <number>              2000
+   Filename        <name>                ../examples/primates.nex.<p/t>
+   Startparams     Current/Reset         Current
+   Starttree       Current/Random/       Current
+                   Parsimony
+   Nperts          <number>              0
+   Data            Yes/No                Yes
+   Ordertaxa       Yes/No                No
+   Append          Yes/No                No
+   Autotune        Yes/No                Yes
+   Tunefreq        <number>              100
+
+   ---------------------------------------------------------------------------
 \end{verbatim}
 \normalsize
 \end{singlespacing}
