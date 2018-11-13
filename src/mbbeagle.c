@@ -188,6 +188,11 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
     preferredFlags = beagleFlags;
     requiredFlags = 0L;
 
+    if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
+        {
+        requiredFlags |= BEAGLE_FLAG_SCALERS_LOG;
+        }
+
     if (beagleResourceNumber >= 0 && beagleResourceNumber != 99)
         {
         resource = beagleResourceNumber;
@@ -202,21 +207,25 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
 #   endif
         }
 #if defined (BEAGLE_V3_ENABLED)
-    else if (beagleResourceNumber == 99) {
+    else if (beagleResourceNumber == 99)
+        {
         int numInstancePartitions = 1;
-        if (division == -1) {
+        if (division == -1)
+            {
             numInstancePartitions = numCurrentDivisions;
-        }
+            }
 
         MrBayesPrint ("\n%s   Running benchmarks to automatically select fastest BEAGLE resource... ", spacer);
 
         long benchmarkFlags = BEAGLE_BENCHFLAG_SCALING_NONE;
-        if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) {
-            requiredFlags |= BEAGLE_FLAG_SCALERS_LOG; //BEAGLE_FLAG_SCALERS_RAW;
+        if (beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS) 
+            {
             benchmarkFlags = BEAGLE_BENCHFLAG_SCALING_ALWAYS;
-        } else if (beagleScalingScheme == MB_BEAGLE_SCALE_DYNAMIC) {
+            }
+        else if (beagleScalingScheme == MB_BEAGLE_SCALE_DYNAMIC)
+            {
             benchmarkFlags = BEAGLE_BENCHFLAG_SCALING_DYNAMIC;
-        }
+            }
 
         // select fastest resource
         BeagleBenchmarkedResourceList* rBList;
@@ -257,8 +266,10 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
 
 
 
-            if (rBList != NULL) {
-                for (int i = 0; i < rBList->length; i++) {
+            if (rBList != NULL)
+                {
+                for (int i = 0; i < rBList->length; i++)
+                    {
                     fprintf(stdout, "\tResource %i:\n\t\tName : %s\n", i, rBList->list[i].name);
                     fprintf(stdout, "\t\tDesc : %s\n", rBList->list[i].description);
                     fprintf(stdout, "\t\tSupport Flags:");
@@ -274,24 +285,27 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
                     BeaglePrintFlags(rBList->list[i].benchedFlags);
                     fprintf(stdout, "\n");
                     fprintf(stdout, "\t\t\tPerf : %.4f ms (%.2fx CPU)\n", rBList->list[i].benchmarkResult, rBList->list[i].performanceRatio);
+                   }
                 }
-            }
             fprintf(stdout, "\n");
 #       endif
 
-        if (rBList != NULL) {
+        if (rBList != NULL)
+            {
             double fastestTime = rBList->list[0].benchmarkResult;
             resource = rBList->list[0].number;
             resourceCount = 1;
 
-            for (int i = 1; i < rBList->length; i++) {
-                if (rBList->list[i].benchmarkResult < fastestTime) {
+            for (int i = 1; i < rBList->length; i++)
+                {
+                if (rBList->list[i].benchmarkResult < fastestTime)
+                    {
                     fastestTime = rBList->list[i].benchmarkResult;
                     resource = rBList->list[i].number;
+                    }
                 }
             }
         }
-    }
 #endif /* BEAGLE_V3_ENABLED */
 
     /* TODO: allocate fewer buffers when nCijkParts > 1 */
@@ -397,7 +411,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
             CopySiteScalers(m, chain);
 
         TreeTiProbs_Beagle(tree, d, chain);
-        TreeCondLikes_Beagle(tree, d, chain);
+        TreeCondLikes_Beagle_Always_Rescale(tree, d, chain);
         TreeLikelihood_Beagle(tree, d, chain, lnL, (chainId[chain] % chainParams.numChains));
         } 
     else 
@@ -852,7 +866,7 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
  |
  |  TreeCondLikes_Beagle: This routine updates all conditional
  |       (partial) likelihoods of a beagle instance while rescaling at every node.
- |        Note: all nodes get recalculated, not only tached by move.
+ |        Note: all nodes get recalculated.
  |
  -----------------------------------------------------------------*/
 int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
@@ -962,20 +976,18 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
 
 /*----------------------------------------------------------------
 |
-|   TreeCondLikes_Beagle: This routine updates all conditional
-|       (partial) likelihoods of a beagle instance.
+|   TreeCondLikes_Beagle: This routine updates and rescales
+|        all conditional (partial) likelihoods of a beagle instance.
 |
 -----------------------------------------------------------------*/
-int TreeCondLikes_Beagle (Tree *t, int division, int chain)
+int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
 {
     int                 i, j, destinationScaleRead, cumulativeScaleIndex, op, opJ, opPrev;
     TreeNode            *p;
     ModelInfo           *m;
     unsigned            chil1Step, chil2Step;
-    int                 *isScalerNode;
     
     m = &modelSettings[division];
-    isScalerNode = m->isScalerNode[chain];
     
     op = 0;
 
@@ -997,7 +1009,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
         if (p->upDateCl == YES)
             {
             /* remove old scalers */
-            if (m->unscaledNodes[chain][p->index] == 0 && m->upDateAll == NO)
+            if (m->upDateAll == NO)
                 {
                 destinationScaleRead = m->nodeScalerIndex[chain][p->index];
                 cumulativeScaleIndex = m->siteScalerIndex[chain];
@@ -1034,20 +1046,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
             else
                 chil2Step=1;
 
-            /* Now deal with scalers */
-            m->unscaledNodes[chain][p->index] = 1 + m->unscaledNodes[chain][p->left->index] + m->unscaledNodes[chain][p->right->index];
-
-            if (m->unscaledNodes[chain][p->index] >= m->rescaleFreq[chain])
-                {
-                m->unscaledNodes[chain][p->index] = 0;
-                m->operations[op].destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
-                cumulativeScaleIndex  = m->siteScalerIndex[chain];
-                }
-            else
-                {
-                m->operations[op].destinationScaleWrite = BEAGLE_OP_NONE;
-                cumulativeScaleIndex  = BEAGLE_OP_NONE;
-                }
+            m->operations[op].destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
             m->operations[op].destinationScaleRead = BEAGLE_OP_NONE;
 
             for (j=1; j<m->nCijkParts; j++)
@@ -1061,14 +1060,7 @@ int TreeCondLikes_Beagle (Tree *t, int division, int chain)
                 m->operations[opJ].child2Partials         = m->operations[opPrev].child2Partials + chil2Step;
                 m->operations[opJ].child2TransitionMatrix = m->operations[opPrev].child2TransitionMatrix + 1;
 
-                if (isScalerNode[p->index] == YES)
-                    {
-                    m->operations[opJ].destinationScaleWrite = m->operations[opPrev].destinationScaleWrite + 1;
-                    }
-                else 
-                    {
-                    m->operations[opJ].destinationScaleWrite = BEAGLE_OP_NONE;
-                    }
+                m->operations[opJ].destinationScaleWrite = m->operations[opPrev].destinationScaleWrite + 1;
                 m->operations[opJ].destinationScaleRead = BEAGLE_OP_NONE;
                 }
 #if defined (DEBUG_MB_BEAGLE_MULTIPART)
@@ -1263,6 +1255,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                                           NULL,
                                           NULL);       
         }
+
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
 #   endif
@@ -1721,7 +1714,7 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
             }
 
         TreeTiProbs_BeagleMultiPartition(divisions, divisionCount, chain);
-        TreeCondLikes_BeagleMultiPartition(divisions, divisionCount, chain);
+        TreeCondLikes_BeagleMultiPartition_Always_Rescale(divisions, divisionCount, chain);
         /* TODO integrate only divisions being updated */
         TreeLikelihood_BeagleMultiPartition(divisions, divisionCount, chain, lnL, (chainId[chain] % chainParams.numChains));
         } 
@@ -2421,7 +2414,7 @@ int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int division
 |       (partial) likelihoods of a beagle instance across all divisions.
 |
 -----------------------------------------------------------------*/
-int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int chain)
+int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divisionCount, int chain)
 {
     int                        i, j, d, dIndex, destinationScaleRead, cumulativeScaleIndex;
     int                        opJ, opPrev, opCountMax, opCountTotal, divisionOffset;
@@ -2429,7 +2422,6 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
     TreeNode                   *p;
     ModelInfo                  *m;
     unsigned                   chil1Step, chil2Step;
-    int                        *isScalerNode;
     BeagleOperationByPartition *operationsAll;
     
     m = &modelSettings[0];
@@ -2442,7 +2434,6 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
 
         /* get model settings */
         m = &modelSettings[dIndex];
-        isScalerNode = m->isScalerNode[chain];
         t = GetTree(m->brlens, chain, state[chain]);
         divisionOffset = m->numTiProbs * m->nCijkParts * m->divisionIndex;
 
@@ -2464,7 +2455,7 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
             /* check if conditional likelihoods need updating */
             if (p->upDateCl == YES)
                 {
-                if (m->unscaledNodes[chain][p->index] == 0 && m->upDateAll == NO)
+                if (m->upDateAll == NO)
                     {
                     destinationScaleRead = m->nodeScalerIndex[chain][p->index];
                     cumulativeScaleIndex = m->siteScalerIndex[chain];
@@ -2503,20 +2494,8 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
                 else
                     chil2Step=1;
 
-                /* Now deal with scalers */
-                m->unscaledNodes[chain][p->index] = 1 + m->unscaledNodes[chain][p->left->index] + m->unscaledNodes[chain][p->right->index];
-
-                if (m->unscaledNodes[chain][p->index] >= m->rescaleFreq[chain])
-                    {
-                    m->unscaledNodes[chain][p->index] = 0;
-                    m->operationsByPartition[m->opCount].destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
-                    m->operationsByPartition[m->opCount].cumulativeScaleIndex  = m->siteScalerIndex[chain];
-                    }
-                else
-                    {
-                    m->operationsByPartition[m->opCount].destinationScaleWrite = BEAGLE_OP_NONE;
-                    m->operationsByPartition[m->opCount].cumulativeScaleIndex  = BEAGLE_OP_NONE;
-                    }
+                m->operationsByPartition[m->opCount].destinationScaleWrite = m->nodeScalerIndex[chain][p->index];
+                m->operationsByPartition[m->opCount].cumulativeScaleIndex  = m->siteScalerIndex[chain];
                 m->operationsByPartition[m->opCount].destinationScaleRead = BEAGLE_OP_NONE;
 
                 for (j=1; j<m->nCijkParts; j++)
@@ -2530,16 +2509,8 @@ int TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int c
                     m->operationsByPartition[opJ].child2Partials         = m->operationsByPartition[opPrev].child2Partials + chil2Step;
                     m->operationsByPartition[opJ].child2TransitionMatrix = m->operationsByPartition[opPrev].child2TransitionMatrix + 1;
 
-                    if (isScalerNode[p->index] == YES)
-                        {
-                        m->operationsByPartition[opJ].destinationScaleWrite = m->operationsByPartition[opPrev].destinationScaleWrite + 1;
-                        m->operationsByPartition[opJ].cumulativeScaleIndex  = m->operationsByPartition[opPrev].cumulativeScaleIndex + 1;
-                        }
-                    else 
-                        {
-                        m->operationsByPartition[opJ].destinationScaleWrite = BEAGLE_OP_NONE;
-                        m->operationsByPartition[opJ].cumulativeScaleIndex  = BEAGLE_OP_NONE;
-                        }
+                    m->operationsByPartition[opJ].destinationScaleWrite = m->operationsByPartition[opPrev].destinationScaleWrite + 1;
+                    m->operationsByPartition[opJ].cumulativeScaleIndex  = m->operationsByPartition[opPrev].cumulativeScaleIndex + 1;
                     m->operationsByPartition[opJ].destinationScaleRead = BEAGLE_OP_NONE;
                     }
                 m->opCount++;

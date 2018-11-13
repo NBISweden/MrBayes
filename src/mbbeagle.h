@@ -19,7 +19,7 @@ int    InitBeagleInstance (ModelInfo *m, int division);
 
 int    createBeagleInstance(ModelInfo *m, int nCijkParts, int numGammaCats, int numModelStates, int numCondLikes, int numScalers, int numChars, int numTiProbs, int numPartAmbigTips, int division);
 
-int    TreeCondLikes_Beagle (Tree *t, int division, int chain);
+int    TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain);
 int    TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int    TreeTiProbs_Beagle (Tree *t, int division, int chain);
 int    TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain);
@@ -30,7 +30,7 @@ void   LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int 
 int    TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int chain);
 int    TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionCount, int chain);
 int    TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int divisionCount, int chain);
-int    TreeCondLikes_BeagleMultiPartition (int* divisions, int divisionCount, int chain);
+int    TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divisionCount, int chain);
 int    TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int chain, MrBFlt *lnL, int whichSitePats);
 
 
