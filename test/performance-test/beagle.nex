@@ -1,0 +1,8 @@
+#NEXUS
+
+begin mrbayes;
+
+[set usebeagle=no;]
+set beaglescaling=dynamic;
+
+end;

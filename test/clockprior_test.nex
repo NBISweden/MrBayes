@@ -1,0 +1,663 @@
+#NEXUS
+
+[This file is for testing agreement with clock and relaxed clock priors in MrBayes 3]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+    [
+    exe ../../test/primates.nex;
+    exe ../../test/primates_treeinfo.nex;
+    ]
+    exe primates.nex;
+    exe primates_treeinfo.nex;
+    constraint root = 1-.;
+    constraint family = Homo_sapiens Pan Gorilla;
+
+    set dir=../../trash; [path from where we run the program...]
+    delete 1 6-12; [leaving four taxa]
+    mcmcp ngen=1000000000 nch=1 nr=1 printfr=100000 samplefr=1000 data=no;
+   
+    [1. Test of uniform prior on a noncalibrated clock tree with fixed tree age.]
+    [
+    We expect the following results (prior is uniform on 18 labeled histories):
+
+    Clade frequencies (*.tstat file)
+    --------------------------------
+
+    Taxa in clade    No.    Frequency
+          1           4     18/18 = 1/1 = 1.000000
+          2           6      4/18 = 2/9 = 0.222222
+          3           4      3/18 = 1/6 = 0.166667
+          4           1     18/18 = 1/1 = 1.000000
+    
+    Tree frequencies (*.trprobs file)
+    ---------------------------------
+    
+    Tree type           No.    Frequency
+    ((1,2),(3,4)) etc    3     2/18 = 1/9 = 0.111111
+    (((1,2),3),4) etc   12     1/18       = 0.055556
+
+    Node heights (root is fixed to 1.0) (*.vstat file)
+    -------------------------------------------------
+    
+    Taxa above node  No.     Mean      Variance  Median
+         2            6      0.416666     ?          ?
+         3            4      0.666666  0.055556      ?
+         4            1      1.000000  0.000000  1.000000
+    ]
+
+    [basic settings]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fix(1.0);
+
+    [
+    [1A. Test nniclock move]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fix(1.0);
+    propset nniclock(tau,v)$prob=10.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0;
+    mcmc file=test1A;
+    sumt file=test1A minpartfreq=0.01;
+
+    [1B. Test extsprclock move]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=10.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0;
+    mcmc file=test1B;
+    sumt file=test1B minpartfreq=0.01;
+
+    [1C. Test extssclock move]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=10.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0;
+    mcmc file=test1C;
+    sumt file=test1C minpartfreq=0.01;
+
+    [1D. Test localclock move]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=10.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0;
+    mcmc file=test1D;
+    sumt file=test1D minpartfreq=0.01;
+
+    [1E. Test parssprclock move]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=10.0
+            nodesliderclock(v)$prob=5.0;
+    exclude 5-.;
+    mcmc file=test1E;
+    sumt file=test1E minpartfreq=0.01;
+    ]
+
+    [2. Test of uniform prior on a non-calibrated clock tree with tree age variable.]
+    [
+    We expect the following results (prior is uniform on 18 labeled histories):
+
+    Clade frequencies (*.tstat file) [same as in test 1]
+    ----------------
+
+    Taxa in clade    No.    Frequency
+          1           4     18/18 = 1/1 = 1.000000
+          2           6      4/18 = 2/9 = 0.222222
+          3           4      3/18 = 1/6 = 0.166667
+          4           1     18/18 = 1/1 = 1.000000
+    
+    Tree frequencies (*.trprobs file) [same as in test 1]
+    ---------------------------------
+    
+    Tree type           No.    Frequency
+    ((1,2),(3,4)) etc    3     2/18 = 1/9 = 0.111111
+    (((1,2),3),4) etc   12     1/18       = 0.055556
+
+    Node heights (root is exp(1.0))
+    -----------
+    
+    Taxa above node  No.     Mean      Variance  Median
+         2            6      0.416666     ?          ?
+         3            4      0.666666     ?          ?
+         4            1      1.000000  1.000000  0.693147
+
+    Node heights (root is gamma(2.0,4.0))
+    -----------
+    
+    Taxa above node  No.     Mean      Variance  Median
+         2            6      0.208333     ?          ?
+         3            4      0.333333     ?          ?
+         4            1      0.500000  0.125000      ?
+    ]
+
+    [
+    [2A. Exp prior on tree age]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=exp(1.0);
+    propset nniclock(tau,v)$prob=10.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test2A;
+    sumt file=test2A minpartfreq=0.01;
+
+    [2B. Gamma prior on tree age]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=gamma(2.0,4.0);
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=10.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test2B;
+    sumt file=test2B minpartfreq=0.01;
+    ]
+
+    [2C. Exp prior on tree age through clock rate prior]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fixed(1.0) clockratepr=gamma(1.0,1.0);
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            [localclock(tau,v)$prob=0.0]
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=10.0
+            treestretch(v)$prob=10.0
+            multiplier(clockrate)$prob=10.0;
+    [
+    mcmc file=test2C;
+    sumt file=test2C minpartfreq=0.01;
+    sump file=test2C;
+    ]
+
+    [3. Test of the uniform prior on a calibrated tree, effect on topology probabilities.]
+    [
+    Assume root fixed to 1.0, two tips A & B fixed to 0.5. This corresponds to one
+    uniform(0.0,1.0) and one uniform(0.5,1.0) random variable for the node times. Half
+    of the probability will fall on both times being larger than 0.5, in which case we
+    get the same clade probabilities and tree frequencies as above. Half of the prob-
+    ability will fall on one time being smaller than 0.5, in which case only some trees
+    will be possible.
+    
+    We expect the following results (root fixed to 1.0, two tips, A & B, fixed to 0.5):
+    
+    (X = fixed(0.5), Y = fixed(0.0))
+
+    Clade frequencies
+
+    ----------------
+
+    Taxa in clade    No.    Frequency
+    X or Y            4     18/36 + 3/6 =  1/1  =       1.000000
+    YY                1      4/36 + 3/6 = 11/18 = 2/9 = 0.611111
+    XX                1      4/36 + 1/6 =  5/18 =       0.277778
+    YYX               2      3/36 + 1/6 =  3/12 = 1/4 = 0.250000
+    XY                4      4/36       =  2/18 = 1/9 = 0.111111
+    XXY               2      3/36       =  1/12 =       0.083333
+    XXYY              4     18/36 + 3/6 =  1/1  =       1.000000
+    
+    Tree frequencies (*.trprobs file)
+    ---------------------------------
+    
+    Tree type        No.    Frequency of each tree
+    ((X,X),(Y,Y))     1      2/36 + 1/6 = 4/18 = 2/9 = 0.222222
+    ((X,Y),(X,Y))     2      2/36       = 1/18 =       0.055556
+    (((X,X),Y),Y)     2      1/36       =              0.028889
+    (((X,Y),X),Y)     4      1/36       =              0.028889
+    (((X,Y),Y),X)     4      1/36       =              0.028889
+    (((Y,Y),X),X)     2      1/36 + 1/6 = 7/36 =       0.194444
+    ]
+
+    [common settings for these tests]
+    calibrate Pan = fixed(0.5);
+    calibrate Gorilla = fixed(0.5);
+    calibrate root = fixed(1.0);
+
+    [3A. We use fixed tips and root to check that we can retrieve the topology prior.]   
+    [treeagepr should be ignored because root is calibrated]
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(root) treeagepr=exp(1.0)
+          statefreq=fixed(equal);
+    propset nniclock(tau,v)$prob=10.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=10.0;
+    [    
+    mcmc file=test3A;
+    sumt file=test3A minpartfreq=0.01;
+    ]
+
+    [3B. Equivalent to 3A, but we fall back to treeagepr for root calibration and use a different move.]    
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=uniform treeagepr=fixed(1.0) statefreq=fixed(equal);
+    startvals tau=smallclocktree;
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=10.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    [
+    mcmc file=test3B;
+    sumt file=test3B minpartfreq=0.01;
+    ]
+
+    [3C. We use nonoverlapping calibrated tips and interior nodes to check that we can retrieve the calibration priors.]    
+    [
+    Expectations
+
+    Clade frequencies (expected node depth 0.25 for Pan and 0.60 for Family; 0.35/0.60 prob divided equally, the rest on Homo+Gorilla)
+    -----------------
+    
+    Clade              Prob
+    Homo+Gorilla     0.611111
+    Homo+Pan         0.194444
+    Gorilla+Pan      0.194444
+    
+    Node heights (Pan~unif(0.2,0.3), Family~unif(0.5,0.7), Root~offsetexp(1.0,2.0))
+    -------------------------------------------------------------------------------
+    
+    Clade     Mean     Variance    Median
+    Pan     0.250000   0.000833   0.250000
+    Family  0.600000   0.003333   0.600000
+    Root    1.500000   0.250000   1.346574
+    ]
+    
+    calibrate Pan = uniform(0.2,0.3);
+    calibrate Gorilla = fixed(0.0);
+    calibrate family = uniform(0.5,0.7);
+    calibrate root = offsetexp(1.0,2.0);
+
+    [treeagepr given here should be overridden]
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(family, root)
+          treeagepr=fixed(1.0) statefreq=fixed(equal);
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            localclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=10.0
+            treestretch(v)$prob=0.0;
+    [
+    mcmc file=test3C;
+    sumt file=test3C minpartfreq=0.01;
+    ]
+
+    [3D. Same as 3C, but we relax clock rate as well.]
+    [
+    Expectations for clock rate, see ratemultiplier in 4. We use all moves simultaneously to check that they do not break consraints.
+    
+    Node heights will be different (higher) but node ages should have the same distribution as in 3C.
+    ]
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(family, root)
+          treeagepr=fixed(1.0) statefreq=fixed(equal) clockratepr=lognormal(0.0,1.0);
+    propset nniclock(tau,v)$prob=2.0
+            extsprclock(tau,v)$prob=2.0
+            extssclock(tau,v)$prob=2.0
+            localclock(tau,v)$prob=2.0
+            parssprclock(tau,v)$prob=2.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=0.0;
+    [
+    mcmc file=test3D;
+    sumt file=test3D minpartfreq=0.01;
+    sump file=test3D;
+    ]
+  
+    [4. Test of the cpp relaxed clock model on fixed tree.]
+    [
+    Expectations: (assuming lambda~fixed(10.0), ratemult~lognormal(0.0,1.0), treelength=3.0)
+
+                    Mean        Variance    Median
+    No. events      30.000000   30.000000   30.332667
+    Ratemult         1.648721    4.670774    1.000000
+    ]
+
+    [
+    [4A. We fix the tree and hyperpriors and expect exactly the distributions above.]
+    prset nodeagepr=unconstrained brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=cpp cppratepr=fixed(10.0) cppmultdevpr=fixed(1.0);
+
+    [
+    mcmc file=test4A;
+    sump file=test4A;
+    sumt file=test4A;
+    ]
+
+    [4B. We fix the tree and allow the clock rate to vary around 2.0.]
+    [
+    Expectations
+    
+    Check that cpp is on exp. number of subst. and not on time, that is, no. cpp events should be the same as in A.
+    We also check that changing clock rate correctly accounts for prior and proposal probs for the cpp model.
+
+                    Mean        Variance    Median
+    No. events      30.000000   30.000000   ~30.0
+    Clockrate        0.500000    0.250000     0.346574
+    ]
+    prset clockratepr=exp(2.0);
+    [
+    mcmc file=test4B;
+    sump file=test4B;
+    sumt file=test4B;
+    ]
+
+    [4C. We fix the tree but relax hyperpriors and expect approximately the distributions above]
+    prset brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal) clockvarpr=cpp clockratepr=fixed(1.0);
+    prset cppratepr=exp(0.2) cppmultdevpr=fixed(2.0);
+    
+    [
+    Expectation:
+
+                    Mean        Variance      Median
+    N_cpp           15.000000       ?           ?
+    Cpprate         10.000000       ?           ?
+    Ratemult         7.389056   2926.359837   1.000000
+    ]
+
+    [    
+    mcmc file=test4C;
+    sump file=test4C;
+    ]
+
+    [4D. Test that we can retrieve exponential prior on tree height]
+    [Expectiation for tree height and clock rate      mean=1.000000  var=1.000000  median=0.693147]
+    prset brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fixed(1.0) clockratepr=gamma(1.0,1.0);
+    prset clockvarpr=cpp cppratepr=fixed(1.0);
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=10.0
+            treestretch(v)$prob=10.0
+            multiplier(clockrate)$prob=10.0;
+    [
+    mcmc file=test4D;
+    sump file=test4D;
+    ]
+    ]
+
+    [5. Test of the cpp relaxed clock model over tree space.]
+    [On average the cpp distribution above; tree space same as in 1.]
+
+    prset nodeagepr=unconstrained brlenspr=clock:uniform treeagepr=fixed(1.0) topologypr=uniform statefreq=fixed(equal) clockvarpr=ibr;
+    prset clockratepr=fixed(1.0) cppratepr=fixed(10.0) cppmultdevpr=fixed(1.0);
+
+    [    
+    [5A. NniClock sampler. ]
+    propset nniclock(tau,v)$prob=10.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    [
+    mcmc file=test5A;
+    sumt file=test5A minpartfreq=0.01;
+    sump file=test5A;
+    ]
+
+    [5B. ExtSprClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=10.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test5B;
+    sumt file=test5B minpartfreq=0.01;        
+    sump file=test5B;
+    
+    [5C. ExtSsClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=10.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test5C;
+    sumt file=test5C minpartfreq=0.01;        
+    sump file=test5C;
+
+    [5D. ParsSprClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=10.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test5D;
+    sumt file=test5D minpartfreq=0.01;
+    sump file=test5D;      
+    ]
+
+    [6. Test of the cpp relaxed clock model on calibrated tree space.]
+    [Use same example as in test 3A above. Average tree length is 2.0]
+    calibrate Pan = fixed(0.5);
+    calibrate Gorilla = fixed(0.5);
+    calibrate root = fixed(1.0);
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(root) statefreq=fixed(equal) clockvarpr=cpp;
+    prset cppratepr=fixed(10.0) cppmultdevpr=fixed(1.1);
+
+    [
+    [6A. NniClock sampler. ]
+    propset nniclock(tau,v)$prob=10.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test6A;
+    sumt file=test6A minpartfreq=0.01;
+   
+    [6B. ExtSprClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=10.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test6B;
+    sumt file=test6B minpartfreq=0.01;        
+    
+    [6C. ExtSsClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=10.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test6C;
+    sumt file=test6C minpartfreq=0.01;        
+    
+    [6D. ParsSprClock sampler. ]
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=10.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test6D;
+    sumt file=test6D minpartfreq=0.01;
+    ]
+
+    [7. Test of the birthdeath prior. Tree distribution is the same as in test 1.]
+    prset nodeagepr=unconstrained brlenspr=clock:birthdeath statefreq=fixed(equal) topologypr=uniform clockvarpr=strict;
+    propset nniclock(tau,v)$prob=2.0
+            extsprclock(tau,v)$prob=2.0
+            extssclock(tau,v)$prob=2.0
+            localclock(tau,v)$prob=2.0
+            parssprclock(tau,v)$prob=2.0
+            nodesliderclock(v)$prob=5.0;
+    [
+    mcmc file=test7;
+    sumt file=test7 minpartfreq=0.01;
+    ]
+
+    [8. Test of the coalescence prior. Tree distribution is the same as in 1.]
+    prset nodeagepr=unconstrained brlenspr=clock:coalescence statefreq=fixed(equal) topologypr=uniform clockvarpr=strict;
+    propset nniclock(tau,v)$prob=2.0
+            extsprclock(tau,v)$prob=2.0
+            extssclock(tau,v)$prob=2.0
+            localclock(tau,v)$prob=2.0
+            parssprclock(tau,v)$prob=2.0
+            nodesliderclock(v)$prob=5.0;
+    [
+    mcmc file=test7;
+    sumt file=test7 minpartfreq=0.01;
+    ]
+    
+    [9. Test of the tk02 relaxed clock model. Use fixed branch lengths, uniform prior.]
+
+    [
+    [9A. Use a fixed tree as in test 4A to check that we retrieve expected variance of branch lengths.]
+    prset nodeagepr=unconstrained brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=tk02 tk02varpr=fixed(1.0);
+    mcmc file=test9A;
+    sump file=test9A;
+    sumt file=test9A;
+
+    [9B. Use a fixed tree as in test 4A but relax hyperpriors and check that we retrieve expected mean branch lengths.]
+    prset nodeagepr=unconstrained brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=tk02 tk02varpr=exp(1.0);
+    mcmc file=test9B;
+    sump file=test9B;
+    sumt file=test9B;
+
+    [9C. Check that we can retrieve simple tree space used in test 1.]
+    prset nodeagepr=unconstrained brlenspr=clock:uniform treeagepr=fixed(1.0) topologypr=uniform statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=ibr tk02varpr=fixed(1.0);
+    exclude 5-.;
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=10.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test9C;
+    sumt file=test9C minpartfreq=0.01;
+    sump file=test9C;
+
+    [9D. Check that we can retrieve calibrated tree space given in example 3A]
+    calibrate Pan = fixed(0.5);
+    calibrate Gorilla = fixed(0.5);
+    calibrate root = fixed(1.0);
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(root) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=tk02 tk02varpr=fixed(1.0);
+    exclude 5-.;
+    propset nniclock(tau,v)$prob=2.0
+            extsprclock(tau,v)$prob=2.0
+            extssclock(tau,v)$prob=2.0
+            parssprclock(tau,v)$prob=2.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    mcmc file=test9D;
+    sumt file=test9D minpartfreq=0.01;
+    sump file=test9D;
+    
+    [9E. Test that we can retrieve exponential prior on tree height]
+
+    [Expectiation for tree height and clock rate      mean=1.000000  var=1.000000  median=0.693147]
+
+    prset nodeagepr=unconstrained brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fix(1.0) clockratepr=gamma(1.0,1.0);
+    prset clockvarpr=tk02;
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=0.0
+            parssprclock(tau,v)$prob=0.0
+            nodesliderclock(v)$prob=10.0
+            treestretch(v)$prob=10.0
+            multiplier(clockrate)$prob=10.0;
+    [
+    mcmc file=test9E;
+    sump file=test9E;
+    ]
+    ]
+
+    [10. Test of the igr relaxed clock model.]
+
+    [10A. Use a fixed tree as in test 4A to check that we retrieve expected variance of branch lengths.]
+    prset nodeagepr=unconstrained brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=ibr igrvarpr=fixed(1.0);
+    [report tree=events;   [Events do not read in properly]]
+    [
+    mcmc file=test10A;
+    sump file=test10A;
+    sumt file=test10A;
+    ]
+
+    [10B. Use a fixed tree as in test 4A but relax hyperpriors and check that we retrieve expected mean branch lengths.]
+    prset nodeagepr=unconstrained brlenspr=clock:fixed(smallclocktree) topologypr=fixed(smallclocktree) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=ibr igrvarpr=exp(1.0);
+    [
+    mcmc file=test10B;
+    sump file=test10B;
+    sumt file=test10B;
+    ]
+
+    [10C. Check that we can retrieve simple tree space used in test 1.]
+    prset nodeagepr=unconstrained brlenspr=clock:uniform treeagepr=fixed(1.0) topologypr=uniform statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=ibr igrvarpr=fixed(1.0);
+    propset nniclock(tau,v)$prob=0.0
+            extsprclock(tau,v)$prob=0.0
+            extssclock(tau,v)$prob=10.0
+            parssprclock(tau,v)$prob=10.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    [
+    mcmc file=test10C;
+    sumt file=test10C minpartfreq=0.01;
+    sump file=test10C;
+    ]
+
+    [10D. Check that we can retrieve calibrated tree space given in example 3A]
+    calibrate Pan = fixed(0.5);
+    calibrate Gorilla = fixed(0.5);
+    calibrate root = fixed(1.0);
+    prset nodeagepr=calibrated brlenspr=clock:uniform topologypr=constraints(root) statefreq=fixed(equal);
+    prset clockratepr=fixed(1.0) clockvarpr=ibr igrvarpr=fixed(1.0);
+    propset nniclock(tau,v)$prob=2.0
+            extsprclock(tau,v)$prob=2.0
+            extssclock(tau,v)$prob=2.0
+            parssprclock(tau,v)$prob=2.0
+            nodesliderclock(v)$prob=5.0
+            treestretch(v)$prob=1.0;
+    [
+    mcmc file=test10D;
+    sumt file=test10D minpartfreq=0.01;
+    sump file=test10D;
+    ]
+
+    [10E. Test that we can retrieve exponential prior on tree height]
+
+    [Expectiation for tree height and clock rate      mean=1.000000  var=1.000000  median=0.693147]
+
+    prset nodeagepr=unconstrained brlenspr=clock:uniform statefreq=fixed(equal) topologypr=uniform treeagepr=fix(1.0) clockratepr=gamma(1.0,1.0);
+    prset clockvarpr=ibr igrvarpr=fixed(1.0);
+    exclude 5-.;
+    propset nniclock(tau,v)$prob=5.0
+            extsprclock(tau,v)$prob=5.0
+            extssclock(tau,v)$prob=5.0
+            parssprclock(tau,v)$prob=5.0
+            nodesliderclock(v)$prob=20.0
+            treestretch(v)$prob=10.0
+            multiplier(clockrate)$prob=10.0
+            multiplier(igr)$prob=30.0;
+    mcmc file=test10E;
+    sump file=test10E;
+end;
+

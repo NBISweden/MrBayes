@@ -1,0 +1,6 @@
+time mb3.2d agtotalcore255.nex >& Outfiles.3.2d/agtotalcore255.log
+time mb3.2d alcedinidae.nex >& Outfiles.3.2d/alcedinidae.log
+time mb3.2d hawks.nex >& Outfiles.3.2d/hawks.log
+time mb3.2d nuclsu_206.nex >& Outfiles.3.2d/nuclsu_206.log
+time mb3.2d nucssu_211.nex >& Outfiles.3.2d/nucssu_211.log
+time mb3.2d rpb2_199_nuc.nex >& Outfiles.3.2d/rpb2_199_nuc.log

@@ -1,0 +1,28 @@
+#NEXUS
+
+begin mrbayes;
+	set autoclose=yes nowarn=yes;
+	execute cynmix.nex;
+
+	charset distribution = 1;
+	partition new = 6: distribution, 2-166, COI, EF1a, LWRh, 28S;
+	set partition = new;
+
+	lset nst=6 rates=gamma;
+	unlink shape=(all) revmat=(all) statefr=(all);
+	prset ratepr=variable;
+
+	prset brlenspr=clock:birthdeath clockvar=ibr;
+
+	constraint  sar = 1 2;
+	constraint  liv = 8-12;
+
+	prset topologypr=constraints(liv,sar);
+
+	prset treeagepr=uniform(13.44,44.86) nodeagepr=calibrated;
+
+	report applyto=(1) ancstates=yes;
+
+	mcmc ngen=30000;
+end;
+

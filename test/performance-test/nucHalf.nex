@@ -1,0 +1,24 @@
+#NEXUS
+
+begin mrbayes;
+
+exe arthopoda.txt;
+
+[All sites:1-41976]
+partition genes = 68: 109fin1_2, 113fin1_2,127fin1_2,149fin2_3,166fin2_3,192fin1_2,197fin1_2,220fin1_2,226fin1_2,247fin1_2,25fin2_4,262fin1_2,265fin2_3,267fin2_3,268fin1_2,26fin3_4,270fin2_3,274fin1_2,2fin3_4,2fin7_8,3006fin1_2,3007fin1_2,3009fin2_3,3012fin1_2,3017fin1_2,3031fin2_3,3031fin4_5,3044fin1_2,3055fin2_3,3059fin1_3,3064fin6_7,3066fin1_3,3070fin4_5,3089fin2_3,3094fin2_3,3114fin1_2,3121fin2_3,3136fin1_2,3152fin1_2,3153fin1_2,3196fin1_3,3196fin5_6,3202fin1_3,36fin1_2,40fin2_3,42fin1_2,44fin2_3,58fin3_6,58fin7_9,62fin2_3,63fin2_3,69fin2_3,6fin2_3,73fin2_3,8018fin1_2,8028fin1_2,8029fin6_7,8053fin2_3,8070fin1_3,8091fin1_2,96fin1_3,acc2_4,aspec11_12,aspec19_21,aspec2_6,ef1a,ef2,polii inter_gene;
+exclude inter_gene;
+
+
+[Half of all sites: 1-21200 ]
+[partition genes = 38: 109fin1_2, 113fin1_2,127fin1_2,149fin2_3,166fin2_3,192fin1_2,197fin1_2,220fin1_2,226fin1_2,247fin1_2,25fin2_4,262fin1_2,265fin2_3,267fin2_3,268fin1_2,26fin3_4,270fin2_3,274fin1_2,2fin3_4,2fin7_8,3006fin1_2,3007fin1_2,3009fin2_3,3012fin1_2,3017fin1_2,3031fin2_3,3031fin4_5,3044fin1_2,3055fin2_3,3059fin1_3,3064fin6_7,3066fin1_3,3070fin4_5,3089fin2_3,3094fin2_3,3114fin1_2,3121fin2_3,   3136fin1_2 3152fin1_2 3153fin1_2 3196fin1_3 3196fin5_6 3202fin1_3 36fin1_2 40fin2_3 42fin1_2 44fin2_3 58fin3_6 58fin7_9 62fin2_3 63fin2_3 69fin2_3 6fin2_3 73fin2_3 8018fin1_2 8028fin1_2 8029fin6_7 8053fin2_3 8070fin1_3 8091fin1_2 96fin1_3 acc2_4 aspec11_12 aspec19_21 aspec2_6 ef1a ef2 polii inter_gene;
+exclude 3152fin1_2 3153fin1_2 3196fin1_3 3196fin5_6 3202fin1_3 36fin1_2 40fin2_3 42fin1_2 44fin2_3 58fin3_6 58fin7_9 62fin2_3 63fin2_3 69fin2_3 6fin2_3 73fin2_3 8018fin1_2 8028fin1_2 8029fin6_7 8053fin2_3 8070fin1_3 8091fin1_2 96fin1_3 acc2_4 aspec11_12 aspec19_21 aspec2_6 ef1a ef2 polii inter_gene;
+]
+
+set partition = genes;
+
+exe beagle.nex;
+
+exe mcmc.nex;
+
+
+end;

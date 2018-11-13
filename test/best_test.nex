@@ -1,0 +1,20 @@
+#NEXUS
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+    execute replicase.nex;
+    partition two = 2: 1-300, 301-.;
+    set partition = two;
+    speciespartition test = SpeciesA: 1 2, SpeciesB: 3 4, SpeciesC: 5 6, SpeciesD: 7 8 9;
+    set speciespartition=test;
+    unlink topology=(all);
+    prset brlenspr=clock:speciestree;
+    prset topologypr=speciestree;
+    prset popvarpr=variable;
+    prset popsizepr=lognormal(4.6,2.3);
+    prset clockratepr = fixed(0.1);
+    prset clockvarpr=ibr;
+
+    exe testrun.nex;
+end;
+

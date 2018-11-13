@@ -1,0 +1,24 @@
+#NEXUS
+begin mrbayes;
+	set autoclose=yes nowarn=yes seed=1 swapseed=1;
+end;
+
+begin data;
+	dimensions ntax=3 nchar=2;
+	format data=dna;
+	matrix
+	Taxon_A AC
+	Taxon_B AC
+	Taxon_C AC
+	;
+end;
+
+begin mrbayes;
+	calibrate Taxon_B = fixed(20);
+	calibrate Taxon_C = fixed(20);
+	prset statefr=fixed(eq);
+	prset brlenspr=clock:uni;
+	prset treeagepr=uni(50,100);
+	prset nodeagepr=calibrated;
+	mcmcp data=no nch=1 nr=1 ng=1000000;
+end;

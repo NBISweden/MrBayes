@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+%myHash = ();
+
+while($line = <STDIN>) {
+	if ($line =~ /^\w+\..*pu/) {	
+		chomp($line);
+		$name = $line;
+		$line = <STDIN>;
+		$line = <STDIN>;
+		$line = <STDIN>; ## Read 'user' entry
+		$line =~ /(\d+)m(.*)s/;
+		$min = $1;
+		$sec = $2;
+		$time = $min * 60 + $sec;
+#		print "$name $time\n";
+		$myHash{"$name"} = $time;
+	}
+}
+
+@names = ( "agtotalcore255", "alcedinidae", "hawks", "nuclsu_206", "nucssu_211", "rpb2_199_nuc" );
+
+@columns = ( "mcpud", "bcpud", "bgpud", "mcpus", "bcpus", "bgpus" );
+
+$printSpeedup=1;
+
+for ($i = 0; $i < scalar(@names); $i++) {
+	$name = $names[$i];
+	$name =~ s/\_//g;
+	$printName = sprintf("%15s",$name);
+	print "$printName";
+    #	for ($j = 0; $j < scalar(@columns); $j++) {
+    $j = 0;
+    $entry = $names[$i] . "." . $columns[$j];
+    $mbDouble = $myHash{$entry};
+    printf(" & %6.1f", $mbDouble);
+	for ($j++; $j < 3; $j++) {
+		$entry = $names[$i] . "." . $columns[$j];
+		if ($myHash{$entry} != 0 && $printSpeedup) {
+            printf(" & %6.1f", $mbDouble/$myHash{$entry});
+        } else {
+            printf(" & %6.1f", $myHash{$entry});
+        }
+	}
+    $entry = $names[$i] . "." . $columns[$j];
+    $mbSingle = $myHash{$entry};
+    printf(" & %6.1f", $mbSingle);
+	for ($j++; $j < scalar(@columns); $j++) {
+		$entry = $names[$i] . "." . $columns[$j];		
+		if ($myHash{$entry} != 0 && $printSpeedup) {
+            printf(" & %6.1f", $mbSingle/$myHash{$entry});
+        } else {
+            printf(" & %6.1f", $myHash{$entry});
+        }
+        
+	}
+    
+	print " \\\\ \n";
+}
+
+#print "$names[0]\n";

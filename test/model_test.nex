@@ -1,0 +1,340 @@
+#NEXUS
+[This file runs through most models implemented in MrBayes]
+[Tree models (only non-rooted standard here), delete - restore,
+ exclude - include, partitioning, mcmc settings, sump and sumt,
+ report ancstates/siterates not tested here]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+
+    [Binary models]
+    [=============]
+
+    exe taylor.nex;
+
+    lset coding=all rates=equal;
+    prset statefreqpr=fixed(empirical);
+    exe testrun.nex;
+
+    lset coding=noabsence rates=gamma;
+    prset statefreqpr=fixed(0.2,0.8);
+    exe testrun.nex;
+
+    lset coding=nopresence;
+    prset statefreqpr=dir(10,20);
+    exe testrun.nex;
+
+    lset coding=variable rates=invgamma;
+    exe testrun.nex;
+
+    lset rates=propinv;
+    exe testrun.nex;
+    
+    lset rates=adgamma;
+    exe testrun.nex;
+
+
+    [Morphology models]
+    [=================]
+   
+    execute cynmorph.nex;
+
+    [variable chars, equal rates]
+    lset coding=variable rates=equal;
+    exe testrun.nex;
+
+    [only parsimony-informative chars, gamma-distributed site rates]
+    lset coding=informative rates=gamma;
+    prset symdir=fixed(inf);
+    exe testrun.nex;
+    
+    [all chars, gamma rates]
+    lset coding=all rates=gamma;
+    exe testrun.nex;
+
+    [rate asymmetry]
+    lset coding=variable rates=gamma;
+    prset symdir=exp(10);
+    exe testrun.nex;
+
+    [all characters unordered]
+    ctype unordered: all;
+    exe testrun.nex;
+
+    
+    [Nucleotide models]
+    [=================]
+
+    exe adh.nex;
+    lset nucmodel=4by4;
+
+    [JC model]
+    lset rates=equal nst=1;
+    prset statefreqpr=fixed(equal);
+    exe testrun.nex;
+ 
+    [F81 model]
+    prset statefreqpr=dir(1,1,1,1);
+    exe testrun.nex;
+
+    [F81 variant]
+    prset statefreqpr=fixed(empirical);
+    exe testrun.nex;
+    
+    [K2P]
+    lset nst=2;
+    prset tratiopr=beta(1,1) statefreqpr=fixed(equal);
+    exe testrun.nex;
+ 
+    [HKY]
+    prset tratiopr=beta(10,20) statefreqpr=dir(1,1,1,1);
+    exe testrun.nex;
+
+    [HKY variant]
+    prset tratiopr=fixed(2.0) statefreqpr=dir(10,10,10,10);
+    exe testrun.nex;
+    
+    [SYM]
+    lset nst=6;
+    prset revmatpr=dir(1,1,1,1,1,1) statefreqpr=fixed(equal);
+    exe testrun.nex;
+    
+    [GTR variant]
+    prset revmatpr=dir(10,20,30,40,50,60);
+    exe testrun.nex;
+     
+    [GTR variant]
+    prset revmatpr=fixed(1,2,3,4,5,6) statefreqpr=fixed(0.10,0.20,0.30,0.40);
+    exe testrun.nex;
+
+    [GTR with gamma rates]
+    lset nst=6 rates=gamma;
+    prset revmatpr=dir(1,1,1,1,1,1) statefreqpr=dir(1,1,1,1);
+    exe testrun.nex;
+
+    [codon-specific rates]
+    charset codon1 = 1-.\3;
+    charset codon2 = 2-.\3;
+    charset codon3 = 3-.\3;
+    partition by_codon = 3: codon1, codon2, codon3;
+    set partition = by_codon;
+    lset rates= equal;
+    prset ratepr = variable;
+
+    [inv rates]
+    set partition=default;
+    lset rates=propinv;
+    exe testrun.nex;
+    
+    [invgamma rates]
+    lset rates=invgamma;
+    exe testrun.nex;
+
+    [adgamma rates]
+    lset nst=6;
+    lset rates=adgamma;
+    exe testrun.nex;
+    mcmc ngen=100000;
+
+    [covarion]
+    lset covarion=yes rates=gamma;
+    exe testrun.nex;
+   
+    [covarion with adgamma rates]
+    lset covarion=yes rates=adgamma;    
+    exe testrun.nex;
+
+    [mixture over revmat space]
+    lset covarion=no nst=mixed rates=invgamma;
+    exe testrun.nex;
+
+    [mixture over revmat space with covarion]
+    lset covarion=yes nst=mixed rates=equal;
+    exe testrun.nex;
+
+
+    [Doublet models]
+    [==============]
+
+    exe kimstems.nex;
+
+    lset nst=1 rates=equal;
+    prset statefreqpr=fixed(empirical);
+    exe testrun.nex;
+    
+    lset nst=2 rates=gamma;
+    prset statefreqpr=fixed(equal);
+    exe testrun.nex;
+    
+    lset rates=propinv;
+    prset statefreqpr=dir(16);
+    exe testrun.nex;
+   
+    lset nst=6 rates=invgamma;
+    prset revmatpr=fixed(1,2,3,4,5,6);
+    exe testrun.nex;
+
+    lset rates=gamma;
+    prset revmatpr=dir(1,1,1,1,1,1);
+    exe testrun.nex;
+
+
+    [Codon models]
+    [============]
+    
+    exe adh.nex;
+    set partition=default;
+    exclude 769-771; [Exclude stop codon]
+    lset code=universal nucmodel=codon;
+    mcmcp ngen=1000 printfr=20;
+
+    lset nst=1 omegavar=equal;
+    prset statefreqpr=fixed(empirical);
+    exe testrun.nex;
+
+    lset nst=2 omegavar=ny98;
+    prset statefreqpr=fixed(equal);
+    exe testrun.nex;
+
+    lset nst=6 omegavar=m3;
+    prset statefreqpr=dir(61);
+    report siteomega=yes possel=yes;
+    exe testrun.nex;
+
+    
+    [Translated protein models]
+    [=========================]
+
+    exe adh.nex;
+    set partition=default;
+    exclude 769-771; [Remove the stop codon]
+    lset nucmodel=protein;
+    mcmcp ngen=1000 printfr=20;
+
+    lset rates=equal;
+    prset aamodelpr=fixed(equalin) [statefreqpr=fixed(empirical)];
+    exe testrun.nex;
+    
+    prset statefreqpr=dir(20);
+    exe testrun.nex;
+
+    prset aamodelpr=fixed(equalin) statefreqpr=fixed(0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04); 
+    exe testrun.nex;
+
+    prset aamodelpr=fixed(gtr) statefreqpr=dir(20) aarevmatpr=dir(190);
+    exe testrun.nex;
+    
+    [The next two can be run for some time and output compared using sump and sumt; they should be equivalent]
+    [GTR fixed to mtrev24 values]
+    prset statefreqpr=fixed(0.073,0.019,0.039,0.019,0.006,0.025,0.024,0.056,0.028,0.088,
+                            0.168,0.023,0.054,0.061,0.054,0.072,0.086,0.029,0.033,0.043);
+    prset aarevmatpr=fixed(
+	 23.18, 26.95, 17.67, 59.93,  1.90,  9.77,120.71, 13.90, 96.49, 25.46,  8.36,141.88,  6.37, 54.31,387.86,480.72,  1.90,  6.48,195.06,
+	        13.24,  1.90,103.33,220.99,  1.90, 23.03,165.23,  1.90, 15.58,141.40,  1.90,  4.69, 23.64,  6.04,  2.08, 21.95,  1.90,  7.64,
+                  794.38, 58.94,173.56, 63.05, 53.30,496.13, 27.10, 15.16,608.70, 65.41, 15.20, 73.31,494.39,238.46, 10.68,191.36,  1.90,
+	                       1.90, 55.28,583.55, 56.77,113.99,  4.34,  1.90,  2.31,  1.90,  4.98, 13.43, 69.02, 28.01, 19.86, 21.21,  1.90,
+                                 75.24,  1.90, 30.71,141.49, 62.73, 25.65,  1.90,  6.18, 70.80, 31.26,277.05,179.97, 33.60,254.77,  1.90,
+                                       313.56,  6.75,582.40,  8.34, 39.70,465.58, 47.37, 19.11,137.29, 54.11, 94.93,  1.90, 38.82, 19.00,
+                                               28.28, 49.12,  3.31,  1.90,313.86,  1.90,  2.67, 12.83, 54.71, 14.82,  1.90, 13.12, 21.14,
+                                                       1.90,  5.98,  2.41, 22.73,  1.90,  1.90,  1.90,125.93, 11.17, 10.92,  3.21,  2.53,
+                                                             12.26, 11.49,127.67, 11.97, 48.16, 60.97, 77.46, 44.78,  7.08,670.14,  1.90,
+                                                                   329.09, 19.57,517.98, 84.67, 20.63, 47.70,368.43,  1.90, 25.01,1222.94,
+                                                                           14.88,537.53,216.06, 40.10, 73.61,126.40, 32.44, 44.15, 91.67,
+                                                                                  91.37,  6.44, 50.10,105.79,136.33, 24.00, 51.17,  1.90,
+                                                                                         90.82, 18.84,111.16,528.17, 21.71, 39.96,387.54,
+                                                                                                17.31, 64.29, 33.85,  7.84,465.58,  6.35,
+                                                                                                      169.90,128.22,  4.21, 16.21,  8.23,
+                                                                                                             597.21, 38.58, 64.92,  1.90,
+                                                                                                                      9.99, 38.73,204.54,
+                                                                                                                            26.25,  5.37,
+                                                                                                                                    1.90
+    );
+    exe testrun.nex;
+
+    prset aamodelpr=fixed(mtrev);
+    exe testrun.nex;
+    
+    lset rates=gamma;
+    prset aamodelpr=mixed;
+    exe testrun.nex;
+    
+    lset rates=propinv;
+    exe testrun.nex;
+    
+    lset rates=invgamma;
+    exe testrun.nex;
+
+    lset rates=adgamma;
+    exe testrun.nex;
+
+    lset covarion=yes rates=equal;
+    exe testrun.nex;
+
+    
+    [Protein models]
+    [==============]
+
+    exe avian_ovomucoids.nex;
+    mcmcp ngen=1000 printfr=20;
+
+    lset rates=equal;
+    prset aamodelpr=fixed(equalin) statefreqpr=fixed(empirical);
+    exe testrun.nex;
+    
+    prset statefreqpr=dir(20);
+    exe testrun.nex;
+    
+    prset statefreqpr=fixed(0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04,0.06,0.04); 
+    exe testrun.nex;
+    
+    prset aamodelpr=fixed(gtr) statefreqpr=dir(20) aarevmatpr=dir(190);
+    exe testrun.nex;
+
+    [The next two can be run for some time and output compared using sump and sumt; they should be equivalent]
+    [GTR fixed to mtrev24 values]
+    prset statefreqpr=fixed(0.073,0.019,0.039,0.019,0.006,0.025,0.024,0.056,0.028,0.088,
+                            0.168,0.023,0.054,0.061,0.054,0.072,0.086,0.029,0.033,0.043);
+    prset aarevmatpr=fixed(
+	 23.18, 26.95, 17.67, 59.93,  1.90,  9.77,120.71, 13.90, 96.49, 25.46,  8.36,141.88,  6.37, 54.31,387.86,480.72,  1.90,  6.48,195.06,
+	        13.24,  1.90,103.33,220.99,  1.90, 23.03,165.23,  1.90, 15.58,141.40,  1.90,  4.69, 23.64,  6.04,  2.08, 21.95,  1.90,  7.64,
+                  794.38, 58.94,173.56, 63.05, 53.30,496.13, 27.10, 15.16,608.70, 65.41, 15.20, 73.31,494.39,238.46, 10.68,191.36,  1.90,
+	                       1.90, 55.28,583.55, 56.77,113.99,  4.34,  1.90,  2.31,  1.90,  4.98, 13.43, 69.02, 28.01, 19.86, 21.21,  1.90,
+                                 75.24,  1.90, 30.71,141.49, 62.73, 25.65,  1.90,  6.18, 70.80, 31.26,277.05,179.97, 33.60,254.77,  1.90,
+                                       313.56,  6.75,582.40,  8.34, 39.70,465.58, 47.37, 19.11,137.29, 54.11, 94.93,  1.90, 38.82, 19.00,
+                                               28.28, 49.12,  3.31,  1.90,313.86,  1.90,  2.67, 12.83, 54.71, 14.82,  1.90, 13.12, 21.14,
+                                                       1.90,  5.98,  2.41, 22.73,  1.90,  1.90,  1.90,125.93, 11.17, 10.92,  3.21,  2.53,
+                                                             12.26, 11.49,127.67, 11.97, 48.16, 60.97, 77.46, 44.78,  7.08,670.14,  1.90,
+                                                                   329.09, 19.57,517.98, 84.67, 20.63, 47.70,368.43,  1.90, 25.01,1222.94,
+                                                                           14.88,537.53,216.06, 40.10, 73.61,126.40, 32.44, 44.15, 91.67,
+                                                                                  91.37,  6.44, 50.10,105.79,136.33, 24.00, 51.17,  1.90,
+                                                                                         90.82, 18.84,111.16,528.17, 21.71, 39.96,387.54,
+                                                                                                17.31, 64.29, 33.85,  7.84,465.58,  6.35,
+                                                                                                      169.90,128.22,  4.21, 16.21,  8.23,
+                                                                                                             597.21, 38.58, 64.92,  1.90,
+                                                                                                                      9.99, 38.73,204.54,
+                                                                                                                            26.25,  5.37,
+                                                                                                                                    1.90
+    );
+    exe testrun.nex;
+
+    prset aamodelpr=fixed(mtrev);
+    exe testrun.nex;
+    
+    lset rates=gamma;
+    prset aamodelpr=mixed;
+    exe testrun.nex;
+
+    lset rates=propinv;
+    exe testrun.nex;
+    
+    lset rates=invgamma;
+    exe testrun.nex;
+
+    lset rates=adgamma;
+    exe testrun.nex;
+
+    prset aamodelpr=mixed;
+    lset covarion=yes rates=equal;
+    exe testrun.nex;
+
+end;

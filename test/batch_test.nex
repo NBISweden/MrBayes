@@ -1,0 +1,22 @@
+#NEXUS 
+
+begin mrbayes;
+	set swapseed=1 seed=1 nowarn=yes autoclose=yes;
+	
+	[Data set # 1]
+	execute agast282.nex;
+	lset rates=invgamma nst=6;
+	mcmc ng=10000 checkfr=100 file=crap;
+	mcmc ng=20000 append=yes file=crap;
+	sumt;
+	sump;
+
+	[Data set # 2]
+	execute agtotalcore255.nex;
+	lset rates=invgamma nst=6;
+	mcmc ng=10000 checkfr=100 file=crap;
+	mcmc ng=20000 append=yes file=crap;
+	sumt;
+	sump;
+	
+end;

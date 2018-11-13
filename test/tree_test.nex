@@ -1,0 +1,139 @@
+#NEXUS
+
+[This file is for testing tree models in MrBayes 3]
+
+begin mrbayes;
+    set autoclose=yes nowarn=yes seed=1 swapseed=1;
+    exe primates.nex;
+    exe primates_treeinfo.nex;
+  
+    [Standard tree model]
+    prset brlenspr=unconstrained:exp(10);
+    exe testrun.nex;
+    
+    [... with constrained node]
+    prset topologypr=constraints(mynode);
+    exe testrun.nex;
+
+    [... with fixed topology]
+    prset topologypr=fixed(tree1);
+    exe testrun.nex;
+
+    [... with fixed topology and brlens]
+    prset brlenspr=fixed(tree1);
+    exe testrun.nex;
+   
+    [Strict clock model]
+    prset topologypr=uniform;
+    prset brlenspr=clock:uniform;
+    exe testrun.nex;
+    
+    [... with constrained node]
+    prset topologypr=constraints(mynode);
+    prset brlenspr=clock:uniform;
+    exe testrun.nex;
+    
+    [... with fixed topology]
+    prset topologypr=fixed(tree2);
+    prset brlenspr=clock:uniform;
+    exe testrun.nex;
+   
+    [... with fixed topology and brlens]
+    prset brlenspr=clock:uniform;
+    prset topologypr=fixed(tree2);
+    prset brlenspr=clock:fixed(tree2);
+    exe testrun.nex;
+
+    [Strict clock model with coalescent prior]
+    prset brlenspr=clock:coalescence;
+    prset topologypr=uniform;
+    exe testrun.nex;
+
+    [... with growth]
+    prset growthpr=exp(10);
+    exe testrun.nex;
+
+    [Strict clock model with birthdeath prior]
+    prset brlenspr=clock:birthdeath;
+    prset speciationpr=exp(1.0);
+    prset extinctionpr=beta(1,1);
+    prset sampleprob=0.5;
+    exe testrun.nex;
+ 
+    [IGR relaxed clock model]
+    prset clockvarpr=igr;
+    exe testrun.nex;
+
+    exe cynmix.nex;
+    exe cynmodel.nex;
+    prset brlenspr=clock:uniform;
+    prset clockvarpr=igr;
+    unlink igrbranchlens=(all) shape=(all) revmat=(all) pinvar=(all) statefr=(all);
+    exe testrun.nex;
+    
+    [CPP relaxed clock model]
+    exe primates.nex;
+    exe primates_treeinfo.nex;
+    prset brlenspr=clock:uniform;
+    prset clockvarpr=cpp;
+    exe testrun.nex;
+
+    prset cppmultdevpr=Fixed(1.0);
+    prset cppratepr=Exponential(1.0);
+    exe testrun.nex;
+    
+    [Brownian motion relaxed clock model]
+    prset clockvarpr=tk02;
+    exe testrun.nex;
+
+    prset tk02varpr=Exponential(1.0);
+    exe testrun.nex;
+
+    [Dated strict clock with root calibration]
+    prset clockvarpr=strict;
+    prset treeagepr=uniform(0.0,10.0);
+    exe testrun.nex;
+ 
+    [Dated strict clock with node calibration]
+    prset topologypr=constraints(mynode);
+    calibrate mynode=uniform(2.0,5.0);
+    prset treeagepr=offsetexp(10.0,20.0);
+    exe testrun.nex;
+
+    [Dated strict clock with tip calibration]
+    prset topologypr=uniform;
+    calibrate Pan=fixed(1.0) Pongo=offsetexp(4.0,6.0);
+    exe testrun.nex;
+
+    [Dated strict clock with mixed calibration]
+    prset topologypr=constraints(mynode);
+    exe testrun.nex;
+    
+    [Lose a calibration point]
+    calibrate mynode=unconstrained;
+    exe testrun.nex;
+    
+    [Dated relaxed clock with root calibration]
+    prset clockvarpr=tk02;
+    prset treeagepr=uniform(0.0,10.0);
+    exe testrun.nex;
+        
+    [Dated relaxed clock with node calibration]
+    prset clockvarpr=cpp;
+    prset topologypr=constraints(mynode);
+    calibrate mynode=uniform(2.0,5.0);
+    prset treeagepr=offsetexp(10.0,20.0);
+    exe testrun.nex;
+
+    [Dated strict clock with tip calibration]
+    prset topologypr=uniform;
+    calibrate Pan=fixed(1.0) Pongo=offsetexp(4.0,6.0);
+    exe testrun.nex;
+
+    [Dated strict clock with mixed calibration]
+    prset clockvarpr=tk02;
+    prset topologypr=constraints(mynode);
+    exe testrun.nex;
+
+end;
+
