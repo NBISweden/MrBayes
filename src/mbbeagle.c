@@ -343,12 +343,12 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
                 }
             else
                 {
-                MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for %d division%s:", spacer, beagleGetVersion(), details.resourceNumber, numCurrentDivisions, (numCurrentDivisions > 1 ? "s" : ""));
+                MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for %d division%s:\n", spacer, beagleGetVersion(), details.resourceNumber, numCurrentDivisions, (numCurrentDivisions > 1 ? "s" : ""));
                 }
             }
         else
             {
-            MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for division %d:", spacer, beagleGetVersion(), details.resourceNumber, division+1);
+            MrBayesPrint ("\n%s   Using BEAGLE v%s resource %i for division %d:\n", spacer, beagleGetVersion(), details.resourceNumber, division+1);
             }
         MrBayesPrint ("%s      Rsrc Name : %s\n", spacer, details.resourceName);
         MrBayesPrint ("%s      Impl Name : %s\n", spacer, details.implName);
