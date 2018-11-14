@@ -94,6 +94,7 @@ int InitBeagleInstance (ModelInfo *m, int division)
     m->childTiProbIndices      = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
     m->cumulativeScaleIndices  = (int *) SafeCalloc (m->nCijkParts, sizeof(int));
     m->operations              = (BeagleOperation *) SafeCalloc(m->numCondLikes*m->nCijkParts, sizeof(BeagleOperation));
+    m->scaleFactorsOps         = (int *) SafeCalloc (2*numLocalTaxa*m->nCijkParts, sizeof(int));
 
     numPartAmbigTips = 0;
     if (m->numStates != m->numModelStates)
@@ -982,7 +983,8 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
 -----------------------------------------------------------------*/
 int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
 {
-    int                 i, j, destinationScaleRead, cumulativeScaleIndex, op, opJ, opPrev;
+    int                 i, j, op, opJ, opPrev, scaleOp;
+    int                 destinationScaleRead, cumulativeScaleIndex;
     TreeNode            *p;
     ModelInfo           *m;
     unsigned            chil1Step, chil2Step;
@@ -990,6 +992,7 @@ int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
     m = &modelSettings[division];
     
     op = 0;
+    scaleOp = 0;
 
     for (i=0; i<t->nIntNodes; i++)
         {
@@ -1012,16 +1015,12 @@ int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
             if (m->upDateAll == NO)
                 {
                 destinationScaleRead = m->nodeScalerIndex[chain][p->index];
-                cumulativeScaleIndex = m->siteScalerIndex[chain];
                 for (j=0; j<m->nCijkParts; j++)
                     {
-                    beagleRemoveScaleFactors(m->beagleInstance,
-                                             &destinationScaleRead,
-                                             1,
-                                             cumulativeScaleIndex);
+                    m->scaleFactorsOps[scaleOp+j*t->nIntNodes] = destinationScaleRead;
                     destinationScaleRead++;
-                    cumulativeScaleIndex++;
                     }
+                scaleOp++;
                 }
 
             /* flip to the new workspace */
@@ -1079,6 +1078,14 @@ int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
     cumulativeScaleIndex  = m->siteScalerIndex[chain];
     for (j=0; j<m->nCijkParts; j++)
         {
+        if (m->upDateAll == NO)
+            {
+            beagleRemoveScaleFactors(m->beagleInstance,
+                                     &m->scaleFactorsOps[j*t->nIntNodes],
+                                     scaleOp,
+                                     cumulativeScaleIndex);
+            }
+
         beagleUpdatePartials(m->beagleInstance,
                              &m->operations[j*t->nIntNodes],
                              op,
@@ -1542,6 +1549,7 @@ int InitBeagleMultiPartitionInstance ()
     m->childTiProbIndices     = (int *)    SafeCalloc (sizePD, sizeof(int));
     m->eigenIndices           = (int *)    SafeCalloc (sizePD, sizeof(int));
     m->cumulativeScaleIndices = (int *)    SafeCalloc (sizePD, sizeof(int));
+    m->scaleFactorsOps        = (int *)    SafeCalloc (sizePD*2*numLocalTaxa*m->nCijkParts, sizeof(int));
 
     for (d=0; d<numCurrentDivisions; d++)
         {
@@ -2417,7 +2425,7 @@ int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int division
 int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divisionCount, int chain)
 {
     int                        i, j, d, dIndex, destinationScaleRead, cumulativeScaleIndex;
-    int                        opJ, opPrev, opCountMax, opCountTotal, divisionOffset;
+    int                        opJ, opPrev, opCountMax, opCountTotal, divisionOffset, scaleOp;
     Tree                       *t;
     TreeNode                   *p;
     ModelInfo                  *m;
@@ -2438,6 +2446,7 @@ int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divis
         divisionOffset = m->numTiProbs * m->nCijkParts * m->divisionIndex;
 
         m->opCount = 0;
+        scaleOp = 0;
 
         for (i=0; i<t->nIntNodes; i++)
             {
@@ -2455,20 +2464,17 @@ int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divis
             /* check if conditional likelihoods need updating */
             if (p->upDateCl == YES)
                 {
+
+                /* remove old scalers */
                 if (m->upDateAll == NO)
                     {
                     destinationScaleRead = m->nodeScalerIndex[chain][p->index];
-                    cumulativeScaleIndex = m->siteScalerIndex[chain];
                     for (j=0; j<m->nCijkParts; j++)
                         {
-                        beagleRemoveScaleFactorsByPartition(m->beagleInstance,
-                                                            &destinationScaleRead,
-                                                            1,
-                                                            cumulativeScaleIndex,
-                                                            m->divisionIndex);
+                        m->scaleFactorsOps[scaleOp+j*t->nIntNodes] = destinationScaleRead;
                         destinationScaleRead++;
-                        cumulativeScaleIndex++;
                         }
+                    scaleOp++;
                     }
 
 
@@ -2515,10 +2521,26 @@ int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divis
                     }
                 m->opCount++;
                 }
-            } /* end of for */
+            } /* end of nIntNodes for */
 
             if (m->opCount > opCountMax)
+                {
                 opCountMax = m->opCount;
+                }
+
+            if (m->upDateAll == NO)
+                {
+                cumulativeScaleIndex  = m->siteScalerIndex[chain];
+                for (j=0; j<m->nCijkParts; j++)
+                    {
+                    beagleRemoveScaleFactorsByPartition(m->beagleInstance,
+                                             &m->scaleFactorsOps[j*t->nIntNodes],
+                                             scaleOp,
+                                             cumulativeScaleIndex,
+                                             m->divisionIndex);
+                    cumulativeScaleIndex++;
+                    }
+                }
         }
 
     for (j=0; j<m->nCijkParts; j++)

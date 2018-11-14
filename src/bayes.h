@@ -1390,6 +1390,7 @@ typedef struct modelinfo
     int         divisionIndex;              /* division index number                        */
     BeagleOperation* operations;            /* array of operations to be sent to Beagle     */
     int         opCount;                    /* partial likelihood operations count          */
+    int*        scaleFactorsOps;            /* array of scaler indices for Beagle operations*/
 #if defined (BEAGLE_V3_ENABLED)
     int         numCharsAll;                /* number of compressed chars for all divisions */
     MrBFlt*     logLikelihoodsAll;          /* array of log likelihoods for all divisions   */

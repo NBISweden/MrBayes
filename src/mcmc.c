@@ -4683,6 +4683,7 @@ void FreeChainMemory (void)
         SAFEFREE(m->successCount);
         SAFEFREE(m->rescaleFreq);
         SAFEFREE(m->operations);
+        SAFEFREE(m->scaleFactorsOps);
 #   if defined (BEAGLE_V3_ENABLED)
         if (m->useBeagleMultiPartitions == YES)
             {
