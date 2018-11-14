@@ -337,7 +337,7 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
             /* do not use multipartition mode (division < 0) for CPU resource */
             if (details.flags & BEAGLE_FLAG_FRAMEWORK_CPU)
                 {
-                MrBayesPrint ("\n%s   Fastest resource is the CPU, changing to multi-instance BEAGLE mode\n", spacer);
+                MrBayesPrint ("\n%s   Selected resource is the CPU, changing to multi-instance BEAGLE mode\n", spacer);
                 beagleFinalizeInstance(beagleInstance);
                 return -1;
                 }
@@ -1549,7 +1549,6 @@ int InitBeagleMultiPartitionInstance ()
     m->childTiProbIndices     = (int *)    SafeCalloc (sizePD, sizeof(int));
     m->eigenIndices           = (int *)    SafeCalloc (sizePD, sizeof(int));
     m->cumulativeScaleIndices = (int *)    SafeCalloc (sizePD, sizeof(int));
-    m->scaleFactorsOps        = (int *)    SafeCalloc (sizePD*2*numLocalTaxa*m->nCijkParts, sizeof(int));
 
     for (d=0; d<numCurrentDivisions; d++)
         {
@@ -1563,6 +1562,7 @@ int InitBeagleMultiPartitionInstance ()
         m->inRates                 = (MrBFlt *) SafeCalloc (m->numRateCats, sizeof(MrBFlt));
         m->inWeights               = (MrBFlt *) SafeCalloc (m->numRateCats*m->nCijkParts, sizeof(MrBFlt));
         m->operationsByPartition   = (BeagleOperationByPartition *) SafeCalloc(m->numCondLikes*m->nCijkParts, sizeof(BeagleOperationByPartition));
+        m->scaleFactorsOps         = (int *) SafeCalloc (2*numLocalTaxa*m->nCijkParts, sizeof(int));
 
         numChars     += m->numChars;
         numTiProbs   += m->numTiProbs;
