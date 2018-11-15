@@ -1,7 +1,7 @@
-** NOTE: For pure support requests, please use a user-driven site such as
-https://bioinformatics.stackexchange.com/ or
-https://www.biostars.org/ **
-We currently do not have the manpower to resolve all support requestes.
+NOTE: We currently do not have the manpower to resolve all support requestes.
+For pure support requests, please use a user-driven site such as
+* https://bioinformatics.stackexchange.com/
+* https://www.biostars.org/
 
 * **I'm submitting a ...**
  - [ ] Bug report
