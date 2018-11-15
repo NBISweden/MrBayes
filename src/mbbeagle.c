@@ -1813,11 +1813,11 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                 (*lnL)=0;
                 for (d=0; d<norescaleDivisionCount; d++)
                     {
-                    if (modelSettings[0].logLikelihoodsAll[d] > DBL_MAX ||
-                        modelSettings[0].logLikelihoodsAll[d] < -DBL_MAX) 
+                    dIndex = norescaleDivisions[d];
+                    m = &modelSettings[dIndex];
+                    if (m->lnLike[2*chain + state[chain]] > DBL_MAX ||
+                        m->lnLike[2*chain + state[chain]] < -DBL_MAX)
                         {
-                        dIndex = norescaleDivisions[d];
-                        m = &modelSettings[dIndex];
 
                         m->rescaleFreqOld = m->rescaleFreqNew = m->rescaleFreq[chain];
                         if (m->rescaleFreqNew > 1 && m->successCount[chain] < 40)
@@ -1851,7 +1851,7 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                         } 
                     else
                         {
-                            (*lnL)+= modelSettings[0].logLikelihoodsAll[d];
+                            (*lnL)+= m->lnLike[2*chain + state[chain]];
                         }
                     }
                 // /* rescaling all divisions */
@@ -2819,30 +2819,39 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                                                     NULL);
 
         }
+
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
 #   endif
+
     if (*lnL > DBL_MAX || *lnL < -DBL_MAX) {
         beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
     }
+
+    for (d=0; d<divisionCount; d++)
+        {
+        dIndex = divisions[d];
+        m = &modelSettings[dIndex];
+        m->lnLike[2*chain + state[chain]] = modelSettings[0].logLikelihoodsAll[d];
+        if (m->lnLike[2*chain + state[chain]] > DBL_MAX || 
+            m->lnLike[2*chain + state[chain]] < -DBL_MAX)
+            {
+            beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
+            }
+        else
+            {
+            m->successCount[chain]++;
+            }
+        }
+
     if (beagleReturn == BEAGLE_ERROR_FLOATING_POINT)
         {
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
         countBeagleDynamicFail++;
         MrBayesPrint ("DEBUG INFO (not an error) countBeagleDynamicFail:%d countALL:%d\n", countBeagleDynamicFail, countALL);
 #   endif
-        return beagleReturn;
         }
-    assert (beagleReturn == BEAGLE_SUCCESS);
 
-    for (d=0; d<divisionCount; d++)
-        {
-        dIndex = divisions[d];    
-        m = &modelSettings[dIndex];
-        m->lnLike[2*chain + state[chain]] = modelSettings[0].logLikelihoodsAll[d];
-        m->successCount[chain]++;
-        }
-    
 #if defined (DEBUG_MB_BEAGLE_MULTIPART_SITELNL)
         beagleGetSiteLogLikelihoods(modelSettings[0].beagleInstance, modelSettings[0].logLikelihoodsAll);
         printf("lnL = ");
@@ -2868,95 +2877,99 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
             {
             dIndex = divisions[d];    
             m = &modelSettings[dIndex];
-            /* find nSitesOfPat */
-            nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
-            
             lnLDiv = &m->lnLike[2*chain + state[chain]];
-            (*lnLDiv) = 0.0;
 
-            site = 0;
-            for (i=0; i<dIndex; i++) {
-                site += modelSettings[i].numChars;
-            }
-            if (m->pInvar == NULL)
+            if (!(*lnLDiv > DBL_MAX || *lnLDiv < -DBL_MAX))
                 {
-                if (m->dataType == RESTRICTION)
-                    {
-                    pUnobserved = 0.0;
-                    for (c=0; c<m->numDummyChars; c++)
-                        {
-                        pUnobserved +=  exp((double)modelSettings[0].logLikelihoodsAll[site]);
-                        site++;
-                        }
-                    /* correct for absent characters */
-                    (*lnLDiv) -= log (1-pUnobserved) * (m->numUncompressedChars);
-                    for (; c<m->numChars; c++)
-                        {
-                        (*lnLDiv) += modelSettings[0].logLikelihoodsAll[site] * nSitesOfPat[c];
-                        site++;
-                        }
-                    }
-                }
-            else
-                {
-                /* has invariable category */
-                pInvar =  *(GetParamVals (m->pInvar, chain, state[chain]));
-                clInvar = m->invCondLikes;
-
-                /* find base frequencies */
-                bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+                /* find nSitesOfPat */
+                nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
                 
-                /* if covarion model, adjust base frequencies */
-                if (m->switchRates != NULL)
-                    {
-                    /* find the stationary frequencies */
-                    swr = GetParamVals(m->switchRates, chain, state[chain]);
-                    s01 = swr[0];
-                    s10 = swr[1];
-                    probOn = s01 / (s01 + s10);
-                    probOff =  1.0 - probOn;
+                (*lnLDiv) = 0.0;
 
-                    /* now adjust the base frequencies; on-state stored first in cond likes */
-                    for (j=0; j<nStates/2; j++)
-                        {
-                        covBF[j] = bs[j] * probOn;
-                        covBF[j+nStates/2] = bs[j] * probOff;
-                        }
-
-                    /* finally set bs pointer to adjusted values */
-                    bs = covBF;
-                    }
-
-                for (c=0; c<m->numChars; c++)
-                    {
-                    likeI = 0.0;
-                    for (j=0; j<nStates; j++)
-                        likeI += (*(clInvar++)) * bs[j];
-                    if (likeI != 0.0)
-                        {
-                        lnLikeI = log(likeI * pInvar);
-                        diff = lnLikeI - modelSettings[0].logLikelihoodsAll[site];
-                        }
-                    else
-                        diff = -1000.0;
-                    if (diff < -200.0)
-                        (*lnLDiv) += modelSettings[0].logLikelihoodsAll[site] * nSitesOfPat[c];
-                    else if (diff > 200.0)
-                        (*lnLDiv) += lnLikeI * nSitesOfPat[c];
-                    else
-                        {
-                        (*lnLDiv) += (modelSettings[0].logLikelihoodsAll[site] + log(1.0 + exp(diff))) * nSitesOfPat[c];
-                        }
-                    site++;
-                    }       
+                site = 0;
+                for (i=0; i<dIndex; i++) {
+                    site += modelSettings[i].numChars;
                 }
-                (*lnL) += m->lnLike[2*chain + state[chain]];
+                if (m->pInvar == NULL)
+                    {
+                    if (m->dataType == RESTRICTION)
+                        {
+                        pUnobserved = 0.0;
+                        for (c=0; c<m->numDummyChars; c++)
+                            {
+                            pUnobserved +=  exp((double)modelSettings[0].logLikelihoodsAll[site]);
+                            site++;
+                            }
+                        /* correct for absent characters */
+                        (*lnLDiv) -= log (1-pUnobserved) * (m->numUncompressedChars);
+                        for (; c<m->numChars; c++)
+                            {
+                            (*lnLDiv) += modelSettings[0].logLikelihoodsAll[site] * nSitesOfPat[c];
+                            site++;
+                            }
+                        }
+                    }
+                else
+                    {
+                    /* has invariable category */
+                    pInvar =  *(GetParamVals (m->pInvar, chain, state[chain]));
+                    clInvar = m->invCondLikes;
+
+                    /* find base frequencies */
+                    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+                    
+                    /* if covarion model, adjust base frequencies */
+                    if (m->switchRates != NULL)
+                        {
+                        /* find the stationary frequencies */
+                        swr = GetParamVals(m->switchRates, chain, state[chain]);
+                        s01 = swr[0];
+                        s10 = swr[1];
+                        probOn = s01 / (s01 + s10);
+                        probOff =  1.0 - probOn;
+
+                        /* now adjust the base frequencies; on-state stored first in cond likes */
+                        for (j=0; j<nStates/2; j++)
+                            {
+                            covBF[j] = bs[j] * probOn;
+                            covBF[j+nStates/2] = bs[j] * probOff;
+                            }
+
+                        /* finally set bs pointer to adjusted values */
+                        bs = covBF;
+                        }
+
+                    for (c=0; c<m->numChars; c++)
+                        {
+                        likeI = 0.0;
+                        for (j=0; j<nStates; j++)
+                            likeI += (*(clInvar++)) * bs[j];
+                        if (likeI != 0.0)
+                            {
+                            lnLikeI = log(likeI * pInvar);
+                            diff = lnLikeI - modelSettings[0].logLikelihoodsAll[site];
+                            }
+                        else
+                            diff = -1000.0;
+                        if (diff < -200.0)
+                            (*lnLDiv) += modelSettings[0].logLikelihoodsAll[site] * nSitesOfPat[c];
+                        else if (diff > 200.0)
+                            (*lnLDiv) += lnLikeI * nSitesOfPat[c];
+                        else
+                            {
+                            (*lnLDiv) += (modelSettings[0].logLikelihoodsAll[site] + log(1.0 + exp(diff))) * nSitesOfPat[c];
+                            }
+                        site++;
+                        }       
+                    }
+                    (*lnL) += m->lnLike[2*chain + state[chain]];
+                }
             }
             /* check for numerical errors */
             assert ((*lnL) == (*lnL));
         }
         
-    return (NO_ERROR);
+    return beagleReturn;
 }
 
 #endif /* BEAGLE_V3_ENABLED */
