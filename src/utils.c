@@ -2042,13 +2042,6 @@ Tree *AllocateTree (int numTaxa)
 
 #if defined (BEAGLE_V3_ENABLED)
     t->levelPassEnabled = 0;
-    if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (numTaxa, sizeof (TreeNode *))) == NULL)
-        {
-        free (t->nodes);
-        free (t->allDownPass);
-        free (t);
-        return NULL;
-        }
 #endif
 
     /* initialize nodes and set index and memoryIndex */
@@ -2122,13 +2115,6 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
 
 #if defined (BEAGLE_V3_ENABLED)
     t->levelPassEnabled = 0;
-    if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (t->nIntNodes, sizeof (TreeNode *))) == NULL)
-        {
-        free (t->nodes);
-        free (t->allDownPass);
-        free (t);
-        return NULL;
-        }
 #endif
     
     /* initialize nodes and set index and memoryIndex */

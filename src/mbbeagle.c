@@ -180,9 +180,10 @@ int InitBeagleInstance (ModelInfo *m, int division)
 
 int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numModelStates, int numCondLikes, int numScalers, int numChars, int numTiProbs, int numPartAmbigTips, int division)
 {
-    int                     resource, resourceCount, beagleInstance;
+    int                     resource, resourceCount, beagleInstance, i;
     BeagleInstanceDetails   details;
     long                    preferredFlags, requiredFlags;
+    Tree*                   t;
 
     resourceCount = beagleResourceCount;
 
@@ -361,14 +362,26 @@ MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
 
 #if defined (BEAGLE_V3_ENABLED)
     /* use level-order traversal with CUDA implementation or OpenCL with multi-partition */
-    if((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) ||
+    if(((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) && division < 1 ) ||
         ((details.flags & BEAGLE_FLAG_FRAMEWORK_OPENCL) && division < 0))
         {
-        Tree *t = GetTree(m->brlens, 0, 0);
-        t->levelPassEnabled = 1;
-        GetDownPass(t);
+        for (i=0; i<(numTrees * 2 * numGlobalChains); i++)
+            {
+            t = mcmcTree[i];
+            if (t != NULL)
+                {
+                if ((t->intDownPassLevel = (TreeNode **) SafeCalloc (numTaxa, sizeof (TreeNode *))) == NULL)
+                    {
+                    free (t->nodes);
+                    free (t->allDownPass);
+                    free (t);
+                    return -1;
+                    }
+                t->levelPassEnabled = 1;
+                GetDownPass(t);
+                }
+            }
         }
-
     /* set max number of CPU threads to be used by BEAGLE with CPU implementation */
     if ((details.flags & BEAGLE_FLAG_FRAMEWORK_CPU) && beagleThreadCount > 1 && beagleThreadCount != 99)
         {
