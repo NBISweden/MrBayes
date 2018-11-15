@@ -1,6 +1,6 @@
 ** NOTE: For pure support requests, please use a user-driven site such as
-[bioinformatics.stackexchange.com](https://bioinformatics.stackexchange.com/) or
-[www.biostars.org](https://www.biostars.org/). **
+https://bioinformatics.stackexchange.com/ or
+https://www.biostars.org/ **
 We currently do not have the manpower to resolve all support requestes.
 
 * **I'm submitting a ...**
