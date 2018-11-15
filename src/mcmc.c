@@ -5769,8 +5769,10 @@ int InitChainCondLikes (void)
 #   endif
 #   if defined (BEAGLE_ENABLED)
     double      *nSitesOfPat;
-    int         *nPartsOfPat;
     MrBFlt      freq;
+#   endif
+#   if defined (BEAGLE_V3_ENABLED)
+    int         *nPartsOfPat;
 #   endif
 
     /* Figure out how large cond like array is needed, and how many cond like, scaler and tiprob arrays are needed.
