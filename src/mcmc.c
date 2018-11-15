@@ -35,6 +35,13 @@
  *
  */
 
+#undef  DEBUG_TIME
+
+#if defined (DEBUG_TIME)
+#define _POSIX_C_SOURCE 199309L
+#include <sys/time.h>
+#endif
+
 #include "bayes.h"
 #include "best.h"
 #include "command.h"

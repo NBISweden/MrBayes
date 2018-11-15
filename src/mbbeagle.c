@@ -180,10 +180,14 @@ int InitBeagleInstance (ModelInfo *m, int division)
 
 int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numModelStates, int numCondLikes, int numScalers, int numChars, int numTiProbs, int numPartAmbigTips, int division)
 {
-    int                     resource, resourceCount, beagleInstance, i;
+    int                     resource, resourceCount, beagleInstance;
     BeagleInstanceDetails   details;
     long                    preferredFlags, requiredFlags;
+
+#if defined (BEAGLE_V3_ENABLED)
+    int                     i;
     Tree*                   t;
+#endif
 
     resourceCount = beagleResourceCount;
 
