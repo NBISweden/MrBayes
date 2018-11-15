@@ -20,24 +20,26 @@ For pure support requests, please use a user-driven site such as
 * **What is the expected/wanted behaviour?**
 
 * **If this is a suspected bug, how may we reproduce it?**
+Steps to reproduce the bug:
+  1.
+  2.
+  3.
+  4.
+
 <!-- We may not be able to fix bugs that we can not reproduce locally. -->
-Steps to reproduce:
-1.
-2.
-3.
-4.
 
 * **I would be able to compile and run MrBayes to test fixes to this bug**
-<!-- Only applicable to bug reports -->
   - [ ] Yes, I know how to use `git` and how to compile MrBayes.
   - [ ] No, sorry.
+
+<!-- Only applicable to bug reports -->
 
 * **What is the environment that you run MrBayes in?**
   - Operating system (including variant and release):
   - Version of MrBayes:
   - If possible, include the output of the `Version` command in MrBayes below:
 
-<-- Format the output of the Verison command as a code block using the
-    provided formatting tools -->
+<!-- Format the output of the Verison command as a code block using the
+     provided formatting tools. -->
 
 * **Other information that may be of use to us in resolving this issue**
