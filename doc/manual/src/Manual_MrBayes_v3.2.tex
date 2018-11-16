@@ -228,7 +228,7 @@ output. On Macintosh and Unix machines, you should be able to increase the windo
 size simply by dragging the margins. On a Windows machine, you cannot increase the
 size of the window beyond the preset value by simply dragging the margins but you can
 change both the size of the screen buffer and the
-console window by right-clicking on the blue title bar of the MrBayes window and then
+console window by right-clicking on the title bar of the MrBayes window and then
 selecting ``Properties'' in the menu that appears. Make sure the ``Layout'' tab is selected in
 the window that appears, and then set the Screen Buffer Size and Window Size to the
 desired values.
@@ -275,27 +275,14 @@ should look like this:
 Note that MrBayes 3 supports abbreviations of commands and options, so in many cases it
 is sufficient to type the first few letters of a command or option instead of the full name.
 
-A complete list of commands and options is given in the command reference, which can
-be downloaded from the program web site (\url{www.mrbayes.net}). You can also produce an
-ASCII text version of the command reference at any time by giving the command
-\texttt{manual} to MrBayes. Finally, you can get in
-touch with other MrBayes users and developers through the mrbayes-users email list
-(subscription information at \url{www.mrbayes.net}).
+A complete list of commands and options can be generated as an ASCII text file
+by giving the command \texttt{manual} to MrBayes. See the output of the command
+\texttt{help manual} for more information.
 
 \section{Reporting and Fixing Bugs}
 If you find a bug in MrBayes, we are grateful if you tell us about it using the bug
-reporting functions of SourceForge, as explained on the MrBayes web site
-(\url{www.mrbayes.net}). When you submit a bug report, make sure that you upload a data file with
-the data set and sequence of commands that produced the error. If the bug occurs during an
-MCMC analysis (after issuing the \texttt{mcmc} command), you can help us greatly by making
-sure the bug can be reproduced reliably using a fixed \ttt{seed} and \ttt{swapseed}. These seeds
-need to be set by invoking the \ttt{set} command before any other commands are executed,
-\emph{including the reading in of data}. When data are read in, a default model is automatically set up, with initial
-values drawn randomly using the current seeds, so resetting the seeds after the data are read in
-is not guaranteed to result in the same MCMC output. Ideally, it should also be possible to reproduce
-the bug with a small data set and using as few MCMC generations as possible. The most common
-mistake is to report a bug without including a dataset or an e-mail address, pretty much making it
-impossible for us to fix the problem.
+reporting functions of GitHub, as explained on the MrBayes web site
+(\url{www.mrbayes.net}).
 
 Advanced users may be interested in fixing bugs themselves in the source code. Refer to
 section \ref{advancedTopics} of this manual for information on how to contribute bug fixes, improved
@@ -344,15 +331,16 @@ In more detail, each of these steps is performed as described in the following p
 
 \textbf{2}. At the \texttt{MrBayes >} prompt, type \textbf{lset nst=6 rates=invgamma}. This sets the 
 evolutionary model to the GTR substitution model with gamma-distributed rate variation across sites and a
- proportion of invariable sites. If your data are not DNA or RNA, if you want to invoke a different model,
+ proportion of invariable sites ("GTR+I+$\Gamma$"). If your data are not DNA or RNA, if you want to invoke a different model,
  or if you want to use non-default priors, refer to the rest of this manual and the Appendix for more help.
 
 \textbf{3.1}. At the \texttt{MrBayes >} prompt, type \textbf{mcmc ngen=20000 samplefreq=100 printfreq=100
- diagnfreq=1000}. This will ensure that you get at least 200 samples from the posterior probability 
- distribution, and that diagnostics are calculated every 1,000 generations. For larger data sets you
- probably want to run the analysis longer and sample less frequently. The default sample and print frequency
- is 500, the default diagnostic frequency is 5,000, and the default run length is 1,000,000. You can find
- the predicted remaining time to completion of the analysis in the last column printed to screen.
+ diagnfreq=1000}. This will start the Markov chain Monte Carlo simulation. It will also ensure that you 
+ get at least 200 samples from the posterior probability distribution, and that diagnostics are
+ calculated every 1,000 generations. For larger data sets you probably want to run the analysis longer 
+ and sample less frequently. The default sample and print frequency is 500, the default diagnostic 
+ frequency is 5,000, and the default run length is 1,000,000. You can find the predicted remaining 
+ time to completion of the analysis in the last column printed to screen.
 
 \textbf{3.2}. If the standard deviation of split frequencies is below 0.01 after 20,000 generations,
  stop the run by answering \textbf{no} when the program asks \texttt{Continue the analysis? (yes/no)}.
@@ -364,6 +352,7 @@ evolutionary model to the GTR substitution model with gamma-distributed rate var
  of the substitution model parameters, including the mean, mode, and 95 \% credibility interval
  (region of Highest Posterior Density, HPD) of each parameter. Make sure that the potential scale reduction
  factor (PSRF) is reasonably close to 1.0 for all parameters; if not, you need to run the analysis longer.
+ The same applies for the ESS. If the ESSs are somewhere below 100, you may want to run longer.
 
 \textbf{4.2}. Summarize the trees using the same burn-in as the \texttt{mcmc} command by typing \textbf{sumt}
 . The program will output a cladogram with the posterior probabilities for each split and a phylogram with
@@ -389,16 +378,19 @@ sequences, morphological ("standard") data, restriction site (binary) data, or a
  \{A, C, G, U, R, Y, M, K, S, W, H, B, V, D, N\} for RNA data, 
  \{A, R, N, D, C, Q, E, G, H, I, L, K, M, F, P, S, T, W, Y, V, X\} for protein data, \{0, 1\} for 
  restriction (binary) data, and \{0, 1, 2, 3, 4, 5, 6, 5, 7, 8, 9\} for standard (morphology) data. 
+
  In addition to the standard one-letter ambiguity symbols for DNA and RNA listed above, ambiguity can also
- be expressed using the Nexus parenthesis or curly braces notation. For instance, a taxon polymorphic for
- states 2 and 3 can be coded as (23), (2,3), \{23\}, or \{2,3\} and a taxon with either amino acid A or F
- can be coded as (AF), (A,F), \{AF\} or \{A,F\}. Like most other statistical phylogenetics programs, 
- MrBayes effectively treats polymorphism and uncertainty the same way (as uncertainty), so it does not 
- matter whether you use parentheses or curly braces. If you have other symbols in your matrix than the
- ones supported by MrBayes, you need to replace them before processing the data block in MrBayes. You
- also need to remove the "Equate" and "Symbols" statements in the "Format" line if they are included.
- Unlike the Nexus standard, MrBayes supports data blocks that contain mixed data types as described in 
- the tutorial in chapter \ref{tutorialPartitioned}.
+ be expressed using the Nexus parenthesis notation. For instance, if there is uncertainty whether a taxon
+ have state 2 or 3 for a specific character, it can be coded as (23) (or (2,3)). The Nexus format also
+ allows coding taxa as polymorphic \textemdash where a taxon truly have both character states 2 and 3.
+ One could then use braces instead of paranthesis: \{23\}. MrBayes, however, does not make any distinction
+ between polymorphic states or uncertainty in states, but treat them the same way (as uncertainty), so 
+ it does not matter whether you use parentheses or curly braces.
+ 
+ If you have other symbols in your matrix than the ones supported by MrBayes, you need to replace them
+ before processing the data block in MrBayes. You also need to remove the "Equate" and "Symbols" statements
+ in the "Format" line if they are included. Unlike the Nexus standard, MrBayes supports data blocks that 
+ contain mixed data types as described in the tutorial in chapter \ref{tutorialPartitioned}.
 
 To put the data into MrBayes type \textbf{execute $<$filename$>$} at the \texttt{MrBayes >} prompt, 
 where \textbf{$<$filename$>$} is the name of the input file. To process our example file, type 
@@ -600,7 +592,7 @@ If we wanted to specify a prior that put more emphasis on equal nucleotide frequ
  sum of the numbers in the Dirichlet distribution determines how focused the distribution is, and the
  balance between the numbers determines the expected proportion of each nucleotide (in the order A, C, G,
  and T). Usually, there is a connection between the parameters in the Dirichlet distribution and the
- observations. For example, you can think of a Dirichlet (150,100,90,140) distribution as one arising from
+ observations. For example, you can think of a Dirichlet(150,100,90,140) distribution as one arising from
  observing (roughly) 150 A's, 100 C's, 90 G's and 140 T's in some set of reference sequences. If the
  reference sequences are independent but clearly relevant to the analysis of your sequences, it might be
  reasonable to use those numbers as a prior in your analysis. 
@@ -613,7 +605,8 @@ In our analysis, we will be cautious and leave the prior on state frequencies at
 
 The \texttt{Shapepr} parameter determines the prior for the $\alpha$ (shape) parameter of the gamma
  distribution of rate variation. We will leave it at its default setting, an Exponential distribution
- with mean 1.0. This will put highest probability on low $\alpha$ values. XXXX See Figure ? XXXX
+ with mean 1.0. This will put highest probability on low $\alpha$ values. 
+ %%%% JN: Expand the text! Add a Figure ?
  The prior for the proportion of invariable sites is set with
  \texttt{Pinvarpr}. The default setting is a uniform distribution between 0 and 1, an appropriate setting
  if we don't want to assume any prior knowledge about the proportion of invariable sites.
@@ -623,8 +616,9 @@ For topology, the default \texttt{Uniform} setting for the \texttt{Topologypr} p
  on the tree topology, but we will not attempt that in this analysis.
 
 The \texttt{Brlenspr} parameter can either be set to unconstrained, clock-constrained, or fixed. If 
- \texttt{Fixed} is chosen then branch lengths will not be updated by the program but will be fixed
- to XXXX.
+ \texttt{Fixed} is chosen then branch lengths will not be updated by the MCMC in the program but will be
+  fixed to the current tree (requires a user-provided starting tree).
+ %%%%% JN: Expand the text! Add details about the fixed tree above?
  For trees without a molecular clock (unconstrained) there are currently five different branch length
  priors that can be applied. The default is a compound Dirichlet prior, which essentially puts a
  prior on the total length on the tree, and then assigns prior lengths on individual branches by
@@ -748,7 +742,7 @@ The analysis is started by issuing the \texttt{mcmc} command. However, before do
    Savetrees       Yes/No                No
    Checkpoint      Yes/No                Yes
    Checkfreq       <number>              2000
-   Filename        <name>                ../examples/primates.nex.<p/t>
+   Filename        <name>                primates.nex.<p/t>
    Startparams     Current/Reset         Current
    Starttree       Current/Random/       Current
                    Parsimony
@@ -831,27 +825,26 @@ When the chain is sampled, the current values of the model parameters are printe
  \texttt{.t} file names can be altered using the \texttt{Filename} setting.
 
 The \texttt{Printfreq} parameter controls the frequency with which brief info about the analysis is printed
- to screen. The default value is 500. Let us change it to match the sample frequency by typing 
- \textbf{mcmcp printfreq=100}.
+ to screen. The default value is 1000. Let us change it to match the sample frequency by typing 
+ \textbf{mcmcp printfreq=500}.
 
 When you set up your model and analysis (the number of runs and heated chains), MrBayes creates starting
  values for the model parameters. A different random tree with predefined branch lengths is generated for
  each chain and most substitution model parameters are set to predefined values. For instance, stationary
  state frequencies start out being equal and unrooted trees have all branch lengths set to $0.1$. The 
- starting values can be changed by using the \textbf{Startvals} command. For instance, user-defined trees
+ starting values can be changed by using the \textbf{Startparams} command. For instance, user-defined trees
  can be read into MrBayes by executing a Nexus file with a "trees" block. The available user trees can then
- be assigned to different chains using the \texttt{Startvals} command. After a completed analysis, MrBayes
+ be assigned to different chains using the \texttt{Startparams} command. After a completed analysis, MrBayes
  keeps the parameter values of the last generation and will use those as the starting values for the next
- analysis unless the values are reset using \texttt{mcmc starttrees=random startvals=reset}.
+ analysis unless the values are reset using \texttt{mcmc starttree=random startparams=reset}.
 
 Since version 3.2, MrBayes prints all parameter values of all chains (cold and heated) to a checkpoint file
- every \texttt{Checkfreq} generations, by default every $100,000$ generations. The checkpoint file has the
+ every \texttt{Checkfreq} generations, by default every $2,000$ generations. The checkpoint file has the
  suffix \texttt{.ckp}. If you run an analysis and it is stopped prematurely, you can restart it from the
  last checkpoint by using \texttt{mcmc append=yes}. MrBayes will start the new analysis from the checkpoint;
  it will even read in all the old trees and include them in the convergence diagnostics. At the end of the
  new run, you will have parameter and tree files that are indistinguishable from those you would have
- obtained from an uninterrupted analysis. Our data set is so small, however, that we are likely to get an
- adequate sample from the posterior before the first checkpoint is reached.
+ obtained from an uninterrupted analysis.
 
 \subsection{Running the Analysis}
 
@@ -864,19 +857,23 @@ Finally, we are ready to start the analysis. Type \textbf{mcmc}. MrBayes will fi
 \begin{verbatim}
    The MCMC sampler will use the following moves:
       With prob.  Chain will use move
-         1.79 %   Dirichlet(Revmat)
-         1.79 %   Slider(Revmat)
-         1.79 %   Dirichlet(Pi)
-         1.79 %   Slider(Pi)
-         3.57 %   Multiplier(Alpha)
-        17.86 %   eSS(Tau,V)
-        17.86 %   eTBR(Tau,V)
-        35.71 %   pSPR(Tau,V)
-        17.86 %   Multiplier(V)
+         0.93 %   Dirichlet(Revmat)
+         0.93 %   Slider(Revmat)
+         0.93 %   Dirichlet(Pi)
+         0.93 %   Slider(Pi)
+         1.85 %   Multiplier(Alpha)
+         1.85 %   Slider(Pinvar)
+         9.26 %   ExtSPR(Tau,V)
+         9.26 %   ExtTBR(Tau,V)
+         9.26 %   NNI(Tau,V)
+         9.26 %   ParsSPR(Tau,V)
+        37.04 %   Multiplier(V)
+        12.96 %   Nodeslider(V)
+         5.56 %   TLMultiplier(V)
 \end{verbatim}
 \normalsize
 \end{singlespacing}
-
+%%%%% JN: Done to here 2018-Nov-16.
 The exact set of proposals and their relative probabilities may differ depending on the exact version of the 
 program that you are using. Note that MrBayes will spend most of its effort changing the topology (Tau) and 
 branch length (V) parameters. In our experience, topology and branch lengths are the most difficult 
