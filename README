@@ -13,23 +13,20 @@ Build instructions, very very short version:
 Current repository directory layout:
 
     .
-    ├ doc
-    │   ├ manual                : The manual
-    │   └ tutorial              : A tutorial
-    ├ examples                  : Example input data sets
-    └ src                       : C source code
+    ├── build          : Tools needed to build the project- 
+    │                      specific libraries etc
+    ├── doc
+    │   ├── manual     : The manual
+    │   └── tutorial   : Tutorial 
+    ├── examples       : Example input data sets
+    ├── m4             : Macro directory for automake
+    └── src            : C source code
 
 
-We are currently in the process of moving everything over from
-Subversion to Git, and from SourceForge to GitHub.  The code, web
-pages and PDF manuals are already available here, and the bug tracking
-database and mailing list are very nearly sorted too.  Also, the MrBayes
-home page link at http://mrbayes.net/ is still pointing to the old web
-pages.
 
-    The new web site is available at
+The new web site is available at
 
-        http://NBISweden.github.io/MrBayes/
+    http://NBISweden.github.io/MrBayes/
 
 
 Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0
@@ -43,7 +40,9 @@ development happens on feature branches off the 'develop' branch, and
 are merged back into 'develop' when finished.  This more or less follows
 the "git-flow" branching model.
 
-The orphaned 'gh-pages' branch contains the web site (only).
+The 'gh-pages' branch contains the web site (only).
+
+The 'testing' branch contains testing data files (only).
 
 After release 3.2.6 (November 2015), MrBayes entered "maintenance mode",
 and its care has been passed over to NBIS (National Bioinformatics
@@ -53,5 +52,5 @@ probably be geared more towards bug-fixes rather than addition of new
 features.
 
 With kind regards,
-    Andreas (Kusalananda) Kähäri
+    Andreas (Kusalananda) Kähäri, Johan Nylander
     NBIS
