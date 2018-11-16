@@ -1,9 +1,0 @@
-#NEXUS
-
-begin mrbayes;
-    set autoclose=yes nowarn=yes;
-    set seed=1 swapseed=1;
-    exe primates.nex;  
-    mcmc ngen=1000;
-end;
-	
