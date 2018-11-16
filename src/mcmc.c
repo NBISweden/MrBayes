@@ -5767,7 +5767,7 @@ int InitAugmentedModels (void)
 int InitChainCondLikes (void)
 {
     int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
-                useBeagleMultiPartitions, clIndex, tiIndex, scalerIndex, indexStep, divisionOffset;
+                clIndex, tiIndex, scalerIndex, indexStep;
     BitsLong    *charBits;
     CLFlt       *cL;
     ModelInfo   *m;
@@ -5775,6 +5775,7 @@ int InitChainCondLikes (void)
     int         j1;
 #   endif
 #   if defined (BEAGLE_ENABLED)
+    int         useBeagleMultiPartitions, divisionOffset;
     double      *nSitesOfPat;
     MrBFlt      freq;
 #   endif
@@ -5910,7 +5911,10 @@ int InitChainCondLikes (void)
     else
         return NO_ERROR;
 
+#   if defined (BEAGLE_ENABLED)
     useBeagleMultiPartitions = NO;
+#   endif
+
 #   if defined (BEAGLE_V3_ENABLED)
     if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
         useBeagleMultiPartitions = YES;

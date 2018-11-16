@@ -10490,7 +10490,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 
 int UpDateCijk (int whichPart, int whichChain)
 {
-    int         c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated, divisionOffset;
+    int         c, i, j, k, n, n3, isComplex, sizeOfSingleCijk, cType, numQAllocated;
     MrBFlt      **q[100], **eigvecs, **inverseEigvecs;
     MrBFlt      *eigenValues, *eigvalsImag, *cijk;
     MrBFlt      *bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
@@ -10498,7 +10498,7 @@ int UpDateCijk (int whichPart, int whichChain)
     ModelInfo   *m;
     Param       *p;
 #   if defined (BEAGLE_ENABLED)
-    int         u;
+    int         u, divisionOffset;
     double      *beagleEigvecs=NULL, *beagleInverseEigvecs=NULL;
 #   endif
 
