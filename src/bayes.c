@@ -500,6 +500,7 @@ int InitializeMrBayes (void)
 #   if defined (BEAGLE_V3_ENABLED)
     beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
     beagleThreadCount = 99;                           /* default to auto threading */
+    beagleAllFloatTips = NO;                          /* default to using compact tips */
 #   endif
 #   endif
 

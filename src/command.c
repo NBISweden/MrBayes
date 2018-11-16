@@ -47,7 +47,7 @@
 #endif
 
 #define NUMCOMMANDS                     62    /* The total number of commands in the program  */
-#define NUMPARAMS                       279   /* The total number of parameters  */
+#define NUMPARAMS                       280   /* The total number of parameters  */
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -252,6 +252,7 @@ int             beagleResourceCount;   /* BEAGLE resource choice list length    
 int             beagleInstanceCount;   /* total number of BEAGLE instances              */
 #if defined (BEAGLE_V3_ENABLED)
 int             beagleThreadCount;     /* max number of BEAGLE CPU threads              */
+int             beagleAllFloatTips;    /* use floating-point represantion for all tips  */
 #endif
 #endif
 
@@ -329,7 +330,7 @@ CmdType     commands[] =
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,                                                            {122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
             { 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-            { 38,             "Set",  NO,             DoSet, 23,       {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268,275,278},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+            { 38,             "Set",  NO,             DoSet, 24,   {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268,275,278,279},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
             { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
             { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
             { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
@@ -6910,24 +6911,61 @@ int DoSetParm (char *parmName, char *tkn)
                 beagleThreadCount = tempI;
                 if (beagleThreadCount == 1)
                     {
-                    MrBayesPrint ("%s   Setting Beaglethreadcount to %d (single-threaded)\n", spacer, beagleThreadCount);
+                    MrBayesPrint ("%s   Setting beaglethreadcount to %d (single-threaded)\n", spacer, beagleThreadCount);
                     beagleFlags &= ~BEAGLE_FLAG_THREADING_CPP;
                     beagleFlags |= BEAGLE_FLAG_THREADING_NONE;
                     }
                 else if (beagleThreadCount == 99)
                     {
-                    MrBayesPrint ("%s   Setting Beaglethreadcount to %d (auto-threading)\n", spacer, beagleThreadCount);
+                    MrBayesPrint ("%s   Setting beaglethreadcount to %d (auto-threading)\n", spacer, beagleThreadCount);
                     beagleFlags &= ~BEAGLE_FLAG_THREADING_NONE;
                     beagleFlags |= BEAGLE_FLAG_THREADING_CPP;
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Setting Beaglethreadcount to %d\n", spacer, beagleThreadCount);
+                    MrBayesPrint ("%s   Setting beaglethreadcount to %d\n", spacer, beagleThreadCount);
                     beagleFlags &= ~BEAGLE_FLAG_THREADING_NONE;
                     beagleFlags |= BEAGLE_FLAG_THREADING_CPP;
                     }
 #   else
                 BeagleThreadsNotAvailable();
+#   endif
+                if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
+                    return ERROR;
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
+        else if (!strcmp(parmName, "Beaglefloattips"))
+            {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {
+#   if defined (BEAGLE_V3_ENABLED)
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+                    if (!strcmp(tempStr, "Yes"))
+                        {
+                        beagleAllFloatTips = YES;
+                        }
+                    else
+                        {
+                        beagleAllFloatTips = NO;
+                        }
+                    if (beagleAllFloatTips)
+                        MrBayesPrint ("%s   Setting beaglefloattips to Yes\n", spacer);
+                    else
+                        MrBayesPrint ("%s   Setting beaglefloattips to No\n", spacer);
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s   Invalid argument for beaglefloattips\n", spacer);
+                    return (ERROR);
+                    }
+#   else
+                MrBayesPrint ("%s   Beaglefloattips setting requires BEAGLE v3.1 and higher.\n", spacer);
 #   endif
                 if (defMatrix == YES && SetUpAnalysis(&globalSeed) == ERROR)
                     return ERROR;
@@ -12259,6 +12297,9 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Beaglethreads -- Use threading for parallelism on multi-core CPU processors.  \n");
         MrBayesPrint ("   Beaglethreadcount -- Set maximum number of CPU threads to be used by BEAGLE.  \n");
         MrBayesPrint ("                   Set to '99' for auto-threading.                               \n");
+        MrBayesPrint ("   Beaglefloattips -- Use floating-point representation for tip sequence data.   \n");
+        MrBayesPrint ("                   Can result in improved performance on GPU devices at the cost \n");
+        MrBayesPrint ("                   of additional memory usage.                                   \n");
 #   endif
 #   endif
         MrBayesPrint ("                                                                                 \n");
@@ -12293,6 +12334,7 @@ else if (!strcmp(helpTkn, "Set"))
 #   if defined (BEAGLE_V3_ENABLED)
         MrBayesPrint ("   Beaglethreads      Yes/No                %s                                   \n", beagleFlags & BEAGLE_FLAG_THREADING_CPP ? "Yes" : "No"); 
         MrBayesPrint ("   Beaglethreadcount  <number>              %d                                   \n", beagleThreadCount); 
+        MrBayesPrint ("   Beaglefloattips    Yes/No                %s                                   \n", beagleAllFloatTips ? "Yes" : "No"); 
 #   endif       
 #   endif
         MrBayesPrint ("                                                                                 \n");
@@ -14602,9 +14644,11 @@ void SetUpParms (void)
     PARAM (276, "Nlnormcat",      DoLsetParm,        "\0");
     PARAM (277, "Nmixtcat",       DoLsetParm,        "\0");
     PARAM (278, "Beaglethreadcount",  DoSetParm,     "\0");
+    PARAM (279, "Beaglefloattips",DoSetParm,  "Yes|No|\0");
+
 
     /* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 279; one more than last index) at the top of this file. */
+            NUMPARAMS (now 280; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 

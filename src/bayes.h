@@ -1742,6 +1742,7 @@ extern int              beagleScalingFrequency;                 /* BEAGLE rescal
 extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
 #if defined (BEAGLE_V3_ENABLED)
 extern int              beagleThreadCount;                      /* max number of BEAGLE CPU threads  */
+extern int              beagleAllFloatTips;                     /* use floating-point represantion for all tips  */
 #endif
 #endif
 

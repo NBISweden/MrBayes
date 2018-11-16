@@ -38,8 +38,6 @@
 // #define DEBUG_MB_BEAGLE_MULTIPART
 // #define DEBUG_MB_BEAGLE_MULTIPART_SITELNL
 
-#undef BEAGLE_CTIPS_ENABLED /* define to use compact representation tips with BEAGLE3 on GPU */
-
 const char* const svnRevisionMbbeagleC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
 
 /* Functions and variables defined in mcmc.c that are not exported in mcmc.h */
@@ -103,8 +101,8 @@ int InitBeagleInstance (ModelInfo *m, int division)
         {
         for (i=0; i<numLocalTaxa; i++)
             {
-#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
-            if (m->isPartAmbig[i] == YES || (beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
+#if defined(BEAGLE_V3_ENABLED)
+            if (m->isPartAmbig[i] == YES || beagleAllFloatTips)
 #else 
             if (m->isPartAmbig[i] == YES)
 #endif
@@ -128,8 +126,8 @@ int InitBeagleInstance (ModelInfo *m, int division)
         return ERROR;
     for (i=0; i<numLocalTaxa; i++)
         {
-#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
-        if (m->isPartAmbig[i] == NO && !(beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
+#if defined(BEAGLE_V3_ENABLED)
+        if (m->isPartAmbig[i] == NO && !(beagleAllFloatTips))
 #else
         if (m->isPartAmbig[i] == NO)
 #endif
@@ -1596,8 +1594,8 @@ int InitBeagleMultiPartitionInstance ()
         {
         for (i=0; i<numLocalTaxa; i++)
             {
-#if defined(BEAGLE_V3_ENABLED) && !defined(BEAGLE_CTIPS_ENABLED) 
-            if (!(beagleFlags & BEAGLE_FLAG_PROCESSOR_GPU))
+#if defined(BEAGLE_V3_ENABLED)
+            if (!beagleAllFloatTips)
 #else
             if (1)
 #endif
@@ -1833,7 +1831,8 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                     dIndex = norescaleDivisions[d];
                     m = &modelSettings[dIndex];
                     if (m->lnLike[2*chain + state[chain]] > DBL_MAX ||
-                        m->lnLike[2*chain + state[chain]] < -DBL_MAX)
+                        m->lnLike[2*chain + state[chain]] < -DBL_MAX ||
+                        m->lnLike[2*chain + state[chain]] != m->lnLike[2*chain + state[chain]])
                         {
 
                         m->rescaleFreqOld = m->rescaleFreqNew = m->rescaleFreq[chain];
@@ -2851,7 +2850,8 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
         m = &modelSettings[dIndex];
         m->lnLike[2*chain + state[chain]] = modelSettings[0].logLikelihoodsAll[d];
         if (m->lnLike[2*chain + state[chain]] > DBL_MAX || 
-            m->lnLike[2*chain + state[chain]] < -DBL_MAX)
+            m->lnLike[2*chain + state[chain]] < -DBL_MAX ||
+            m->lnLike[2*chain + state[chain]] != m->lnLike[2*chain + state[chain]])
             {
             beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
             }
@@ -2896,7 +2896,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
             m = &modelSettings[dIndex];
             lnLDiv = &m->lnLike[2*chain + state[chain]];
 
-            if (!(*lnLDiv > DBL_MAX || *lnLDiv < -DBL_MAX))
+            if (!(*lnLDiv > DBL_MAX || *lnLDiv < -DBL_MAX || *lnLDiv != *lnLDiv))
                 {
                 /* find nSitesOfPat */
                 nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
