@@ -106,7 +106,6 @@ AM_COND_IF([BUILD_DOC], [],
            [AC_MSG_WARN([pdflatex or bibtex is missing, documentation will not be rebuilt])])
 
 # Determine if we can (and want) to use an MPI C compiler.
-
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     [use_mpi=yes
      AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
@@ -122,67 +121,59 @@ AC_CHECK_LIB([m], [sqrt])
 # Check for the Beagle library.
 
 # Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
-# and headers with the given prefix, or in /usr/local if no prefix path
-# was given, and if that fails use PKG_CHECK_MODULES (and trust its
-# result).
+# and headers with the given prefix, or in /usr/local followed by /usr
+# if no prefix path was given, and if that fails use PKG_CHECK_MODULES
+# (and trust its result).
 
-# Note: Beagle is at API version 1, however, there was a version 2
-# available up until November 2013.  This was then renamed "1" again.
-# Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
-# over both versions in our Beagle checks below.
-# To complicate things, version 2 reports the wrong include path with
-# pkg-config.
+# Note: We assume that Beagle's top-level include directory is located under
+# include/libhmsbeagle-1 and nowhere else.
 
 AS_IF([test "x$with_beagle" != "xno"], [
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
     old_ldlibs="$LDLIBS"
 
-    for beagle_api_version in 1 2; do
-        beagle_subinc="include/libhmsbeagle-$beagle_api_version"
-        beagle_sublib="lib"
+    beagle_pkg_name="hmsbeagle-1"
+    beagle_subinc="include/lib$beagle_pkg_name"
+    beagle_sublib="lib"
 
-        AS_IF([test -d "$with_beagle"],
-              [beagle_prefix_list="$with_beagle"],
-              [beagle_prefix_list="/usr/local /usr"])
+    AS_IF([test -d "$with_beagle"],
+          [beagle_prefix_list="$with_beagle"],
+          [beagle_prefix_list="/usr/local /usr"])
 
-        for beagle_prefix in $beagle_prefix_list; do
+    for beagle_prefix in $beagle_prefix_list; do
 
-            AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
+        AC_MSG_NOTICE([Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'])
 
-            CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
-            LDLIBS="-lhmsbeagle"
+        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
+        LDLIBS="-lhmsbeagle"
 
-            AC_CHECK_HEADER([libhmsbeagle/beagle.h],
-                [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
-            AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
-                [AC_SUBST([BEAGLE_LIBS], ["$LDFLAGS $LDLIBS"])], [])
+        AC_CHECK_HEADER([libhmsbeagle/beagle.h],
+            [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
+        AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+            [AC_SUBST([BEAGLE_LIBS], ["$LDFLAGS $LDLIBS"])], [])
 
-            CPPFLAGS="$old_cppflags"
-            LDFLAGS="$old_ldflags"
-            LDLIBS="$old_ldlibs"
+        CPPFLAGS="$old_cppflags"
+        LDFLAGS="$old_ldflags"
+        LDLIBS="$old_ldlibs"
 
-            AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
-                [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
-                 beagle_found="yes"])
+        AS_IF([test -n "$BEAGLE_CFLAGS" && test -n "$BEAGLE_LIBS"],
+            [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
+             beagle_found="yes"])
 
-            AS_IF([test "x$beagle_found" = "xyes"], [break 2],
-                  [unset BEAGLE_LIBS BEAGLE_CFLAGS
-                   AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
-        done
+        AS_IF([test "x$beagle_found" = "xyes"], [break 2],
+              [unset BEAGLE_LIBS BEAGLE_CFLAGS
+               AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
     done
 
     AS_IF([test "x$beagle_found" != "xyes"], [
         AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
 
-        for beagle_api_version in 1 2; do
-             PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-$beagle_api_version],
+             PKG_CHECK_MODULES([BEAGLE], [$beagle_pkg_name],
                 [AC_MSG_NOTICE([Found Beagle with pkg-config])
                  beagle_found="yes"],
                 [beagle_found="no"])
-            AS_IF([test "x$beagle_found" = "xyes"], [break])
-        done
     ]) dnl AS_IF
 
     AS_IF([test "x$beagle_found" != "xyes"],
@@ -190,13 +181,22 @@ AS_IF([test "x$with_beagle" != "xno"], [
             [AC_MSG_ERROR(
                 [--with-beagle was given, but test for Beagle failed])]
         )], dnl AS_IF
-        [AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
+        [
+         # Add -Wl,-rpath,LIBDIR to the BEAGLE_LIBS flags as we need
+         # to be able to run MrBayes with Beagle linked in from a
+         # non-standard path.  This makes it possible to build and
+         # run MrBayes with Beagle installed under some place like
+         # $HOME/local.
+         BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath,$(pkg-config --variable=libdir "$beagle_pkg_name")"
+         AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
          AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
          AC_DEFINE([BEAGLE_ENABLED], [1],
             [Define if you want to enable Beagle])])
+         # Save old flags, just for safety.  Then see if we have Beagle 3.
+         old_ldflags="$LDFLAGS"
          LDFLAGS="$BEAGLE_LIBS"
          AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
-            [AC_DEFINE([BEAGLE_V3_ENABLED],[1],
+            [AC_DEFINE([BEAGLE_V3_ENABLED], [1],
                 [Define to enable Beagle v3.1 extensions])], [])
          LDFLAGS="$old_ldflags"
 ]) dnl AS_IF
@@ -258,5 +258,3 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
 ])
 AC_OUTPUT
-m4_unquote(
-  _m4_defn([_m4_wrap_text])_m4_popdef([_m4_wrap_text]))
