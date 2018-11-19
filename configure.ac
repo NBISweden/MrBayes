@@ -197,7 +197,8 @@ AS_IF([test "x$with_beagle" != "xno"], [
          LDFLAGS="$BEAGLE_LIBS"
          AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
             [AC_DEFINE([BEAGLE_V3_ENABLED],[1],
-                [Define to enable Beagle v3.1 extensions])], [])
+                [Define to enable Beagle v3.1 extensions])
+                BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"], [])
          LDFLAGS="$old_ldflags"
 ]) dnl AS_IF
 
