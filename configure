@@ -641,7 +641,6 @@ am__nodep
 AMDEPBACKSLASH
 AMDEP_FALSE
 AMDEP_TRUE
-am__quote
 am__include
 DEPDIR
 OBJEXT
@@ -713,7 +712,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -732,7 +730,8 @@ PACKAGE_VERSION
 PACKAGE_TARNAME
 PACKAGE_NAME
 PATH_SEPARATOR
-SHELL'
+SHELL
+am__quote'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
@@ -800,7 +799,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1053,15 +1051,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1199,7 +1188,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1352,7 +1341,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -2488,7 +2476,7 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 
-am__api_version='1.15'
+am__api_version='1.16'
 
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -3004,8 +2992,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 
 # For better backward compatibility.  To be removed once Automake 1.9.x
 # dies out for good.  For more background, see:
-# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
-# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
+# <https://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
+# <https://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
 # We need awk for the "check" target (and possibly the TAP driver).  The
@@ -3056,7 +3044,7 @@ END
 Aborting the configuration process, to ensure you take notice of the issue.
 
 You can download and install GNU coreutils to get an 'rm' implementation
-that behaves properly: <http://www.gnu.org/software/coreutils/>.
+that behaves properly: <https://www.gnu.org/software/coreutils/>.
 
 If you want to complete the configuration process using your problematic
 'rm' anyway, export the environment variable ACCEPT_INFERIOR_RM_PROGRAM
@@ -3367,50 +3355,49 @@ $as_echo "$as_me: WARNING: pdflatex or bibtex is missing, documentation will not
 fi
 
 # Determine if we can (and want) to use an MPI C compiler.
-
 DEPDIR="${am__leading_dot}deps"
 
 ac_config_commands="$ac_config_commands depfiles"
 
-
-am_make=${MAKE-make}
-cat > confinc << 'END'
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} supports the include directive" >&5
+$as_echo_n "checking whether ${MAKE-make} supports the include directive... " >&6; }
+cat > confinc.mk << 'END'
 am__doit:
-	@echo this is the am__doit target
+	@echo this is the am__doit target >confinc.out
 .PHONY: am__doit
 END
-# If we don't find an include directive, just comment out the code.
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for style of include used by $am_make" >&5
-$as_echo_n "checking for style of include used by $am_make... " >&6; }
 am__include="#"
 am__quote=
-_am_result=none
-# First try GNU make style include.
-echo "include confinc" > confmf
-# Ignore all kinds of additional output from 'make'.
-case `$am_make -s -f confmf 2> /dev/null` in #(
-*the\ am__doit\ target*)
-  am__include=include
-  am__quote=
-  _am_result=GNU
-  ;;
-esac
-# Now try BSD make style include.
-if test "$am__include" = "#"; then
-   echo '.include "confinc"' > confmf
-   case `$am_make -s -f confmf 2> /dev/null` in #(
-   *the\ am__doit\ target*)
-     am__include=.include
-     am__quote="\""
-     _am_result=BSD
+# BSD make does it like this.
+echo '.include "confinc.mk" # ignored' > confmf.BSD
+# Other make implementations (GNU, Solaris 10, AIX) do it like this.
+echo 'include confinc.mk # ignored' > confmf.GNU
+_am_result=no
+for s in GNU BSD; do
+  { echo "$as_me:$LINENO: ${MAKE-make} -f confmf.$s && cat confinc.out" >&5
+   (${MAKE-make} -f confmf.$s && cat confinc.out) >&5 2>&5
+   ac_status=$?
+   echo "$as_me:$LINENO: \$? = $ac_status" >&5
+   (exit $ac_status); }
+  case $?:`cat confinc.out 2>/dev/null` in #(
+  '0:this is the am__doit target') :
+    case $s in #(
+  BSD) :
+    am__include='.include' am__quote='"' ;; #(
+  *) :
+    am__include='include' am__quote='' ;;
+esac ;; #(
+  *) :
      ;;
-   esac
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $_am_result" >&5
-$as_echo "$_am_result" >&6; }
-rm -f confinc confmf
+esac
+  if test "$am__include" != "#"; then
+    _am_result="yes ($s style)"
+    break
+  fi
+done
+rm -f confinc.* confmf.*
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${_am_result}" >&5
+$as_echo "${_am_result}" >&6; }
 
 # Check whether --enable-dependency-tracking was given.
 if test "${enable_dependency_tracking+set}" = set; then :
@@ -4701,16 +4688,12 @@ fi
 # Check for the Beagle library.
 
 # Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
-# and headers with the given prefix, or in /usr/local if no prefix path
-# was given, and if that fails use PKG_CHECK_MODULES (and trust its
-# result).
+# and headers with the given prefix, or in /usr/local followed by /usr
+# if no prefix path was given, and if that fails use PKG_CHECK_MODULES
+# (and trust its result).
 
-# Note: Beagle is at API version 1, however, there was a version 2
-# available up until November 2013.  This was then renamed "1" again.
-# Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
-# over both versions in our Beagle checks below.
-# To complicate things, version 2 reports the wrong include path with
-# pkg-config.
+# Note: We assume that Beagle's top-level include directory is located under
+# include/libhmsbeagle-1 and nowhere else.
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5235,33 +5218,33 @@ if test "x$with_beagle" != "xno"; then :
     old_ldflags="$LDFLAGS"
     old_ldlibs="$LDLIBS"
 
-    for beagle_api_version in 1 2; do
-        beagle_subinc="include/libhmsbeagle-$beagle_api_version"
-        beagle_sublib="lib"
+    beagle_pkg_name="hmsbeagle-1"
+    beagle_subinc="include/lib$beagle_pkg_name"
+    beagle_sublib="lib"
 
-        if test -d "$with_beagle"; then :
+    if test -d "$with_beagle"; then :
   beagle_prefix_list="$with_beagle"
 else
   beagle_prefix_list="/usr/local /usr"
 fi
 
-        for beagle_prefix in $beagle_prefix_list; do
+    for beagle_prefix in $beagle_prefix_list; do
 
-            { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&5
-$as_echo "$as_me: Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&5
+$as_echo "$as_me: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&6;}
 
-            CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib"
-            LDLIBS="-lhmsbeagle"
+        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
+        LDLIBS="-lhmsbeagle"
 
-            ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
+        ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
 if test "x$ac_cv_header_libhmsbeagle_beagle_h" = xyes; then :
   BEAGLE_CFLAGS=$CPPFLAGS
 
 fi
 
 
-            { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
 $as_echo_n "checking for beagleCreateInstance in -lhmsbeagle... " >&6; }
 if ${ac_cv_lib_hmsbeagle_beagleCreateInstance+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5303,17 +5286,17 @@ if test "x$ac_cv_lib_hmsbeagle_beagleCreateInstance" = xyes; then :
 fi
 
 
-            CPPFLAGS="$old_cppflags"
-            LDFLAGS="$old_ldflags"
-            LDLIBS="$old_ldlibs"
+        CPPFLAGS="$old_cppflags"
+        LDFLAGS="$old_ldflags"
+        LDLIBS="$old_ldlibs"
 
-            if test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"; then :
+        if test -n "$BEAGLE_CFLAGS" && test -n "$BEAGLE_LIBS"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
 $as_echo "$as_me: Found Beagle in '$beagle_prefix'" >&6;}
-                 beagle_found="yes"
+             beagle_found="yes"
 fi
 
-            if test "x$beagle_found" = "xyes"; then :
+        if test "x$beagle_found" = "xyes"; then :
   break 2
 else
   unset BEAGLE_LIBS BEAGLE_CFLAGS
@@ -5329,7 +5312,6 @@ do :
 done
 
 fi
-        done
     done
 
     if test "x$beagle_found" != "xyes"; then :
@@ -5337,7 +5319,6 @@ fi
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
 $as_echo "$as_me: WARNING: Failed to locate Beagle, falling back on pkg-config" >&2;}
 
-        for beagle_api_version in 1 2; do
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for BEAGLE" >&5
@@ -5347,12 +5328,12 @@ if test -n "$BEAGLE_CFLAGS"; then
     pkg_cv_BEAGLE_CFLAGS="$BEAGLE_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-\$beagle_api_version\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-$beagle_api_version") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"\$beagle_pkg_name\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "$beagle_pkg_name") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "hmsbeagle-$beagle_api_version" 2>/dev/null`
+  pkg_cv_BEAGLE_CFLAGS=`$PKG_CONFIG --cflags "$beagle_pkg_name" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -5364,12 +5345,12 @@ if test -n "$BEAGLE_LIBS"; then
     pkg_cv_BEAGLE_LIBS="$BEAGLE_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hmsbeagle-\$beagle_api_version\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hmsbeagle-$beagle_api_version") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"\$beagle_pkg_name\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "$beagle_pkg_name") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "hmsbeagle-$beagle_api_version" 2>/dev/null`
+  pkg_cv_BEAGLE_LIBS=`$PKG_CONFIG --libs "$beagle_pkg_name" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -5390,9 +5371,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hmsbeagle-$beagle_api_version" 2>&1`
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "$beagle_pkg_name" 2>&1`
         else
-	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hmsbeagle-$beagle_api_version" 2>&1`
+	        BEAGLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "$beagle_pkg_name" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$BEAGLE_PKG_ERRORS" >&5
@@ -5411,10 +5392,6 @@ $as_echo "yes" >&6; }
 $as_echo "$as_me: Found Beagle with pkg-config" >&6;}
                  beagle_found="yes"
 fi
-            if test "x$beagle_found" = "xyes"; then :
-  break
-fi
-        done
 
 fi
     if test "x$beagle_found" != "xyes"; then :
@@ -5423,7 +5400,14 @@ fi
 
 fi
 else
-          { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
+
+         # Add -Wl,-rpath,LIBDIR to the BEAGLE_LIBS flags as we need
+         # to be able to run MrBayes with Beagle linked in from a
+         # non-standard path.  This makes it possible to build and
+         # run MrBayes with Beagle installed under some place like
+         # $HOME/local.
+         BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath,$(pkg-config --variable=libdir "$beagle_pkg_name")"
+         { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
 $as_echo "$as_me: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&5
 $as_echo "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
@@ -5431,6 +5415,8 @@ $as_echo "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
 $as_echo "#define BEAGLE_ENABLED 1" >>confdefs.h
 
 fi
+         # Save old flags, just for safety.  Then see if we have Beagle 3.
+         old_ldflags="$LDFLAGS"
          LDFLAGS="$BEAGLE_LIBS"
          { $as_echo "$as_me:${as_lineno-$LINENO}: checking for beagleSetCPUThreadCount in -lhmsbeagle" >&5
 $as_echo_n "checking for beagleSetCPUThreadCount in -lhmsbeagle... " >&6; }
@@ -5750,6 +5736,7 @@ else
            clang:     __clang__
            cray:      _CRAYC
            fujitsu:   __FUJITSU
+           sdcc:      SDCC, __SDCC
            gnu:       __GNUC__
            sun:       __SUNPRO_C,__SUNPRO_CC
            hp:        __HP_cc,__HP_aCC
@@ -6766,6 +6753,58 @@ fi
   tcc) :
 
   ax_cv_c_compiler_version=`tcc -v | $SED 's/^[ ]*tcc[ ]\+version[ ]\+\([0-9.]\+\).*/\1/g'`
+   ;; #(
+  sdcc) :
+
+  if ac_fn_c_compute_int "$LINENO" "/* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MAJOR))
+	__SDCC_VERSION_MAJOR
+    #else
+	SDCC/100
+    #endif
+    " "_ax_c_compiler_version_major"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc major
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  if ac_fn_c_compute_int "$LINENO" "/* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MINOR))
+	__SDCC_VERSION_MINOR
+    #else
+	(SDCC%100)/10
+    #endif
+    " "_ax_c_compiler_version_minor"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc minor
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  if ac_fn_c_compute_int "$LINENO" "
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_PATCH))
+	__SDCC_VERSION_PATCH
+    #elsif(defined(_SDCC_VERSION_PATCHLEVEL))
+	__SDCC_VERSION_PATCHLEVEL
+    #else
+	SDCC%10
+    #endif
+    " "_ax_c_compiler_version_patch"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc patch level
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  ax_cv_c_compiler_version="$_ax_c_compiler_version_major.$_ax_c_compiler_version_minor.$_ax_c_compiler_version_patch"
    ;; #(
   *) :
     ax_cv_c_compiler_version="" ;;
@@ -8573,7 +8612,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 #
 # INIT-COMMANDS
 #
-AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"
+AMDEP_TRUE="$AMDEP_TRUE" MAKE="${MAKE-make}"
 
 _ACEOF
 
@@ -9190,29 +9229,35 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
   # Older Autoconf quotes --file arguments for eval, but not when files
   # are listed without --file.  Let's play safe and only enable the eval
   # if we detect the quoting.
-  case $CONFIG_FILES in
-  *\'*) eval set x "$CONFIG_FILES" ;;
-  *)   set x $CONFIG_FILES ;;
-  esac
+  # TODO: see whether this extra hack can be removed once we start
+  # requiring Autoconf 2.70 or later.
+  case $CONFIG_FILES in #(
+  *\'*) :
+    eval set x "$CONFIG_FILES" ;; #(
+  *) :
+    set x $CONFIG_FILES ;; #(
+  *) :
+     ;;
+esac
   shift
-  for mf
+  # Used to flag and report bootstrapping failures.
+  am_rc=0
+  for am_mf
   do
     # Strip MF so we end up with the name of the file.
-    mf=`echo "$mf" | sed -e 's/:.*$//'`
-    # Check whether this is an Automake generated Makefile or not.
-    # We used to match only the files named 'Makefile.in', but
-    # some people rename them; so instead we look at the file content.
-    # Grep'ing the first line is not enough: some people post-process
-    # each Makefile.in and add a new line on top of each file to say so.
-    # Grep'ing the whole file is not good either: AIX grep has a line
+    am_mf=`$as_echo "$am_mf" | sed -e 's/:.*$//'`
+    # Check whether this is an Automake generated Makefile which includes
+    # dependency-tracking related rules and includes.
+    # Grep'ing the whole file directly is not great: AIX grep has a line
     # limit of 2048, but all sed's we know have understand at least 4000.
-    if sed -n 's,^#.*generated by automake.*,X,p' "$mf" | grep X >/dev/null 2>&1; then
-      dirpart=`$as_dirname -- "$mf" ||
-$as_expr X"$mf" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$mf" : 'X\(//\)[^/]' \| \
-	 X"$mf" : 'X\(//\)$' \| \
-	 X"$mf" : 'X\(/\)' \| . 2>/dev/null ||
-$as_echo X"$mf" |
+    sed -n 's,^am--depfiles:.*,X,p' "$am_mf" | grep X >/dev/null 2>&1 \
+      || continue
+    am_dirpart=`$as_dirname -- "$am_mf" ||
+$as_expr X"$am_mf" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$am_mf" : 'X\(//\)[^/]' \| \
+	 X"$am_mf" : 'X\(//\)$' \| \
+	 X"$am_mf" : 'X\(/\)' \| . 2>/dev/null ||
+$as_echo X"$am_mf" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
 	    s//\1/
 	    q
@@ -9230,53 +9275,48 @@ $as_echo X"$mf" |
 	    q
 	  }
 	  s/.*/./; q'`
-    else
-      continue
-    fi
-    # Extract the definition of DEPDIR, am__include, and am__quote
-    # from the Makefile without running 'make'.
-    DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
-    test -z "$DEPDIR" && continue
-    am__include=`sed -n 's/^am__include = //p' < "$mf"`
-    test -z "$am__include" && continue
-    am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
-    # Find all dependency output files, they are included files with
-    # $(DEPDIR) in their names.  We invoke sed twice because it is the
-    # simplest approach to changing $(DEPDIR) to its actual value in the
-    # expansion.
-    for file in `sed -n "
-      s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
-	 sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g'`; do
-      # Make sure the directory exists.
-      test -f "$dirpart/$file" && continue
-      fdir=`$as_dirname -- "$file" ||
-$as_expr X"$file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$file" : 'X\(//\)[^/]' \| \
-	 X"$file" : 'X\(//\)$' \| \
-	 X"$file" : 'X\(/\)' \| . 2>/dev/null ||
-$as_echo X"$file" |
-    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
+    am_filepart=`$as_basename -- "$am_mf" ||
+$as_expr X/"$am_mf" : '.*/\([^/][^/]*\)/*$' \| \
+	 X"$am_mf" : 'X\(//\)$' \| \
+	 X"$am_mf" : 'X\(/\)' \| . 2>/dev/null ||
+$as_echo X/"$am_mf" |
+    sed '/^.*\/\([^/][^/]*\)\/*$/{
 	    s//\1/
 	    q
 	  }
-	  /^X\(\/\/\)[^/].*/{
+	  /^X\/\(\/\/\)$/{
 	    s//\1/
 	    q
 	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
+	  /^X\/\(\/\).*/{
 	    s//\1/
 	    q
 	  }
 	  s/.*/./; q'`
-      as_dir=$dirpart/$fdir; as_fn_mkdir_p
-      # echo "creating $dirpart/$file"
-      echo '# dummy' > "$dirpart/$file"
-    done
+    { echo "$as_me:$LINENO: cd "$am_dirpart" \
+      && sed -e '/# am--include-marker/d' "$am_filepart" \
+        | $MAKE -f - am--depfiles" >&5
+   (cd "$am_dirpart" \
+      && sed -e '/# am--include-marker/d' "$am_filepart" \
+        | $MAKE -f - am--depfiles) >&5 2>&5
+   ac_status=$?
+   echo "$as_me:$LINENO: \$? = $ac_status" >&5
+   (exit $ac_status); } || am_rc=$?
   done
+  if test $am_rc -ne 0; then
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "Something went wrong bootstrapping makefile fragments
+    for automatic dependency tracking.  Try re-running configure with the
+    '--disable-dependency-tracking' option to at least be able to build
+    the package (albeit without support for automatic dependency tracking).
+See \`config.log' for more details" "$LINENO" 5; }
+  fi
+  { am_dirpart=; unset am_dirpart;}
+  { am_filepart=; unset am_filepart;}
+  { am_mf=; unset am_mf;}
+  { am_rc=; unset am_rc;}
+  rm -f conftest-deps.mk
 }
  ;;
 
