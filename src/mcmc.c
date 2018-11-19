@@ -35,6 +35,13 @@
  *
  */
 
+#undef  DEBUG_TIME
+
+#if defined (DEBUG_TIME)
+#define _POSIX_C_SOURCE 199309L
+#include <sys/time.h>
+#endif
+
 #include "bayes.h"
 #include "best.h"
 #include "command.h"
@@ -2080,12 +2087,28 @@ void CopySiteScalers (ModelInfo *m, int chain)
         j = m->siteScalerScratchIndex;
         for (i=0; i<m->nCijkParts; i++)
             {
-            beagleResetScaleFactors (m->beagleInstance,
-                                     m->siteScalerIndex[chain] + i);
-            beagleAccumulateScaleFactors (m->beagleInstance,
-                                          &j,
-                                          1,
-                                          m->siteScalerIndex[chain] + i);
+            if (m->useBeagleMultiPartitions == NO)
+                {
+                beagleResetScaleFactors (m->beagleInstance,
+                                         m->siteScalerIndex[chain] + i);
+                beagleAccumulateScaleFactors (m->beagleInstance,
+                                              &j,
+                                              1,
+                                              m->siteScalerIndex[chain] + i);
+                }
+            else
+#   if defined (BEAGLE_V3_ENABLED)
+                {
+                beagleResetScaleFactorsByPartition (m->beagleInstance,
+                                                    m->siteScalerIndex[chain] + i,
+                                                    m->divisionIndex);
+                beagleAccumulateScaleFactorsByPartition (m->beagleInstance,
+                                                         &j,
+                                                         1,
+                                                         m->siteScalerIndex[chain] + i,
+                                                         m->divisionIndex);                        
+                }
+#   endif /* BEAGLE_V3_ENABLED */
             j++;
             }
         return;
@@ -2159,6 +2182,12 @@ void CopyTrees (int chain)
         for (i=0; i<from->nIntNodes; i++)
             {
             to->intDownPass[i] = to->nodes + from->intDownPass[i]->memoryIndex;
+#if defined (BEAGLE_V3_ENABLED)
+            if (from->levelPassEnabled)
+                {
+                to->intDownPassLevel[i] = to->nodes + from->intDownPassLevel[i]->memoryIndex;
+                }
+#endif
             }
         for (i=0; i<from->nNodes; i++)
             {
@@ -4633,7 +4662,10 @@ void FreeChainMemory (void)
         if (m->useBeagle == NO)
             continue;
 
-        beagleFinalizeInstance(m->beagleInstance);
+        if (!(m->useBeagleMultiPartitions == YES && m->divisionIndex > 0)) {
+            beagleFinalizeInstance(m->beagleInstance);
+            m->beagleInstance = -99; // TODO: allow consecutive 'mcmc' runs using BEAGLE
+        }
         SAFEFREE(m->logLikelihoods);
         SAFEFREE(m->inRates);
         SAFEFREE(m->branchLengths);
@@ -4655,10 +4687,24 @@ void FreeChainMemory (void)
         SAFEFREE(m->isScalerNode);
 
         SAFEFREE(m->beagleComputeCount);
-        SAFEFREE(m->succesCount);
+        SAFEFREE(m->successCount);
         SAFEFREE(m->rescaleFreq);
-
-#   endif
+        SAFEFREE(m->operations);
+        SAFEFREE(m->scaleFactorsOps);
+#   if defined (BEAGLE_V3_ENABLED)
+        if (m->useBeagleMultiPartitions == YES)
+            {
+            if (m->divisionIndex == 0)
+                {
+                SAFEFREE(m->logLikelihoodsAll);
+                SAFEFREE(m->cijkIndicesAll);
+                SAFEFREE(m->categoryRateIndicesAll);
+                SAFEFREE(m->operationsAll);
+                }
+            SAFEFREE(m->operationsByPartition);
+            }
+#   endif /* BEAGLE_V3_ENABLED */
+#   endif /* BEAGLE_ENABLED */
         }
 
     if (memAllocs[ALLOC_CURLNL] == YES) /*alloc in RunChain()*/
@@ -5729,8 +5775,12 @@ int InitChainCondLikes (void)
     int         j1;
 #   endif
 #   if defined (BEAGLE_ENABLED)
+    int         useBeagleMultiPartitions, divisionOffset;
     double      *nSitesOfPat;
     MrBFlt      freq;
+#   endif
+#   if defined (BEAGLE_V3_ENABLED)
+    int         *nPartsOfPat;
 #   endif
 
     /* Figure out how large cond like array is needed, and how many cond like, scaler and tiprob arrays are needed.
@@ -5861,6 +5911,15 @@ int InitChainCondLikes (void)
     else
         return NO_ERROR;
 
+#   if defined (BEAGLE_ENABLED)
+    useBeagleMultiPartitions = NO;
+#   endif
+
+#   if defined (BEAGLE_V3_ENABLED)
+    if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
+        useBeagleMultiPartitions = YES;
+#   endif
+
     /* allocate space and fill in info for tips */
     for (d=0; d<numCurrentDivisions; d++)
         {
@@ -5871,7 +5930,9 @@ int InitChainCondLikes (void)
 #   if defined (BEAGLE_ENABLED)
         if (m->useBeagle == YES)
             {
-            if (InitBeagleInstance(m, d) != ERROR)
+            if (useBeagleMultiPartitions == YES)
+                useBeagle = YES;
+            else if (InitBeagleInstance(m, d) != ERROR)
                 useBeagle = YES;
             else
                 m->useBeagle = NO;
@@ -6218,7 +6279,7 @@ int InitChainCondLikes (void)
         /* used only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
         if (m->useBeagle == YES)
             {
-            m->succesCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
+            m->successCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
             m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains);
             t=BEAGLE_RESCALE_FREQ/m->numModelStates;
             if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE) /*if double presition is used*/
@@ -6253,12 +6314,19 @@ int InitChainCondLikes (void)
             /* Set up nSitesOfPat for Beagle */
             if (m->useBeagle == YES)
                 {
-                nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
-                for (c=0; c<m->numChars; c++)
-                    nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                beagleSetPatternWeights(m->beagleInstance, nSitesOfPat);
-                free (nSitesOfPat);
-                nSitesOfPat = NULL;
+                if (useBeagleMultiPartitions == NO)
+                    {
+                    nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
+                    for (c=0; c<m->numChars; c++)
+                        nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
+                    beagleSetPatternWeights(m->beagleInstance,
+                                            nSitesOfPat);
+                    free (nSitesOfPat);
+                    nSitesOfPat = NULL;
+                     /* Set up scalers for Beagle */
+                    for (i=0; i<m->numScalers*m->nCijkParts; i++)
+                        beagleResetScaleFactors(m->beagleInstance, i);
+                    }
 
                 /* find category frequencies */
                 if (m->pInvar == NO)
@@ -6268,22 +6336,24 @@ int InitChainCondLikes (void)
                     /* set category frequencies in beagle instance */
                     if (m->numOmegaCats <= 1)
                         {
+                        divisionOffset = 0;
+                        if (m->useBeagleMultiPartitions == YES)
+                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
+
                         for (i=0; i<m->numRateCats; i++)
                             m->inWeights[i] = freq;
-                        for (i=0; i< (numLocalChains); i++) {
+                        for (i=0; i< (numLocalChains); i++)
+                            {
                             beagleSetCategoryWeights(m->beagleInstance,
-                                                     m->cijkIndex[i],
+                                                     m->cijkIndex[i] + divisionOffset,
                                                      m->inWeights);
                             }
                         beagleSetCategoryWeights(m->beagleInstance,
-                                                 m->cijkScratchIndex,
+                                                 m->cijkScratchIndex + divisionOffset,
                                                  m->inWeights);
                         }
                     }
                 
-                /* Set up scalers for Beagle */
-                for (i=0; i<m->numScalers*m->nCijkParts; i++)
-                    beagleResetScaleFactors(m->beagleInstance, i);
                 }
 #   endif
 
@@ -6429,6 +6499,38 @@ int InitChainCondLikes (void)
                 return (ERROR);
             }
         }
+
+#if defined (BEAGLE_V3_ENABLED)
+    if (useBeagleMultiPartitions == YES)
+        {
+        nSitesOfPat = (double *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(double));
+        nPartsOfPat = (int    *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(int   ));
+        j = 0;
+        for (d=0; d<numCurrentDivisions; d++)
+            {
+            m = &modelSettings[d];
+            for (c=0; c<m->numChars; c++)
+                {
+                nSitesOfPat[j] = numSitesOfPat[m->compCharStart + c];
+                nPartsOfPat[j] = m->divisionIndex;
+                j++;
+                }
+            }
+        beagleSetPatternWeights(modelSettings[0].beagleInstance,
+                                nSitesOfPat);
+        beagleSetPatternPartitions(modelSettings[0].beagleInstance,
+                                   numCurrentDivisions,
+                                   nPartsOfPat);
+        free (nSitesOfPat);
+        free (nPartsOfPat);
+        nSitesOfPat = NULL;
+        nPartsOfPat = NULL;
+         /* Set up scalers for Beagle */
+        for (i=0; i<modelSettings[0].numScalers*modelSettings[0].nCijkParts; i++)
+            beagleResetScaleFactors(modelSettings[0].beagleInstance, i);
+        }
+#endif
+
     /* allocate space for precalculated likelihoods */
     j = 0;
     for (d=0; d<numCurrentDivisions; d++)
@@ -6615,9 +6717,12 @@ int InitInvCondLikes (void)
             for (i=0; i<c1; i++)
                 m->invCondLikes[i] = 0.0f;
             }
-#   else
-        m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+        else
 #   endif
+            {
+            m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+            }
+
         if (!m->invCondLikes)
             return ERROR;
         }
@@ -6665,80 +6770,85 @@ int InitInvCondLikes (void)
             {
             assert (m->numModelStates == m->numStates);
 #   if defined (SSE_ENABLED)
-             for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
+            if ( m->useVec != VEC_NONE )
                 {
-                for (s=0; s<m->numModelStates; s++)
+                for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
                     {
-                    for (c1=0; c1<m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
                         }
                     }
-                }
-             if (m->numChars % m->numFloatsPerVec != 0)
-                {
-                for (s=0; s<m->numModelStates; s++)
+                 if (m->numChars % m->numFloatsPerVec != 0)
                     {
-                    for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
-                        }
-                    for (; c1<m->numFloatsPerVec; c1++)
-                        {
-                        *cI = 1.0;
-                        cI++;
-                        }
-                    }
-                }
-#   else
-            for (c=0; c<m->numChars; c++)
-                {
-                for (s=0; s<m->numModelStates; s++)
-                    {
-                    isConstant = YES;
-                    for (i=0; i<numLocalTaxa; i++)
-                        {
-                        charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
-                        if (IsBitSet(s, charBits) == NO)
+                        for (; c1<m->numFloatsPerVec; c1++)
                             {
-                            isConstant = NO;
-                            break;
+                            *cI = 1.0;
+                            cI++;
                             }
                         }
-                    if (isConstant == YES)
-                        *cI = 1.0;
-                    cI++;
                     }
                 }
+            else
 #   endif
+                {
+                for (c=0; c<m->numChars; c++)
+                    {
+                    for (s=0; s<m->numModelStates; s++)
+                        {
+                        isConstant = YES;
+                        for (i=0; i<numLocalTaxa; i++)
+                            {
+                            charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
+                            if (IsBitSet(s, charBits) == NO)
+                                {
+                                isConstant = NO;
+                                break;
+                                }
+                            }
+                        if (isConstant == YES)
+                            *cI = 1.0;
+                        cI++;
+                        }
+                    }
+                }
             }
         }   /* next division */
 
@@ -7352,6 +7462,16 @@ MrBFlt LogLike (int chain)
     return (chainLnLike);
 #   endif
 
+#   if defined (BEAGLE_V3_ENABLED)
+    if (modelSettings[0].useBeagleMultiPartitions == YES)
+        {
+        /* Launch all divisions that require updating in one Beagle instance, concurrently */
+        LaunchLogLikeForBeagleMultiPartition(chain, &chainLnLike);
+        }
+    else
+        {
+#   endif
+
     /* Cycle through divisions and recalculate tis and cond likes as necessary. */
     /* Code below does not try to avoid recalculating ti probs for divisions    */
     /* that could share ti probs with other divisions.                          */
@@ -7373,7 +7493,13 @@ MrBFlt LogLike (int chain)
             return MRBFLT_NEG_MAX;
         chainLnLike += m->lnLike[2*chain + state[chain]];   
         }
-        
+
+#   if defined (BEAGLE_V3_ENABLED)
+        }
+#   endif
+#if defined (DEBUG_MB_BEAGLE_MULTIPART)
+    printf("chainLnLike = %f\n", chainLnLike);
+#endif        
 
     /* unmark all divisions */
     if (chainHasAdgamma == YES)
@@ -15721,7 +15847,13 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 #if defined (BEAGLE_ENABLED)
     if (m->useBeagle == YES)
         {
-        beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
+        if (m->useBeagleMultiPartitions == NO)
+            beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
+        else
+#   if defined (BEAGLE_V3_ENABLED)
+            beagleResetScaleFactorsByPartition(m->beagleInstance, m->siteScalerIndex[chain], m->divisionIndex);
+#   endif /* BEAGLE_V3_ENABLED */
+        /* TODO: check if nCijkParts scale factors should also be reset here */
         return;
         }
 #endif
@@ -15896,28 +16028,18 @@ int RunChain (RandLong *seed)
     MCMCMove    *theMove, *mv;
     time_t      startingT, endingT, stoppingT1, stoppingT2;
     clock_t     previousCPUTime, currentCPUTime;
+#   if defined (DEBUG_TIME)
+    struct timespec tw1, tw2;
+#   endif
     /* Stepping-stone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
     MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
     char        ckpFileName[220], bkupFileName[220];
 
 #   if defined (BEAGLE_ENABLED)
-    int         ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
 #       ifdef DEBUG_BEAGLE
     int         beagleScalingSchemeOld;
 #       endif
-    ModelInfo   *m;
-    ResetScalersNeeded = NO;
-    
-    for (i=0; i<numCurrentDivisions; i++)
-        {
-        m = &modelSettings[i];
-        if (m->useBeagle == NO || beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
-            {
-            ResetScalersNeeded =YES;
-            break;
-            }
-        }
 #   endif
 
 #   if defined (MPI_ENABLED)
@@ -16507,6 +16629,9 @@ int RunChain (RandLong *seed)
         maxLnL0[i] = -100000000.0;
 
     startingT=time(0);
+#   if defined (DEBUG_TIME)
+    clock_gettime(CLOCK_MONOTONIC, &tw1);
+#   endif
     CPUTime = 0.0;
     previousCPUTime = clock();
 
@@ -17263,6 +17388,9 @@ int RunChain (RandLong *seed)
 
         } /* end run chain */
     endingT = time(0);
+#   if defined (DEBUG_TIME)
+    clock_gettime(CLOCK_MONOTONIC, &tw2);
+#   endif
     currentCPUTime = clock();
     CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
 
@@ -17316,6 +17444,10 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   Analysis completed in 1 second\n", spacer);
     else
         MrBayesPrint ("%s   Analysis completed in less than 1 second\n", spacer);
+
+#   if defined (DEBUG_TIME)
+    MrBayesPrint ("%s   Analysis used %1.2f seconds of total time\n", spacer, (MrBFlt) (1000.0*tw2.tv_sec + 1e-6*tw2.tv_nsec - (1000.0*tw1.tv_sec + 1e-6*tw1.tv_nsec))/1000);
+#   endif
 
 #   if defined (MPI_ENABLED)
     MrBayesPrint ("%s   Analysis used %1.2f seconds of CPU time on processor 0\n", spacer, (MrBFlt) CPUTime);

@@ -497,6 +497,11 @@ int InitializeMrBayes (void)
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
     beagleScalingFrequency = 1000;  
+#   if defined (BEAGLE_V3_ENABLED)
+    beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
+    beagleThreadCount = 99;                           /* default to auto threading */
+    beagleAllFloatTips = NO;                          /* default to using compact tips */
+#   endif
 #   endif
 
     /* set the proposal information */
