@@ -33,5 +33,5 @@ MBDating.pdf: \
 else
 MBDating.pdf:
 	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
-	exit 1
+	exit 0
 endif
