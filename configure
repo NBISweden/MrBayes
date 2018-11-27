@@ -5458,6 +5458,7 @@ if test "x$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" = xyes; then :
 
 $as_echo "#define BEAGLE_V3_ENABLED 1" >>confdefs.h
 
+                BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"
 fi
 
          LDFLAGS="$old_ldflags"
