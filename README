@@ -7,21 +7,22 @@ inference of phylogeny.
 Build instructions, very very short version:
 
     1. Clone the Git repository.
+       This is best done through
+
+        git clone --depth=1 https://github.com/NBISweden/MrBayes.git
+
     2. Refer to the document called "INSTALL" for further information.
 
 
 Current repository directory layout:
 
     .
-    ├── build          : Tools needed to build the project- 
-    │                      specific libraries etc
+    ├── am-*           : Files relating to the build system
     ├── doc
     │   ├── manual     : The manual
-    │   └── tutorial   : Tutorial 
+    │   └── tutorial   : A tutorial
     ├── examples       : Example input data sets
-    ├── m4             : Macro directory for automake
     └── src            : C source code
-
 
 
 The new web site is available at
@@ -52,5 +53,6 @@ probably be geared more towards bug-fixes rather than addition of new
 features.
 
 With kind regards,
-    Andreas (Kusalananda) Kähäri, Johan Nylander
+    Andreas (Kusalananda) Kähäri, and
+    Johan Nylander
     NBIS
