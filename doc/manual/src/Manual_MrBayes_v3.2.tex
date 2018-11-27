@@ -1,8 +1,8 @@
 \documentclass[12pt]{book}
-\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
-\geometry{a4paper}                   % ... or a4paper or a5paper or ... 
-%\geometry{landscape}                % Activate for for rotated page geometry
-\usepackage[parfill]{parskip}     % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{geometry}           % See geometry.pdf to learn the layout options. There are lots.
+\geometry{a4paper}              % ... or a4paper or a5paper or ... 
+%\geometry{landscape}           % Activate for for rotated page geometry
+\usepackage[parfill]{parskip}   % Activate to begin paragraphs with an empty line rather than an indent
 \usepackage{graphicx}
 \usepackage{amssymb}
 %\usepackage{epstopdf}
@@ -143,6 +143,7 @@ MrBayes 3 is distributed without charge by download from the MrBayes web site,
 that you download the most recent version from the official MrBayes site. The site also gives 
 information about the MrBayes users email list and describes how you can report bugs or 
 contribute to the project.
+%%%% JN: Nov-18: This section about OS-specific installers needs to be rewritten
 
 MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
 behaves virtually the same on all platforms --- Macintosh, Windows and Unix. There is a
@@ -151,8 +152,9 @@ an installer that will install the program for you.
 
 The \emph{Macintosh} installer will put an executable in a default location that should be in
 your path. After installation, you run MrBayes by opening a terminal window (for instance using
-the Terminal application, which you will find in the Utilities folder in your Applications folder), and then
-simply typing \textbf{mb} on the command line. The example data files and the documentation are installed in a MrBayes folder in your Applications directory.
+the Terminal application, which you will find in the Utilities folder in your Applications folder),
+and then simply typing \textbf{mb} on the command line. The example data files and the 
+documentation are installed in a MrBayes folder in your Applications directory.
 
 The Macintosh installer will also install the BEAGLE library, which you can use
 to speed up likelihood calculations. The BEAGLE option is particularly useful if you have
@@ -607,9 +609,9 @@ The \texttt{Shapepr} parameter determines the prior for the $\alpha$ (shape) par
  distribution of rate variation. We will leave it at its default setting, an Exponential distribution
  with mean 1.0. This will put highest probability on low $\alpha$ values. 
  %%%% JN: Expand the text! Add a Figure ?
- The prior for the proportion of invariable sites is set with
- \texttt{Pinvarpr}. The default setting is a uniform distribution between 0 and 1, an appropriate setting
- if we don't want to assume any prior knowledge about the proportion of invariable sites.
+ The prior for the proportion of invariable sites is set with \texttt{Pinvarpr}. The default setting
+ is a uniform distribution between 0 and 1, an appropriate setting if we don't want to assume any prior
+ knowledge about the proportion of invariable sites.
 
 For topology, the default \texttt{Uniform} setting for the \texttt{Topologypr} parameter puts equal
  probability on all distinct, fully resolved topologies. The alternative is to introduce some constraints
