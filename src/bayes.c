@@ -197,9 +197,6 @@ int main (int argc, char *argv[])
     /* Initialize the variables of the program. */
     InitializeMrBayes ();
     
-    /* Print the nifty header. */
-    PrintHeader ();
-    
     /* Go to the command line, process any arguments passed to the program
        and then wait for input. */
     i = CommandLine (argc, argv);
@@ -336,6 +333,9 @@ int CommandLine (int argc, char **argv)
         quitOnError = YES;
         }
 #endif
+
+    /* Display MrBayes header *after* parsing the command line un Unix systems */
+    PrintHeader();
 
     for (;;)
         {
