@@ -1,6 +1,14 @@
 MrBayes 3.2.7-dev (development not-yet-3.2.7 version)
 ========================================================================
 
+Make a shallow clone of the repository:
+
+    git clone --depth=1 https://github.com/NBISweden/MrBayes.git
+
+(a shallow clone requires less than 30 Mb of disk space, a full clone
+requires about 205 Mb)
+
+
 Building MrBayes using the supplied "configure" script:
 ------------------------------------------------------------------------
 
@@ -47,7 +55,7 @@ configuration and build system.  To tinker with "configure.ac" and
 "Makefile.am" and then to regenerate the "configure" script and
 associated files, there are some prerequisites that need to be in place:
 
-* Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
+* Make sure Automake 1.16 (http://www.gnu.org/software/automake/)
   is installed.
 
 * Make sure Autoconf 2.69 (http://www.gnu.org/software/autoconf/)
@@ -68,7 +76,7 @@ architecture-dependent compiler flags.  Therefore,
   the GNU autotools (OpenBSD for example):
 
         $ export AUTOCONF_VERSION=2.69
-        $ export AUTOMAKE_VERSION=1.15
+        $ export AUTOMAKE_VERSION=1.16
 
 * On Ubuntu Linux, installing the following packages installs all of the
   above prerequisites:

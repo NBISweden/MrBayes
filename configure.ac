@@ -4,8 +4,8 @@
 AC_PREREQ([2.69])
 AC_INIT([MrBayes],[pre-3.2.7])
 
-AC_CONFIG_AUX_DIR([build])
-AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_AUX_DIR([am-aux])
+AC_CONFIG_MACRO_DIRS([am-macros])
 
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
@@ -243,8 +243,6 @@ AS_IF([test "x$enable_fma" = "xno"],
         [FMA code path should not be compiled.])])
 
 # Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 
 AC_CONFIG_FILES([Makefile
@@ -255,3 +253,5 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
 ])
 AC_OUTPUT
+m4_unquote(
+  _m4_defn([_m4_wrap_text])_m4_popdef([_m4_wrap_text]))
