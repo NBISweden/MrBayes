@@ -21,11 +21,11 @@ compile and optionally install MrBayes:
   MrBayes, or how to install in non-standard locations etc., and also
   read further down in this document):
 
-        $ ./configure
+    ./configure
 
 * Make (i.e. compile) the project:
 
-        $ make
+    make
 
   Note that if "pdflatex" or "bibtex" could not be found by the
   "configure" script, the PDF documentation in doc/manual and
@@ -39,12 +39,32 @@ compile and optionally install MrBayes:
   prefix ("/usr/local") is changed with the "--prefix" option when
   running "configure".
 
-        $ make install
+    make install
+
+* We also support configuring and building the project away from the
+  checked out source repository.  This avoides littering the source
+  repository checkout with temporary files.  This is done through the
+  following steps:
+
+  1. Create and enter a build directory somewhere (its name and location
+     is arbitrary)
+
+        mkdir build
+        cd build
+
+  2. Call the "configure" script
+
+        location-of-MrBayes-checkout/configure
+
+  3. Build and optionally install the project
+
+        make
+        make install
 
 To build a statically linked version of MrBayes, set the environment
 variable LDFLAGS to "-static" when configuring:
 
-    $ env LDFLAGS=-static ./configure
+    env LDFLAGS=-static ./configure
 
 
 Building MrBayes using the GNU autotools (Autoconf and Automake):
@@ -55,7 +75,7 @@ configuration and build system.  To tinker with "configure.ac" and
 "Makefile.am" and then to regenerate the "configure" script and
 associated files, there are some prerequisites that need to be in place:
 
-* Make sure Automake 1.16 (http://www.gnu.org/software/automake/)
+* Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
   is installed.
 
 * Make sure Autoconf 2.69 (http://www.gnu.org/software/autoconf/)
@@ -75,8 +95,8 @@ architecture-dependent compiler flags.  Therefore,
 * On some systems that uses metaauto for wrapping multiple versions of
   the GNU autotools (OpenBSD for example):
 
-        $ export AUTOCONF_VERSION=2.69
-        $ export AUTOMAKE_VERSION=1.16
+    export AUTOCONF_VERSION=2.69
+    export AUTOMAKE_VERSION=1.15
 
 * On Ubuntu Linux, installing the following packages installs all of the
   above prerequisites:
@@ -94,7 +114,7 @@ When all the prerequisites are in place:
 
 * Run "autoreconf" to generate the "configure" script:
 
-        $ autoreconf -i
+    autoreconf -i
 
 * Then continue as outlined earlier in this document.
 
@@ -128,24 +148,23 @@ script is run with "--without-beagle", Beagle will not be used.
 If Beagle is installed in a non-default location, there are three ways
 of telling the "configure" script how to find it:
 
-1.  Use the flag "--with-beagle=PATH" where "PATH" is the prefix path
-    where the Beagle headers and libraries may be found.  For example
-    "$HOME/local", "/opt" etc.  The paths "/usr/local" and "/usr" are
-    tested if no path is specified.
+* Use the flag "--with-beagle=PATH" where "PATH" is the prefix path
+  where the Beagle headers and libraries may be found.  For example
+  "$HOME/local", "/opt" etc.  The paths "/usr/local" and "/usr" are
+  tested if no path is specified.
 
-2.  Point the "PKG_CONFIG_PATH" environment variable to the "pkgconfig"
-    directory that Beagle installed its "hmsbeagle-1.pc" file into.
-    This file is installed if Beagle was compiled from sources, and
-    may be found in the installation's "lib" directory.  The detection
-    of Beagle will fall back on using "pkg-config" which picks up this
-    file.
+* Point the "PKG_CONFIG_PATH" environment variable to the "pkgconfig"
+  directory that Beagle installed its "hmsbeagle-1.pc" file into.  This
+  file is installed if Beagle was compiled from sources, and may be
+  found in the installation's "lib" directory.  The detection of Beagle
+  will fall back on using "pkg-config" which picks up this file.
 
-3.  As a last resort, it's also possible to set the "BEAGLE_CFLAGS" and
-    "BEAGLE_LIBS" environment variables prior to running "configure":
+* As a last resort, it's also possible to set the "BEAGLE_CFLAGS" and
+ "BEAGLE_LIBS" environment variables prior to running "configure":
 
-    $ env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
-          BEAGLE_LIBS="-L$HOME/local/lib -lhmsbeagle" \
-          ./configure
+    env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
+        BEAGLE_LIBS="-L$HOME/local/lib -lhmsbeagle" \
+        ./configure
 
 
 Picking up and using MPI:
@@ -161,7 +180,7 @@ MPI parallelization.
 You may set the "MPICC" environment variable to the name or path of a
 specific MPI C compiler, if you have many to choose from:
 
-    $ env MPICC="/usr/local/bin/mpicc" ./configure --with-mpi
+        env MPICC="/usr/local/bin/mpicc" ./configure --with-mpi
 
 
 About support for the GNU Readline library:
@@ -183,7 +202,7 @@ command line history between sessions, but no command tab-completion.
 To use rlwrap with an MPI-enabled MrBayes, simply start MrBayes like
 this:
 
-    $ rlwrap mb
+        rlwrap mb
 
 
 # vim: filetype=text
