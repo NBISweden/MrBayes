@@ -238,6 +238,7 @@ int CommandLine (int argc, char **argv)
         case 'h': /* help */
             /* Display (very short) command synopsis and terminate
              * succesfully */
+            puts("MrBayes, Bayesian Analysis of Phylogeny\n");
             puts("Usage:");
             printf("\t%s [-i] [filename ...]\n", argv[0]);
             printf("\t%s -v\n", argv[0]);
@@ -261,6 +262,7 @@ int CommandLine (int argc, char **argv)
         case 'v': /* version */
                   /* Display the same information that is displayed by the
                    * "Version" interactive command and terminate succesfully */
+            puts("MrBayes, Bayesian Analysis of Phylogeny\n");
             printf("Version:   %s\n", VERSION_NUMBER);
             fputs("Features: ", stdout);
 #ifdef SSE_ENABLED
