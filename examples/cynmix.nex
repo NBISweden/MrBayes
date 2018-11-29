@@ -679,9 +679,8 @@ begin mrbayes;
     charset LWRh = 1612-2092;
     charset 28S = 2093-3246;
     partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
-    set partition = favored;
 
-    [The following lines set up a particular model (the one discussed in the MrBayes manual. Uncomment this block
+    [The following lines set up a particular model (the one discussed in the MrBayes manual). Uncomment this block
     if you want to set up the model when executing this file instead of specifying it yourself.]
 
     [

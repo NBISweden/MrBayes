@@ -1395,8 +1395,6 @@ interleaved format, with each block consisting of a natural subset of the matrix
 data or one of the gene regions.
 
 \section{Dividing the Data into Partitions}
-%%%%% JN Nov-29: The description here is dependent on a file "cynmix-run.nex" that are no longer present.
-%%%%% JN: I suggest changing BOTH here and in the cynmix.nex file (coomenting-out the entire mb block)
 
 By default, MrBayes partitions the data according to data type. There are only two data types in the matrix, 
 so the default model will include only a morphology (standard) and a DNA partition. To divide the DNA 
@@ -1404,7 +1402,7 @@ partition into gene regions or other appropriate subsets, it is convenient to fi
 In principle, this can be done from the command line but it is easier to do it in a MrBayes block in the 
 data file. At the end of the \texttt{cynmix.nex}, there is such a block (starting with \texttt{begin mrbayes;}).
 Any text between square brackets \texttt{[]} are comments and ignored by MrBayes.
-Note also that each command ends with a semicolon (\texttt{;}).
+Note also that each command ends with a semicolon.
 
 The relevant lines for setting up partitions starts with the command \texttt{charset}. That command simply
 associates a name with a set of characters. For instance, the character set \texttt{COI} is defined to
@@ -1422,9 +1420,14 @@ The elements of the \texttt{partition} command are: (1) the name of the partitio
 (4) a colon (:); and (5) a list of the characters in each division, separated by commas. The list of 
 characters can simply be an enumeration of the character numbers (the above line is equivalent to 
 \texttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but it is often more 
-convenient to use predefined character sets as given in the mrbayes block. The final step is to tell 
-MrBayes that we want to work with this partitioning of the data instead of the default partitioning. 
-We do this using the \texttt{set} command:
+convenient to use predefined character sets as given in the mrbayes block. 
+The \texttt{end} statement closes the MrBayes block.
+
+When we read this block into MrBayes, we will have defined variables that can be used for setting up
+a partitioned analysis with the first character division being morphology, the second division being the COI 
+gene, etc. Exit your text editor, launch MrBayes and type \textbf{execute cynmix.nex} to read in your data
+and the variables. The final step is to tell MrBayes that we want to work with this partitioning of the
+data instead of the default partitioning. We do this using the \texttt{set} command:
 
 \begin{singlespacing}
 \small
@@ -1434,11 +1437,6 @@ We do this using the \texttt{set} command:
 \normalsize
 \end{singlespacing}
 
-The \texttt{end} statement closees the MrBayes block.
-
-When we read this block into MrBayes, we will get a partitioned model with the first character division 
-being morphology, the second division being the COI gene, etc. Exit your text editor, launch MrBayes and 
-type \textbf{execute cynmix.nex} to read in your data and set up the partitioning scheme.
 
 \section{Specifying a Partitioned Model}
 
