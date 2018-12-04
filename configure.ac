@@ -168,7 +168,8 @@ AS_IF([test "x$with_beagle" != "xno"], [
                  beagle_found="yes"])
 
             AS_IF([test "x$beagle_found" = "xyes"], [break 2],
-                  [unset BEAGLE_LIBS BEAGLE_CFLAGS
+                  [AS_UNSET([BEAGLE_LIBS])
+                   AS_UNSET([BEAGLE_CFLAGS])
                    AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
         done
     done
