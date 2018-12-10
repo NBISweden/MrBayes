@@ -5299,7 +5299,8 @@ fi
         if test "x$beagle_found" = "xyes"; then :
   break 2
 else
-  unset BEAGLE_LIBS BEAGLE_CFLAGS
+  { BEAGLE_LIBS=; unset BEAGLE_LIBS;}
+               { BEAGLE_CFLAGS=; unset BEAGLE_CFLAGS;}
 
     for ax_var in libhmsbeagle_beagle_h
 do :
