@@ -1,18 +1,6 @@
 #ifndef __BAYES_H__
 #define __BAYES_H__
 
-#include <assert.h>
-#include <ctype.h>
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <time.h>
-
 #ifdef HAVE_CONFIG_H
 #   include "config.h"
 #   define VERSION_NUMBER  PACKAGE_VERSION
@@ -29,6 +17,23 @@
 #   undef  MPI_ENABLED
 #   undef  BEAGLE_ENABLED
 #endif
+
+#ifdef HAVE_UNISTD_H
+#define _XOPEN_SOURCE
+#include <unistd.h>
+#endif
+
+#include <assert.h>
+#include <ctype.h>
+#include <float.h>
+#include <limits.h>
+#include <math.h>
+#include <memory.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
 
 /* Set SSE_ENABLED if SSE SIMD extensions available. */
 #ifdef HAVE_SSE
