@@ -5234,7 +5234,7 @@ fi
 $as_echo "$as_me: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&6;}
 
         CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib"
         LDLIBS="-lhmsbeagle"
 
         ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
@@ -5402,12 +5402,6 @@ fi
 fi
 else
 
-         # Add -Wl,-rpath,LIBDIR to the BEAGLE_LIBS flags as we need
-         # to be able to run MrBayes with Beagle linked in from a
-         # non-standard path.  This makes it possible to build and
-         # run MrBayes with Beagle installed under some place like
-         # $HOME/local.
-         BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath,$(pkg-config --variable=libdir "$beagle_pkg_name")"
          { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
 $as_echo "$as_me: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&5
