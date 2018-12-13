@@ -146,7 +146,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
         AC_MSG_NOTICE([Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'])
 
         CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib"
         LDLIBS="-lhmsbeagle"
 
         AC_CHECK_HEADER([libhmsbeagle/beagle.h],
@@ -183,12 +183,6 @@ AS_IF([test "x$with_beagle" != "xno"], [
                 [--with-beagle was given, but test for Beagle failed])]
         )], dnl AS_IF
         [
-         # Add -Wl,-rpath,LIBDIR to the BEAGLE_LIBS flags as we need
-         # to be able to run MrBayes with Beagle linked in from a
-         # non-standard path.  This makes it possible to build and
-         # run MrBayes with Beagle installed under some place like
-         # $HOME/local.
-         BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath,$(pkg-config --variable=libdir "$beagle_pkg_name")"
          AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
          AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
          AC_DEFINE([BEAGLE_ENABLED], [1],
