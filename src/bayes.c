@@ -594,7 +594,17 @@ int InitializeMrBayes (void)
 #       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #       else
-    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
+/* Try using Beagle */
+/*
+ * Note: The old (2015) comment from Chi says that there is some issue with
+ * single precision SSE code.  This issue is unknown to us at this point
+ * in time (2019, four years later).
+ *
+ * */
+
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
 #       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE always scaling                     */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
