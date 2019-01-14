@@ -615,6 +615,10 @@ int InitializeMrBayes (void)
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
     beagleScalingFrequency = 1000;  
+
+    beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;   /* Use Beagle in single precision mode */
+    beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;
+
 #   if defined (BEAGLE_V3_ENABLED)
     beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
     beagleThreadCount = 99;                           /* default to auto threading */
