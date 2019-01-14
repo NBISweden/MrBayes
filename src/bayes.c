@@ -614,7 +614,7 @@ int InitializeMrBayes (void)
     beagleResource = NULL;
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
-    beagleScalingFrequency = 1000;  
+    beagleScalingFrequency = 1000;
 
     beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;   /* Use Beagle in single precision mode */
     beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;

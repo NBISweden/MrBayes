@@ -6736,7 +6736,7 @@ int DoSetParm (char *parmName, char *tkn)
                     if (!strcmp(tempStr, "Single"))
                         {
                         beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;
-                        beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;                       
+                        beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;
                         }
                     else
                         {
