@@ -146,7 +146,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
         AC_MSG_NOTICE([Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'])
 
         CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath=$beagle_prefix/$beagle_sublib"
         LDLIBS="-lhmsbeagle"
 
         AC_CHECK_HEADER([libhmsbeagle/beagle.h],
@@ -173,7 +173,9 @@ AS_IF([test "x$with_beagle" != "xno"], [
 
              PKG_CHECK_MODULES([BEAGLE], [$beagle_pkg_name],
                 [AC_MSG_NOTICE([Found Beagle with pkg-config])
-                 beagle_found="yes"],
+                 beagle_found="yes"
+                 # Augument the BEAGLE_LIBS value with -Wl,-rpath=...
+                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-R$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"],
                 [beagle_found="no"])
     ]) dnl AS_IF
 
