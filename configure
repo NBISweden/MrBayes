@@ -5234,7 +5234,7 @@ fi
 $as_echo "$as_me: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&6;}
 
         CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath=$beagle_prefix/$beagle_sublib"
         LDLIBS="-lhmsbeagle"
 
         ac_fn_c_check_header_mongrel "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
@@ -5392,6 +5392,8 @@ $as_echo "yes" >&6; }
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: Found Beagle with pkg-config" >&5
 $as_echo "$as_me: Found Beagle with pkg-config" >&6;}
                  beagle_found="yes"
+                 # Augument the BEAGLE_LIBS value with -Wl,-rpath=...
+                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-R$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"
 fi
 
 fi
