@@ -1,6 +1,6 @@
 # Test MrBayes+BEAGLE3 using Docker containers
 
-- Last modified: Tue Jan 22, 2019  01:56PM
+- Last modified: Tue Jan 22, 2019  02:24PM
 - Sign: JN
 
 ## Description
@@ -15,7 +15,7 @@ resources (MrBayes command `showbeagle`).
 Evaluation of "success" or "failure" have to be done manually
 (by looking at the output).
 
-- Note 1: the `--dns` argument is needed locally behind NRM firewall.
+- Note 1: A `--dns IPNUMBER` argument is needed for docker when running locally behind NRM firewall.
 - Note 2: NVIDIA CUDA is not installed in the examples below.
 
 

@@ -1,13 +1,13 @@
 # Run MrBayes+BEAGLE3 inside Debian Sid Docker container
 
-- Last modified: Tue Jan 22, 2019  01:17PM
+- Last modified: Tue Jan 22, 2019  02:22PM
 - Sign: JN
 - Status: CUDA:NA, OpenCL:OK, OpenMPI:OK, BEAGLE3:OK, MB-MPI:OK, MB:OK
 - Comment: Can't get beagle to work from inside mb unless beagle is configured using `-rpath`, or, `LD_LIBRARY_PATH` is set before running mb.
 
 # Install and run
 
-    $ docker run --dns 172.16.0.9 -it debian:sid /bin/bash
+    $ docker run -it debian:sid /bin/bash
 
     # Base system
     mywd=$(pwd)
