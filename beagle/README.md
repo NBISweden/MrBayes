@@ -1,6 +1,6 @@
 # Test MrBayes+BEAGLE3 using Docker containers
 
-- Last modified: Tue Jan 22, 2019  01:36PM
+- Last modified: Tue Jan 22, 2019  01:56PM
 - Sign: JN
 
 ## Description
@@ -34,6 +34,7 @@ Evaluation of "success" or "failure" have to be done manually
 - [https://amir.rachum.com/blog/2016/09/17/shared-libraries/](https://amir.rachum.com/blog/2016/09/17/shared-libraries/)
 - [https://wiki.debian.org/RpathIssue](https://wiki.debian.org/RpathIssue)
 - [https://unix.stackexchange.com/questions/22926/where-do-executables-look-for-shared-objects-at-runtime](https://unix.stackexchange.com/questions/22926/where-do-executables-look-for-shared-objects-at-runtime)
+- [http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html](http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html)
 
 ## Docker commands
 
