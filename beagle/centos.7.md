@@ -1,13 +1,13 @@
 # Run MrBayes+BEAGLE3 inside CentOS 7 Docker container
 
-- Last modified: Tue Jan 22, 2019  02:22PM
+- Last modified: Tue Jan 29, 2019  02:48PM
 - Sign: JN
 - Status: CUDA:NA, OpenCL:FAIL, OpenMPI:OK, BEAGLE3:OK, MB-MPI:OK, MB:OK
 - Comment: Can't get beagle to work from inside mb unless beagle is configured using `-rpath`, or, `LD_LIBRARY_PATH` is set before running mb. And, can't get beagle to run if OpenCL is installed.
 
 # Install and run
 
-    $ docker run -it debian:sid /bin/bash
+    $ docker run -it centos:7 /bin/bash
 
     # Base system
     mywd=$(pwd)
@@ -55,13 +55,8 @@
 
     # MrBayes
     cd "$mywd"
-    git clone https://github.com/NBISweden/MrBayes.git
+    git clone --depth=1 --branch=develop https://github.com/NBISweden/MrBayes.git
     cd MrBayes
-    git checkout feature/beagle3
-    cd "$mywd"
-    git clone https://github.com/NBISweden/MrBayes.git
-    cd MrBayes
-    git checkout feature/beagle3
     ./configure --with-mpi
     make
     mpirun --allow-run-as-root -np 1 src/mb <<MBCMD
