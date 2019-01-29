@@ -1,4 +1,4 @@
-MrBayes 3.2.7-dev (development not-yet-3.2.7 version)
+MrBayes pre-3.2.7 (development, not-yet-3.2.7 version)
 ========================================================================
 
 Make a shallow clone of the repository:
@@ -187,13 +187,13 @@ About support for the GNU Readline library:
 ------------------------------------------------------------------------
 
 MrBayes will be compiled with support for the GNU Readline Library
-(https://cnswww.cns.cwru.edu/php/chet/readline/rltop.html) (which
-allows for command line history within an interactive session, and
-command completion through pressing the "tab" key) if the Readline
-library and its associated header files are available.  However, it
-seems as if the Readline library doesn't work well together with common
-MPI implementations (OpenMPI (https://www.open-mpi.org/) and MPICH
-(https://www.mpich.org/)), so if MrBayes is configured with support for
+(https://cnswww.cns.cwru.edu/php/chet/readline/rltop.html) (which allows
+for command line history within an interactive session, and command
+completion through pressing the "tab" key) if the Readline library
+and its associated header files are available.  However, it seems as
+if the Readline library doesn't work well together with common MPI
+implementations, such as OpenMPI (https://www.open-mpi.org/) and MPICH
+(https://www.mpich.org/), so if MrBayes is configured with support for
 MPI parallelization, Readline support will be automatically disabled.
 
 A possible workaround is to use a "Readline wrapper", such as "rlwrap"

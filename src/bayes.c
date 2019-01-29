@@ -594,9 +594,19 @@ int InitializeMrBayes (void)
 #       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #       else
-    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
+/* Try using Beagle */
+/*
+ * Note: The old (2015) comment from Chi says that there is some issue with
+ * single precision SSE code.  This issue is unknown to us at this point
+ * in time (2019, four years later).
+ *
+ * */
+
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
 #       endif
-    beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE always scaling                     */
+    beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;   /* use BEAGLE dynamic scaling                     */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment
@@ -604,7 +614,16 @@ int InitializeMrBayes (void)
     beagleResource = NULL;
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
-    beagleScalingFrequency = 1000;  
+    beagleScalingFrequency = 1000;
+
+    beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;   /* Use Beagle in single precision mode */
+    beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;
+
+#   if defined (BEAGLE_V3_ENABLED)
+    beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
+    beagleThreadCount = 99;                           /* default to auto threading */
+    beagleAllFloatTips = NO;                          /* default to using compact tips */
+#   endif
 #   endif
 
     /* set the proposal information */

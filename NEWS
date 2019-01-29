@@ -1,5 +1,11 @@
 Release Note
 
+v3.2.7 (not yet released)
+  *  Support for Beagle 3 added.
+  *  Fixed a bug causing segmentation faults in the FMA code due to misaligned data
+  *  Added basic command line option support on Unix systems (-h,-i,-v)
+  *  Various minor bug fixes
+
 v3.2.6 (Nov 25 2015)
   1. Add invertebrate mt, Echinoderm and Euplotid codes [lset code=invermt].
   2. Fix a bug of updating brls in tree-stretch move.
