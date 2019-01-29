@@ -151,7 +151,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
 
         AC_CHECK_HEADER([libhmsbeagle/beagle.h],
             [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
-        AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+        AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
             [AC_SUBST([BEAGLE_LIBS], ["$LDFLAGS $LDLIBS"])], [])
 
         CPPFLAGS="$old_cppflags"
@@ -183,20 +183,14 @@ AS_IF([test "x$with_beagle" != "xno"], [
         [AS_IF([test "x$with_beagle" != "xcheck"],
             [AC_MSG_ERROR(
                 [--with-beagle was given, but test for Beagle failed])]
-        )], dnl AS_IF
-        [
+        )], dnl AS_IF - ELSE
+        [BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"
          AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
          AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
+         AC_DEFINE([BEAGLE_V3_ENABLED], [1],
+            [Always defined together with BEAGLE_ENABLED as we only support v3 now])
          AC_DEFINE([BEAGLE_ENABLED], [1],
             [Define if you want to enable Beagle])])
-         # Save old flags, just for safety.  Then see if we have Beagle 3.
-         old_ldflags="$LDFLAGS"
-         LDFLAGS="$BEAGLE_LIBS"
-         AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
-            [AC_DEFINE([BEAGLE_V3_ENABLED], [1],
-                [Define to enable Beagle v3.1 extensions])
-                BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"], [])
-         LDFLAGS="$old_ldflags"
 ]) dnl AS_IF
 
 # Check for readline, but only if we don't have MPI, because apparently
