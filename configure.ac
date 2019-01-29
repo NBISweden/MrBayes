@@ -162,18 +162,10 @@ AS_IF([test "x$with_beagle" != "xno"], [
             [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
              beagle_found="yes"])
 
-<<<<<<< HEAD
-            AS_IF([test "x$beagle_found" = "xyes"], [break 2],
-                  [AS_UNSET([BEAGLE_LIBS])
-                   AS_UNSET([BEAGLE_CFLAGS])
-                   AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
-        done
-=======
         AS_IF([test "x$beagle_found" = "xyes"], [break],
               [AS_UNSET(BEAGLE_LIBS)
                AS_UNSET(BEAGLE_CFLAGS)
                AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
->>>>>>> feature/beagle3
     done
 
     AS_IF([test "x$beagle_found" != "xyes"], [
