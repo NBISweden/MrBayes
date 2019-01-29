@@ -3,7 +3,7 @@
 /* Define if you want to enable Beagle */
 #undef BEAGLE_ENABLED
 
-/* Define to enable Beagle v3.1 extensions */
+/* Always defined together with BEAGLE_ENABLED as we only support v3 now */
 #undef BEAGLE_V3_ENABLED
 
 /* Compiler vendor */
