@@ -18,8 +18,7 @@
         make \
         g++ \
         git \
-        default-jdk \
-        texlive
+        libreadline-dev
 
     # OpenCL
     apt-get install -y \
@@ -28,8 +27,6 @@
 
     # OpenMPI
     apt-get install -y \
-        openmpi-bin \
-        openmpi-common \
         libopenmpi-dev
 
     # BEAGLE
@@ -37,7 +34,7 @@
     git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
     cd beagle-lib
     ./autogen.sh
-    ./configure LDFLAGS=-Wl,-rpath=/usr/local/lib
+    ./configure --without-jdk LDFLAGS=-Wl,-rpath=/usr/local/lib
     make
     make install
 
