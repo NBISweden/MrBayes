@@ -175,7 +175,7 @@ AS_IF([test "x$with_beagle" != "xno"], [
                 [AC_MSG_NOTICE([Found Beagle with pkg-config])
                  beagle_found="yes"
                  # Augument the BEAGLE_LIBS value with -Wl,-rpath=...
-                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-R$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"],
+                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath=$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"],
                 [beagle_found="no"])
     ]) dnl AS_IF
 

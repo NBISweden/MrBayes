@@ -5393,7 +5393,7 @@ $as_echo "yes" >&6; }
 $as_echo "$as_me: Found Beagle with pkg-config" >&6;}
                  beagle_found="yes"
                  # Augument the BEAGLE_LIBS value with -Wl,-rpath=...
-                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-R$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"
+                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath=$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"
 fi
 
 fi
