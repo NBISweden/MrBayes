@@ -46,7 +46,7 @@
     cd beagle-lib
     ./autogen.sh
     ./configure --without-jdk LDFLAGS=-Wl,-rpath=/usr/local/lib
-    make
+    make -j2
     make install
 
     # MrBayes
@@ -54,14 +54,14 @@
     git clone --depth=1 --branch=develop https://github.com/NBISweden/MrBayes.git
     cd MrBayes
     ./configure --with-mpi
-    make
+    make -j2
     mpirun --allow-run-as-root -np 1 src/mb <<MBCMD
     showb
     quit
     MBCMD
     make clean
     ./configure
-    make
+    make -j2
     src/mb <<MBCMD
     showb
     quit
