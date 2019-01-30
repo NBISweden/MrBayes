@@ -20,8 +20,7 @@
         make \
         gcc-c++ \
         git \
-        java-1.8.0-openjdk-devel \
-        texlive
+        readline-devel
 
     # Note: Currently (18 Jan 2019), Beagle seems not to work if OpenCL is
     # installed. Not even when using `./configure --without-opencl`.
@@ -31,25 +30,22 @@
     # OpenCL. Apparently, need to install "EPEL" sources to get OpenCL
     #yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     #yum -y install \
-    #    opencl-headers \
     #    ocl-icd \
     #    ocl-icd-devel
     #ln -s /usr/lib64/libOpenCL.so.1 /usr/lib/libOpenCL.so # Hack https://unix.stackexchange.com/questions/292630/how-to-install-opencl-in-centos-7-using-yum
 
     # OpenMPI. Apparently, mpirun need to be handled by the `module` system.
     yum -y install \
-        openmpi \
-        openmpi-devel \
-        environment-modules
+        openmpi-devel
     source /etc/profile
-    module load mpi/openmpi-x86_64
+    module load mpi
 
     # BEAGLE
     cd "$mywd"
     git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
     cd beagle-lib
     ./autogen.sh
-    ./configure LDFLAGS=-Wl,-rpath=/usr/local/lib
+    ./configure --without-jdk LDFLAGS=-Wl,-rpath=/usr/local/lib
     make
     make install
 
