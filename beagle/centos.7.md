@@ -49,7 +49,7 @@
     git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
     cd beagle-lib
     ./autogen.sh
-    ./configure LDFLAGS=-Wl,-rpath,/usr/local/lib
+    ./configure LDFLAGS=-Wl,-rpath=/usr/local/lib
     make
     make install
 
