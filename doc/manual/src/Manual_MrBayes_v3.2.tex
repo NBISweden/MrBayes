@@ -15,7 +15,6 @@
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
 
-
 \newcommand{\term}[1]{{\bfseries\slshape #1}}
 \newcommand{\ttt}[1]{\texttt{#1} }
 \newcommand{\prout}[1]{\texttt{#1} }
@@ -23,11 +22,14 @@
 
 \begin{document}
 
-\title{Draft MrBayes version 3.2 Manual: Tutorials and Model Summaries}
-\author{Fredrik Ronquist, John Huelsenbeck and Maxim Teslenko}
+\title{MrBayes version 3.2 Manual: Tutorials and Model Summaries}
+
+\date{\large Draft version, January 2019}
+
+\author{Fredrik Ronquist, John Huelsenbeck, Maxim Teslenko and Johan Nylander}
+
 \maketitle
 
-\newpage
 \tableofcontents
 
 \newpage
@@ -144,6 +146,8 @@ that you download the most recent version from the official MrBayes site. The si
 information about the MrBayes users email list and describes how you can report bugs or 
 contribute to the project.
 %%%% JN: Nov-18: This section about OS-specific installers needs to be rewritten
+%%%% I suggest we skip the detailed installation procedures and instead refer to the 
+%%%% INSTALL, and README documents on github.com.
 
 MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
 behaves virtually the same on all platforms --- Macintosh, Windows and Unix. There is a
@@ -193,6 +197,9 @@ various types of analyses you can perform with the program, and you can use them
 templates for your own analyses. In the tutorials given in chapters \ref{tutorialSimple}
 to \ref{tutorialAdvanced}, you can learn more about how to set up various types of 
 analyses based on these example data files.
+%%%% JN: Nov-18: This section (above) about OS-specific installers needs to be rewritten
+%%%% I suggest we skip the detailed installation procedures and instead refer to the 
+%%%% INSTALL, and README documents on github.com.
 
 \section{Getting Started}
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb} depending
@@ -1544,7 +1551,7 @@ the parameters are followed by the character division (partition) number in curl
 \texttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3, which is the EF1a 
 division in the above analysis.
 
-%%%%% JN Nov 29: Start here next
+%%%%% JN: I've done from the start until here (Nov 29 - 2018)
 In this section we have used a separate Nexus file for the MrBayes block. Although one can add this command 
 block to the data file itself, there are several advantages to keeping the commands and the data blocks 
 separate. For example, one can create a set of different analyses with different parameters in separate 
