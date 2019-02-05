@@ -5222,10 +5222,16 @@ if test "x$with_beagle" != "xno"; then :
     beagle_subinc="include/lib$beagle_pkg_name"
     beagle_sublib="lib"
 
-    if test -d "$with_beagle"; then :
+    if test -n "$BEAGLE_CFLAGS" || test -n "$BEAGLE_LIBS"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS" >&5
+$as_echo "$as_me: Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS" >&6;}
+         beagle_found="yes"
+else
+  if test -d "$with_beagle"; then :
   beagle_prefix_list="$with_beagle"
 else
   beagle_prefix_list="/usr/local /usr"
+fi
 fi
 
     for beagle_prefix in $beagle_prefix_list; do
