@@ -137,9 +137,12 @@ AS_IF([test "x$with_beagle" != "xno"], [
     beagle_subinc="include/lib$beagle_pkg_name"
     beagle_sublib="lib"
 
-    AS_IF([test -d "$with_beagle"],
-          [beagle_prefix_list="$with_beagle"],
-          [beagle_prefix_list="/usr/local /usr"])
+    AS_IF([test -n "$BEAGLE_CFLAGS" || test -n "$BEAGLE_LIBS"],
+        [AC_MSG_NOTICE([Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS])
+         beagle_found="yes"],
+        [AS_IF([test -d "$with_beagle"],
+              [beagle_prefix_list="$with_beagle"],
+              [beagle_prefix_list="/usr/local /usr"])])
 
     for beagle_prefix in $beagle_prefix_list; do
 
