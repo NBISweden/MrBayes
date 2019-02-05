@@ -61,11 +61,6 @@ compile and optionally install MrBayes:
         make
         make install
 
-To build a statically linked version of MrBayes, set the environment
-variable LDFLAGS to "-static" when configuring:
-
-    env LDFLAGS=-static ./configure
-
 
 Building MrBayes using the GNU autotools (Autoconf and Automake):
 ------------------------------------------------------------------------
@@ -143,7 +138,7 @@ Picking up the Beagle library:
 
 MrBayes uses the Beagle library
 (https://github.com/beagle-dev/beagle-lib) if it is available.  It will
-make use of release 3.1.2 of Beagle but should also werk with release
+make use of release 3.1.2 of Beagle but should also work with release
 2.1.3 of the library.
 
 Assuming Beagle was compiled and installed in a standard location, it
@@ -166,10 +161,12 @@ of telling the "configure" script how to find it:
   will fall back on using "pkg-config" which picks up this file.
 
 * As a last resort, it's also possible to set the "BEAGLE_CFLAGS" and
- "BEAGLE_LIBS" environment variables prior to running "configure":
+  "BEAGLE_LIBS" environment variables prior to running "configure" (the
+  example shows how to use thusu variables when Beagle was installed
+  under the path "$HOME/local"):
 
     env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
-        BEAGLE_LIBS="-L$HOME/local/lib -lhmsbeagle" \
+        BEAGLE_LIBS="-L$HOME/local/lib -Wl,-rpath=$HOME/local/lib -lhmsbeagle" \
         ./configure
 
 
