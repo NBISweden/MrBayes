@@ -170,6 +170,33 @@ of telling the "configure" script how to find it:
         ./configure
 
 
+Building the Beagle library for MrBayes
+------------------------------------------------------------------------
+
+Ideally, you would use a pre-built distribution of the Beagle library,
+as setting up the required prerequisites for things like OpenCL etc. is
+a bit cumbersome to say the least.
+
+If you none the less want to try building and installing it, this is the
+executive summary for how to do this on a Unix system, not including
+installation of prerequisites (since these will differ between systems).
+It's assumed that the Beagle library is being installed in the default
+location, under "/usr/local". Note that the Beagle Java library is not
+needed by MrBayes.
+
+    git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
+    cd beagle-lib
+
+    ./autogen.sh
+    ./configure --without-jdk LDFLAGS=-Wl,-rpath=/usr/local/lib
+
+    make
+    sudo make install
+
+See also the "INSTALL" document supplied with the Beagle library's
+source distribution.
+
+
 Picking up and using MPI:
 ------------------------------------------------------------------------
 
