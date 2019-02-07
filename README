@@ -4,14 +4,15 @@ This is the GitHub repository for MrBayes, a program used for Bayesian
 inference of phylogeny.
 
 
-Build instructions, very very short version:
+Build instructions, very very short version (would install MrBayes as
+"/usr/local/bin/mb"):
 
-    1. Clone the Git repository.
-       This is best done through
+    git clone --depth=1 https://github.com/NBISweden/MrBayes.git
+    cd MrBayes
+    ./configure
+    make && sudo make install
 
-        git clone --depth=1 https://github.com/NBISweden/MrBayes.git
-
-    2. Refer to the document called "INSTALL" for further information.
+    Refer to the document called "INSTALL" for further information.
 
 
 Current repository directory layout:
@@ -25,7 +26,7 @@ Current repository directory layout:
     └── src            : C source code
 
 
-The new web site is available at
+The web site is available at
 
     http://NBISweden.github.io/MrBayes/
 
