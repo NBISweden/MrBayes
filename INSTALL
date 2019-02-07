@@ -42,7 +42,7 @@ compile and optionally install MrBayes:
     make install
 
 * We also support configuring and building the project away from the
-  checked out source repository.  This avoides littering the source
+  checked out source repository.  This avoids littering the source
   repository checkout with temporary files.  This is done through the
   following steps:
 
@@ -130,7 +130,7 @@ disabling AVX will also disable FMA.
 Note also that disabling these accelerated code paths will not remove
 the "-msse" (etc.) compiler flags.  These compiler flags affects what
 instructions the compiler is allowed to generate, not what code path is
-choosen for compilation.
+chosen for compilation.
 
 
 Picking up the Beagle library:
@@ -162,7 +162,7 @@ of telling the "configure" script how to find it:
 
 * As a last resort, it's also possible to set the "BEAGLE_CFLAGS" and
   "BEAGLE_LIBS" environment variables prior to running "configure" (the
-  example shows how to use thusu variables when Beagle was installed
+  example shows how to use these variables when Beagle was installed
   under the path "$HOME/local"):
 
     env BEAGLE_CFLAGS="-I$HOME/local/include/hmsbeagle-1" \
