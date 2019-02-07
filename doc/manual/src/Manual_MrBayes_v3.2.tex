@@ -20,11 +20,16 @@
 \newcommand{\prout}[1]{\texttt{#1} }
 \newcommand{\tb}[1]{\texttt{\textbf{#1}} }
 
+%%%% JN: Draft version, February 2019
+%%%% JN: Please note, I (JN) have started to review the text, and added occasional comments.
+%%%% JN: I also added a note on how far (starting from the very beginning), I made it thus
+%%%% JN: far (Around line #1868, Feb 2019).
+
 \begin{document}
 
 \title{MrBayes version 3.2 Manual: Tutorials and Model Summaries}
 
-\date{\large Draft version, January 2019}
+\date{\large Draft version, February 2019}
 
 \author{Fredrik Ronquist, John Huelsenbeck, Maxim Teslenko and Johan Nylander}
 
@@ -45,7 +50,7 @@ software available then. Nevertheless, we were astonished by how quickly users t
 to their hearts. The original release paper \citep{huelsenbeck01c}, which appeared in Bioinformatics
 in 2001, quickly became a fast-track paper in Computer Science, as did the release note for
 version 3  \citep{ronquist03}, published in Bioinformatics in 2003. To date, these
-two papers have accumulated more than 13,000 citations.
+two papers have accumulated more than 24,000 citations.
 
 With the release of version 3.2 \citep{ronquist11}, MrBayes has come of age. Through
 the years, we have added to, extended, and rewritten the program to cover most of the models used
@@ -141,65 +146,63 @@ are also given in \texttt{typewriter font}.
 
 \section{Acquiring and Installing MrBayes}
 MrBayes 3 is distributed without charge by download from the MrBayes web site,
-\url{http://mrbayes.net}. If someone has given you a copy of MrBayes 3, we strongly suggest
-that you download the most recent version from the official MrBayes site. The site also gives 
-information about the MrBayes users email list and describes how you can report bugs or 
-contribute to the project.
+\url{http://mrbayes.net}, or from the linked code repository on Github \url{https://github.com/NBISweden/MrBayes}.
+If someone has given you a copy of MrBayes 3, we strongly suggest that you download
+the most recent version from the official MrBayes site. The site also gives detailed
+information about installation on different platforms (Window, Macintosh, UNIX) and 
+describes how you can report bugs or contribute to the project.
 %%%% JN: Nov-18: This section about OS-specific installers needs to be rewritten
 %%%% I suggest we skip the detailed installation procedures and instead refer to the 
 %%%% INSTALL, and README documents on github.com.
 
-MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
-behaves virtually the same on all platforms --- Macintosh, Windows and Unix. There is a
-separate download for each platform. The Windows and Macintosh downloads contain
-an installer that will install the program for you.
-
-The \emph{Macintosh} installer will put an executable in a default location that should be in
-your path. After installation, you run MrBayes by opening a terminal window (for instance using
-the Terminal application, which you will find in the Utilities folder in your Applications folder),
-and then simply typing \textbf{mb} on the command line. The example data files and the 
-documentation are installed in a MrBayes folder in your Applications directory.
-
-The Macintosh installer will also install the BEAGLE library, which you can use
-to speed up likelihood calculations. The BEAGLE option is particularly useful if you have
-an NVIDIA graphics card and the relevant CUDA drivers installed, in which case MCMC sampling
-from amino acid and codon models should be much faster. The installer will provide you with a link
-that you can use to download and install the relevant drivers given that you have an NVIDIA
-graphics card. If the CUDA drivers are not installed (or if you do not have an NVIDIA graphics card),
-then BEAGLE will run on the CPU instead of on the GPU. In this case, the
-BEAGLE performance will be similar to that of the default likelihood calculators used by MrBayes.
- 
-The \emph{Windows} installer behaves similarly to the Macintosh installer except that it places a
-double-clickable executable in the MrBayes folder inside your Program directory, together
-with the example files and the documentation. To start the program, simply double-click on
-the executable. The Windows installer will also install the BEAGLE library, and it will give you
-a link to the relevant CUDA drivers.
-
-If you decide to run the program under Unix/Linux, then you need to compile the
-program from source code. You can find detailed compilation instructions in chapter 
-\ref{advancedTopics}. Once you have compiled MrBayes, you will get an executable
-called \texttt{mb}. To execute the program, simply type \tb{./mb} in the directory
-where you compiled the program. If you execute \tb{make install} after compilation,
-the binary is installed in your path and you can then invoke MrBayes by typing \tb{mb}
-from any directory on your system.
-
-The Macintosh and Windows installers will install the serial version of the program. The
-serial version does not support multithreading, which means that you will not be able
-to utilize more than one core on a multi-core machine for a single MrBayes analysis. If
-you want to utilize all cores, you need to run the MPI-version of MrBayes. The MPI-version
-must be compiled from source and will only run under Unix/Linux. Most Windows machines
-allow you to install a parallel Linux partition, and all modern Macintosh computers come with a
-Unix system under the hood, which will support MPI. Refer to chapter \ref{advancedTopics} for
-more detailed instructions on how to compile and run the MPI version of MrBayes.
-
-All three packages of MrBayes come with example data files. These are intended to show
+%%%% MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
+%%%% behaves virtually the same on all platforms --- Macintosh, Windows and Unix. There is a
+%%%% separate download for each platform. The Windows and Macintosh downloads contain
+%%%% an installer that will install the program for you.
+%%%% 
+%%%% The \emph{Macintosh} installer will put an executable in a default location that should be in
+%%%% your path. After installation, you run MrBayes by opening a terminal window (for instance using
+%%%% the Terminal application, which you will find in the Utilities folder in your Applications folder),
+%%%% and then simply typing \textbf{mb} on the command line. The example data files and the 
+%%%% documentation are installed in a MrBayes folder in your Applications directory.
+%%%% 
+%%%% The Macintosh installer will also install the BEAGLE library, which you can use
+%%%% to speed up likelihood calculations. The BEAGLE option is particularly useful if you have
+%%%% an NVIDIA graphics card and the relevant CUDA drivers installed, in which case MCMC sampling
+%%%% from amino acid and codon models should be much faster. The installer will provide you with a link
+%%%% that you can use to download and install the relevant drivers given that you have an NVIDIA
+%%%% graphics card. If the CUDA drivers are not installed (or if you do not have an NVIDIA graphics card),
+%%%% then BEAGLE will run on the CPU instead of on the GPU. In this case, the
+%%%% BEAGLE performance will be similar to that of the default likelihood calculators used by MrBayes.
+%%%%  
+%%%% The \emph{Windows} installer behaves similarly to the Macintosh installer except that it places a
+%%%% double-clickable executable in the MrBayes folder inside your Program directory, together
+%%%% with the example files and the documentation. To start the program, simply double-click on
+%%%% the executable. The Windows installer will also install the BEAGLE library, and it will give you
+%%%% a link to the relevant CUDA drivers.
+%%%% 
+%%%% If you decide to run the program under Unix/Linux, then you need to compile the
+%%%% program from source code. You can find detailed compilation instructions in chapter 
+%%%% \ref{advancedTopics}. Once you have compiled MrBayes, you will get an executable
+%%%% called \texttt{mb}. To execute the program, simply type \tb{./mb} in the directory
+%%%% where you compiled the program. If you execute \tb{make install} after compilation,
+%%%% the binary is installed in your path and you can then invoke MrBayes by typing \tb{mb}
+%%%% from any directory on your system.
+%%%% 
+%%%% The Macintosh and Windows installers will install the serial version of the program. The
+%%%% serial version does not support multithreading, which means that you will not be able
+%%%% to utilize more than one core on a multi-core machine for a single MrBayes analysis. If
+%%%% you want to utilize all cores, you need to run the MPI-version of MrBayes. The MPI-version
+%%%% must be compiled from source and will only run under Unix/Linux. Most Windows machines
+%%%% allow you to install a parallel Linux partition, and all modern Macintosh computers come with a
+%%%% Unix system under the hood, which will support MPI. Refer to chapter \ref{advancedTopics} for
+%%%% more detailed instructions on how to compile and run the MPI version of MrBayes.
+%%%% 
+The MrBayes package also come with example data files. These are intended to show
 various types of analyses you can perform with the program, and you can use them as
 templates for your own analyses. In the tutorials given in chapters \ref{tutorialSimple}
 to \ref{tutorialAdvanced}, you can learn more about how to set up various types of 
 analyses based on these example data files.
-%%%% JN: Nov-18: This section (above) about OS-specific installers needs to be rewritten
-%%%% I suggest we skip the detailed installation procedures and instead refer to the 
-%%%% INSTALL, and README documents on github.com.
 
 \section{Getting Started}
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb} depending
@@ -208,7 +211,7 @@ on your system) and you will see the information below:
 \begin{singlespacing}
 \small
 \begin{verbatim}
-                               MrBayes v3.2
+                               MrBayes v3.2.7
 
                       (Bayesian Analysis of Phylogeny)
 
@@ -294,8 +297,8 @@ reporting functions of GitHub, as explained on the MrBayes web site
 (\url{www.mrbayes.net}).
 
 Advanced users may be interested in fixing bugs themselves in the source code. Refer to
-section \ref{advancedTopics} of this manual for information on how to contribute bug fixes, improved
-algorithms or expanded functionality to other users of MrBayes.
+section \ref{advancedTopics} of this manual for information on how to contribute bug fixes,
+improved algorithms or expanded functionality to other users of MrBayes.
 	 
 \section{License and Warranty}
 MrBayes is free software; you can redistribute it and/or modify it under the terms of the
@@ -310,8 +313,8 @@ more details (http://www.gnu.org/copyleft/gpl.html).
 \section{Citing the Program}
 If you wish to cite the program, you can simply refer to the most recent release note \citep{ronquist11}.
 This manual should be cited as an online publication. For more tips on citations, you can run
-the \ttt{citations} command in the program, which will give you a number of other relevant citations for the program
-and its models and algorithms.
+the \ttt{citations} command in the program, which will give you a number of other relevant citations
+for the program and its models and algorithms.
 
 \chapter{Tutorial: A Simple Analysis}
 \label{tutorialSimple}
@@ -1551,7 +1554,6 @@ the parameters are followed by the character division (partition) number in curl
 \texttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3, which is the EF1a 
 division in the above analysis.
 
-%%%%% JN: I've done from the start until here (Nov 29 - 2018)
 In this section we have used a separate Nexus file for the MrBayes block. Although one can add this command 
 block to the data file itself, there are several advantages to keeping the commands and the data blocks 
 separate. For example, one can create a set of different analyses with different parameters in separate 
@@ -1563,7 +1565,7 @@ analyses will overwrite each other.
 To change this behavior, include the command \textbf{mcmcp filename=$<$filename$>$;} in each of your run 
 files, just before issuing the \texttt{mcmc} command, using a different file name for each run file. For 
 instance, if you wish to name the output files from one analysis using the root \texttt{analysis1}, you use 
-the line \textbf{mcmcp filename=analysis;}. The files will then be named \texttt{analysis1.run1.t}, 
+the line \textbf{mcmcp filename=analysis1;}. The files will then be named \texttt{analysis1.run1.t}, 
 \texttt{analysis1.run2.t}, etc. An alternative approach is to run each analysis in a separate directory, in 
 which case the naming of the output files will not be an issue.
 
@@ -1573,9 +1575,9 @@ which case the naming of the output files will not be an issue.
 In this chapter, we provide a number of brief tutorials that cover a wide range of common
 models and analyses in MrBayes. We use a slightly different format for these tutorials.
 First, we assume that you are familiar with the basic working of the program, so we skip
-uninteresting details when they should be obvious. Also, in addition to the conventions used previously, we will
-often simply give the command line, including the \texttt{MrBayes >} prompt. What you need to type
-in is simply the text after the prompt.
+uninteresting details when they should be obvious. Also, in addition to the conventions used previously, 
+we will often simply give the command line, including the \texttt{MrBayes >} prompt. What you need to 
+type in is simply the text after the prompt.
 
 You may wish to start each tutorial by switching off warnings and asking MrBayes to quietly finish
 each analysis after the requested number of generations, without asking you if you want to extend
@@ -1617,17 +1619,16 @@ We do this by asking for a single chain per analysis using \ttt{nchains = 1} in
 the \ttt{mcmc} command. Although convergence might be slightly slower if measured in terms of the
 number of generations, the analysis will run much faster without the overhead of the heated chains.
 We are still using the default of two parallel runs, so we can monitor topological convergence on the fly.
-For the dataset in this tutorial, our results indicate that about 300,000 generations are sufficient for
-decent topological convergence. Run 300,000 generations without heating using the command:
+For the dataset in this tutorial, our previous results indicate that about 300,000 generations are
+sufficient for decent topological convergence. Run 300,000 generations without heating using the command:
 
 \begin{verbatim}
 MrBayes > mcmc nchains = 1 ngen = 300000
 \end{verbatim}
 
 Now we can summarize the parameter and tree samples as usual using the \ttt{sumt} and \ttt{sump}
-commands. The output of the \ttt{sumt} command will include a table giving the posterior probabilities
+commands. The output of the \ttt{sump} command will include a table giving the posterior probabilities
 of the amino acid models:
-
 
 \begin{singlespacing}
 \scriptsize
@@ -1645,15 +1646,14 @@ of the amino acid models:
 \end{singlespacing}
 
 This particular dataset overwhelmingly supports the Jones model, so this may be the only model sampled
-after the burn-in phase. This means that the move mechanism trying to change the
-amino acid model will rarely or ever have its proposals accepted after the burn-in phase. However, the
-sample from the posterior may nevertheless be accurate. To determine whether we have an appropriate sample
-from the posterior, we simply compare the model probabilities across independent runs. The range of probabilities,
-from minimum to maximum, across independent
-analyses is given in the table. In our case, we have two independent analyses, both of which are putting all of the
-probability on the Jones model (both minimum and maximum probabilities are 1.000). This is good evidence that
-we have an adequate sample from the posterior, since each run started with a randomly selected amino acid
-rate matrix.
+after the burn-in phase. This means that the move mechanism trying to change the amino acid model will
+rarely or ever have its proposals accepted after the burn-in phase. However, the sample from the
+posterior may nevertheless be accurate. To determine whether we have an appropriate sample
+from the posterior, we simply compare the model probabilities across independent runs. The range of
+probabilities, from minimum to maximum, across independent analyses is given in the table. In our case,
+we have two independent analyses, both of which are putting all of the probability on the Jones model
+(both minimum and maximum probabilities are 1.000). This is good evidence that we have an adequate 
+sample from the posterior, since each run started with a randomly selected amino acid rate matrix.
 
 If desired, it is possible to run the same data set under another amino acid model, for instance the Dayhoff
 model, by fixing the rate matrix. Do this by running the analysis with the following commands:
@@ -1682,7 +1682,7 @@ data set using:
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > execute replicase.nex
-MrBayes > lset nucmodel = aa
+MrBayes > lset nucmodel = protein
 MrBayes > prset aamodelpr = mixed
 MrBayes > mcmc nchains = 1 ngen = 300000
 \end{verbatim}
@@ -1698,7 +1698,8 @@ First, we read in the data:
 MrBayes > execute replicase.nex
 \end{verbatim}
 
-Then we specify that we want to use a codon model with omega variation across sites, and that we want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
+Then we specify that we want to use a codon model with omega variation across sites, and that we want
+MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
 
 \begin{singlespacing}
 \begin{verbatim}
@@ -1730,30 +1731,31 @@ of sites being in the positively selected class, and the weighted site omega val
 \begin{singlespacing}
 \tiny
 \begin{verbatim}
-                                                  95% HPD Interval
-                                                --------------------
+                                                95% HPD Interval
+                                               --------------------
    Parameter              Mean      Variance     Lower       Upper       Median    min ESS*  avg ESS    PSRF+ 
    -----------------------------------------------------------------------------------------------------------
-   TL                   4.563947    0.098902    3.852775    5.086475    4.558925     24.35     28.69    1.011
-   omega(-)             0.086415    0.000079    0.071653    0.099446    0.085985     25.65     33.41    1.002
+   TL                   6.063468    0.869372    4.156027    7.813660    6.025831      5.08     12.36    1.014
+   omega(-)             0.069961    0.000184    0.047403    0.095480    0.068025      6.48      7.61    1.048
    omega(N)             1.000000    0.000000    1.000000    1.000000    1.000000       NA        NA      NA   
-   omega(+)             1.212074    0.078799    1.000334    1.803710    1.089336     13.25     26.08    1.020
-   pi(-)                0.848886    0.001521    0.768849    0.908021    0.855780     18.59     21.49    1.000
-   pi(N)                0.108926    0.001967    0.002585    0.165223    0.117114      4.85     13.43    1.194
-   pi(+)                0.042188    0.002153    0.000444    0.152103    0.023432      4.00     44.72    1.131
-   pi(AAA)              0.012023    0.000007    0.006097    0.014923    0.012476     13.35     22.25    1.005
-   pi(AAC)              0.015588    0.000011    0.011123    0.021896    0.014725      4.48     16.95    1.006
-   pi(AAG)              0.018310    0.000023    0.010587    0.028169    0.018029     20.57    167.06    1.087
+   omega(+)             1.657224    1.111911    1.000940    4.105477    1.112150     34.57     84.80    0.999
+   pi(-)                0.827655    0.001925    0.764926    0.906755    0.828821     10.20     11.70    0.999
+   pi(N)                0.125519    0.002765    0.009573    0.206275    0.128064     16.95     33.05    1.166
+   pi(+)                0.046826    0.003448    0.000100    0.172577    0.015650     20.67     43.00    1.119
+   pi(AAA)              0.014750    0.000007    0.011227    0.019912    0.014817     10.95     12.02    1.010
+   pi(AAC)              0.014741    0.000009    0.009607    0.019714    0.015200      7.43     37.31    1.488
+   pi(AAG)              0.021098    0.000010    0.015839    0.026900    0.020483     11.36     17.71    1.089
    ...
-   pr+(1,2,3)           0.031105    0.001769    0.000193    0.128472    0.012165      3.84     40.87    1.161
-   pr+(4,5,6)           0.007634    0.000092    0.000042    0.027822    0.003308      4.67     24.37    1.078
-   pr+(7,8,9)           0.206222    0.060969    0.001249    0.798449    0.090067      3.24     47.63    1.184
+   pr+(1,2,3)           0.012812    0.000861    0.000000    0.059747    0.000743     40.76    171.75    1.080
+   pr+(4,5,6)           0.000332    0.000000    0.000000    0.001532    0.000036     43.44    195.80    1.092
+   pr+(7,8,9)           0.000068    0.000000    0.000000    0.000316    0.000003     83.01    223.65    1.054
    ...
-   omega(1,2,3)         0.593781    0.021720    0.256204    0.844889    0.603819     17.99     30.35    1.198
-   omega(4,5,6)         0.094908    0.000141    0.072752    0.116642    0.094196      4.39     23.04    1.031
-   omega(7,8,9)         0.953129    0.002358    0.851367    1.023135    0.964322     30.66     45.53    1.045
+   omega(1,2,3)         0.103900    0.002723    0.054415    0.176367    0.089053     16.88     20.23    1.014
+   omega(4,5,6)         0.071107    0.000195    0.048813    0.097142    0.069085      6.47      7.37    1.041
+   omega(7,8,9)         0.070189    0.000188    0.048528    0.096028    0.068360      6.46      7.48    1.046
    ...
    -----------------------------------------------------------------------------------------------------------
+
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -1768,9 +1770,9 @@ posterior, and we might expect the sample obtained so far to be reasonably close
 
 Now focus on the summaries of the parameter samples. From the top, the parameters are
 total tree length (\ttt{TL}), the omega values (dN/dS ratios) for the negatively selected, neutral, and
-positively selected sites (\ttt{omega(-)}, \ttt{omega(N)}, and \ttt{omega(+)}), the frequencies of the site categories
-(\ttt{pi(-)}, \ttt{pi(N)}, and \ttt{pi(+)}), and the stationary state frequencies of the codons (\ttt{pi(AAA)}, 
-\ttt{pi(AAC)}, etc).
+positively selected sites (\ttt{omega(-)}, \ttt{omega(N)}, and \ttt{omega(+)}), the frequencies of the
+site categories (\ttt{pi(-)}, \ttt{pi(N)}, and \ttt{pi(+)}), and the stationary state frequencies of
+the codons (\ttt{pi(AAA)}, \ttt{pi(AAC)}, etc).
 
 The table ends with the probabilities of individual sites being in the positively selected class, with
 \ttt{pr+(1,2,3)} being the probability of the codon corresponding to nucleotide sites 1--3 being positively
@@ -1778,21 +1780,28 @@ selected, \ttt{pr+(4,5,6)} being the probability for the codon corresponding to 
 positively selected, etc.
 
 The positive selection probabilities are followed by the site omega values, which represent a weighted
-average for each site across all categories of omega values, with \ttt{omega(1,2,3)} being the value for the codon
-corresponding to nucleotide sites 1--3, \ttt{omega(4,5,6)} the value for the codon corresponding to sites
-4--6, etc.
+average for each site across all categories of omega values, with \ttt{omega(1,2,3)} being the value for
+the codon corresponding to nucleotide sites 1--3, \ttt{omega(4,5,6)} the value for the codon 
+corresponding to sites 4--6, etc.
 
-Looking at the values, we note that about 85\% (\ttt{pi(-)}) of the sites are under strong constraining selection
-(\ttt{omega(-) = 0.086}). Only a small fraction of sites, around 4\%, are under positive selection (\ttt{pi(+)}).
+Looking at the values, we note that about 85\% (\ttt{pi(-)}) of the sites are under strong constraining
+selection (\ttt{omega(-) = 0.0699}). Only a small fraction of sites, around 5\%, are under positive
+selection (\ttt{pi(+)}).
+
 Examination of the positive selection probabilities and codon site omega values reveals which sites
-are most likely to be experiencing positive selection. For instance, the evidence is strong that site (292,293,294)
-is under positive selection (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
+are most likely to be experiencing positive selection (a high value for \ttt{pr+(n,n,n)}, and
+\ttt{omega(n,n,n) > 1.0}). 
+% For instance, the evidence is strong that site (292,293,294) is under positive selection
+% (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
+%%%% JN: My rerun using 3.2.7 did not find any pr+ value > 0.282567,
+%%%% JN: and for site (292,293,294), I get pr+(292,293,294) = 0.000015, omega(292,293,294) = 0.070020
+
 
 \section{Sampling Across the GTR Model Space}
 
 A standard approach to Bayesian phylogenetics is to first select an appropriate substitution model using
-a model testing approach, such as those implemented in ModelTest or jModelTest \citep{posada98, posada08}. An
-alternative, more elegant approach, is to sample across the substitution model space in the Bayesian MCMC
+a model testing approach, such as those implemented in ModelTest or jModelTest \citep{posada98, posada08}.
+An alternative, more elegant approach, is to sample across the substitution model space in the Bayesian MCMC
 analysis itself \citep{huelsenbeck04d}, removing the need for a priori model testing. The purpose of this
 tutorial is to demonstrate how to set up an analysis that integrates out the uncertainty about the correct
 substitution model by sampling across the entire general time reversible (GTR) model space.
@@ -1825,12 +1834,12 @@ two independent runs on the tutorial data set:
                               Posterior      Standard         Min.           Max.   
    Model                     Probability     Deviation     Probability    Probability
    ----------------------------------------------------------------------------------
-   gtrsubmodel[121123]          0.195          0.033          0.172          0.219
-   gtrsubmodel[121324]          0.089          0.005          0.086          0.093
-   gtrsubmodel[121323]          0.079          0.009          0.073          0.086
-   gtrsubmodel[121321]          0.060          0.037          0.033          0.086
-   gtrsubmodel[123324]          0.060          0.000          0.060          0.060
-   gtrsubmodel[121121]          0.053          0.009          0.046          0.060
+   gtrsubmodel[121123]          0.196          0.015          0.186          0.207
+   gtrsubmodel[121121]          0.099          0.007          0.094          0.104
+   gtrsubmodel[121321]          0.066          0.017          0.053          0.078
+   gtrsubmodel[121324]          0.063          0.013          0.054          0.072
+   gtrsubmodel[121323]          0.062          0.008          0.057          0.068
+   gtrsubmodel[123323]          0.055          0.004          0.053          0.058
    ----------------------------------------------------------------------------------
 \end{verbatim}
 \end{singlespacing}
@@ -1845,7 +1854,7 @@ partition it belongs to. For instance, \texttt{gtrsubmodel[111111]} refers to th
 For this particular data set, we observe that there is considerable uncertainty concerning the correct
 substitution model. The model with the highest posterior probability is \texttt{gtrsubmodel[121123]}, which differs
 from the HKY model only in that the G--T substitution rate is different from the other transversion rates,
-presumably lower. The HKY model has the smallest posterior probability of all the models
+presumably lower. The HKY model has the second best posterior probability of all the models
 reaching above the reporting threshold of 0.050. All other estimates of model parameters derived from this
 analysis, the topology estimate for instance, will be based on an average across the sampled substitution models,
 each one weighted according to its posterior probability.
@@ -1855,9 +1864,13 @@ across runs in estimated model probabilities. The table gives the standard devia
 of estimated values across runs. Here, we see some heterogeneity across runs in model probabilities, but
 most models receive similar probabilities in the two independent runs.
 
+%%%%% JN: I've done from the start until here (Feb 7 - 2019)
+\large{Please note, the following sections of the manual is not revised for v.3.2.7.}
+
 \section{Testing a Topological Hypothesis}
 
-In this tutorial, we will use Bayes factor comparisons to test a topological hypothesis, namely that humans are more closely related to chimps than to other primates. Specifically, we will contrast the hypothesis that humans and chimps form
+In this tutorial, we will use Bayes factor comparisons to test a topological hypothesis, namely that humans are 
+more closely related to chimps than to other primates. Specifically, we will contrast the hypothesis that humans and chimps form
 a monophyletic group ($M_1$), with the hypothesis that humans and chimps do not form a monophyletic group ($M_2$).
 In order to do this, we need to compute the ratio of the marginal likelihoods of the two models, $M_1$ and $M_2$.
 This ratio is known as the Bayes factor. We will use the data in the file \texttt{primates.nex} for the analysis.
