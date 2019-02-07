@@ -12,6 +12,11 @@ requires about 205 Mb)
 Building MrBayes using the supplied "configure" script:
 ------------------------------------------------------------------------
 
+To build MrBayes, you will need a C compiler (gcc or clang works well),
+the "make" utility, and optionally the "pkg-config" utility.  MrBayes
+may also be compiled with support for the Beagle library and for
+parallelization using MPI.
+
 The code in the MrBayes Git repository comes with a standard GNU
 "configure" script.  On any Unix system, these are the steps required to
 compile and optionally install MrBayes:
