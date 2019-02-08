@@ -1,88 +1,98 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MrBayes | manual</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/handheld.css" media=
-  "only screen and (min-device-width:320px) and (max-device-width:568px)">
-  <meta name="viewport" content=
-  "width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+
+<title>MrBayes | manual</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/handheld.css" media=
+"only screen and (min-device-width:320px) and (max-device-width:568px)">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
-  <header>
-    <h1>MrBayes: Bayesian Inference of Phylogeny</h1>
+<header>
+<h1>MrBayes: Bayesian Inference of Phylogeny</h1>
 
-    <nav>
-      <a href="./index.html">Home</a> <a href=
-      "./download.html">Download</a> <a href="./manual.html" class=
-      "selected">Manual</a> <a href="./issues.html">Bug Report</a>
-      <a href="./authors.html">Authors</a> <a href=
-      "./links.html">Links</a>
-    </nav>
 
-    <aside>
-      <a href="http://www.vr.se/"><img src="./img/vr.png" alt=
-      "Vetenskapsradet"></a> <a href="http://www.nrm.se/"><img src=
-      "./img/nrm.gif" alt="Naturhistoriska Riksmuseet"></a> <a href=
-      "http://nbis.se/"><img src="./img/nbis.svg" alt=
-      "National Bioinformatics Infrastructure Sweden (NBIS)"></a>
-      <a href="http://www.nih.gov/"><img src="./img/nih.gif" alt=
-      "National Institutes of Health"></a> <a href=
-      "http://www.nsf.gov/"><img src="./img/nsf.gif" alt=
-      "National Science Foundation"></a>
-    </aside>
-  </header>
+<nav>
+<a href="./index.html">Home</a> <a href="./download.html">Download</a>
+<a href="./manual.html" class="selected">Manual</a> <a href=
+"./issues.html">Bug Report</a> <a href="./authors.html">Authors</a>
+<a href="./links.html">Links</a>
+</nav>
 
-  <main id="manual">
-    <h2>Manual and Other Resources</h2>
 
-    <h3>Manual</h3>
+<aside>
+<a href="http://www.vr.se/"><img src="./img/vr.png" alt=
+"Vetenskapsradet"></a> <a href="http://www.nrm.se/"><img src=
+"./img/nrm.gif" alt="Naturhistoriska Riksmuseet"></a> <a href=
+"http://nbis.se/"><img src="./img/nbis.svg" alt=
+"National Bioinformatics Infrastructure Sweden (NBIS)"></a> <a href=
+"http://www.nih.gov/"><img src="./img/nih.gif" alt=
+"National Institutes of Health"></a> <a href=
+"http://www.nsf.gov/"><img src="./img/nsf.gif" alt=
+"National Science Foundation"></a>
+</aside>
+</header>
 
-    <p>A good resource for new users is the MrBayes 3.2 manual, which
-    contains instructions for downloading and installing the program,
-    two tutorials including a qick-start version, discussions of all
-    the models implemented in the program, answers to some frequently
-    asked questions, a list of the differences between versions 2 and 3
-    of the program, instructions for compiling and running the parallel
-    version of the program, and tips for users who want to tweak the
-    source code or contribute bug fixes or new functionality. In an
-    appendix, there is a diagrammatic summary of all the models
-    implemented in the program and most of the proposal mechanisms. You
-    can download the manual (pdf) <a href=
-    "https://github.com/NBISweden/MrBayes/blob/develop/doc/manual/Manual_MrBayes_v3.2.pdf">
-    here</a>.</p>
 
-    <h3>Online Help</h3>
+<main id="manual">
+<h2>Manual and Other Resources</h2>
 
-    <p>MrBayes 3 provides extensive online help through the
-    <kbd>help</kbd> command. Simply type <kbd>help</kbd> at the command
-    prompt to get a list of the available commands. Type <kbd>help
-    &lt;command&gt;</kbd> to get help information for a specific
-    command. For instance, <kbd>help lset</kbd> will give you the help
-    information for the <kbd>lset</kbd> command, including a discussion
-    of all the available parameters and options. The help information
-    for a command typically also includes a summary table of the
-    options and current settings.</p>
 
-    <h3>Command Reference</h3>
+<h3>Manual</h3>
 
-    <p>You can produce a text file containing all the help information
-    for the current version of the program by using the
-    <kbd>manual</kbd> command in MrBayes. If you produce this file
-    immediately after starting the program, the text file will contain
-    all the default settings and can be used as a command
-    reference.</p>
 
-    <h3>General Advice</h3>
+<p>A good resource for new users is the MrBayes 3.2 manual, which
+contains instructions for downloading and installing the program, two
+tutorials including a quick-start version, discussions of all the
+models implemented in the program, answers to some frequently asked
+questions, and a list of the differences between versions 2 and 3 of
+the program. In an appendix, there is a diagrammatic summary of all the
+models implemented in the program and most of the proposal mechanisms.
+You can download the manual (pdf) <a href=
+"https://github.com/NBISweden/MrBayes/blob/develop/doc/manual/Manual_MrBayes_v3.2.pdf">
+here</a>.</p>
 
-    <p>Remember that MrBayes is free software and that it currently has
-    thousands of users around the world. Therefore, the authors have no
-    possibility to provide extensive user help. Please first read the
-    manual and the command reference carefully to make sure the problem
-    you are having is not addressed there. If the problem you are
-    having seems to be a bug in the program, report it as described
-    <a href="issues.html">here</a>.</p>
-  </main>
+
+<h3>Online Help</h3>
+
+
+<p>MrBayes 3 provides extensive online help through the
+<strong><kbd>help</kbd></strong> command. Simply type
+<strong><kbd>help</kbd></strong> at the command prompt to get a list of
+the available commands. Type <strong><kbd>help
+&lt;command&gt;</kbd></strong> to get help information for a specific
+command. For instance, <strong><kbd>help lset</kbd></strong> will give
+you the help information for the <strong><kbd>lset</kbd></strong>
+command, including a discussion of all the available parameters and
+options. The help information for a command typically also includes a
+summary table of the options and current settings.</p>
+
+
+<h3>Command Reference</h3>
+
+
+<p>You can produce a text file containing all the help information for
+the current version of the program by using the
+<strong><kbd>manual</kbd></strong> command in MrBayes. If you produce
+this file immediately after starting the program, the text file will
+contain all the default settings and can be used as a command
+reference.</p>
+
+
+<h3>General Advice</h3>
+
+
+<p>Remember that MrBayes is free software and that it currently has
+thousands of users around the world. Therefore, the authors have no
+possibility to provide extensive user help. Please first read the
+manual and the command reference carefully to make sure the problem you
+are having is not addressed there. If the problem you are having seems
+to be a bug in the program, report it as described <a href=
+"issues.html">here</a>.</p>
+</main>
 </body>
 </html>
