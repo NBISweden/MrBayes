@@ -1,8 +1,13 @@
 Release Note
 
 v3.2.7 (not yet released)
-  *  Support for Beagle 3 added.
-  *  Fixed a bug causing segmentation faults in the FMA code due to misaligned data
+  *  Added lognormal and flat ordered dirichelet distributions as alternatives to the
+     gamma prior on site variation across sites
+  *  Added new, optional moves for the fossilized birth-death model
+  *  Added new, optional parsimony-guided moves for non-clock trees
+  *  Support for Beagle 3 added
+  *  Added support for FMA and AVX instructions in built-in likelihood calculators
+     for 4by4 nucleotide models
   *  Added basic command line option support on Unix systems (-h,-i,-v)
   *  Various minor bug fixes
 
