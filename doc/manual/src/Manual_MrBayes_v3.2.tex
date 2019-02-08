@@ -151,54 +151,33 @@ If someone has given you a copy of MrBayes 3, we strongly suggest that you downl
 the most recent version from the official MrBayes site. The site also gives detailed
 information about installation on different platforms (Window, Macintosh, UNIX) and 
 describes how you can report bugs or contribute to the project.
-%%%% JN: Nov-18: This section about OS-specific installers needs to be rewritten
-%%%% I suggest we skip the detailed installation procedures and instead refer to the 
-%%%% INSTALL, and README documents on github.com.
 
-%%%% MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
-%%%% behaves virtually the same on all platforms --- Macintosh, Windows and Unix. There is a
-%%%% separate download for each platform. The Windows and Macintosh downloads contain
-%%%% an installer that will install the program for you.
-%%%% 
-%%%% The \emph{Macintosh} installer will put an executable in a default location that should be in
-%%%% your path. After installation, you run MrBayes by opening a terminal window (for instance using
-%%%% the Terminal application, which you will find in the Utilities folder in your Applications folder),
-%%%% and then simply typing \textbf{mb} on the command line. The example data files and the 
-%%%% documentation are installed in a MrBayes folder in your Applications directory.
-%%%% 
-%%%% The Macintosh installer will also install the BEAGLE library, which you can use
-%%%% to speed up likelihood calculations. The BEAGLE option is particularly useful if you have
-%%%% an NVIDIA graphics card and the relevant CUDA drivers installed, in which case MCMC sampling
-%%%% from amino acid and codon models should be much faster. The installer will provide you with a link
-%%%% that you can use to download and install the relevant drivers given that you have an NVIDIA
-%%%% graphics card. If the CUDA drivers are not installed (or if you do not have an NVIDIA graphics card),
-%%%% then BEAGLE will run on the CPU instead of on the GPU. In this case, the
-%%%% BEAGLE performance will be similar to that of the default likelihood calculators used by MrBayes.
-%%%%  
-%%%% The \emph{Windows} installer behaves similarly to the Macintosh installer except that it places a
-%%%% double-clickable executable in the MrBayes folder inside your Program directory, together
-%%%% with the example files and the documentation. To start the program, simply double-click on
-%%%% the executable. The Windows installer will also install the BEAGLE library, and it will give you
-%%%% a link to the relevant CUDA drivers.
-%%%% 
-%%%% If you decide to run the program under Unix/Linux, then you need to compile the
-%%%% program from source code. You can find detailed compilation instructions in chapter 
-%%%% \ref{advancedTopics}. Once you have compiled MrBayes, you will get an executable
-%%%% called \texttt{mb}. To execute the program, simply type \tb{./mb} in the directory
-%%%% where you compiled the program. If you execute \tb{make install} after compilation,
-%%%% the binary is installed in your path and you can then invoke MrBayes by typing \tb{mb}
-%%%% from any directory on your system.
-%%%% 
-%%%% The Macintosh and Windows installers will install the serial version of the program. The
-%%%% serial version does not support multithreading, which means that you will not be able
-%%%% to utilize more than one core on a multi-core machine for a single MrBayes analysis. If
-%%%% you want to utilize all cores, you need to run the MPI-version of MrBayes. The MPI-version
-%%%% must be compiled from source and will only run under Unix/Linux. Most Windows machines
-%%%% allow you to install a parallel Linux partition, and all modern Macintosh computers come with a
-%%%% Unix system under the hood, which will support MPI. Refer to chapter \ref{advancedTopics} for
-%%%% more detailed instructions on how to compile and run the MPI version of MrBayes.
-%%%% 
-The MrBayes package also come with example data files. These are intended to show
+MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore
+behaves virtually the same on all platforms --- Macintosh, Windows and Unix. Perhaps
+the easiest way of installing the program is to compile it from source code in a Unix
+environment, as described in the README and INSTALL documents in the MrBayes
+repository. The program may also be available as binaries that run on Windows or
+Macintosh computers.
+
+MrBayes comes with reasonably fast code for computing likelihoods, partly implemented using
+so-called SIMD (single instruction, multiple data) technologies like SSE, AVX and FMA. However,
+MrBayes will run faster with the specialized BEAGLE library, which makes even better use of
+the available computing resources. For instance, BEAGLE allows you to take advantage of the
+processing power of your graphics card, which the standard MrBayes code does not. Installing
+the BEAGLE library and linking it to MrBayes can be challenging; please follow the instructions
+in the INSTALL file.
+
+MrBayes is available both in a serial version and in a parallel version that uses MPI (message
+passing interface) instructions to distribute computations across several processors or
+processor cores. The serial version does not support multithreading, which means that you will not
+be able to utilize more than one core on a multi-core machine for a single MrBayes analysis. If
+you want to utilize all cores, you need to run the MPI version of MrBayes. The MPI version
+must be compiled from source and will only run under Unix/Linux. Most Windows machines
+allow you to install a parallel Linux partition, and all Macintosh computers come with a
+Unix system under the hood, which will support MPI. Refer to the README and INSTALL
+documents for further instructions on how to compile and run the MPI version.
+
+The MrBayes package comes with example data files. These are intended to show
 various types of analyses you can perform with the program, and you can use them as
 templates for your own analyses. In the tutorials given in chapters \ref{tutorialSimple}
 to \ref{tutorialAdvanced}, you can learn more about how to set up various types of 
