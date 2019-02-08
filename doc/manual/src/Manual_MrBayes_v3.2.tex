@@ -52,7 +52,7 @@ in 2001, quickly became a fast-track paper in Computer Science, as did the relea
 version 3  \citep{ronquist03}, published in Bioinformatics in 2003. To date, these
 two papers have accumulated more than 24,000 citations.
 
-With the release of version 3.2 \citep{ronquist11}, MrBayes has come of age. Through
+With the release of version 3.2 \citep{ronquist12a}, MrBayes has come of age. Through
 the years, we have added to, extended, and rewritten the program to cover most of the models used
 in standard statistical phylogenetic analyses today. We have also implemented a number of techniques
 to speed up calculations, improve convergence, and facilitate Bayesian model averaging and model
@@ -290,7 +290,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
 more details (http://www.gnu.org/copyleft/gpl.html).
 
 \section{Citing the Program}
-If you wish to cite the program, you can simply refer to the most recent release note \citep{ronquist11}.
+If you wish to cite the program, you can simply refer to the most recent release note \citep{ronquist12a}.
 This manual should be cited as an online publication. For more tips on citations, you can run
 the \ttt{citations} command in the program, which will give you a number of other relevant citations
 for the program and its models and algorithms.
@@ -2824,7 +2824,7 @@ the clock tree parameters (such as the tree age for the uniform prior), the node
 carefully. It is good practice to examine the influence of these priors on the dating results.
 
 Now we turn our attention to a larger data set, and more complex dating scenarios. The data set, \texttt{hymfossil.nex},
-is from a study of the early radiation of the Hymenoptera \citep{ronquist12}, and includes 68 recent taxa
+is from a study of the early radiation of the Hymenoptera \citep{ronquist12ba}, and includes 68 recent taxa
 and 45 fossil taxa. The data matrix comprises about 5 kb data from seven molecular markers for recent taxa,
 and about 350 morphological characters coded for both recent and fossil taxa.
 
@@ -2941,7 +2941,7 @@ in section \ref{relaxedClock}.
 An appropriate prior for the \ttt{igrvarpr} parameter, the variance increase parameter of the IGR model, was found
 by simulations. Specifically, strict-clock and non-clock branch lengths were inferred on the same topology, and then
 simulations under the IGR model were used to try to match the variation observed between them
-\citep{ronquist12}. Stepping-stone sampling indicated that the IGR model matched these data better
+\citep{ronquist12b}. Stepping-stone sampling indicated that the IGR model matched these data better
 than the other two relaxed clock models provided by MrBayes.
 
 The final five lines define a prior on the clock rate and sets the two outgroup calibration points using the same
@@ -2960,7 +2960,7 @@ commands discussed previously in this tutorial:
 Note that a tree age prior is not used here; instead, we define a root calibration point. MrBayes will use the root
 calibration as your tree age prior if you provide one; otherwise, it is the \ttt{treeagepr} setting that will be used to
 define the uniform prior on clock trees. The specific parameter values used in defining the priors on the calibration
-points and the clock rate are derived from the fossil record \citep{ronquist12}.
+points and the clock rate are derived from the fossil record \citep{ronquist12b}.
 
 This completes the definition of the total-evidence analysis. Let us now turn our attention to the node-dating analysis.
 It starts out by deleting the fossils from the analysis, using the previously defined taxon set called \ttt{fossils}:
