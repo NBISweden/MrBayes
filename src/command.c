@@ -955,8 +955,11 @@ int DoAbout (void)
     MrBayesPrint ("   have also contributed importantly to the project (type 'Acknowledgments' for  \n");
     MrBayesPrint ("   a list of some of them).                                                      \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   Since 2003, MrBayes has been distributed from SourceForge. Bugs can be repor- \n");
-    MrBayesPrint ("   ted to the MrBayes site on SourceForge.                                       \n");
+    MrBayesPrint ("   From 2003, MrBayes was distributed from SourceForge; the repository was moved \n");
+    MrBayesPrint ("   to GitHub in 2018, when the project entered maintenance phase and the res-    \n");
+    MrBayesPrint ("   ponsibility was transferred to National Bioinformatics Infrastructure Sweden  \n");
+    MrBayesPrint ("   (https://nbis.se), where Andreas Kahari and Johan Nylander jointly take care  \n");
+    MrBayesPrint ("   of bug fixes, documentation updates, and other maintenance tasks.             \n");
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
@@ -981,7 +984,10 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   Pearl helped integrate MrBayes with BEST.                                     \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Bug fixes and user support was provided by Paul van der Mark (2005-2007),     \n");
-    MrBayesPrint ("   Maxim Teslenko (2010-2012) and Chi Zhang (2012-2015).                         \n");
+    MrBayesPrint ("   Maxim Teslenko (2010-2012) and Chi Zhang (2012-2015). From 2015, Andreas      \n");
+    MrBayesPrint ("   Kahari and Johan Nylander at the National Bioinformatics Infrastructure       \n");
+    MrBayesPrint ("   Sweden (NBIS; https://nbis.se) have been responsible for bug fixes and        \n");
+    MrBayesPrint ("   maintenance of the code base.                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   Our wives -- Edna Huelsenbeck and Eva Ronquist -- showed extraordinary        \n");
     MrBayesPrint ("   patience with us while we spent many late nights programming.                 \n");
@@ -989,7 +995,7 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   JPH was supported by NSF grants DEB-007540 and MCB-0075404 and a Wenner-      \n");
     MrBayesPrint ("   Gren scholarship while writing this program. FR was supported by grants       \n");
     MrBayesPrint ("   from the Swedish Natural Science Research Council and the Swedish Research    \n");
-    MrBayesPrint ("   Council.                                                                      \n");
+    MrBayesPrint ("   Council, which also supports NBIS work on MrBayes.                            \n");
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
 
     return (NO_ERROR);
