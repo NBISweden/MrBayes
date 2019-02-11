@@ -90,7 +90,8 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = doc/tutorial
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_reset_header_cache.m4 \
+am__aclocal_m4_deps =  \
+	$(top_srcdir)/am-macros/ax_reset_header_cache.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -522,7 +523,7 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 @BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 @BUILD_DOC_FALSE@MBDating.pdf:
 @BUILD_DOC_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
-@BUILD_DOC_FALSE@	exit 1
+@BUILD_DOC_FALSE@	exit 0
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -45,33 +45,12 @@ To do so, use the procedure documented by the package, typically 'autoreconf'.])
 #   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
 #   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
 #
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <https://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Archive. When you make and distribute a
-#   modified version of the Autoconf Macro, you may extend this special
-#   exception to the GPL to apply to your modified version as well.
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.  This file is offered as-is, without any
+#   warranty.
 
-#serial 7
+#serial 8
 
 AC_DEFUN([AX_APPEND_FLAG],
 [dnl
@@ -246,33 +225,12 @@ AC_LANG_POP([Fortran])
 #   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
 #   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
 #
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <https://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Archive. When you make and distribute a
-#   modified version of the Autoconf Macro, you may extend this special
-#   exception to the GPL to apply to your modified version as well.
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.  This file is offered as-is, without any
+#   warranty.
 
-#serial 5
+#serial 6
 
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
 [AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
@@ -955,7 +913,7 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 17
+#serial 18
 
 AC_DEFUN([AX_EXT],
 [
@@ -1071,7 +1029,7 @@ AC_DEFUN([AX_EXT],
         ax_cv_have_sse_os_support_ext=no,
         if test "$((0x$edx_cpuid1>>25&0x01))" = 1; then
           AC_LANG_PUSH([C])
-          AC_TRY_RUN([
+          AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <signal.h>
 #include <stdlib.h>
             /* No way at ring1 to ring3 in protected mode to check the CR0 and CR4
@@ -1083,10 +1041,10 @@ AC_DEFUN([AX_EXT],
               /* SSE instruction xorps  %xmm0,%xmm0 */
               __asm__ __volatile__ (".byte 0x0f, 0x57, 0xc0");
               return 0;
-            }],
-            ax_cv_have_sse_os_support_ext=yes,
-            ax_cv_have_sse_os_support_ext=no,
-            ax_cv_have_sse_os_support_ext=no)
+            }]])],
+            [ax_cv_have_sse_os_support_ext=yes],
+            [ax_cv_have_sse_os_support_ext=no],
+            [ax_cv_have_sse_os_support_ext=no])
           AC_LANG_POP([C])
         fi
       ])
@@ -1468,7 +1426,7 @@ AC_LANG_POP([C])
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 7
+#serial 8
 
 AU_ALIAS([VL_LIB_READLINE], [AX_LIB_READLINE])
 AC_DEFUN([AX_LIB_READLINE], [
@@ -1483,7 +1441,7 @@ AC_DEFUN([AX_LIB_READLINE], [
           TRY_LIB="-l$readline_lib -l$termcap_lib"
         fi
         LIBS="$ORIG_LIBS $TRY_LIB"
-        AC_TRY_LINK_FUNC(readline, ax_cv_lib_readline="$TRY_LIB")
+        AC_LINK_IFELSE([AC_LANG_CALL([], [readline])], [ax_cv_lib_readline="$TRY_LIB"])
         if test -n "$ax_cv_lib_readline"; then
           break
         fi
@@ -1506,7 +1464,7 @@ AC_DEFUN([AX_LIB_READLINE], [
     AC_CACHE_CHECK([whether readline supports history],
                    ax_cv_lib_readline_history, [
       ax_cv_lib_readline_history="no"
-      AC_TRY_LINK_FUNC(add_history, ax_cv_lib_readline_history="yes")
+      AC_LINK_IFELSE([AC_LANG_CALL([], [add_history])], [ax_cv_lib_readline_history="yes"])
     ])
     if test "$ax_cv_lib_readline_history" = "yes"; then
       AC_DEFINE(HAVE_READLINE_HISTORY, 1,
@@ -1726,32 +1684,63 @@ AC_DEFUN([AX_REQUIRE_DEFINED], [dnl
   m4_ifndef([$1], [m4_fatal([macro ]$1[ is not defined; is a m4 file missing?])])
 ])dnl AX_REQUIRE_DEFINED
 
-# pkg.m4 - Macros to locate and utilise pkg-config.            -*- Autoconf -*-
-# serial 1 (pkg-config-0.24)
-# 
-# Copyright © 2004 Scott James Remnant <scott@netsplit.com>.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-#
-# As a special exception to the GNU General Public License, if you
-# distribute this file as part of a program that contains a
-# configuration script generated by Autoconf, you may include it under
-# the same distribution terms that you use for the rest of that program.
+dnl pkg.m4 - Macros to locate and utilise pkg-config.   -*- Autoconf -*-
+dnl serial 11 (pkg-config-0.29.1)
+dnl
+dnl Copyright © 2004 Scott James Remnant <scott@netsplit.com>.
+dnl Copyright © 2012-2015 Dan Nicholson <dbn.lists@gmail.com>
+dnl
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
+dnl
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+dnl General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+dnl 02111-1307, USA.
+dnl
+dnl As a special exception to the GNU General Public License, if you
+dnl distribute this file as part of a program that contains a
+dnl configuration script generated by Autoconf, you may include it under
+dnl the same distribution terms that you use for the rest of that
+dnl program.
 
-# PKG_PROG_PKG_CONFIG([MIN-VERSION])
-# ----------------------------------
+dnl PKG_PREREQ(MIN-VERSION)
+dnl -----------------------
+dnl Since: 0.29
+dnl
+dnl Verify that the version of the pkg-config macros are at least
+dnl MIN-VERSION. Unlike PKG_PROG_PKG_CONFIG, which checks the user's
+dnl installed version of pkg-config, this checks the developer's version
+dnl of pkg.m4 when generating configure.
+dnl
+dnl To ensure that this macro is defined, also add:
+dnl m4_ifndef([PKG_PREREQ],
+dnl     [m4_fatal([must install pkg-config 0.29 or later before running autoconf/autogen])])
+dnl
+dnl See the "Since" comment for each macro you use to see what version
+dnl of the macros you require.
+m4_defun([PKG_PREREQ],
+[m4_define([PKG_MACROS_VERSION], [0.29.1])
+m4_if(m4_version_compare(PKG_MACROS_VERSION, [$1]), -1,
+    [m4_fatal([pkg.m4 version $1 or higher is required but ]PKG_MACROS_VERSION[ found])])
+])dnl PKG_PREREQ
+
+dnl PKG_PROG_PKG_CONFIG([MIN-VERSION])
+dnl ----------------------------------
+dnl Since: 0.16
+dnl
+dnl Search for the pkg-config tool and set the PKG_CONFIG variable to
+dnl first found in the path. Checks that the version of pkg-config found
+dnl is at least MIN-VERSION. If MIN-VERSION is not specified, 0.9.0 is
+dnl used since that's the first version where most current features of
+dnl pkg-config existed.
 AC_DEFUN([PKG_PROG_PKG_CONFIG],
 [m4_pattern_forbid([^_?PKG_[A-Z_]+$])
 m4_pattern_allow([^PKG_CONFIG(_(PATH|LIBDIR|SYSROOT_DIR|ALLOW_SYSTEM_(CFLAGS|LIBS)))?$])
@@ -1773,18 +1762,19 @@ if test -n "$PKG_CONFIG"; then
 		PKG_CONFIG=""
 	fi
 fi[]dnl
-])# PKG_PROG_PKG_CONFIG
+])dnl PKG_PROG_PKG_CONFIG
 
-# PKG_CHECK_EXISTS(MODULES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
-#
-# Check to see whether a particular set of modules exists.  Similar
-# to PKG_CHECK_MODULES(), but does not set variables or print errors.
-#
-# Please remember that m4 expands AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-# only at the first occurence in configure.ac, so if the first place
-# it's called might be skipped (such as if it is within an "if", you
-# have to call PKG_CHECK_EXISTS manually
-# --------------------------------------------------------------
+dnl PKG_CHECK_EXISTS(MODULES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl -------------------------------------------------------------------
+dnl Since: 0.18
+dnl
+dnl Check to see whether a particular set of modules exists. Similar to
+dnl PKG_CHECK_MODULES(), but does not set variables or print errors.
+dnl
+dnl Please remember that m4 expands AC_REQUIRE([PKG_PROG_PKG_CONFIG])
+dnl only at the first occurence in configure.ac, so if the first place
+dnl it's called might be skipped (such as if it is within an "if", you
+dnl have to call PKG_CHECK_EXISTS manually
 AC_DEFUN([PKG_CHECK_EXISTS],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
 if test -n "$PKG_CONFIG" && \
@@ -1794,8 +1784,10 @@ m4_ifvaln([$3], [else
   $3])dnl
 fi])
 
-# _PKG_CONFIG([VARIABLE], [COMMAND], [MODULES])
-# ---------------------------------------------
+dnl _PKG_CONFIG([VARIABLE], [COMMAND], [MODULES])
+dnl ---------------------------------------------
+dnl Internal wrapper calling pkg-config via PKG_CONFIG and setting
+dnl pkg_failed based on the result.
 m4_define([_PKG_CONFIG],
 [if test -n "$$1"; then
     pkg_cv_[]$1="$$1"
@@ -1807,10 +1799,11 @@ m4_define([_PKG_CONFIG],
  else
     pkg_failed=untried
 fi[]dnl
-])# _PKG_CONFIG
+])dnl _PKG_CONFIG
 
-# _PKG_SHORT_ERRORS_SUPPORTED
-# -----------------------------
+dnl _PKG_SHORT_ERRORS_SUPPORTED
+dnl ---------------------------
+dnl Internal check to see if pkg-config supports short errors.
 AC_DEFUN([_PKG_SHORT_ERRORS_SUPPORTED],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -1818,19 +1811,17 @@ if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
 else
         _pkg_short_errors_supported=no
 fi[]dnl
-])# _PKG_SHORT_ERRORS_SUPPORTED
+])dnl _PKG_SHORT_ERRORS_SUPPORTED
 
 
-# PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
-# [ACTION-IF-NOT-FOUND])
-#
-#
-# Note that if there is a possibility the first call to
-# PKG_CHECK_MODULES might not happen, you should be sure to include an
-# explicit call to PKG_PROG_PKG_CONFIG in your configure.ac
-#
-#
-# --------------------------------------------------------------
+dnl PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
+dnl   [ACTION-IF-NOT-FOUND])
+dnl --------------------------------------------------------------
+dnl Since: 0.4.0
+dnl
+dnl Note that if there is a possibility the first call to
+dnl PKG_CHECK_MODULES might not happen, you should be sure to include an
+dnl explicit call to PKG_PROG_PKG_CONFIG in your configure.ac
 AC_DEFUN([PKG_CHECK_MODULES],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
 AC_ARG_VAR([$1][_CFLAGS], [C compiler flags for $1, overriding pkg-config])dnl
@@ -1884,16 +1875,40 @@ else
         AC_MSG_RESULT([yes])
 	$3
 fi[]dnl
-])# PKG_CHECK_MODULES
+])dnl PKG_CHECK_MODULES
 
 
-# PKG_INSTALLDIR(DIRECTORY)
-# -------------------------
-# Substitutes the variable pkgconfigdir as the location where a module
-# should install pkg-config .pc files. By default the directory is
-# $libdir/pkgconfig, but the default can be changed by passing
-# DIRECTORY. The user can override through the --with-pkgconfigdir
-# parameter.
+dnl PKG_CHECK_MODULES_STATIC(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
+dnl   [ACTION-IF-NOT-FOUND])
+dnl ---------------------------------------------------------------------
+dnl Since: 0.29
+dnl
+dnl Checks for existence of MODULES and gathers its build flags with
+dnl static libraries enabled. Sets VARIABLE-PREFIX_CFLAGS from --cflags
+dnl and VARIABLE-PREFIX_LIBS from --libs.
+dnl
+dnl Note that if there is a possibility the first call to
+dnl PKG_CHECK_MODULES_STATIC might not happen, you should be sure to
+dnl include an explicit call to PKG_PROG_PKG_CONFIG in your
+dnl configure.ac.
+AC_DEFUN([PKG_CHECK_MODULES_STATIC],
+[AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
+_save_PKG_CONFIG=$PKG_CONFIG
+PKG_CONFIG="$PKG_CONFIG --static"
+PKG_CHECK_MODULES($@)
+PKG_CONFIG=$_save_PKG_CONFIG[]dnl
+])dnl PKG_CHECK_MODULES_STATIC
+
+
+dnl PKG_INSTALLDIR([DIRECTORY])
+dnl -------------------------
+dnl Since: 0.27
+dnl
+dnl Substitutes the variable pkgconfigdir as the location where a module
+dnl should install pkg-config .pc files. By default the directory is
+dnl $libdir/pkgconfig, but the default can be changed by passing
+dnl DIRECTORY. The user can override through the --with-pkgconfigdir
+dnl parameter.
 AC_DEFUN([PKG_INSTALLDIR],
 [m4_pushdef([pkg_default], [m4_default([$1], ['${libdir}/pkgconfig'])])
 m4_pushdef([pkg_description],
@@ -1904,16 +1919,18 @@ AC_ARG_WITH([pkgconfigdir],
 AC_SUBST([pkgconfigdir], [$with_pkgconfigdir])
 m4_popdef([pkg_default])
 m4_popdef([pkg_description])
-]) dnl PKG_INSTALLDIR
+])dnl PKG_INSTALLDIR
 
 
-# PKG_NOARCH_INSTALLDIR(DIRECTORY)
-# -------------------------
-# Substitutes the variable noarch_pkgconfigdir as the location where a
-# module should install arch-independent pkg-config .pc files. By
-# default the directory is $datadir/pkgconfig, but the default can be
-# changed by passing DIRECTORY. The user can override through the
-# --with-noarch-pkgconfigdir parameter.
+dnl PKG_NOARCH_INSTALLDIR([DIRECTORY])
+dnl --------------------------------
+dnl Since: 0.27
+dnl
+dnl Substitutes the variable noarch_pkgconfigdir as the location where a
+dnl module should install arch-independent pkg-config .pc files. By
+dnl default the directory is $datadir/pkgconfig, but the default can be
+dnl changed by passing DIRECTORY. The user can override through the
+dnl --with-noarch-pkgconfigdir parameter.
 AC_DEFUN([PKG_NOARCH_INSTALLDIR],
 [m4_pushdef([pkg_default], [m4_default([$1], ['${datadir}/pkgconfig'])])
 m4_pushdef([pkg_description],
@@ -1924,7 +1941,24 @@ AC_ARG_WITH([noarch-pkgconfigdir],
 AC_SUBST([noarch_pkgconfigdir], [$with_noarch_pkgconfigdir])
 m4_popdef([pkg_default])
 m4_popdef([pkg_description])
-]) dnl PKG_NOARCH_INSTALLDIR
+])dnl PKG_NOARCH_INSTALLDIR
+
+
+dnl PKG_CHECK_VAR(VARIABLE, MODULE, CONFIG-VARIABLE,
+dnl [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl -------------------------------------------
+dnl Since: 0.28
+dnl
+dnl Retrieves the value of the pkg-config variable for the given module.
+AC_DEFUN([PKG_CHECK_VAR],
+[AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
+AC_ARG_VAR([$1], [value of $3 for $2, overriding pkg-config])dnl
+
+_PKG_CONFIG([$1], [variable="][$3]["], [$2])
+AS_VAR_COPY([$1], [pkg_cv_][$1])
+
+AS_VAR_IF([$1], [""], [$5], [$4])dnl
+])dnl PKG_CHECK_VAR
 
 # Copyright (C) 2002-2017 Free Software Foundation, Inc.
 #
@@ -3129,4 +3163,4 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([m4/ax_reset_header_cache.m4])
+m4_include([am-macros/ax_reset_header_cache.m4])
