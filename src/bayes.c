@@ -155,7 +155,7 @@ int main (int argc, char *argv[])
 #   if defined (__MWERKS__) & defined (MAC_VERSION)
     /* Set up interface when using the Metrowerks compiler. This
        should work for either Macintosh or Windows. */
-    SIOUXSetTitle("\pMrBayes v3.2");
+    SIOUXSetTitle("\pMrBayes v3.2.7");
     SIOUXSettings.fontface         = 0;  /* plain=0; bold=1 */
     SIOUXSettings.setupmenus       = 0;
     SIOUXSettings.autocloseonquit  = 1;

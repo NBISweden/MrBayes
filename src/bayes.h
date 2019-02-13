@@ -6,7 +6,7 @@
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
-#   define PACKAGE_VERSION "3.2.7-dev"
+#   define PACKAGE_VERSION "3.2.7"
 #   define HOST_CPU "x86_64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
