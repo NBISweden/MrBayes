@@ -5,7 +5,7 @@ inference of phylogeny.
 
 
 Build instructions, very very short version (would install MrBayes as
-"/usr/local/bin/mb"):
+"/usr/local/bin/mb" on a Unix system):
 
     git clone --depth=1 https://github.com/NBISweden/MrBayes.git
     cd MrBayes
