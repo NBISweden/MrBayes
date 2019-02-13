@@ -1,0 +1,5 @@
+dist_doc_DATA=	COPYING README NEWS
+
+EXTRA_DIST=	INSTALL
+
+SUBDIRS=	src doc examples

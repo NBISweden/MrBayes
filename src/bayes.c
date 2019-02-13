@@ -41,20 +41,29 @@
 #include "sumpt.h"
 #include "utils.h"
 
-       const char* const svnRevisionBayesC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-extern const char* const svnRevisionBestC;
-extern const char* const svnRevisionCommandC;
-extern const char* const svnRevisionLikeliC;
-extern const char* const svnRevisionMbbeagleC;
-extern const char* const svnRevisionMcmcC;
-extern const char* const svnRevisionModelC;
-extern const char* const svnRevisionProposalC;
-extern const char* const svnRevisionSumptC;
-extern const char* const svnRevisionUtilsC;
+/* We only do proper command line parsing if we're on a system where the
+   unistd.h header is available */
+#ifdef HAVE_UNISTD_H
+#define UNIX_COMMAND_LINE_PARSING 1
+#include <unistd.h> /* getopt() */
+#endif
 
 #ifdef HAVE_LIBREADLINE
-#include <readline/readline.h>
-#include <readline/history.h>
+#  if defined(HAVE_READLINE_READLINE_H)
+#    include <readline/readline.h>
+#  elif defined(HAVE_READLINE_H)
+#    include <readline.h>
+#  endif /* !defined(HAVE_READLINE_H) */
+#endif /* HAVE_LIBREADLINE */
+#ifdef HAVE_READLINE_HISTORY
+#  if defined(HAVE_READLINE_HISTORY_H)
+#    include <readline/history.h>
+#  elif defined(HAVE_HISTORY_H)
+#    include <history.h>
+#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+#endif /* HAVE_READLINE_HISTORY */
+
+#ifdef HAVE_LIBREADLINE
 static char **readline_completion(const char *, int, int);
 #endif
 
@@ -95,13 +104,6 @@ int         num_procs;                   /* number of active processors         
 MrBFlt      myStateInfo[7];              /* likelihood/prior/heat/ran/moveInfo vals of me              */
 MrBFlt      partnerStateInfo[7];         /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #endif
-
-#if defined (FAST_LOG)
-CLFlt       scalerValue[400];
-CLFlt       logValue[400];
-#endif
-/* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
-
 
 int main (int argc, char *argv[])
 {
@@ -153,7 +155,7 @@ int main (int argc, char *argv[])
 #   if defined (__MWERKS__) & defined (MAC_VERSION)
     /* Set up interface when using the Metrowerks compiler. This
        should work for either Macintosh or Windows. */
-    SIOUXSetTitle("\pMrBayes v3.2");
+    SIOUXSetTitle("\pMrBayes v3.2.7");
     SIOUXSettings.fontface         = 0;  /* plain=0; bold=1 */
     SIOUXSettings.setupmenus       = 0;
     SIOUXSettings.autocloseonquit  = 1;
@@ -195,9 +197,6 @@ int main (int argc, char *argv[])
     /* Initialize the variables of the program. */
     InitializeMrBayes ();
     
-    /* Print the nifty header. */
-    PrintHeader ();
-    
     /* Go to the command line, process any arguments passed to the program
        and then wait for input. */
     i = CommandLine (argc, argv);
@@ -226,8 +225,105 @@ int CommandLine (int argc, char **argv)
     int     ierror;
 #   endif
 
-    for (i=0;i<CMD_STRING_LENGTH;i++) cmdStr[i]='\0';
-    
+    for (i = 0; i < CMD_STRING_LENGTH; i++) cmdStr[i] = '\0';
+
+#ifdef UNIX_COMMAND_LINE_PARSING
+{
+    int ch;              /* the option character */
+    int interactive = 0; /* enable/disable interactive mode */
+
+    /* Do command line parsing on Unix-like systems */
+    while ((ch = getopt(argc, argv, "hiIv")) != -1) {
+        switch (ch) {
+        case 'h': /* help */
+            /* Display (very short) command synopsis and terminate
+             * succesfully */
+            puts("MrBayes, Bayesian Analysis of Phylogeny\n");
+            puts("Usage:");
+            printf("\t%s [-i] [filename ...]\n", argv[0]);
+            printf("\t%s -v\n", argv[0]);
+            printf("\t%s -h\n", argv[0]);
+            putchar('\n');
+            puts("Options:");
+            puts("\t-i\tForce interactive mode");
+            puts("\t\tNon-interactive mode is the default when a "
+                 "filename is given");
+            puts("\t\tInteractive mode is the default when no filename is "
+                 "given");
+            puts("\t-v\tDisplay version information and exit");
+            puts("\t-h\tDisplay this short help text and exit");
+            return NO_ERROR;
+            break; /* NOTREACHED */
+        case 'i':  /* interactive */
+        case 'I':  /* interactive */
+            /* Force enable interactive mode */
+            interactive = 1;
+            break;
+        case 'v': /* version */
+                  /* Display the same information that is displayed by the
+                   * "Version" interactive command and terminate succesfully */
+            puts("MrBayes, Bayesian Analysis of Phylogeny\n");
+            printf("Version:   %s\n", VERSION_NUMBER);
+            fputs("Features: ", stdout);
+#ifdef SSE_ENABLED
+            fputs(" SSE", stdout);
+#endif
+#ifdef AVX_ENABLED
+            fputs(" AVX", stdout);
+#endif
+#ifdef FMA_ENABLED
+            fputs(" FMA", stdout);
+#endif
+#ifdef BEAGLE_ENABLED
+            fputs(" Beagle", stdout);
+#endif
+#ifdef MPI_ENABLED
+            fputs(" MPI", stdout);
+#endif
+#ifdef HAVE_LIBREADLINE
+            fputs(" readline", stdout);
+#endif
+            putchar('\n');
+#if defined(HOST_TYPE) && defined(HOST_CPU)
+            printf("Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
+#endif
+#if defined(COMPILER_VENDOR) && defined(COMPILER_VERSION)
+            printf(
+                "Compiler:  %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
+#endif
+            return NO_ERROR;
+            break; /* NOTREACHED */
+        case '?':  /* unknown */
+        default:   /* unknown */
+            fprintf(stderr,
+                "Error in command line parsing (see '%s -h')\n", argv[0]);
+            return ERROR;
+        }
+    }
+
+    if (optind == argc) {
+        /* If no further operands are available (i.e. there are no files to
+         * process), switch to interactive mode */
+        interactive = 1;
+    }
+
+    if (interactive) {
+        mode = INTERACTIVE;
+        autoClose = NO;
+        autoOverwrite = YES;
+        noWarn = NO;
+        quitOnError = NO;
+    } else {
+        mode = NONINTERACTIVE;
+        autoClose = YES;
+        autoOverwrite = YES;
+        noWarn = YES;
+        quitOnError = YES;
+    }
+
+    nProcessedArgs = optind;
+}
+#else /* !UNIX_COMMAND_LINE_PARSING */
     /* wait for user-input commands */
     nProcessedArgs = 1; /* first argument is program name and needs not be processed */
     if (nProcessedArgs < argc)
@@ -238,10 +334,16 @@ int CommandLine (int argc, char **argv)
         noWarn = YES;
         quitOnError = YES;
         }
+#endif
+
+    /* Display MrBayes header *after* parsing the command line un Unix systems */
+    PrintHeader();
+
     for (;;)
         {
         if (nProcessedArgs < argc) 
             {
+#ifndef UNIX_COMMAND_LINE_PARSING
             /* we are here only if a command that has been passed
                into the program remains to be processed */
             if (nProcessedArgs == 1 && (strcmp(argv[1],"-i") == 0 || strcmp(argv[1],"-I") == 0))
@@ -253,6 +355,7 @@ int CommandLine (int argc, char **argv)
                 quitOnError = NO;
                 }
             else
+#endif
                 sprintf (cmdStr, "Execute %s", argv[nProcessedArgs]);
             nProcessedArgs++;
             }
@@ -375,26 +478,6 @@ char **readline_completion (const char *text, int start, int stop)
 #endif
 
 
-unsigned FindMaxRevision (unsigned amount, ...)
-{
-    const char* cur;
-    char tmp[20];
-    unsigned val,i,max;
-    
-    va_list vl;
-    va_start(vl,amount);
-    max=0;
-    for (i=0;i<amount;i++)
-        {
-        cur=va_arg(vl,const char*);
-        sscanf(cur,"%s %d",tmp,&val);
-        max=(max>val)?max:val;
-        }
-    va_end(vl);
-    return max;
-}
-
-
 void GetTimeSeed (void)
 {
     time_t      curTime;
@@ -511,9 +594,19 @@ int InitializeMrBayes (void)
 #       if defined (WIN_VERSION)
     tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library (NO until SSE code works in Win) */
 #       else
-    tryToUseBEAGLE = NO;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
+/* Try using Beagle */
+/*
+ * Note: The old (2015) comment from Chi says that there is some issue with
+ * single precision SSE code.  This issue is unknown to us at this point
+ * in time (2019, four years later).
+ *
+ * */
+
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+
 #       endif
-    beagleScalingScheme = MB_BEAGLE_SCALE_ALWAYS;    /* use BEAGLE always scaling                     */
+    beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;   /* use BEAGLE dynamic scaling                     */
     beagleFlags = BEAGLE_FLAG_PROCESSOR_CPU;         /* default to generic CPU                        */
     beagleResourceNumber = 99;                       /* default to auto-resource selection            */
     // SSE instructions do not work in Windows environment
@@ -521,10 +614,16 @@ int InitializeMrBayes (void)
     beagleResource = NULL;
     beagleResourceCount = 0;                         /* default has no list */
     beagleInstanceCount = 0;                         /* no BEAGLE instances */
-    beagleScalingFrequency = 1000;  
+    beagleScalingFrequency = 1000;
+
+    beagleFlags &= ~BEAGLE_FLAG_PRECISION_DOUBLE;   /* Use Beagle in single precision mode */
+    beagleFlags |= BEAGLE_FLAG_PRECISION_SINGLE;
+
+#   if defined (BEAGLE_V3_ENABLED)
+    beagleFlags |= BEAGLE_FLAG_THREADING_CPP;         /* default to use threads on CPU */
+    beagleThreadCount = 99;                           /* default to auto threading */
+    beagleAllFloatTips = NO;                          /* default to using compact tips */
 #   endif
-#   if defined (THREADS_ENABLED)
-    tryToUseThreads = NO;                            /* try to use pthread with BEAGLE library        */
 #   endif
 
     /* set the proposal information */
@@ -552,15 +651,6 @@ int InitializeMrBayes (void)
     doublet[14].first  = 8;   doublet[14].second = 4;
     doublet[15].first  = 8;   doublet[15].second = 8;
 
-#   if defined (FAST_LOG)
-    /* set up log table */
-    for (i=0; i<400; i++)
-        {
-        scalerValue[i] = (CLFlt) ldexp (1.0, 1-i);  /* offset 1 needed to deal with scaler == 1.0 */
-        logValue[i] = (CLFlt) log (scalerValue[i]);     
-        }
-#   endif
-
     /* user trees */
     for (i=0; i<MAX_NUM_USERTREES; i++)
         userTree[i] = NULL;
@@ -585,6 +675,8 @@ int InitializeMrBayes (void)
     strcpy(defaultModel.omegaVar, "Equal");             /* omega variation                              */
     strcpy(defaultModel.ratesModel, "Equal");           /* rates across sites model                     */
     defaultModel.numGammaCats = 4;                      /* number of categories for gamma approximation */
+    defaultModel.numLnormCats = 4;                      /* number of categories for lnorm approximation */
+    defaultModel.numMixtCats = 4;                       /* number of components in rate mixture         */
     strcpy(defaultModel.useGibbs,"No");                 /* do not use Gibbs sampling of rate cats by default */
     defaultModel.gibbsFreq = 100;                       /* default Gibbs sampling frequency of rate cats*/
     defaultModel.numBetaCats = 5;                       /* number of categories for beta approximation  */
@@ -728,19 +820,21 @@ int InitializeMrBayes (void)
     strcpy(defaultModel.speciationPr, "Exponential");   /* prior on speciation rate (net diversification) */
     defaultModel.speciationFix = 0.1;
     defaultModel.speciationUni[0] = 0.0;
-    defaultModel.speciationUni[1] = 10.0;
+    defaultModel.speciationUni[1] = 1000.0;
     defaultModel.speciationExp = 10.0;
     strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover)          */
-    defaultModel.extinctionFix = 0.5;
+    defaultModel.extinctionFix = 0.9;
     defaultModel.extinctionBeta[0] = 1;
     defaultModel.extinctionBeta[1] = 1;
     strcpy(defaultModel.fossilizationPr, "Beta");       /* prior on fossilization rate (sampling proportion) */
-    defaultModel.fossilizationFix = 0.5;
+    defaultModel.fossilizationFix = 0.1;
     defaultModel.fossilizationBeta[0] = 1;
     defaultModel.fossilizationBeta[1] = 1;
     strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                      */
     defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction               */
-    defaultModel.sampleFSNum = 0;                       /* number of fossil slice sampling events       */
+    defaultModel.birthRateShiftNum = 0;                 /* number of birth rate shifts                  */
+    defaultModel.deathRateShiftNum = 0;                 /* number of death rate shifts                  */
+    defaultModel.fossilSamplingNum = 0;                 /* number of fossil sampling rate shifts / slice sampling events */
 
     strcpy(defaultModel.popSizePr, "Gamma");            /* prior on coalescence population size         */
     defaultModel.popSizeFix = 100.0;                    /* N_e = 100 */
@@ -853,20 +947,8 @@ int InitializeMrBayes (void)
 
 void PrintHeader (void)
 {
-    char arch[4];
-#   ifndef RELEASE
-    unsigned rev = FindMaxRevision (10, svnRevisionBayesC,svnRevisionBestC,svnRevisionCommandC,svnRevisionLikeliC,svnRevisionMbbeagleC,
-                                        svnRevisionMcmcC,svnRevisionModelC,svnRevisionProposalC,svnRevisionSumptC,svnRevisionUtilsC);
-#   endif
-
-    strcpy(arch,(sizeof(void*)==4)?"x86":"x64");
-
     MrBayesPrint ("\n\n");
-#   ifdef RELEASE
-    MrBayesPrint ("                            MrBayes v%s %s\n\n", VERSION_NUMBER,arch);
-#   else
-    MrBayesPrint ("                        MrBayes v%s(r%d) %s\n\n", VERSION_NUMBER,rev,arch);
-#   endif
+    MrBayesPrint ("                            MrBayes %s %s\n\n", VERSION_NUMBER, HOST_CPU);
     MrBayesPrint ("                      (Bayesian Analysis of Phylogeny)\n\n");
 #   if defined (MPI_ENABLED)
     MrBayesPrint ("                             (Parallel version)\n");

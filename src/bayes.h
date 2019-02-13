@@ -1,6 +1,28 @@
 #ifndef __BAYES_H__
 #define __BAYES_H__
 
+#ifdef HAVE_CONFIG_H
+#   include "config.h"
+#   define VERSION_NUMBER  PACKAGE_VERSION
+#elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
+#   define PACKAGE_NAME "MrBayes"
+#   define PACKAGE_VERSION "3.2.7"
+#   define HOST_CPU "x86_64"
+#   define VERSION_NUMBER  PACKAGE_VERSION
+#   undef  HAVE_LIBREADLINE
+#   define UNIX_VERSION 1
+#   define SSE_ENABLED  1
+#   undef  AVX_ENABLED
+#   undef  FMA_ENABLED
+#   undef  MPI_ENABLED
+#   undef  BEAGLE_ENABLED
+#endif
+
+#ifdef HAVE_UNISTD_H
+#define _XOPEN_SOURCE
+#include <unistd.h>
+#endif
+
 #include <assert.h>
 #include <ctype.h>
 #include <float.h>
@@ -13,19 +35,24 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef USECONFIG_H
-#   include "config.h"
-#elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
-#   define PACKAGE_NAME "mrbayes"
-#   define PACKAGE_VERSION "3.2"
-#   undef  HAVE_LIBREADLINE
-#   define UNIX_VERSION 1
-#   define SSE_ENABLED  1
-#   undef  AVX_ENABLED
-#   undef  FMA_ENABLED
-#   undef  MPI_ENABLED
-#   undef  BEAGLE_ENABLED
-#   undef  FAST_LOG
+/* Set SSE_ENABLED if SSE SIMD extensions available. */
+#ifdef HAVE_SSE
+#define SSE_ENABLED
+#endif
+
+/* Set AVX_ENABLED if AVX SIMD extensions available. */
+#ifdef HAVE_AVX
+#define AVX_ENABLED
+#endif
+
+/* Set FMA_ENABLED if FMA SIMD extensions available. */
+#if defined(HAVE_FMA3) || defined(HAVE_FMA4)
+#define FMA_ENABLED
+#endif
+
+/* Set COMPLETIONMATCHES if we have the readline library */
+#ifdef HAVE_LIBREADLINE
+#define COMPLETIONMATCHES
 #endif
 
 #if defined (MPI_ENABLED)
@@ -36,19 +63,13 @@
 #include "libhmsbeagle/beagle.h"
 #endif
 
-/* uncomment the following line when releasing, also modify the VERSION_NUMBER below */
-/* #define RELEASE */
-#ifdef RELEASE
-#define VERSION_NUMBER  "3.2.7"
-#else
-#define VERSION_NUMBER  "3.2.7-svn"
-#endif
-
 #if !defined (UNIX_VERSION) && !defined (WIN_VERSION) && !defined (MAC_VERSION)
 #  ifdef __MWERKS__
 #    define MAC_VERSION
 #  elif defined __APPLE__
 #    define MAC_VERSION
+#  elif defined __unix__
+#    define UNIX_VERISON
 #  else
 #    define WIN_VERSION
 #  endif
@@ -104,6 +125,23 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #  if !defined (SSE_ENABLED)
 #    define SSE_ENABLED
 #  endif
+#endif
+
+/* Likewise, if the user has asked for SIMD instructions to be disabled, do this
+ * too in a stepwise manner */
+#ifdef DISABLE_SSE
+#undef SSE_ENABLED
+#undef AVX_ENABLED
+#undef FMA_ENABLED
+#endif
+
+#ifdef DISABLE_AVX
+#undef AVX_ENABLED
+#undef FMA_ENABLED
+#endif
+
+#ifdef DISABLE_FMA
+#undef FMA_ENABLED
 #endif
 
 /* Define compiler for appropriate SIMD vector data alignment and free operations */
@@ -235,8 +273,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 #define NST_MIXED              -1  /* anything other than 1, 2, or 6 */
 
-#define MISSING                 10000000
-#define GAP                     10000001
+#define MISSING                 100000000
+#define GAP                     100000001
 
 #define UNORD                   0
 #define ORD                     1
@@ -281,8 +319,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define MIN_SHAPE_PARAM         0.00001f
 #define MAX_SHAPE_PARAM         100.0f
 #define MAX_SITE_RATE           10.0f
-#define MAX_GAMMA_CATS          20
-#define MAX_GAMMA_CATS_SQUARED  400
+#define MAX_RATE_CATS           20
+#define MAX_RATE_CATS_SQUARED   400
 #define BRLENS_MIN              0.00000001f  // 1E-8f
 #define BRLENS_MAX              100.0f
 /* BRLENS_MIN must be bigger than TIME_MIN */
@@ -391,13 +429,12 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define ALLOC_BEST               88
 #define ALLOC_SPECIESPARTITIONS  89
 #define ALLOC_SS                 90
-#define ALLOC_SAMPLEFOSSILSLICE  91
 
 #define LINKED                  0
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              31
+#define NUM_LINKED              32
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -429,6 +466,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_GENETREERATE          28
 #define P_MIXEDVAR              29
 #define P_MIXEDBRCHRATES        30
+#define P_MIXTURE_RATES         31
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
@@ -569,11 +607,15 @@ typedef struct
     int             nLocks;             /*!< number of constrained (locked) nodes         */
     TreeNode        **allDownPass;      /*!< downpass array of all nodes                  */
     TreeNode        **intDownPass;      /*!< downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
+#if defined (BEAGLE_V3_ENABLED)
+    int             levelPassEnabled;   /*!< are we also doing a level-order traversal?   */
+    TreeNode        **intDownPassLevel; /*!< level order downpass array of interior nodes (including upper but excluding lower root in rooted trees) */
+#endif
     TreeNode        *root;              /*!< pointer to root (lower root in rooted trees) */
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
     BitsLong        *flags;             /*!< pointer to cond like flags                   */
-    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengthes are set from user tree(as start tree or fix branch length prior), NO otherwise */       
+    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
     }
     Tree;
 
@@ -674,17 +716,6 @@ typedef struct param
     LnPriorProbFxn  LnPriorProb;        /* ln prior prob function                         */
     LnPriorRatioFxn LnPriorRatio;       /* ln prior prob ratio function                   */
     } Param;
-
-#if defined(THREADS_ENABLED)
-#include <pthread.h>
-
-typedef struct s_launch_struct 
-    {
-    int chain;
-    int division;
-    MrBFlt* lnL;                    
-    } LaunchStruct; 
-#endif
 
 /* parameter ID values */
 /* identifies unique model parameter x prior combinations */
@@ -834,6 +865,7 @@ typedef struct s_launch_struct
 #define MIXEDVAR_EXP                    144
 #define MIXEDVAR_UNI                    145
 #define MIXEDBRCHRATES                  146
+#define MIXTURE_RATES                   147
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -954,6 +986,8 @@ typedef struct model
     char        omegaVar[100];     /* type of omega variation model                */
     char        ratesModel[100];   /* rates across sites model                     */
     int         numGammaCats;      /* number of categories for gamma approximation */
+    int         numLnormCats;      /* number of categories for lnorm approximation */
+    int         numMixtCats;       /* number of components of rate mixture         */
     char        useGibbs[100];     /* flags whether Gibbs sampling of discrete gamma is used */
     int         gibbsFreq;         /* frequency of Gibbs resampling of discrete gamma */
 
@@ -1063,9 +1097,13 @@ typedef struct model
     MrBFlt      fossilizationFix;
     MrBFlt      fossilizationBeta[2];
     char        sampleStrat[100];      /* taxon sampling strategy (for b-d process)         */
-    int         sampleFSNum;           /* number of fossil slice sampling events (s)        */
-    MrBFlt     *sampleFSTime;          /* fossil slice sampling times (t_i,   i=1,..,s)     */
-    MrBFlt     *sampleFSProb;          /* fossil slice sampling probs (rho_i, i=1,..,s)     */
+    int         birthRateShiftNum;     /* number of birth rate shifts                       */
+    MrBFlt      birthRateShiftTime[100];    /* birth rate shifting times                    */
+    int         deathRateShiftNum;     /* number of death rate shifts                       */
+    MrBFlt      deathRateShiftTime[100];    /* death rate shifting times                    */
+    int         fossilSamplingNum;     /* number of fossil sampling rate shiftings / slice sampling events */
+    MrBFlt      fossilSamplingTime[100];    /* fossil sampling rate shifting times          */
+    // MrBFlt     *fossilSamplingProb; /* fossil slice sampling probs (rho_i)               */
     MrBFlt      sampleProb;            /* extant taxon sampling fraction (rho)              */
     Calibration treeAgePr;             /* prior on tree age for uniform clock trees         */
     char        clockRatePr[100];      /* prior on base substitution rate of tree for clock trees */
@@ -1183,7 +1221,7 @@ typedef struct modelinfo
     int         parsModelId;                /* is parsimony model used YES/NO           */
 
     /* Specific model information */
-    int         numGammaCats;               /* number of gamma cats (1 if inapplic.)    */
+    int         numRateCats;                /* number of rate cats (1 if inapplic.)    */
     int         numBetaCats;                /* number of beta cats (1 if inapplic.)     */
     int         numOmegaCats;               /* number of omega cats (1 if inapplic.)    */
     int         numTiCats;                  /* number of cats needing different tis     */
@@ -1195,6 +1233,7 @@ typedef struct modelinfo
     Param       *revMat;                    /* ptr to revMat used in model              */
     Param       *omega;                     /* ptr to omega used in model               */
     Param       *stateFreq;                 /* ptr to statFreq used in model            */
+    Param       *mixtureRates;              /* ptr to site rate mixture used in model   */
     Param       *shape;                     /* ptr to shape used in model               */
     Param       *pInvar;                    /* ptr to pInvar used in model              */
     Param       *correlation;               /* ptr to correlation used in model         */
@@ -1327,6 +1366,7 @@ typedef struct modelinfo
 
     /* likelihood calculator flags and variables */
     int         useBeagle;                  /* use Beagle for this partition?               */
+    int         useBeagleMultiPartitions;   /* use one Beagle instance for all partitions?  */
     int         useVec;                     /* use SSE for this partition?                  */
     int*        rescaleFreq;                /* rescale frequency for each chain             */
 
@@ -1346,12 +1386,25 @@ typedef struct modelinfo
     int*        cumulativeScaleIndices;     /* array of cumulative scale indices            */
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
     int         rescaleFreqOld;             /* holds rescale frequency of current state     */
+    int         rescaleFreqNew;             /* holds temporary new rescale frequency        */
     int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
-    int*        succesCount;                /* count number of succesful computation since last reset of scalers */
+    int*        successCount;               /* count of successful computations since last reset of scalers */
     int**       isScalerNode;               /* for each node and chain set to YES if scaled node */
     int*        isScalerNodeScratch;        /* scratch space to hold isScalerNode of proposed state*/
     long*       beagleComputeCount;         /* count of number of calls to likelihood       */
-#endif
+    int         divisionIndex;              /* division index number                        */
+    BeagleOperation* operations;            /* array of operations to be sent to Beagle     */
+    int         opCount;                    /* partial likelihood operations count          */
+    int*        scaleFactorsOps;            /* array of scaler indices for Beagle operations*/
+#if defined (BEAGLE_V3_ENABLED)
+    int         numCharsAll;                /* number of compressed chars for all divisions */
+    MrBFlt*     logLikelihoodsAll;          /* array of log likelihoods for all divisions   */
+    int*        cijkIndicesAll;             /* cijk array for all divisions                 */
+    int*        categoryRateIndicesAll;     /* category rate array for all divisions        */
+    BeagleOperationByPartition* operationsAll; /* array of all operations across divisions  */
+    BeagleOperationByPartition* operationsByPartition; /* array of division operations to be sent to Beagle     */
+#endif /* BEAGLE_V3_ENABLED */
+#endif /* BEAGLE_ENABLED */
 
     } ModelInfo;
 
@@ -1692,9 +1745,10 @@ extern int              beagleInstanceCount;                    /* total number 
 extern int              beagleScalingScheme;                    /* BEAGLE dynamic scaling                        */
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
 extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
+#if defined (BEAGLE_V3_ENABLED)
+extern int              beagleThreadCount;                      /* max number of BEAGLE CPU threads  */
+extern int              beagleAllFloatTips;                     /* use floating-point represantion for all tips  */
 #endif
-#if defined (THREADS_ENABLED)
-extern int              tryToUseThreads;                        /* try to use pthreads with BEAGLE library       */
 #endif
 
 /* Aamodel parameters */
@@ -1728,11 +1782,6 @@ extern int              proc_id;                                /* process ID (0
 extern int              num_procs;                              /* number of active processors                                */
 extern MrBFlt           myStateInfo[7];                         /* likelihood/prior/heat/ran/moveInfo vals of me              */
 extern MrBFlt           partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
-#endif
-
-#if defined (FAST_LOG)
-extern CLFlt            scalerValue[];
-extern CLFlt            logValue[];
 #endif
 
 #endif  /* __BAYES_H__ */

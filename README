@@ -1,0 +1,59 @@
+Hi,
+
+This is the GitHub repository for MrBayes, a program used for Bayesian
+inference of phylogeny.
+
+
+Build instructions, very very short version (would install MrBayes as
+"/usr/local/bin/mb" on a Unix system):
+
+    git clone --depth=1 https://github.com/NBISweden/MrBayes.git
+    cd MrBayes
+    ./configure
+    make && sudo make install
+
+    Refer to the document called "INSTALL" for further information.
+
+
+Current repository directory layout:
+
+    .
+    ├── am-*           : Files relating to the build system
+    ├── doc
+    │   ├── manual     : The manual
+    │   └── tutorial   : A tutorial
+    ├── examples       : Example input data sets
+    └── src            : C source code
+
+
+The web site is available at
+
+    http://NBISweden.github.io/MrBayes/
+
+
+Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0
+onwards.
+
+The 'master' branch contains releases.
+
+The 'develop' branch should hopefully, at all times, contain working
+development code that at least compiles.  Apart from simple fixes, new
+development happens on feature branches off the 'develop' branch, and
+are merged back into 'develop' when finished.  This more or less follows
+the "git-flow" branching model.
+
+The 'gh-pages' branch contains the web site (only).
+
+The 'testing' branch contains testing data files (only).
+
+After release 3.2.6 (November 2015), MrBayes entered "maintenance mode",
+and its care has been passed over to NBIS (National Bioinformatics
+Infrastructure Sweden, http://nbis.se/).  The original development
+team is still involved with the program, but any future releases will
+probably be geared more towards bug-fixes rather than addition of new
+features.
+
+With kind regards,
+    Andreas (Kusalananda) Kähäri, and
+    Johan Nylander
+    NBIS

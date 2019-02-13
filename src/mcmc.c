@@ -35,6 +35,13 @@
  *
  */
 
+#undef  DEBUG_TIME
+
+#if defined (DEBUG_TIME)
+#define _POSIX_C_SOURCE 199309L
+#include <sys/time.h>
+#endif
+
 #include "bayes.h"
 #include "best.h"
 #include "command.h"
@@ -49,8 +56,6 @@
 #include "SIOUX.h"
 #endif
 #include <signal.h>
-
-const char* const svnRevisionMcmcC = "$Rev$";   /* Revision keyword which is expanded/updated by svn on each commit/update */
 
 #if defined (WIN_VERSION) && !defined (__GNUC__)
 #define VISUAL
@@ -147,6 +152,7 @@ MrBFlt    GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, i
 void      GetStamp (void);
 void      GetSwappers (int *swapA, int *swapB, int curGen);
 void      GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp);
+int       GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes);
 MrBFlt    GibbsSampleGamma (int chain, int division, RandLong *seed);
 int       InitAdGamma(void);
 int       InitChainCondLikes (void);
@@ -162,9 +168,9 @@ MrBFlt    LogPrior (int chain);
 int       LnBirthDeathPriorPrRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
 int       LnBirthDeathPriorPrCluster   (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF);
-int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR);
-int       LnFossilizedBDPriorRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
-int       LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR);
+int       LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF);
+int       LnFossilizedBDPriorRandom    (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF);
+int       LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF);
 MrBFlt    LnP0 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt    LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
@@ -252,7 +258,7 @@ void      TouchAllPartitions (void);
 void      TouchAllTrees (int chain);
 void      TouchEverything (int chain);
 
-/* globals */
+/* globals declared here and used elsewhere */
 int             *bsIndex;                    /* compressed std stat freq index               */
 Chain           chainParams;                 /* parameters of Markov chain                   */
 int             *compCharPos;                /* char position in compressed matrix           */
@@ -273,6 +279,11 @@ int             *tiIndex;                    /* compressed std char ti index    
 #if defined (BEAGLE_ENABLED)
 int             recalcScalers;               /* shoud we recalculate scalers for current state YES/NO */
 #endif
+
+/* globals used here but declared elsewhere (in likelihood.c) */
+extern CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
+extern CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
+extern CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
 
 /* local (to this file) variables */
 int             numLocalChains;              /* number of Markov chains                      */
@@ -476,7 +487,7 @@ int AddTreeSamples (int from, int to, int saveToList)
 
             if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
-                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
+                MrBayesPrint ("%s   Problem opening file %s.\n", spacer, tempStr);
                 free (tempStr);
                 return (ERROR);
                 }
@@ -1528,7 +1539,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
 {
     int             c, i, j, nRates, posit, lastCharId;
     MrBFlt          logScaler, max, prob, *F,
-                    *oldF, *tempF, fSpace[2][MAX_GAMMA_CATS];
+                    *oldF, *tempF, fSpace[2][MAX_RATE_CATS];
     MrBFlt          *rP;
     CLFlt           freq, *lnScaler;
     ModelInfo       *m;
@@ -1538,7 +1549,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
     /* find nRates for first division in HMM */
     m = &modelSettings[d];
     mp = &modelParams[d];
-    nRates = m->numGammaCats;
+    nRates = m->numRateCats;
 
     /* calculate rate category frequencies */
     freq = (CLFlt) ((CLFlt) 1.0 / nRates);
@@ -1593,7 +1604,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
     /* fill in fi(0) */
     max = 0.0;
     m = &modelSettings[partitionId[c][partitionNum] - 1];
-    posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numGammaCats;
+    posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numRateCats;
 
     for (i=0; i<nRates; i++)
         {
@@ -1633,7 +1644,7 @@ int CalcLikeAdgamma (int d, Param *param, int chain, MrBFlt *lnL)
 
         /* find the position of the rate probs */
         m = &modelSettings[partitionId[c][partitionNum] - 1];
-        posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numGammaCats;
+        posit = m->rateProbStart + (compCharPos[c] - m->compCharStart) * m->numRateCats;
                 
         /* calculate the HMM forward probs fi(x) at site x in HMM */
         if (siteJump[c] <= MAX_SMALL_JUMP)
@@ -2076,12 +2087,28 @@ void CopySiteScalers (ModelInfo *m, int chain)
         j = m->siteScalerScratchIndex;
         for (i=0; i<m->nCijkParts; i++)
             {
-            beagleResetScaleFactors (m->beagleInstance,
-                                     m->siteScalerIndex[chain] + i);
-            beagleAccumulateScaleFactors (m->beagleInstance,
-                                          &j,
-                                          1,
-                                          m->siteScalerIndex[chain] + i);
+            if (m->useBeagleMultiPartitions == NO)
+                {
+                beagleResetScaleFactors (m->beagleInstance,
+                                         m->siteScalerIndex[chain] + i);
+                beagleAccumulateScaleFactors (m->beagleInstance,
+                                              &j,
+                                              1,
+                                              m->siteScalerIndex[chain] + i);
+                }
+            else
+#   if defined (BEAGLE_V3_ENABLED)
+                {
+                beagleResetScaleFactorsByPartition (m->beagleInstance,
+                                                    m->siteScalerIndex[chain] + i,
+                                                    m->divisionIndex);
+                beagleAccumulateScaleFactorsByPartition (m->beagleInstance,
+                                                         &j,
+                                                         1,
+                                                         m->siteScalerIndex[chain] + i,
+                                                         m->divisionIndex);                        
+                }
+#   endif /* BEAGLE_V3_ENABLED */
             j++;
             }
         return;
@@ -2155,6 +2182,12 @@ void CopyTrees (int chain)
         for (i=0; i<from->nIntNodes; i++)
             {
             to->intDownPass[i] = to->nodes + from->intDownPass[i]->memoryIndex;
+#if defined (BEAGLE_V3_ENABLED)
+            if (from->levelPassEnabled)
+                {
+                to->intDownPassLevel[i] = to->nodes + from->intDownPassLevel[i]->memoryIndex;
+                }
+#endif
             }
         for (i=0; i<from->nNodes; i++)
             {
@@ -2275,7 +2308,7 @@ int DoMcmc (void)
     if (setUpAnalysisSuccess == NO)
         {
         MrBayesPrint ("%s   The analysis could not be started because there was an error during its setup.\n", spacer);
-        MrBayesPrint ("%s   Refer to error messages printed during model set up to adress the problem.\n", spacer);
+        MrBayesPrint ("%s   Refer to error messages printed during model set up to address the problem.\n", spacer);
         goto errorExit;
         }
 
@@ -2803,7 +2836,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Seed (globalSeed) ***************************************************************/
         if (!strcmp(parmName, "Seed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -2827,7 +2860,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Swapseed (global variable swapSeed) ***************************************************************/
         else if (!strcmp(parmName, "Swapseed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is depricated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -4100,7 +4133,7 @@ int ExtendChainQuery ()
 
                 if (fgets (s, 100, stdin) == NULL)
                     {
-                    printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                    printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                     }
                 sscanf (s, "%d", &additionalCycles);
 
@@ -4129,7 +4162,7 @@ int ExtendChainQuery ()
 
             if (fgets (s, 20, stdin) == NULL)
                 {
-                printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+                printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
                 }
             sscanf (s, "%d", &additionalCycles);
 
@@ -4433,7 +4466,7 @@ void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
 
 void FreeChainMemory (void)
 {
-    int         i, j, k, nRateCats;
+    int         i, j, k, nRates;
     ModelInfo   *m;
 
     /* free model variables for Gibbs gamma */
@@ -4442,12 +4475,12 @@ void FreeChainMemory (void)
         if (modelSettings[i].gibbsGamma == YES)
             {
             if (modelSettings[i].pInvar != NULL)
-                nRateCats = modelSettings[i].numGammaCats + 1;
+                nRates = modelSettings[i].numRateCats + 1;
             else
-                nRateCats = modelSettings[i].numGammaCats;
+                nRates = modelSettings[i].numRateCats;
             for (j=0; j<numLocalChains; j++)
                 {
-                for (k=0; k<nRateCats; k++)
+                for (k=0; k<nRates; k++)
                     {
                     free(modelSettings[i].catLnScaler[j][k]);
                     free(modelSettings[i].catLike[j][k]);
@@ -4489,7 +4522,7 @@ void FreeChainMemory (void)
                 {
 #   if defined (SSE_ENABLED)
                 if (m->useVec != NO)
-                    AlignedSafeFree ((void **)(&m->condLikes[j]));
+                    ALIGNEDSAFEFREE (m->condLikes[j]);
                 else
                     free (m->condLikes[j]);
 #   else
@@ -4505,7 +4538,7 @@ void FreeChainMemory (void)
             for (j=0; j<m->numScalers; j++)
 #   if defined (SSE_ENABLED)
             if (m->useVec != VEC_NONE)
-                AlignedSafeFree ((void **)(&m->scalers[j]));
+                ALIGNEDSAFEFREE (m->scalers[j]);
             else
                 free (m->scalers[j]);
 #   else
@@ -4537,9 +4570,9 @@ void FreeChainMemory (void)
                 }
 #endif
             if (m->lnL_Vec)
-                AlignedSafeFree ((void **)(&m->lnL_Vec));
+                ALIGNEDSAFEFREE (m->lnL_Vec);
             if (m->lnLI_Vec)
-                AlignedSafeFree ((void **)(&m->lnLI_Vec));
+                ALIGNEDSAFEFREE (m->lnLI_Vec);
             }
 #   endif
 
@@ -4629,32 +4662,49 @@ void FreeChainMemory (void)
         if (m->useBeagle == NO)
             continue;
 
-        beagleFinalizeInstance(m->beagleInstance);
-        SafeFree((void **)(&m->logLikelihoods));
-        SafeFree((void **)(&m->inRates));
-        SafeFree((void **)(&m->branchLengths));
-        SafeFree((void **)(&m->tiProbIndices));
-        SafeFree((void **)(&m->inWeights));
-        SafeFree((void **)(&m->bufferIndices));
-        SafeFree((void **)(&m->eigenIndices));
-        SafeFree((void **)(&m->childBufferIndices));
-        SafeFree((void **)(&m->childTiProbIndices));
-        SafeFree((void **)(&m->cumulativeScaleIndices));
+        if (!(m->useBeagleMultiPartitions == YES && m->divisionIndex > 0)) {
+            beagleFinalizeInstance(m->beagleInstance);
+            m->beagleInstance = -99; // TODO: allow consecutive 'mcmc' runs using BEAGLE
+        }
+        SAFEFREE(m->logLikelihoods);
+        SAFEFREE(m->inRates);
+        SAFEFREE(m->branchLengths);
+        SAFEFREE(m->tiProbIndices);
+        SAFEFREE(m->inWeights);
+        SAFEFREE(m->bufferIndices);
+        SAFEFREE(m->eigenIndices);
+        SAFEFREE(m->childBufferIndices);
+        SAFEFREE(m->childTiProbIndices);
+        SAFEFREE(m->cumulativeScaleIndices);
 
         m->isScalerNodeScratch += numLocalTaxa;
-        SafeFree((void **)&(m->isScalerNodeScratch)); 
+        SAFEFREE(m->isScalerNodeScratch); 
         for (j=0; j<numLocalChains; j++)
             {
             m->isScalerNode[j] += numLocalTaxa;
-            SafeFree((void **)&(m->isScalerNode[j]));
+            SAFEFREE(m->isScalerNode[j]);
             }
-        SafeFree((void **)(&m->isScalerNode));
+        SAFEFREE(m->isScalerNode);
 
-        SafeFree((void **)(&m->beagleComputeCount));
-        SafeFree((void **)(&m->succesCount));
-        SafeFree((void **)(&m->rescaleFreq));
-
-#   endif
+        SAFEFREE(m->beagleComputeCount);
+        SAFEFREE(m->successCount);
+        SAFEFREE(m->rescaleFreq);
+        SAFEFREE(m->operations);
+        SAFEFREE(m->scaleFactorsOps);
+#   if defined (BEAGLE_V3_ENABLED)
+        if (m->useBeagleMultiPartitions == YES)
+            {
+            if (m->divisionIndex == 0)
+                {
+                SAFEFREE(m->logLikelihoodsAll);
+                SAFEFREE(m->cijkIndicesAll);
+                SAFEFREE(m->categoryRateIndicesAll);
+                SAFEFREE(m->operationsAll);
+                }
+            SAFEFREE(m->operationsByPartition);
+            }
+#   endif /* BEAGLE_V3_ENABLED */
+#   endif /* BEAGLE_ENABLED */
         }
 
     if (memAllocs[ALLOC_CURLNL] == YES) /*alloc in RunChain()*/
@@ -4857,7 +4907,6 @@ MrBFlt GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int 
         }
 
     return length;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -5167,7 +5216,6 @@ void GetParsimonySubtreeRootstate (Tree *t, TreeNode *root, int chain)
         }
 
     return;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -5278,7 +5326,7 @@ void GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp)
 
 MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
 {
-    int             c, i, k, *rateCat, nStates, nRateCats, nGammaCats, id;
+    int             c, i, k, *rateCat, nStates, nRateCats, nPosRateCats, id;
     CLFlt           **catLike, **catLnScaler, *lnScaler, maxLnScaler,
                     *clRoot, f, bs[64], *clInvar, pInvar, freq;
     MrBFlt          ran, lnL, *bsVals, deltaLnL, temp;
@@ -5305,7 +5353,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
     rateCat = m->tiIndex + chain*m->numChars;
     
     /* find number of rate cats and gamma cats */
-    nRateCats = nGammaCats = m->numGammaCats;
+    nRateCats = nPosRateCats = m->numRateCats;
     if (m->pInvar != NULL)
         nRateCats++;
 
@@ -5320,14 +5368,14 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
         pInvar = 0.0;
     else
         pInvar = (CLFlt) *GetParamVals (m->pInvar, chain, state[chain]);
-    freq = ((CLFlt)1.0 - pInvar) / nGammaCats;
+    freq = ((CLFlt)1.0 - pInvar) / nPosRateCats;
 
     /* get chain temperature */
     temp = Temperature (chainId[chain]);
     id = chainId[chain] % chainParams.numChains;
 
     /* calculate rate probs */
-    for (k=0; k<nGammaCats; k++)
+    for (k=0; k<nPosRateCats; k++)
         {
         FlipSiteScalerSpace(m, chain);
         ResetSiteScalers(m, chain);
@@ -5361,7 +5409,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
     /* fill in the invar cond likes if needed */
     if (m->pInvar != NULL)
         {
-        k = nGammaCats;
+        k = nPosRateCats;
         for (c=0; c<m->numChars; c++)
             {
             catLike[k][c] = 0.0;
@@ -5503,8 +5551,8 @@ int InitAdGamma (void)
             }
         k++;
 
-        if (m->numGammaCats > maxRates)
-            maxRates = m->numGammaCats;
+        if (m->numRateCats > maxRates)
+            maxRates = m->numRateCats;
 
         }
 
@@ -5581,7 +5629,7 @@ int InitAdGamma (void)
         memAllocs[ALLOC_MARKOVTIS] = YES;
     else
         {
-        MrBayesPrint ("%s   Problem allocating MarkovTis in InitAdGamma (%d MrBFlt)\n", spacer, 2 * MAX_GAMMA_CATS * MAX_GAMMA_CATS);
+        MrBayesPrint ("%s   Problem allocating MarkovTis in InitAdGamma (%d MrBFlt)\n", spacer, 2 * MAX_RATE_CATS * MAX_RATE_CATS);
         for (i=0; i<MAX_SMALL_JUMP; i++)
             if (markovTi[i] != NULL) 
                 FreeSquareDoubleMatrix (markovTi[i]);
@@ -5601,7 +5649,7 @@ int InitAdGamma (void)
         if (m->correlation != NULL)
             {
             m->rateProbStart = i;
-            i += m->numGammaCats * m->numChars;
+            i += m->numRateCats * m->numChars;
             }
         }
     rateProbRowSize = i;
@@ -5679,9 +5727,9 @@ int InitAugmentedModels (void)
         if (!m->catLnScaler)
             return ERROR;
         if (m->pInvar == NULL)
-            nRateCats = m->numGammaCats;
+            nRateCats = m->numRateCats;
         else
-            nRateCats = m->numGammaCats + 1;
+            nRateCats = m->numRateCats + 1;
         for (i=0; i<numLocalChains; i++)
             {
             m->catLike[i] = (CLFlt **) SafeCalloc (nRateCats, sizeof (CLFlt *));
@@ -5727,8 +5775,12 @@ int InitChainCondLikes (void)
     int         j1;
 #   endif
 #   if defined (BEAGLE_ENABLED)
+    int         useBeagleMultiPartitions, divisionOffset;
     double      *nSitesOfPat;
     MrBFlt      freq;
+#   endif
+#   if defined (BEAGLE_V3_ENABLED)
+    int         *nPartsOfPat;
 #   endif
 
     /* Figure out how large cond like array is needed, and how many cond like, scaler and tiprob arrays are needed.
@@ -5757,7 +5809,7 @@ int InitChainCondLikes (void)
 #   endif
             for (c=0; c<m->numChars; c++)
                 {
-                numReps = m->numGammaCats;
+                numReps = m->numRateCats;
                 if (m->nStates[c] == 2)
                     numReps *= m->numBetaCats;
                 m->condLikeLength += m->nStates[c] * numReps;
@@ -5768,7 +5820,7 @@ int InitChainCondLikes (void)
             if (m->gibbsGamma == YES)
                 m->condLikeLength = m->numChars * m->numModelStates;
             else
-                m->condLikeLength = m->numChars * m->numGammaCats * m->numOmegaCats * m->numModelStates;
+                m->condLikeLength = m->numChars * m->numRateCats * m->numOmegaCats * m->numModelStates;
 #   if defined (BEAGLE_ENABLED)
             /* tentatively decide on whether to use Beagle */
             if (tryToUseBEAGLE == YES)
@@ -5814,36 +5866,36 @@ int InitChainCondLikes (void)
                 for (k=0; k<9; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k + 2) * (k + 2) * m->numGammaCats;
+                        m->tiProbLength += (k + 2) * (k + 2) * m->numRateCats;
                     }
                 for (k=9; k<13; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k - 6) * (k - 6) * m->numGammaCats;
+                        m->tiProbLength += (k - 6) * (k - 6) * m->numRateCats;
                     }
                 for (k=13; k<18; k++)
                     {
                     if (m->isTiNeeded[k] == YES)
-                         m->tiProbLength += (k - 11) * (k - 11) * m->numGammaCats;
+                         m->tiProbLength += (k - 11) * (k - 11) * m->numRateCats;
                     }
                 }
             else
                 {
                 /* deal with unequal state frequencies */
                 if (m->isTiNeeded[0] == YES)
-                    m->tiProbLength += 4 * m->numGammaCats * m->numBetaCats;
+                    m->tiProbLength += 4 * m->numRateCats * m->numBetaCats;
                 for (c=0; c<m->numChars; c++)
                     {
                     if (m->nStates[c] > 2 && (m->cType[c] == UNORD || m->cType[c] == ORD))
                         {
-                        m->tiProbLength += (m->nStates[c] * m->nStates[c]) * m->numGammaCats;
+                        m->tiProbLength += (m->nStates[c] * m->nStates[c]) * m->numRateCats;
                         }
                     }
                 }
             }
         else
             {
-            m->numTiCats    = m->numGammaCats * m->numBetaCats * m->numOmegaCats;   /* A single partition has either gamma, beta or omega categories */
+            m->numTiCats    = m->numRateCats * m->numBetaCats * m->numOmegaCats;   /* A single partition has either gamma, beta or omega categories */
             m->tiProbLength = m->numModelStates * m->numModelStates * m->numTiCats;
             }
         m->numTiProbs = (numLocalChains + 1) * nNodes;
@@ -5859,6 +5911,15 @@ int InitChainCondLikes (void)
     else
         return NO_ERROR;
 
+#   if defined (BEAGLE_ENABLED)
+    useBeagleMultiPartitions = NO;
+#   endif
+
+#   if defined (BEAGLE_V3_ENABLED)
+    if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
+        useBeagleMultiPartitions = YES;
+#   endif
+
     /* allocate space and fill in info for tips */
     for (d=0; d<numCurrentDivisions; d++)
         {
@@ -5869,7 +5930,9 @@ int InitChainCondLikes (void)
 #   if defined (BEAGLE_ENABLED)
         if (m->useBeagle == YES)
             {
-            if (InitBeagleInstance(m, d) != ERROR)
+            if (useBeagleMultiPartitions == YES)
+                useBeagle = YES;
+            else if (InitBeagleInstance(m, d) != ERROR)
                 useBeagle = YES;
             else
                 m->useBeagle = NO;
@@ -5917,10 +5980,10 @@ int InitChainCondLikes (void)
                     if (m->gibbsGamma == YES)
                         numReps = 1;
                     else
-                        numReps = m->numGammaCats * m->numOmegaCats;
+                        numReps = m->numRateCats * m->numOmegaCats;
                     k = m->numVecChars * m->numFloatsPerVec * m->numModelStates * numReps;
                     
-                    if (m->useVec == VEC_AVX)
+                    if (m->useVec == VEC_AVX || m->useVec == VEC_FMA)
                         m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 32);
                     else
                         m->condLikes[i] = (CLFlt*) AlignedMalloc (k * sizeof(CLFlt), 16);
@@ -5980,7 +6043,7 @@ int InitChainCondLikes (void)
             /* allocate stuff for facilitating scaling and accumulation of cond likes */
             if (m->dataType == STANDARD)
                 {
-                m->clP = (CLFlt **) SafeMalloc(m->numGammaCats * sizeof(CLFlt *));
+                m->clP = (CLFlt **) SafeMalloc(m->numRateCats * sizeof(CLFlt *));
                 if (!m->clP)
                     return (ERROR);
                 }
@@ -6057,7 +6120,6 @@ int InitChainCondLikes (void)
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
         nNodes = GetTree(m->brlens,0,0)->nNodes;
 
-            
         /* allocate and set indices from tree nodes to cond like arrays */
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
@@ -6217,7 +6279,7 @@ int InitChainCondLikes (void)
         /* used only with Beagle advanced dynamic rescaling where we set scaler nodes for each partition  */
         if (m->useBeagle == YES)
             {
-            m->succesCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
+            m->successCount = (int*) SafeMalloc((numLocalChains) * sizeof(int));
             m->beagleComputeCount = (long *) SafeMalloc(sizeof(long) * numLocalChains);
             t=BEAGLE_RESCALE_FREQ/m->numModelStates;
             if (beagleFlags & BEAGLE_FLAG_PRECISION_DOUBLE) /*if double presition is used*/
@@ -6252,38 +6314,46 @@ int InitChainCondLikes (void)
             /* Set up nSitesOfPat for Beagle */
             if (m->useBeagle == YES)
                 {
-                nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
-                for (c=0; c<m->numChars; c++)
-                    nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                beagleSetPatternWeights(m->beagleInstance,
-                                        nSitesOfPat);
-                free (nSitesOfPat);
-                nSitesOfPat = NULL;
+                if (useBeagleMultiPartitions == NO)
+                    {
+                    nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
+                    for (c=0; c<m->numChars; c++)
+                        nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
+                    beagleSetPatternWeights(m->beagleInstance,
+                                            nSitesOfPat);
+                    free (nSitesOfPat);
+                    nSitesOfPat = NULL;
+                     /* Set up scalers for Beagle */
+                    for (i=0; i<m->numScalers*m->nCijkParts; i++)
+                        beagleResetScaleFactors(m->beagleInstance, i);
+                    }
 
                 /* find category frequencies */
                 if (m->pInvar == NO)
                     {
-                    freq =  1.0 /  m->numGammaCats;
+                    freq =  1.0 /  m->numRateCats;
                     
                     /* set category frequencies in beagle instance */
                     if (m->numOmegaCats <= 1)
                         {
-                        for (i=0; i<m->numGammaCats; i++)
+                        divisionOffset = 0;
+                        if (m->useBeagleMultiPartitions == YES)
+                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
+
+                        for (i=0; i<m->numRateCats; i++)
                             m->inWeights[i] = freq;
-                        for (i=0; i< (numLocalChains); i++) {
+                        for (i=0; i< (numLocalChains); i++)
+                            {
                             beagleSetCategoryWeights(m->beagleInstance,
-                                                     m->cijkIndex[i],
+                                                     m->cijkIndex[i] + divisionOffset,
                                                      m->inWeights);
                             }
                         beagleSetCategoryWeights(m->beagleInstance,
-                                                 m->cijkScratchIndex,
+                                                 m->cijkScratchIndex + divisionOffset,
                                                  m->inWeights);
                         }
                     }
                 
-                /* Set up scalers for Beagle */
-                for (i=0; i<m->numScalers*m->nCijkParts; i++)
-                    beagleResetScaleFactors(m->beagleInstance, i);
                 }
 #   endif
 
@@ -6294,7 +6364,7 @@ int InitChainCondLikes (void)
             for (i=0; i<numLocalTaxa; i++)
                 {
                 cL = m->condLikes[clIndex++];
-                for (t=0; t<m->numGammaCats;t++)
+                for (t=0; t<m->numRateCats;t++)
                     {
                     charBits = m->parsSets[i];
                     for (c=0; c<m->numChars; c++)
@@ -6320,7 +6390,7 @@ int InitChainCondLikes (void)
         else if (useBeagle == NO)
             {
             if (m->gibbsGamma == YES)
-                numReps = m->numTiCats / m->numGammaCats;
+                numReps = m->numTiCats / m->numRateCats;
             else
                 numReps = m->numTiCats;
 
@@ -6429,6 +6499,38 @@ int InitChainCondLikes (void)
                 return (ERROR);
             }
         }
+
+#if defined (BEAGLE_V3_ENABLED)
+    if (useBeagleMultiPartitions == YES)
+        {
+        nSitesOfPat = (double *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(double));
+        nPartsOfPat = (int    *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(int   ));
+        j = 0;
+        for (d=0; d<numCurrentDivisions; d++)
+            {
+            m = &modelSettings[d];
+            for (c=0; c<m->numChars; c++)
+                {
+                nSitesOfPat[j] = numSitesOfPat[m->compCharStart + c];
+                nPartsOfPat[j] = m->divisionIndex;
+                j++;
+                }
+            }
+        beagleSetPatternWeights(modelSettings[0].beagleInstance,
+                                nSitesOfPat);
+        beagleSetPatternPartitions(modelSettings[0].beagleInstance,
+                                   numCurrentDivisions,
+                                   nPartsOfPat);
+        free (nSitesOfPat);
+        free (nPartsOfPat);
+        nSitesOfPat = NULL;
+        nPartsOfPat = NULL;
+         /* Set up scalers for Beagle */
+        for (i=0; i<modelSettings[0].numScalers*modelSettings[0].nCijkParts; i++)
+            beagleResetScaleFactors(modelSettings[0].beagleInstance, i);
+        }
+#endif
+
     /* allocate space for precalculated likelihoods */
     j = 0;
     for (d=0; d<numCurrentDivisions; d++)
@@ -6487,8 +6589,8 @@ int InitEigenSystemInfo (ModelInfo *m)
         m->nCijkParts = 1;
         if (m->switchRates != NULL) /* covarion model */
             {
-            m->cijkLength *= m->numGammaCats;
-            m->nCijkParts = m->numGammaCats;
+            m->cijkLength *= m->numRateCats;
+            m->nCijkParts = m->numRateCats;
             }
         }
     else if (m->dataType == DNA || m->dataType == RNA)
@@ -6513,8 +6615,8 @@ int InitEigenSystemInfo (ModelInfo *m)
                 }
             if (m->switchRates != NULL)
                 {
-                m->cijkLength *= m->numGammaCats;
-                m->nCijkParts = m->numGammaCats;
+                m->cijkLength *= m->numRateCats;
+                m->nCijkParts = m->numRateCats;
                 }
             }
         else if (m->nucModelId == NUCMODEL_DOUBLET)
@@ -6608,16 +6710,19 @@ int InitInvCondLikes (void)
         if ( m->useVec != VEC_NONE )
             {
             c1 = m->numVecChars * m->numFloatsPerVec * m->numModelStates;
-            if (m->useVec == VEC_AVX)
+            if (m->useVec == VEC_AVX || m->useVec == VEC_FMA)
                 m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 32);
             else
                 m->invCondLikes = (CLFlt *) AlignedMalloc (c1 * sizeof(CLFlt), 16);
             for (i=0; i<c1; i++)
                 m->invCondLikes[i] = 0.0f;
             }
-#   else
-        m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+        else
 #   endif
+            {
+            m->invCondLikes = (CLFlt *) SafeMalloc (m->numChars * m->numModelStates * sizeof(CLFlt));
+            }
+
         if (!m->invCondLikes)
             return ERROR;
         }
@@ -6665,80 +6770,85 @@ int InitInvCondLikes (void)
             {
             assert (m->numModelStates == m->numStates);
 #   if defined (SSE_ENABLED)
-             for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
+            if ( m->useVec != VEC_NONE )
                 {
-                for (s=0; s<m->numModelStates; s++)
+                for (c=0; c<m->numChars/m->numFloatsPerVec; c++)
                     {
-                    for (c1=0; c1<m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + ((c * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][((c * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
                         }
                     }
-                }
-             if (m->numChars % m->numFloatsPerVec != 0)
-                {
-                for (s=0; s<m->numModelStates; s++)
+                 if (m->numChars % m->numFloatsPerVec != 0)
                     {
-                    for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
+                    for (s=0; s<m->numModelStates; s++)
                         {
-                        isConstant = YES;
-                        //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
-                        for (i=0; i<numLocalTaxa; i++)
+                        for (c1=0; c1<m->numChars%m->numFloatsPerVec; c1++)
                             {
-                            charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
-                            if (IsBitSet(s, charBits) == NO)
+                            isConstant = YES;
+                            //charBits = parsMatrix + m->parsMatrixStart + (((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) * m->nParsIntsPerSite;
+                            for (i=0; i<numLocalTaxa; i++)
                                 {
-                                isConstant = NO;
-                                break;
+                                charBits = &m->parsSets[i][(((m->numChars / m->numFloatsPerVec) * m->numFloatsPerVec) + c1) *m->nParsIntsPerSite];
+                                if (IsBitSet(s, charBits) == NO)
+                                    {
+                                    isConstant = NO;
+                                    break;
+                                    }
+                                //charBits += parsMatrixRowSize;
                                 }
-                            //charBits += parsMatrixRowSize;
+                            if (isConstant == YES)
+                                *cI = 1.0;
+                            cI++;
                             }
-                        if (isConstant == YES)
-                            *cI = 1.0;
-                        cI++;
-                        }
-                    for (; c1<m->numFloatsPerVec; c1++)
-                        {
-                        *cI = 1.0;
-                        cI++;
-                        }
-                    }
-                }
-#   else
-            for (c=0; c<m->numChars; c++)
-                {
-                for (s=0; s<m->numModelStates; s++)
-                    {
-                    isConstant = YES;
-                    for (i=0; i<numLocalTaxa; i++)
-                        {
-                        charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
-                        if (IsBitSet(s, charBits) == NO)
+                        for (; c1<m->numFloatsPerVec; c1++)
                             {
-                            isConstant = NO;
-                            break;
+                            *cI = 1.0;
+                            cI++;
                             }
                         }
-                    if (isConstant == YES)
-                        *cI = 1.0;
-                    cI++;
                     }
                 }
+            else
 #   endif
+                {
+                for (c=0; c<m->numChars; c++)
+                    {
+                    for (s=0; s<m->numModelStates; s++)
+                        {
+                        isConstant = YES;
+                        for (i=0; i<numLocalTaxa; i++)
+                            {
+                            charBits = &m->parsSets[i][c*m->nParsIntsPerSite];
+                            if (IsBitSet(s, charBits) == NO)
+                                {
+                                isConstant = NO;
+                                break;
+                                }
+                            }
+                        if (isConstant == YES)
+                            *cI = 1.0;
+                        cI++;
+                        }
+                    }
+                }
             }
         }   /* next division */
 
@@ -6830,7 +6940,6 @@ int InitParsSets (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        mp = &modelParams[d];
 
         m->parsSets = (BitsLong **) SafeCalloc (m->numParsSets, sizeof(BitsLong*));
         if (!m->parsSets)
@@ -7278,15 +7387,15 @@ int LogClockTreePriorRatio (Param *param, int chain, MrBFlt *lnPriorRatio)
         /* fossilized birth-death prior */
         sR = GetParamVals (m->speciationRates, chain, state[chain]);
         eR = GetParamVals (m->extinctionRates, chain, state[chain]);
-        sF = mp->sampleProb;
         fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
+        sF = mp->sampleProb;
         sS = mp->sampleStrat;
-        if (LnFossilizationPriorPr (oldTree, clockRate, &oldLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (oldTree, clockRate, &oldLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
             }
-        if (LnFossilizationPriorPr (newTree, clockRate, &newLnPrior, sR, eR, sF, fR, sS) == ERROR)
+        if (LnFossilizationPriorPr (newTree, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
             return (ERROR);
@@ -7353,17 +7462,16 @@ MrBFlt LogLike (int chain)
     return (chainLnLike);
 #   endif
 
-#   if defined (THREADS_ENABLED)
-    if (tryToUseThreads && ScheduleLogLikeForAllDivisions()) 
+#   if defined (BEAGLE_V3_ENABLED)
+    if (modelSettings[0].useBeagleMultiPartitions == YES)
         {
-        /* Launch all divisions that require updating simultaneously */
-        chainLnLike = LaunchLogLikeForAllDivisionsInParallel(chain);
-        } 
-    else 
+        /* Launch all divisions that require updating in one Beagle instance, concurrently */
+        LaunchLogLikeForBeagleMultiPartition(chain, &chainLnLike);
+        }
+    else
         {
-        /* Launch divisions in series */
 #   endif
-        
+
     /* Cycle through divisions and recalculate tis and cond likes as necessary. */
     /* Code below does not try to avoid recalculating ti probs for divisions    */
     /* that could share ti probs with other divisions.                          */
@@ -7385,10 +7493,13 @@ MrBFlt LogLike (int chain)
             return MRBFLT_NEG_MAX;
         chainLnLike += m->lnLike[2*chain + state[chain]];   
         }
-        
-#   if defined (THREADS_ENABLED)
+
+#   if defined (BEAGLE_V3_ENABLED)
         }
 #   endif
+#if defined (DEBUG_MB_BEAGLE_MULTIPART)
+    printf("chainLnLike = %f\n", chainLnLike);
+#endif        
 
     /* unmark all divisions */
     if (chainHasAdgamma == YES)
@@ -7729,6 +7840,24 @@ MrBFlt LogPrior (int chain)
                     }
                 }
             }
+        else if (p->paramType == P_MIXTURE_RATES)
+            {
+            /* site rate mixture; first deal with dirichlet prior */
+            nStates = p->nSubValues;
+            sum = 0.0;
+            for (i=0; i<nStates; i++)
+                sum += st[i];
+            x = LnGamma(sum);
+            for (i=0; i<nStates; i++)
+                x -= LnGamma(st[i]);
+            for (i=0; i<nStates; i++)
+                x += (st[i] - 1.0)*log(sst[i]/nStates);
+                
+            /* now deal with the order statistic; we multiply the density by the number of orderings */
+            x += LnFactorial(nStates);
+
+            lnPrior += x;
+            }
         else if (p->paramType == P_SHAPE)
             {
             /* gamma/lnorm shape parameter */
@@ -7746,16 +7875,16 @@ MrBFlt LogPrior (int chain)
                 if (m->gibbsGamma == YES)
                     {
                     if (m->pInvar == NULL)
-                        lnPrior += log(1.0/m->numGammaCats) * m->numUncompressedChars;
+                        lnPrior += log(1.0/m->numRateCats) * m->numUncompressedChars;
                     else
                         {
                         rateCat = m->tiIndex + chain * m->numChars;
                         pInvar = *GetParamVals (m->pInvar, chain, state[chain]);
                         nSitesOfPat = numSitesOfPat + m->compCharStart;
-                        freq = (1.0 - pInvar)/m->numGammaCats;
+                        freq = (1.0 - pInvar)/m->numRateCats;
                         for (c=0; c<m->numChars; c++)
                             {
-                            if (rateCat[c] < m->numGammaCats)
+                            if (rateCat[c] < m->numRateCats)
                                 lnPrior += log(freq) * nSitesOfPat[c];
                             else
                                 lnPrior += log(pInvar) * nSitesOfPat[c];
@@ -7921,18 +8050,18 @@ MrBFlt LogPrior (int chain)
                     /* fossilized birth-death prior */
                     sR = GetParamVals (m->speciationRates, chain, state[chain]);
                     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
-                    sF = mp->sampleProb;
                     fR = GetParamVals (m->fossilizationRates, chain, state[chain]);
+                    sF = mp->sampleProb;
                     sS = mp->sampleStrat;
                     if (m->clockRate != NULL)
                         clockRate = *(GetParamVals (m->clockRate, chain, state[chain]));
                     else
                         clockRate = 1.0;
-                    if (LnFossilizationPriorPr (t, clockRate, &x, sR, eR, sF, fR, sS) == ERROR)
+                    if (LnFossilizationPriorPr (t, clockRate, &x, sR, eR, fR, sF, sS) == ERROR)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
                         }
-                    lnPrior += x;
+                    lnPrior += x; /* FIXME: x undefined? (from clang static analyzer) */
                     }
                 else if (p->paramId == BRLENS_CLOCK_SPCOAL)
                     {
@@ -8223,9 +8352,6 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |
 |   LnBirthDeathPriorPrRandom
 |
-|   We assume a rooted tree that satisfies the molecular clock constraint. The
-|   tree is labelled as follows:
-|
 |                                      t_4 (age of tips)
 |     \         \         \        /            
 |      \         \         \      /              
@@ -8244,11 +8370,10 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |                   \/                 t_1 (age of most recent common ancestor)
 |    
 |
-|   This function calculates the probability of such a tree under the neutral
-|   birth death prior with constant birth and death rates, conditioned on
-|   a particular time of the first split, t_1, and a particular number of
-|   species, n. We assume rho-sampling, that is, a constant sampling pro-
-|   bability rho, which is known, across tips of the tree. Variables:
+|   This function calculates the probability of a rooted tree under the neutral
+|   birth death prior with constant birth and death rates, conditioned on t_1,
+|   the most recent common ancestor. We assume rho-sampling, that is, a constant
+|   sampling probability rho on extant taxa, which is known.
 |
 |   T:   the unlabeled oriented tree, which is equivalent to a set of unordered
 |        speciation times from a point process
@@ -8256,56 +8381,30 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |   b:   birth (speciation) rate
 |   d:   death (extintion) rate
 |   f:   sampling fraction
-|   n:   number of species in the sampled tree
+|   n:   number of (extant) taxa in the sampled tree
 |
-|   See:
-|   Tanja Stadler (2009) On incomplete sampling under birth-death models and
-|   connections to the sampling-based coalescent. Journal of Theoretical Biology
-|   261: 58-66.
-|
-|   We use f(T|n), which is derived from f(T|n,t_or) using Stadler's approach,
-|   in which the time of origin of the tree is associated with a uniform prior
-|   and integrated out of the density. We then have:
-|
-|   We have the following distribution for ordered bifurcation times (cf.
-|   equation 5 in Stadler, 2009, simplified here using the p0 and p1 functions):
-|
-|
-|              n! * p1(t_1)    n-1
-|   f(T|n) = --------------- * prod (b * p1(t_i))
-|             (1 - p0(t_1))    i=1
-|
-|
-|   where   t_1   = time of most recent common ancestor
-|           p0(t) = prob. of no descendants surviving and being sampled after time t (see LnP0 function below)
-|           p1(t) = prob. of one descendant surviving and being sampled after time t (see LnP1 function below)
-|
-|   To get the distribution on oriented trees, this density needs to be divided by the
-|   number of ways of ordering n-1 bifurcation times, (n-1)!, since each way of ordering
-|   the bifurcation times corresponds to a distinct oriented tree. The result is the following
-|   density on oritented trees:
-|
-|              n * p1(t_1)     n-1
-|   f(T|n) = --------------- * prod (b * p1(t_i))
-|             (1 - p0(t_1))    i=1
-|
-|
-|   To translate this to a density on distinct labeled trees, the density needs to be multiplied by
-|   (2^(n-1) / n!).
-|
-|   For the critical process where the speciation and extinction rates are equal, we obtain the
-|   following result in the limit (cf. equation 6 in Stadler (2009)):
-|
-|                  n          n-1          f*b      
-|   f(T|n) = -------------- * prod -----------------
-|            (1 + f*b*t_1)    i=1   (1 + f*b*t_i)^2
+|   Eq.3 * Eq.A0 in Hohna et al. 2011 MBE
 |
 ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa;
-    MrBFlt          *nt, lambda, mu, rho;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, tmrca;
     TreeNode        *p;
+    Model           *mp;
+    
+    /* transform to standard variables */
+    lambda = sR / (1.0 - eR);
+    mu     = eR * lambda;
+    
+    n      = t->nIntNodes+1;
+    m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
+    
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for random sampling not implemented\n");
+        return (ERROR);
+        }
 
     /* allocate space for the speciation times */
     nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
@@ -8314,38 +8413,31 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
         MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
         return (ERROR);
         }
-
-    /* transform to standard variables */
-    rho    = sF;
-    lambda = sR / (1.0 - eR);
-    mu     = eR * lambda;
-
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
 
     /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate, see equation (5) in Stadler (2009) and above
-        (*prob) = log(nTaxa) + log(lambda - mu) - (lambda - mu) * nt[t->nIntNodes-1];
-        (*prob) -= log(rho*lambda + (lambda*(1.0 - rho) - mu)*exp((mu - lambda)*nt[t->nIntNodes-1]));
-        for (i=0; i<t->nIntNodes; i++)
-            (*prob) += log(rho*lambda) + LnP1Subsample(nt[i], lambda, mu, rho);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        // birth rate == death rate -> the critical branching process
-        (*prob) = log(nTaxa/(1.0 + rho*lambda*nt[t->nIntNodes-1]));
-        for (i=0; i<t->nIntNodes; i++)
-            (*prob) += log(rho*lambda) - 2.0 * log(1.0 + rho*lambda*nt[i]);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);    /* conversion to labeled tree from oriented tree */
-        }
+    (*prob) = log(m-1) - log(n-1);  // constant
+    (*prob) += (m-2.0) * (LnP0(tmrca, lambda, mu) + log(lambda) - log(mu));
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(LnP0(tmrca, lambda, mu))));
+    (*prob) += (n-2.0) * (log(lambda*sF + (lambda-lambda*sF-mu)*exp((mu-lambda)*tmrca)) - log(sF*(1-exp((mu-lambda)*tmrca))));
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1Subsample(nt[i], lambda, mu, sF);
+    
+    /* conversion to labeled tree from oriented tree */
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
@@ -8358,22 +8450,15 @@ int LnBirthDeathPriorPrRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt s
  |
  |   LnBirthDeathPriorPrDiversity
  |
- |   Eq.5 in Hohna et al. 2011 MBE
+ |   Eq.A1 in Hohna et al. 2011 MBE
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu, nt_min;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, nt_min, tmrca, ln_p0_t1;
     TreeNode        *p;
-    
-    /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
-    if (!nt)
-        {
-        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
-        return (ERROR);
-        }
+    Model           *mp;
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -8382,13 +8467,28 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     n      = t->nIntNodes+1;
     m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for diversity sampling not implemented\n");
+        return (ERROR);
+        }
+
+    /* allocate space for the speciation times */
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
+    if (!nt)
+        {
+        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
+        return (ERROR);
+        }
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
 
     /* find the youngest interal node */
     nt_min = nt[0];
@@ -8397,26 +8497,22 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         if (nt_min > nt[i])
             nt_min = nt[i];
         }
-    
-    /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate
-        MrBFlt p0_t1;
-        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
-        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - p0_t1);
-        for (i=0; i<t->nIntNodes-1; i++)
-            (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        MrBayesPrint ("\n   ERROR: Critical branchin process for diversity sampling not implemented\n");
-        return (ERROR);
-        }
 
-    /* condition on tmrca ??? */
+    ln_p0_t1 = LnP0(tmrca, lambda, mu);
+    (*prob) = 0;  // LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant
+    (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
+    (*prob) += (m-n) * (LnP0(nt_min, lambda, mu) - ln_p0_t1);
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
+    
+    /* conversion to labeled tree from oriented tree */
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
@@ -8429,22 +8525,15 @@ int LnBirthDeathPriorPrDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |
  |   LnBirthDeathPriorPrCluster
  |
- |   Eq.7 in Hohna et al. 2011 MBE
+ |   Eq.A2 in Hohna et al. 2011 MBE
  |
  ---------------------------------------------------------------------------------*/
 int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF)
 {
-    int             i, nTaxa, n, m;
-    MrBFlt          *nt, lambda, mu, nt_max;
+    int             i, n, m;
+    MrBFlt          *nt, lambda, mu, nt_2, tmrca, ln_p0_t1;
     TreeNode        *p;
-    
-    /* allocate space for the speciation times */
-    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
-    if (!nt)
-        {
-        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
-        return (ERROR);
-        }
+    Model           *mp;
     
     /* transform to standard variables */
     lambda = sR / (1.0 - eR);
@@ -8453,41 +8542,52 @@ int LnBirthDeathPriorPrCluster (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt 
     n      = t->nIntNodes+1;
     m      = (int)floor(n/sF+0.5); /* equal to round(n/sF) plus it is compatible with MS Visual Studio */
     
+    if (AreDoublesEqual(lambda, mu, ETA) == YES)
+        {
+        MrBayesPrint ("\n   ERROR: Critical branching process for cluster sampling not implemented\n");
+        return (ERROR);
+        }
+
+    /* allocate space for the speciation times */
+    nt = (MrBFlt *)SafeMalloc((size_t)(t->nIntNodes) * sizeof(MrBFlt));
+    if (!nt)
+        {
+        MrBayesPrint ("\n   ERROR: Problem allocating nt\n");
+        return (ERROR);
+        }
+    
     /* get the node times and put them into a vector */
     for (i=0; i<t->nIntNodes; i++)
         {
         p = t->intDownPass[i];
         nt[i] = p->nodeDepth / clockRate;
         }
-    nTaxa = t->nIntNodes + 1;
-    
+    /* time of most recent common ancestor */
+    tmrca = nt[t->nIntNodes-1];  // t->root->left->nodeDepth / clockRate
+
     /* find the second oldest interal node */
-    nt_max = nt[0];
+    nt_2 = nt[0];
     for (i=0; i<t->nIntNodes-1; i++)
         {
-        if (nt_max < nt[i])
-            nt_max = nt[i];
+        if (nt_2 < nt[i])
+            nt_2 = nt[i];
         }
 
-    /* calculate probability of tree using standard variables */
-    if (AreDoublesEqual(lambda,mu,ETA)==NO)
-        {
-        // birth rate != death rate
-        MrBFlt p0_t1;
-        p0_t1 = LnP0(nt[t->nIntNodes-1], lambda, mu);
-        (*prob) = log(nTaxa); // we need to add here the binomial coefficient
-        (*prob) += (m-n) * (LnP0(nt_max, lambda, mu) - p0_t1);
-        for (i=0; i<t->nIntNodes-1; i++)
-            (*prob) += (LnP1(nt[i], lambda, mu) - p0_t1);
-        (*prob) += (nTaxa - 1.0) * log(2.0) - LnFactorial(nTaxa);  /* conversion to labeled tree from oriented tree */
-        }
-    else
-        {
-        MrBayesPrint ("\n   ERROR: Critical branchin process for cluster sampling not implemented\n");
-        return (ERROR);
-        }
-
-    /* condition on tmrca ??? */
+    ln_p0_t1 = LnP0(tmrca, lambda, mu);
+    (*prob) = 0;  // LnFactorial(m-1) - LnFactorial(n-1) - LnFactorial(m-n);  // constant
+    (*prob) += (m-2.0) * (ln_p0_t1 + log(lambda)) + (n-m)*log(mu);
+    (*prob) += 2.0 * (LnP1(tmrca, lambda, mu) - log(1.0 - exp(ln_p0_t1)));
+    (*prob) += (m-n) * log(1.0 - exp(LnP0(nt_2, lambda, mu))/exp(ln_p0_t1));
+    for (i=0; i<t->nIntNodes-1; i++)
+        (*prob) += LnP1(nt[i], lambda, mu) - ln_p0_t1;
+    
+    /* conversion to labeled tree from oriented tree */
+    // (*prob) += (n-1.0)*log(2.0) - LnFactorial(n);  // constant
+    
+    /* condition on tmrca, calibrations are dealt with separately */
+    mp = &modelParams[t->relParts[0]];
+    if (t->root->left->isDated == NO)
+        (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
 
     /* free memory */
     free (nt);
@@ -8516,23 +8616,12 @@ MrBFlt LnP0 (MrBFlt t, MrBFlt b, MrBFlt d)
     return (log(p0t));
 }
 
-/*
- |
- | The probability of having zero lineages remaining after time t in the
- | birth-death process.
- |
- | param: t - speciation time
- | param: b - birth rate
- | param: d - death rate
- | param: f - sample frequency
- | return: log probability of zero remaining lineages
- |
- */
+/* The probability that a lineage at time t has 0 sampled descendants at time 0 */
 MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
     MrBFlt      p0t;
     
-    p0t = (f*d + (b*(1.0-f) - d)*exp((d-b)*t)) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+    p0t = (f*d + (b*(1.0-f) -d)*exp((d-b)*t)) / (f*b + (b*(1.0-f) -d)*exp((d-b)*t));
     
     return (log(p0t));
 }
@@ -8550,34 +8639,23 @@ MrBFlt LnP0Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
  */
 MrBFlt LnP1 (MrBFlt t, MrBFlt b, MrBFlt d)
 {
-    MrBFlt      p0t;
+    MrBFlt      p1t;
     
-    p0t = 2.0 * log(b-d) - (b-d)*t;
+    p1t = 2.0*log(b-d) - (b-d)*t;
     
-    p0t -= 2.0 * log(b - d*exp((d-b)*t));
+    p1t -= 2.0*log(b -d*exp((d-b)*t));
     
-    return p0t;
+    return p1t;
 }
 
-/*
- |
- | The probability of having one lineage remaining after time t
- | in the birth-death process.
- |
- | param: t - speciation time
- | param: b - birth rate
- | param: d - death rate
- | param: f - sample frequency
- | return: log probability of one remaining lineage
- |
- */
+/* The probability that a lineage at time t has 1 sampled descendants at time 0 */
 MrBFlt LnP1Subsample (MrBFlt t, MrBFlt b, MrBFlt d, MrBFlt f)
 {
-    MrBFlt      p0t;
+    MrBFlt      p1t;
     
-    p0t = (b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
+    p1t = (b-d) / (f*b + (b*(1.0-f)-d)*exp((d-b)*t));
     
-    return (2.0*log(p0t) + (d-b)*t);
+    return (2.0*log(p1t) + log(f) - (b-d)*t);
 }
 
 
@@ -8592,7 +8670,7 @@ MrBFlt LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, M
     // c2 = (-lambda + mu + 2*lambda*rho + psi) / c1;
     other = (exp(-c1 *t) * (1 - c2) - (1 + c2)) / (exp(-c1 *t) * (1 - c2) + (1 + c2));
     
-    return log(0.5) + log(lambda + mu + psi + c1 * other) - log(lambda);
+    return log(lambda + mu + psi + c1 * other) - log(2.0*lambda);
 }
 
 /* probability that an individual alive at time t before today has
@@ -8654,17 +8732,17 @@ MrBFlt  LnPi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2, MrBF
 }
 
 
-int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR, char *sS)
+int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF, char *sS)
 {
     /* fossilization priors 
      //chi */
     
     if (!strcmp(sS, "FossilTip"))
-        return LnFossilizedBDPriorFossilTip (t, clockRate, prob, *sR, *eR, sF, *fR);
+        return LnFossilizedBDPriorFossilTip (t, clockRate, prob, sR, eR, fR, sF);
     else if (!strcmp(sS, "Random"))
-        return LnFossilizedBDPriorRandom    (t, clockRate, prob, sR, eR, sF, fR);
+        return LnFossilizedBDPriorRandom    (t, clockRate, prob, sR, eR, fR, sF);
     else if (!strcmp(sS, "Diversity"))
-        return LnFossilizedBDPriorDiversity (t, clockRate, prob, sR, eR, sF, fR);
+        return LnFossilizedBDPriorDiversity (t, clockRate, prob, sR, eR, fR, sF);
     else
         {
         MrBayesPrint ("%s   Sampling strategy %s for fossilized birth-death process not implemented\n", spacer, sS);
@@ -8696,36 +8774,37 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
  |   T:   oriented tree
  |   b:   birth (speciation) rate
  |   d:   death (extintion) rate
- |   p:   extant sampling rate
+ |   p:   extant sampling prob
  |   q:   fossil sampling rate
  |   n:   number of extant taxa
  |   m:   number of fossil tips
  |
  |
- |                     [p1(x1)]^2    n+m-1            m    q
+ |                    [p1(x1)]^2     n+m-1            m    q
  |   f(T|tmrca) = ---------------- * prod b*p1(xi) * prod -----  .
- |                [1 - ^p0(x1)]^2    i=2             i=1  p1(yi)
+ |                 [1 - p0(x1)]^2    i=2             i=1  p1(yi)
  |
  |   f(tmrca) ~ uniform, gamma, etc (see treeAge).
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrBFlt eR, MrBFlt sF, MrBFlt fR)
+int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF)
 {
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
     int         i, n, m;
-    MrBFlt      x, lambda, rho, psi, tmrca, c1, c2, hatP0;
+    MrBFlt      x, lambda, mu, rho, psi, tmrca, c1, c2;
     TreeNode    *p;
     Model       *mp;
     
     /* sR = lambda-mu-psi, eR = (mu+psi)/lambda, fR = psi/(mu+psi) */
-    lambda = sR / (1.0 - eR);
-    psi    = lambda * eR * fR;
+    lambda = sR[0] / (1.0 - eR[0]);
+    mu     = lambda * eR[0] * (1.0 - fR[0]);
+    psi    = lambda * eR[0] * fR[0];
     rho    = sF;
     
     tmrca = t->root->left->nodeDepth / clockRate;
-    c1 = sqrt(sR*sR + 4 *lambda *psi);
-    c2 = (2 *lambda *rho - sR) / c1;
+    c1 = sqrt(sR[0]*sR[0] + 4 *lambda *psi);
+    c2 = (2 *lambda *rho - sR[0]) / c1;
 
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
@@ -8752,20 +8831,63 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             }
         }
 
-    /* p_0 (t |psi=0, mu->mu+psi) */
-    hatP0 = 1.0 - rho*sR / (rho*lambda + (sR - rho*lambda) * exp(-sR*tmrca));
-    
-    (*prob) += 2.0 * (LnP1_fossil(tmrca, rho, c1, c2) - log(1 - hatP0));
+    (*prob) += 2.0 * LnP1_fossil(tmrca, rho, c1, c2);
+
+    /* condition on sampling at least one individual in both subtrees leading to the root */
+    (*prob) -= 2.0 * log(1 - exp(LnP0_fossil(tmrca, lambda, mu, psi, c1, c2)));
     
     /* condition on tmrca, calibrations are dealt with separately */
     mp = &modelParams[t->relParts[0]];
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
     
-    /* conversion to labeled tree from oriented tree , constant for a given dataset */
-    (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
+    /* conversion to labeled tree from oriented tree, constant */
+    // (*prob) += (n + m - 1) * log(2.0) - LnFactorial(n) - LnFactorial(m);
 
     return (NO_ERROR);
+}
+
+
+int CompareDoubleDescending (const void *x, const void *y)
+{
+    if (*((double *)(x)) > *((double *)(y)))
+        return -1;
+    else if (*((double *)(x)) < *((double *)(y)))
+        return 1;
+    else
+        return 0;
+}
+int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
+{
+    int    i, j, sLen, sTotal;
+
+    /* get the total number of rate shifts */
+    sTotal = mp->fossilSamplingNum;
+    for (i = 0; i < mp->fossilSamplingNum; i++)
+        shiftTimes[i] = mp->fossilSamplingTime[i];
+    sLen = sTotal;
+    for (i = 0; i < mp->birthRateShiftNum; i++)
+        {
+        for (j = 0; j < sLen; j++)
+            if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
+                break;
+        if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+            shiftTimes[sTotal++] = mp->birthRateShiftTime[i];
+        }
+    sLen = sTotal;
+    for (i = 0; i < mp->deathRateShiftNum; i++)
+        {
+        for (j = 0; j < sLen; j++)
+            if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
+                break;
+        if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+            shiftTimes[sTotal++] = mp->deathRateShiftTime[i];
+        }
+    
+    /* sort shiftTimes[] in ascending order */
+    qsort(shiftTimes, sTotal, sizeof(double), CompareDoubleDescending);
+
+    return sTotal;
 }
 
 
@@ -8801,14 +8923,13 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
  |    E = 2, K = 1, M = 2
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF)
 {
-    /* Fossils in the past are sampled with piecewise constant rates, 
-       also in several time slices each with a seperate probability.
-       Extant taxa are sampled uniformly at random at time 0 (present). */
+    /* Fossils are sampled with piecewise constant rates in the past.
+       Extant taxa are sampled uniformly at random at present. */
     
-    int         i, j, sl, K, M, E;
-    MrBFlt      x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
+    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    MrBFlt      x, tmrca, *t_f, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
@@ -8817,45 +8938,61 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     /* time of most recent common ancestor */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    /* get the number of fossil slice sampling events, s >= 0 */
-    sl = mp->sampleFSNum;
+    /* alloc memory for time of each shift, t_f[sl] = 0 */
+    t_f = (MrBFlt *)SafeMalloc((size_t)(mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum +1) * sizeof(MrBFlt));
+    if (!t_f)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating t_f in LnFossilizedBDPriorRandom\n", spacer);
+        return (ERROR);
+        }
+    /* get the total rate shifts, sl >= 0 */
+    sl = GetTotalRateShifts(mp, t_f);
     
-    /* alloc memory for time of each slice, t_f[sl] = 0 */
-    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    
-    if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
+    t_f[sl] = 0.0;
+    assert (t_f[0] < tmrca);
+
+    /* alloc memory for the other parameters */
+    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
         {
         MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorRandom\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho);
-        free(t_f); free(c1); free(c2); free(p_t);
+        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
+        return (ERROR);
         }
     
     /* initialization */
+    i1 = i2 = i3 = 0;
     for (i = 0; i <= sl; i++)
         {
-        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-        lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i] = lambda[i] * eR[i];
-        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
-        if (i < sl) {
-            rho[i] = mp->sampleFSProb[i];
-            t_f[i] = mp->sampleFSTime[i];
-            }
+        if (mp->birthRateShiftNum > 0 && mp->birthRateShiftTime[i1] > t_f[i] +BRLENS_MIN/2)
+            i1++;
+        if (mp->deathRateShiftNum > 0 && mp->deathRateShiftTime[i2] > t_f[i] +BRLENS_MIN/2)
+            i2++;
+        if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_f[i] +BRLENS_MIN/2)
+            i3++;
+        netDiver[i] = sR[i1];
+        turnOver[i] = eR[i2];
+        sampProp[i] = fR[i3];
         }
-    rho[sl] = sF;
-    t_f[sl] = 0.0;
+    for (i = 0; i <= sl; i++)
+        {
+        /* netDiver = lambda-mu, turnOver = mu/lambda, sampProp = psi/(mu+psi) */
+        lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
+        mu[i] = lambda[i] * turnOver[i];
+        psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
+        rho[i] = 1E-20;  // to avoid prob being -inf
+        }
+    rho[sl] = sF;  // 0 < sF <= 1
 
-    if (sl > 0)  assert (mp->sampleFSTime[0] < tmrca);
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -8869,15 +9006,14 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         else
             p_t[i] = (lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
-        }
-    
+
 #   ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl; i++)
-        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
-    for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+    printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+            i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+    printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
-    
+        }
+
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
     
@@ -8902,7 +9038,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
-                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -8917,46 +9052,40 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/5) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
-                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
-                             - LnQi_fossil(x, t_f, sl, c1,c2);
+                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil tip at silice time t[j] */
                     {
-                    (*prob) += log(p_t[j+1]);
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
                 M++;              /* number of fossil tips */
                 }
             else
                 {
-                if (rho[sl] > 0.0)
-                    {
-                    (*prob) += log(rho[sl]);
-                    }
+                (*prob) += log(rho[sl]);  // 0 < rho[sl] <= 1
                 E++;              /* number of extant taxa */
                 }
             }
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (p->length > 0.0)
-                if ((p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
-                    {
-                    (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
-                    if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
-                    }
+            if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
+                {
+                (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2) + log(1 - rho[j]);
+                }
             }
         }
     
+    /* condition on sampling a fossil OR a extant taxa */
     (*prob) += 2.0 * (LnQi_fossil(tmrca, t_f, sl, c1,c2) - log(1- p_t[0]));
     
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
+
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
-    
-    /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
@@ -8964,8 +9093,8 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
 #   endif
     
     /* free memory */
-    free(lambda); free(mu); free(psi); free(rho);
-    free(t_f); free(c1); free(c2); free(p_t);
+    free(t_f);
+    free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
 }
@@ -8979,14 +9108,13 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
  |       Total-Evidence Dating under the Fossilized Birth-Death Process. Syst. Biol.
  |
  ---------------------------------------------------------------------------------*/
-int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt sF, MrBFlt *fR)
+int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR, MrBFlt *eR, MrBFlt *fR, MrBFlt sF)
 {
-    /* Fossils in the past are sampled with piecewise constant rates, 
-       also in several time slices each with a seperate probability.
+    /* Fossils are sampled with piecewise constant rates in the past.
        Extant taxa are sampled with prop sF to maximize diversity. */
     
-    int         i, j, sl, K, M, E;
-    MrBFlt      x, x_min, t_min, M_x, *lambda, *mu, *rho, *psi, *t_f, tmrca, *c1, *c2, *p_t;
+    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    MrBFlt      x, tmrca, *t_f, x_cut, M_x, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
     
@@ -8995,71 +9123,83 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* time of most recent common ancestor */
     tmrca = t->root->left->nodeDepth / clockRate;
     
-    /* get the number of fossil slice sampling events, plus 1 extra slice (x_cut) to shift psi to 0 */
-    sl = mp->sampleFSNum + 1;
-    
-    /* alloc memory for time of each slice */
-    t_f    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* lambda, mu, psi */
-    lambda = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    mu     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    psi    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* for sampling prob in each slice, including extant */
-    rho    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    /* A_i, B_i, ... */
-    c1     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    c2     = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    p_t    = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
-    
-    if (!lambda || !mu || !psi || !rho || !t_f || !c1 || !c2 || !p_t)
+    /* alloc memory for time of each shift, t_f[sl] = 0, t_f[sl-1] = x_cut */
+    t_f = (MrBFlt *)SafeMalloc((size_t)(mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum +2) * sizeof(MrBFlt));
+    if (!t_f)
         {
-        MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho);
-        free(t_f); free(c1); free(c2); free(p_t);
+        MrBayesPrint ("%s   ERROR: Problem allocating t_f in LnFossilizedBDPriorDiversity\n", spacer);
+        return (ERROR);
         }
+    /* get the total rate shifts, plus 1 to shift psi to 0 */
+    sl = GetTotalRateShifts(mp, t_f) + 1;
     
     /* get time of youngest fossil and internal node */
-    t_min = x_min = tmrca;
+    x_cut = tmrca;
     for (i = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         if (p->left == NULL && p->nodeDepth > 0.0)  //fossil
-            if (t_min > p->nodeDepth / clockRate)
-                t_min = p->nodeDepth / clockRate;
+            if (x_cut > p->nodeDepth / clockRate)
+                x_cut = p->nodeDepth / clockRate;
         if (p->left != NULL && p->right != NULL &&
-            p->left->length > 0.0 && p->right->length > 0.0)
-            if (x_min > p->nodeDepth / clockRate)
-                x_min = p->nodeDepth / clockRate;
+            p->left->length > 0.0 && p->right->length > 0.0)  // internal
+            if (x_cut > p->nodeDepth / clockRate)
+                x_cut = p->nodeDepth / clockRate;
         }
 
     /* lower the cutoff time if not compatible */
-    if (x_min > t_min)
-        x_min = t_min;
-    if (sl > 1 && mp->sampleFSTime[sl-2] < x_min)
-        x_min = mp->sampleFSTime[sl-2];
+    if (sl > 1 && x_cut > t_f[sl-2])
+        x_cut = t_f[sl-2];
     
-    /* initialization (sl >= 1) */
+    t_f[sl] = 0.0;
+    t_f[sl-1] = x_cut * 0.95;  // x_cut
+    assert (t_f[0] < tmrca);
+
+    /* alloc memory for the other parameters */
+    lambda   = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    mu       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    psi      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    rho      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    netDiver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    turnOver = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    sampProp = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c1       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    c2       = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    p_t      = (MrBFlt *)SafeMalloc((size_t)(sl+1) * sizeof(MrBFlt));
+    if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
+        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
+        return (ERROR);
+        }
+    
+    /* initialization */
+    i1 = i2 = i3 = 0;
     for (i = 0; i < sl; i++)
         {
-        /* sR = lambda-mu, eR = mu/lambda, fR = psi/(mu+psi) */
-        lambda[i] = sR[i] / (1.0 - eR[i]);
-        mu[i] = lambda[i] * eR[i];
-        psi[i] = mu[i] * fR[i] / (1.0 - fR[i]);
+        if (mp->birthRateShiftNum > 0 && mp->birthRateShiftTime[i1] > t_f[i] +BRLENS_MIN/2)
+            i1++;
+        if (mp->deathRateShiftNum > 0 && mp->deathRateShiftTime[i2] > t_f[i] +BRLENS_MIN/2)
+            i2++;
+        if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_f[i] +BRLENS_MIN/2)
+            i3++;
+        netDiver[i] = sR[i1];
+        turnOver[i] = eR[i2];
+        sampProp[i] = fR[i3];
         }
-    lambda[sl] = lambda[sl-1];
-    mu[sl] = mu[sl-1];
-    psi[sl] = 0.0;  // psi = 0 in [0, x_cut]
-    for (i = 0; i < sl-1; i++)
+    for (i = 0; i < sl; i++)
         {
-        rho[i] = mp->sampleFSProb[i];
-        t_f[i] = mp->sampleFSTime[i];
+        /* netDiver = lambda-mu, turnOver = mu/lambda, sampProp = psi/(mu+psi) */
+        lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
+        mu[i] = lambda[i] * turnOver[i];
+        psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
+        rho[i] = 1E-20;  // to avoid prob being -inf
         }
-    rho[sl-1] = 0.0;
-    t_f[sl-1] = x_min * 0.95; // x_cut
-    rho[sl]   = 1.0;          // not sF
-    t_f[sl]   = 0.0;
-    
-    if (sl > 1)  assert (mp->sampleFSTime[0] < tmrca);
+    lambda[sl] = lambda[sl-1];  netDiver[sl] = netDiver[sl-1];
+    mu[sl]  = mu[sl-1];         turnOver[sl] = turnOver[sl-1];
+    psi[sl] = 0.0;   // psi = 0 in [0, x_cut]
+    rho[sl] = 1.0;   // not sF
+
     for (i = sl; i >= 0; i--)
         {
         c1[i] = sqrt(pow(lambda[i]-mu[i]-psi[i], 2) + 4*lambda[i]*psi[i]);
@@ -9073,15 +9213,14 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         else
             p_t[i] = (lambda[i] +mu[i] +psi[i] -c1[i] * (1 +c2[i] -(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))
                                                       / (1 +c2[i] +(1 -c2[i]) *exp(c1[i] *(t_f[i] -tmrca)))) *0.5/lambda[i];
-        }
-    
+
 #   ifdef DEBUG_FBDPR
-    for (i = 0; i <= sl; i++)
-        printf ("%d: lambad=%lf mu=%lf psi=%lf t=%lf rho=%lf\n",i+1, lambda[i], mu[i], psi[i], t_f[i], rho[i]);
-    for (i = 0; i <= sl; i++)
-        printf ("%d: A=%lf B=%lf p%d(t%d)=%lf\n", i+1, c1[i], c2[i], i+1, i, p_t[i]);
+    printf ("%d: lambda=%lf mu=%lf psi=%lf d=%lf r=%lf s=%lf t=%lf rho=%lf\n",
+            i+1, lambda[i], mu[i], psi[i], netDiver[i], turnOver[i], sampProp[i], t_f[i], rho[i]);
+    printf ("    A=%lf B=%lf p%d(t%d)=%lf\n", c1[i], c2[i], i+1, i, p_t[i]);
 #   endif
-    
+        }
+
     /* first calculate prob of the fbd tree assuming complete sampling */
     (*prob) = 0.0;
     
@@ -9106,7 +9245,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil ancestor at silice time t[j] */
-                if (rho[j] > 0.0 && rho[j] < 1.0)
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -9121,35 +9259,32 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     if (AreDoublesEqual(p->nodeDepth, t_f[j]*clockRate, BRLENS_MIN/5) == YES)  break;
                 if (j == sl)      /* fossil tip between t[j-1] and t[j] */
                     {
-                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi)
-                             - LnQi_fossil(x, t_f, sl, c1,c2);
+                    (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
                 else              /* fossil tip at silice time t[j] */
                     {
-                    (*prob) += log(p_t[j+1]);
-                    if (rho[j] > 0.0)  (*prob) += log(rho[j]);
+                    (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
                 M++;              /* number of fossil tips */
                 }
             else
                 {
-                //  (*prob) += log(rho[sl]);  // rho[sl] == 1
+                // (*prob) += log(rho[sl]);  // rho[sl] = 1
                 E++;              /* number of extant taxa */
                 }
             }
         
         for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
             {
-            if (p->length > 0.0)
-                if ((p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
-                    {
-                    (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2);
-                    if (rho[j] < 1.0)  (*prob) += log(1 - rho[j]);
-                    }
+            if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
+                {
+                (*prob) += LnQi_fossil(t_f[j], t_f, sl, c1,c2) + log(1 - rho[j]);
+                }
             }
         }
     
+    /* condition on sampling a fossil OR a extant taxa */
     (*prob) += 2.0 * (LnQi_fossil(tmrca, t_f, sl, c1,c2) - log(1- p_t[0]));
     
     /* number of extant taxa not sampled */
@@ -9158,12 +9293,12 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* then calculate the prob of the fbd tree assuming diversified sampling of extant */
     (*prob) += M_x * (log(lambda[sl] * (1.0 - exp((mu[sl]-lambda[sl])*t_f[sl-1]))) - log(lambda[sl] - mu[sl] * exp((mu[sl]-lambda[sl])*t_f[sl-1])));
     
+    /* conversion to labeled tree from oriented tree */
+    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K);  // # permutation is constant
+
     /* condition on tmrca, calibrations are dealt with separately */
     if (t->root->left->isDated == NO)
         (*prob) += mp->treeAgePr.LnPriorProb(tmrca, mp->treeAgePr.priorParams);
-    
-    /* conversion to labeled tree from oriented tree */
-    (*prob) += (M + E - 1) * log(2.0);  // - LnFactorial(E + M + K) (# permutation is constant given data)
     
 #   ifdef DEBUG_FBDPR
     printf ("K=%d M=%d E=%d\n", K, M, E);
@@ -9171,8 +9306,8 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 #   endif
     
     /* free memory */
-    free(lambda); free(mu); free(psi); free(rho);
-    free(t_f); free(c1); free(c2); free(p_t);
+    free(t_f);
+    free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
     
     return (NO_ERROR);
 }
@@ -9287,7 +9422,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
         for (i=0, k=numLocalTaxa; i<nNodes; i++)
             {
             coalescenceTime = ct[i];
-            intervalLength = coalescenceTime - lastCoalescenceTime;
+            intervalLength = coalescenceTime - lastCoalescenceTime; /* FIXME: Not used (from clang static analyzer) */
             tempD += growth * coalescenceTime + (((k * (k-1)) / (theta * growth)) * (exp(growth * lastCoalescenceTime) - exp(growth * coalescenceTime)));
             lastCoalescenceTime = ct[i];
             k--;
@@ -9536,12 +9671,12 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
     
             /* find category frequencies and some additional stuff for the invar model */
             if (m->pInvar == NULL)
-                freq =  (CLFlt) (1.0 /  m->numGammaCats);
+                freq =  (CLFlt) (1.0 /  m->numRateCats);
             else
                 {
                 /* invariable sites model */
                 pInvar = * GetParamVals(m->pInvar, chain, state[chain]);
-                freq = (CLFlt) ((1.0 - pInvar) /  m->numGammaCats);
+                freq = (CLFlt) ((1.0 - pInvar) /  m->numRateCats);
                 baseRate /= (1.0 - pInvar);
                 clInvar = m->invCondLikes;
                 lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -9585,7 +9720,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 beta = 0.5 / sum;
 
                 /* calculate derivatives */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k] * baseRate;
                     expBetaV = exp (- beta * v);
@@ -9630,7 +9765,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 beta = 0.5 / sum;
 
                 /* calculate derivatives */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k] * baseRate;
                     expBetaV = exp (- beta * v);
@@ -9674,7 +9809,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 cijk        = eigenValues + (2 * n);
 
                 /* calculate P'(v) and P''(v) */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v = length * catRate[k];
                     for (s=0; s<n; s++)
@@ -9712,7 +9847,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                 /* calculate P'(v) and P''(v) */
                 for (k=0; k<m->numTiCats; k++)
                     {
-                    if (m->numGammaCats > 1)
+                    if (m->numRateCats > 1)
                         v = length * catRate[k];
                     else
                         v = length;
@@ -9753,7 +9888,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
                     {
                     like = like1 = like2 = 0.0;
                     r = rateCat[c];
-                    if (r < m->numGammaCats)
+                    if (r < m->numRateCats)
                         {
                         index = r*m->numModelStates*m->numModelStates;
                         for (j=0; j<n; j++)
@@ -10000,6 +10135,8 @@ int PosSelProbs (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10082,6 +10219,8 @@ int PosSelProbs_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in PosSelProbs_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
 
@@ -10155,6 +10294,8 @@ int SiteOmegas (TreeNode *p, int division, int chain)
     if (!clP || !like)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas\n", spacer);
+        free (clP);
+        free (like);
         return (ERROR);
         }
     
@@ -10237,6 +10378,8 @@ int SiteOmegas_SSE (TreeNode *p, int division, int chain)
     if (!catLike || !mCatLike)
         {
         MrBayesPrint ("%s   ERROR: Out of memory in SiteOmegas_SSE\n", spacer);
+        free (catLike);
+        free (mCatLike);
         return (ERROR);
         }
     
@@ -10518,13 +10661,13 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
     /* find frequencies of rate categories */
-    freq =  1.0 /  m->numGammaCats;
+    freq =  1.0 /  m->numRateCats;
     
     /* find the conditional likelihoods from the final pass */
     clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
 
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] =  clFP;
         clFP += m->numChars * m->numModelStates;
@@ -10537,7 +10680,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     for (c=0; c<m->numChars; c++)
         {
         cL[0] = cL[1] = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             cL[0] += clP[k][0];
             cL[1] += clP[k][1];
@@ -10632,7 +10775,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
         }
 
     /* find number of rate categories */
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find frequencies of rate categories (only relevant if gibbsGamma == NO) */
     freq = ((CLFlt)1.0 - pInvar) / nGammaCats;
@@ -10668,6 +10811,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
                 {
                 for (i=0; i<nStates; i++)
                     {
+                    /* FIXME: clInvar == NULL if hasPInvar != YES (from clang static analyzer) */
                     cL[i] = *(clInvar++) * bs[i];
                     sum += cL[i];
                     }
@@ -10682,7 +10826,7 @@ int PrintAncStates_Gen (TreeNode *p, int division, int chain)
         {
         /* find conditional likelihood pointers */
         clP = (const CLFlt**)m->clP;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             clP[k] = clFP;
             clFP += m->numChars * m->numModelStates;
@@ -10806,7 +10950,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         }
 
     /* find number of rate categories */
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find frequencies of rate categories (only relevant if gibbsGamma == NO) */
     if (hasPInvar == NO)
@@ -10859,7 +11003,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
         {
         /* find conditional likelihood pointers */
         clP = (const CLFlt**)m->clP;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             clP[k] = clFP;
             clFP += m->numChars * m->numModelStates;
@@ -10976,7 +11120,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
     /* find conditional likelihood pointers */
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clFP;
         clFP += numReps;
@@ -10996,10 +11140,10 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 
         if (nStates == 2)
             {
-            freq = 1.0 / (m->numBetaCats * m->numGammaCats);
+            freq = 1.0 / (m->numBetaCats * m->numRateCats);
             for (i=0; i<m->numBetaCats; i++)
                 {
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     for (s=0; s<nStates; s++)
                         cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
@@ -11010,8 +11154,8 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
            }
         else
             {
-            freq = 1.0 / (m->numGammaCats);
-            for (k=0; k<m->numGammaCats; k++)
+            freq = 1.0 / (m->numRateCats);
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (s=0; s<nStates; s++)
                     cL[s] += clP[k][s] * (CLFlt)(bs[s] * freq);
@@ -12149,9 +12293,9 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq = 1.0 /  m->numGammaCats;
+        freq = 1.0 /  m->numRateCats;
     else
-        freq = (1.0 - pInvar) /  m->numGammaCats;
+        freq = (1.0 - pInvar) /  m->numRateCats;
 
     /* get rate multipliers (for gamma & partition specific rates) */
     baseRate = GetRate (division, chain);
@@ -12171,7 +12315,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
             {
             siteLike = 0.0;
             siteRates[c] = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -12189,7 +12333,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
             {
             siteLike = invLike = 0.0;
             siteRates[c] = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -12267,7 +12411,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
         siteLike = 0.0;
         siteRates[c] = 0.0;
         nStates = m->nStates[c];
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             catLike = 0.0;
             for (j=0; j<nStates; j++)
@@ -12318,7 +12462,7 @@ int PrintStates (int curGen, int coldId)
         }
     if (!tempStr)
         {
-        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, (size_t)(tempStrSize) * sizeof(char));
         goto errorExit;
         }
     
@@ -12449,7 +12593,7 @@ int PrintStates (int curGen, int coldId)
                     continue;
                 d = partitionId[i][partitionNum] - 1;
                 m = &modelSettings[d];
-                mp = &modelParams[d];
+
                 if (m->printSiteRates == YES)
                     {
                     if (m->nCharsPerSite == 1)
@@ -12756,9 +12900,10 @@ int PrintStates (int curGen, int coldId)
                     }
                 }
             }
-        else if (p->paramType == P_PI)
+        else if (p->paramType == P_PI || p->paramType == P_MIXTURE_RATES)
             {
-            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues). */
+            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues) OR
+               if we are dealing with rates of a siterate mixture (rates held in subvalues). */
             for (j=0; j<p->nSubValues; j++)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
@@ -12884,7 +13029,6 @@ int PrintStates (int curGen, int coldId)
             m = &modelSettings[d];
             if (m->printSiteRates == YES)
                 {
-                mp = &modelParams[d];
                 tree = GetTree (m->brlens, coldId, state[coldId]);
                 node = tree->root->left;
                 m->PrintSiteRates (node, d, coldId);
@@ -13020,7 +13164,7 @@ int PrintStates (int curGen, int coldId)
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
     
     free (tempStr);
-    SafeFree ((void **)&partString);
+    SAFEFREE (partString);
     
     return (NO_ERROR);
     
@@ -13031,7 +13175,7 @@ int PrintStates (int curGen, int coldId)
             free (posSelProbs);
         memAllocs[ALLOC_POSSELPROBS] = NO;
         free (tempStr);
-        SafeFree ((void **)&partString);
+        SAFEFREE (partString);
         return (ERROR);
 }
 
@@ -15364,7 +15508,7 @@ int ConfirmAbortRun(void)
     MrBayesPrint("   Do you really want to stop the run (y/n)?");
     if (fgets (line,98,stdin) == NULL)
         {
-        printf ("Error in function: %s at line: %d in file: %s", __FUNCTION__, __LINE__, __FILE__);
+        printf ("Error in function: %s at line: %d in file: %s", __func__, __LINE__, __FILE__);
         }
     for (i=0; (c=line[i])!='\0' && !isgraph(c); i++)
         ;
@@ -15703,7 +15847,13 @@ void ResetSiteScalers (ModelInfo *m, int chain)
 #if defined (BEAGLE_ENABLED)
     if (m->useBeagle == YES)
         {
-        beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
+        if (m->useBeagleMultiPartitions == NO)
+            beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
+        else
+#   if defined (BEAGLE_V3_ENABLED)
+            beagleResetScaleFactorsByPartition(m->beagleInstance, m->siteScalerIndex[chain], m->divisionIndex);
+#   endif /* BEAGLE_V3_ENABLED */
+        /* TODO: check if nCijkParts scale factors should also be reset here */
         return;
         }
 #endif
@@ -15878,28 +16028,18 @@ int RunChain (RandLong *seed)
     MCMCMove    *theMove, *mv;
     time_t      startingT, endingT, stoppingT1, stoppingT2;
     clock_t     previousCPUTime, currentCPUTime;
+#   if defined (DEBUG_TIME)
+    struct timespec tw1, tw2;
+#   endif
     /* Stepping-stone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
     MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
     char        ckpFileName[220], bkupFileName[220];
 
 #   if defined (BEAGLE_ENABLED)
-    int         ResetScalersNeeded;  //set to YES if we need to reset node->scalerNode, used in old style rescaling;
 #       ifdef DEBUG_BEAGLE
     int         beagleScalingSchemeOld;
 #       endif
-    ModelInfo   *m;
-    ResetScalersNeeded = NO;
-    
-    for (i=0; i<numCurrentDivisions; i++)
-        {
-        m = &modelSettings[i];
-        if (m->useBeagle == NO || beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS)
-            {
-            ResetScalersNeeded =YES;
-            break;
-            }
-        }
 #   endif
 
 #   if defined (MPI_ENABLED)
@@ -16229,7 +16369,7 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   Total of %d generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq);
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as initial burnin.          \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
-        MrBayesPrint ("%s   Additionally at the begining of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   Additionally at the beginning of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if (chainParams.startFromPriorSS==YES)
             MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior.   \n", spacer);
@@ -16483,16 +16623,15 @@ int RunChain (RandLong *seed)
         }
 #   endif
 
-    if (chainParams.relativeBurnin == NO)
-        lastDiagnostics = chainParams.chainBurnIn;
-    else
-        lastDiagnostics = 0;
     stopChain = NO;
 
     for (i=0; i<chainParams.numRuns; i++)
         maxLnL0[i] = -100000000.0;
 
     startingT=time(0);
+#   if defined (DEBUG_TIME)
+    clock_gettime(CLOCK_MONOTONIC, &tw1);
+#   endif
     CPUTime = 0.0;
     previousCPUTime = clock();
 
@@ -16835,16 +16974,17 @@ int RunChain (RandLong *seed)
             {
             for (i = 0; i<chainParams.numRuns; i++)
                 {
-                for (j = 0; j<chainParams.numSwaps; j++)
+                for (j = 0; j<chainParams.numSwaps; j++) {
                     GetSwappers (&swapA, &swapB, i);
-                if (AttemptSwap (swapA, swapB, seed) == ERROR)
-                    {
-                    MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
+                    if (AttemptSwap (swapA, swapB, seed) == ERROR)
+                        {
+                        MrBayesPrint ("%s   Unsuccessful swap of states\n", spacer);
 #   if defined (MPI_ENABLED)
-                    nErrors++;
+                        nErrors++;
 #   else
-                    return ERROR;
+                        return ERROR;
 #   endif
+                        }
                     }
                 }
             }
@@ -17066,7 +17206,6 @@ int RunChain (RandLong *seed)
             stoppingT1 = time(0);
             currentCPUTime = clock();
             CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
-            previousCPUTime = currentCPUTime;
             chainParams.numGen += ExtendChainQuery ();
             stoppingT2 = time(0);
             startingT += (stoppingT2-stoppingT1);
@@ -17249,6 +17388,9 @@ int RunChain (RandLong *seed)
 
         } /* end run chain */
     endingT = time(0);
+#   if defined (DEBUG_TIME)
+    clock_gettime(CLOCK_MONOTONIC, &tw2);
+#   endif
     currentCPUTime = clock();
     CPUTime += (currentCPUTime - previousCPUTime) / (MrBFlt) CLOCKS_PER_SEC;
 
@@ -17302,6 +17444,10 @@ int RunChain (RandLong *seed)
         MrBayesPrint ("%s   Analysis completed in 1 second\n", spacer);
     else
         MrBayesPrint ("%s   Analysis completed in less than 1 second\n", spacer);
+
+#   if defined (DEBUG_TIME)
+    MrBayesPrint ("%s   Analysis used %1.2f seconds of total time\n", spacer, (MrBFlt) (1000.0*tw2.tv_sec + 1e-6*tw2.tv_nsec - (1000.0*tw1.tv_sec + 1e-6*tw1.tv_nsec))/1000);
+#   endif
 
 #   if defined (MPI_ENABLED)
     MrBayesPrint ("%s   Analysis used %1.2f seconds of CPU time on processor 0\n", spacer, (MrBFlt) CPUTime);
@@ -17721,7 +17867,7 @@ int SetFilePositions (int samplePos)
 
             if ((fp = OpenBinaryFileR (tempStr)) == NULL) 
                 {
-                MrBayesPrint ("%s   Problem openning file %s.\n", spacer, tempStr);
+                MrBayesPrint ("%s   Problem opening file %s.\n", spacer, tempStr);
                 free (tempStr);
                 return (ERROR);
                 }
@@ -18275,18 +18421,6 @@ int SetLocalChainsAndDataSplits(void)
 
 #   endif
 
-#   if defined (THREADS_ENABLED)
-
-    if (numLocalChains > 1)
-        {
-        /* Use pthreads to divide chains and possibly do data splits */
-        }
-    else
-        {
-        /* Use pthreads for data splits */
-        }
-#   endif
-
     return (NO_ERROR);
 }
 
@@ -18423,8 +18557,8 @@ int SetUpPartitionCounters (void)
     partFreqTreeRoot = (PFNODE **) SafeCalloc (numTopologies, sizeof (PFNODE *));
     if (partFreqTreeRoot == NULL)
         {
-        free (partition);
         free (partition[0]);
+        free (partition);
         MrBayesPrint ("%s   Failed to allocate partFreqTreeRoot in SetUpPartitionCounters\n", spacer);
         return ERROR;
         }
@@ -18915,7 +19049,6 @@ void TouchAllCijks (int chain)
         }
 
     return;
-    MrBayesPrint ("%d", chain); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 

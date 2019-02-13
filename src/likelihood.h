@@ -39,10 +39,6 @@
 #define TG                          14
 #define TT                          15
 
-CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
-CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
-CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
-
 int       CondLikeDown_Bin (TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
 int       CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain);
@@ -115,6 +111,9 @@ int       CondLikeUp_Bin (TreeNode *p, int division, int chain);
 int       CondLikeUp_Gen (TreeNode *p, int division, int chain);
 int       CondLikeUp_NUC4 (TreeNode *p, int division, int chain);
 int       CondLikeUp_Std (TreeNode *p, int division, int chain);
+#if defined(BEAGLE_V3_ENABLED)
+void      LaunchLogLikeForBeagleMultiPartition(int chain, MrBFlt* lnL);
+#endif
 void      LaunchLogLikeForDivision (int chain, int d, MrBFlt* lnL);
 int       Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);

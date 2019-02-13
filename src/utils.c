@@ -42,11 +42,7 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionUtilsC = "$Rev$";   /* Revision keyword which is expended/updated by svn on each commit/update */
-
-#define MAX_GAMMA_CATS                      20
-#define PI                                  3.14159265358979324
-#define PIOVER2                             1.57079632679489662
+#define MAX_RATE_CATS                      20
 #define POINTGAMMA(prob,alpha,beta)         PointChi2(prob,2.0*(alpha))/(2.0*(beta))
 #define PAI2                                6.283185307
 #define TINY                                1.0e-20
@@ -80,20 +76,20 @@ MrBFlt  BetaCf (MrBFlt a, MrBFlt b, MrBFlt x);
 MrBFlt  BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt  CdfBinormal (MrBFlt h1, MrBFlt h2, MrBFlt r);
 MrBFlt  CdfNormal (MrBFlt x);
-complex Complex (MrBFlt a, MrBFlt b);
-MrBFlt  ComplexAbsoluteValue (complex a);
-complex ComplexAddition (complex a, complex b);
-complex ComplexConjugate (complex a);
-complex ComplexDivision (complex a, complex b);
+MrBComplex Complex (MrBFlt a, MrBFlt b);
+MrBFlt  ComplexAbsoluteValue (MrBComplex a);
+MrBComplex ComplexAddition (MrBComplex a, MrBComplex b);
+MrBComplex ComplexConjugate (MrBComplex a);
+MrBComplex ComplexDivision (MrBComplex a, MrBComplex b);
 void    ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, MrBFlt *ci);
-complex ComplexExponentiation (complex a);
-int     ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex **aInverse, complex *col);
-complex ComplexLog (complex a);
-void    ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b);
-int     ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd);
-complex ComplexMultiplication (complex a, complex b);
-complex ComplexSquareRoot (complex a);
-complex ComplexSubtraction (complex a, complex b);
+MrBComplex ComplexExponentiation (MrBComplex a);
+int     ComplexInvertMatrix (int dim, MrBComplex **a, MrBFlt *dwork, int *indx, MrBComplex **aInverse, MrBComplex *col);
+MrBComplex ComplexLog (MrBComplex a);
+void    ComplexLUBackSubstitution (int dim, MrBComplex **a, int *indx, MrBComplex *b);
+int     ComplexLUDecompose (int dim, MrBComplex **a, MrBFlt *vv, int *indx, MrBFlt *pd);
+MrBComplex ComplexMultiplication (MrBComplex a, MrBComplex b);
+MrBComplex ComplexSquareRoot (MrBComplex a);
+MrBComplex ComplexSubtraction (MrBComplex a, MrBComplex b);
 int     ComputeEigenSystem (int dim, MrBFlt **a, MrBFlt *v, MrBFlt *vi, MrBFlt **u, int *iwork, MrBFlt *dwork);
 void    ComputeLandU (int dim, MrBFlt **aMat, MrBFlt **lMat, MrBFlt **uMat);
 void    ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f);
@@ -117,11 +113,11 @@ void    LUBackSubstitution (int dim, MrBFlt **a, int *indx, MrBFlt *b);
 int     LUDecompose (int dim, MrBFlt **a, MrBFlt *vv, int *indx, MrBFlt *pd);
 void    MultiplyMatrixByScalar (int dim, MrBFlt **a, MrBFlt scalar, MrBFlt **result);
 MrBFlt  PointChi2 (MrBFlt prob, MrBFlt v);
-void    PrintComplexVector (int dim, complex *vec);
-void    PrintSquareComplexMatrix (int dim, complex **m);
+void    PrintComplexVector (int dim, MrBComplex *vec);
+void    PrintSquareComplexMatrix (int dim, MrBComplex **m);
 void    PrintSquareDoubleMatrix (int dim, MrBFlt **matrix);
 void    PrintSquareIntegerMatrix (int dim, int **matrix);
-complex ProductOfRealAndComplex (MrBFlt a, complex b);
+MrBComplex ProductOfRealAndComplex (MrBFlt a, MrBComplex b);
 MrBFlt  RndGamma (MrBFlt s, RandLong *seed);
 MrBFlt  RndGamma1 (MrBFlt s, RandLong *seed);
 MrBFlt  RndGamma2 (MrBFlt s, RandLong *seed);
@@ -134,6 +130,27 @@ void    TiProbsUsingPadeApprox (int dim, MrBFlt **qMat, MrBFlt v, MrBFlt r, MrBF
 MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
+
+#if defined (BEAGLE_V3_ENABLED)
+int     Height(TreeNode *p);
+void    ReverseLevelOrder(Tree *t, TreeNode *p, int *i);
+void    StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i);
+#endif
+
+/* qsort compare function for MrBFlt */
+int cmpMrBFlt(const void *a, const void *b)
+{
+    MrBFlt  x = *((MrBFlt *)(a));
+    MrBFlt  y = *((MrBFlt *)(b));
+    
+    if ( x < y )
+        return -1;
+    else if ( x == y )
+        return 0;
+    else
+        return 1;
+}
+
 
 /* AddBitfield: Add bitfield to list of bitfields. The function uses global variable nLongsNeeded. */
 int AddBitfield (BitsLong ***list, int listLen, int *set, int setLen)
@@ -179,18 +196,20 @@ void * AlignedMalloc (size_t size, size_t alignment)
 }
 
 
-void AlignedSafeFree (void **ptr)
+void *AlignedSafeFree (void *ptr)
 {
 
-    #if defined ICC_VEC     /* icc compiler */
-    _mm_free (*ptr);
-    #elif defined MS_VCPP_VEC  /* ms visual */
-    _aligned_free (*ptr);
-    #else
-    free (*ptr);
-    #endif
-    
-    (*ptr) = NULL;
+#if defined ICC_VEC             /* icc compiler */
+    _mm_free (ptr);
+#elif defined MS_VCPP_VEC       /* ms visual */
+    _aligned_free (ptr);
+#else
+    free (ptr);
+#endif
+
+    ptr = NULL;
+
+    return ptr;
 }
 #endif
 
@@ -282,7 +301,10 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -318,7 +340,10 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -387,7 +412,10 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
     strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
+        {
+        free (strBuf);
         return ERROR;
+        }
     
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
@@ -1014,7 +1042,7 @@ MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
 }
 
 
-/* NOTE!!!! The result of this function should be used before consequtive call to it again.
+/* NOTE!!!! The result of this function should be used before consecutive call to it again.
    It means NEVER use it like this:  printf ("%s %s", MbPrintNum (a),MbPrintNum (b)) */
 char *MbPrintNum (MrBFlt num)
 {
@@ -1057,9 +1085,9 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 /*  Compute mean and variance of log scaled values.
 @param vals    pointer to values in log scale
 @param nVals   number of "vals", minimum 1
-@param mean    adress of variable where computed mean is returned by the function
-@param var     adress of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
-@param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
+@param mean    address of variable where computed mean is returned by the function
+@param var     address of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
+@param varEst  address of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
                Could be set to NULL if this value need not to be returened.
 Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
 void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst)
@@ -1343,9 +1371,9 @@ FILE *OpenTextFileW (char *name)
 
 
 /*!
-\param vals[0..nRuns][count[]]   All records for all runs 
+\param vals [0..nRuns][count[]]  All records for all runs
 \param nRuns                     Number of runs
-\param count[0..nRuns]           Number of records in each run
+\param count [0..nRuns]          Number of records in each run
 \return PSRF
 */
 MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
@@ -1393,10 +1421,10 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 
 
 /*!
-\param vals[0..nRuns][count[]]   All records for all runs 
+\param vals [0..nRuns][count[]]  All records for all runs
 \param nRuns                     Number of runs
-\param count[0..nRuns]           Number of records in each run
-\param returnESS[0..nRuns]       Is an arry in which the routine returns ESS values for each run.
+\param count [0..nRuns]          Number of records in each run
+\param returnESS [0..nRuns]      Is an arry in which the routine returns ESS values for each run.
 */
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
@@ -1448,32 +1476,6 @@ void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnES
 }
 
 
-/* SafeCalloc: Print error if out of memory */
-void *SafeCalloc(size_t n, size_t s) {
-
-    void *ptr;
-    
-    if (s*n == 0)
-        {
-        //return NULL;
-        }
-
-    ptr= calloc(n, s);
-
-    if (ptr==NULL)
-        {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
-        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
-        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        return NULL;
-        }
-
-    return ptr;
-}
-
-
 int SafeFclose(FILE **fp) {
     int retval=-1;
 #   if defined MPI_ENABLED
@@ -1490,81 +1492,118 @@ int SafeFclose(FILE **fp) {
 
 
 /* SafeFree: Set pointer to freed space to NULL */
-void SafeFree (void **ptr)
+/* Calls to be made like this:
+ *
+ *   ptr = SafeFree(ptr);
+ *
+ * or using the SAFEFREE() macro defined in utils.h:
+ *
+ *   SAFEFREE(ptr);
+ *
+ * See http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
+ *
+ */
+void *SafeFree (void *ptr)
 {
-    free (*ptr);
+    free (ptr);
+    ptr = NULL;
 
-    (*ptr) = NULL;
+    return ptr;
 }
 
 
 /* SafeMalloc: Print error if out of memory; clear memory */
 void *SafeMalloc (size_t s)
 {
-    void *ptr;
+    void           *ptr;
 
     if (s == 0)
         {
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         return NULL;
         }
 
-    ptr= malloc(s);
+    ptr = calloc (1, s);
 
-    if (ptr==NULL)
+    if (ptr == NULL && s > 0)
         {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
         MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
         MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        return NULL;
-        }
-
-    return memset(ptr,0,s);
-}
-
-
-/* SafeRealloc: Print error if out of memory */
-void *SafeRealloc (void *ptr, size_t s)
-{
-    if (s == 0)
-        {
-        free(ptr);
-        return NULL;
-        }
-
-    if (ptr == NULL)
-        {
-        ptr = malloc (s);
-        memset(ptr, 0, s);
-        }
-    else
-        ptr = realloc (ptr, s);
-
-    if (ptr==NULL)
-        {
-        MrBayesPrint ("%s   Out of memory. Most probable course for the problem is that MrBayes reached\n", spacer);
-        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
-        MrBayesPrint ("%s   documentation of your OS how to extend the limit, or use 64 bit version OS \n", spacer);
-        MrBayesPrint ("%s   and compile 64 bit version of MrBayes.                                     \n", spacer);
-        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
-        return NULL;
         }
 
     return ptr;
 }
 
 
+/* SafeCalloc: Print error if out of memory */
+void *SafeCalloc (size_t n, size_t s)
+{
+    void           *ptr;
+
+    if (s * n == 0)
+        {
+        MrBayesPrint ("%s   WARNING: Allocation of zero size attempted. This is probably a bug; problems may follow.\n", spacer);
+        return NULL;
+        }
+
+    ptr = calloc (n, s);
+
+    if (ptr == NULL && n * s > 0)
+        {
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
+        }
+
+    return ptr;
+}
+
+
+/* SafeRealloc: Print error if out of memory */
+void *SafeRealloc (void *ptr, size_t s)
+{
+    void           *tmp;
+
+    if (s == 0)
+        {
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        free (ptr);
+        return NULL;
+        }
+
+    if (ptr == NULL)
+        tmp = calloc (1, s);
+    else
+        tmp = realloc (ptr, s);
+
+    if (tmp == NULL)
+        {
+        MrBayesPrint ("%s   Out of memory. Most probable cause for the problem is that MrBayes reached \n", spacer);
+        MrBayesPrint ("%s   the limit of allowed memory for a process in your Operating System. Consult\n", spacer);
+        MrBayesPrint ("%s   the documentation of your OS on how to extend the limit.                   \n", spacer);
+        MrBayesPrint ("%s   Segmentation fault may follow.                                             \n", spacer);
+        }
+
+    return tmp;
+}
+
+
 /* SafeStrcat: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
-char *SafeStrcat (char **target, const char *source)
+char           *SafeStrcat (char **target, const char *source)
 {
     if (*target == NULL)
-        *target = (char *) SafeCalloc (strlen(source)+1, sizeof(char));
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
     else
-        *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+strlen(*target)+1)*sizeof(char));
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + strlen (*target) +
+                                   1) * sizeof (char));
 
     if (*target)
-        strcat(*target, source);
+        strcat (*target, source);
 
     return (*target);
 }
@@ -1573,10 +1612,15 @@ char *SafeStrcat (char **target, const char *source)
 /* SafeStrcpy: Allocate or reallocate target to fit result; assumes ptr is NULL if not allocated */
 char *SafeStrcpy (char **target, const char *source)
 {
-    *target = (char *) SafeRealloc ((void *)*target, (strlen(source)+1)*sizeof(char));
+    if (*target == NULL)
+        *target = (char *) SafeCalloc (strlen (source) + 1, sizeof (char));
+    else
+        *target =
+            (char *) SafeRealloc ((void *) *target,
+                                  (strlen (source) + 1) * sizeof (char));
 
     if (*target)
-        strcpy(*target,source);
+        strcpy (*target, source);
 
     return (*target);
 }
@@ -1595,112 +1639,52 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
-void SortInts (int *item, int *assoc, int count, int descendingOrder)
+int MrBFlt_cmp (const void *a, const void *b)
 {
-    SortInts2 (item, assoc, 0, count-1, descendingOrder);
+    MrBFlt          x = * (MrBFlt *) a;
+    MrBFlt          y = * (MrBFlt *) b;
+
+    if (x < y)
+        return -1;
+    else if (x > y)
+        return 1;
+
+    return 0;
 }
-
-
-void SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder)
-{
-    register int    i, j, x, y;
-
-    if (descendingOrder == YES)
-        {
-        i = left;
-        j = right;
-        x = item[(left+right)/2];
-        do 
-            {
-            while (item[i] > x && i < right)
-                i++;
-            while (x > item[j] && j > left)
-                j--;
-            if (i <= j)
-                {
-                y = item[i];
-                item[i] = item[j];
-                item[j] = y;
-                
-                if (assoc)
-                    {
-                    y = assoc[i];
-                    assoc[i] = assoc[j];
-                    assoc[j] = y;
-                    }               
-                i++;
-                j--;
-                }
-            } while (i <= j);
-        if (left < j)
-            SortInts2 (item, assoc, left, j, descendingOrder);
-        if (i < right)
-            SortInts2 (item, assoc, i, right, descendingOrder);
-        }
-    else
-        {
-        i = left;
-        j = right;
-        x = item[(left+right)/2];
-        do 
-            {
-            while (item[i] < x && i < right)
-                i++;
-            while (x < item[j] && j > left)
-                j--;
-            if (i <= j)
-                {
-                y = item[i];
-                item[i] = item[j];
-                item[j] = y;
-                
-                if (assoc)
-                    {
-                    y = assoc[i];
-                    assoc[i] = assoc[j];
-                    assoc[j] = y;
-                    }               
-                i++;
-                j--;
-                }
-            } while (i <= j);
-        if (left < j)
-            SortInts2 (item, assoc, left, j, descendingOrder);
-        if (i < right)
-            SortInts2 (item, assoc, i, right, descendingOrder);
-        }
-}
-
 
 /* SortMrBFlt: Sort in increasing order */
 void SortMrBFlt (MrBFlt *item, int left, int right)
 {
-    register int    i, j;
-    MrBFlt          x, temp;
+    qsort ((void *) item, right - left + 1, sizeof (MrBFlt),
+           &MrBFlt_cmp);
+}
 
-    i = left;
-    j = right;
-    x = item[(left+right)/2];
-    do 
+
+/* StrCmpCaseInsensitiveLen: Case insensitive string comparison (with maximum
+ * string length restriction). */
+int StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len)
+{
+    char            sc, tc;
+
+    if (len == 0)
+        return 0;
+
+    while (len-- > 0)
         {
-        while (item[i] < x && i < right)
-            i++;
-        while (x < item[j] && j > left)
-            j--;
-        if (i <= j)
-            {
-            temp = item[i];
-            item[i] = item[j];
-            item[j] = temp;
-                
-            i++;
-            j--;
-            }
-        } while (i <= j);
-    if (left < j)
-        SortMrBFlt (item, left, j);
-    if (i < right)
-        SortMrBFlt (item, i, right);
+        sc = tolower (s[0]);
+        s++;
+        tc = tolower (t[0]);
+        t++;
+
+        if (sc > tc)
+            return 1;
+        else if (sc < tc)
+            return -1;
+        else if (sc == '\0')
+            break;
+        }
+
+    return 0;
 }
 
 
@@ -2007,17 +1991,18 @@ int AllocatePolyTreePartitions (PolyTree *pt)
 /* AllocateTree: Allocate memory space for a tree (unrooted or rooted) */
 Tree *AllocateTree (int numTaxa)
 {
-    int     i;
-    Tree    *t;
-    
+    int             i;
+    Tree           *t;
+
     t = (Tree *) SafeCalloc (1, sizeof (Tree));
+
     if (t == NULL)
         return NULL;
 
     /* initialize basic tree properties */
-    t->memNodes = 2*numTaxa;
+    t->memNodes = 2 * numTaxa;
     strcpy (t->name, "");
-    
+
     t->isRooted = NO;
     t->isClock = NO;
 
@@ -2037,23 +2022,32 @@ Tree *AllocateTree (int numTaxa)
     /* allocate and initialize nodes and node arrays (enough for both rooted and unrooted trees) */
     t->nNodes = 0;
     t->nIntNodes = 0;
-    if ((t->nodes = (TreeNode *) SafeCalloc (2*numTaxa, sizeof (TreeNode))) == NULL)
+
+    if ((t->nodes =
+                (TreeNode *) SafeCalloc (2 * numTaxa, sizeof (TreeNode))) == NULL)
         {
         free (t);
         return NULL;
         }
-    if ((t->allDownPass = (TreeNode **) SafeCalloc (3*numTaxa, sizeof (TreeNode *))) == NULL)
+
+    if ((t->allDownPass =
+                (TreeNode **) SafeCalloc (3 * numTaxa, sizeof (TreeNode *))) == NULL)
         {
         free (t->nodes);
         free (t);
         return NULL;
         }
+
     t->intDownPass = t->allDownPass + t->memNodes;
-    
+
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
+#endif
+
     /* initialize nodes and set index and memoryIndex */
-    for (i=0; i<t->memNodes; i++)
+    for (i = 0; i < t->memNodes; i++)
         {
-        ResetTreeNode(&t->nodes[i]);
+        ResetTreeNode (&t->nodes[i]);
         t->nodes[i].memoryIndex = i;
         t->nodes[i].index = i;
         }
@@ -2118,6 +2112,10 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
         return NULL;
         }
     t->intDownPass = t->allDownPass + t->nNodes;
+
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
+#endif
     
     /* initialize nodes and set index and memoryIndex */
     for (i=0; i<t->memNodes; i++)
@@ -3687,8 +3685,8 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
 |   findAllowedClockrate: Finds the range of clock rates allowed for the tree.
 |
 |   @param t        - tree to check (IN)  
-|   @minClockRate   - adress where minimum allowed clock rate is stored (OUT)
-|   @maxClockRate   - adress where maximum allowed clock rate is stored (OUT)
+|   @minClockRate   - address where minimum allowed clock rate is stored (OUT)
+|   @maxClockRate   - address where maximum allowed clock rate is stored (OUT)
 |
 ----------------------------------------------------------------*/
 void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
@@ -3827,6 +3825,9 @@ void FreeTree (Tree *t)
         free (t->bitsets);
         free (t->flags);
         free (t->allDownPass);
+#if defined (BEAGLE_V3_ENABLED)
+        free (t->intDownPassLevel);
+#endif 
         free (t->nodes);
         free (t);
         }
@@ -3896,6 +3897,13 @@ void GetDownPass (Tree *t)
 
     i = j = 0;
     GetNodeDownPass (t, t->root, &i, &j);
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
+        i = 0;
+        ReverseLevelOrder (t, t->root, &i);
+        }
+#endif
 }
 
 
@@ -3922,6 +3930,54 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
         }
 }
 
+#if defined (BEAGLE_V3_ENABLED)
+ /* Compute the "height" of a tree -- the number of
+    nodes along the longest path from the root node
+    down to the farthest leaf node.*/
+int Height(TreeNode *p)
+{
+    if (p==NULL)
+        return 0;
+    else
+        {
+        /* compute the height of each subtree */
+        int lheight = Height(p->left);
+        int rheight = Height(p->right);
+ 
+        /* use the larger one */
+        if (lheight > rheight)
+            return(lheight+1);
+        else
+            return(rheight+1);
+        }
+}
+ /* Function to perform reverse level order traversal a tree*/
+void ReverseLevelOrder(Tree *t, TreeNode *p, int *i)
+{
+    int h = Height(p);
+    int l;
+    for (l=h; l>=1; l--) 
+        StoreGivenLevel(t, p, l, i);
+}
+ /* Store nodes at a given level */
+void StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i)
+{
+    if (p == NULL)
+        return;
+    if (level == 1)
+        {
+        if (p->left != NULL && p->right != NULL && p->anc != NULL)
+            {
+            t->intDownPassLevel[(*i)++] = p;
+            }
+        }
+    else if (level > 1)
+        {
+        StoreGivenLevel(t, p->left, level-1, i);
+        StoreGivenLevel(t, p->right, level-1, i);
+        }
+}
+#endif
 
 /* GetPolyAges: Get PolyTree node ages */
 void GetPolyAges (PolyTree *t)
@@ -4115,13 +4171,15 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     treeAgeMax = POS_INFINITY;
     if (t->root->left->isDated == YES)
         {
-        treeAgeMin = t->root->left->calibration->min;
+        treeAgeMin = t->root->left->calibration->min;   /* FIXME: Not used (from clang static analyzer) */
         treeAgeMax = t->root->left->calibration->max;
         }
-    else if (!strcmp(mp->clockPr, "Uniform") || !strcmp(mp->clockPr, "Fossilization"))
+    else if (!strcmp(mp->clockPr, "Uniform") ||
+             !strcmp(mp->clockPr, "Birthdeath") ||
+             !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
-            treeAgeMin = mp->treeAgePr.min;
+            treeAgeMin = mp->treeAgePr.min; /* FIXME: Not used (from clang static analyzer) */
         if (mp->treeAgePr.max < treeAgeMax)
             treeAgeMax = mp->treeAgePr.max;
         }
@@ -4153,7 +4211,9 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                     p->nodeDepth = p->left->nodeDepth;
                 else
                     p->nodeDepth = p->right->nodeDepth;
-                if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr,"Uniform") || !strcmp(mp->clockPr,"Fossilization"))))
+                if (p->isDated == YES || (p->anc->anc == NULL && (!strcmp(mp->clockPr, "Uniform") ||
+                                                                  !strcmp(mp->clockPr, "Birthdeath") ||
+                                                                  !strcmp(mp->clockPr, "Fossilization"))))
                     {
                     if (p->isDated == NO)
                         calibrationPtr = &mp->treeAgePr;
@@ -4212,12 +4272,12 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                 p->length = p->anc->nodeDepth - p->nodeDepth;
                 if (p->length < BRLENS_MIN)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too small.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too small.\n", spacer);
                     //return (ERROR);
                     }
                 if (p->length > BRLENS_MAX)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too long.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too long.\n", spacer);
                     //return (ERROR);
                     }
                 }
@@ -4233,7 +4293,6 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
 #   endif
 
     return (NO_ERROR);
-    MrBayesPrint ("%lf", *seed); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -4420,7 +4479,7 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengthes
+| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengths
 |     and checks that user defined brlens satisfy the specified calibration(s) up to tolerance tol
 | TODO: clock rate is devived here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistancy)
 |
@@ -5427,7 +5486,7 @@ void PrintPolyNodes (PolyTree *pt)
             printf ("Cpp event set '%s'\n", pt->eSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
-                if (pt->nEvents[i*pt->nNodes+j] > 0)
+                if (pt->nEvents[i][j] > 0)
                     {
                     printf ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
                     for (k=0; k<pt->nEvents[i][j]; k++)
@@ -6007,7 +6066,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
     assert (tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
     nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
     assert (nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
-    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated length of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
@@ -6088,7 +6147,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
             if (nodeArraySize==0)
                 return ABORT; /* Potentaily here we could instead revert by removing last added node and try again. */
 
-            /* Move all nodes in nodeArray which can be paired with w to the begining of array */
+            /* Move all nodes in nodeArray which can be paired with w to the beginning of array */
             nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
             /* TODO optimization for Maxim (if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
             } while (nodeArrayAllowedSize == 0);
@@ -8410,7 +8469,8 @@ void WriteEventTree (TreeNode *p, int chain, Param *param)
                     rateMult = param->rateMult[2*chain+state[chain]][p->index];
                     for (j=0; j<nEvents; j++)
                         {
-                        printf ("%s %s", MbPrintNum(position[j]), MbPrintNum(rateMult[j]));
+                        printf ("%s ", MbPrintNum(position[j]));
+                        printf ("%s", MbPrintNum(rateMult[j]));
                         if (j != nEvents-1)
                             printf (", ");
                         }
@@ -8783,18 +8843,18 @@ void AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result)
 |   Allocate memory for a square (dim X dim) complex matrix.
 |
 ---------------------------------------------------------------------------------*/
-complex **AllocateSquareComplexMatrix (int dim)
+MrBComplex **AllocateSquareComplexMatrix (int dim)
 {
     int         i;
-    complex     **m;
+    MrBComplex     **m;
 
-    m = (complex **) SafeMalloc ((size_t)dim * sizeof(complex*));
+    m = (MrBComplex **) SafeMalloc ((size_t)dim * sizeof(MrBComplex*));
     if (!m) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
         exit (0);
         }
-    m[0]=(complex *) SafeMalloc ((size_t)dim * (size_t)dim *sizeof(complex));
+    m[0]=(MrBComplex *) SafeMalloc ((size_t)dim * (size_t)dim *sizeof(MrBComplex));
     if (!m[0]) 
         {
         MrBayesPrint ("%s   Error: Problem allocating a square complex matrix.\n", spacer);
@@ -8886,7 +8946,7 @@ int **AllocateSquareIntegerMatrix (int dim)
 int AutodGamma (MrBFlt *M, MrBFlt rho, int K)
 {
     int         i, j, i1, i2;
-    MrBFlt      point[MAX_GAMMA_CATS], x, y, large = 20.0, sum;
+    MrBFlt      point[MAX_RATE_CATS], x, y, large = 20.0, sum;
 
     for (i=0; i<K-1; i++) 
         point[i] = PointNormal ((i + 1.0) / K);
@@ -9478,7 +9538,6 @@ void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
     int             i;
     MrBFlt          r, quantile, lower, upper;
             
-    r = (1.0 / K) * 0.5;
     lower = 0.0;
     upper = (1.0 / K);
     r = (upper - lower) * 0.5 + lower;
@@ -9704,9 +9763,9 @@ MrBFlt CdfNormal (MrBFlt x)
 |   Returns a complex number with specified real and imaginary parts.
 |
 ---------------------------------------------------------------------------------*/
-complex Complex (MrBFlt a, MrBFlt b)
+MrBComplex Complex (MrBFlt a, MrBFlt b)
 {
-    complex c;
+    MrBComplex c;
     
     c.re = a;
     c.im = b;
@@ -9722,7 +9781,7 @@ complex Complex (MrBFlt a, MrBFlt b)
 |   Returns the complex absolute value (modulus) of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-MrBFlt ComplexAbsoluteValue (complex a)
+MrBFlt ComplexAbsoluteValue (MrBComplex a)
 {
     MrBFlt      x, y, answer, temp;
     
@@ -9754,9 +9813,9 @@ MrBFlt ComplexAbsoluteValue (complex a)
 |   Returns the complex sum of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexAddition (complex a, complex b)
+MrBComplex ComplexAddition (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re + b.re;
     c.im = a.im + b.im;
@@ -9772,9 +9831,9 @@ complex ComplexAddition (complex a, complex b)
 |   Returns the complex conjugate of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexConjugate (complex a)
+MrBComplex ComplexConjugate (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re;
     c.im = -a.im;
@@ -9790,9 +9849,9 @@ complex ComplexConjugate (complex a)
 |   Returns the complex quotient of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexDivision (complex a, complex b)
+MrBComplex ComplexDivision (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     MrBFlt      r, den;
     
     if (fabs(b.re) >= fabs(b.im)) 
@@ -9844,9 +9903,9 @@ void ComplexDivision2 (MrBFlt ar, MrBFlt ai, MrBFlt br, MrBFlt bi, MrBFlt *cr, M
 |   Returns the complex exponential of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexExponentiation (complex a)
+MrBComplex ComplexExponentiation (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
 
     c.re = exp(a.re);
     if (AreDoublesEqual(a.im,0.0, ETA)==YES) /* == 0 */
@@ -9878,7 +9937,7 @@ complex ComplexExponentiation (complex a)
 |   The function returns YES (1) or NO (0) if the results are singular.
 |
 ---------------------------------------------------------------------------------*/
-int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex **aInverse, complex *col)
+int ComplexInvertMatrix (int dim, MrBComplex **a, MrBFlt *dwork, int *indx, MrBComplex **aInverse, MrBComplex *col)
 {
     int             isSingular, i, j;
 
@@ -9908,14 +9967,14 @@ int ComplexInvertMatrix (int dim, complex **a, MrBFlt *dwork, int *indx, complex
 |   Returns the complex exponential of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexLog (complex a)
+MrBComplex ComplexLog (MrBComplex a)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = log(ComplexAbsoluteValue(a));
     if (AreDoublesEqual(a.re,0.0,ETA)==YES) /* == 0.0 */ 
         {
-        c.im = PIOVER2;
+        c.im = M_PI_2;
         } 
     else 
         {
@@ -9934,10 +9993,10 @@ complex ComplexLog (complex a)
 |   the inverse.
 |      
 ---------------------------------------------------------------------------------*/
-void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
+void ComplexLUBackSubstitution (int dim, MrBComplex **a, int *indx, MrBComplex *b)
 {
     int             i, ip, j, ii = -1;
-    complex         sum;
+    MrBComplex         sum;
 
     for (i = 0; i < dim; i++) 
         {
@@ -9980,11 +10039,11 @@ void ComplexLUBackSubstitution (int dim, complex **a, int *indx, complex *b)
 |   The function returns YES (1) or NO (0) if the results are singular.
 |
 ---------------------------------------------------------------------------------*/
-int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
+int ComplexLUDecompose (int dim, MrBComplex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 {
     int             i, imax, j, k;
     MrBFlt          big, dum, temp, d;
-    complex         sum, cdum;
+    MrBComplex         sum, cdum;
 
     d = 1.0;
     imax = 0;
@@ -10064,9 +10123,9 @@ int ComplexLUDecompose (int dim, complex **a, MrBFlt *vv, int *indx, MrBFlt *pd)
 |   Returns the complex product of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexMultiplication (complex a, complex b)
+MrBComplex ComplexMultiplication (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re * b.re - a.im * b.im;
     c.im = a.im * b.re + a.re * b.im;
@@ -10082,9 +10141,9 @@ complex ComplexMultiplication (complex a, complex b)
 |   Returns the complex square root of a complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexSquareRoot (complex a)
+MrBComplex ComplexSquareRoot (MrBComplex a)
 {
-    complex         c;
+    MrBComplex         c;
     MrBFlt          x, y, w, r;
     
     if (AreDoublesEqual(a.re, 0.0, ETA)==YES && AreDoublesEqual(a.im, 0.0, ETA)==YES) /* 2x == 0.0 */
@@ -10129,9 +10188,9 @@ complex ComplexSquareRoot (complex a)
 |   Returns the complex difference of two complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-complex ComplexSubtraction (complex a, complex b)
+MrBComplex ComplexSubtraction (MrBComplex a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a.re - b.re;
     c.im = a.im - b.im;
@@ -10298,7 +10357,7 @@ void ComputeMatrixExponential (int dim, MrBFlt **a, int qValue, MrBFlt **f)
 |   Copies the contents of one matrix of complex numbers to another matrix.
 |
 ---------------------------------------------------------------------------------*/
-void CopyComplexMatrices (int dim, complex **from, complex **to)
+void CopyComplexMatrices (int dim, MrBComplex **from, MrBComplex **to)
 {
     int         i, j;
     
@@ -10423,7 +10482,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
     int i;
     MrBFlt t, factor;
     MrBFlt sigmaL = sqrt(sigma);
-    MrBFlt mu = -1.0*((0.5*pow(sigmaL,2.0)));
+    MrBFlt mu = -0.5*sigmaL*sigmaL;
     if (median)
         {
         for (i=0; i<K; i++) {
@@ -10438,7 +10497,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
         }
     else
         {
-        mu = -1.0*((0.5*pow(sigmaL,2.0)));
+        mu = -0.5*sigmaL*sigmaL;
         /* Mean set to 1.0 so factor = K */
         factor = 1.0*K;
         for (i=0; i<K-1; i++) {
@@ -10448,7 +10507,7 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
             //rK[i] = LogNormalPoint(rK[i], mu, sigma);
             //rK[i] = QuantileLogNormal(rK[i], mu, sigma);
             //rK[i] = CdfNormal((log(rK[i])-mu)/sigma);
-            rK[i] = 1 - (1.0 * CdfNormal((mu + pow(sigmaL,2.0) - log(rK[i]))/sigmaL));
+            rK[i] = 1 - (1.0 * CdfNormal((mu + sigmaL*sigmaL - log(rK[i]))/sigmaL));
             }
         rK[K-1] = 1.0;
         for (i=K-1; i>0; i--) {
@@ -10971,7 +11030,7 @@ void ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b)
 |   Frees a matrix of complex numbers.
 |      
 ---------------------------------------------------------------------------------*/
-void FreeSquareComplexMatrix (complex **m)
+void FreeSquareComplexMatrix (MrBComplex **m)
 {
     free((char *) (m[0]));
     free((char *) (m));
@@ -11072,11 +11131,11 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 |   returns NO if non complex eigendecomposition, YES if complex eigendecomposition,  ABORT if an error has occured
 |
 ---------------------------------------------------------------------------------*/
-int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs)
+int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, MrBComplex **Ceigvecs, MrBComplex **CinverseEigvecs)
 {
     int         i, j, rc, *iWork, isComplex;
     MrBFlt      **tempWork, *dWork;
-    complex     **cWork, *Ccol;
+    MrBComplex     **cWork, *Ccol;
 
     /* allocate memory */
     dWork = (MrBFlt *) SafeMalloc ((size_t)dim * sizeof(MrBFlt));
@@ -11135,7 +11194,7 @@ int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, Mr
                     }
                 }
             }
-        Ccol = (complex *) SafeMalloc ((size_t)dim * sizeof(complex));
+        Ccol = (MrBComplex *) SafeMalloc ((size_t)dim * sizeof(MrBComplex));
         if (!Ccol)
             {
             MrBayesPrint ("%s   Error: Problem in GetEigens\n", spacer);
@@ -12621,7 +12680,7 @@ MrBFlt LnPriorProbLognormal (MrBFlt val, MrBFlt *params)
 
     z = (log(val) - params[0]) / params[1];
 
-    return - log(params[1] * val * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(params[1] * val * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12635,7 +12694,7 @@ MrBFlt LnPriorProbLognormal_Param_Mean_Sd (MrBFlt val, MrBFlt *params)
 
     z= (log(val) - mean_log) / sd_log;
 
-    return - log(sd_log * val * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * val * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12646,7 +12705,7 @@ MrBFlt LnPriorProbNormal (MrBFlt val, MrBFlt *params)
 
     z = (val - params[0]) / params[1];
 
-    return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(params[1] * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12709,7 +12768,7 @@ MrBFlt LnPriorProbOffsetLognormal (MrBFlt val, MrBFlt *params)
 
     z = (log(x) - mean_log) / sd_log;
 
-    return - log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * x * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12726,7 +12785,7 @@ MrBFlt LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd (MrBFlt val, MrBFlt *para
 
     z = (log(x) - mean_log) / sd_log;
 
-    return - log(sd_log * x * sqrt(2.0 * PI)) - z * z / 2.0;
+    return - log(sd_log * x * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 
@@ -12739,7 +12798,7 @@ MrBFlt LnPriorProbTruncatedNormal (MrBFlt val, MrBFlt *params)
     z_0 = (0.0 - params[0]) / params[1];
     normConst = CdfNormal(z_0);
     
-    return - log(params[1] * sqrt(2.0 * PI)) - z * z / 2.0 - log(1.0 - normConst);
+    return - log(params[1] * sqrt(2.0 * M_PI)) - z * z / 2.0 - log(1.0 - normConst);
 }
 
 
@@ -12752,7 +12811,7 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
     z_trunc = (params[0] - params[1]) / params[2];
     normConst = CdfNormal(z_trunc);
 
-    return - log(params[2] * sqrt(2.0 * PI)) - z * z / 2.0 - log(1.0 - normConst);
+    return - log(params[2] * sqrt(2.0 * M_PI)) - z * z / 2.0 - log(1.0 - normConst);
 }
 
 
@@ -12760,7 +12819,6 @@ MrBFlt LnPriorProbTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt val, MrBFlt *param
 MrBFlt LnPriorProbUniform (MrBFlt val, MrBFlt *params)
 {
     return - log(params[1] - params[0]);
-    MrBayesPrint ("%lf", val); /* just because I am tired of seeing the unused parameter error msg */
 }
 
 
@@ -12959,8 +13017,6 @@ MrBFlt LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt oldX,
 MrBFlt LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params)
 {
     return 0.0;
-    MrBayesPrint ("%lf %lf", newX, oldX); /* just because I am tired of seeing the unused parameter error msg */
-    MrBayesPrint ("%lf", *params);
 }
 
 
@@ -12995,7 +13051,7 @@ MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
     
     z = (log(x) - exp) / sd;
     
-    lnProb = - log (x * sd * sqrt (2.0 * PI)) - (z * z / 2.0);
+    lnProb = - log (x * sd * sqrt (2.0 * M_PI)) - (z * z / 2.0);
     
     return lnProb;
 }
@@ -13024,7 +13080,7 @@ MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
     
     z = (log(x) - mu) / sigma;
     
-    lnProb = - log (x * sigma * sqrt (2.0 * PI)) - (z * z / 2.0);
+    lnProb = - log (x * sigma * sqrt (2.0 * M_PI)) - (z * z / 2.0);
     
     return lnProb;
 }
@@ -13284,9 +13340,9 @@ int MultiplyMatrixNTimes (int dim, MrBFlt **Mat, int power, MrBFlt **Result)
 
         /* how many times can I multiply the matrices together */
         numSquares = 0;
-        while (pow (2.0, (MrBFlt)(numSquares)) < power)
+        while ((1 << numSquares) < power)
             numSquares++;
-        numRemaining = power - (int)(pow(2.0, (MrBFlt)(numSquares)));
+        numRemaining = power - (1 << numSquares);
         
         /* now, multiply matrix by power of 2's */
         CopyDoubleMatrices (dim, Mat, TempIn);
@@ -13326,7 +13382,8 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
 {
     MrBFlt      e = 0.5e-6, aa = 0.6931471805, p = prob, g,
                     xx, c, ch, a = 0.0, q = 0.0, p1 = 0.0, p2 = 0.0, t = 0.0, 
-                    x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6;
+                    x = 0.0, b = 0.0, s1, s2, s3, s4, s5, s6,
+                    tmp;
 
     if (p < 0.000002 || p > 0.999998 || v <= 0.0) 
         return (-1.0);
@@ -13357,7 +13414,8 @@ MrBFlt PointChi2 (MrBFlt prob, MrBFlt v)
     l3: 
         x = PointNormal (p);
         p1 = 0.222222/v;   
-        ch = v*pow((x*sqrt(p1)+1.0-p1), 3.0);
+        tmp = (x*sqrt(p1)+1.0-p1);
+        ch = v*tmp*tmp*tmp;
         if (ch > 2.2*v+6.0)  
             ch = -2.0*(log(1.0-p)-c*log(0.5*ch)+g);
     l4:
@@ -13427,7 +13485,7 @@ MrBFlt PointNormal (MrBFlt prob)
 |   Prints a vector of dim complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-void PrintComplexVector (int dim, complex *vec)
+void PrintComplexVector (int dim, MrBComplex *vec)
 {
     int     i;
 
@@ -13449,7 +13507,7 @@ void PrintComplexVector (int dim, complex *vec)
 |   Prints a square matrix of complex numbers.
 |
 ---------------------------------------------------------------------------------*/
-void PrintSquareComplexMatrix (int dim, complex **m)
+void PrintSquareComplexMatrix (int dim, MrBComplex **m)
 {
     int     row, col;
 
@@ -13525,9 +13583,9 @@ void PrintSquareIntegerMatrix (int dim, int **matrix)
 |   Returns the complex product of a real and complex number.
 |
 ---------------------------------------------------------------------------------*/
-complex ProductOfRealAndComplex (MrBFlt a, complex b)
+MrBComplex ProductOfRealAndComplex (MrBFlt a, MrBComplex b)
 {
-    complex     c;
+    MrBComplex     c;
     
     c.re = a * b.re;
     c.im = a * b.im;
@@ -13709,10 +13767,16 @@ MrBFlt RndGamma1 (MrBFlt s, RandLong *seed)
     for (;;) 
         {
         r = RandomNumber(seed);
-        if (r > p)        
-            x = a - log((1.0 - r) / (1.0 - p)), w = a * log(x) - d;
-        else if (r>uf)  
-            x = a * pow(r / p, 1.0 / s), w = x;
+        if (r > p)
+            {
+            x = a - log((1.0 - r) / (1.0 - p));
+            w = a * log(x) - d;
+            }
+        else if (r > uf)
+            {
+            x = a * pow(r / p, 1.0 / s);
+            w = x;
+            }
         else            
             return (0.0);
         r = RandomNumber(seed);
@@ -13786,7 +13850,10 @@ int SetQvalue (MrBFlt tol)
     int         qV;
     MrBFlt      x;
     
+    /*
     x = pow(2.0, 3.0 - (0 + 0)) * Factorial(0) * Factorial (0) / (Factorial(0+0) * Factorial (0+0+1));
+    */
+    x = 8.0;
     qV = 0;
     while (x > tol)
         {

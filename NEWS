@@ -1,0 +1,67 @@
+Release Note
+
+After v3.2.7  (not yet released)
+  * Move to semantic versioning scheme (see https://semver.org/).
+    Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
+    number means backward incompatible changes were made, a new MINOR
+    number means backward compatible features were added, and a new
+    PATCH number means backward compatible bugfixes were made.  We may
+    or may not use transient suffixes like "-alpha", "-beta" and "-rcN"
+    as well at times.
+
+v3.2.7 (Feb 13 2019)
+  * Added lognormal and flat ordered dirichelet distributions as
+    alternatives to the gamma prior on site variation across sites.
+  * Added new, optional moves for the fossilized birth-death model.
+  * Added new, optional parsimony-guided moves for non-clock trees.
+  * Support for Beagle 3 added.
+  * Added support for FMA and AVX instructions in built-in likelihood
+    calculators for 4by4 nucleotide models.
+  * Added basic command line option support on Unix systems (-h,-i,-v)
+  * Various minor bug fixes.
+
+v3.2.6 (Nov 25 2015)
+  * Add invertebrate mt, Echinoderm and Euplotid codes [lset code=invermt].
+  * Fix a bug of updating brls in tree-stretch move.
+  * Correct the proposal ratio in the add/delete branch move.
+  * Add more coding options for restriction site chars.
+
+v3.2.5 (Apr 8 2015)
+  * Fix pdf in the coalescent prior.
+  * Fix a few issues when appending to the previous run.
+  * Improve the efficiency of moving ancestral fossils.
+  * Add lognormal rate variation among sites [lset rate=lnorm].
+  * Add parsimony-biased SPR and TBR proposals (for developers).
+  * Other minor bug fixes and improvements.
+
+v3.2.4 (Jan 27 2015)
+  * Correct the proposal ratio in the node slider move for non-clock tree.
+  * Fix reporting ancestral states under GTR+I+G model.
+  * Fix the sliding window in the move of updating omega in codon model.
+  * Fix the likelihood and proposal ratio of NaN in the multi-species
+    coalescent analysis.
+  * Correct screen output messages for a few commands.
+  * Fix the interaction of MrBayes with Beagle for the Windows executable.
+  * Fix prior pdf of relative rates (rate multipliers).
+
+v3.2.3 (Oct 22 2014)
+  * Correct the proposal ratio in the extending TBR move for non-clock tree.
+  * Fix numerical error of calculating proposal ratio in
+    parsimony-biased SPR moves.
+  * Set unconstrained:gammadir prior as default to help avoid
+    overestimating branch lengths.
+  * Add clock:fossilization prior for total-evidence dating analysis.
+  * Add LG model to Aamodelpr [prset aamodelpr=fixed(LG)].
+  * Rearrange the code to be more concise.
+  * Other minor bug fixes and improvements.
+
+v3.2.2 (Aug 22 2013)
+  * Disable LIKE_EPSILON warning for standard users.
+  * Fix segmentation fault errors in 64bit version.
+  * Fix some issues when dealing with constraints.
+  * Fix setting aarevmatpr parameters to fixed for GTR.
+  * Other bug fixes and improvements.
+
+v3.2.1 (Feb 8 2012)
+v3.2.0 (Nov 16 2011)
+  Major release.

@@ -1,13 +1,20 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#undef complex
-struct complex
+/* M_PI and M_PI_2 not part of standard C */
+#ifndef M_PI
+#    define M_PI    3.14159265358979323846264338327950288
+#endif
+#ifndef M_PI_2
+#    define M_PI_2  1.57079632679489661923132169163975144
+#endif
+
+struct MrBComplex
 {
     MrBFlt re;
     MrBFlt im;
 };
-typedef struct complex complex;
+typedef struct MrBComplex MrBComplex;
 
 typedef struct
     {
@@ -22,10 +29,18 @@ typedef struct
     }
     Stat;
 
+
+/* For explanantion why the following two macros exists, see
+ * http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
+ */
+
+#define SAFEFREE(ptr) (ptr = SafeFree(ptr))
+#define ALIGNEDSAFEFREE(ptr) (ptr = AlignedSafeFree(ptr))
+
 int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
 #if defined (SSE_ENABLED)
 void    *AlignedMalloc (size_t size, size_t alignment);
-void     AlignedSafeFree (void **ptr);
+void    *AlignedSafeFree (void *ptr);
 #endif
 int      AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length);
 int      Bit (int n, BitsLong *p);
@@ -74,7 +89,7 @@ MrBFlt   PotentialScaleReduction (MrBFlt **vals, int nRows, int *count);
 void     EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS);
 void    *SafeCalloc (size_t n, size_t s);
 int      SafeFclose (FILE **fp);
-void     SafeFree (void **ptr);
+void    *SafeFree (void *ptr);
 void    *SafeMalloc (size_t s);
 void    *SafeRealloc (void *ptr, size_t s);
 char    *SafeStrcat (char **target, const char *source);
@@ -83,6 +98,7 @@ void     SetBit (int i, BitsLong *bits);
 void     SortInts (int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
 void     SortMrBFlt (MrBFlt *item, int left, int right);
+int      StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
 FILE    *TestOpenTextFileR (char *name);
@@ -195,21 +211,21 @@ void      WriteEvolTree (TreeNode *p, int chain, Param *param);
 void      WriteTopologyToFile (FILE *fp, TreeNode *p, int isRooted);
 
 /* math utility functions */
-complex **AllocateSquareComplexMatrix (int dim);
+MrBComplex **AllocateSquareComplexMatrix (int dim);
 MrBFlt  **AllocateSquareDoubleMatrix (int dim);
 int     **AllocateSquareIntegerMatrix (int dim);
 int       AutodGamma (MrBFlt *M, MrBFlt rho, int K);
 void      BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K);
 MrBFlt    BetaQuantile (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 void      CalcCijk (int dim, MrBFlt *c_ijk, MrBFlt **u, MrBFlt **v);
-void      CopyComplexMatrices (int dim, complex **from, complex **to);
+void      CopyComplexMatrices (int dim, MrBComplex **from, MrBComplex **to);
 void      CopyDoubleMatrices (int dim, MrBFlt **from, MrBFlt **to);
 void      DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed);
 int       DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median);
-void      FreeSquareComplexMatrix (complex **m);
+void      FreeSquareComplexMatrix (MrBComplex **m);
 void      FreeSquareDoubleMatrix (MrBFlt **m);
 void      FreeSquareIntegerMatrix (int **m);
-int       GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, complex **Ceigvecs, complex **CinverseEigvecs);
+int       GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, MrBComplex **Ceigvecs, MrBComplex **CinverseEigvecs);
 MrBFlt    LnFactorial (int value);
 MrBFlt    LnGamma (MrBFlt alp);
 MrBFlt    LnPriorProbExponential (MrBFlt val, MrBFlt *params);
@@ -266,5 +282,8 @@ MrBFlt    RandomNumber (RandLong *seed);
 MrBFlt    QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int       DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt    LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
+
+/* qsort utility function */
+int       cmpMrBFlt(const void *a, const void *b);
 
 #endif  /* __UTILS_H__ */

@@ -41,10 +41,14 @@
 #include "model.h"
 #include "utils.h"
 
-const char* const svnRevisionLikeliC = "$Rev: 1003 $";   /* Revision keyword which is expanded/updated by svn on each commit/update */
-
 #define LIKE_EPSILON                1.0e-300
 
+/* global variables declared here */
+CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
+CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
+CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
+
+/* global variables used here but declared elsewhere */
 extern int      *chainId;
 extern int      numLocalChains;
 extern int      rateProbRowSize;            /* size of rate probs for one chain one state   */
@@ -66,6 +70,10 @@ int       RemoveNodeScalers_SSE(TreeNode *p, int division, int chain);
 int       RemoveNodeScalers_AVX(TreeNode *p, int division, int chain);
 #endif
 void      ResetSiteScalers (ModelInfo *m, int chain);
+int       SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
+int       SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS);
+int       SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType);
+int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult);
 int       UpDateCijk (int whichPart, int whichChain);
 
 
@@ -99,7 +107,7 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
 
     tiPL = pL;
     tiPR = pR;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numChars; c++)
             {
@@ -152,7 +160,7 @@ int CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain)
 
     tiPL = pL;
     tiPR = pR;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numVecChars; c++)
             {
@@ -240,7 +248,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -268,7 +276,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -295,7 +303,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
         case 0:
             tiPL = pL;
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -318,7 +326,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
             break;
         case 1:
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -339,7 +347,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
             break;
         case 2:
             tiPL = pL;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -359,7 +367,7 @@ int CondLikeDown_Gen (TreeNode *p, int division, int chain)
                 }
             break;
         case 3:
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -392,8 +400,8 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a, b, catStart;
@@ -426,7 +434,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -454,7 +462,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -482,7 +490,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
         case 0:
             tiPL = pL;
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numVecChars; c++)
                     {
@@ -510,7 +518,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
             break;
         case 1:
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -537,7 +545,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
             break;
         case 2:
             tiPL = pL;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -563,7 +571,7 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
                 }
             break;
         case 3:
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -624,7 +632,7 @@ int CondLikeDown_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 
     /* find rate category index and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -813,7 +821,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=j=0; k<m->numGammaCats; k++)
+        for (k=j=0; k<m->numRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -836,7 +844,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=j=0; k<m->numGammaCats; k++)
+        for (k=j=0; k<m->numRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -859,7 +867,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
         case 0:
             tiPL = pL;
             tiPR = pR;
-            for (k=h=0; k<m->numGammaCats; k++)
+            for (k=h=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -880,7 +888,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
             break;
         case 1:
             tiPR = pR;
-            for (k=h=0; k<m->numGammaCats; k++)
+            for (k=h=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -900,7 +908,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
             break;
         case 2:
             tiPL = pL;
-            for (k=h=0; k<m->numGammaCats; k++)
+            for (k=h=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -919,7 +927,7 @@ int CondLikeDown_NUC4 (TreeNode *p, int division, int chain)
                 }
             break;
         case 3:
-            for (k=h=0; k<m->numGammaCats; k++)
+            for (k=h=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -970,7 +978,7 @@ int CondLikeDown_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
     /* find rate category index  and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -1144,7 +1152,7 @@ int CondLikeDown_NUC4_FMA (TreeNode *p, int division, int chain)
     
     tiPL = pL;
     tiPR = pR;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         for (c=0; c<m->numVecChars; c++)
         {
@@ -1280,7 +1288,7 @@ int CondLikeDown_NUC4_AVX (TreeNode *p, int division, int chain)
     
     tiPL = pL;
     tiPR = pR;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         for (c=0; c<m->numVecChars; c++)
         {
@@ -1440,7 +1448,7 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 
     tiPL = pL;
     tiPR = pR;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numVecChars; c++)
             {
@@ -1739,8 +1747,8 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
 #   endif
@@ -1946,7 +1954,7 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
     A sequence consists of nStates for all non-binary data, otherwise length of sequence is nStates*numBetaCats (i.e. 2*numBetaCats) */
 
     /* calculate ancestral probabilities */
-    for (k=h=0; k<m->numGammaCats; k++)
+    for (k=h=0; k<m->numRateCats; k++)
         {
         /* calculate ancestral probabilities */
         for (c=0; c<m->numChars; c++)
@@ -1960,10 +1968,10 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
             else
                 nCats = 1;
 
-            tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
+            tmp = k*nStates*nStates; /* tmp contains offset to skip rate cats that already processed*/
             tiPL = pL + m->tiIndex[c] + tmp;
             tiPR = pR + m->tiIndex[c] + tmp;
-            tmp = (m->numGammaCats-1)*2*2; /* tmp contains size of block of tpi matrices across all gamma cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
+            tmp = (m->numRateCats-1)*2*2; /* tmp contains size of block of tpi matrices across all rate cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
                 
             for (j=0; j<nCats;j++)
                 {
@@ -2023,7 +2031,7 @@ int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
     tiPL = pL;
     tiPR = pR;
     tiPA = pA;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numChars; c++)
             {
@@ -2082,7 +2090,7 @@ int CondLikeRoot_Bin_SSE (TreeNode *p, int division, int chain)
     tiPL = pL;
     tiPR = pR;
     tiPA = pA;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numVecChars; c++)
             {
@@ -2195,7 +2203,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2223,7 +2231,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2254,7 +2262,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
         {
         aState = m->termState[p->anc->index];
         tiPA = pA;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2286,7 +2294,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
             tiPL = pL;
             tiPR = pR;
             tiPA = pA;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -2313,7 +2321,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
         case 0:
             tiPR = pR;
             tiPL = pL;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -2337,7 +2345,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
             break;
         case 1:
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -2359,7 +2367,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
             break;
         case 2:
             tiPL = pL;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -2380,7 +2388,7 @@ int CondLikeRoot_Gen (TreeNode *p, int division, int chain)
                 }
             break;  
         case 3:
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numChars; c++)
                     {
@@ -2416,9 +2424,9 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int a, b, catStart;
@@ -2453,7 +2461,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2481,7 +2489,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2512,7 +2520,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
         {
         aState = m->termState[p->anc->index];
         tiPA = pA;
-        for (k=a=0; k<m->numGammaCats; k++)
+        for (k=a=0; k<m->numRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2543,7 +2551,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
             tiPL = pL;
             tiPR = pR;
             tiPA = pA;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=0; c<m->numVecChars; c++)
                     {
@@ -2579,7 +2587,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
         case 0:
             tiPL =pL;
             tiPR =pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -2614,7 +2622,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
             break;
         case 1:
             tiPR = pR;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -2645,7 +2653,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
             break;
         case 2:
             tiPL = pL;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -2675,7 +2683,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
                 }
             break;
         case 3:
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 for (c=t=0; c<m->numVecChars; c++)
                     {
@@ -2715,7 +2723,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 {
     int             a, b, c, i, j, r, *rateCat, shortCut, *lState=NULL,
                     *rState=NULL, *aState=NULL, nObsStates, nStates,
-                    nStatesSquared, nGammaCats;
+                    nStatesSquared, nRateCats;
     CLFlt           likeL, likeR, likeA, *clL, *clR, *clP, *clA, *pL, *pR, *pA,
                     *tiPL, *tiPR, *tiPA;
     ModelInfo       *m;
@@ -2743,9 +2751,9 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
     pR = m->tiProbs[m->tiProbsIndex[chain][p->right->index]];
     pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
 
-    /* find rate category index and number of gamma categories */
+    /* find rate category index and number of rate categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nRateCats = m->numRateCats;
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -2755,7 +2763,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=a=0; k<nGammaCats; k++)
+        for (k=a=0; k<nRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2783,7 +2791,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=a=0; k<nGammaCats; k++)
+        for (k=a=0; k<nRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2814,7 +2822,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         {
         aState = m->termState[p->anc->index];
         tiPA = pA;
-        for (k=a=0; k<nGammaCats; k++)
+        for (k=a=0; k<nRateCats; k++)
             {
             catStart = a;
             for (i=0; i<nObsStates; i++)
@@ -2845,7 +2853,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=0; c<m->numChars; c++)
             {
             r = (*rateCat++);
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r*nStatesSquared;
                 tiPR = pR + r*nStatesSquared;
@@ -2874,7 +2882,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=0; c<m->numChars; c++)
             {
             r = (*rateCat++);
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r*nStatesSquared;
                 tiPR = pR + r*nStatesSquared;
@@ -2900,7 +2908,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=0; c<m->numChars; c++)
             {
             r = (*rateCat++);
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPR = pR + r*nStatesSquared;
                 a = lState[c] + r*(nStatesSquared+nStates);
@@ -2924,7 +2932,7 @@ int CondLikeRoot_Gen_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=0; c<m->numChars; c++)
             {
             r = (*rateCat++);
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r*nStatesSquared;
                 a = rState[c] + r*(nStatesSquared+nStates);
@@ -2986,7 +2994,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=j=0; k<m->numGammaCats; k++)
+        for (k=j=0; k<m->numRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3009,7 +3017,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=j=0; k<m->numGammaCats; k++)
+        for (k=j=0; k<m->numRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3035,7 +3043,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         {
         aState = m->termState[p->anc->index];
         tiPA = pA;
-        for (k=j=0; k<m->numGammaCats; k++)
+        for (k=j=0; k<m->numRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3061,7 +3069,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         tiPL = pL;
         tiPR = pR;
         tiPA = pA;
-        for (k=h=0; k<m->numGammaCats; k++)
+        for (k=h=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -3090,7 +3098,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
     case 0:
         tiPL = pL;
         tiPR = pR;
-        for (k=h=0; k<m->numGammaCats; k++)
+        for (k=h=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -3117,7 +3125,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 
     case 1:
         tiPR = pR;
-        for (k=h=0; k<m->numGammaCats; k++)
+        for (k=h=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -3139,7 +3147,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 
     case 2:
         tiPL = pL;
-        for (k=h=0; k<m->numGammaCats; k++)
+        for (k=h=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -3160,7 +3168,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
         break;
 
     case 3:
-        for (k=h=0; k<m->numGammaCats; k++)
+        for (k=h=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -3189,7 +3197,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 {
     int             c, h, i, j, r, *rateCat, shortCut, *lState=NULL, *rState=NULL, *aState=NULL,
-                    nGammaCats;
+                    nRateCats;
     CLFlt           *clL, *clR, *clP, *clA, *pL, *pR, *pA, *tiPL, *tiPR, *tiPA;
     ModelInfo       *m;
 #   if !defined (DEBUG_NOSHORTCUTS)
@@ -3214,7 +3222,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
     /* find rate category index and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nRateCats = m->numRateCats;
 
     /* find likelihoods of site patterns for left branch if terminal */
     shortCut = 0;
@@ -3224,7 +3232,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         shortCut |= 1;
         lState = m->termState[p->left->index];
         tiPL = pL;
-        for (k=j=0; k<nGammaCats; k++)
+        for (k=j=0; k<nRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3247,7 +3255,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         shortCut |= 2;
         rState = m->termState[p->right->index];
         tiPR = pR;
-        for (k=j=0; k<nGammaCats; k++)
+        for (k=j=0; k<nRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3273,7 +3281,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         {
         aState = m->termState[p->anc->index];
         tiPA = pA;
-        for (k=j=0; k<nGammaCats; k++)
+        for (k=j=0; k<nRateCats; k++)
             {
             for (i=0; i<4; i++)
                 {
@@ -3299,7 +3307,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=h=0; c<m->numChars; c++)
             {
             r = rateCat[c];
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r * 16;
                 tiPR = pR + r * 16;
@@ -3330,7 +3338,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=h=0; c<m->numChars; c++)
             {
             r = rateCat[c];
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r * 16;
                 tiPR = pR + r * 16;
@@ -3359,7 +3367,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=h=0; c<m->numChars; c++)
             {
             r = rateCat[c];
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPR = pR + r * 16;
                 i = lState[c] + r * 20;
@@ -3383,7 +3391,7 @@ int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
         for (c=h=0; c<m->numChars; c++)
             {
             r = rateCat[c];
-            if (r < nGammaCats)
+            if (r < nRateCats)
                 {
                 tiPL = pL + r * 16;
                 i = rState[c] + r * 20;
@@ -3442,7 +3450,7 @@ int CondLikeRoot_NUC4_FMA (TreeNode *p, int division, int chain)
     tiPL = pL;
     tiPR = pR;
     tiPA = pA;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         for (c=0; c<m->numVecChars; c++)
         {
@@ -3618,7 +3626,7 @@ int CondLikeRoot_NUC4_AVX (TreeNode *p, int division, int chain)
     tiPL = pL;
     tiPR = pR;
     tiPA = pA;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         for (c=0; c<m->numVecChars; c++)
         {
@@ -3830,7 +3838,7 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
     tiPL = pL;
     tiPR = pR;
     tiPA = pA;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         for (c=0; c<m->numVecChars; c++)
             {
@@ -4239,9 +4247,9 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
@@ -4525,7 +4533,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
     pA = m->tiProbs[m->tiProbsIndex[chain][p->index       ]];
 
     /* calculate ancestral probabilities */
-    for (k=h=0; k<m->numGammaCats; k++)
+    for (k=h=0; k<m->numRateCats; k++)
         {
         /* calculate ancestral probabilities */
         for (c=0; c<m->numChars; c++)
@@ -4543,7 +4551,7 @@ int CondLikeRoot_Std (TreeNode *p, int division, int chain)
             tiPL = pL + m->tiIndex[c] + tmp;
             tiPR = pR + m->tiIndex[c] + tmp;
             tiPA = pA + m->tiIndex[c] + tmp;
-            tmp = (m->numGammaCats-1)*2*2; /* tmp contains size of block of tpi matrices across all gamma cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
+            tmp = (m->numRateCats-1)*2*2; /* tmp contains size of block of tpi matrices across all rate cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
                 
             for (j=0; j<nCats;j++)
                 {
@@ -4596,7 +4604,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
         clDP = m->condLikes[m->condLikeIndex[chain][p->index]];
         clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
 
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -4616,7 +4624,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
         /* find transition probabilities */
         tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -4650,7 +4658,7 @@ int CondLikeUp_Bin (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 {
-    int             a, c, i, j, k, nStates, nStatesSquared, nGammaCats;
+    int             a, c, i, j, k, nStates, nStatesSquared, nRateCats;
     CLFlt           *clFA, *clFP, *clDP, *tiP, *condLikeUp, sum;
     ModelInfo       *m;
     
@@ -4662,9 +4670,9 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
     nStatesSquared = nStates * nStates;
 
     /* find number of gamma cats */
-    nGammaCats = m->numGammaCats;
+    nRateCats = m->numRateCats;
     if (m->gibbsGamma == YES)
-        nGammaCats = 1;
+        nRateCats = 1;
 
     /* use preallocated scratch space */
     condLikeUp = m->ancStateCondLikes;
@@ -4679,7 +4687,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
         clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
         
         /* final cond likes = downpass cond likes */
-        for (k=0; k<nGammaCats; k++)
+        for (k=0; k<nRateCats; k++)
             {
             /* copy cond likes */ 
             for (c=0; c<m->numChars*nStates; c++)
@@ -4697,7 +4705,7 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
         /* find transition probabilities */
         tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-        for (k=0; k<nGammaCats; k++)
+        for (k=0; k<nRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -4738,17 +4746,17 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 {
-    int             c, k, nGammaCats;
+    int             c, k, nRateCats;
     CLFlt           *clFA, *clFP, *clDP, *tiP, condLikeUp[4], sum[4];
     ModelInfo       *m;
     
     /* find model settings for this division */
     m = &modelSettings[division];
 
-    /* find number of gamma cats */
-    nGammaCats = m->numGammaCats;
+    /* find number of rate cats */
+    nRateCats = m->numRateCats;
     if (m->gibbsGamma == YES)
-        nGammaCats = 1;
+        nRateCats = 1;
 
     /* calculate final states */
     if (p->anc->anc == NULL)
@@ -4760,7 +4768,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
         clFP = m->condLikes[m->condLikeScratchIndex[p->index]];
         
         /* final cond likes = downpass cond likes */
-        for (k=0; k<nGammaCats; k++)
+        for (k=0; k<nRateCats; k++)
             {
             /* copy cond likes */ 
             for (c=0; c<m->numChars; c++)
@@ -4783,7 +4791,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
         /* find transition probabilities */
         tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-        for (k=0; k<nGammaCats; k++)
+        for (k=0; k<nRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -4864,8 +4872,8 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
             coppySize+=nCats*nStates;
             }
 
-        /* finally multiply with the gamma cats */
-        coppySize *= m->numGammaCats;
+        /* finally multiply with the rate cats */
+        coppySize *= m->numRateCats;
 
         /* copy cond likes */ 
         for (k=0; k<coppySize; k++)
@@ -4882,7 +4890,7 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
         /* find transition probabilities */
         pA = m->tiProbs[m->tiProbsIndex[chain][p->index]];
         
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
@@ -4897,12 +4905,9 @@ int     CondLikeUp_Std (TreeNode *p, int division, int chain)
                 else
                     nCats = 1;
 
-                tmp = k*nStates*nStates; /* tmp contains offset to skip gamma cats that already processed*/
+                tmp = k*nStates*nStates; /* tmp contains offset to skip rate cats that already processed*/
                 tiP = pA + m->tiIndex[c] + tmp;
-                tmp = (m->numGammaCats-1)*2*2; /* tmp contains size of block of tpi matrices across all gamma cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
-
-                /* finally multiply with the gamma cats */
-                //nCats *= m->numGammaCats;
+                tmp = (m->numRateCats-1)*2*2; /* tmp contains size of block of tpi matrices across all rate cats (minus one) for single beta category. Further used only if character is binary to jump to next beta category */
 
                 /* now calculate the final cond likes */
                 for (t=0; t<nCats; t++)
@@ -4952,9 +4957,6 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -4962,7 +4964,7 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numChars * m->numModelStates;
@@ -4978,7 +4980,7 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
     for (c=0; c<m->numChars; c++)
         {
         scaler = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 {
@@ -4987,25 +4989,15 @@ int CondLikeScaler_Gen (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 clP[k][n] /= scaler;
             clP[k] += n;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];              /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5027,9 +5019,6 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     CLFlt           *scP, *lnScaler;
     __m128          *clPtr, **clP, m1;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5037,7 +5026,7 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP_SSE;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -5055,7 +5044,7 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
         {
         //scaler = 0.0;
         m1 = _mm_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 {
@@ -5065,12 +5054,7 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps (scP,  m1);
         scP += m->numFloatsPerVec;
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 {
@@ -5084,13 +5068,8 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
     scP = m->scalers[m->nodeScalerIndex[chain][p->index]];
     for (c=0; c<m->numChars; c++)
         {
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scP[c]);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5108,12 +5087,9 @@ int CondLikeScaler_Gen_SSE (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
 {
-    int             c, i, j, n, nStates, *rateCat, nGammaCats;
+    int             c, i, j, n, nStates, *rateCat, nRateCats;
     CLFlt           scaler, *clP, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5127,15 +5103,15 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
     /* find site scalers */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
 
-    /* find rate category index and number of gamma categories */
+    /* find rate category index and number of rate categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nRateCats = m->numRateCats;
 
     /* scale */
     i = j = 0;
     for (c=0; c<m->numChars; c++)
         {
-        if (rateCat[c] < nGammaCats)
+        if (rateCat[c] < nRateCats)
             {
             scaler = 0.0;
             for (n=0; n<nStates; n++)
@@ -5145,22 +5121,12 @@ int CondLikeScaler_Gen_GibbsGamma (TreeNode *p, int division, int chain)
                 i++;
                 }
 
-#   if defined (FAST_LOG)
-            frexp (scaler, &index);
-            index = 1-index;
-            scaler = scalerValue[index];
-#   endif
 
             for (n=0; n<nStates; n++)
                 clP[j++] /= scaler;
 
-#   if defined (FAST_LOG)
-            scP[c]       = logValue[index];         /* store node scaler */
-            lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
             scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
             lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
 
             }
         else
@@ -5189,17 +5155,13 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     int             c, k;
     CLFlt           scaler, *scP, *lnScaler, *clPtr, **clP;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numChars * m->numModelStates;
@@ -5215,7 +5177,7 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
     for (c=0; c<m->numChars; c++)
         {
         scaler = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             if (clP[k][A] > scaler)
                 scaler = clP[k][A];
@@ -5227,12 +5189,7 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
                 scaler = clP[k][T];
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             clP[k][A] /= scaler;
             clP[k][C] /= scaler;
@@ -5241,13 +5198,8 @@ int CondLikeScaler_NUC4 (TreeNode *p, int division, int chain)
             clP[k] += 4;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];     /* store node scaler */
-        lnScaler[c] += scP[c];              /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log(scaler); /* store node scaler */
         lnScaler[c] += scP[c];  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;   /* set unscaled nodes to 0 */
@@ -5267,7 +5219,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
 {
     int             c, k;
     CLFlt           *scP, *lnScaler;
-    __m256          *clPtr, **clP, *scP_AVX, m1, m2;
+    __m256          *clPtr, **clP, *scP_AVX, m1;
     ModelInfo       *m;
     
     m = &modelSettings[division];
@@ -5275,7 +5227,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
     /* find conditional likelihood pointers */
     clPtr = (__m256 *) m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP_AVX;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -5293,7 +5245,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
     {
         m1 = _mm256_setzero_ps ();
 
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
         {
             m1 = _mm256_max_ps (m1, clP[k][A]);
             m1 = _mm256_max_ps (m1, clP[k][C]);
@@ -5301,7 +5253,7 @@ int CondLikeScaler_NUC4_AVX (TreeNode *p, int division, int chain)
             m1 = _mm256_max_ps (m1, clP[k][T]);
         }
         
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
         {
             *clP[k] = _mm256_div_ps (*clP[k], m1);
             clP[k]++;
@@ -5347,7 +5299,7 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP_SSE;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -5364,7 +5316,7 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
     for (c=0; c<m->numVecChars; c++)
         {
         m1 = _mm_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             m1 = _mm_max_ps (m1, clP[k][A]);
             m1 = _mm_max_ps (m1, clP[k][C]);
@@ -5372,7 +5324,7 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
             m1 = _mm_max_ps (m1, clP[k][T]);
             }
 
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             *clP[k] = _mm_div_ps (*clP[k], m1);
             clP[k]++;
@@ -5407,13 +5359,9 @@ int CondLikeScaler_NUC4_SSE (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 {
-    int             c, i, j, nGammaCats, *rateCat;
+    int             c, i, j, nRateCats, *rateCat;
     CLFlt           scaler, *clP, *scP, *lnScaler;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
@@ -5428,13 +5376,13 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 
     /* find rate category index and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nRateCats = m->numRateCats;
 
     /* scale */
     i = j = 0;
     for (c=0; c<m->numChars; c++)
         {
-        if (rateCat[c] < nGammaCats)
+        if (rateCat[c] < nRateCats)
             {
             scaler = 0.0;
             if (clP[i] > scaler)
@@ -5450,24 +5398,13 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
                 scaler = clP[i];
             i++;
 
-#   if defined (FAST_LOG)
-            frexp (scaler, &index);
-            index = 1-index;
-            scaler = scalerValue[index];
-#   endif
-
             clP[j++] /= scaler;
             clP[j++] /= scaler;
             clP[j++] /= scaler;
             clP[j++] /= scaler;
 
-#   if defined (FAST_LOG)
-            scP[c]       = logValue[index];         /* store node scaler */
-            lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
             scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
             lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
             }
         else
             {
@@ -5495,9 +5432,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
     int             c, k, n, nStates;
     CLFlt           scaler, **clP, *clPtr, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5530,11 +5464,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numOmegaCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5544,13 +5473,8 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
             clP[k] += n;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5572,9 +5496,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     CLFlt           *scP, *lnScaler;
     __m128          *clPtr, **clP, m1;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
     nStates = m->numModelStates;
@@ -5610,11 +5531,6 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
         _mm_store_ps (scP,  m1);
         scP += m->numFloatsPerVec;
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
         for (k=0; k<m->numOmegaCats; k++)
             {
             for (n=0; n<nStates; n++)
@@ -5629,13 +5545,8 @@ int CondLikeScaler_NY98_SSE (TreeNode *p, int division, int chain)
     scP = m->scalers[m->nodeScalerIndex[chain][p->index]];
     for (c=0; c<m->numChars; c++)
         {
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scP[c]);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5656,9 +5567,6 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     int             c, n, k, nStates, numReps;
     CLFlt           scaler, *clPtr, **clP, *scP, *lnScaler;
     ModelInfo       *m;
-#   if defined (FAST_LOG)
-    int             index;
-#   endif
 
     m = &modelSettings[division];
 
@@ -5674,7 +5582,7 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += numReps;
@@ -5694,7 +5602,7 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
         if (nStates == 2)
             nStates = m->numBetaCats * 2;
 
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 {
@@ -5703,25 +5611,15 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
                 }
             }
 
-#   if defined (FAST_LOG)
-        frexp (scaler, &index);
-        index = 1-index;
-        scaler = scalerValue[index];
-#   endif
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             for (n=0; n<nStates; n++)
                 clP[k][n] /= scaler;
             clP[k] += nStates;
             }
 
-#   if defined (FAST_LOG)
-        scP[c]       = logValue[index];         /* store node scaler */
-        lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   else
         scP[c]       = (CLFlt) log (scaler);    /* store node scaler */
         lnScaler[c] += scP[c];                  /* add into tree scaler  */
-#   endif
         }
 
     m->unscaledNodes[chain][p->index] = 0;
@@ -5752,7 +5650,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
        we properly calculate likelihoods when some site patterns have increased or decreased weight. For
        now, we do not allow MCMCMC with character reweighting with this HMM; we bail out in the function
        FillNumSitesOfPat if we have Adgamma rate variation and reweighting. */
-    k = whichSitePats;
+    k = whichSitePats;  /* FIXME: Not used (from clang static analyzer) */
     
     /* find model settings */
     m = &modelSettings[division];
@@ -5788,7 +5686,7 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 
     for (c=i=0; c<m->numChars; c++)
         {
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             like =  0.0;
             for (j=0; j<nStates; j++)
@@ -5835,7 +5733,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numChars * m->numModelStates;
@@ -5868,9 +5766,9 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 /  m->numGammaCats;
+        freq =  1.0 /  m->numRateCats;
     else
-        freq = (1.0 - pInvar) /  m->numGammaCats;
+        freq = (1.0 - pInvar) /  m->numRateCats;
 
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -5887,7 +5785,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         for (c=0; c<m->numChars; c++)
             {
             like = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 for (j=0; j<nStates; j++)
                     {
                     like += (*(clP[k]++)) * bs[j];
@@ -5919,7 +5817,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         for (c=0; c<m->numChars; c++)
             {
             likeI = like = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 for (j=0; j<nStates; j++)
                     {
                     like += (*(clP[k]++)) * bs[j];
@@ -5984,7 +5882,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 //
 //    clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
 //    clP = m->clP_SSE;
-//    for (k=0; k<m->numGammaCats; k++)
+//    for (k=0; k<m->numRateCats; k++)
 //        {
 //        clP[k] = clPtr;
 //        clPtr += m->numVecChars * m->numModelStates;
@@ -5993,7 +5891,7 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 //    for (c=0; c<m->numChars; c++)
 //        {
 //        c1 = c / FLOATS_PER_VEC;
-//        for (k=0; k<m->numGammaCats; k++)
+//        for (k=0; k<m->numRateCats; k++)
 //            {
 //            for (j=0; j<nStates; j++)
 //                {
@@ -6041,7 +5939,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
     clP = m->clP_SSE;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -6075,9 +5973,9 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 /  m->numGammaCats;
+        freq =  1.0 /  m->numRateCats;
     else
-        freq = (1.0 - pInvar) /  m->numGammaCats;
+        freq = (1.0 - pInvar) /  m->numRateCats;
 
     mFreq = _mm_set1_ps ((CLFlt)(freq));
 
@@ -6093,7 +5991,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     for (c=0; c<m->numVecChars; c++)
         {
         mLike = _mm_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             mCatLike = _mm_setzero_ps ();
             for (j=0; j<nStates; j++)
@@ -6245,7 +6143,7 @@ int Likelihood_Gen_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *lnL
     
     /* find rate category index and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* reset lnL */
     *lnL = 0.0;
@@ -6333,11 +6231,6 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat, *clInvar=NULL;
     ModelInfo       *m;
 
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -6354,7 +6247,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numChars * m->numModelStates;
@@ -6365,9 +6258,9 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 /  m->numGammaCats;
+        freq =  1.0 /  m->numRateCats;
     else
-        freq =  (1.0 - pInvar) /  m->numGammaCats;
+        freq =  (1.0 - pInvar) /  m->numRateCats;
 
     /* find tree scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -6384,7 +6277,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         for (c=0; c<m->numChars; c++)
             {
             like = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 like += (clP[k][A] * bs[A] + clP[k][C] * bs[C] + clP[k][G] * bs[G] + clP[k][T] * bs[T]);
                 clP[k] += 4;
@@ -6403,15 +6296,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -6421,7 +6306,7 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         for (c=0; c<m->numChars; c++)
             {
             like = 0.0;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 like += (clP[k][A] * bs[A] + clP[k][C] * bs[C] + clP[k][G] * bs[G] + clP[k][T] * bs[T]);
                 clP[k] += 4;
@@ -6458,22 +6343,11 @@ int Likelihood_NUC4 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }       
         }
         
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }
@@ -6491,11 +6365,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
     MrBFlt          *bs, like;
     CLFlt           *clP, *lnScaler, *nSitesOfPat, *clInvar;
     ModelInfo       *m;
-
-#   if defined (FAST_LOG)
-    int             k, index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
 
     /* find model settings and invar cond likes */
     m = &modelSettings[division];
@@ -6515,7 +6384,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
     
     /* find rate category index  and number of gamma categories */
     rateCat = m->tiIndex + chain * m->numChars;
-    nGammaCats = m->numGammaCats;
+    nGammaCats = m->numRateCats;
 
     /* reset lnL */
     *lnL = 0.0;
@@ -6540,15 +6409,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -6581,10 +6442,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
                 }
             }       
         }
-        
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }
@@ -6599,7 +6456,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 // -------------------------------------------------------------------*/
 //int Likelihood_NUC4_GibbsGamma_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 //{
-//    int             c, i, r, nGammaCats, *rateCat;
+//    int             c, i, r, nRateCats, *rateCat;
 //    MrBFlt          *bs, like;
 //    CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
 //    __m128          *clP, *clInvar=NULL;
@@ -6629,9 +6486,9 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //    /* find nSitesOfPat */
 //    nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
 //    
-//    /* find rate category index  and number of gamma categories */
+//    /* find rate category index  and number of rate categories */
 //    rateCat = m->tiIndex + chain * m->numChars;
-//    nGammaCats = m->numGammaCats;
+//    nRateCats = m->numRateCats;
 //    
 //    /* reset lnL */
 //    *lnL = 0.0;
@@ -6706,7 +6563,7 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 //        for (c=i=0; c<m->numChars; c++)
 //        {
 //            r = rateCat[c];
-//            if (r < nGammaCats)
+//            if (r < nRateCats)
 //                like = m->lnL_SSE[c];
 //            else
 //                like = m->lnLI_SSE[c];
@@ -6747,14 +6604,9 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     MrBFlt          freq, *bs, pInvar=0.0, like, likeI;
     CLFlt           *lnScaler, *nSitesOfPat, *lnL_Vec, *lnLI_Vec;
     __m256          *clPtr, **clP, *clInvar=NULL;
-    __m256          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
+    __m256          mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
     ModelInfo       *m;
-    
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-    
+
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -6772,7 +6624,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     /* find conditional likelihood pointers */
     clPtr = (__m256 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
     clP = m->clP_AVX;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -6789,9 +6641,9 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 / m->numGammaCats;
+        freq =  1.0 / m->numRateCats;
     else
-        freq =  (1.0 - pInvar) / m->numGammaCats;
+        freq =  (1.0 - pInvar) / m->numRateCats;
     mFreq = _mm256_set1_ps ((CLFlt)(freq));
     
     /* find tree scaler */
@@ -6807,7 +6659,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     for (c=0; c<m->numVecChars; c++)
     {
         mLike = _mm256_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
         {
             mLike = _mm256_fmadd_ps (clP[k][A], mA, mLike);
             mLike = _mm256_fmadd_ps (clP[k][C], mC, mLike);
@@ -6854,15 +6706,7 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
@@ -6901,22 +6745,10 @@ int Likelihood_NUC4_FMA (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
-    
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
     
     return NO_ERROR;
 }
@@ -6939,11 +6771,6 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     __m256          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm256_set1_ps(0.0f), mLike;
     ModelInfo       *m;
     
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-    
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -6961,7 +6788,7 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     /* find conditional likelihood pointers */
     clPtr = (__m256 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
     clP = m->clP_AVX;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
     {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -6978,9 +6805,9 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 / m->numGammaCats;
+        freq =  1.0 / m->numRateCats;
     else
-        freq =  (1.0 - pInvar) / m->numGammaCats;
+        freq =  (1.0 - pInvar) / m->numRateCats;
     mFreq = _mm256_set1_ps ((CLFlt)(freq));
     
     /* find tree scaler */
@@ -6996,7 +6823,7 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     for (c=0; c<m->numVecChars; c++)
     {
         mLike = _mm256_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
         {
             m1    = _mm256_mul_ps (clP[k][A], mA);
             mLike = _mm256_add_ps (mLike, m1);
@@ -7051,15 +6878,7 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
@@ -7098,22 +6917,10 @@ int Likelihood_NUC4_AVX (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
             }
             else
             {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
             }
         }
     }
-    
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
     
     return NO_ERROR;
 }
@@ -7136,11 +6943,6 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     __m128          m1, mA, mC, mG, mT, mFreq, mPInvar=_mm_set1_ps(0.0f), mLike;
     ModelInfo       *m;
 
-#   if defined (FAST_LOG)
-    int             index;
-    MrBFlt          likeAdjust = 1.0, f;
-#   endif
-
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
     if (m->pInvar == NULL)
@@ -7158,7 +6960,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
     clP = m->clP_SSE;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -7175,9 +6977,9 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
 
     /* find category frequencies */
     if (hasPInvar == NO)
-        freq =  1.0 / m->numGammaCats;
+        freq =  1.0 / m->numRateCats;
     else
-        freq =  (1.0 - pInvar) / m->numGammaCats;
+        freq =  (1.0 - pInvar) / m->numRateCats;
     mFreq = _mm_set1_ps ((CLFlt)(freq));
 
     /* find tree scaler */
@@ -7193,7 +6995,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
     for (c=0; c<m->numVecChars; c++)
         {
         mLike = _mm_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             m1    = _mm_mul_ps (clP[k][A], mA);
             mLike = _mm_add_ps (mLike, m1);
@@ -7248,15 +7050,7 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
@@ -7295,22 +7089,10 @@ int Likelihood_NUC4_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int 
                 }
             else    
                 {
-#   if defined (FAST_LOG)
-                f = frexp (like, &index);
-                index = 1-index;
-                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];                
-                for (k=0; k<(int)nSitesOfPat[c]; k++)
-                    likeAdjust *= f;
-#   else
                 (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-#   endif
                 }
             }
         }
-
-#   if defined (FAST_LOG)
-    (*lnL) += log (likeAdjust);
-#   endif
 
     return NO_ERROR;
 }
@@ -7495,7 +7277,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     /* find conditional likelihood pointer */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numChars * m->numModelStates;
@@ -7505,7 +7287,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
 
     /* find category frequencies */
-    freq =  1.0 /  m->numGammaCats;
+    freq =  1.0 /  m->numRateCats;
 
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -7519,7 +7301,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     for (c=0; c<m->numDummyChars; c++)
         {
         like = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             like += (clP[k][0]*bs[0] + clP[k][1]*bs[1]) * freq;
             clP[k] += 2;
@@ -7541,7 +7323,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     for (c=m->numDummyChars; c<m->numChars; c++)
         {
         like = 0.0;
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             like += (clP[k][0]*bs[0] + clP[k][1]*bs[1]) * freq;
             clP[k] += 2;
@@ -7572,7 +7354,7 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 #if defined (SSE_ENABLED)
 /*------------------------------------------------------------------
 |
-|   Likelihood_Res_SSE: 4by4 nucleotide models with or without rate
+|   Likelihood_Res_SSE: restriction site model with or without rate
 |       variation
 |
 -------------------------------------------------------------------*/
@@ -7591,7 +7373,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
     clP = m->clP_SSE;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += m->numVecChars * m->numModelStates;
@@ -7603,7 +7385,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     mA = _mm_set1_ps ((CLFlt)(bs[0]));
     mB = _mm_set1_ps ((CLFlt)(bs[1]));
 
-    freq =  1.0 / m->numGammaCats;
+    freq =  1.0 / m->numRateCats;
     mFreq = _mm_set1_ps ((CLFlt)(freq));
 
     /* find tree scaler */
@@ -7619,7 +7401,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     for (c=0; c<m->numVecChars; c++)
         {
         mLike = _mm_setzero_ps ();
-        for (k=0; k<m->numGammaCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             m1    = _mm_mul_ps (clP[k][0], mA);
             mLike = _mm_add_ps (mLike, m1);
@@ -7685,8 +7467,8 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 -------------------------------------------------------------------*/
 int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    int             b, c, j, k, nBetaCats, nGammaCats, nStates, numReps;
-    MrBFlt          catLike, catFreq, gammaFreq, like, *bs, *bsBase,
+    int             b, c, j, k, nBetaCats, nRateCats, nStates, numReps;
+    MrBFlt          catLike, catFreq, rateFreq, like, *bs, *bsBase,
                     pUnobserved, pObserved;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
     ModelInfo       *m;
@@ -7704,7 +7486,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     /* find conditional likelihood pointers */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
     clP   = m->clP;
-    for (k=0; k<m->numGammaCats; k++)
+    for (k=0; k<m->numRateCats; k++)
         {
         clP[k] = clPtr;
         clPtr += numReps;
@@ -7713,9 +7495,9 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     /* find base frequencies */
     bsBase = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 
-    /* find gamma category number and frequencies */
-    nGammaCats = m->numGammaCats;
-    gammaFreq = 1.0 / nGammaCats;
+    /* find rate category number and frequencies */
+    nRateCats = m->numRateCats;
+    rateFreq = 1.0 / nRateCats;
 
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
@@ -7728,13 +7510,13 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     if (m->numBetaCats == 1)
         {
         pUnobserved = 0.0;
-        catFreq = gammaFreq;
+        catFreq = rateFreq;
         for (c=j=0; c<m->numDummyChars; c++)
             {
             like = 0.0;
             nStates = m->nStates[c];
             bs = bsBase + m->bsIndex[c];
-            for (k=0; k<nGammaCats; k++)
+            for (k=0; k<nRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -7755,7 +7537,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             nStates = m->nStates[c];
             bs = bsBase + m->bsIndex[c];
 
-            for (k=0; k<nGammaCats; k++)
+            for (k=0; k<nRateCats; k++)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
@@ -7790,16 +7572,16 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             if (nStates == 2)
                 {
                 nBetaCats = m->numBetaCats;
-                catFreq = gammaFreq / nBetaCats;
+                catFreq = rateFreq / nBetaCats;
                 }
             else
                 {
                 nBetaCats = 1;
-                catFreq = gammaFreq;
+                catFreq = rateFreq;
                 }
             for (b=0; b<nBetaCats; b++)
                 {
-                for (k=0; k<nGammaCats; k++)
+                for (k=0; k<nRateCats; k++)
                     {
                     catLike = 0.0;
                     for (j=0; j<nStates; j++)
@@ -7824,16 +7606,16 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
             if (nStates == 2)
                 {
                 nBetaCats = m->numBetaCats;
-                catFreq = gammaFreq / nBetaCats;
+                catFreq = rateFreq / nBetaCats;
                 }
             else
                 {
                 nBetaCats = 1;
-                catFreq = gammaFreq;
+                catFreq = rateFreq;
                 }
             for (b=0; b<nBetaCats; b++)
                 {
-                for (k=0; k<nGammaCats; k++)
+                for (k=0; k<nRateCats; k++)
                     {
                     catLike = 0.0;
                     for (j=0; j<nStates; j++)
@@ -8143,6 +7925,64 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     return (NO_ERROR);
 }
 
+#if defined(BEAGLE_V3_ENABLED)
+/*-----------------------------------------------------------------
+|
+|   LaunchLogLikeForBeagleMultiPartition: calculate the log likelihood of the 
+|       new state of the chain for all divisions with Beagle
+|
+-----------------------------------------------------------------*/
+void LaunchLogLikeForBeagleMultiPartition(int chain, MrBFlt* lnL)
+{
+    int             d, divisionCount;
+    int             *divisions;
+    ModelInfo       *m;    
+     divisions = (int *) SafeCalloc (numCurrentDivisions, sizeof(int));
+    divisionCount = 0;
+     /* Cycle through divisions and recalculate tis and cond likes as necessary. */
+    /* Code below does not try to avoid recalculating ti probs for divisions    */
+    /* that could share ti probs with other divisions.                          */
+    for (d=0; d<numCurrentDivisions; d++)
+        {
+#   if defined (BEST_MPI_ENABLED)
+        if (isDivisionActive[d] == NO)
+            continue;
+#   endif
+        m = &modelSettings[d];
+        if (m->upDateCl == YES) 
+            {   
+            if (m->upDateCijk == YES)
+                {
+                if (UpDateCijk(d, chain) == ERROR)
+                    {
+                    (*lnL) = MRBFLT_NEG_MAX; /* effectively abort the move */
+                    continue;
+                    }
+                m->upDateAll = YES;
+                }
+            divisions[divisionCount++] = d;
+#if defined (DEBUG_MB_BEAGLE_MULTIPART)
+            printf("divisions[%d] = %d\n", divisionCount-1, d);
+#endif
+            }
+        }
+     LaunchBEAGLELogLikeMultiPartition(divisions, divisionCount, chain, lnL);
+     if (divisionCount != numCurrentDivisions)
+        {
+        for (d=0; d<numCurrentDivisions; d++)
+            {
+            m = &modelSettings[d];
+            if (m->upDateCl == NO) 
+                {   
+                /* add log likelihood of divisions that were not updated */
+                (*lnL) += m->lnLike[2*chain + state[chain]];
+                }
+            }
+        }
+     free(divisions);
+     return;
+}
+#endif /* BEAGLE_MULTI_PART_ENABLED */
 
 /*-----------------------------------------------------------------
 |
@@ -9525,17 +9365,21 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
     /* get base frequencies */
     pis = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
+    
     /* compensate for invariable sites if appropriate */
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* rescale beta */
     beta =  (0.5 / ((pis[0] + pis[2])*(pis[1] + pis[3]) + ((pis[0]*pis[2]) + (pis[1]*pis[3]))));
@@ -9569,7 +9413,7 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
        which might occur in relaxed clock models */
 
     /* fill in values */
-    for (k=index=0; k<m->numGammaCats; k++)
+    for (k=index=0; k<m->numRateCats; k++)
         {
         t =  length * baseRate * catRate[k];
 
@@ -9658,8 +9502,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
     
     /* compensate for invariable sites if appropriate */
@@ -9667,11 +9510,14 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
         
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
-        
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* get eigenvalues and cijk pointers */
     eigenValues = m->cijks[m->cijkIndex[chain]];
     cijk        = eigenValues + (2 * n);
@@ -9697,7 +9543,7 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         length = p->length;
 
     /* fill in values */
-    for (k=index=0; k<m->numGammaCats; k++)
+    for (k=index=0; k<m->numRateCats; k++)
         {
         t =  length * baseRate * catRate[k] * correctionFactor;
 
@@ -9918,17 +9764,21 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
     /* get base frequencies */
     pis = GetParamSubVals (m->stateFreq, chain, state[chain]);
     
-    /* get rate multipliers (for gamma & partition specific rates) */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
+    
     /* compensate for invariable sites if appropriate */
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* rescale beta */
     beta =  0.5 / ((pis[0] + pis[2])*(pis[1] + pis[3]) + kap*((pis[0]*pis[2]) + (pis[1]*pis[3])));
@@ -9962,7 +9812,7 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
        which might occur in relaxed clock models */
 
     /* fill in values */
-    for (k=index=0; k<m->numGammaCats; k++)
+    for (k=index=0; k<m->numRateCats; k++)
         {
         t =  length * baseRate * catRate[k];
 
@@ -10029,7 +9879,7 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
     /* calculate Jukes Cantor transition probabilities */
     
     int         i, j, k, index;
-    MrBFlt      t, *catRate, baseRate, length;
+    MrBFlt      t, *catRate, baseRate, theRate, length;
     CLFlt       pNoChange, pChange, *tiP;
     ModelInfo   *m;
     
@@ -10038,12 +9888,22 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-    baseRate =  1.0;
-    if (m->shape == NULL)
-        catRate = &baseRate;
-    else
-        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get base rate */
+    baseRate = GetRate (division, chain);
     
+    /* compensate for invariable sites if appropriate */
+    if (m->pInvar != NULL)
+        baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
+    
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* find length */
     if (m->cppEvents != NULL)
         {
@@ -10068,9 +9928,9 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
        which might occur in relaxed clock models */
 
     /* fill in values */
-    for (k=index=0; k<m->numGammaCats; k++)
+    for (k=index=0; k<m->numRateCats; k++)
         {
-        t = length*catRate[k];
+        t = length * baseRate * catRate[k];
             
         if (t < TIME_MIN)
             {
@@ -10135,14 +9995,18 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
 
-    /* find rates */
+    /* get base rate */
     baseRate = GetRate (division, chain);
-    theRate = 1.0;
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
-        catRate = GetParamSubVals (m->shape, chain, state[chain]);
     
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+
     /* find base frequencies */
     bs = GetParamSubVals(m->stateFreq, chain, state[chain]);
 
@@ -10173,7 +10037,7 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
        which might occur in relaxed clock models */
 
     /* fill in values */
-    for (k=index=0; k<m->numGammaCats; k++)
+    for (k=index=0; k<m->numRateCats; k++)
         {       
         v =  length * baseRate * catRate[k];
             
@@ -10231,15 +10095,17 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     /* find transition probabilities */
     tiP = m->tiProbs[m->tiProbsIndex[chain][p->index]];
     
-    /* get rate multiplier */
-    theRate = 1.0;
+    /* get base rate */
     baseRate = GetRate (division, chain);
-
+    
     /* get category rates */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    theRate = 1.0;
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
 #   if defined (DEBUG_TIPROBS_STD)
     /* find base frequencies */
@@ -10287,10 +10153,10 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             {
             if (m->isTiNeeded[nStates-2] == NO)
                 continue;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
-                v =  length*catRate[k]*baseRate;
+                v =  length * catRate[k] * baseRate;
                 eV1 =  exp(-(nStates / (nStates -  1.0)) * v);
                 pChange   = (CLFlt) ((1.0 / nStates) - ((1.0 / nStates) * eV1));
                 pNoChange = (CLFlt) ((1.0 / nStates) + ((nStates - 1.0) / nStates) * eV1);
@@ -10319,7 +10185,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         if (m->isTiNeeded[9] == YES)
             {
             nStates = 3;
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
                 v =  length * catRate[k] * baseRate;
@@ -10365,7 +10231,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             f1 = root +  1.0;
             f2 = root -  1.0;
 
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
                 v =  length * catRate[k] * baseRate;
@@ -10422,7 +10288,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             f6 = f5 +  0.5;
             f7 = f5 -  0.5;
 
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
                 v =  length * catRate[k] * baseRate;
@@ -10487,7 +10353,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             f3 =  0.5 + f4;
             f4 =  0.5 - f4;
 
-            for (k=0; k<m->numGammaCats; k++)
+            for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
                 v =  length * catRate[k] * baseRate;
@@ -10561,10 +10427,10 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             for (b=0; b<m->numBetaCats; b++)
                 {
                 mu =  1.0 / (2.0 * bs[0] * bs[1]);
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     /* calculate probabilities */
-                    v =  length*catRate[k]*baseRate;
+                    v =  length * catRate[k] * baseRate;
                     eV1 =  exp(- mu * v);
                     tiP[index++] = (CLFlt) (bs[0] + (bs[1] * eV1));
                     tiP[index++] = (CLFlt) (bs[1] - (bs[1] * eV1));
@@ -10595,7 +10461,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 n = m->stateFreq->sympinStates[c];
 
                 /* fill in values */
-                for (k=0; k<m->numGammaCats; k++)
+                for (k=0; k<m->numRateCats; k++)
                     {
                     v =  length * baseRate * catRate[k];
                     cijk = eigenValues + (2 * n);
@@ -10628,11 +10494,11 @@ int UpDateCijk (int whichPart, int whichChain)
     MrBFlt      **q[100], **eigvecs, **inverseEigvecs;
     MrBFlt      *eigenValues, *eigvalsImag, *cijk;
     MrBFlt      *bs, *bsBase, *rateOmegaValues=NULL, rA=0.0, rS=0.0, posScaler, *omegaCatFreq=NULL;
-    complex     **Ceigvecs, **CinverseEigvecs;
+    MrBComplex     **Ceigvecs, **CinverseEigvecs;
     ModelInfo   *m;
     Param       *p;
 #   if defined (BEAGLE_ENABLED)
-    int         u;
+    int         u, divisionOffset;
     double      *beagleEigvecs=NULL, *beagleInverseEigvecs=NULL;
 #   endif
 
@@ -10655,13 +10521,25 @@ int UpDateCijk (int whichPart, int whichChain)
                 if (m->numOmegaCats > 1)
                     omegaCatFreq = GetParamSubVals (m->omega, whichChain, state[whichChain]);
                 }
-            else if (m->nCijkParts > 1 && m->nucModelId == NUCMODEL_4BY4 && m->numModelStates == 8) /* we have a covarion model */
-                rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);        /* with rate variation      */
+            else if (m->nCijkParts > 1 && m->nucModelId == NUCMODEL_4BY4 && m->numModelStates == 8)
+                {
+                /* we have a covarion (covariotide) model with rate variation */
+                if (m->shape != NULL)
+                    rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);
+                else if (m->mixtureRates != NULL)
+                    rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
+                }
             }
         else if (m->dataType == PROTEIN)
             {
-            if (m->nCijkParts > 1)                                                                  /* we have a covarion model */
-                rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);        /* with rate variation      */
+            if (m->nCijkParts > 1)
+                {
+                /* we have a covarion model with rate variation */
+                if (m->shape != NULL)
+                    rateOmegaValues = GetParamSubVals (m->shape, whichChain, state[whichChain]);
+                else if (m->mixtureRates != NULL)
+                    rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
+                }
             }
 #   if defined (BEAGLE_ENABLED)
         else if (m->dataType == RESTRICTION){}
@@ -10718,7 +10596,6 @@ int UpDateCijk (int whichPart, int whichChain)
             numQAllocated = m->nCijkParts;
             sizeOfSingleCijk = m->cijkLength / m->nCijkParts;
             n = m->numModelStates;
-            n3 = n * n * n;
 #   if defined (BEAGLE_ENABLED)
             if (m->useBeagle == YES)
                 eigenValues = m->cijks[m->cijkIndex[whichChain]/m->nCijkParts];
@@ -10735,7 +10612,6 @@ int UpDateCijk (int whichPart, int whichChain)
             inverseEigvecs = AllocateSquareDoubleMatrix (n);
             Ceigvecs = AllocateSquareComplexMatrix (n);
             CinverseEigvecs = AllocateSquareComplexMatrix (n);
-            bs = GetParamSubVals (m->stateFreq, whichChain, state[whichChain]);
             
             if (m->nCijkParts == 1)
                 {
@@ -10788,8 +10664,11 @@ int UpDateCijk (int whichPart, int whichChain)
                             k++;
                             }
                         }
+                    divisionOffset = 0;
+                    if (m->useBeagleMultiPartitions == YES)
+                        divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
                     beagleSetEigenDecomposition(m->beagleInstance,
-                                                m->cijkIndex[whichChain],
+                                                m->cijkIndex[whichChain] + divisionOffset,
                                                 beagleEigvecs,
                                                 beagleInverseEigvecs,
                                                 eigenValues);
@@ -10885,9 +10764,11 @@ int UpDateCijk (int whichPart, int whichChain)
                                 u++;
                                 }
                             }
-
+                        divisionOffset = 0;
+                        if (m->useBeagleMultiPartitions == YES)
+                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
                         beagleSetEigenDecomposition(m->beagleInstance,
-                                                    m->cijkIndex[whichChain] + k,
+                                                    m->cijkIndex[whichChain] + k + divisionOffset,
                                                     beagleEigvecs,
                                                     beagleInverseEigvecs,
                                                     eigenValues);
