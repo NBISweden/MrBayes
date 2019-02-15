@@ -45,6 +45,6 @@ main#authors img {margin:0 10px 10px 0;float:left; width:120px; box-shadow: 0 8p
 main ul {list-style-type: disc; padding-left:3em;}
 main ul li {margin-bottom: 0.5em;}
 main em {font-style:italic;}
-main kbd {font-family:monospace;}
-main strong {font-weight:bold;}
+main kbd {font-family:monospace;font-weight:bold;}
+/* main strong {font-weight:bold;} */
 
