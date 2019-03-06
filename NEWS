@@ -5,9 +5,12 @@ After v3.2.7  (not yet released)
     Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
     number means backward incompatible changes were made, a new MINOR
     number means backward compatible features were added, and a new
-    PATCH number means backward compatible bugfixes were made.  We may
-    or may not use transient suffixes like "-alpha", "-beta" and "-rcN"
-    as well at times.
+    PATCH number means backward compatible bugfixes to the C code were
+    made.  We may or may not use transient suffixes like "a", "b",
+    "-alpha", "-beta" and "-rcN" as well at times.
+
+v3.2.7a (Mar 06 2019): hotfix
+  * PDF manual re-generated from already updated LaTeX sources.
 
 v3.2.7 (Feb 13 2019)
   * Added lognormal and flat ordered dirichelet distributions as
