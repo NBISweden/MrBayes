@@ -330,7 +330,7 @@ CmdType     commands[] =
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
             { 36,          "Report",  NO,          DoReport,  9,                                                            {122,123,124,125,134,135,136,192,217},        4,                 "Controls how model parameters are reported",  IN_CMD, SHOW },
             { 37,         "Restore", YES,         DoRestore,  1,                                                                                             {48},    49152,                                              "Restores taxa",  IN_CMD, SHOW },
-            { 38,             "Set",  NO,             DoSet, 24,   {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,237,238,239,240,245,268,275,278,279},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
+            { 38,             "Set",  NO,             DoSet, 23,   {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,238,239,240,245,268,275,278,279},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
             { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
             { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
             { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
@@ -14608,7 +14608,7 @@ void SetUpParms (void)
     PARAM (234, "Beagledevice",   DoSetParm,         "Cpu|Gpu|\0");
     PARAM (235, "Beagleprecision",DoSetParm,         "Single|Double|\0");
     PARAM (236, "Beaglesse",      DoSetParm,         "Yes|No|\0");
-    PARAM (237, "Beagleopenmp",   DoSetParm,         "Yes|No|\0");
+    PARAM (237, "Beagleopenmp",   DoSetParm,         "Yes|No|\0"); /* not in use */
     PARAM (238, "Beaglethreads",  DoSetParm,         "Yes|No|\0");
     PARAM (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
     PARAM (240, "Beaglefreq",     DoSetParm,         "\0");
