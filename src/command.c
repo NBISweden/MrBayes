@@ -1983,10 +1983,10 @@ int DoCitations (void)
     MrBayesPrint ("   If you use the BEAGLE library, the appropriate citation is                    \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Ayres, D. L., A. Darling, D. J. Zwickl, P. Beerli, M. T. Holder, P. O.     \n");
-    MrBayesPrint ("         J. P. Huelsenbeck, F. Ronquist, D. L. Swofford, M. P. Cummings, A.      \n");
-    MrBayesPrint ("         Rambaut, and M. A. Suchard. 2012. BEAGLE: an application programming    \n");
-    MrBayesPrint ("         interface for statistical phylogenetics. Syst. Biol. 61:170-173.        \n");
-    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("         Lewis, J. P. Huelsenbeck, F. Ronquist, D. L. Swofford, M. P.            \n");
+    MrBayesPrint ("         Cummings, A. Rambaut, and M. A. Suchard. 2012. BEAGLE: an application   \n");
+    MrBayesPrint ("         programming interface for statistical phylogenetics. Syst. Biol.        \n");
+    MrBayesPrint ("         61:170-173.                                                             \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   You should also cite other papers for different ideas that are implemented    \n");
     MrBayesPrint ("   in the program.  For example, the program performs Bayesian inference of      \n");
