@@ -1,12 +1,12 @@
 MrBayes 3.2.7a (development version)
 
-This document describes how to install pre-built binaries of MrBayes
-on macOS and how to install the software from sources on any Unix-like
-operating system.
+This document describes how to install MrBayes using Homebrew on macOS,
+Linux, or on Window subsystem for Linux (WSL).  It also describes how to
+build MrBayes from the GitHub repository sources.
 
 
 ========================================================================
-Installing MrBayes on macOS
+Installing MrBayes on macOS using Homebrew
 ------------------------------------------------------------------------
 
 MrBayes is available for macOS through the Homebrew package manager.
@@ -35,7 +35,30 @@ install it on your macOS system (this may take a bit of time).
 
 
 ========================================================================
-Installing MrBayes from sources on Unix
+Installing MrBayes on Linux or WSL using Homebrew ("Linuxbrew")
+------------------------------------------------------------------------
+
+The instructions for installing MrBayes on Linux systems are identical
+to those for installing MrBayes on macOS.  It relies on Homebrow
+being available on the Linux system where it's being installed.
+Installing Homebrew on Linux is a matter of following the instructions
+at https://docs.brew.sh/Homebrew-on-Linux
+
+We have found that the pre-compiled binaries may not work on all systems
+and that you may get an "Illegal instruction (core dumped)" error when
+you try starting MrBayes.  In that case, install the MrBayes package
+from sources instead.  This can still be done through Homebrew like
+this:
+
+    brew reinstall -s mrbayes
+
+Likewise, you may possibly want to compile the Beagle library locally,
+
+    brew reinstall -s beagle
+
+
+========================================================================
+Installing MrBayes from the GitHub sources on Unix
 ------------------------------------------------------------------------
 
 Make a shallow clone of the MrBayes repository:
