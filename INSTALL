@@ -1,7 +1,44 @@
 MrBayes 3.2.7a (development version)
-========================================================================
 
-Make a shallow clone of the repository:
+This document describes how to install pre-built binaries of MrBayes
+on macOS and how to install the software from sources on any Unix-like
+operating system.
+
+
+========================================================================
+Installing MrBayes on macOS
+------------------------------------------------------------------------
+
+MrBayes is available for macOS through the Homebrew package manager.
+See https://brew.sh/ for general information about Homebrew and for
+Homebrew installation instructions.
+
+On a macOS system with Homebrew, MrBayes may be installed through the
+following two commands in a terminal:
+
+    brew tap brewsci/bio
+    brew install mrbayes
+
+The first command adds the "brewsci/bio" "tap" to your Homebrew system.
+This is a Homebrew repository that contains various software related to
+bioinformatics.  Once the repository is available, you install MrBayes
+with the second command above.
+
+This will install MrBayes with support for the Beagle library.  If you
+need additional MPI support, use
+
+    brew install mrbayes --with-open-mpi
+
+This will likely download the neccesary Homebrew packages for building
+MrBayes with MPI support and then proceed to automatically build and
+install it on your macOS system (this may take a bit of time).
+
+
+========================================================================
+Installing MrBayes from sources on Unix
+------------------------------------------------------------------------
+
+Make a shallow clone of the MrBayes repository:
 
     git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 
