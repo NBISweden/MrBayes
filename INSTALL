@@ -1,8 +1,9 @@
-MrBayes 3.2.7a (development version)
+MrBayes 3.2.7a
 
-This document describes how to install MrBayes using Homebrew on macOS,
-Linux, or on Window subsystem for Linux (WSL).  It also describes how to
-build MrBayes from the GitHub repository sources.
+This document describes how to install the most recent release of
+MrBayes using Homebrew on macOS, Linux, or on Window subsystem for
+Linux (WSL).  It also describes how to build the development sources of
+MrBayes from the GitHub repository sources.
 
 
 ========================================================================
