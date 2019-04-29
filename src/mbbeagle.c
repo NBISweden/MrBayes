@@ -2901,8 +2901,6 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                 /* find nSitesOfPat */
                 nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
                 
-                (*lnLDiv) = 0.0;
-
                 site = 0;
                 for (i=0; i<dIndex; i++) {
                     site += modelSettings[i].numChars;
@@ -2911,6 +2909,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                     {
                     if (m->dataType == RESTRICTION)
                         {
+                        (*lnLDiv) = 0.0;
                         pUnobserved = 0.0;
                         for (c=0; c<m->numDummyChars; c++)
                             {
@@ -2928,6 +2927,8 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                     }
                 else
                     {
+                    (*lnLDiv) = 0.0;
+
                     /* has invariable category */
                     pInvar =  *(GetParamVals (m->pInvar, chain, state[chain]));
                     clInvar = m->invCondLikes;
