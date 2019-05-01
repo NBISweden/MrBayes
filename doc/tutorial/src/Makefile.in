@@ -261,11 +261,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_pdf_DATA = MBDating.pdf
-CLEANFILES = MBDating.aux \
-		MBDating.bbl \
-		MBDating.blg \
-		MBDating.log \
-		MBDating.out
+CLEANFILES = \
+	MBDating.aux \
+	MBDating.bbl \
+	MBDating.blg \
+	MBDating.fdb_latexmk \
+	MBDating.fls \
+	MBDating.log \
+	MBDating.out
 
 DISTCLEANFILES = MBDating.pdf
 @HAVE_LATEX_TRUE@envvars = TEXINPUTS=$(srcdir): BIBINPUTS=$(srcdir): BSTINPUTS=$(srcdir):

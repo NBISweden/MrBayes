@@ -1,10 +1,13 @@
 dist_pdf_DATA=	MBDating.pdf
 
-CLEANFILES=	MBDating.aux \
-		MBDating.bbl \
-		MBDating.blg \
-		MBDating.log \
-		MBDating.out
+CLEANFILES=	\
+	MBDating.aux \
+	MBDating.bbl \
+	MBDating.blg \
+	MBDating.fdb_latexmk \
+	MBDating.fls \
+	MBDating.log \
+	MBDating.out
 
 DISTCLEANFILES=	MBDating.pdf
 
