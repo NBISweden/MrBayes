@@ -3,35 +3,42 @@ dist_pdf_DATA=	MBDating.pdf
 
 EXTRA_DIST=	src
 
-CLEANFILES=	MBDating.aux \
-		MBDating.bbl \
-		MBDating.blg \
-		MBDating.log \
-		MBDating.out
+CLEANFILES=	\
+	MBDating.aux \
+	MBDating.bbl \
+	MBDating.blg \
+	MBDating.fdb_latexmk \
+	MBDating.fls \
+	MBDating.log \
+	MBDating.out
 
 DISTCLEANFILES=	MBDating.pdf
 
-if BUILD_DOC
-MBDating.pdf: \
-    src/MBDating.tex \
-    src/master_refs.bib \
-    src/figures/ccby.pdf \
-    src/figures/clockr.pdf \
-    src/figures/cltree.pdf \
-    src/figures/distribution.r \
-    src/figures/fbdtree.pdf \
-    src/figures/gamdir.pdf \
-    src/figures/gamma.pdf \
-    src/figures/nctree.pdf \
-    src/figures/nodecali.pdf \
-    src/figures/relaxcl.pdf \
-    src/figures/treeage.pdf
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-else
+if HAVE_LATEX
+
+envvars=	\
+	TEXINPUTS=$(srcdir)/src: \
+	BIBINPUTS=$(srcdir)/src: \
+	BSTINPUTS=$(srcdir)/src:
+
+if HAVE_LATEXMK
+
+MBDating.pdf:
+	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/MBDating
+
+else # !HAVE_LATEXMK
+
+MBDating.pdf:
+	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
+	env $(envvars) $(BIBTEX) MBDating
+	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
+	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
+
+endif
+else # !HAVE_LATEX
+
 MBDating.pdf:
 	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
 	exit 0
+
 endif

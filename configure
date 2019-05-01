@@ -649,8 +649,11 @@ CFLAGS
 ac_ct_CC
 CC
 MPICC
-BUILD_DOC_FALSE
-BUILD_DOC_TRUE
+HAVE_LATEXMK_FALSE
+HAVE_LATEXMK_TRUE
+HAVE_LATEX_FALSE
+HAVE_LATEX_TRUE
+LATEXMK
 BIBTEX
 PDFLATEX
 PKG_CONFIG_LIBDIR
@@ -3459,20 +3462,69 @@ $as_echo "no" >&6; }
 fi
 
 
-
- if test -n "$PDFLATEX" && test -n "$BIBTEX"; then
-  BUILD_DOC_TRUE=
-  BUILD_DOC_FALSE='#'
+# Extract the first word of "latexmk", so it can be a program name with args.
+set dummy latexmk; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_LATEXMK+:} false; then :
+  $as_echo_n "(cached) " >&6
 else
-  BUILD_DOC_TRUE='#'
-  BUILD_DOC_FALSE=
+  case $LATEXMK in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_LATEXMK="$LATEXMK" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_LATEXMK="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+LATEXMK=$ac_cv_path_LATEXMK
+if test -n "$LATEXMK"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LATEXMK" >&5
+$as_echo "$LATEXMK" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 fi
 
-if test -z "$BUILD_DOC_TRUE"; then :
+
+
+ if test -n "$PDFLATEX" && test -n "$BIBTEX"; then
+  HAVE_LATEX_TRUE=
+  HAVE_LATEX_FALSE='#'
+else
+  HAVE_LATEX_TRUE='#'
+  HAVE_LATEX_FALSE=
+fi
+
+if test -z "$HAVE_LATEX_TRUE"; then :
   else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: pdflatex or bibtex is missing, documentation will not be rebuilt" >&5
 $as_echo "$as_me: WARNING: pdflatex or bibtex is missing, documentation will not be rebuilt" >&2;}
 fi
+
+ if test -n "$LATEXMK"; then
+  HAVE_LATEXMK_TRUE=
+  HAVE_LATEXMK_FALSE='#'
+else
+  HAVE_LATEXMK_TRUE='#'
+  HAVE_LATEXMK_FALSE=
+fi
+
 
 # Determine if we can (and want) to use an MPI C compiler.
 DEPDIR="${am__leading_dot}deps"
@@ -8024,8 +8076,12 @@ if test -z "${MAINTAINER_MODE_TRUE}" && test -z "${MAINTAINER_MODE_FALSE}"; then
   as_fn_error $? "conditional \"MAINTAINER_MODE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${BUILD_DOC_TRUE}" && test -z "${BUILD_DOC_FALSE}"; then
-  as_fn_error $? "conditional \"BUILD_DOC\" was never defined.
+if test -z "${HAVE_LATEX_TRUE}" && test -z "${HAVE_LATEX_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_LATEX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_LATEXMK_TRUE}" && test -z "${HAVE_LATEXMK_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_LATEXMK\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
