@@ -2,6 +2,10 @@ dist_pdf_DATA=	Manual_MrBayes_v3.2.pdf
 
 EXTRA_DIST=	src
 
+DISTCLEANFILES=	Manual_MrBayes_v3.2.pdf
+
+if HAVE_LATEX
+
 CLEANFILES=	\
 	Manual_MrBayes_v3.2.aux \
 	Manual_MrBayes_v3.2.bbl \
@@ -11,23 +15,28 @@ CLEANFILES=	\
 	Manual_MrBayes_v3.2.log \
 	Manual_MrBayes_v3.2.toc
 
-DISTCLEANFILES=	Manual_MrBayes_v3.2.pdf
-
-if HAVE_LATEX
-
 envvars=	\
 	TEXINPUTS=$(srcdir)/src: \
 	BIBINPUTS=$(srcdir)/src: \
 	BSTINPUTS=$(srcdir)/src:
 
+deps=	\
+	$(srcdir)/src/Appendix_Fig1.pdf \
+	$(srcdir)/src/Appendix_Fig2.pdf \
+	$(srcdir)/src/Appendix_Fig3.pdf \
+	$(srcdir)/src/Manual_MrBayes_v3.2.tex \
+	$(srcdir)/src/StatisticalMethods_Chapter.tex \
+	$(srcdir)/src/bayes.bib \
+	$(srcdir)/src/sysbio.bst
+
 if HAVE_LATEXMK
 
-Manual_MrBayes_v3.2.pdf:
+Manual_MrBayes_v3.2.pdf: $(deps)
 	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Manual_MrBayes_v3.2
 
 else # !HAVE_LATEXMK
 
-Manual_MrBayes_v3.2.pdf:
+Manual_MrBayes_v3.2.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 	env $(envvars) $(BIBTEX) Manual_MrBayes_v3.2
 	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2

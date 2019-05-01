@@ -3,6 +3,10 @@ dist_pdf_DATA=	MBDating.pdf
 
 EXTRA_DIST=	src
 
+DISTCLEANFILES=	MBDating.pdf
+
+if HAVE_LATEX
+
 CLEANFILES=	\
 	MBDating.aux \
 	MBDating.bbl \
@@ -12,23 +16,34 @@ CLEANFILES=	\
 	MBDating.log \
 	MBDating.out
 
-DISTCLEANFILES=	MBDating.pdf
-
-if HAVE_LATEX
-
 envvars=	\
 	TEXINPUTS=$(srcdir)/src: \
 	BIBINPUTS=$(srcdir)/src: \
 	BSTINPUTS=$(srcdir)/src:
 
+deps=	\
+	$(srcdir)/src/MBDating.tex \
+	$(srcdir)/src/figures/ccby.pdf \
+	$(srcdir)/src/figures/clockr.pdf \
+	$(srcdir)/src/figures/cltree.pdf \
+	$(srcdir)/src/figures/fbdtree.pdf \
+	$(srcdir)/src/figures/gamdir.pdf \
+	$(srcdir)/src/figures/gamma.pdf \
+	$(srcdir)/src/figures/nctree.pdf \
+	$(srcdir)/src/figures/nodecali.pdf \
+	$(srcdir)/src/figures/relaxcl.pdf \
+	$(srcdir)/src/figures/treeage.pdf \
+	$(srcdir)/src/master_refs.bib \
+	$(srcdir)/src/sysbio.bst
+
 if HAVE_LATEXMK
 
-MBDating.pdf:
+MBDating.pdf: $(deps)
 	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/MBDating
 
 else # !HAVE_LATEXMK
 
-MBDating.pdf:
+MBDating.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
 	env $(envvars) $(BIBTEX) MBDating
 	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
