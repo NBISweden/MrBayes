@@ -1,5 +1,7 @@
 dist_pdf_DATA=	Manual_MrBayes_v3.2.pdf
 
+EXTRA_DIST=	src
+
 CLEANFILES=	\
 	Manual_MrBayes_v3.2.aux \
 	Manual_MrBayes_v3.2.bbl \

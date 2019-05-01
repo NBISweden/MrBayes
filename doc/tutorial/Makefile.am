@@ -1,6 +1,8 @@
 dist_doc_DATA=	hym.nex
 dist_pdf_DATA=	MBDating.pdf
 
+EXTRA_DIST=	src
+
 CLEANFILES=	\
 	MBDating.aux \
 	MBDating.bbl \
