@@ -91,7 +91,7 @@ host_triplet = @host@
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps =  \
-	$(top_srcdir)/am-macros/ax_reset_header_cache.m4 \
+	$(top_srcdir)/autotools/ax_reset_header_cache.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -188,13 +188,15 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = $(SUBDIRS)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/am-aux/compile \
-	$(top_srcdir)/am-aux/config.guess \
-	$(top_srcdir)/am-aux/config.sub \
-	$(top_srcdir)/am-aux/install-sh $(top_srcdir)/am-aux/missing \
-	COPYING INSTALL NEWS README TODO am-aux/compile \
-	am-aux/config.guess am-aux/config.sub am-aux/depcomp \
-	am-aux/install-sh am-aux/missing
+am__DIST_COMMON = $(srcdir)/Makefile.in \
+	$(top_srcdir)/autotools/compile \
+	$(top_srcdir)/autotools/config.guess \
+	$(top_srcdir)/autotools/config.sub \
+	$(top_srcdir)/autotools/install-sh \
+	$(top_srcdir)/autotools/missing COPYING INSTALL NEWS README \
+	TODO autotools/compile autotools/config.guess \
+	autotools/config.sub autotools/depcomp autotools/install-sh \
+	autotools/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)

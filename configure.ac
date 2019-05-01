@@ -4,8 +4,8 @@
 AC_PREREQ([2.69])
 AC_INIT([MrBayes],[3.2.7a])
 
-AC_CONFIG_AUX_DIR([am-aux])
-AC_CONFIG_MACRO_DIRS([am-macros])
+AC_CONFIG_AUX_DIR([autotools])
+AC_CONFIG_MACRO_DIRS([autotools])
 
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
