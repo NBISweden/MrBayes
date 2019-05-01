@@ -10,7 +10,15 @@ CLEANFILES=	Manual_MrBayes_v3.2.aux \
 
 DISTCLEANFILES=	Manual_MrBayes_v3.2.pdf
 
-if BUILD_DOC
+if HAVE_LATEX
+if HAVE_LATEXMK
+
+Manual_MrBayes_v3.2.pdf:
+	$(LATEXMK) -pdf -cd $(srcdir)/src/Manual_MrBayes_v3.2
+	mv $(srcdir)/src/Manual_MrBayes_v3.2.pdf Manual_MrBayes_v3.2.pdf
+
+else # !HAVE_LATEXMK
+
 Manual_MrBayes_v3.2.pdf: \
     src/Manual_MrBayes_v3.2.tex \
     src/bayes.bib \
@@ -21,8 +29,12 @@ Manual_MrBayes_v3.2.pdf: \
 	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) Manual_MrBayes_v3.2
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
-else
+
+endif
+else # !HAVE_LATEX
+
 Manual_MrBayes_v3.2.pdf:
 	echo 'Can not build the manual PDF since LaTeX was not detected' >&2
 	exit 0
+
 endif

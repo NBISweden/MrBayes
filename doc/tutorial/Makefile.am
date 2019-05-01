@@ -11,7 +11,15 @@ CLEANFILES=	MBDating.aux \
 
 DISTCLEANFILES=	MBDating.pdf
 
-if BUILD_DOC
+if HAVE_LATEX
+if HAVE_LATEXMK
+
+MBDating.pdf:
+	$(LATEXMK) -pdf -cd $(srcdir)/src/MBDating
+	mv $(srcdir)/src/MBDating.pdf MBDating.pdf
+
+else # !HAVE_LATEXMK
+
 MBDating.pdf: \
     src/MBDating.tex \
     src/master_refs.bib \
@@ -30,8 +38,12 @@ MBDating.pdf: \
 	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
 	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-else
+
+endif
+else # !HAVE_LATEX
+
 MBDating.pdf:
 	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
 	exit 0
+
 endif
