@@ -15,7 +15,7 @@ if HAVE_LATEX
 if HAVE_LATEXMK
 
 MBDating.pdf:
-	$(LATEXMK) -pdf -cd $(srcdir)/src/MBDating
+	$(LATEXMK) -quiet -pdf -cd $(srcdir)/src/MBDating
 	mv $(srcdir)/src/MBDating.pdf MBDating.pdf
 
 else # !HAVE_LATEXMK

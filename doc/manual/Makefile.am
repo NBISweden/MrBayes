@@ -14,7 +14,7 @@ if HAVE_LATEX
 if HAVE_LATEXMK
 
 Manual_MrBayes_v3.2.pdf:
-	$(LATEXMK) -pdf -cd $(srcdir)/src/Manual_MrBayes_v3.2
+	$(LATEXMK) -quiet -pdf -cd $(srcdir)/src/Manual_MrBayes_v3.2
 	mv $(srcdir)/src/Manual_MrBayes_v3.2.pdf Manual_MrBayes_v3.2.pdf
 
 else # !HAVE_LATEXMK
