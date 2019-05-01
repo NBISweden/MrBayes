@@ -261,25 +261,17 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_pdf_DATA = Manual_MrBayes_v3.2.pdf
-sources = \
-	$(srcdir)/Appendix_Fig1.pdf \
-	$(srcdir)/Appendix_Fig2.pdf \
-	$(srcdir)/Appendix_Fig3.pdf \
-	$(srcdir)/Manual_MrBayes_v3.2.tex \
-	$(srcdir)/StatisticalMethods_Chapter.tex \
-	$(srcdir)/bayes.bib \
-	$(srcdir)/sysbio.bst
-
-CLEANFILES = Manual_MrBayes_v3.2.aux \
-		Manual_MrBayes_v3.2.bbl \
-		Manual_MrBayes_v3.2.blg \
-		Manual_MrBayes_v3.2.log \
-		Manual_MrBayes_v3.2.toc \
-		Manual_MrBayes_v3.2.fdb_latexmk \
-		Manual_MrBayes_v3.2.fls \
-		$(sources)
+CLEANFILES = \
+	Manual_MrBayes_v3.2.aux \
+	Manual_MrBayes_v3.2.bbl \
+	Manual_MrBayes_v3.2.blg \
+	Manual_MrBayes_v3.2.fdb_latexmk \
+	Manual_MrBayes_v3.2.fls \
+	Manual_MrBayes_v3.2.log \
+	Manual_MrBayes_v3.2.toc
 
 DISTCLEANFILES = Manual_MrBayes_v3.2.pdf
+@HAVE_LATEX_TRUE@envvars = TEXINPUTS=$(srcdir): BIBINPUTS=$(srcdir): BSTINPUTS=$(srcdir):
 all: all-am
 
 .SUFFIXES:
@@ -493,8 +485,7 @@ uninstall-am: uninstall-dist_pdfDATA
 
 
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@Manual_MrBayes_v3.2.pdf:
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	cp $(sources) .
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -quiet -pdf -cd Manual_MrBayes_v3.2
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/Manual_MrBayes_v3.2
 
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@Manual_MrBayes_v3.2.pdf: \
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    Manual_MrBayes_v3.2.tex \
@@ -502,11 +493,10 @@ uninstall-am: uninstall-dist_pdfDATA
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    Appendix_Fig1.pdf \
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    Appendix_Fig2.pdf \
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    Appendix_Fig3.pdf
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	cp $(sources) .
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	$(PDFLATEX) Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	$(BIBTEX) Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	$(PDFLATEX) Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	$(PDFLATEX) Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) Manual_MrBayes_v3.2
 
 @HAVE_LATEX_FALSE@Manual_MrBayes_v3.2.pdf:
 @HAVE_LATEX_FALSE@	echo 'Can not build the manual PDF since LaTeX was not detected' >&2
