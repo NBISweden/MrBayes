@@ -101,10 +101,13 @@ PKG_PROG_PKG_CONFIG
 # This does not affect the pre-built PDF documents unless these are deleted.
 AC_PATH_PROG(PDFLATEX, [pdflatex])
 AC_PATH_PROG(BIBTEX, [bibtex])
+AC_PATH_PROG(LATEXMK, [latexmk])
 
-AM_CONDITIONAL([BUILD_DOC], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
-AM_COND_IF([BUILD_DOC], [],
+AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
+AM_COND_IF([HAVE_LATEX], [],
            [AC_MSG_WARN([pdflatex or bibtex is missing, documentation will not be rebuilt])])
+
+AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
 
 # Determine if we can (and want) to use an MPI C compiler.
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
