@@ -260,7 +260,6 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/manual/Makefile
-                 doc/manual/src/Makefile
                  doc/tutorial/Makefile
                  doc/tutorial/src/Makefile
                  examples/Makefile
