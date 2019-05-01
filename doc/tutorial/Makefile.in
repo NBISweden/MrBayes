@@ -505,7 +505,7 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 
 
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@MBDating.pdf:
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -pdf -cd $(srcdir)/src/MBDating
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -quiet -pdf -cd $(srcdir)/src/MBDating
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	mv $(srcdir)/src/MBDating.pdf MBDating.pdf
 
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@MBDating.pdf: \

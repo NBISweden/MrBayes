@@ -482,7 +482,7 @@ uninstall-am: uninstall-dist_pdfDATA
 
 
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@Manual_MrBayes_v3.2.pdf:
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -pdf -cd $(srcdir)/src/Manual_MrBayes_v3.2
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -quiet -pdf -cd $(srcdir)/src/Manual_MrBayes_v3.2
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	mv $(srcdir)/src/Manual_MrBayes_v3.2.pdf Manual_MrBayes_v3.2.pdf
 
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@Manual_MrBayes_v3.2.pdf: \
