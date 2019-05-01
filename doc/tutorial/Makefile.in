@@ -182,6 +182,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LATEXMK = @LATEXMK@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -503,27 +504,32 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 .PRECIOUS: Makefile
 
 
-@BUILD_DOC_TRUE@MBDating.pdf: \
-@BUILD_DOC_TRUE@    src/MBDating.tex \
-@BUILD_DOC_TRUE@    src/master_refs.bib \
-@BUILD_DOC_TRUE@    src/figures/ccby.pdf \
-@BUILD_DOC_TRUE@    src/figures/clockr.pdf \
-@BUILD_DOC_TRUE@    src/figures/cltree.pdf \
-@BUILD_DOC_TRUE@    src/figures/distribution.r \
-@BUILD_DOC_TRUE@    src/figures/fbdtree.pdf \
-@BUILD_DOC_TRUE@    src/figures/gamdir.pdf \
-@BUILD_DOC_TRUE@    src/figures/gamma.pdf \
-@BUILD_DOC_TRUE@    src/figures/nctree.pdf \
-@BUILD_DOC_TRUE@    src/figures/nodecali.pdf \
-@BUILD_DOC_TRUE@    src/figures/relaxcl.pdf \
-@BUILD_DOC_TRUE@    src/figures/treeage.pdf
-@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-@BUILD_DOC_TRUE@	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
-@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-@BUILD_DOC_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
-@BUILD_DOC_FALSE@MBDating.pdf:
-@BUILD_DOC_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
-@BUILD_DOC_FALSE@	exit 0
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@MBDating.pdf:
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	$(LATEXMK) -pdf -cd $(srcdir)/src/MBDating
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	mv $(srcdir)/src/MBDating.pdf MBDating.pdf
+
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@MBDating.pdf: \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/MBDating.tex \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/master_refs.bib \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/ccby.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/clockr.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/cltree.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/distribution.r \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/fbdtree.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/gamdir.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/gamma.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/nctree.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/nodecali.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/relaxcl.pdf \
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@    src/figures/treeage.pdf
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	BSTINPUTS=$(srcdir)/src BIBINPUTS=$(srcdir)/src $(BIBTEX) MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	TEXINPUTS=".:$(srcdir)/src:" $(PDFLATEX) $(srcdir)/src/MBDating
+
+@HAVE_LATEX_FALSE@MBDating.pdf:
+@HAVE_LATEX_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+@HAVE_LATEX_FALSE@	exit 0
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
