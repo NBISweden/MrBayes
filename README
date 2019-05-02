@@ -18,7 +18,7 @@ Build instructions, very very short version (would install MrBayes as
 Current repository directory layout:
 
     .
-    ├── am-*           : Files relating to the build system
+    ├── autotools      : Files relating to the build system
     ├── doc
     │   ├── manual     : The manual
     │   └── tutorial   : A tutorial
