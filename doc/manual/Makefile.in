@@ -502,10 +502,10 @@ uninstall-am: uninstall-dist_pdfDATA
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Manual_MrBayes_v3.2
 
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@Manual_MrBayes_v3.2.pdf: $(deps)
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
 
 @HAVE_LATEX_FALSE@Manual_MrBayes_v3.2.pdf:
 @HAVE_LATEX_FALSE@	echo 'Can not build the manual PDF since LaTeX was not detected' >&2

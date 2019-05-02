@@ -37,10 +37,10 @@ Manual_MrBayes_v3.2.pdf: $(deps)
 else # !HAVE_LATEXMK
 
 Manual_MrBayes_v3.2.pdf: $(deps)
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
-	env $(envvars) $(BIBTEX) Manual_MrBayes_v3.2
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/Manual_MrBayes_v3.2
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+	env $(envvars) $(BIBTEX) -terse Manual_MrBayes_v3.2
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
 
 endif
 else # !HAVE_LATEX

@@ -44,10 +44,10 @@ MBDating.pdf: $(deps)
 else # !HAVE_LATEXMK
 
 MBDating.pdf: $(deps)
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
-	env $(envvars) $(BIBTEX) MBDating
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
-	env $(envvars) $(PDFLATEX) $(srcdir)/src/MBDating
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+	env $(envvars) $(BIBTEX) -terse MBDating
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 
 endif
 else # !HAVE_LATEX
