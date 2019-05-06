@@ -1,6 +1,6 @@
 Release Note
 
-After v3.2.7  (not yet released)
+Development version  (not yet released)
   * Move to semantic versioning scheme (see https://semver.org/).
     Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
     number means backward incompatible changes were made, a new MINOR
@@ -8,6 +8,8 @@ After v3.2.7  (not yet released)
     PATCH number means backward compatible bugfixes to the C code were
     made.  We may or may not use transient suffixes like "a", "b",
     "-alpha", "-beta" and "-rcN" as well at times.
+  * Use latexmk to build the PDF documentation, if avaliable.
+  * Bug fix to multi-partition Beagle code.
 
 v3.2.7a (Mar 06 2019): hotfix
   * PDF manual re-generated from already updated LaTeX sources.
