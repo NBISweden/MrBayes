@@ -264,34 +264,34 @@ dist_doc_DATA = hym.nex
 dist_pdf_DATA = MBDating.pdf
 EXTRA_DIST = src
 DISTCLEANFILES = MBDating.pdf
-@HAVE_LATEX_TRUE@CLEANFILES = \
-@HAVE_LATEX_TRUE@	MBDating.aux \
-@HAVE_LATEX_TRUE@	MBDating.bbl \
-@HAVE_LATEX_TRUE@	MBDating.blg \
-@HAVE_LATEX_TRUE@	MBDating.fdb_latexmk \
-@HAVE_LATEX_TRUE@	MBDating.fls \
-@HAVE_LATEX_TRUE@	MBDating.log \
-@HAVE_LATEX_TRUE@	MBDating.out
+CLEANFILES = \
+	MBDating.aux \
+	MBDating.bbl \
+	MBDating.blg \
+	MBDating.fdb_latexmk \
+	MBDating.fls \
+	MBDating.log \
+	MBDating.out
 
-@HAVE_LATEX_TRUE@envvars = \
-@HAVE_LATEX_TRUE@	TEXINPUTS=$(srcdir)/src: \
-@HAVE_LATEX_TRUE@	BIBINPUTS=$(srcdir)/src: \
-@HAVE_LATEX_TRUE@	BSTINPUTS=$(srcdir)/src:
+envvars = \
+	TEXINPUTS=$(srcdir)/src: \
+	BIBINPUTS=$(srcdir)/src: \
+	BSTINPUTS=$(srcdir)/src:
 
-@HAVE_LATEX_TRUE@deps = \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/MBDating.tex \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/ccby.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/clockr.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/cltree.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/fbdtree.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/gamdir.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/gamma.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/nctree.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/nodecali.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/relaxcl.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/figures/treeage.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/master_refs.bib \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/sysbio.bst
+deps = \
+	$(srcdir)/src/MBDating.tex \
+	$(srcdir)/src/figures/ccby.pdf \
+	$(srcdir)/src/figures/clockr.pdf \
+	$(srcdir)/src/figures/cltree.pdf \
+	$(srcdir)/src/figures/fbdtree.pdf \
+	$(srcdir)/src/figures/gamdir.pdf \
+	$(srcdir)/src/figures/gamma.pdf \
+	$(srcdir)/src/figures/nctree.pdf \
+	$(srcdir)/src/figures/nodecali.pdf \
+	$(srcdir)/src/figures/relaxcl.pdf \
+	$(srcdir)/src/figures/treeage.pdf \
+	$(srcdir)/src/master_refs.bib \
+	$(srcdir)/src/sysbio.bst
 
 all: all-am
 

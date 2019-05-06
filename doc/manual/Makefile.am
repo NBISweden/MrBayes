@@ -4,8 +4,6 @@ EXTRA_DIST=	src
 
 DISTCLEANFILES=	Manual_MrBayes_v3.2.pdf
 
-if HAVE_LATEX
-
 CLEANFILES=	\
 	Manual_MrBayes_v3.2.aux \
 	Manual_MrBayes_v3.2.bbl \
@@ -28,6 +26,8 @@ deps=	\
 	$(srcdir)/src/StatisticalMethods_Chapter.tex \
 	$(srcdir)/src/bayes.bib \
 	$(srcdir)/src/sysbio.bst
+
+if HAVE_LATEX
 
 if HAVE_LATEXMK
 

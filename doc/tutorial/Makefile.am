@@ -5,8 +5,6 @@ EXTRA_DIST=	src
 
 DISTCLEANFILES=	MBDating.pdf
 
-if HAVE_LATEX
-
 CLEANFILES=	\
 	MBDating.aux \
 	MBDating.bbl \
@@ -35,6 +33,8 @@ deps=	\
 	$(srcdir)/src/figures/treeage.pdf \
 	$(srcdir)/src/master_refs.bib \
 	$(srcdir)/src/sysbio.bst
+
+if HAVE_LATEX
 
 if HAVE_LATEXMK
 

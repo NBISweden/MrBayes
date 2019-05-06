@@ -263,28 +263,28 @@ top_srcdir = @top_srcdir@
 dist_pdf_DATA = Manual_MrBayes_v3.2.pdf
 EXTRA_DIST = src
 DISTCLEANFILES = Manual_MrBayes_v3.2.pdf
-@HAVE_LATEX_TRUE@CLEANFILES = \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.aux \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.bbl \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.blg \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.fdb_latexmk \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.fls \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.log \
-@HAVE_LATEX_TRUE@	Manual_MrBayes_v3.2.toc
+CLEANFILES = \
+	Manual_MrBayes_v3.2.aux \
+	Manual_MrBayes_v3.2.bbl \
+	Manual_MrBayes_v3.2.blg \
+	Manual_MrBayes_v3.2.fdb_latexmk \
+	Manual_MrBayes_v3.2.fls \
+	Manual_MrBayes_v3.2.log \
+	Manual_MrBayes_v3.2.toc
 
-@HAVE_LATEX_TRUE@envvars = \
-@HAVE_LATEX_TRUE@	TEXINPUTS=$(srcdir)/src: \
-@HAVE_LATEX_TRUE@	BIBINPUTS=$(srcdir)/src: \
-@HAVE_LATEX_TRUE@	BSTINPUTS=$(srcdir)/src:
+envvars = \
+	TEXINPUTS=$(srcdir)/src: \
+	BIBINPUTS=$(srcdir)/src: \
+	BSTINPUTS=$(srcdir)/src:
 
-@HAVE_LATEX_TRUE@deps = \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/Appendix_Fig1.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/Appendix_Fig2.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/Appendix_Fig3.pdf \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/Manual_MrBayes_v3.2.tex \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/StatisticalMethods_Chapter.tex \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/bayes.bib \
-@HAVE_LATEX_TRUE@	$(srcdir)/src/sysbio.bst
+deps = \
+	$(srcdir)/src/Appendix_Fig1.pdf \
+	$(srcdir)/src/Appendix_Fig2.pdf \
+	$(srcdir)/src/Appendix_Fig3.pdf \
+	$(srcdir)/src/Manual_MrBayes_v3.2.tex \
+	$(srcdir)/src/StatisticalMethods_Chapter.tex \
+	$(srcdir)/src/bayes.bib \
+	$(srcdir)/src/sysbio.bst
 
 all: all-am
 
