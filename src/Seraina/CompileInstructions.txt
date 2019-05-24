@@ -1,0 +1,136 @@
+Content
+=======
+1) How to compile MrBayes from source
+2) Configuration options
+3) Trouble shooting compilation problems
+4) Further references
+
+
+How to compile MrBayes from source
+==================================
+
+Pre-requirements:
+
+You will need the following software to build MrBayes:
+* gcc (or other C++ compiler)
+* autotools (autoconf, automake, etc)
+* Optional: MPI compiler and library
+* Optional: Beagle library
+
+Compilation: 
+To compile MrBayes in UNIX like environment, first navigate to the folder
+containing the source code. Then execute the following commands in your terminal:
+
+> autoconf
+> ./configure 
+> make
+
+The compilation will produce an executable in the source directory with the name
+"mb". To start the program, simply type
+
+> ./mb
+
+For more convenient access to the program, you may want to install it in your
+path, in which case you can invoke the program from any directory on your
+computer by simply typing
+
+> mb
+
+If you wish to make the program available to all users in this way, you can use
+
+> sudo make install
+
+after having compiled the program.
+
+
+Configuration options
+=====================
+
+1) BEAGLE
+
+MrBayes 3.2 uses the BEAGLE library by default. You should either install the
+BEAGLE library from http://code.google.com/p/beagle-lib/ or disable use of the
+library by invoking the configure script with option "--with-beagle=no". i.e. 
+
+> ./configure --with-beagle=no
+
+Note: without beagle library MrBayes may run slower.
+
+
+2) SSE code
+
+All main-stream modern processors have support for SSE instructions 
+which are utilized by default by MrBayes 3.2 in order to substantially speed up
+execution. If you experience problems with the SSE code, you can disable the use of
+SSE code by invoking the configure script with the option "–-enable-sse=no", i.e.
+
+
+> ./configure --enable-sse=no
+
+If you use SSE code, you may encounter problems with older compilers. Specifically,
+if you are getting errors about undefined reference to "posix_memalign", you should
+update your compiler. You should have libc library of at least version 2.1.91 for
+the SSE code to compile.
+
+
+3) MPI version
+
+To make use of MPI code to parallelize MrBayes computations across several processors
+or CPU cores, you should invoke the configure script with the option
+"--enable-mpi=yes". The MPI code can be used both together with the Beagle library
+and the SSE code. Your computer also needs to have an MPI implementation installed,
+for instance OpenMPI or MPICH, and the environment needs to be set up to run MPI
+programs. To install an MPI version of MrBayes using BEAGLE and SSE, use:
+
+> autoconf
+> ./configure --enable-mpi=yes
+> make
+
+The resulting program will be called mb. A typical run might be started with a
+command like:
+
+> mpirun -np 8 mb data.nex > output.txt &
+
+This will run MrBayes on eight processors or cores (-np 8), using the data file
+"data.nex" as input. The output will not be printed to screen but to the file
+"output.txt" (> output.txt). The ampersand (&) causes the control to return
+immediately to the console, while the job will continue running in the background.
+
+To examine the most recent output from the run, you might e.g. use the tail command
+of UNIX like this:
+
+> tail -f output.txt
+
+This will print the lines onto the screen as they get added to the file "output.txt".
+To stop the output, simply press ctrl-C (this will stop the output from the tail
+command, it will not stop the MrBayes run).
+
+
+Trouble shooting compilation problems
+=====================================
+
+Problem: The compilation process hangs on model.c when using compiler that comes with
+developer kit on MacOSX 10.7.X Lion.
+
+Solution: Install another compiler. For example you can use MacPorts (macports.org) 
+to install gcc, openmpi and other open source tools.
+
+To install openmpi using MacPorts type in terminal:
+
+>sudo port install openmpi
+
+Installing openmpi will give you a compiler which is newer than the one bundled
+with Apple's Developer Tools. It will not hang while compiling mrbayes.
+Openmpi installed by the command above will be installed into /opt/local.
+Unfortunately, it will NOT install the required "mpicc", but "openmpicc" instead.
+That means that configuring MrBayes won't work.
+
+Fix this after the installation by creating a symbolic link to openmpicc:
+
+>cd /opt/local/bin
+>sudo ln -s openmpicc mpicc
+
+
+Further references
+==================
+See the manual for more compilation/installation instructions.

@@ -1,0 +1,48 @@
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the `readline' library (-lreadline). */
+#undef HAVE_LIBREADLINE
+
+/* Define to 1 if you have a recent version of readline */
+#undef COMPLETIONMATCHES
+
+/* Define to 1 if you want to compile the parallel version */
+#undef MPI_ENABLED
+
+/* Define to 1 if you want to compile SSE-enabled version */
+#undef SSE_ENABLED
+
+/* Define one of the UNIX, MAC or WINDOWS */
+#undef UNIX_VERSION
+#undef MAC_VERSION
+#undef WINDOWS_VERSION
+
+/* Define to 1 if you want to compile the debug version */
+#undef DEBUGOUTPUT
+
+/* Define if used on a 64bit cpu */
+#undef _64BIT
+
+/* Define to use a log lookup for 4by4 nucleotide data (actually SLOWER than normal code on intel processors) */
+#undef FAST_VERSION
+
+/* Define to enable beagle library */
+#undef BEAGLE_ENABLED
+
+/* Define to enable threads in BEAGLE library */
+#undef THREADS_ENABLED
+
+/* PAUL: "#if defined READLINE_LIBRARY" (sax?) */
