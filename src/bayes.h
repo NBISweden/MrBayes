@@ -366,6 +366,11 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define POSREAL_MIN             1E-25f
 #define POSREAL_MAX             1E25f
 
+/* Seraina:
+ * Used when doing reversible jump over stationary and directional
+ * model: root frequencies are not used when in stationary model. */
+#define NOT_APPLICABLE -9999.0
+
 #define CMD_STRING_LENGTH       100000
 
 #define pos(i,j,n)              ((i)*(n)+(j))
@@ -867,6 +872,14 @@ typedef struct param
 #define MIXEDBRCHRATES                  146
 #define MIXTURE_RATES                   147
 
+/* Seraina:
+ * Note: incremented by 1 from Seraina's code as 147 was already used. */
+#define DIRPI_DIRxDIR                  148
+#define DIRPI_DIRxFIXED                149
+#define DIRPI_FIXEDxDIR                150
+#define DIRPI_FIXEDxFIXED              151
+#define DIRPI_MIX                      152
+
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
 #define MB_BEAGLE_SCALE_DYNAMIC         1
@@ -975,9 +988,10 @@ typedef struct model
     int         codon[64];         /* gives protein ID for each codon              */
     int         codonNucs[64][3];  /* gives triplet for each codon                 */
     int         codonAAs[64];      /* gives protein ID for implemented code        */
-    
+
     char        nucModel[100];     /* nucleotide model used                        */
     char        nst[100];          /* number of substitution types                 */
+    char        statefreqModel[100];    /* Seraina: stationary or directional Markov model  */
     char        parsModel[100];    /* use the (so-called) parsimony model          */
     char        geneticCode[100];  /* genetic code used                            */
     int         coding;            /* type of patterns encoded                     */
@@ -1038,6 +1052,7 @@ typedef struct model
     MrBFlt      stateFreqsDir[200];
     char        stateFreqsFixType[100];
     int         numDirParams;
+    char        rootFreqPr[100];    /* Seraina: prior for root state frequencies   */
     char        shapePr[100];      /* prior for gamma/lnorm shape parameter        */
     MrBFlt      shapeFix;
     MrBFlt      shapeUni[2];
@@ -1233,6 +1248,8 @@ typedef struct modelinfo
     Param       *revMat;                    /* ptr to revMat used in model              */
     Param       *omega;                     /* ptr to omega used in model               */
     Param       *stateFreq;                 /* ptr to statFreq used in model            */
+                                            /* Seraina: same pointer (stateFreq) also
+                                             * used for the stationary-root freq vector */
     Param       *mixtureRates;              /* ptr to site rate mixture used in model   */
     Param       *shape;                     /* ptr to shape used in model               */
     Param       *pInvar;                    /* ptr to pInvar used in model              */
