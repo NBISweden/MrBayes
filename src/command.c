@@ -47,7 +47,7 @@
 #endif
 
 #define NUMCOMMANDS                     62    /* The total number of commands in the program  */
-#define NUMPARAMS                       280   /* The total number of parameters  */
+#define NUMPARAMS                       282   /* The total number of parameters  */
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -8297,6 +8297,10 @@ int DoTreeParm (char *parmName, char *tkn)
                 {
                 t->isRooted = YES;
                 t->isClock = YES;   /* assume clock if rooted */
+                /* Seraina:
+                 * Remove this (line above) in case I want to read in
+                 * user trees for directional model! Does that break
+                 * anything else? */
                 expecting = Expecting(RIGHTCOMMENT);
                 }
             else if (strcmp(tkn, "U") == 0)
@@ -10540,6 +10544,19 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                Informative/Nosingletons) or restriction site (All/Variable/     \n");
         MrBayesPrint ("                Informative/Nosingletons/Noabsencesites/Nopresencesites/         \n");
         MrBayesPrint ("                Nosingletonpresence/Nosingletonabsence) data.                    \n");
+
+        /* Seraina: (the whole StatefreqModel bit) */
+        MrBayesPrint ("   StatefreqModel -- This option allows you to specify whether a \"stationary\"  \n");
+        MrBayesPrint ("                (= steady state) or a \"directional\" model of evolution should  \n");
+        MrBayesPrint ("                be used (the option \"mixed\" invokes a reversible jump over     \n");
+        MrBayesPrint ("                both alternatives). In the stationary (which is the standard)    \n");
+        MrBayesPrint ("                case, the state frequencies are assumed to be at equilibrium     \n");
+        MrBayesPrint ("                on the whole tree. If a directional model is chosen, then the    \n");
+        MrBayesPrint ("                state frequencies at the root are allowed to differ from the     \n");
+        MrBayesPrint ("                equilibrium frequencies. The directional and mixed models are    \n");
+        MrBayesPrint ("                currently only implemented for restriction data. Note that       \n");
+        MrBayesPrint ("                directional evolution requires the tree to be rooted.            \n");
+
         MrBayesPrint ("   Parsmodel -- This forces calculation under the so-called parsimony model      \n");
         MrBayesPrint ("                described by Tuffley and Steel (1998). The options are \"yes\"   \n");
         MrBayesPrint ("                or \"no\". Note that the biological assumptions of this model    \n");
@@ -10592,6 +10609,8 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Coding       All/Variable/Informative/Nosingletons                            \n");
             MrBayesPrint ("                Noabsencesites/Nopresencesites/                                  \n");
             MrBayesPrint ("                Nosingletonabsence/Nosingletonpresence  %s                       \n", mp->codingString);
+            /* Seraina: (next line) */
+            MrBayesPrint ("   StateFreqModel    Stationary/Directional/Mixed       %s                        \n", mp->statefreqModel);
             MrBayesPrint ("   Parsmodel    No/Yes                                  %s                       \n", mp->parsModel);
         /*  MrBayesPrint ("   Augment      No/Yes                                  %s                       \n", mp->augmentData); */
             MrBayesPrint ("                                                                                 \n");
@@ -10824,6 +10843,13 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    single number, then the prior has all states equally         \n");
         MrBayesPrint ("                    probable with a variance related to the single parameter     \n");
         MrBayesPrint ("                    passed in.                                                   \n");
+
+        /* Seraina: (the whole Rootfreqpr section) */
+        MrBayesPrint ("   Rootfreqpr    -- This prior is only available when the \"Directional\" model  \n");
+        MrBayesPrint ("                    was chosen as the StatefreqModel in Lset. It specifies the   \n");
+        MrBayesPrint ("                    prior on the state freuencies at the root, in contrast to    \n");
+        MrBayesPrint ("                    the equilibrium state frequencies. The options are:          \n");
+
         MrBayesPrint ("   Shapepr       -- This parameter specifies the prior for the gamma/lnorm shape \n");
         MrBayesPrint ("                    parameter for among-site rate variation. The options are:    \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14652,9 +14678,12 @@ void SetUpParms (void)
     PARAM (278, "Beaglethreadcount",  DoSetParm,     "\0");
     PARAM (279, "Beaglefloattips",DoSetParm,  "Yes|No|\0");
 
+    /* Seraina: (the two next ones, but with different (+10) integer values) */
+    PARAM   (280, "StatefreqModel", DoLsetParm,         "Stationary|Directional|Mixed|\0");
+    PARAM   (281, "Rootfreqpr",     DoPrsetParm,        "Dirichlet|Fixed|\0");
 
     /* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 280; one more than last index) at the top of this file. */
+            NUMPARAMS (now 282; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 
