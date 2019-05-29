@@ -10418,6 +10418,39 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
 }
 
 
+/* Seraina: (this whole function, below) */
+
+/*---------------------------------------------------------------------------------
+ |
+ |   LnDirichlet
+ |
+ |   Calculates the log of the Dirichlet function.
+ |
+ |
+ ---------------------------------------------------------------------------------*/
+MrBFlt LnDirichlet (MrBFlt *alphai, MrBFlt *xi, int lengthi)
+
+{
+    MrBFlt sum = 0.0;
+    MrBFlt dirprob;
+    int i;
+
+    for (i=0; i<lengthi; i++)
+        sum += alphai[i];
+
+    dirprob = LnGamma(sum);
+
+    for (i=0; i<lengthi; i++)
+        dirprob -= LnGamma(alphai[i]);
+
+    for (i=0; i<lengthi; i++)
+        dirprob += (alphai[i] - 1.0)*log(xi[i]);
+
+    return (dirprob);
+
+}
+
+
 /*---------------------------------------------------------------------------------
 |
 |   DiscreteGamma
