@@ -2593,12 +2593,13 @@ int DoMcmc (void)
         if (UpdateClockRate(0.0, j) == ERROR) 
             goto errorExit;
         }
-    /*
+
+    /* Seraina: (This for loop initially commented out) */
     for (i=0; i<numParams; i++)
         {
         for (j=0; j<numGlobalChains; j++)
             assert (IsTreeConsistent(&params[i], j, 0) == YES);
-        }  */
+        }
 
     /* Initialize vectors of print parameters */
     if (InitPrintParams () == ERROR)
