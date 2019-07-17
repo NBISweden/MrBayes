@@ -1,7 +1,7 @@
 \documentclass[12pt]{book}
 \usepackage{geometry}         % See geometry.pdf to learn the layout options. There are lots.
 \geometry{a4paper}            % ... or a4paper or a5paper or ...
-%\geometry{landscape}         % Activate for for rotated page geometry
+%\geometry{landscape}         % Activate for rotated page geometry
 \usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
 \usepackage{amssymb}
@@ -15,9 +15,8 @@
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
-%\renewcommand{\ttdefault}{pcr} % Try changing monospace font default in order to be able to make it bold
 
-% Short-hand font settings used in this document.
+% Short-hand font settings used in this document:
 \usepackage{lmodern}
 \renewcommand\ttfamily{\usefont{T1}{lmtt}{m}{n}}
 \newcommand{\term}[1]{{\bfseries\slshape #1}}
@@ -36,7 +35,7 @@
 
 \date{\large Draft version, July 2019}
 
-\author{Fredrik Ronquist, John Huelsenbeck, Maxim Teslenko and Johan Nylander}
+\author{Fredrik Ronquist, John Huelsenbeck, Maxim Teslenko, Johan Nylander}
 
 \maketitle
 
@@ -773,7 +772,7 @@ different trees but when they have reached convergence (when they produce a good
 posterior probability distribution), the two tree samples should be very similar.
 
 To make sure that MrBayes compares tree samples from the different runs, check that \ttt{Mcmcdiagn}
-is set to yes and that \ttt{Diagnfreq} is set to some reasonable value. The default value of 5000
+is set to yes and that \ttt{Diagnfreq} is set to some reasonable value. The default value of $5000$
 is more appropriate for a larger analysis, so change the setting so that we compute diagnostics
 every 1000th generation instead by typing \tb{mcmcp diagnfreq=1000}.
 
@@ -787,6 +786,8 @@ chain is discarded. The \ttt{relburnin} setting determines whether a fixed burni
 discard the first 25 \% samples from the cold chain (\ttt{relburnin=yes} and
 \ttt{burninfrac=0.25}).
 
+%\subsubsection{Metropolis coupling}
+\label{metropolisCoupling}
 By default, MrBayes uses Metropolis coupling to improve the MCMC sampling of the target
 distribution. The \ttt{Swapfreq}, \ttt{Nswaps}, \ttt{Nchains}, and \ttt{Temp} settings together
 control the Metropolis coupling behavior. When \ttt{Nchains} is set to 1, no heating is used. When
@@ -827,7 +828,7 @@ programs like PAUP* and TreeView. The root of the \ttt{.p} and \ttt{.t} file nam
 using the \ttt{Filename} setting.
 
 The \ttt{Printfreq} parameter controls the frequency with which brief info about the analysis is
-printed to screen. The default value is 1000. Let us change it to match the sample frequency by
+printed to screen. The default value is $1000$. Let us change it to match the sample frequency by
 typing \tb{mcmcp printfreq=100}.
 
 When you set up your model and analysis (the number of runs and heated chains), MrBayes creates
@@ -842,7 +843,7 @@ last generation and will use those as the starting values for the next analysis 
 are reset using \ttt{mcmc starttree=random startparams=reset}.
 
 Since version 3.2, MrBayes prints all parameter values of all chains (cold and heated) to a
-checkpoint file every \ttt{Checkfreq} generations, by default every $2,000$ generations. The
+checkpoint file every \ttt{Checkfreq} generations, by default every $2000$ generations. The
 checkpoint file has the suffix \ttt{.ckp}. If you run an analysis and it is stopped prematurely,
 you can restart it from the last checkpoint by using \ttt{mcmc append=yes}. MrBayes will start the
 new analysis from the checkpoint; it will even read in all the old trees and include them in the
@@ -1423,7 +1424,7 @@ the matrix, so the default model will include only a morphology (standard) and a
 divide the DNA partition into gene regions or other appropriate subsets, it is convenient to first
 specify character sets. In principle, this can be done from the command line but it is easier to
 do it in a MrBayes block in the data file. At the end of the \ttt{cynmix.nex}, there is such a
-block (starting with \ttt{begin mrbayes;}). Any text between square brackets \ttt{[]} are comments
+block (starting with \ttt{begin mrbayes;}). Any text between square brackets (\ttt{[]}) are comments
 and ignored by MrBayes. Note also that each command ends with a semicolon.
 
 The relevant lines for setting up partitions starts with the command \ttt{charset}. That command
@@ -1432,9 +1433,11 @@ defined to include characters 167 to 1244. The next step is to define a partitio
 according to genes and morphology. This is accomplished with the line:
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
     partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
 \end{verbatim}
+\normalsize
 \end{singlespacing}
 
 The elements of the \ttt{partition} command are: (1) the name of the partitioning scheme
@@ -3648,14 +3651,14 @@ overparameterization, so we suggest that you simply substitute the preferred mod
 more complex model available in MrBayes.
 
 Since version 3.2, MrBayes can automatically sample across the entire general time-reversible
-(GTR)model space (see below), which basically renders a priori model testing superfluous. An
-additional advantage of this approach is that your results will be based on a weighted average of
-the best substitution models instead of being based exclusively on a single model. The only
-potential drawback is that you may experience problems with mixing over the substitution model
-space. In our limited experience, however, this has not been a problem. If it is, you will detect
-it easily by examining the \ttt{sump} output from the analysis sampling across the GTR model space,
-as described in the tutorial in section \ref{sampleGTR}. A similar option of sampling across rate
-matrices is available for fixed amino-acid rate matrices, as described below.
+(GTR)model space (see section \ref{modelJumping} below), which basically renders a priori model
+testing superfluous. An additional advantage of this approach is that your results will be based on
+a weighted average of the best substitution models instead of being based exclusively on a single
+model. The only potential drawback is that you may experience problems with mixing over the
+substitution model space. In our limited experience, however, this has not been a problem. If it
+is, you will detect it easily by examining the \ttt{sump} output from the analysis sampling across
+the GTR model space, as described in the tutorial in section \ref{sampleGTR}. A similar option of
+sampling across rate matrices is available for fixed amino-acid rate matrices, as described below.
 
 If you are interested in fixing parameters in MrBayes to specific values, you can do that using
 \ttt{prset <parameter\_prior\_name>=fixed (<value or commaseparated values>)}. For instance, if
@@ -3742,25 +3745,28 @@ Once a small set of models have been chosen for analysis, they can be compared u
 choice criteria. This is typically done through the calculation of Bayes factors, which can be
 interpreted as indicators of the strength of the evidence in favor of the best of two models.
 
-Bayes' rule is often written as
-$$
-f(\theta|X) = \frac{f(\theta)f(X|\theta)}{f(X)},
-$$
-where $\theta$ is the Bayes factor.
+Bayes factor is given by
 
-The Bayes factors values are typically interpreted according to recommendations presented by Kass
-and Raftery \citep{kass95}.
+$$
+BF_{12} = \frac{Pr(Data|Hypothesis_{1})}{Pr(Ddata|Hypothesis_{2})}
+$$
+
+where $Data$ is the data thought to have been generated by any of the candidate hypotheses
+$Hypothesis_{k}$ ($k = 1,2$). The expression $Pr(Data|Hypothesis_{k})$ is called the marginal
+likelihood.  The Bayes factors values are typically interpreted according to recommendations
+presented by Kass and Raftery \citep{kass95}.
 
 Unlike a hierarchical likelihood ratio test, the models compared with Bayes factors need not be
 hierarchically nested. A Bayes factor is calculated simply as the ratio of the marginal likelihoods
 of the two models being compared. The logarithm of the Bayes factor is the difference in the
 logarithms of the marginal model likelihoods.
 
-The marginal likelihood of a model is difficult to estimate accurately but a rough estimate may be
-obtained easily as the harmonic mean of the likelihood values of the MCMC samples \citep{newton94}.
-MrBayes calculates this estimator when you summarize your samples with the command \ttt{sump}. In
-the output from the sump command, you will find the following table (it might look a little
-different depending on how many simultaneous runs you have performed; this table is for two runs):
+The marginal likelihood of a model is difficult to estimate accurately but a very rough estimate
+may be obtained from the harmonic mean of the likelihood values of the MCMC samples
+\citep{newton94}. MrBayes calculates this estimator when you summarize your samples with the
+command \ttt{sump}. In the output from the \ttt{sump} command, you will find the following table
+(it might look a little different depending on how many simultaneous runs you have performed; this
+table is for two runs):
 
 \begin{singlespacing}
 \small
@@ -3797,19 +3803,76 @@ found in \citet{nylander04}.
 
 
 \subsection{Model Jumping}
-
+\label{modelJumping}
 Bayesian MCMC model jumping provides a convenient alternative to model selection prior to the
 analysis. In model jumping, the MCMC sampler explores different models and weights the results
-according to the posterior probability of each model.
+according to the posterior probability of each model. In MrBayes, the model-jumping approach is
+available for two sets of models. One is for all models where a four-by-four nucleotide model is a
+component, i.e., doublet and codon models in addition to the ordinary nucleotide models.  Rather
+than selecting a substitution model before the analysis, the user can now sample across all 203
+possible time-reversible rate matrices according to their posterior probability
+\citep{huelsenbeck04d}. This can be accomplished simply by using the option \ttt{mixed} for the
+\ttt{Nst} parameter in the \ttt{lset} command. For example:
 
-???????? The only model jumping implemented in MrBayes 3 is the estimation of fixed-rate amino-acid
-substitution models (see the section on those models in this manual). General model jumping across
-models of different dimensionality will be implemented in version 4 of MrBayes.
+\small
+\begin{singlespacing}
+\begin{verbatim}
+MrBayes > lset applyto=(all) nst=mixed
+\end{verbatim}
+\end{singlespacing}
+\normalsize
+
+Currently, the program only applies model-jumping among subclasses in the GTR matrix, so there
+is not possible to sample across, for example, a GTR model with or without any assumption of rate
+variation across sites (e.g. GTR vs. GTR+$\Gamma$ vs. GTR+I+$\Gamma$).
+
+The second scenario where the program can apply model jumping is is the estimation of fixed-rate
+amino-acid substitution models. In this situation, the Markov chain will sample over models
+according to its probability. Currently, ten different rate matrices will be sampled (see section
+\ref{estimatingTheFixedRateModel}). To achive the integration over rate matrices, one need to use
+the \ttt{mixed} option for \ttt{Aamodelpr} parameter in the \ttt{prset} command. For example:
+
+\small
+\begin{singlespacing}
+\begin{verbatim}
+MrBayes > prset applyto=(all) aamodelpr=mixed
+\end{verbatim}
+\end{singlespacing}
+\normalsize
 
 
 %%% \section{Starting Values}
 %%% \subsection{Default Starting Values}
-%%% \subsection{Changing Starting Values}
+% \subsection{Changing Starting Values}
+% One can change the default, or current, starting values for parameters in a model using the command
+% \ttt{startvals}. The basic format is:                                                          
+% 
+% \footnotesize
+% \begin{singlespacing}
+% \begin{verbatim}
+% startvals <param>=(<value_1>,<value_2>,...,<value_n>)                      
+% \end{verbatim}
+% \end{singlespacing}
+% \normalsize
+% 
+% for all substitution model parameters. The format is slightly different for parameters that are
+% written to a tree file:                                   
+% 
+% \footnotesize
+% \begin{singlespacing}
+% \begin{verbatim}
+% startvals <param>=<tree_name>                                              
+% \end{verbatim}
+% \end{singlespacing}
+% \normalsize
+% 
+% This version of the command will look for a tree with the specified name among the trees read in
+% previously when parsing a tree block. The information stored in that tree will be used to set the
+% starting value of the parameter. The parameters that are set using this mechanism include topology
+% and branch length parameters, as well as relaxed clock branch rates, cpp events and cpp branch rate
+% multipliers.  
+
+
 %%% 
 %%% \section{Sampling the Posterior}
 %%% \subsection{Convergence and Mixing}
@@ -3902,7 +3965,7 @@ chapter \ref{advancedTopics}.
 
 If you decide to experiment with an increased number of chains, you may wish to simultaneously
 decrease the heating coefficient, so that the temperature difference between the cold chain and the
-hottest chain stays the same. See chapter \ref{algorithms} for more details on the heating
+hottest chain stays the same. See chapter \ref{metropolisCoupling} for more details on the heating
 coefficient.
 
 \subsection{Improving Convergence}
@@ -4875,86 +4938,86 @@ runs will have different starting values and will produce slightly different res
 way of making sure analyses are repeatable is to set the seed and swapseed before reading in the
 character matrix.
 
-\section{Differences Between Versions 3.1 and 3.2}
-
-We have discontinued the development of version 3.1 of MrBayes and recommend all users to switch
-over to version 3.2. Version 3.2 adds a number of new features to version 3.1. In addition, large
-parts of the code have been restructured or rewritten, resulting in a code base that is more stable
-and easier to maintain.
-
-Major new features include:
-
-\tb{Strict clock models}. There are now more and better topology moves for strict clock trees, and
-the clock tree priors have been modified, extended and in some cases corrected.
-
-\tb{Relaxed clock models}. Three different relaxed clock models are now available.
-
-\tb{Dating}. Clock trees, whether strict or relaxed, can now be dated using several different
-methods, including tip dating, node dating, and clock rate dating.
-
-\tb{Stepping-stone sampling}. Marginal model likelihoods for Bayes factor testing can now be
-computed across the entire model space using the accurate stepping-stone sampling method.
-
-\tb{Sampling across the GTR model space}. As an alternative to a priori model testing, MrBayes now
-implements sampling across the entire time-reversible substitution model space.
-
-\tb{Adaptive tuning}. MrBayes now uses automatic tuning of proposal tuning parameters.
-
-\tb{New tree moves}. There are now more and better tree moves implemented in MrBayes.
-
-\tb{Checkpointing}. Checkpointing is now implemented across all models, allowing you to restart
-analyses that have crashed or been terminated prematurely from the last checkpoint.
-
-\tb{Setting starting values}. You can explicitly set starting values or starting trees using the
-\ttt{startvals} command.
-
-\tb{Setting tuning parameters and proposal probabilities}. The proposal probabilities and tuning
-parameters can now be set separately for each of the chains in the analysis using the new
-\ttt{propset} command, replacing the old \ttt{props} command.
-
-\tb{More diagnostics}. The \ttt{sumt} and \ttt{sump} commands now output a wider range of
-convergence diagnostics, including effective sample size (ESS), potential scale reduction factor
-(PSRF), and average standard deviation of split frequencies (ASDSF).
-
-\tb{Rich tree summaries}. The \ttt{sumt} command now provides much richer summaries of tree
-samples. A wide range of node and branch parameters are summarized and written to the consensus
-tree in a format that allows users to display the information on the tree using FigTree.
-
-\tb{Multi-species coalescent}. MrBayes now includes the BEST algorithms for estimating species
-trees from gene trees based on the multi-species coalescent.
-
-\tb{Topology constraints}. MrBayes now supports backbone and negative constraints in addition to
-standard hard (positive) constraints.
-
-\tb{Starting trees}. Starting trees are now set using the \ttt{startvals} command. There is no
-longer a separate \ttt{usertree} command; instead, the user trees are defined using a standard
-NEXUS tree block. Up to 100 user trees can be defined, and then used as start values for MCMC
-analysis with the \ttt{startvals} command. One can choose to either use just the topology or both
-the topology and branch lengths of the user tree as values for the tree parameters of the analysis.
-Furthermore, it is possible to ask MrBayes to use parsimony trees as starting values for the tree
-parameters using the \ttt{starttree} option of \ttt{mcmc} and \ttt{mcmcp} commands.
-
-Minor changes between versions 3.1 and 3.2 include:
-
-\tb{Fixing topology and branch lengths}. You can now fix the topology or the topology and branch
-lengths of a tree parameter using the \ttt{prset} command.
-
-\tb{More report options}. You now have more options for reporting various types of parameters
-during the MCMC run.
-
-\tb{Random number seeds}. Already when a file is read in, a default model is set up including
-starting values for parameters. This means that the random number generator is called already when
-a data file is executed. To make sure that two analyses produce exactly identical results, the
-random number seeds must be set to the same values before any other commands are executed. This is
-done using the \ttt{set} command.
-
-\tb{showmoves}. This command shows all the currently used moves, and can also display all the
-available moves for the parameters in the model.
-
-\tb{showparams}. This command will show all the parameters in the current model, including their
-priors and current values for all runs and chains.
-
-\tb{showusertrees}. This will show all user-defined trees currently in memory.
+%% \section{Differences Between Versions 3.1 and 3.2}
+%% 
+%% We have discontinued the development of version 3.1 of MrBayes and recommend all users to switch
+%% over to version 3.2. Version 3.2 adds a number of new features to version 3.1. In addition, large
+%% parts of the code have been restructured or rewritten, resulting in a code base that is more stable
+%% and easier to maintain.
+%% 
+%% Major new features include:
+%% 
+%% \tb{Strict clock models}. There are now more and better topology moves for strict clock trees, and
+%% the clock tree priors have been modified, extended and in some cases corrected.
+%% 
+%% \tb{Relaxed clock models}. Three different relaxed clock models are now available.
+%% 
+%% \tb{Dating}. Clock trees, whether strict or relaxed, can now be dated using several different
+%% methods, including tip dating, node dating, and clock rate dating.
+%% 
+%% \tb{Stepping-stone sampling}. Marginal model likelihoods for Bayes factor testing can now be
+%% computed across the entire model space using the accurate stepping-stone sampling method.
+%% 
+%% \tb{Sampling across the GTR model space}. As an alternative to a priori model testing, MrBayes now
+%% implements sampling across the entire time-reversible substitution model space.
+%% 
+%% \tb{Adaptive tuning}. MrBayes now uses automatic tuning of proposal tuning parameters.
+%% 
+%% \tb{New tree moves}. There are now more and better tree moves implemented in MrBayes.
+%% 
+%% \tb{Checkpointing}. Checkpointing is now implemented across all models, allowing you to restart
+%% analyses that have crashed or been terminated prematurely from the last checkpoint.
+%% 
+%% \tb{Setting starting values}. You can explicitly set starting values or starting trees using the
+%% \ttt{startvals} command.
+%% 
+%% \tb{Setting tuning parameters and proposal probabilities}. The proposal probabilities and tuning
+%% parameters can now be set separately for each of the chains in the analysis using the new
+%% \ttt{propset} command, replacing the old \ttt{props} command.
+%% 
+%% \tb{More diagnostics}. The \ttt{sumt} and \ttt{sump} commands now output a wider range of
+%% convergence diagnostics, including effective sample size (ESS), potential scale reduction factor
+%% (PSRF), and average standard deviation of split frequencies (ASDSF).
+%% 
+%% \tb{Rich tree summaries}. The \ttt{sumt} command now provides much richer summaries of tree
+%% samples. A wide range of node and branch parameters are summarized and written to the consensus
+%% tree in a format that allows users to display the information on the tree using FigTree.
+%% 
+%% \tb{Multi-species coalescent}. MrBayes now includes the BEST algorithms for estimating species
+%% trees from gene trees based on the multi-species coalescent.
+%% 
+%% \tb{Topology constraints}. MrBayes now supports backbone and negative constraints in addition to
+%% standard hard (positive) constraints.
+%% 
+%% \tb{Starting trees}. Starting trees are now set using the \ttt{startvals} command. There is no
+%% longer a separate \ttt{usertree} command; instead, the user trees are defined using a standard
+%% NEXUS tree block. Up to 100 user trees can be defined, and then used as start values for MCMC
+%% analysis with the \ttt{startvals} command. One can choose to either use just the topology or both
+%% the topology and branch lengths of the user tree as values for the tree parameters of the analysis.
+%% Furthermore, it is possible to ask MrBayes to use parsimony trees as starting values for the tree
+%% parameters using the \ttt{starttree} option of \ttt{mcmc} and \ttt{mcmcp} commands.
+%% 
+%% Minor changes between versions 3.1 and 3.2 include:
+%% 
+%% \tb{Fixing topology and branch lengths}. You can now fix the topology or the topology and branch
+%% lengths of a tree parameter using the \ttt{prset} command.
+%% 
+%% \tb{More report options}. You now have more options for reporting various types of parameters
+%% during the MCMC run.
+%% 
+%% \tb{Random number seeds}. Already when a file is read in, a default model is set up including
+%% starting values for parameters. This means that the random number generator is called already when
+%% a data file is executed. To make sure that two analyses produce exactly identical results, the
+%% random number seeds must be set to the same values before any other commands are executed. This is
+%% done using the \ttt{set} command.
+%% 
+%% \tb{showmoves}. This command shows all the currently used moves, and can also display all the
+%% available moves for the parameters in the model.
+%% 
+%% \tb{showparams}. This command will show all the parameters in the current model, including their
+%% priors and current values for all runs and chains.
+%% 
+%% \tb{showusertrees}. This will show all user-defined trees currently in memory.
 
 \section{More Information}
 For more information on how to use MrBayes, turn to the MrBayes web site
@@ -5091,9 +5154,9 @@ simply select the next more complex model implemented in MrBayes.
 
 How do I select the best substitution model for my analysis? A standard approach is to use a model
 testing procedure, such as those implemented in ModelTest \citep{posada98}, jModelTest
-\citep{posada08}, or MrModelTest \citep{}. However, a priori model testing comes with a number of
-serious drawbacks. It typically restricts the testing to a rough topology estimate, and at the end
-of the day you have to put all your money down on a single substitution model.
+\citep{posada08}, or MrModelTest \citep{nylander04b}. However, a priori model testing comes with a
+number of serious drawbacks. It typically restricts the testing to a rough topology estimate, and
+at the end of the day you have to put all your money down on a single substitution model.
 
 An alternative approach, which is more truly Bayesian, is to integrate out the uncertainty
 concerning the correct structure of the substitution model. This is accomplished by having the MCMC
@@ -5262,6 +5325,7 @@ particular type of proteins. For instance, if you are analyzing mammal mitochond
 might want to use the Mtmam model. Invoke that model by typing \tb{prset aamodelpr=fixed(mtmam)}.
 
 \subsection{Estimating the Fixed Rate Model}
+\label{estimatingTheFixedRateModel}
 MrBayes allows a convenient way of estimating the fixed-rate model for your amino acid data instead
 of specifying it prior to the analysis. If you choose this option, MrBayes will allow the MCMC
 sampler to explore all of the fixed-rate models listed above, including the Poisson model, by
@@ -5408,14 +5472,14 @@ Q=\begin{bmatrix}
 \end{bmatrix}
 \]
 
-Because all rates are the same, we can maintain the essential property of standard
-characters, namely that state labels are arbitrary. Thus, the standard model assures that
-you will get the same results regardless of the way in which you label the states.
+Because all rates are the same, we can maintain the essential property of standard characters,
+namely that state labels are arbitrary. Thus, the standard model assures that you will get the same
+results regardless of the way in which you label the states.
 
-and unordered characters. In ordered characters, evolution between some states is
-assumed to go through intermediate states. MrBayes implements a stochastic model for
-such characters. For a three-state character assumed to be ordered (by convention in the
-sequence 0-1-2), the instantaneous rate matrix is
+This applies to the standard, program default, assumption of unordered character states. In ordered
+characters, on the other hand, evolution between some states is assumed to go through intermediate
+states. MrBayes implements a stochastic model for such characters. For a three-state character
+assumed to be ordered (by convention in the sequence 0-1-2), the instantaneous rate matrix is
 
 \[
 Q=\begin{bmatrix}
@@ -5453,25 +5517,25 @@ likelihood.
 The symmetric Dirichlet distribution has one parameter that determines its shape, just like the
 alpha parameter determines the shape of the gamma distribution. The larger the parameter of the
 symmetric Dirichlet, the less transition rate (stationary frequency) asymmetry there is across
-sites. By default, the parameter is fixed to infinity (\tb{prset symdirihyperpr=fixed(infinity)});
+sites. By default, the parameter is fixed to infinity (\ttt{prset symdirihyperpr=fixed(infinity)});
 this corresponds to the standard assumption of no transition rate asymmetry across sites: the rate
 of going from 0 to 1 is equal to the rate of going from 1 to 0 for all characters. The prior is
 called a hyperprior because it concerns a distribution that controls the distributions of other
 model parameters (stationary state frequencies in this case). If you want to allow transition rate
 (stationary frequency) asymmetry in standard data, then simply select another (hyper)prior. For
-instance, you can fix the parameter to 1.0, which would result in a uniform prior on the
+instance, you can fix the parameter to $1.0$, which would result in a uniform prior on the
 proportions of the state frequencies.
 
 In practice, MrBayes uses a discrete approximation of the Dirichlet distribution for binary
 characters; five categories are used by default (change this with \ttt{lset nbetacat}). For
-instance, assume that we fix the hyperprior to 1.0 and then evaluate the likelihood of one binary
+instance, assume that we fix the hyperprior to $1.0$ and then evaluate the likelihood of one binary
 character using five discrete beta categories. MrBayes would then calculate the likelihood of the
-character assuming that the stationary state frequencies of the two states were 0.1:0.9, 0.3:0.7,
-0.5:0.5, 0.7:0.3 and 0.9:0.1. The five category likelihoods would then be multiplied by 0.20 (there
-is a probability of 0.20 of being in each of the categories) and then summed up to give the total
-likelihood of the character. For multistate characters, MrBayes does not use the discrete
-approximation; instead, it uses the MCMC procedure to explore different stationary state frequency
-proportions.
+character assuming that the stationary state frequencies of the two states were $0.1:0.9$,
+$0.3:0.7$, $0.5:0.5$, $0.7:0.3$ and $0.9:0.1$. The five category likelihoods would then be
+multiplied by $0.20$ (there is a probability of $0.20$ of being in each of the categories) and then
+summed up to give the total likelihood of the character. For multistate characters, MrBayes does
+not use the discrete approximation; instead, it uses the MCMC procedure to explore different
+stationary state frequency proportions.
 
 \section{Parsimony Model}
 MrBayes implements an incredibly parameter-rich model, first described by \citet{tuffley97}. It
@@ -5489,8 +5553,8 @@ similar under both approaches.
 
 The parsimony model is much less parsimonious with respect to parameters than any other model
 implemented in MrBayes. Consider, for instance, an analysis of 1,000 characters and 100 taxa. The
-parsimony model would have about 200,000 free parameters (200 branches times 1,000 characters). A
-more typical GTR+$\gamma$+I model would have only little more than 200 parameters, about 1,000
+parsimony model would have about 200,000 free parameters ($200$ branches times $1000$ characters).
+A more typical GTR+$\gamma$+I model would have only little more than 200 parameters, about 1,000
 times fewer parameters. In this sense, the standard stochastic models are much more parsimonious
 than the parsimony model. Several problems are associated with the excessive number of parameters.
 Statistical inconcistency is perhaps the best known of these but, more fundamentally, a model like
@@ -5514,20 +5578,21 @@ parsimony model at all; you have to invoke it using \tb{lset parsmodel=yes}.
 
 \section{Rate Variation Across Sites}
 By default, MrBayes assumes that all characters evolve at the same rate (measured in expected
-changes per site over the tree). There are four ways in which you can allow rate variation across
-sites. The simplest method is to assume that rates vary over sites according to a gamma
+changes per site over the tree). There are different ways in which you can allow rate variation
+across sites. The simplest method is to assume that rates vary over sites according to a gamma
 distribution \citep{yang93}. The gamma model can be combined with spatial autocorrelation between
 the rates at adjacent sites, the autocorrelated gamma model. A completely different approach to
 rate variation across sites is to allow a proportion of sites to be invariable. This model can be
-combined with the gamma model but not with the autocorrelated gamma model. Finally, it is possible
-to divide characters into groups evolving at different rates, the partitioned or site specific rate
-model.
+combined with the gamma model but not with the autocorrelated gamma model. In addition, MrBayes
+also implements new ways of modelling rate-variation (log normal, and $k$-mixtures, see below).
+Finally, it is possible to divide characters into groups evolving at different rates, the
+partitioned or site specific rate model.
 
 \subsection{Gamma-distributed Rate Model}
 The commonly used model of gamma-shaped rate variation across sites is invoked using \tb{lset
-rates=gamma}. The shape of the gamma distribution is determined by the socalled $\alpha$ (alpha)
-parameter. When this parameter is small (below 1), the distribution takes on an L-shaped form with
-a few sites evolving rapidly while most sites are conserved. Conversely, when $\alpha$ is above 1
+rates=gamma}. The shape of the gamma distribution is determined by the so-called $\alpha$ (alpha)
+parameter. When this parameter is small (below $1$), the distribution takes on an L-shaped form with
+a few sites evolving rapidly while most sites are conserved. Conversely, when $\alpha$ is above $1$
 the distribution becomes similar to a normal distribution with less and less variation in rates
 across sites as $\alpha$ becomes larger.
 
@@ -5542,9 +5607,9 @@ The shape parameter ($\alpha$) of the gamma distribution is similar to the shape
 Dirichlet distribution of stationary state frequencies used for standard data (see above) in that
 it controls the distribution of another model parameter (the site rates). Therefore, the prior
 probability distribution used for the shape parameter can be referred to as a hyperprior. The
-default prior used in MrBayes is a uniform distribution on the interval (0.05,50). The sampled
-values of the shape parameter are found under the column heading \ttt{alpha} in the \ttt{.p}
-file(s).
+default prior used in MrBayes is an exponential distribution with mean set to $1.0$ (\ttt{prset
+shapepr=exponential(1.0)}). The sampled values of the shape parameter are found under the column
+heading \ttt{alpha} in the \ttt{.p} file(s).
 
 \subsection{Autocorrelated Gamma Model}
 In this model, rates vary across sites according to an autocorrelated gamma model where the rate at
@@ -5552,7 +5617,7 @@ each site depends to some extent on the rates at adjacent sites \citep{yang95a}.
 autocorrelation is measured by the $\rho$ (rho) parameter, which ranges from -1 (negative
 autocorrelation, that is, adjacent sites tend to have wildly different rates) to 1 (adjacent sites
 have very similar rates). The default prior probability for rho is a uniform distribution covering
-the entire interval (-1,1).
+the entire interval $(-1,1)$.
 
 In the worst case, a small symmetric tree, the extra computational complexity incurred by invoking
 the auto correlated gamma model instead of the gamma model is comparable to a doubling of the
@@ -5579,11 +5644,22 @@ site before the break. The \ttt{databreaks} command is only needed when you invo
 autocorrelated gamma model for a multigene dataset. The \ttt{databreaks} command cannot be used to
 partition a data set.
 
+% Comment JN: This subsection needs to be expanded
+\subsection{Lognormal-distributed rates across sites}
+\ttt{LNorm} --- Lognormal-distributed rates across sites. The rate at a site is drawn from a
+lognormal distribution. the lognormal distribiton has a single parameter, sigma (SD) that describes
+how much rates vary (mean fixed to $log(1.0) = 0.0$).
+
+% Comment JN: This subsection needs to be expanded
+\subsection{Site rates from a mixture with $k$ categories}
+\ttt{Kmixture} --- Site rates come from a mixture with k categories. Category rates are drawn from
+an ordered flat Dirichlet distribution with mean rather than sum equal to $1.0$. 
+
 \subsection{Proportion of Invariable Sites}
 A completely different approach to rate variation is to allow a proportion of sites to be
 invariable. This model is invoked using \tb{lset rates=propinv}. The proportion of invariable sites
-is referred to as \ttt{pinvar;} it can vary from 0 (no invariable sites) to 1 (all sites are
-invariable). The default prior is a uniform distribution on the interval (0,1); change it using
+is referred to as \ttt{pinvar;} it can vary from $0$ (no invariable sites) to $1$ (all sites are
+invariable). The default prior is a uniform distribution on the interval $(0,1)$; change it using
 \ttt{prset pinvarpr}.
 
 The proportion of invariable sites model can be combined with the gamma model using \tb{lset
@@ -5603,7 +5679,7 @@ each parameter would be misleading.
 \subsection{Partitioned (Site Specific) Rate Model}
 For protein-coding nucleotide sequences, a site-specific rate model is often used, allowing each
 codon position (first, second and third codon position sites) to have its own rate. This results in
-a model with three rates, two of which are free to vary (since the average rate is 1.0 by
+a model with three rates, two of which are free to vary (since the average rate is $1.0$ by
 definition). More generally, we might have different character divisions (separate genes,
 morphology, etc) which potentially evolve at very different rates.
 
@@ -5749,17 +5825,17 @@ constraint my\_constraint defined above, use \tb{prset topologypr=constraints(my
 If you do not want to enforce a molecular clock, you choose an unconstrained branch length prior.
 Actually, you do not have to do anything because unconstrained branch lengths are the default. You
 can associate unconstrained branch lengths with either a uniform prior from 0 to some arbitrary
-value or an exponential prior. The default is an exponential distribution with parameter 10
-(\ttt{Exponential(10)}); it has an expectation of 0.1 (= 1/10) but (in principle) it allows branch
-lengths to vary from 0 to infinity. The exponential distribution apparently puts a lot more
-probability on short branches than on long branches. However, because transition (substitution)
-probabilities change rapidly at small branch lengths but only very slowly at long branch lengths,
-the exponential prior is actually closer to an uninformative prior than the uniform distribution.
-We advise against using a uniform prior on branch lengths because of the large prior probability it
-puts on long branches and their close-to-random substitution probabilities.
+value or an exponential prior. The default is an exponential distribution with parameter $10$
+(\ttt{Exponential(10)}); it has an expectation of $0.1 (= 1/10)$ but (in principle) it allows
+branch lengths to vary from $0$ to infinity. The exponential distribution apparently puts a lot
+more probability on short branches than on long branches. However, because transition
+(substitution) probabilities change rapidly at small branch lengths but only very slowly at long
+branch lengths, the exponential prior is actually closer to an uninformative prior than the uniform
+distribution.  We advise against using a uniform prior on branch lengths because of the large prior
+probability it puts on long branches and their close-to-random substitution probabilities.
 
 To change the prior on unconstrained branch lengths you use \ttt{prset brlenspr}. For instance,
-assume you wanted to use an exponential prior with parameter 1 instead of the default prior. This
+assume you wanted to use an exponential prior with parameter $1$ instead of the default prior. This
 prior is set by typing \tb{prset brlenspr=unconstrained:exponential(1)}.
 
 \subsection{Strict Clock Trees}
