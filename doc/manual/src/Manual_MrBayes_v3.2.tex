@@ -20,14 +20,15 @@
 \usepackage{lmodern}
 \renewcommand\ttfamily{\usefont{T1}{lmtt}{m}{n}}
 \newcommand{\term}[1]{{\bfseries\slshape #1}}
-\newcommand{\ttt}[1]{\texttt{#1} }
-\newcommand{\prout}[1]{\ttt{#1} }
-\newcommand{\tb}[1]{\ttt{\textbf{#1}} }
+\newcommand{\ttt}[1]{\texttt{#1}}
+\newcommand{\prout}[1]{\ttt{#1}}
+\newcommand{\tb}[1]{\ttt{\textbf{#1}}}
 
 %%%% JN: Draft version, July 2019
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: I also added a note on how far (starting from the very beginning), I made it thus
 %%%% JN: far (around line #1894, Feb 2019).
+%%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
 \begin{document}
 
@@ -35,7 +36,7 @@
 
 \date{\large Draft version, July 2019}
 
-\author{Fredrik Ronquist, John Huelsenbeck, Maxim Teslenko, Johan Nylander}
+\author{Fredrik Ronquist, John P. Huelsenbeck, \\ Maxim Teslenko, Johan A. A. Nylander}
 
 \maketitle
 
@@ -188,7 +189,7 @@ Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or si
 depending on your system) and you will see the information below:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
                          MrBayes v3.2.7
 
@@ -212,7 +213,7 @@ depending on your system) and you will see the information below:
 Note the \ttt{MrBayes >} prompt at the bottom, which tells you that MrBayes is ready for your
 commands.
 
-\section{Changing the Size of the MrBayes Window}
+\subsubsection{Changing the Size of the MrBayes Window}
 
 Some MrBayes commands will output a lot of information and write fairly long lines, so you may want
 to change the size of the MrBayes window to make it easier to read the output. On Macintosh and
@@ -234,7 +235,7 @@ also see a list of the current settings at the end. Try, for instance, \tb{help 
 mcmc}. The \ttt{lset} settings table at the end should look like this:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Parameter    Options                               Current Setting
    ------------------------------------------------------------------
@@ -265,13 +266,13 @@ Note that MrBayes 3 supports abbreviations of commands and options, so in many c
 sufficient to type the first few letters of a command or option instead of the full name.
 
 A complete list of commands and options can be generated as an ASCII text file by giving the
-command \ttt{manual} to MrBayes. See the output of the command \ttt{help manual} for more
+command \ttt{manual} to MrBayes. See the output of the command \tb{help manual} for more
 information.
 
 \section{Reporting and Fixing Bugs}
 If you find a bug in MrBayes, we are grateful if you tell us about it using the bug reporting
 functions of GitHub, as explained on the MrBayes web site (\url{www.mrbayes.net}).
-
+%%%% JN: Remove or rewrite next paragraph. At least refer to direct contributions through github
 Advanced users may be interested in fixing bugs themselves in the source code. Refer to section
 \ref{advancedTopics} of this manual for information on how to contribute bug fixes, improved
 algorithms or expanded functionality to other users of MrBayes.
@@ -287,9 +288,30 @@ General Public License for more details (\url{http://www.gnu.org/copyleft/gpl.ht
 
 \section{Citing the Program}
 If you wish to cite the program, you can simply refer to the most recent release note
-\citep{ronquist12a}. This manual should be cited as an online publication. For more tips on
-citations, you can run the \ttt{citations} command in the program, which will give you a number of
-other relevant citations for the program and its models and algorithms.
+\citep{ronquist12b}. That is,
+
+\begin{singlespacing}
+\footnotesize
+Ronquist, F., M. Teslenko, P. van der Mark, D. Ayres, A. Darling, S. H\"{o}hna,
+B. Larget, L. Liu, M. A. Suchard, and J. P. Huelsenbeck. 2012. MrBayes 3.2:
+efficient Bayesian phylogenetic inference and model choice across a large model
+space. Systematic Biology 61:539--542.
+\normalsize
+\end{singlespacing}
+
+This manual should be cited as an online publication, for example:
+
+\begin{singlespacing}
+\footnotesize
+Ronquist, F., J. P. Huelsenbeck, M. Teslenko, and J. A. A Nylander (2019) MrBayes version 3.2 manual:
+tutorials and model summaries. Distributed with the software from
+\url{https://github.com/NBISweden/MrBayes}
+\normalsize
+\end{singlespacing}
+
+For more tips on citations, you can run the \ttt{citations} command in the program, which will give
+you a number of other relevant citations for the program and its models and algorithms.
+
 
 \chapter{Tutorial: A Simple Analysis}
 \label{tutorialSimple}
@@ -308,6 +330,7 @@ There are four steps to a typical Bayesian phylogenetic analysis using MrBayes:
 \item Run the analysis
 \item Summarize the samples
 \end{enumerate}
+
 In more detail, each of these steps is performed as described in the following paragraphs:
 
 \tb{1}. At the \ttt{MrBayes >} prompt, type \tb{execute primates.nex}. This will bring the data
@@ -332,23 +355,24 @@ longer and sample less frequently. The default sample and print frequency is 500
 diagnostic frequency is 5,000, and the default run length is 1,000,000. You can find the predicted
 remaining time to completion of the analysis in the last column printed to screen.
 
-\tb{3.2}. If the standard deviation of split frequencies is below 0.01 after 20,000 generations,
+\tb{3.2}. If the standard deviation of split frequencies is below $0.01$ after 20,000 generations,
 stop the run by answering \tb{no} when the program asks \ttt{Continue the analysis? (yes/no)}.
-Otherwise, keep adding generations until the value falls below 0.01. If you are interested mainly
-in the well-supported parts of the tree, a standard deviation below 0.05 may be adequate.
+Otherwise, keep adding generations until the value falls below $0.01$. If you are interested mainly
+in the well-supported parts of the tree, a standard deviation below $0.05$ may be adequate.
 
 \tb{4.1}. Type \tb{sump} to summarize the parameter values using the same burn-in as the
 diagnostics in the \ttt{mcmc} command. The program will output a table with summaries of the
 samples of the substitution model parameters, including the mean, mode, and 95 \% credibility
 interval (region of Highest Posterior Density, HPD) of each parameter. Make sure that the potential
-scale reduction factor (PSRF) is reasonably close to 1.0 for all parameters; if not, you need to
+scale reduction factor (PSRF) is reasonably close to $1.0$ for all parameters; if not, you need to
 run the analysis longer. The same applies for the effective sample size (ESS). If the ESSs are
 somewhere below 100, you may want to run longer.
 
-\tb{4.2}. Summarize the trees using the same burn-in as the \ttt{mcmc} command by typing
-\tb{sumt}. The program will output a cladogram with the posterior probabilities for each split
-and a phylogram with mean branch lengths. Both trees will also be printed to a file that can be
-read by FigTree and other tree-drawing programs, such as TreeView and Mesquite.
+\tb{4.2}. Summarize the trees using the same burn-in as the \ttt{mcmc} command by typing \tb{sumt}.
+The program will output a cladogram with the posterior probabilities for each split and a phylogram
+with mean branch lengths. Both trees will also be printed to a file that can be read by FigTree
+\citep{rambaut12} and other tree-drawing programs, such as TreeView \citep{page96} and Mesquite
+\citep{maddison06}.
 
 It does not have to be more complicated than this; however, as you get more proficient you will
 probably want to know more about what is happening behind the scenes. The rest of this section
@@ -361,7 +385,7 @@ are making and the machinery that MrBayes uses in order to perform your analysis
 To get data into MrBayes, you need a so-called Nexus file that contains aligned nucleotide or amino
 acid sequences, morphological (``standard'') data, restriction site (binary) data, or any mix of
 these four data types. The Nexus data file is often generated by another program, such as Mesquite
-\citep{Maddison06}. Note, however, that MrBayes version 3 does not support the full Nexus standard,
+\citep{maddison06}. Note, however, that MrBayes version 3 does not support the full Nexus standard,
 so you may have to do a little editing of the file for MrBayes to process it properly. In
 particular, MrBayes uses a fixed set of symbols for each data type and does not support
 user-defined symbols. The supported symbols are \{A, C, G, T, R, Y, M, K, S, W, H, B, V, D, N\} for
@@ -372,11 +396,10 @@ and \{0, 1, 2, 3, 4, 5, 6, 5, 7, 8, 9\} for standard (morphology) data.
 In addition to the standard one-letter ambiguity symbols for DNA and RNA listed above, ambiguity
 can also be expressed using the Nexus parenthesis notation. For instance, if there is uncertainty
 whether a taxon have state 2 or 3 for a specific character, it can be coded as (23) (or (2,3)).
-The Nexus format also allows coding taxa as polymorphic \textemdash where a taxon truly have both
-character states 2 and 3. One would then use braces instead of paranthesis: \{23\}. MrBayes,
-however, does not make any distinction between polymorphic states or uncertainty in states, but
-treat them the same way (as uncertainty), so it does not matter whether you use parentheses or
-curly braces.
+The Nexus format also allows coding taxa as polymorphic --- where a taxon truly have both character
+states 2 and 3. One would then use braces instead of paranthesis: \{23\}. MrBayes, however, does
+not make any distinction between polymorphic states or uncertainty in states, but treat them the
+same way (as uncertainty), so it does not matter whether you use parentheses or braces.
 
 If you have other symbols in your matrix than the ones supported by MrBayes, you need to replace
 them before processing the data block in MrBayes. You also need to remove the \ttt{Equate} and
@@ -391,7 +414,7 @@ shortest unambiguous version of a command). Note that the input file must be loc
 folder (directory) where you started the MrBayes application (or else you will have to give the
 path to the file) and the name of the input file should not have blank spaces, or it will have to
 be quoted. If everything proceeds normally, MrBayes will acknowledge that it has read the data in
-the DATA block of the Nexus file by outputting some information about the file read in.
+the \ttt{DATA} block of the Nexus file by outputting some information about the file read in.
 
 \subsection{Specifying a Model}
 All of the commands are entered at the \ttt{MrBayes >} prompt. At a minimum two commands,
@@ -409,7 +432,7 @@ concentrate on the table at the bottom of the output, which specifies the curren
 should look like this:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Model settings for partition 1:
 
@@ -475,7 +498,7 @@ data, so we will leave these settings at their default values. If you type \tb{h
 verify that the model is correctly set, the table should look like this:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Model settings for partition 1:
 
@@ -514,8 +537,6 @@ default settings for the parameters in your model. The table at the end of the h
 reads:
 
 \begin{singlespacing}
-%\small
-%\footnotesize
 \scriptsize
 \begin{verbatim}
    Model settings for partition 1:
@@ -574,12 +595,12 @@ We need to focus on \ttt{Revmatpr} (for the six substitution rates of the GTR ra
 proportion of invariable sites), \ttt{Topologypr} (for the topology), and \ttt{Brlenspr} (for the
 branch lengths).
 
-The default prior probability density is a flat Dirichlet (all values are 1.0) for both
+The default prior probability density is a flat Dirichlet (all values are $1.0$) for both
 \ttt{Revmatpr} and \ttt{Statefreqpr}. This is appropriate if we want estimate these parameters from
 the data assuming no prior knowledge about their values. It is possible to fix the rates and
 nucleotide frequencies but this is generally not recommended. However, it is occasionally necessary
 to fix the nucleotide frequencies to be equal, for instance in specifying the JC and SYM models.
-This would be achieved by typing \ttt{prset statefreqpr=fixed(equal)}.
+This would be achieved by using \ttt{prset statefreqpr=fixed(equal)}.
 
 If we wanted to specify a prior that put more emphasis on equal nucleotide frequencies than the
 default flat Dirichlet prior, we could for instance use \ttt{prset
@@ -601,8 +622,9 @@ Dirichlet(1,1,1,1) distribution.
 
 The \ttt{Shapepr} parameter determines the prior for the $\alpha$ (shape) parameter of the gamma
 distribution of rate variation. We will leave it at its default setting, an Exponential
-distribution with mean 1.0. This will put highest probability on low $\alpha$ values.
-%%%% JN: Expand the text! Add a Figure ?
+distribution with mean 1.0. This will put highest probability on low $\alpha$ values (see section
+\ref{gammaDistributedRateModel}).
+
 The prior for the proportion of invariable sites is set with \ttt{Pinvarpr}. The default setting
 is a uniform distribution between 0 and 1, an appropriate setting if we don't want to assume any
 prior knowledge about the proportion of invariable sites.
@@ -614,12 +636,13 @@ constraints on the tree topology, but we will not attempt that in this analysis.
 The \ttt{Brlenspr} parameter can either be set to unconstrained, clock-constrained, or fixed. If
 \ttt{Fixed} is chosen then branch lengths will not be updated by the MCMC in the program but
 will be fixed to the current tree (requires a user-provided starting tree).
-%%%%% JN: Expand the text! Add details about the fixed tree above?
-For trees without a molecular clock (unconstrained) there are currently five different branch
+%%%%% JN: Add reference to description of user provided starting tree?
+For trees without a molecular clock (``unconstrained'') there are currently five different branch
 length priors that can be applied. The default is a compound Dirichlet prior, which essentially
 puts a prior on the total length on the tree, and then assigns prior lengths on individual branches
-by dividing the tree length using a Dirichlet prior. More details can be found from the build in
-help documentation (\ttt{help prset}).
+by dividing the tree length using a Dirichlet prior.
+%%%% JN: Add text here
+More details can be found in build in help documentation (by issuing \tb{help prset}).
 
 
 \subsection{Checking the Model}
@@ -772,9 +795,9 @@ different trees but when they have reached convergence (when they produce a good
 posterior probability distribution), the two tree samples should be very similar.
 
 To make sure that MrBayes compares tree samples from the different runs, check that \ttt{Mcmcdiagn}
-is set to yes and that \ttt{Diagnfreq} is set to some reasonable value. The default value of $5000$
+is set to yes and that \ttt{Diagnfreq} is set to some reasonable value. The default value of 5,000
 is more appropriate for a larger analysis, so change the setting so that we compute diagnostics
-every 1000th generation instead by typing \tb{mcmcp diagnfreq=1000}.
+every 1,000th generation instead by typing \tb{mcmcp diagnfreq=1000}.
 
 MrBayes will now calculate various run diagnostics every \ttt{Diagnfreq} generation and print them
 to a file with the name \ttt{<Filename>.mcmc}. The most important diagnostic, a measure of the
@@ -786,8 +809,6 @@ chain is discarded. The \ttt{relburnin} setting determines whether a fixed burni
 discard the first 25 \% samples from the cold chain (\ttt{relburnin=yes} and
 \ttt{burninfrac=0.25}).
 
-%\subsubsection{Metropolis coupling}
-\label{metropolisCoupling}
 By default, MrBayes uses Metropolis coupling to improve the MCMC sampling of the target
 distribution. The \ttt{Swapfreq}, \ttt{Nswaps}, \ttt{Nchains}, and \ttt{Temp} settings together
 control the Metropolis coupling behavior. When \ttt{Nchains} is set to 1, no heating is used. When
@@ -799,16 +820,7 @@ complexity of the analysis is directly proportional to the number of chains used
 runs out of physical RAM memory, in which case the analysis will suddenly become much slower), but
 the cold and heated chains can be distributed among processors in a cluster of computers and among
 cores in multicore processors using the MPI version of the program, greatly speeding up the
-calculations.
-
-MrBayes uses an incremental heating scheme, in which chain $i$ is heated by raising its posterior
-probability to the power $1/ (1 + i\lambda)$, where $\lambda$ is the heating coefficient controlled
-by the \ttt{Temp} parameter. Every \ttt{Swapfreq} generation, two chains are picked at random
-and an attempt is made to swap their states. For many analyses, the default settings should work
-nicely. If you are running many more than three heated chains, however, you may want to increase
-the number of swaps (\ttt{Nswaps}) that are tried each time the chain stops for swapping. If the
-frequency of swapping between chains that are adjacent in temperature is low, you may want to
-decrease the \ttt{Temp} parameter.
+calculations. See also section \ref{metropolisCoupling} for more information on Metropolis coupling.
 
 The \ttt{Samplefreq} setting determines how often the chain is sampled; the default is every 500
 generations. This works well for moderate-sized analyses but our analysis is so small and is likely
@@ -824,11 +836,11 @@ for each independent analysis, and they will be called \ttt{primates.nex.run1.p}
 into most statistics and graphing programs. The topology and branch lengths are printed to a
 \ttt{.t} file (in our case, there will be two files called \ttt{primates.nex.run1.t} and
 \ttt{primates.nex.run2.t}). The \ttt{.t} files are Nexus tree files that can be imported into
-programs like PAUP* and TreeView. The root of the \ttt{.p} and \ttt{.t} file names can be altered
-using the \ttt{Filename} setting.
+programs like PAUP* \citep{swofford98}, Mesquite, and FigTree. The root of the \ttt{.p} and
+\ttt{.t} file names can be altered using the \ttt{Filename} setting.
 
 The \ttt{Printfreq} parameter controls the frequency with which brief info about the analysis is
-printed to screen. The default value is $1000$. Let us change it to match the sample frequency by
+printed to screen. The default value is 1,000. Let us change it to match the sample frequency by
 typing \tb{mcmcp printfreq=100}.
 
 When you set up your model and analysis (the number of runs and heated chains), MrBayes creates
@@ -843,7 +855,7 @@ last generation and will use those as the starting values for the next analysis 
 are reset using \ttt{mcmc starttree=random startparams=reset}.
 
 Since version 3.2, MrBayes prints all parameter values of all chains (cold and heated) to a
-checkpoint file every \ttt{Checkfreq} generations, by default every $2000$ generations. The
+checkpoint file every \ttt{Checkfreq} generations, by default every 2,000 generations. The
 checkpoint file has the suffix \ttt{.ckp}. If you run an analysis and it is stopped prematurely,
 you can restart it from the last checkpoint by using \ttt{mcmc append=yes}. MrBayes will start the
 new analysis from the checkpoint; it will even read in all the old trees and include them in the
@@ -857,7 +869,7 @@ about the model and then list the proposal mechanisms that will be used in sampl
 posterior distribution. In our case, the proposals are the following:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    The MCMC sampler will use the following moves:
       With prob.  Chain will use move
@@ -1004,7 +1016,6 @@ files every \ttt{samplefreq} generation. These files are tab-delimited text file
 something like this:
 
 \begin{singlespacing}
-%\small
 \scriptsize
 \begin{verbatim}
    [ID: 0184438524]
@@ -1046,7 +1057,6 @@ noise'', that is, there should be no tendency of increase or decrease over time.
 look something like this:
 
 \begin{singlespacing}
-%\small
 \footnotesize
 \begin{verbatim}
    +------------------------------------------------------------+ -5718.97
@@ -1116,17 +1126,17 @@ across sites (\ttt{alpha}), and the proportion of invariable sites (\ttt{pinvar}
 six rate parameters of the GTR model are given as proportions of the rate sum (the Dirichlet
 parameterization). This parameterization has some advantages in the Bayesian context; in
 particular, it allows convenient formulation of priors. If you want to scale the rates relative to
-the G-T rate, just divide all rate proportions by the G-T rate proportion.
+the G--T rate, just divide all rate proportions by the G--T rate proportion.
 
 The last three columns in the table contains information about the mixing and convergence of the
-MCMC. The ESS (Effective Sample Size) is the (estimated) effective number of independent draws from
-the posterior distribution that the MCMC managed to sample. A small ESS ($<100$) would indicate
-poor mixing behaviour, suggesting that you need to run longer simulations. The Potential Scale
-Reduction Factor (PSRF), is based on comparing the estimated between-chain variance with the
-within-chain variance for a parameter. If we have a good sample from the posterior probability
-distribution, these values should be close to $1.0$. A reasonable goal might be to aim for values
-between $1.00$ and $1.2$ but it can be difficult to achieve this for all parameters in the model in
-larger and more complicated analyses.
+MCMC. The ESS (Effective Sample Size; \cite{ripley87}) is the (estimated) effective number of
+independent draws from the posterior distribution that the MCMC managed to sample. A small ESS
+($<100$) would indicate poor mixing behaviour, suggesting that you need to run longer simulations.
+The Potential Scale Reduction Factor (PSRF; \cite{gelman92}), is based on comparing the estimated
+between-chain variance with the within-chain variance for a parameter. If we have a good sample
+from the posterior probability distribution, these values should be close to $1.0$. A reasonable
+goal might be to aim for values between $1.0$ and $1.2$ but it can be difficult to achieve this
+for all parameters in the model in larger and more complicated analyses.
 
 \subsection{Summarizing Tree Samples}
 
@@ -1173,7 +1183,7 @@ side. For instance, the 14th partition (ID 14) in the output below represents th
 positions and a dot in all other positions.
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    List of taxa in bipartitions:
 
@@ -1229,7 +1239,7 @@ overwhelming support for a single tree, so all partitions in this tree have a po
 of $1.0$ (or very close to $1.0$).
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Summary statistics for informative taxon bipartitions
       (saved to file "primates.nex.tstat"):
@@ -1256,10 +1266,9 @@ of the branch corresponding to partition ID 14. As we noted above, this is the b
 humans and chimps. The meaning of most of the values in this table is obvious. The last two columns
 give a convergence diagnostic, the Potential Scale Reduction Factor (PSRF), and the number of runs
 in which the partition was encountered. The PSRF diagnostic is the same used for the regular
-parameter samples, and it should approach 1.0 as runs converge.
+parameter samples, and it should approach $1.0$ as runs converge.
 
 \begin{singlespacing}
-%\tiny
 \scriptsize
 \begin{verbatim}
    Summary statistics for branch and node parameters
@@ -1300,7 +1309,6 @@ of each partition or clade in the tree, and the phylogram (lower tree) gives the
 measured in expected substitutions per site:
 
 \begin{singlespacing}
-%\footnotesize
 \scriptsize
 \begin{verbatim}
    Clade credibility values:
@@ -1400,7 +1408,7 @@ look familiar but there are some differences compared to the \ttt{primates.nex} 
 statement:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Format datatype=mixed(Standard:1-166,DNA:167-3246)
        interleave=yes gap=- missing=?;
@@ -1409,7 +1417,7 @@ statement:
 \end{singlespacing}
 
 First, the datatype is given as mixed followed by a specification of the content of the matrix: it
-contains standard (morphology) characters in columns 1-166 and DNA characters in the remaining
+contains standard (morphology) characters in columns 1--166 and DNA characters in the remaining
 columns. The mixed datatype is an extension to the Nexus standard, which originated in MrBayes 3.
 It may not be compatible with other phylogenetics programs.
 
@@ -1433,7 +1441,7 @@ defined to include characters 167 to 1244. The next step is to define a partitio
 according to genes and morphology. This is accomplished with the line:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
     partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
 \end{verbatim}
@@ -1441,12 +1449,12 @@ according to genes and morphology. This is accomplished with the line:
 \end{singlespacing}
 
 The elements of the \ttt{partition} command are: (1) the name of the partitioning scheme
-(\ttt{favored}); (2) an equal sign (=); (3) the number of character divisions in the scheme
+(\ttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
 (\ttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
 The list of characters can simply be an enumeration of the character numbers (the above line is
 equivalent to \ttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
 it is often more convenient to use predefined character sets as given in the mrbayes block. The
-\ttt{end} statement closes the MrBayes block.
+\ttt{end;} statement closes the MrBayes block.
 
 When we read this block into MrBayes, we will have defined variables that can be used for setting
 up a partitioned analysis with the first character division being morphology, the second division
@@ -1456,7 +1464,7 @@ this partitioning of the data instead of the default partitioning. We do this us
 command:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    set partition = favored;
 \end{verbatim}
@@ -1470,7 +1478,7 @@ Before starting to specify the partitioned model, it is useful to examine the de
 \tb{showmodel} and you should get this table as part of the output:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Active parameters:
 
@@ -1503,7 +1511,7 @@ we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the 
 when \tb{showmodel} is invoked:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Active parameters:
  
@@ -1544,7 +1552,7 @@ variable characters but no constant characters. If necessary, one can change thi
 \ttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Active parameters:
  
@@ -1604,9 +1612,13 @@ You may wish to start each tutorial by switching off warnings and asking MrBayes
 each analysis after the requested number of generations, without asking you if you want to extend
 the analysis. You can accomplish this with the command line:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarn=yes
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 The tutorials are largely independent of each other, so it should be possible to skip directly to a
 tutorial that is of particular interest. However, some tutorials form a natural sequence of
@@ -1624,15 +1636,23 @@ we will ask MrBayes to integrate over a predetermined set of fixed rate matrices
 repeat the analysis using a fixed rate matrix. To start the tutorial, first read in the amino acid
 data:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > execute avian_ovomucoids.nex
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 To ask MrBayes to sample across fixed amino acid rate matrices, we use the \ttt{prset} command:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > prset aamodelpr=mixed
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 Now we run the analysis as usual. The analysis is much slower than a normal nucleotide analysis, so
 let us try first and see if we can get convergence without using Metropolis coupling (heated
@@ -1644,9 +1664,13 @@ the fly. For the dataset in this tutorial, our previous results indicate that ab
 generations are sufficient for decent topological convergence. Run 300,000 generations without
 heating using the command:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 Now we can summarize the parameter and tree samples as usual using the \ttt{sumt} and \ttt{sump}
 commands. The output of the \ttt{sump} command will include a table giving the posterior
@@ -1683,10 +1707,12 @@ the Dayhoff model, by fixing the rate matrix. Do this by running the analysis wi
 commands:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > prset aamodelpr=fixed(dayhoff)
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
+\normalsize
 \end{singlespacing}
 
 Note that the likelihoods printed to screen during the run are much worse (about 100 log likelihood
@@ -1705,12 +1731,14 @@ running the analysis. For instance, we would run a mixed amino acid model analys
 protein-coding viral sequences in the \ttt{replicase.nex} data set using:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > execute replicase.nex
 MrBayes > lset nucmodel=protein
 MrBayes > prset aamodelpr=mixed
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
+\normalsize
 \end{singlespacing}
 
 \section{Identifying Positively Selected Sites}
@@ -1719,18 +1747,24 @@ sequence. We will use the data in the file \ttt{replicase.nex}.
 
 First, we read in the data:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > execute replicase.nex
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 Then we specify that we want to use a codon model with omega variation across sites, and that we
 want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > lset nucmodel=codon omegavar=ny98
 MrBayes > report possel=yes siteomega=yes
 \end{verbatim}
+\normalsize
 \end{singlespacing}
 
 This is going to be a slow analysis, so we will run relatively short analyses and will therefore
@@ -1744,10 +1778,12 @@ Our results indicate that it is possible to get decent if not perfect convergenc
 10,000 generations, so let us try that:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > mcmcp printfreq=20 samplefreq=20 diagnfreq=500
 MrBayes > mcmc ngen=10000
 \end{verbatim}
+\normalsize
 \end{singlespacing}
 
 Now we examine the parameter samples by using the \tb{sump} command. The output will dominated by a
@@ -1813,13 +1849,13 @@ weighted average for each site across all categories of omega values, with \ttt{
 the value for the codon corresponding to nucleotide sites 1--3, \ttt{omega(4,5,6)} the value for
 the codon corresponding to sites 4--6, etc.
 
-Looking at the values, we note that about 85\% (\ttt{pi(-)}) of the sites are under strong
-constraining selection (\ttt{omega(-)=0.0699}). Only a small fraction of sites, around 5\%, are
+Looking at the values, we note that about 85 \% (\ttt{pi(-)}) of the sites are under strong
+constraining selection (\ttt{omega(-)=0.0699}). Only a small fraction of sites, around 5 \%, are
 under positive selection (\ttt{pi(+)}).
 
 Examination of the positive selection probabilities and codon site omega values reveals which sites
 are most likely to be experiencing positive selection (a high value for \ttt{pr+(n,n,n)}, and
-\ttt{omega(n,n,n) > 1.0}).
+\ttt{omega(n,n,n)} $> 1.0$).
 % For instance, the evidence is strong that site (292,293,294) is under positive selection
 % (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
 %%%% JN: My rerun using 3.2.7 did not find any pr+ value > 0.282567,
@@ -1839,24 +1875,32 @@ across the entire general time reversible (GTR) model space. We will use the dat
 
 First, we read in the data:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 Then we specify that we want to use a gamma model of rate variation across sites, and that we want
 to sample across the GTR model space:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > lset nst=mixed rates=gamma
 \end{verbatim}
+\normalsize
+\end{singlespacing}
 
 We can now run the analysis as usual. The \tb{sump} command will give relevant summaries of the
 parameter samples, including the probabilities of the sampled substitution models. We assess
 convergence by making sure that these probabilities are the same across independent runs. This is a
 sample table from an analysis using two independent runs on the tutorial data set:
 
-\scriptsize
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
    Model probabilities above 0.050
    Estimates saved to file "primates.nex.mstat".
@@ -1876,17 +1920,17 @@ sample table from an analysis using two independent runs on the tutorial data se
 \normalsize
 
 The models are labeled using a so-called restricted growth function. The six different substitution
-rates are given in the order $\{r_{AC},r_{AG},r_{AT},r_{CG},r_{CT},r_{GT}\}$. The first rate is
+rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first rate is
 labeled ``1''. The next rate is labeled with the next higher, unused integer if it is different,
 and otherwise with the same integer as the partition it belongs to. For instance,
 \ttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \ttt{gtrsubmodel[123456]} to
-the GTR model, and \ttt{gtrsubmodel[121121]} to the HKY model.
+the GTR model, and \ttt{gtrsubmodel[121121]} to the HKY model, and so on.
 
 For this particular data set, we observe that there is considerable uncertainty concerning the
 correct substitution model. The model with the highest posterior probability is
 \ttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
 is different from the other transversion rates, presumably lower. The HKY model has the second best
-posterior probability of all the models reaching above the reporting threshold of 0.050. All other
+posterior probability of all the models reaching above the reporting threshold of $0.050$. All other
 estimates of model parameters derived from this analysis, the topology estimate for instance, will
 be based on an average across the sampled substitution models, each one weighted according to its
 posterior probability.
@@ -1898,7 +1942,7 @@ model probabilities, but most models receive similar probabilities in the two in
 
 %%%%% JN: I've done from the start until here (Feb 12 - 2019)
 \vspace{10 pt}
-{\LARGE Please note, the following sections of the manual is not revised for v.3.2.7!}
+{\LARGE\color{red} Please note, the following sections of the manual is not revised for v.3.2.7!}
 
 \section{Testing a Topological Hypothesis}
 
@@ -1951,7 +1995,7 @@ In the output from the \ttt{sum} command, focus on the table summarizing the lik
 MCMC samples:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
    Estimated marginal likelihoods for runs sampled in files
       "primates.nex.run1.p" and "primates.nex.run2.p":
@@ -2092,12 +2136,12 @@ upwards in practice.
 
 We also note that the more accurate model likelihoods suggest a larger difference between the two
 models, about 11 log likelihood units. Thus, we conclude that the better model (humans and chimps
-do form a monophyletic group) is very strongly supported by a Bayes factor test.
+do form a monophyletic group) is very strongly supported by the Bayes factor.
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses. It will probably look something like this:
 
-\small
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
    Plot of average standard deviation of split frequencies across steps.
@@ -3748,7 +3792,7 @@ interpreted as indicators of the strength of the evidence in favor of the best o
 Bayes factor is given by
 
 $$
-BF_{12} = \frac{Pr(Data|Hypothesis_{1})}{Pr(Ddata|Hypothesis_{2})}
+BF_{12} = \frac{Pr(Data|Hypothesis_{1})}{Pr(Data|Hypothesis_{2})}
 $$
 
 where $Data$ is the data thought to have been generated by any of the candidate hypotheses
@@ -3769,7 +3813,7 @@ command \ttt{sump}. In the output from the \ttt{sump} command, you will find the
 table is for two runs):
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 
 Estimated marginal likelihoods for runs sampled in files
@@ -3814,7 +3858,7 @@ possible time-reversible rate matrices according to their posterior probability
 \citep{huelsenbeck04d}. This can be accomplished simply by using the option \ttt{mixed} for the
 \ttt{Nst} parameter in the \ttt{lset} command. For example:
 
-\small
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > lset applyto=(all) nst=mixed
@@ -3832,7 +3876,7 @@ according to its probability. Currently, ten different rate matrices will be sam
 \ref{estimatingTheFixedRateModel}). To achive the integration over rate matrices, one need to use
 the \ttt{mixed} option for \ttt{Aamodelpr} parameter in the \ttt{prset} command. For example:
 
-\small
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset applyto=(all) aamodelpr=mixed
@@ -3922,21 +3966,116 @@ fine-tune proposal tuning parameters or proposal frequencies.
 
 %% \subsubsection{Adaptive Tuning}
 
-%% \subsection{Monitoring Convergence}
+
+\subsection{Monitoring Convergence}
+\label{monitoringConvergence}
+One of the most powerful ways of assessing MCMC convergene, is to compare samples obtained from
+independent MCMC analyses. It is typically the tree samples that are most divergent in phylogenetic
+analyses, and we therefore introduced the average standard deviation of split frequencies (ASDSF;
+\citep{lakner08}) in MrBayes to allow quantitative assessment of the similarity among such samples.
+
+ASDSF is calculated by comparing split or clade frequencies across multiple independent MCMC runs
+that ideally should be started from different randomly chosen starting trees \citep{lakner08}.
+ASDSF should approach $0.0$ as runs converge to the same distribution. The frequencies of rare
+splits or clades are difficult to estimate accurately and these groupings are usually of marginal
+interest. Therefore, it may be advantageous to exclude them from the diagnostic. MrBayes allows the
+user to set a cutoff frequency (using the \ttt{Minpartfreq} option for the \ttt{sumt} command); all
+splits or clades occurring minimally at that frequency (default value $0.10$)in at least one of the
+runs will be incorporated in the ASDSF.
+
+To allow users to monitor MCMC progress, MrBayes can run several analyses in parallel (by ensuring 
+that the \ttt{nruns} parameter for the \ttt{mcmc} command is $>1$) and report the average (ASDSF) or
+maximum standard deviation of split frequencies at regular intervals. For example (command given on
+several lines for readability):
+
+\footnotesize
+\begin{singlespacing}
+\begin{verbatim}
+MrBayes > mcmcp nruns=2 mcmcdiagn=yes diagnfreq=5000
+MrBayes > mcmcp diagnstat=avgstddev minpartfreq=0.10
+MrBayes > mcmcp relburnin=yes burninfrac=0.25 savetrees=no
+\end{verbatim}
+\end{singlespacing}
+\normalsize
+
+All options given for the \ttt{mcmcp} command above are the default settings for MrBayes 3.2
+(effectively the same as typing \tb{mcmc}), but we want to highlight the relevant parts. Setting
+\ttt{nruns=2} will ensure that we can compare independent runs (two in this case), each started
+from a random starting tree. By using \ttt{mcmcdiagn=yes}, MrBayes will print a MCMC-diagnostics
+file, ending in \ttt{.mcmc}, with the convergence diagnostics calculated every \ttt{diagnfreq}
+generation. Here we have chosen the standard deviation of split frequencies to be based on the
+average (\ttt{diagnstat=avgstddev}), but there is also a choice of using the maximum
+(\ttt{diagnstat=maxstddev}). The \ttt{minpartfreq=0.10} will discard any partitions with a
+frequency $<0.10$ from being included in the calculation of the diagnostic statistic. The
+\ttt{savetrees} option becomes relevant if you are using a relative burnin for run-time convergence
+diagnostics (as given by \ttt{relburnin=yes burninfrac=0.25}. Tree samples need to be deleted from
+split frequency counters as the cut-off point for the burnin moves during the run. If \t{avetrees}
+is set to \ttt{no}, tree samples to be discarded are read back in from file. If \ttt{savetrees} is
+set to \ttt{yes}, the tree samples to be removed will be stored in the internal memory instead.
+This can use up a lot of memory in large analyses.
+
+If one wishes to rely on the ASDSF as the crucial statistic for deciding when to stop a run, then
+MrBayes provides a convenient ``automatic stopping rule''. For example (note that other default
+values are omitted):
+
+\footnotesize
+\begin{singlespacing}
+\begin{verbatim}
+MrBayes > mcmc stoprule=yes stopval=0.01
+\end{verbatim}
+\end{singlespacing}
+\normalsize
+
+In the example above, we start a MCMC run and allow MrBayes to check the ASDSF (every
+\ttt{diagnfreq} generation, see above), and if the ASDSF value is below $0.01$, the run will
+automatically stop. In order for the stopping rule to work, more than one run needs to be started.
+
+More detailed diagnostics can be obtained using the \ttt{sump} and \ttt{sumt} commands after a run
+has completed. They include ASDSF across runs for each of the sampled clades in addition to the
+potential scale reduction factor (PSRF; \citep{gelman92}) for branch lengths, node times, and
+substitution model parameters. PSRF compares the variance within and between runs and should
+approach $1.0$ as runs converge. MrBayes 3.2 also reports the effective sample size (ESS;
+\citep{ripley87}), the number of effectively independent draws from the posterior distribution,
+widely used for single-run convergence diagnostics.
+
+%%%% JN: mention that one can use sumt, sump, compare tree, plot etc using mrbayes after a run,
+%%%% JN: or other software potentially both during (gnuplot, R), and after a run (Tracer, AWTY/RWTY).
 
 \subsection{Metropolis Coupling}
+\label{metropolisCoupling}
+
+MrBayes uses Metropolis coupling to improve the MCMC sampling of the target distribution. The
+\ttt{Swapfreq}, \ttt{Nswaps}, \ttt{Nchains}, and \ttt{Temp} settings together control the
+Metropolis coupling behavior. When \ttt{Nchains} is set to 1, no heating is used. When
+\ttt{Nchains} is set to a value $n$ larger than 1, then $n - 1$ heated chains are used. By default,
+\ttt{Nchains} is set to 4, meaning that MrBayes will use 3 heated chains and one ``cold'' chain. In
+our experience, heating is essential for some data sets but it is not needed for others. Adding
+more than three heated chains may be helpful in analyzing large and difficult data sets. The time
+complexity of the analysis is directly proportional to the number of chains used, but the cold and
+heated chains can be distributed among processors in a cluster of computers and among cores in
+multicore processors using the MPI version of the program, greatly speeding up the calculations.
+
+MrBayes uses an incremental heating scheme, in which chain $i$ is heated by raising its posterior
+probability to the power $1/ (1 + i\lambda)$, where $\lambda$ is the heating coefficient controlled
+by the \ttt{Temp} parameter. Every \ttt{Swapfreq} generation, two chains are picked at random
+and an attempt is made to swap their states. For many analyses, the default settings should work
+nicely. If you are running many more than three heated chains, however, you may want to increase
+the number of swaps (\ttt{Nswaps}) that are tried each time the chain stops for swapping. If the
+frequency of swapping between chains that are adjacent in temperature is low, you may want to
+decrease the \ttt{Temp} parameter.
+
 As illustrated by several of the tutorials above, it is sometimes possible to get a reasonable
 sample from the posterior without using Metropolis coupling, which will save you a lot of
 computational effort. The risk is that you will have to start over if you have difficulties getting
-convergence. Turn off heating by setting the \ttt{mcmc} option \ttt{nchains} to 1 and switch
-it on by setting \ttt{nchains} to a value larger than 1.
+convergence. Turn off heating by setting the \ttt{mcmc} option \ttt{nchains} to 1 and switch it on
+by setting \ttt{nchains} to a value larger than $1$.
 
 If you do use heated chains, try to make sure that the acceptance rates of swaps between adjacent
 chains are in the approximate range of 10 to 70 \%. The acceptance rates are printed to the
 \ttt{.mcmc} file and to screen at the end of the run. The latter output contains a table that
 looks like this (you find the critical values in a different format in the \ttt{.mcmc} file):
 
-\small
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
               1     2     3     4 
@@ -4202,13 +4341,14 @@ ancstates=yes.} Now only the ancestral states for the character of interest will
 \ttt{.p} file(s). The sampled values can be summarized as usual with the \ttt{sump} command.
 
 \subsection{Convergence Diagnostics}
-The convergence diagnostics provided by MrBayes are quite powerful but they certainly do not
-exhaust the possibilities. Several programs will read MrBayes output files and will provide you
-with a number of additional ways in which you can examine the output from your analysis. Two of the
-most popular tools are Tracer \citep{rambaut07} and AWTY \citep{nylander07}. Among other things,
-they provide nice graphical representations of the output from MCMC analyses. Another set of tools
-is provided by the CODA \citep{plummer06} and RWTY \citep{warren17} packages for R
-\citep{rcoreteam18}.
+The convergence diagnostics provided by MrBayes are quite powerful (see section
+\ref{monitoringConvergence}) but they certainly do not exhaust the possibilities. Several programs
+will read MrBayes output files and will provide you with a number of additional ways in which you
+can examine the output from your analysis. Two of the most popular tools are Tracer
+\citep{rambaut18} for the parameter (\ttt{.p}) files, and AWTY \citep{nylander07} for the tree
+(\ttt{.t}, \ttt{.con.tre}) files. Among other things, they provide nice graphical representations
+of the output from MCMC analyses. Another set of tools is provided by the CODA \citep{plummer06}
+and RWTY \citep{warren17} packages for R \citep{rcoreteam18}.
 
 %% \subsection{Plotting}
 %% \subsection{Tree Summaries}
@@ -4228,7 +4368,7 @@ in \ttt{primates.nex} under the GTR+$\gamma$ model and stores each result in a
 separate file is given below:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 begin mrbayes;
    set autoclose=yes nowarn=yes;
@@ -4267,7 +4407,7 @@ both angle brackets are essential and must be included in the command line) with
 \ttt{batch.txt} file containing this text:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 set autoclose=yes nowarn=yes
 execute primates.nex
@@ -5204,7 +5344,7 @@ q_{ij} = \left\{
 for the case when $i$ differs from $j$; the diagonal elements ($i = j$) are determined, as usual,
 to balance the rows in the instantaneous rate matrix to sum to zero. This gives the
 instantaneous rate matrix (only 7 rows and columns out of 16 shown):
-\small
+\footnotesize
 \[
 Q=\begin{bmatrix}
     & [AA] & [AC] & [AG] & [AT] & [CA] & [CC] & \cdots & [TT]\\
@@ -5589,12 +5729,14 @@ Finally, it is possible to divide characters into groups evolving at different r
 partitioned or site specific rate model.
 
 \subsection{Gamma-distributed Rate Model}
+\label{gammaDistributedRateModel}
 The commonly used model of gamma-shaped rate variation across sites is invoked using \tb{lset
 rates=gamma}. The shape of the gamma distribution is determined by the so-called $\alpha$ (alpha)
 parameter. When this parameter is small (below $1$), the distribution takes on an L-shaped form with
 a few sites evolving rapidly while most sites are conserved. Conversely, when $\alpha$ is above $1$
 the distribution becomes similar to a normal distribution with less and less variation in rates
 across sites as $\alpha$ becomes larger.
+%%%% JN: Include the classical Figure?
 
 In practice, the gamma distribution is approximated using a small number of discrete rate
 categories \citep{yang94a}. By default, four rate categories are used; you can change this setting
@@ -5607,9 +5749,11 @@ The shape parameter ($\alpha$) of the gamma distribution is similar to the shape
 Dirichlet distribution of stationary state frequencies used for standard data (see above) in that
 it controls the distribution of another model parameter (the site rates). Therefore, the prior
 probability distribution used for the shape parameter can be referred to as a hyperprior. The
-default prior used in MrBayes is an exponential distribution with mean set to $1.0$ (\ttt{prset
-shapepr=exponential(1.0)}). The sampled values of the shape parameter are found under the column
-heading \ttt{alpha} in the \ttt{.p} file(s).
+default prior used in MrBayes is an exponential distribution with the rate set to $1.0$ (\ttt{prset
+shapepr=exponential(1.0)}). Note that he mean of the exponential distribution is the inverse of the
+rate, so if, for example, changing the rate of the exponential distribution to $10.0$, will move
+the mean from $1.0$ to $1/10.0 = 0.1$. The sampled values of the shape parameter are found under
+the column heading \ttt{alpha} in the \ttt{.p} file(s).
 
 \subsection{Autocorrelated Gamma Model}
 In this model, rates vary across sites according to an autocorrelated gamma model where the rate at
@@ -5644,13 +5788,13 @@ site before the break. The \ttt{databreaks} command is only needed when you invo
 autocorrelated gamma model for a multigene dataset. The \ttt{databreaks} command cannot be used to
 partition a data set.
 
-% Comment JN: This subsection needs to be expanded
+%%%% JN: This subsection needs to be expanded
 \subsection{Lognormal-distributed rates across sites}
 \ttt{LNorm} --- Lognormal-distributed rates across sites. The rate at a site is drawn from a
 lognormal distribution. the lognormal distribiton has a single parameter, sigma (SD) that describes
 how much rates vary (mean fixed to $log(1.0) = 0.0$).
 
-% Comment JN: This subsection needs to be expanded
+%%%% JN: This subsection needs to be expanded
 \subsection{Site rates from a mixture with $k$ categories}
 \ttt{Kmixture} --- Site rates come from a mixture with k categories. Category rates are drawn from
 an ordered flat Dirichlet distribution with mean rather than sum equal to $1.0$. 
@@ -5689,7 +5833,7 @@ set up a site specific rate model for a data set with one sequence. We first set
 partitioning scheme using the following lines in a MrBayes block:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 charset pos1 = 1-.\3;
 charset pos2 = 2-.\3;
@@ -5733,7 +5877,7 @@ controlled by two rate parameters, s01 (from off to on) and s10 (from on to off)
 rate matrix of the nucleotide variant (also referred to as the covariotide model), assuming a GTR
 model for the on state, is
 
-\small
+\footnotesize
 \[
 Q=\begin{bmatrix}
     & [A_{off}] & [C_{off}] & [G_{off}] & [T_{off}] & [A_{on}] & [C_{on}] & [G_{on}] & [T_{on}]\\
@@ -5795,7 +5939,7 @@ constraint(s) first by listing the taxa that should form a monophyletic group. F
 wanted to constrain taxa 4, 5 and 6 to be monophyletic, you would use
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 constraint my_constraint -1 = 4 5 6;
 \end{verbatim}
@@ -5881,7 +6025,7 @@ concatenated nucleotide sequences from three genes in your data set of length 19
 sites, respectively. Then you create character sets for those three genes using
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 charset gene1 = 1-1962;
 charset gene2 = 1963-3012;
@@ -5897,7 +6041,7 @@ partitioning scheme based on the genes is defined with the \ttt{partition} comma
 using the \ttt{set} command:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 partition by_gene = 3:gene1,gene2,gene3;
 set partition=by_gene;
@@ -5912,7 +6056,7 @@ for instance, that you wanted to run an analysis with only gene 1 and gene 2. Th
 two-partition scheme and exclude the characters represented by gene 3:
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 partition gene1&2 = 2:gene1,gene2 gene3;
 exclude gene3;
@@ -5931,7 +6075,7 @@ that we have two partitions, a standard data partition (partition 1) and a nucle
 both partitions, and allow the partition rates to be different. Then we would use the commands
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 lset applyto=(2) nst=6;
 lset applyto=(all) rates=gamma;
@@ -5949,7 +6093,7 @@ standard data and the molecular data have the same distribution of rates across 
 be achieved using
 
 \begin{singlespacing}
-\small
+\footnotesize
 \begin{verbatim}
 unlink shape=(all);
 \end{verbatim}
