@@ -88,14 +88,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = doc/tutorial
+subdir = doc/SMME_paper
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps =  \
 	$(top_srcdir)/autotools/ax_reset_header_cache.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-DIST_COMMON = $(srcdir)/Makefile.am $(dist_doc_DATA) $(dist_pdf_DATA) \
+DIST_COMMON = $(srcdir)/Makefile.am $(dist_pdf_DATA) \
 	$(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
@@ -147,8 +147,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pdfdir)"
-DATA = $(dist_doc_DATA) $(dist_pdf_DATA)
+am__installdirs = "$(DESTDIR)$(pdfdir)"
+DATA = $(dist_pdf_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -261,18 +261,20 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dist_doc_DATA = hym.nex
-dist_pdf_DATA = MBDating.pdf
+dist_pdf_DATA = Huelsenbeck_Ronquist_SMME_2005.pdf
 EXTRA_DIST = src
-DISTCLEANFILES = MBDating.pdf
+DISTCLEANFILES = Huelsenbeck_Ronquist_SMME_2005.pdf
 CLEANFILES = \
-	MBDating.aux \
-	MBDating.bbl \
-	MBDating.blg \
-	MBDating.fdb_latexmk \
-	MBDating.fls \
-	MBDating.log \
-	MBDating.out
+	Huelsenbeck_Ronquist_SMME_2005.aux \
+	Huelsenbeck_Ronquist_SMME_2005.bbl \
+	Huelsenbeck_Ronquist_SMME_2005.blg \
+	Huelsenbeck_Ronquist_SMME_2005.fdb_latexmk \
+	Huelsenbeck_Ronquist_SMME_2005.fls \
+	Huelsenbeck_Ronquist_SMME_2005.log \
+	Huelsenbeck_Ronquist_SMME_2005.idx \
+	Huelsenbeck_Ronquist_SMME_2005.ilg \
+	Huelsenbeck_Ronquist_SMME_2005.ind \
+	Huelsenbeck_Ronquist_SMME_2005.toc
 
 envvars = \
 	TEXINPUTS=$(srcdir)/src: \
@@ -280,19 +282,21 @@ envvars = \
 	BSTINPUTS=$(srcdir)/src:
 
 deps = \
-	$(srcdir)/src/MBDating.tex \
-	$(srcdir)/src/figures/ccby.pdf \
-	$(srcdir)/src/figures/clockr.pdf \
-	$(srcdir)/src/figures/cltree.pdf \
-	$(srcdir)/src/figures/fbdtree.pdf \
-	$(srcdir)/src/figures/gamdir.pdf \
-	$(srcdir)/src/figures/gamma.pdf \
-	$(srcdir)/src/figures/nctree.pdf \
-	$(srcdir)/src/figures/nodecali.pdf \
-	$(srcdir)/src/figures/relaxcl.pdf \
-	$(srcdir)/src/figures/treeage.pdf \
-	$(srcdir)/src/master_refs.bib \
-	$(srcdir)/src/sysbio.bst
+	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.tex \
+	$(srcdir)/src/svmult.cls \
+	$(srcdir)/src/bayes.bib\
+	$(srcdir)/src/fig1.png \
+	$(srcdir)/src/fig2.png \
+	$(srcdir)/src/fig3.png \
+	$(srcdir)/src/fig4.png \
+	$(srcdir)/src/fig5.png \
+	$(srcdir)/src/fig6.png \
+	$(srcdir)/src/fig7.png \
+	$(srcdir)/src/fig8.png \
+	$(srcdir)/src/fig9.png \
+	$(srcdir)/src/fig10.png \
+	$(srcdir)/src/fig11.png \
+	$(srcdir)/src/fig12.png
 
 all: all-am
 
@@ -306,9 +310,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign doc/tutorial/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign doc/SMME_paper/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign doc/tutorial/Makefile
+	  $(AUTOMAKE) --foreign doc/SMME_paper/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -326,27 +330,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-dist_docDATA: $(dist_doc_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(dist_doc_DATA)'; test -n "$(docdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(docdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(docdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(docdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(docdir)" || exit $$?; \
-	done
-
-uninstall-dist_docDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(dist_doc_DATA)'; test -n "$(docdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
 install-dist_pdfDATA: $(dist_pdf_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_pdf_DATA)'; test -n "$(pdfdir)" || list=; \
@@ -409,7 +392,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pdfdir)"; do \
+	for dir in "$(DESTDIR)$(pdfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -464,7 +447,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_docDATA install-dist_pdfDATA
+install-data-am: install-dist_pdfDATA
 
 install-dvi: install-dvi-am
 
@@ -508,37 +491,36 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
+uninstall-am: uninstall-dist_pdfDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic cscopelist-am \
 	ctags-am distclean distclean-generic distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-dist_docDATA install-dist_pdfDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags-am \
-	uninstall uninstall-am uninstall-dist_docDATA \
-	uninstall-dist_pdfDATA
+	install-data-am install-dist_pdfDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am tags-am uninstall \
+	uninstall-am uninstall-dist_pdfDATA
 
 .PRECIOUS: Makefile
 
 
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
-@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/MBDating
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
-@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 
-@HAVE_LATEX_FALSE@MBDating.pdf:
-@HAVE_LATEX_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+@HAVE_LATEX_FALSE@Huelsenbeck_Ronquist_SMME_2005.pdf:
+@HAVE_LATEX_FALSE@	echo 'Can not build the Huelsenbeck and Ronquist 2005 PDF since LaTeX was not detected' >&2
 @HAVE_LATEX_FALSE@	exit 0
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

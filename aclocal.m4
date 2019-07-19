@@ -45,12 +45,33 @@ To do so, use the procedure documented by the package, typically 'autoreconf'.])
 #   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
 #   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
 #
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.  This file is offered as-is, without any
-#   warranty.
+#   This program is free software: you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation, either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+#
+#   This special exception to the GPL applies to versions of the Autoconf
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
 
-#serial 8
+#serial 7
 
 AC_DEFUN([AX_APPEND_FLAG],
 [dnl
@@ -225,12 +246,33 @@ AC_LANG_POP([Fortran])
 #   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
 #   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
 #
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.  This file is offered as-is, without any
-#   warranty.
+#   This program is free software: you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation, either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+#
+#   This special exception to the GPL applies to versions of the Autoconf
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
 
-#serial 6
+#serial 5
 
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
 [AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
@@ -294,7 +336,7 @@ AS_VAR_POPDEF([CACHEVAR])dnl
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 17
+#serial 16
 
 AC_DEFUN([AX_COMPILER_VENDOR],
 [AC_CACHE_CHECK([for _AC_LANG compiler vendor], ax_cv_[]_AC_LANG_ABBREV[]_compiler_vendor,
@@ -306,7 +348,6 @@ AC_DEFUN([AX_COMPILER_VENDOR],
            clang:     __clang__
            cray:      _CRAYC
            fujitsu:   __FUJITSU
-           sdcc:      SDCC, __SDCC
            gnu:       __GNUC__
            sun:       __SUNPRO_C,__SUNPRO_CC
            hp:        __HP_cc,__HP_aCC
@@ -375,7 +416,7 @@ AC_DEFUN([AX_COMPILER_VENDOR],
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 12
+#serial 9
 
 # for intel
 AC_DEFUN([_AX_COMPILER_VERSION_INTEL],
@@ -799,42 +840,6 @@ AC_DEFUN([_AX_COMPILER_VERSION_PORTLAND],[
 AC_DEFUN([_AX_COMPILER_VERSION_TCC],[
   ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=[`tcc -v | $SED 's/^[ ]*tcc[ ]\+version[ ]\+\([0-9.]\+\).*/\1/g'`]
   ])
-
-# for GNU
-AC_DEFUN([_AX_COMPILER_VERSION_SDCC],[
-  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
-    /* avoid parse error with comments */
-    #if(defined(__SDCC_VERSION_MAJOR))
-	__SDCC_VERSION_MAJOR
-    #else
-	SDCC/100
-    #endif
-    ,,
-    AC_MSG_FAILURE([[[$0]] unknown sdcc major]))
-  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor,
-    /* avoid parse error with comments */
-    #if(defined(__SDCC_VERSION_MINOR))
-	__SDCC_VERSION_MINOR
-    #else
-	(SDCC%100)/10
-    #endif
-    ,,
-    AC_MSG_FAILURE([[[$0]] unknown sdcc minor]))
-  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch,
-    [
-    /* avoid parse error with comments */
-    #if(defined(__SDCC_VERSION_PATCH))
-	__SDCC_VERSION_PATCH
-    #elsif(defined(_SDCC_VERSION_PATCHLEVEL))
-	__SDCC_VERSION_PATCHLEVEL
-    #else
-	SDCC%10
-    #endif
-    ],,
-    AC_MSG_FAILURE([[[$0]] unknown sdcc patch level]))
-  ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="$_ax_[]_AC_LANG_ABBREV[]_compiler_version_major.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch"
-  ])
-
 # main entry point
 AC_DEFUN([AX_COMPILER_VERSION],[dnl
   AC_REQUIRE([AX_COMPILER_VENDOR])
@@ -862,7 +867,6 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 	[watcom],[_AX_COMPILER_VERSION_WATCOM],
 	[portland],[_AX_COMPILER_VERSION_PORTLAND],
 	[tcc],[_AX_COMPILER_VERSION_TCC],
-	[sdcc],[_AX_COMPILER_VERSION_SDCC],
   	[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=""])
     ])
 ])
@@ -913,7 +917,7 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 18
+#serial 17
 
 AC_DEFUN([AX_EXT],
 [
@@ -1029,7 +1033,7 @@ AC_DEFUN([AX_EXT],
         ax_cv_have_sse_os_support_ext=no,
         if test "$((0x$edx_cpuid1>>25&0x01))" = 1; then
           AC_LANG_PUSH([C])
-          AC_RUN_IFELSE([AC_LANG_SOURCE([[
+          AC_TRY_RUN([
 #include <signal.h>
 #include <stdlib.h>
             /* No way at ring1 to ring3 in protected mode to check the CR0 and CR4
@@ -1041,10 +1045,10 @@ AC_DEFUN([AX_EXT],
               /* SSE instruction xorps  %xmm0,%xmm0 */
               __asm__ __volatile__ (".byte 0x0f, 0x57, 0xc0");
               return 0;
-            }]])],
-            [ax_cv_have_sse_os_support_ext=yes],
-            [ax_cv_have_sse_os_support_ext=no],
-            [ax_cv_have_sse_os_support_ext=no])
+            }],
+            ax_cv_have_sse_os_support_ext=yes,
+            ax_cv_have_sse_os_support_ext=no,
+            ax_cv_have_sse_os_support_ext=no)
           AC_LANG_POP([C])
         fi
       ])
@@ -1426,7 +1430,7 @@ AC_LANG_POP([C])
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 8
+#serial 7
 
 AU_ALIAS([VL_LIB_READLINE], [AX_LIB_READLINE])
 AC_DEFUN([AX_LIB_READLINE], [
@@ -1441,7 +1445,7 @@ AC_DEFUN([AX_LIB_READLINE], [
           TRY_LIB="-l$readline_lib -l$termcap_lib"
         fi
         LIBS="$ORIG_LIBS $TRY_LIB"
-        AC_LINK_IFELSE([AC_LANG_CALL([], [readline])], [ax_cv_lib_readline="$TRY_LIB"])
+        AC_TRY_LINK_FUNC(readline, ax_cv_lib_readline="$TRY_LIB")
         if test -n "$ax_cv_lib_readline"; then
           break
         fi
@@ -1464,7 +1468,7 @@ AC_DEFUN([AX_LIB_READLINE], [
     AC_CACHE_CHECK([whether readline supports history],
                    ax_cv_lib_readline_history, [
       ax_cv_lib_readline_history="no"
-      AC_LINK_IFELSE([AC_LANG_CALL([], [add_history])], [ax_cv_lib_readline_history="yes"])
+      AC_TRY_LINK_FUNC(add_history, ax_cv_lib_readline_history="yes")
     ])
     if test "$ax_cv_lib_readline_history" = "yes"; then
       AC_DEFINE(HAVE_READLINE_HISTORY, 1,

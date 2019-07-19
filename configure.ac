@@ -261,6 +261,7 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/manual/Makefile
                  doc/tutorial/Makefile
+                 doc/SMME_paper/Makefile
                  examples/Makefile
                  src/Makefile
 ])

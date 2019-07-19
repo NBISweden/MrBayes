@@ -1,13 +1,13 @@
 # Files for building "Bayesian Analysis of Molecular Evolution using MrBayes"
 
-- Last modified: fre jul 19, 2019  03:56
+- Last modified: fre jul 19, 2019  04:33
 - Sign: Johan Nylander
 
 
 ## Description
 
 * The files in this directory are "reversed engineered" to be able to build
-the LaTeX file `StatisticalMethods_Chapter.tex`. The build process works, 
+the LaTeX file `Huelsenbeck_Ronquist_SMME_2005.tex`. The build process works, 
 but see **Issues** below.
 
 * The manuscript was published as
@@ -27,7 +27,7 @@ but see **Issues** below.
 
 ## Files included 
 
-    StatisticalMethods_Chapter.tex
+    Huelsenbeck_Ronquist_SMME_2005.tex
     svmult.cls  bayes.bib
     fig1.png  fig2.png  fig3.png  fig4.png
     fig5.png  fig6.png  fig7.png  fig8.png
@@ -36,11 +36,11 @@ but see **Issues** below.
 
 ## Compile
 
-    pdfplatex StatisticalMethods_Chapter
+    pdfplatex Huelsenbeck_Ronquist_SMME_2005.tex
 
 Or, if `latexmk` is available:
 
-    latexmk -pdf StatisticalMethods_Chapter
+    latexmk -pdf Huelsenbeck_Ronquist_SMME_2005.tex
 
 
 ## Issues
