@@ -12,6 +12,8 @@
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{booktabs}
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
@@ -27,7 +29,7 @@
 %%%% JN: Draft version, July 2019
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: I also added a note on how far (starting from the very beginning), I made it thus
-%%%% JN: far (around line #1894, Feb 2019).
+%%%% JN: far (around line #2194, Feb 2019).
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
 \begin{document}
@@ -343,7 +345,7 @@ tutorial.
 
 \tb{2}. At the \ttt{MrBayes >} prompt, type \tb{lset nst=6 rates=invgamma}. This sets the
 evolutionary model to the GTR substitution model with gamma-distributed rate variation across sites
-and a proportion of invariable sites (``GTR+I+$\Gamma$''). If your data are not DNA or RNA, if you
+and a proportion of invariable sites (``GTR + I + $\Gamma$''). If your data are not DNA or RNA, if you
 want to invoke a different model, or if you want to use non-default priors, refer to the rest of
 this manual and the Appendix for more help.
 
@@ -422,7 +424,7 @@ All of the commands are entered at the \ttt{MrBayes >} prompt. At a minimum two 
 analysis. Usually, it is also a good idea to check the model settings prior to the analysis using
 the \ttt{showmodel} command. In general, \ttt{lset} is used to define the structure of the model
 and \ttt{prset} is used to define the prior probability distributions on the parameters of the
-model. In the following, we will specify a GTR+I+$\Gamma$ model (a General Time Reversible model
+model. In the following, we will specify a GTR + I + $\Gamma$ model (a General Time Reversible model
 with a proportion of invariable sites and a gamma-shaped distribution of rates across sites) for
 the evolution of the mitochondrial sequences and we will check all of the relevant priors. We
 assume that you are familiar with the common stochastic models of molecular evolution.
@@ -1501,12 +1503,12 @@ morphological data (parameter 1) and one for the DNA data (parameter 2). Then th
 ratemultiplier (3), a topology parameter (4) and a set of branch length parameters (5). All three
 are the same for all partitions.
 
-Now, assume we want a separate GTR+$\Gamma$+I model for each gene partition. All the parameters
+Now, assume we want a separate GTR + I + $\Gamma$ model for each gene partition. All the parameters
 should be estimated separately for the individual genes. Assume further that we want the overall
 evolutionary rate to be (potentially) different across partitions, and that we want to assume
 gamma-shaped rate variation for the morphological data. We can obtain this model by using
 \ttt{lset} and \ttt{prset} with the \ttt{applyto} mechanism, which allows us to apply the settings
-to specific partitions. For instance, to apply a GTR+$\Gamma$+I model to the molecular partitions,
+to specific partitions. For instance, to apply a GTR + I + $\Gamma$ model to the molecular partitions,
 we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the following table
 when \tb{showmodel} is invoked:
 
@@ -1940,58 +1942,73 @@ variation across runs in estimated model probabilities. The table gives the stan
 well as the range of estimated values across runs. Here, we see some heterogeneity across runs in
 model probabilities, but most models receive similar probabilities in the two independent runs.
 
-%%%%% JN: I've done from the start until here (Feb 12 - 2019)
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following sections of the manual is not revised for v.3.2.7!}
 
 \section{Testing a Topological Hypothesis}
 
 In this tutorial, we will use Bayes factor comparisons to test a topological hypothesis, namely
 that humans are more closely related to chimps than to other primates. Specifically, we will
-contrast the hypothesis that humans and chimps form a monophyletic group ($M_1$), with the
-hypothesis that humans and chimps do not form a monophyletic group ($M_2$). In order to do this,
-we need to compute the ratio of the marginal likelihoods of the two models, $M_1$ and $M_2$. This
-ratio is known as the Bayes factor. We will use the data in the file \ttt{primates.nex} for the
-analysis.
+contrast the hypothesis that humans and chimps form a monophyletic group ($M_{1}$), with the
+hypothesis that humans and chimps do not form a monophyletic group ($M_{2}$). In order to do this,
+we need to compute the ratio of the marginal likelihoods of the two models, $M_{1}$ and $M_{2}$.
+This ratio is known as the Bayes factor. We will use the data in the file \ttt{primates.nex} for
+the analysis.
 
 First, read in the data using:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
+
 
 Now let us specify a GTR + I + $\Gamma$ model:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
-> lset nst=6 rates=invgamma
+MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Before we can test the hypothesis, we need to specify a hard constraint and a negative constraint.
 The hard constraint will allow us to force a partition to always be present in the sampled trees.
 The negative constraint will allow us to sample across all trees that do not contain the specified
 partition. Specify the constraints using the following commands:
 
+\begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > constraint nohumanchimp negative = Homo_sapiens Pan
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 MrBayes provides two methods for estimating marginal model likelihoods. The first is based on the
 harmonic mean of the likelihood values of the MCMC samples. It is simple to compute but it is a
 pretty rough estimate of the model likelihood. To obtain a more accurate model likelihood, MrBayes
-provides the stepping-stone method First, let us use the harmonic mean estimate of the model
+provides the stepping-stone method. First, let us use the harmonic mean estimate of the model
 likelihoods of the two models we want to compare. First we enforce the positive constraint, run an
-mcmc analysis with 100,000 generations, and use sump to get the harmonic mean estimate:
+MCMC analysis with 100,000 generations, and use \ttt{sump} to get the harmonic mean estimate (we
+also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
+answering \ttt{yes}/\ttt{no} between steps):
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > mcmc ngen=100000
 MrBayes > sump
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
-In the output from the \ttt{sum} command, focus on the table summarizing the likelihoods of the
+In the output from the \ttt{sump} command, focus on the table summarizing the likelihoods of the
 MCMC samples:
 
 \begin{singlespacing}
@@ -2005,60 +2022,65 @@ MCMC samples:
 
    Run   Arithmetic mean   Harmonic mean
    --------------------------------------
-     1      -5720.59         -5729.69
-     2      -5720.75         -5735.25
+     1      -5719.86         -5730.72
+     2      -5720.03         -5730.95
    --------------------------------------
-   TOTAL    -5720.67         -5734.56
+   TOTAL    -5719.94         -5730.84
    --------------------------------------
+
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
 It is the harmonic mean that we will use as the initial estimate of the model likelihood. The
-estimate of the logarithm of the model likelihood is $-5734.56$, with a little bit of heterogeneity
+estimate of the logarithm of the model likelihood is $-5730.84$, with a little bit of heterogeneity
 between the runs.
 
 Now we enforce the negative constraint, and repeat the procedure using the commands:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(nohumanchimp)
 MrBayes > mcmc ngen=100000
 MrBayes > sump
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Our run produced the following estimates of the log of the model likelihoods:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
    Run   Arithmetic mean   Harmonic mean
    --------------------------------------
-     1      -5727.08         -5738.92
-     2      -5725.67         -5737.63
+     1      -5726.95         -5735.94
+     2      -5727.59         -5738.19
    --------------------------------------
-   TOTAL    -5726.15         -5738.47
+   TOTAL    -5727.22         -5737.59
    --------------------------------------
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
-The harmonic mean estimate for this model is $-5738.47$ in log units, which is about 4 log units
+The harmonic mean estimate for this model is $-5737.59$ in log units, which is about 6 log units
 worse than the previous model. A log difference in the range of 3--5 is typically considered strong
 evidence in favor of the better model, while a log difference above 5 is considered very strong
-evidence \citep{kass95}. Thus, the harmonic mean estimator indicates that we have strong evidence
-in favor of human and chimp being each others closest relatives, with Gorilla and other primates
-being more distant.
+evidence \citep{kass95}. Thus, the harmonic mean estimator indicates that we have very strong
+evidence in favor of human and chimp being each others closest relatives, with Gorilla and other
+primates being more distant.
 
 It may also be interesting to look at the best estimate of the phylogeny under the assumption that
-humans and chimps are not each others sister groups. Do this by typing \textbf{sumt}. As you will
-see, this tree groups chimps and gorillas together, with humans being just outside, as one might
-have expected.
+humans and chimps are not each others sister groups. Do this by typing \tb{sumt}. As you will see,
+this tree groups chimps (\textit{Pan}) and gorillas (\textit{Gorilla}) together, with humans
+\textit{Homo sapiens} being just outside, as one might have expected.
 
 Let us now repeat the comparison using the more accurate stepping-stone sampling approach. Instead
 of using the \ttt{mcmc} command followed by the \ttt{sump} command, we simply use the \ttt{ss}
 command instead, which will produce the estimated model likelihood directly. The stepping-stone
-analysis moves from the posterior to the prior through a number of steps in which the sampled
-distribution is a mixture of varying proportions of the two.
+analysis moves from the posterior to the prior through a number of steps (MCMC analyses) in which
+the sampled distribution is a mixture of varying proportions of the two.
 
 Ideally, one would like to see evidence of convergence among independent runs in each of the steps
 of the stepping-stone sampling algorithm. As the algorithm moves close to the prior, however, we
@@ -2067,28 +2089,34 @@ of trees with similar probability will become huge for any reasonably-sized set 
 
 To help you monitor convergence during stepping-stone sampling, MrBayes will print the average
 standard deviation of split frequencies across runs if you use at least two independent, parallel
-runs. Each step in the algorithm is treated as an independent MCMC sampling problem. The only
-burn-in phase used by the algorithm occurs before the first step of the algorithm. Once the step
-sampling starts, each step simply serves as the burn-in for the next one. The length of the initial
-burn-in can be specified either in terms of the number of samples to be discarded (positive
-numbers) or in terms of step lengths (negative numbers). By default, the initial burn-in phase is
-as long as one of the subsequent steps in the algorithm, that is, \ttt{burninss=-1}.
+runs. Each step in the algorithm is treated as an independent MCMC sampling problem, and where most
+of the parameters in the \ttt{mcmcp} and \ttt{mcmc} commands are applicable to the MCMC analysis in
+each step. For example, the \ttt{samplefreq} and the \ttt{burnin} parameters, respectively, are
+used for setting sampling frequency and burnin behaviour within each step. In addition, the
+\ttt{ss} command also uses its own burnin parameter, \ttt{Burninss}, for specifying the number of
+samples to be discarded before sampling of the first step starts. The length of the initial burn-in
+can be specified either in terms of the number of samples to be discarded (positive numbers) or in
+terms of step lengths (negative numbers). By default, the initial burn-in phase is as long as one
+of the subsequent steps in the algorithm, that is, \ttt{burninss=-1}. For example, assume that
+\ttt{Burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{Ngen} to $300000$ and \ttt{samplefreq} to
+$500$. The algorithm will then run 49 steps, each with 6,000 generations ($Ngen/Nsteps+1$), which
+is the number of generations per step left --- after a burnin of (the length of) one step is removed.
 
-To obtain an adequate sample from most of the steps in the algorithm, we will use 50 steps (the
-default) with 5,000 generations each, for a total of 250,000 generations. If we add the initial
-burn in of 5,000 generations (one step), the total run length wil be 255,000. To monitor
-convergence twice during each step, we set the diagnostics frequency to once every 2,500
-generations. Stepping-stone analysis under the two models using these settings will be generated by
-the following commands:
+To obtain an adequate sample from most of the steps in the algorithm, we will use the settings
+given above. To monitor convergence, twice during each step, we set the diagnostics frequency to
+once every 3,000 generations. Stepping-stone analysis under the two models using these settings
+will be generated by the following commands:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(humanchimp)
-MrBayes > ss ngen=250000 diagnfreq=2500
+MrBayes > ss ngen=300000 diagnfreq=3000
 MrBayes > prset topologypr=constraints(nohumanchimp)
 MrBayes > ss
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The output from the \ttt{ss} command will include the following table, which is given here for the
 first model:
@@ -2097,14 +2125,14 @@ first model:
 \begin{singlespacing}
 \begin{verbatim}
    Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
-   50 steps with 5000 generations (10 samples) within each step. 
+   49 steps with 6000 generations (12 samples) within each step. 
 
        Run   Marginal likelihood (ln)
-       -----------------------------
-         1     -5788.13   
-         2     -5785.85   
-       -----------------------------
-       Mean:   -5786.45
+       ------------------------------
+         1     -5797.07   
+         2     -5795.82   
+       ------------------------------
+       Mean:   -5796.26
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -2114,20 +2142,17 @@ In our run, the second model produced the following version of the same table:
 \scriptsize
 \begin{singlespacing}
 \begin{verbatim}
-   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
-   50 steps with 5000 generations (10 samples) within each step. 
-
        Run   Marginal likelihood (ln)
-       -----------------------------
-         1     -5797.09   
-         2     -5798.19   
-       -----------------------------
-       Mean:   -5797.50
+       ------------------------------
+         1     -5805.21   
+         2     -5807.67   
+       ------------------------------
+       Mean:   -5805.82
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-The model likelihoods are thus $-5786.45$ for the first model and $5798.19$ for the second (in
+The model likelihoods are thus $-5796.26$ for the first model and $-5805.82$ for the second (in
 natural log units). We first note that both likelihoods are considerably smaller than the
 corresponding values based on the harmonic mean estimator. This is an expected effect due to the
 reliance of the harmonic mean estimator on rare samples of very low likelihood. Short runs are
@@ -2135,37 +2160,37 @@ unlikely to include such samples, resulting in the harmonic mean estimator usual
 upwards in practice.
 
 We also note that the more accurate model likelihoods suggest a larger difference between the two
-models, about 11 log likelihood units. Thus, we conclude that the better model (humans and chimps
+models, about 9 log likelihood units. Thus, we conclude that the better model (humans and chimps
 do form a monophyletic group) is very strongly supported by the Bayes factor.
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
-analyses. It will probably look something like this:
+analyses:
 
 \footnotesize
 \begin{singlespacing}
 \begin{verbatim}
    Plot of average standard deviation of split frequencies across steps.
-   Points at -1.0 (y-axis) indicates that there were no splits
+   Points at -1.0 (y-axis) indicate that there were no splits
    above minimum frequency for corresponding step.
-   +------------------------------------------------------------+ 0.11
-   |                                         *                  |
+   +------------------------------------------------------------+ 0.101
+   |                                     *    *    *            |
+   |                      *       *       *                     |
+   |                                 *       * * **    *       *|
+   |                                   **           *   *  * *  |
+   |                                        *         *  *  * * |
+   |                          ***  **                           |
+   |                 *  **   *                                  |
    |                                                            |
-   |                                    *     *                 |
    |                                                            |
+   |             *  * *                                         |
+   |       *    *          *                                    |
    |                                                            |
+   |   *  *                                                     |
    |                                                            |
-   |                                       *                    |
-   |                        *          *    *                   |
-   |                             *                              |
-   |                                              *             |
-   |                                            *               |
-   |                                               *  *  *      |
-   |                          *                              *  |
-   |                                             *         **   |
-   |***** **** ***** **** ** *  * ** **  *          *  **     **|
-   +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ 0.07
+   |***  *  * **   *                                            |
+   +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ 0.000
    ^                                                            ^
-   1                                                           50
+   1                                                           49
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -2177,6 +2202,13 @@ length of each step, it should be possible to improve convergence also in the st
 prior, and therefore increase the precision of the estimated model likelihoods. However, the
 similarity between the two independent estimates of the model likelihood we obtained in this
 analysis suggests that the accuracy is already reasonably good.
+
+%%%% JN: It might be worth mentioning that for all difficult MCMC scenarios, it might be worth
+%%%% JN: repeating the analysis, and using more resources, and for ss, to repeat using
+%%%% JN: fromprior=yes 
+%%%% JN: Done this far Mon 22 jul 2019 17:28:33
+\vspace{10 pt}
+{\LARGE\color{red} Please note, the following sections of the manual is not revised for v.3.2.7!}
 
 
 \section{Testing the Strict Molecular Clock}
@@ -3776,7 +3808,7 @@ A particularly common situation is that the MLE region, which includes trees wit
 lengths, has considerably lower probability mass than a much larger region of tree space at longer
 branch lengths. The reason is that a standard phylogenetic model, particularly a non-clock model,
 is entirely dominated by the many branch length parameters. For instance, a non-clock
-GTR+I+$\Gamma$ model for 100 taxa has 10 free substitution model parameters but roughly 200 branch
+GTR + I + $\Gamma$ model for 100 taxa has 10 free substitution model parameters but roughly 200 branch
 length parameters. As a branch becomes longer, its exact value has little influence on likelihood
 and we can end up with the huge office complex situation.
 
@@ -3791,14 +3823,33 @@ interpreted as indicators of the strength of the evidence in favor of the best o
 
 Bayes factor is given by
 
+%%%% JN: be consistent: $B_{10}$ or $BF_{12}$ 
+
 $$
 BF_{12} = \frac{Pr(Data|Hypothesis_{1})}{Pr(Data|Hypothesis_{2})}
 $$
 
 where $Data$ is the data thought to have been generated by any of the candidate hypotheses
 $Hypothesis_{k}$ ($k = 1,2$). The expression $Pr(Data|Hypothesis_{k})$ is called the marginal
-likelihood.  The Bayes factors values are typically interpreted according to recommendations
+likelihood. The Bayes factors values are typically interpreted according to recommendations
 presented by Kass and Raftery \citep{kass95}.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\(2\log_{e}(B_{10})\) & \(B_{10}\) & Evidence against
+\(H_{0}\)\tabularnewline
+\midrule
+\endhead
+\(0\) to \(2\) & \(1\) to \(3\) & Not worth more than a bare
+mention\tabularnewline
+\(2\) to \(6\) & \(3\) to \(20\) & Positive\tabularnewline
+\(6\) to \(10\) & \(20\) to \(150\) & Strong\tabularnewline
+\(>10\) & \(>150\) & Very strong\tabularnewline
+\bottomrule
+    \caption{Table for interpreting the Bayes factor. Based on \citep{kass95}.}
+\label{table:bftable}
+\end{longtable}
+
 
 Unlike a hierarchical likelihood ratio test, the models compared with Bayes factors need not be
 hierarchically nested. A Bayes factor is calculated simply as the ratio of the marginal likelihoods
@@ -3838,12 +3889,12 @@ between the logarithms of the harmonic means and find the corresponding interpre
 of \citet{kass95} (to use this table, you actually have to calculate twice the difference in the
 logarithm of the model likelihoods). The same approach can be used to compare any pair of models
 you are interested in. For instance, one model might have a group constrained to be monophyletic
-while the other is unconstrained, or one model can have gammashaped rate variation while the other
-assumes equal rates across sites. As stated above, models need not be hierarchically nested. An
-interesting property of the Bayes factor comparisons is that it can favor either the more complex
-model or the simpler model, so they need not be corrected for the number of parameters in the
-models being compared. Additional discussion of Bayesian model testing, with several examples, is
-found in \citet{nylander04}.
+while the other is unconstrained, or one model can have $\Gamma$-shaped rate variation while the
+other assumes equal rates across sites. As stated above, models need not be hierarchically nested.
+An interesting property of the Bayes factor comparisons is that it can favor either the more
+complex model or the simpler model, so they need not be corrected for the number of parameters in
+the models being compared. Additional discussion of Bayesian model testing, with several examples,
+is found in \citet{nylander04}.
 
 
 \subsection{Model Jumping}
@@ -3868,7 +3919,7 @@ MrBayes > lset applyto=(all) nst=mixed
 
 Currently, the program only applies model-jumping among subclasses in the GTR matrix, so there
 is not possible to sample across, for example, a GTR model with or without any assumption of rate
-variation across sites (e.g. GTR vs. GTR+$\Gamma$ vs. GTR+I+$\Gamma$).
+variation across sites (e.g. GTR vs. GTR + $\Gamma$ vs. GTR + I + $\Gamma$).
 
 The second scenario where the program can apply model jumping is is the estimation of fixed-rate
 amino-acid substitution models. In this situation, the Markov chain will sample over models
@@ -4364,7 +4415,7 @@ the \ttt{DATA} block or a separate Nexus file. The \ttt{MRBAYES} block simply
 contains the commands as you would have given them from the command line, with
 the difference that each command line is ended with a semi-colon. For instance,
 a \ttt{MRBAYES} block that performs three single-run analyses of the data set
-in \ttt{primates.nex} under the GTR+$\gamma$ model and stores each result in a
+in \ttt{primates.nex} under the GTR + $\Gamma$ model and stores each result in a
 separate file is given below:
 
 \begin{singlespacing}
@@ -5694,7 +5745,7 @@ similar under both approaches.
 The parsimony model is much less parsimonious with respect to parameters than any other model
 implemented in MrBayes. Consider, for instance, an analysis of 1,000 characters and 100 taxa. The
 parsimony model would have about 200,000 free parameters ($200$ branches times $1000$ characters).
-A more typical GTR+$\gamma$+I model would have only little more than 200 parameters, about 1,000
+A more typical GTR + I + $\Gamma$ model would have only little more than 200 parameters, about 1,000
 times fewer parameters. In this sense, the standard stochastic models are much more parsimonious
 than the parsimony model. Several problems are associated with the excessive number of parameters.
 Statistical inconcistency is perhaps the best known of these but, more fundamentally, a model like
