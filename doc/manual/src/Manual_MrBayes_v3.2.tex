@@ -5,13 +5,11 @@
 \usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
 \usepackage{amssymb}
-%\usepackage{epstopdf}
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{url}
 \usepackage{natbib}
 \usepackage{pdfpages}
-\usepackage[T1]{fontenc}
 \usepackage{longtable}
 \usepackage{booktabs}
 
@@ -19,6 +17,7 @@
 \renewcommand{\baselinestretch}{1.2}
 
 % Short-hand font settings used in this document:
+\usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \renewcommand\ttfamily{\usefont{T1}{lmtt}{m}{n}}
 \newcommand{\term}[1]{{\bfseries\slshape #1}}
@@ -29,7 +28,7 @@
 %%%% JN: Draft version, July 2019
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: I also added a note on how far (starting from the very beginning), I made it thus
-%%%% JN: far (around line #2194, Feb 2019).
+%%%% JN: far (around line #2477, Feb 2019).
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
 \begin{document}
@@ -1615,7 +1614,7 @@ each analysis after the requested number of generations, without asking you if y
 the analysis. You can accomplish this with the command line:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarn=yes
 \end{verbatim}
@@ -1639,7 +1638,7 @@ repeat the analysis using a fixed rate matrix. To start the tutorial, first read
 data:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > execute avian_ovomucoids.nex
 \end{verbatim}
@@ -1649,7 +1648,7 @@ MrBayes > execute avian_ovomucoids.nex
 To ask MrBayes to sample across fixed amino acid rate matrices, we use the \ttt{prset} command:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=mixed
 \end{verbatim}
@@ -1667,7 +1666,7 @@ generations are sufficient for decent topological convergence. Run 300,000 gener
 heating using the command:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
@@ -1709,7 +1708,7 @@ the Dayhoff model, by fixing the rate matrix. Do this by running the analysis wi
 commands:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=fixed(dayhoff)
 MrBayes > mcmc nchains=1 ngen=300000
@@ -1733,7 +1732,7 @@ running the analysis. For instance, we would run a mixed amino acid model analys
 protein-coding viral sequences in the \ttt{replicase.nex} data set using:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 MrBayes > lset nucmodel=protein
@@ -1750,7 +1749,7 @@ sequence. We will use the data in the file \ttt{replicase.nex}.
 First, we read in the data:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 \end{verbatim}
@@ -1761,7 +1760,7 @@ Then we specify that we want to use a codon model with omega variation across si
 want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > lset nucmodel=codon omegavar=ny98
 MrBayes > report possel=yes siteomega=yes
@@ -1780,7 +1779,7 @@ Our results indicate that it is possible to get decent if not perfect convergenc
 10,000 generations, so let us try that:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > mcmcp printfreq=20 samplefreq=20 diagnfreq=500
 MrBayes > mcmc ngen=10000
@@ -1878,7 +1877,7 @@ across the entire general time reversible (GTR) model space. We will use the dat
 First, we read in the data:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
@@ -1889,7 +1888,7 @@ Then we specify that we want to use a gamma model of rate variation across sites
 to sample across the GTR model space:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > lset nst=mixed rates=gamma
 \end{verbatim}
@@ -1950,24 +1949,24 @@ that humans are more closely related to chimps than to other primates. Specifica
 contrast the hypothesis that humans and chimps form a monophyletic group ($M_{1}$), with the
 hypothesis that humans and chimps do not form a monophyletic group ($M_{2}$). In order to do this,
 we need to compute the ratio of the marginal likelihoods of the two models, $M_{1}$ and $M_{2}$.
-This ratio is known as the Bayes factor. We will use the data in the file \ttt{primates.nex} for
-the analysis.
+This ratio is known as the Bayes factor, $B_{12}$, and is a summary of the evidence provided by the
+data in favor of model 1 over model 2 \citep{kass95} (see also section \ref{bayesianModelChoice}).
 
-First, read in the data using:
+We will use the data in the file \ttt{primates.nex} for the analysis. First, read in the data
+using:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-
 Now let us specify a GTR + I + $\Gamma$ model:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
@@ -1980,7 +1979,7 @@ The negative constraint will allow us to sample across all trees that do not con
 partition. Specify the constraints using the following commands:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > constraint nohumanchimp negative = Homo_sapiens Pan
@@ -1998,7 +1997,7 @@ also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without b
 answering \ttt{yes}/\ttt{no} between steps):
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > prset topologypr=constraints(humanchimp)
@@ -2039,7 +2038,7 @@ between the runs.
 Now we enforce the negative constraint, and repeat the procedure using the commands:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(nohumanchimp)
 MrBayes > mcmc ngen=100000
@@ -2065,11 +2064,10 @@ Our run produced the following estimates of the log of the model likelihoods:
 \normalsize
 
 The harmonic mean estimate for this model is $-5737.59$ in log units, which is about 6 log units
-worse than the previous model. A log difference in the range of 3--5 is typically considered strong
-evidence in favor of the better model, while a log difference above 5 is considered very strong
-evidence \citep{kass95}. Thus, the harmonic mean estimator indicates that we have very strong
-evidence in favor of human and chimp being each others closest relatives, with Gorilla and other
-primates being more distant.
+worse than the previous model---wich gives us a $2logB_{12} = 13.5$. A value $10$ is typically
+considered ``very strong'' evidence in favor of the better model (Table \ref{table:bftable}). Thus,
+the harmonic mean estimator indicates that we have very strong evidence in favor of human and chimp
+being each others closest relatives, with Gorilla and other primates being more distant.
 
 It may also be interesting to look at the best estimate of the phylogeny under the assumption that
 humans and chimps are not each others sister groups. Do this by typing \tb{sumt}. As you will see,
@@ -2100,7 +2098,8 @@ terms of step lengths (negative numbers). By default, the initial burn-in phase 
 of the subsequent steps in the algorithm, that is, \ttt{burninss=-1}. For example, assume that
 \ttt{Burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{Ngen} to $300000$ and \ttt{samplefreq} to
 $500$. The algorithm will then run 49 steps, each with 6,000 generations ($Ngen/Nsteps+1$), which
-is the number of generations per step left --- after a burnin of (the length of) one step is removed.
+is the number of generations per step left---after a burnin of (the length of) one step is
+removed.
 
 To obtain an adequate sample from most of the steps in the algorithm, we will use the settings
 given above. To monitor convergence, twice during each step, we set the diagnostics frequency to
@@ -2108,7 +2107,7 @@ once every 3,000 generations. Stepping-stone analysis under the two models using
 will be generated by the following commands:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > ss ngen=300000 diagnfreq=3000
@@ -2152,7 +2151,7 @@ In our run, the second model produced the following version of the same table:
 \end{singlespacing}
 \normalsize
 
-The model likelihoods are thus $-5796.26$ for the first model and $-5805.82$ for the second (in
+The model likelihoods are thus $-5796.26$ for the first model,and $-5805.82$ for the second (in
 natural log units). We first note that both likelihoods are considerably smaller than the
 corresponding values based on the harmonic mean estimator. This is an expected effect due to the
 reliance of the harmonic mean estimator on rare samples of very low likelihood. Short runs are
@@ -2160,8 +2159,9 @@ unlikely to include such samples, resulting in the harmonic mean estimator usual
 upwards in practice.
 
 We also note that the more accurate model likelihoods suggest a larger difference between the two
-models, about 9 log likelihood units. Thus, we conclude that the better model (humans and chimps
-do form a monophyletic group) is very strongly supported by the Bayes factor.
+models, about 9 log likelihood units (with a $2*logB_{12} = 19,12$). Thus, we conclude that the
+better model (humans and chimps do form a monophyletic group) is very strongly supported by the
+Bayes factor.
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses:
@@ -2203,13 +2203,12 @@ prior, and therefore increase the precision of the estimated model likelihoods. 
 similarity between the two independent estimates of the model likelihood we obtained in this
 analysis suggests that the accuracy is already reasonably good.
 
-%%%% JN: It might be worth mentioning that for all difficult MCMC scenarios, it might be worth
-%%%% JN: repeating the analysis, and using more resources, and for ss, to repeat using
-%%%% JN: fromprior=yes 
-%%%% JN: Done this far Mon 22 jul 2019 17:28:33
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following sections of the manual is not revised for v.3.2.7!}
-
+It might be worth repeating that for any difficult MCMC scenario (such as getting an accurate
+estimate from the stepping-stone algorithm), it is well worth trying to repeat the analyses,
+perhaps with slightly different settings, to look for robustness. In the case of the \ttt{ss}
+command, one might also use the parameter \ttt{fromprior=yes}, which starts from the prior and goes
+towards the posterior (the opposite direction from the default settings). The two approaches
+should, in theory, give the same estimate (plus/minus the MCMC error).
 
 \section{Testing the Strict Molecular Clock}
 \label{strictClock}
@@ -2225,114 +2224,131 @@ accurate stepping-stone method. We will use both in this tutorial and compare th
 
 As usual, we first read in the data:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
-> execute primates.nex
+MrBayes > execute primates.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Then we specify a GTR + I + $\Gamma$ model:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 To estimate marginal likelihoods of the two models using harmonic means of the likelihoods of the
 MCMC samples, we simply run an ordinary MCMC analysis and obtain the appropriate values using the
 standard \ttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
-generations and summarize the obtained samples using \ttt{sump}:
+generations and summarize the obtained samples using \ttt{sump} (we also use \ttt{set autoclose=yes
+nowarnings=yes} for allowing execution without being prompted for answering \ttt{yes}/\ttt{no}
+between steps):
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > mcmc ngen=100000
 MrBayes > sump
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 In the \ttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
 MCMC samples obtained after the burn-in:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
    Run   Arithmetic mean   Harmonic mean
    --------------------------------------
-     1      -5720.67         -5735.68
-     2      -5719.97         -5730.58
+     1      -5720.09         -5732.97
+     2      -5719.24         -5730.36
    --------------------------------------
-   TOTAL    -5720.26         -5734.99
+   TOTAL    -5719.58         -5732.35
    --------------------------------------
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
-The harmonic mean suggests that the marginal likelihood of the standard non-clock model is $-5734$
-log units. Notice, however, some heterogeneity between the runs.
+The harmonic mean suggests that the marginal likelihood of the standard non-clock model is
+$-5732.35$ log units. Notice, however, some heterogeneity between the runs.
 
 Now we repeat the procedure under the strict clock model. To enforce branch lengths to conform to a
 strict clock, we choose one of the clock priors for the branch lengths. Specifically, we are going
 to use the uniform prior on clock trees. The other commands are the same as those used previously:
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
 > prset brlenspr=clock:uniform
 > mcmc ngen=100000
 > sump
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
    Run   Arithmetic mean   Harmonic mean
    --------------------------------------
-     1      -5719.69         -5726.23
-     2      -5719.44         -5733.01
+     1      -5719.56         -5729.48
+     2      -5719.12         -5731.20
    --------------------------------------
-   TOTAL    -5719.55         -5732.32
+   TOTAL    -5719.32         -5730.67
    --------------------------------------
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
-The harmonic mean is lower for the strict-clock mode than for the non-clock model, the log values
-being $-5732$ and $-5734$, respectively. This is as we suspected, but the difference is small and
-there is overlap between the estimates obtained in individual runs. In this case, we undoubtedly
-need the increased accuracy of the stepping- stone sampling method.
+The harmonic mean is lower for the strict-clock model than for the non-clock model, the log values
+being $-5730.67$ and $-5732.35$, respectively. This is as we suspected, but the difference is small
+and there is overlap between the estimates obtained in individual runs. In this case, we
+undoubtedly need the increased accuracy of the stepping-stone sampling method.
 
 Before moving on to the stepping-stone analysis, first compute a summary of the tree samples using
 the \tb{sumt} command. Now focus on the phylogram, the second tree, in the output from this
 command. It should look something like this:
 
-
 \begin{singlespacing}
-%\footnotesize
 \scriptsize
 \begin{verbatim}
    Phylogram (based on median node depths):
 
-                                                        /----- Homo_sapiens (3)
-                                                      /-+                          
-                                                      | \----- Pan (4)
-                                              /-------+                            
-                                              |       \------- Gorilla (5)
-                                         /----+                                    
-                                         |    \--------------- Pongo (6)
-                           /-------------+                                         
-                           |             \-------------------- Hylobates (7)
-                           |                                                       
-                           |                               /-- Macaca_fuscata (8)
-                /----------+                            /--+                       
-                |          |                            |  \-- M_mulatta (9)
-                |          |                        /---+                          
-                |          |                        |   \----- M_fascicularis (10)
-   /------------+          \------------------------+                              
-   |            |                                   \--------- M_sylvanus (11)
-   |            |                                                                  
-   +            \--------------------------------------------- Saimiri_sciure~ (12)
+                  /------------------------------------------- Tarsius_syrichta (1)
+   /--------------+                                                                
+   |              \------------------------------------------- Lemur_catta (2)
    |                                                                               
-   |             /-------------------------------------------- Tarsius_syrichta (1)
-   \-------------+                                                                 
-                 \-------------------------------------------- Lemur_catta (2)
+   |                                                    /----- Homo_sapiens (3)
+   |                                                  /-+                          
+   |                                                  | \----- Pan (4)
+   |                                          /-------+                            
+   |                                          |       \------- Gorilla (5)
+   |                                      /---+                                    
+   +                                      |   \--------------- Pongo (6)
+   |                        /-------------+                                        
+   |                        |             \------------------- Hylobates (7)
+   |                        |                                                      
+   |                        |                              /-- Macaca_fuscata (8)
+   |            /-----------+                           /--+                       
+   |            |           |                           |  \-- M_mulatta (9)
+   |            |           |                        /--+                          
+   |            |           |                        |  \----- M_fascicularis (10)
+   \------------+           \------------------------+                             
+                |                                    \-------- M_sylvanus (11)
+                |                                                                  
+                \--------------------------------------------- Saimiri_sciure~ (12)
                                                                                    
-   -|---------|--------|---------|--------|---------|--------|                     
-   0.60     0.50     0.40      0.30     0.20      0.10     0.00                    
+   --|---------|--------|--------|---------|--------|--------|                     
+   0.60      0.50     0.40     0.30      0.20     0.10     0.00                    
 
    [Expected changes per site]
 \end{verbatim}
@@ -2347,11 +2363,11 @@ rooted, unlike a tree resulting from a non-clock analysis. An unrooted tree is d
 such that it is rooted on the outgroup taxon. This means that it will have a basal trichotomy, or a
 basal polytomy of higher degree if outgroup relationships are unresolved. The specified outgroup
 taxon (by default the first taxon in the matrix) will be the first member lineage of the basal
-trichotomy. A strict-clock analysis, however, produces a rooted tree, which should have a
-dichotomy at the root unless there is uncertainty concerning the resolution near the base of the
-tree. Such a tree does not have to be artificially rooted for drawing purposes using an outgroup.
-Thus, \emph{the outgroup setting is irrelevant in analyses of clock tree models}. The outgroup
-setting is only used when drawing unrooted trees.
+trichotomy. A strict-clock analysis, however, produces a rooted tree, which should have a dichotomy
+at the root unless there is uncertainty concerning the resolution near the base of the tree. Such a
+tree does not have to be artificially rooted for drawing purposes using an outgroup.  Thus,
+\emph{the outgroup setting is irrelevant in analyses of clock tree models}. The outgroup setting is
+only used when drawing unrooted trees.
 
 Now let us continue with a more accurate assessment of the marginal model likelihoods using the
 stepping-stone method. It estimates the model likelihood by sampling a series of distributions that
@@ -2373,62 +2389,70 @@ choose that alternative, do not forget to specify the GTR + I + $\Gamma$ model b
 stepping-stone method.
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
-> prset brlenspr=unconstrained:exp(10.0)
-> ss ngen=255000 diagnfreq=2500
+> MrBayes > prset brlenspr=unconstrained:exp(10.0)
+> MrBayes > ss ngen=255000 diagnfreq=2500
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The estimated marginal likelihoods are found in a table printed by the \ttt{ss} command after the
 analysis is completed. Here are the estimates from our run:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
        Run   Marginal likelihood (ln)
-       ---------------------------
-         1     -5791.38   
-         2     -5792.04   
-       ---------------------------
-       Mean:   -5791.66
+       ------------------------------
+         1     -5798.62   
+         2     -5799.24   
+       ------------------------------
+       Mean:   -5798.88
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 We now run the same analysis on the strict clock model:
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
-> prset brlenspr=clock:uniform
-> ss ngen=255000 diagnfreq=2500
+> MrBayes > prset brlenspr=clock:uniform
+> MrBayes > ss ngen=255000 diagnfreq=2500
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 We got the following estimates of the marginal model likelihoods:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
        Run   Marginal likelihood (ln)
-       ---------------------------
-         1     -5774.94   
-         2     -5774.75   
-       ---------------------------
-       Mean:   -5774.84
+       ------------------------------
+         1     -5783.66   
+         2     -5784.14   
+       ------------------------------
+       Mean:   -5783.87
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 First we note that there is good agreement between the two independent analyses for both models,
-indicating that we now have accurate estimates of the marginal model likelihoods. If we compare
-these estimates with the harmonic mean estimates, it is striking that they are both much lower.
-Although the harmonic mean estimator is unbiased if you let the number of samples go to infinity,
-it relies heavily on rarely sampled states with low likelihood. Short runs tend not to include such
-samples, so the harmonic mean estimate is often considerably inflated in practice.
+indicating that we now have more accurate estimates of the marginal model likelihoods. If we
+compare these estimates with the harmonic mean estimates, it is striking that they are both much
+lower.  Although the harmonic mean estimator is unbiased if you let the number of samples go to
+infinity, it relies heavily on rarely sampled states with low likelihood. Short runs tend not to
+include such samples, so the harmonic mean estimate is often considerably inflated in practice.
 
-We also see that the strict-clock model is now almost 17 log likelihood units better than the
+We also see that the strict-clock model is now almost $15$ log likelihood units better than the
 non-clock model. A difference exceeding 5 log likelihood units is usually considered very strong
-evidence in favor of the better model \citep{kass95}. If you are familiar with likelihood ratio
-tests, it may seem counter-intuitive that the strict clock model can be so strongly preferred.
-After all, the strict clock is just a special case of the non-clock model, so the likelihood
-\emph{must} necessarily be higher, or at least as high, for the latter. How can the strict-clock
-model still be preferred in the Bayes factor test?
+evidence in favor of the better model \citep{kass95} (see also Table \ref{table:bftable}). If you
+are familiar with likelihood ratio tests, it may seem counter-intuitive that the strict clock model
+can be so strongly preferred. After all, the strict clock is just a special case of the non-clock
+model, so the (maximum) likelihood \emph{must} necessarily be higher, or at least as high, for the
+latter. How can the strict-clock model still be preferred in the Bayes factor comparison?
 
 The answer has to do with the number of parameters. For a data set with $n$ taxa, a non-clock model
 has roughly $2n$ independent branch length parameters, whereas a strict clock model only has around
@@ -2450,6 +2474,10 @@ space. This is what happens here, resulting in a strong preference for the stric
 For a brief discussion on convergence diagnostics and the plot printed by the \ttt{ss} command,
 see the previous tutorial.
 
+%%%% JN: Have done this far tis 23 jul 2019 16:17:35
+\vspace{10 pt}
+{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
+
 \section{Using a Relaxed Clock Model}
 \label{relaxedClock}
 
@@ -2469,15 +2497,23 @@ Specifically, we will accept the common view that lemurs form the sister group o
 
 As usual, we first read in the data:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
-> execute primates.nex
+MrBayes > execute primates.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Then we specify a GTR + I + $\Gamma$ model:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 To specify a rooting constraint, we first need to know the order of the taxa in the data matrix, or
 their names. We can do this by looking into the data file or by printing the matrix using the
@@ -2485,9 +2521,13 @@ their names. We can do this by looking into the data file or by printing the mat
 \textit{Lemur catta}, is taxon number 2. To specify a hard constraint that includes all taxa but
 taxon 2, we can use the following command:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > constraint ingroup = 1 3-.
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 The constraint command first gives the name of the constraint, and then the constraint is specified
 after the equal sign using a list of taxa, where the taxa can be specified using either their index
@@ -2498,18 +2538,26 @@ trees.
 
 To enforce the constraint, we also need to set the topology prior using the following command:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(ingroup)
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Inside the parenthesis, it is possible to give one or more previously defined constraints,
 separated by a comma. We are now ready to specify the relaxed clock model, which is done in two
 steps. First, we select an underlying strict clock model. Let us use the simple uniform clock
 model, which would be specified with the command:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset brlenspr=clock:uniform
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Other options include the coalescent and the birth -- death models. In the next step, we select a
 model for the variation of the clock rate across lineages. MrBayes offers three relaxed clock
@@ -2517,9 +2565,13 @@ models: the Thorne--Kishino 2002 (TK02), the compound poisson process (CPP), and
 gamma rates (IGR) models. Let us use the independent gamma rates model, which is a continuous
 uncorrelated model of rate variation across lineages. We invoke this model using:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset clockvarpr=igr
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Each relaxed clock model has one or more additional parameters. In the case of the IGR model, it is
 the rate at which the variance of the effective branch length increases over time, \ttt{Igrvarpr}.
@@ -2530,9 +2582,13 @@ distribution with rate $10.0$, should be more than generous enough for our analy
 To check the model settings, it is wise to first run the \tb{showmodel} command. Once you are
 convinced that the model settings are OK, run the analysis for 100,000 generation using:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > mcmc ngen=100000
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 We can now verify using the \tb{sumt} command that the tree is rooted correctly and that it
 looks reasonable. We focus on the phylogram, the second tree to be displayed:
@@ -2589,6 +2645,7 @@ look for this pattern in the summary statistics for the branch and node paramete
 which is critical to interpreting where the different parameters belong:
 
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
    List of taxa in bipartitions:
 
@@ -2635,6 +2692,7 @@ which is critical to interpreting where the different parameters belong:
    ------------------
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Now let us find the ID of the partitions corresponding to the \textit{Lemur} and \textit{Tarsius}
 lineages, and their sister lineages. We first identify the taxon ID of \textit{Lemur} and find that
@@ -2687,17 +2745,21 @@ rooting constraint that we enforced above. To get an accurate comparison, we run
 sampling method. We refer to the previous two tutorials for details, but briefly give the commands
 here for the two stepping-stone analyses that are required for this comparison:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > ss ngen=250000 diagnfreq=2500
 MrBayes > prset clockvarpr=strict
 MrBayes > ss
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 The results are summarized in the tables output by the \ttt{ss} command. The results we got are
 summarized below, with the relaxed clock model first, followed by the strict clock model:
 
-\footnotesize
 \begin{singlespacing}
+\footnotesize
 \begin{verbatim}
        Run   Marginal likelihood (ln)
        ---------------------------
@@ -2724,6 +2786,9 @@ model \cite{kass95}. Our runs indicate that the result is going to be similar if
 the comparison without enforcing a rooting constraint. We end by pointing out that this is a rather
 unusual data set; most other data sets will strongly favor relaxed over strict clock models.
 
+\vspace{10 pt}
+{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
+
 \section{Node Dating and Total-Evidence Dating}
 
 In this tutorial, we will use three different approaches to dating. First, we will show how to
@@ -2737,23 +2802,35 @@ typical setting.
 
 We begin by reading in the smaller data set using the command
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Next, we set the substitution model to GTR + I + $\Gamma$:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 We know from previous tutorials (see sections \ref{strictClock} and \ref{relaxedClock}) that a
 strict clock model provides a good fit to the data set. Specifically, we choose a strict clock
 model with uniform branch lengths using the command:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset brlenspr=clock:uniform
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 By default, the clock rate is going to be fixed to $1.0$, which means that the age of the nodes in
 the tree will be measured in terms of the number of expected substitutions per site. If we want a
@@ -2765,9 +2842,13 @@ millions of years as the unit, the resulting tree will be calibrated in millions
 
 Setting the prior on the clock rate is thus achieved with
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset clockratepr=normal(0.01,0.005)
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 There is one more thing to consider before we can run the analysis. By default, the clock rate is
 fixed to $1.0$. This means that the tree age (or height, if you wish) measured in substitutions
@@ -2786,23 +2867,28 @@ the expected clock rate. Since the expectation of the exponential distribution i
 inverse of the rate parameter, we thus need to modify the tree age prior to an exponential
 distribution with the rate $0.01$. We do this using the following command line.
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset treeagepr=exponential(0.01)
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Now let us run a short MCMC analysis using 100,000 generations and the default settings. After
 that, we use the \ttt{sumt} command to examine the calibrated tree:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > mcmc ngen=100000
 MrBayes > sumt
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The resulting dated phylogram should look something like this:
 
-%\footnotesize
 \scriptsize
 \begin{singlespacing}
 \begin{verbatim}
@@ -2952,7 +3038,6 @@ MrBayes > prset nodeagepr=calibrated
 After running the analysis and summarizing the tree samples, we can examine the resulting
 phylogram. It should look something like this:
 
-%\footnotesize
 \scriptsize
 \begin{singlespacing}
 \begin{verbatim}
@@ -3172,6 +3257,9 @@ This completes the description of the analysis specifications. As you will notic
 setting up some \ttt{mcmc} parameters using the \ttt{mcmcp} command but it leaves it up to you to
 actually start the analysis.
 
+\vspace{10 pt}
+{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
+
 \section{Inferring Ancestral States}
 
 The purpose of the analysis discussed in this tutorial is to infer the ancestral state
@@ -3262,6 +3350,9 @@ The first line gives the probability of state 0 for character 1 at the constrain
 node. The results indicate that the probability of the ancestral state being 0 at this node is only
 slightly higher than the probability of the state being 1.
 
+\vspace{10 pt}
+{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
+%%%% JN: tis 23 jul 2019 16:55:36: I started on this section but encountered a bug in mb(!)
 \section{The Multi-Species Coalescent}
 
 In this tutorial, we will set up an analysis using the multi-species coalescent. Unlike standard
@@ -3275,27 +3366,43 @@ hybridization.
 For this tutorial, we will use the \ttt{finch.nex} data set, which contains data from 30 loci for a
 set of four individuals belonging to four different species. As usual, we first read in the data:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > execute finch.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
-The data file sets up a partition that divides the data into the 30 separate genes. The next step
-in specifying the multi-species coalescent is to define what species to which the different
-sequenced individuals belong. This is done using the \ttt{speciespartition} command. By default, it
-is assumed that each individual belongs to a separate species, which is the case we are dealing
-with, but let us nevertheless be explicit:
+The data file contains a \ttt{MRBAYES} block, with commands to define a partition that divides the
+data into the 30 separate genes. Lets start by making sure this partition is used:
 
 \begin{singlespacing}
+\small
+\begin{verbatim}
+MrBayes > set partition = genes
+\end{verbatim}
+\end{singlespacing}
+\normalsize
+
+The next step in specifying the multi-species coalescent is to define what species to which the
+different sequenced individuals belong. This is done using the \ttt{speciespartition} command. By
+default, it is assumed that each individual belongs to a separate species, which is the case we are
+dealing with, but let us nevertheless be explicit:
+
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > speciespartition species = SpeciesA: 1, SpeciesB: 2,
                                      SpeciesC: 3, SpeciesD: 4
 MrBayes > set speciespartition=species
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The first line (broken here into two to fit the page, but you need to enter it as a single line in
 the console window) simply names each of the species and then lists the sequences that belong to
-that species. The list of sequences is a standard taxon list, as used by the \ttt{Taxset} command.
+that species. The list of sequences is a standard taxon list, as used by the \ttt{taxset} command.
 This means that you can use either the index or the name of a sequence (``taxon''). Ranges are
 specified using a dash, and a period can be used as a synonym of the last sequence in the matrix.
 Here, each species that we name is represented by a single sequence, specified by its row index in
@@ -3304,20 +3411,26 @@ the data matrix.
 We now need to unlink the topology parameter of the 30 gene partitions, which is done using the
 \ttt{unlink} command:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > unlink topology=(all)
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 To set the multi-species coalescent as the prior for each of the gene trees, we need to say both
-that the branch lengths should come from a coalescent process within a species tree and that the
+that the branch lengths should come from a coalescent process within a species tree,and that the
 topology should be constrained by the species tree. This is achieved using the lines:
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > prset topologypr=speciestree
 MrBayes > prset brlenspr=clock:speciestree
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Note that these settings need to go together to invoke the multi-species coalescent. Once the
 multi-species coalescent is invoked, the ordinary rate multiplier is split into a within-gene and
@@ -3328,9 +3441,13 @@ model parameters by using the \tb{showmodel} command to verify this.
 We now turn our attention to the substitution model. Assume that we would like to use an HKY model
 with site rates modeled using a discrete gamma. This would be accomplished using the line:
 
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > lset nst=2 rates=gamma
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 Finally, we need to consider the prior on the population size. By default, it will be assumed that
 the population size is the same for all lineages in the tree. Let us change that to make the
@@ -3340,11 +3457,13 @@ the standard deviation on the log scale being equal to 10. Since the natural log
 $4.6$, and the natural log of 10 is about $2.3$, this would be achieved using the lines:
 
 \begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > prset popvarpr=variable
 MrBayes > prset popsizepr=lognormal(4.6,2.3)
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 We can now sample from the model to estimate the posterior probability distribution. This is a
 large model with many parameters, so we need to run a fair number of generations to get adequate
@@ -3353,9 +3472,21 @@ We do that by setting the number of chains to one, \ttt{nchains=1}. Under these 
 run seemed to produce an adequate sample within 1 M generations. To run an analysis of this length
 without Metropolis coupling, use:
 
+%%%% JN: tis 23 jul 2019 16:51:10: Here (mcmc) I get a Warning:
+%%%% JN:     WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.
+%%%% JN:        This is likely to be incorrect unless you have set the population size prior
+%%%% JN:        ('prset popsizepr') to reflect an appropriate prior on theta. 
+%%%% JN:     Do you want to continue with the run regardless? (yes/no):
+%%%% JN: Answering 'yes' to the question ends up in an infinite loop (asking again, and again...)
+%%%% JN: The command works if read from a batch file, so something in the cmd line parser!
+
+\begin{singlespacing}
+\small
 \begin{verbatim}
 MrBayes > mcmc ngen=1000000 nchains=1
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 By default, MrBayes runs two analysis in parallel, and computes convergence diagnostics on all gene
 trees as well as on the species tree. Ideally, we would like to see topological convergence on all
@@ -3364,18 +3495,18 @@ trees. This is a sample output from our analysis:
 \footnotesize
 \begin{singlespacing}
 \begin{verbatim}
-   Average standard deviation of split frequencies for topology 1: 0.007974
-   Average standard deviation of split frequencies for topology 2: 0.016684
-   Average standard deviation of split frequencies for topology 3: 0.015212
+   Average standard deviation of split frequencies for gene tree 1: 0.007974
+   Average standard deviation of split frequencies for gene tree 2: 0.016684
+   Average standard deviation of split frequencies for gene tree 3: 0.015212
    ...
-   Average standard deviation of split frequencies for topology 31: 0.043427
+   Average standard deviation of split frequencies for species tree (tree 31): 0.043427
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
 In this list, the first 30 topologies correspond to the gene trees, and the last one to the species
-tree. To summarize the tree samples, simply use the \tb{sumt} command, which will process all
-of the gene trees and then the species tree. Focus on the last tree, which is the species tree. It
+tree. To summarize the tree samples, simply use the \tb{sumt} command, which will process all of
+the gene trees and then the species tree. Focus on the last tree, which is the species tree. It
 should look something like this:
 
 \scriptsize
@@ -3817,27 +3948,26 @@ decrease the model complexity by reducing the number of model parameters, or you
 background information into your prior distributions.
 
 \subsection{Bayesian Model Choice}
+\label{bayesianModelChoice}
 Once a small set of models have been chosen for analysis, they can be compared using Bayesian model
 choice criteria. This is typically done through the calculation of Bayes factors, which can be
 interpreted as indicators of the strength of the evidence in favor of the best of two models.
 
 Bayes factor is given by
 
-%%%% JN: be consistent: $B_{10}$ or $BF_{12}$ 
-
 $$
-BF_{12} = \frac{Pr(Data|Hypothesis_{1})}{Pr(Data|Hypothesis_{2})}
+B_{12} = \frac{P(D|H_{1})}{P(D|H_{2})}
 $$
 
-where $Data$ is the data thought to have been generated by any of the candidate hypotheses
-$Hypothesis_{k}$ ($k = 1,2$). The expression $Pr(Data|Hypothesis_{k})$ is called the marginal
+where $D$ is the data thought to have been generated by any of the candidate hypotheses
+$H_{k}$ ($k = 1,2$). The expression $P(D|H_{k})$ is also called the model-, or marginal
 likelihood. The Bayes factors values are typically interpreted according to recommendations
-presented by Kass and Raftery \citep{kass95}.
+presented by Kass and Raftery \citep{kass95} (see Table \ref{table:bftable}).
 
-\begin{longtable}[]{@{}lll@{}}
+\begin{longtable}[h!]{@{}lll@{}}
 \toprule
-\(2\log_{e}(B_{10})\) & \(B_{10}\) & Evidence against
-\(H_{0}\)\tabularnewline
+\(2\log_{e}(B_{12})\) & \(B_{12}\) & Evidence against
+\(H_{2}\)\tabularnewline
 \midrule
 \endhead
 \(0\) to \(2\) & \(1\) to \(3\) & Not worth more than a bare
@@ -3846,10 +3976,9 @@ mention\tabularnewline
 \(6\) to \(10\) & \(20\) to \(150\) & Strong\tabularnewline
 \(>10\) & \(>150\) & Very strong\tabularnewline
 \bottomrule
-    \caption{Table for interpreting the Bayes factor. Based on \citep{kass95}.}
+\caption{Interpretation of the Bayes factor ($B_{12}$). Based on \citep{kass95}.}
 \label{table:bftable}
 \end{longtable}
-
 
 Unlike a hierarchical likelihood ratio test, the models compared with Bayes factors need not be
 hierarchically nested. A Bayes factor is calculated simply as the ratio of the marginal likelihoods
@@ -3866,18 +3995,17 @@ table is for two runs):
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-
 Estimated marginal likelihoods for runs sampled in files
    "replicase.nex.run1.p", "replicase.nex.run2.p", etc:
    (Use the harmonic mean for Bayes factor comparisons of models)
 
-Run   Arithmetic mean   Harmonic mean
---------------------------------------
-  1    -5883.41            -5892.10
-  2    -5883.82            -5892.81
---------------------------------------
-TOTAL  -5883.60            -5892.52
---------------------------------------
+   Run   Arithmetic mean   Harmonic mean
+   --------------------------------------
+     1      -5838.81         -5847.20
+     2      -5838.21         -5849.17
+   --------------------------------------
+   TOTAL    -5838.47         -5848.61
+   --------------------------------------
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -3886,15 +4014,31 @@ For instance, assume we want to compare a GTR model with an HKY model. Then simp
 analyses, one under each model, and estimate the logarithm of the marginal likelihoods for the two
 models (using only samples from the stationary phase of the runs). Then simply take the difference
 between the logarithms of the harmonic means and find the corresponding interpretation in the table
-of \citet{kass95} (to use this table, you actually have to calculate twice the difference in the
-logarithm of the model likelihoods). The same approach can be used to compare any pair of models
-you are interested in. For instance, one model might have a group constrained to be monophyletic
-while the other is unconstrained, or one model can have $\Gamma$-shaped rate variation while the
-other assumes equal rates across sites. As stated above, models need not be hierarchically nested.
-An interesting property of the Bayes factor comparisons is that it can favor either the more
-complex model or the simpler model, so they need not be corrected for the number of parameters in
-the models being compared. Additional discussion of Bayesian model testing, with several examples,
-is found in \citet{nylander04}.
+of \citet{kass95} (Table \ref{table:bftable}). A worked example might look like this:
+
+Assume that we wish to compare two models $M_{1}$ and $M_{2}$ on the same data. We run two separate
+MCMC simulations, one for each model, and $M_{1}$ gives a marginal likelihood of $-5848.61$, and
+$M_{2}$ gives a marginal likelihood of $-5857.70$.  The Bayes factor is the ratio between the model
+likelihoods. Since we are approximating the model likelihoods by the harmonic mean on a log scale,
+we have 
+
+$$
+log (B_{12}) =
+log \Big(\frac{P(D|M_{1})}{P(D|M_{2})}\Big) = log(P(D|M_{1})) - log(P(D|M_{2}))
+$$
+
+and by using the first column in Table \ref{table:bftable} for interpretation, we multiply by $2$
+to get $2 log(B_{12}) = 2 * (-5848.61 - (-5857.70)) = 18.18$. According to Table
+\ref{table:bftable}, any value over $10$ for $2 log(B_{12})$ is considered ``Very strong evidence
+against $M_{2}$'' (compared to $M_{1}$), and this might also be our conclusion in our comparison.
+
+The same approach can be used to compare any pair of models you are interested in. For instance,
+one model might have a group constrained to be monophyletic while the other is unconstrained, or
+one model can have $\Gamma$-shaped rate variation while the other assumes equal rates across sites.
+As stated above, models need not be hierarchically nested.  An interesting property of the Bayes
+factor comparisons is that it can favor either the more complex model or the simpler model, so they
+need not be corrected for the number of parameters in the models being compared. Additional
+discussion of Bayesian model testing, with several examples, is found in \citet{nylander04}.
 
 
 \subsection{Model Jumping}
@@ -3903,7 +4047,7 @@ Bayesian MCMC model jumping provides a convenient alternative to model selection
 analysis. In model jumping, the MCMC sampler explores different models and weights the results
 according to the posterior probability of each model. In MrBayes, the model-jumping approach is
 available for two sets of models. One is for all models where a four-by-four nucleotide model is a
-component, i.e., doublet and codon models in addition to the ordinary nucleotide models.  Rather
+component, i.e., doublet and codon models in addition to the ordinary nucleotide models. Rather
 than selecting a substitution model before the analysis, the user can now sample across all 203
 possible time-reversible rate matrices according to their posterior probability
 \citep{huelsenbeck04d}. This can be accomplished simply by using the option \ttt{mixed} for the
@@ -4254,7 +4398,7 @@ for each run is printed along with the mean value:
 Note that unlike with ordinary MCMC run you can not stop the SS-run and process results for sampled
 generations or extend your run beyond originally specified length. Thus, it is extremely important
 to chose right length of the SS-run at the beginning, you will not be able to change it later on.
-That sad, it does not mean that if your SS-run did not finish it is complitly wasted. As we with
+That said, it does not mean that if your SS-run did not finish it is completly wasted. As with
 any other MCMC run, if you enable checkpointing you can ``resurrect'' you run from the last
 checkpoint.
 
@@ -4317,7 +4461,7 @@ value is equal to the last quantile, i.e., it is close to $1.0$. For each succes
 $\beta$ value takes on the value of the next quantile, in decreasing order, until it reaches the
 value of $0.0$.
 
-
+%%%% JN: Check if this is true: "However, the \ttt{mcmc} burnin parameters are ignored."
 The \ttt{ss} procedure uses the same machinery as the standard \ttt{mcmc} algorithm, and shares
 most of its parameters with the \ttt{mcmc} and \ttt{mcmcp} commands. All \ttt{mcmc} parameters,
 except those related to burnin, have the same meaning and usage in the \ttt{ss} command as they
@@ -4333,10 +4477,9 @@ $1000000$ and \ttt{Samplefreq} to $1000$. We will then get 1,000 samples in tota
 1,000). These will fall into 50 bins, one of which represents the burnin and is discarded. Each
 step in the algorithm will thus be represented by 20 samples.
 
-
 The marginal likelihood estimated by SS is the multiplication of the ratios obtained from each
 step. Information about value of the ratio estimated at each step and run could be found in a file
-with .ss extension created during SS analyses. Since each ratio is stored in log units, the
+with \ttt{.ss} extension created during SS analyses. Since each ratio is stored in log units, the
 marginal likelihood in log units is obtained simply by summing of the log ratios across all steps.
 Examining the values of ratio estimates allows you to asses there quality and judge convergence of
 different runs for specific steps. If you observe huge differences among estimates for the same
@@ -4344,7 +4487,7 @@ step then the runs did not converge for the step. If you observe poor convergenc
 then in your next SS analyzes you may consider reducing \ttt{Alpha} to increase skewness of the
 $\beta$ values. If you have diagnostic turned the file contains information about standard
 deviation of split frequencies for each step. So, instead of looking at the graph with split
-frequencies plotted at the end of SS analyzes, you may examine the .ss file to analyze precise
+frequencies plotted at the end of SS analyzes, you may examine the \ttt{.ss} file to analyze precise
 values. If you have dataset with many taxa ($>20$) you should not wary if standard deviation of
 split frequencies is poor or even can not be evaluated for later steps.
 
@@ -4476,7 +4619,6 @@ problems with infinite loops when the quit command is not included at the end of
 problem should have been solved since version 3.1.0.
 
 %% \subsection{Running MrBayes on a Cluster}
-
 
 \subsection{Turbo-charging MrBayes with BEAGLE and MPI}
 \vspace{5 pt}
@@ -4642,169 +4784,6 @@ leading to a program that might produce incorrect results. If you encounter prob
 please make sure they are not due to unusual compiler optimization settings before submitting a bug
 report.
 
-%% \subsection{Compiling with the GNU Tool-Chain}
-%% These instructions apply only to Unix systems, or Unix-like systems (Linux, Mac OS X). Before you
-%% start with installation of MrBayes you may consider installing the BEAGLE library. You can download
-%% an appropriate installer at \url{http://code.google.com/p/beagle-lib/}. It is not required to have
-%% the BEAGLE library installed, and its absence does not limit the functionality of MrBayes in any
-%% way. However computers equipped with Nvidia video cards may enjoy significant boosts in performance
-%% by using MrBayes compiled with support for the BEAGLE library. Even if you do not have an Nvidia
-%% GPU, you may see slight performance improvements with the BEAGLE library.
-%% 
-%% In order to use the automated compilation process, you should have \ttt{autoconf}, \ttt{make} and a
-%% \ttt{C++ compiler} installed on your computer. On a Macintosh, the easiest way of making sure you
-%% have these tools on your system is to install XCode. Previously, XCode was distributed with the
-%% operating system even though it had to be installed separately from the Developer Tools disk. Now,
-%% you have to acquire it for a nominal fee from AppStore. Most Unix or Linux machines will have all
-%% these developer tools installed by default.
-%% 
-%% To compile MrBayes, first make sure you download the source code from the MrBayes web site
-%% (\url{http://mrbayes.net}). Navigate to the folder with the compressed file archive, the so-called
-%% tarball, and unpack it using the command \tb{gunzip <filename>} and \tb{tar -xvf <filename>
-%% mrbayes}. Replace \ttt{<filename>} with the original file name in the first step, and the unzipped
-%% file name in the second step. On most systems, you should actually be able to skip the first step,
-%% because \ttt{tar} will accept also zipped files, but the two-step procedure is safer. Now you
-%% should have a folder named \ttt{mrbayes} containing the source files, documentation, and example
-%% files.
-%% 
-%% Now navigate to the folder containing the source code, called \ttt{src}, and execute the command
-%% \tb{autoconf} in order to generate the configuration script. When you run the configure script, it
-%% examines your build environment for appropriate compiler flags and program settings. If you have
-%% the BEAGLE library installed you can run this script by typing \tb{./configure} without any
-%% arguments. If you do not have the BEAGLE library installed, you invoke the script by typing
-%% \tb{./configure --with-beagle=no}. At the end of the day, the script will produce a \ttt{Makefile},
-%% which can be used to compile the MrBayes executable using the command \tb{make}.
-%% 
-%% There is a number of options you can give the configure script to alter its behavior. Turn an
-%% option on use \ttt{--<option>=yes}, to turn it off use \ttt{--<option>=no}, using the command
-%% syntax we described above for turning off the \ttt{with-beagle} option. The available configure
-%% script options are:
-%% 
-%% \tb{--enable-mpi}. Use this option if you want to compile the parallel (MPI) version of MrBayes.
-%% This option is off by default, meaning that a serial version of MrBayes will be built. See below
-%% for more information on how to compile and run the MPI version of MrBayes.
-%% 
-%% \tb{--enable-fastlog}. With this option a fast approximation algorithm is used instead of the
-%% normal log  math functions. Since this approximation algorithm can actually slow down the program
-%% on some computer architectures, this option is turned off by default.
-%% 
-%% \tb{--enable-debug}. If you want to compile a debug version of MrBayes, you can use this option.
-%% This adds the appropriate flags for the GNU gdb debugger.
-%% 
-%% \tb{--enable-sse}    All main-stream modern processors have support for SSE instructions, which are
-%% utilized by default by MrBayes 3.2 in order to substantially speed up execution. If you experience
-%% problems with the SSE code, you can turn off this option.
-%% 
-%% Before running the configure script, one can set a number of shell environment variables to
-%% influence the compiler and its flags. Refer to the documentation of your shell for instructions on
-%% how to set environment variables.
-%% 
-%% \tb{CC}. This variable defines which compiler to use. For example, \ttt{gcc} for the GNU compiler
-%% or \ttt{icc} for the Intel C compiler. The default setting is the GNU compiler.
-%% 
-%% \tb{CFLAGS}. Sets the optimization flags for the compiler. The default is set to -O3, which yields
-%% good results for every platform. It is, however, possible to perform some tuning with this
-%% variable. We give a few possibilities below for some common processor types, assuming you are using
-%% gcc version 3. See the gcc manual for further information on optimization flags.
-%% 
-%% \tb{{Intel x86/AMD/AMD64}}
-%% 
-%% Some compiler flags for gcc under Unix or Linux, and for gcc and cygwin under Windows:
-%% 
-%% \ttt{-march=X}, with X one of \ttt{pentium4}, \ttt{athlon-xp} or \ttt{opteron}. If you have one of
-%% these processors this will generate instructions specifically tailored for that processor.
-%% 
-%% \ttt{-mfpmath=sse} attempts to use the SSE extensions for numerical calculations. This flag is only
-%% effective in combination with the above-mentioned \ttt{-march} flag. This flag can provide a big
-%% performance gain. However, using this flag in combination with other optimization flags might yield
-%% numerically incorrect code. For example, one can set \ttt{-mfpmath=sse,386}, but this flag leads to
-%% incorrect results, when used in combination with \ttt{-march=pentium4}.
-%% 
-%% \ttt{-fomit-frame-pointer} saves some function overhead.
-%% 
-%% \ttt{-O2} instead of \ttt{-O3} turns on a smaller number of optimization flags. However, a number
-%% of optimizations turned on by \ttt{-O3} might give a slowdown instead of producing faster code,
-%% especially in combination with the \ttt{-mfpmath=sse} option.
-%% 
-%% \tb{{Mac G4 and G5}}
-%% 
-%% Some compiler flags for gcc for OS X:
-%% 
-%% \ttt{-fast}. This flag is specific for the gcc version delivered by Apple. It turns on a set of
-%% compiler flags with the purpose of optimizing for maximum performance. This is the recommended
-%% setting if you have a G5 processor and the Apple version of gcc. Code compiled with this flag will
-%% not run on a G4 processor.
-%% 
-%% \ttt{-O2} or \ttt{-O3}.
-%% 
-%% \ttt{-mcpu=X}, with \ttt{X} one of \ttt{G4} or \ttt{G5}.
-%% 
-%% Setting \ttt{-mcpu} or \ttt{-fast} on the Mac results in gcc enabling a number of different flags.
-%% Read the gcc manual carefully if you want to experiment with other flags. Compilation of MrBayes
-%% version 3.2 may look like this,
-%% 
-%% \begin{singlespacing}
-%% \small
-%% \begin{verbatim}
-%% ~ $ tar zxf mrbayes-3.2.tar.gz
-%% ~ $ cd mrbayes-3.2
-%% ~/mrbayes-3.2  $ ./configure --with-beagle=no
-%% checking for gcc... gcc
-%% checking for C compiler default output file name... a.out
-%% checking whether the C compiler works... yes
-%% checking whether we are cross compiling... no
-%% checking for suffix of executables... 
-%% checking for suffix of object files... o
-%% checking whether we are using the GNU C compiler... yes
-%% checking whether gcc accepts -g... yes
-%% checking for gcc option to accept ISO C89... none needed
-%% checking how to run the C preprocessor... gcc -E
-%% checking for grep that handles long lines and -e... /usr/bin/grep
-%% checking for egrep... /usr/bin/grep -E
-%% checking for ANSI C header files... yes
-%% checking for exp in -lm... yes
-%% checking for a BSD-compatible install... /usr/bin/install -c
-%% checking for readline in -lreadline... yes
-%% checking for rl_completion_matches function... no
-%% checking for 32 or 64 bits cpu... 32
-%% configure: creating ./config.status
-%% config.status: creating Makefile
-%% config.status: creating config.h
-%% config.status: config.h is unchanged
-%% ~/mrbayes-3.2  $ make
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o bayes.o bayes.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o command.o command.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mbmath.o mbmath.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mcmc.o mcmc.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o model.o model.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o plot.o plot.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o sump.o sump.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o sumt.o sumt.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o tree.o tree.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o utils.o utils.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mbbeagle.o mbbeagle.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o best.o best.c
-%% gcc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H  -lreadline -lm  mb.c bayes.o
-%% command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o
-%% best.o   -o mb
-%% ~/mrbayes-3.2 $ 
-%% \end{verbatim}
-%% \normalsize
-%% \end{singlespacing}
-%% 
-%% It is perfectly normal for this process to take some time, as the optimization of the code is
-%% computationally challenging. The resulting executable is called \ttt{mb}, and it is added to your
-%% working directory together with a number of other files generated by the compiler. If you are
-%% going to run MrBayes often, you will probably want to add the program to your ``path''. If you
-%% have administrative rights on your system, you can type \tb{sudo make install} to install MrBayes
-%% for all users. To install MrBayes just for your user, you need to copy or move the executable to a
-%% directory in your path, to which you have write access.
-%% 
-%% If MrBayes is in your path, you can run the program by simply typing \tb{mb} from any directory on
-%% your system. If you do not have it in your path, you need to specify the path to the executable
-%% each time you run it. For instance, if you are in the same folder as the executable, you run it
-%% using \tb{./mb}.
-
 \subsection{Compiling and Running the MPI Version of MrBayes}
 \label{MPIversion}
 
@@ -4946,79 +4925,6 @@ $ git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 
 In the copy of the \ttt{MrBayes} repository on the local system, you will find the compile
 instructions in the file INSTALL.
-%%%% JN: Remove the following section?
-% \subsection{Compiling MrBayes with Xcode}
-% 
-% Here we describe how to compile MrBayes with Xcode for use on Macintoshes. Note that you can also
-% compile MrBayes on Macintoshes inside the Unix environment underneath the hood of all Mac OS X
-% machines, in which case you would essentially follow the instructions given above. The end product,
-% the executable, will be very similar if not identical.
-% 
-% To compile with Xcode, we suggest using the Xcode project we provide in the MrBayes repository on
-% SourceForge. Rather than downloading just the files we need, it is simplest to download the entire
-% repository. First navigate to the directory where you would like to keep your MrBayes project
-% folder. Then use the command 
-% 
-% \begin{verbatim}
-% $ git clone --depth=1 https://github.com/NBISweden/MrBayes.git
-% \end{verbatim}
-% 
-% to download the repository.
-% 
-% Inside the repository, navigate to the folder \ttt{mrbayes/projects/xcode\_FR} and double-click on
-% the file (it is actually a folder) \ttt{xcode\_FR.xcodeproj}. This should launch Xcode with the
-% development version of MrBayes. Simply select the version you would like to produce (Debug or
-% Release, with or without BEAGLE) and then compile and run the program. Note that you need to have
-% the BEAGLE libraries installed first to compile a BEAGLE-enabled version of MrBayes.
-% 
-% If you wish to compile the latest officially released version instead of the development version,
-% simply replace the source files with those you find in the folder \ttt{mrbayes/release/src}.
-% 
-% \subsection{Compiling MrBayes with Visual Studio}
-% 
-% Again, the simplest way of compiling MrBayes using Visual Studio is to start from a Visual Studio
-% project that we provide in the MrBayes source repository on SourceForge. Specifically, if you are a
-% new user, we suggest you use the project located in the \ttt{/projects/VisualStudioProject} folder,
-% since it is the most general and easy to configure.
-% 
-% First, however, we need to download the MrBayes repository. The easiest way of doing this is using
-% TortoiseSVN, a free SVN client for Windows computers. Once you have TortoiseSVN installed on your
-% system, create a new folder based on the SVN path
-% http://mrbayes.svn.sourceforge.net/svnroot/mrbayes.
-% 
-% Once you have a copy of the repository on your local machine, navigate to the
-% \ttt{/projects/VisualStudioProject/} folder and double-click on the \ttt{mrbayes.vcproj} icon. It
-% should invoke the Visual Studio copy installed on your computer. If you have Visual Studio 2010 or
-% later you will be asked to convert the project; just use the default conversion options offered by
-% Visual Studio. After that you should be able to compile and run the non-BEAGLE version of MrBayes
-% without further modification. Note that by default you would be using the \ttt{Debug} configuration
-% for the \ttt{Win32} platform. That version is good for debugging but if you wish to produce a
-% faster version for real analyses, you shoud change the configuration to \ttt{Release}. Note that it
-% takes a considerable amount of time to compile the \ttt{Release} configuration of MrBayes.
-% Targeting the x64 platform is another option that you may consider if you need access to more than
-% 2GB of memory space.
-% 
-% If you want to compile the SSE version of MrBayes, you should navigate to \ttt{Projects
-% $\rightarrow$ mrbayes Properties} and then open \ttt{Configuration Properties $\rightarrow$ C/C++
-% $\rightarrow$ Preprocessor}. In the field \ttt{Preprocessor definitions} add \ttt{SSE\_ENABLED}.
-% 
-% If you have the BEAGLE library installed on your system, you can enable its use in MrBayes. To do
-% so, you should navigate to \ttt{Projects $\rightarrow$ mrbayes Properties} and then open
-% \ttt{Configuration Properties}. Here, you need to introduce the following modifications:
-% 
-% \begin{enumerate}
-% \item Open \ttt{C/C++  $\rightarrow$ Preprocessor}. In the field \ttt{Preprocessor definitions} 
-% \add \ttt{BEAGLE\_ENABLED}
-% \\item Open \ttt{C/C++  $\rightarrow$ General}. In the field \ttt{Additional Include Directories}
-% add a path to the folder where the BEAGLE library is installed. Note that the folder you specified
-% should contain the folder \ttt{libhmsbeagle}, which in turn contains the  BEAGLE header files. 
-% \item Open \ttt{Linker  $\rightarrow$ Input}. In the field \ttt{Additional Dependencies}, add 
-% \ttt{hmsbeagleXX.lib} where XX in the file name is 32 or 64 depending on whether MrBayes is
-% targeted for a 32-bit or 64-bit platform.
-% \item Open \ttt{Linker  $\rightarrow$ General}. In the field \ttt{Additional Library Directories},
-% add a path to the folder where the BEAGLE library is installed. Note that the folder you specified
-% should contain the BEAGLE library file \ttt{hmsbeagleXX.lib} you chose in the previous step.
-% \end{enumerate}
 
 \subsection{Modifying or Extending MrBayes}
 
@@ -5129,91 +5035,9 @@ runs will have different starting values and will produce slightly different res
 way of making sure analyses are repeatable is to set the seed and swapseed before reading in the
 character matrix.
 
-%% \section{Differences Between Versions 3.1 and 3.2}
-%% 
-%% We have discontinued the development of version 3.1 of MrBayes and recommend all users to switch
-%% over to version 3.2. Version 3.2 adds a number of new features to version 3.1. In addition, large
-%% parts of the code have been restructured or rewritten, resulting in a code base that is more stable
-%% and easier to maintain.
-%% 
-%% Major new features include:
-%% 
-%% \tb{Strict clock models}. There are now more and better topology moves for strict clock trees, and
-%% the clock tree priors have been modified, extended and in some cases corrected.
-%% 
-%% \tb{Relaxed clock models}. Three different relaxed clock models are now available.
-%% 
-%% \tb{Dating}. Clock trees, whether strict or relaxed, can now be dated using several different
-%% methods, including tip dating, node dating, and clock rate dating.
-%% 
-%% \tb{Stepping-stone sampling}. Marginal model likelihoods for Bayes factor testing can now be
-%% computed across the entire model space using the accurate stepping-stone sampling method.
-%% 
-%% \tb{Sampling across the GTR model space}. As an alternative to a priori model testing, MrBayes now
-%% implements sampling across the entire time-reversible substitution model space.
-%% 
-%% \tb{Adaptive tuning}. MrBayes now uses automatic tuning of proposal tuning parameters.
-%% 
-%% \tb{New tree moves}. There are now more and better tree moves implemented in MrBayes.
-%% 
-%% \tb{Checkpointing}. Checkpointing is now implemented across all models, allowing you to restart
-%% analyses that have crashed or been terminated prematurely from the last checkpoint.
-%% 
-%% \tb{Setting starting values}. You can explicitly set starting values or starting trees using the
-%% \ttt{startvals} command.
-%% 
-%% \tb{Setting tuning parameters and proposal probabilities}. The proposal probabilities and tuning
-%% parameters can now be set separately for each of the chains in the analysis using the new
-%% \ttt{propset} command, replacing the old \ttt{props} command.
-%% 
-%% \tb{More diagnostics}. The \ttt{sumt} and \ttt{sump} commands now output a wider range of
-%% convergence diagnostics, including effective sample size (ESS), potential scale reduction factor
-%% (PSRF), and average standard deviation of split frequencies (ASDSF).
-%% 
-%% \tb{Rich tree summaries}. The \ttt{sumt} command now provides much richer summaries of tree
-%% samples. A wide range of node and branch parameters are summarized and written to the consensus
-%% tree in a format that allows users to display the information on the tree using FigTree.
-%% 
-%% \tb{Multi-species coalescent}. MrBayes now includes the BEST algorithms for estimating species
-%% trees from gene trees based on the multi-species coalescent.
-%% 
-%% \tb{Topology constraints}. MrBayes now supports backbone and negative constraints in addition to
-%% standard hard (positive) constraints.
-%% 
-%% \tb{Starting trees}. Starting trees are now set using the \ttt{startvals} command. There is no
-%% longer a separate \ttt{usertree} command; instead, the user trees are defined using a standard
-%% NEXUS tree block. Up to 100 user trees can be defined, and then used as start values for MCMC
-%% analysis with the \ttt{startvals} command. One can choose to either use just the topology or both
-%% the topology and branch lengths of the user tree as values for the tree parameters of the analysis.
-%% Furthermore, it is possible to ask MrBayes to use parsimony trees as starting values for the tree
-%% parameters using the \ttt{starttree} option of \ttt{mcmc} and \ttt{mcmcp} commands.
-%% 
-%% Minor changes between versions 3.1 and 3.2 include:
-%% 
-%% \tb{Fixing topology and branch lengths}. You can now fix the topology or the topology and branch
-%% lengths of a tree parameter using the \ttt{prset} command.
-%% 
-%% \tb{More report options}. You now have more options for reporting various types of parameters
-%% during the MCMC run.
-%% 
-%% \tb{Random number seeds}. Already when a file is read in, a default model is set up including
-%% starting values for parameters. This means that the random number generator is called already when
-%% a data file is executed. To make sure that two analyses produce exactly identical results, the
-%% random number seeds must be set to the same values before any other commands are executed. This is
-%% done using the \ttt{set} command.
-%% 
-%% \tb{showmoves}. This command shows all the currently used moves, and can also display all the
-%% available moves for the parameters in the model.
-%% 
-%% \tb{showparams}. This command will show all the parameters in the current model, including their
-%% priors and current values for all runs and chains.
-%% 
-%% \tb{showusertrees}. This will show all user-defined trees currently in memory.
-
 \section{More Information}
 For more information on how to use MrBayes, turn to the MrBayes web site
 (\ttt{www.mrbayes.net}).
-
 
 \chapter{Evolutionary Models in MrBayes}
 \label{evolutionaryModels}
