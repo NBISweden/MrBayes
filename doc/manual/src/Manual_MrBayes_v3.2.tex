@@ -3267,11 +3267,17 @@ probabilities for a given node in a phylogeny, while simultaneously accommodatin
 all other model parameters, including the topology of other parts of the tree. We will use the
 \ttt{cynmix.nex} dataset for the tutorial.
 
-First, we read in the data using
+First, we read in the data (we also use \ttt{set autoclose=yes nowarnings=yes} for allowing
+execution without being prompted for answering \ttt{yes}/\ttt{no} between steps):
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute cynmix.nex
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 This is the same data set we used for the partitioned analysis in chapter
 \ref{tutorialPartitioned}. It is a mixed data set consisting of morphological and molecular data.
@@ -3285,7 +3291,7 @@ the states of all other morphological characters, we will treat it in a separate
 Otherwise, we will use the same partitioned model as in chapter \ref{tutorialPartitioned}. To set
 up the model, we need to type in the following lines:
 
-\footnotesize
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > partition ancstates = 6: 1, 2-166, COI, EF1a, LWRh, 28S
@@ -3303,44 +3309,53 @@ MrBayes to report ancestral states for that node and the relevant partition. We 
 corresponding to the Cynipidae to always be present in the sampled trees by first defining and then
 enforcing the constraint:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > constraint cynipidae=1-29
 MrBayes > prset topologypr=constraints(cynipidae)
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 To ask MrBayes to report ancestral states for the first partition, which contains only the first
 morphological character, we use:
 
+\small
+\begin{singlespacing}
 \begin{verbatim}
 MrBayes > report applyto=(1) ancstates=yes
 \end{verbatim}
+\end{singlespacing}
+\normalsize
 
 We now run the analysis, say for 30,000 generations, which is barely enough to get adequate
 convergence. After the analysis is completed, we summarize the parameter samples, including those
 of the ancestral state probabilities, using the \ttt{sump} command:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > mcmc ngen=30000
 MrBayes > sump
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The output from \ttt{sump} will include the state probabilities of the first character for the node
 corresponding to the most recent common ancestor of the Cynipidae. Here are the relevant lines in
 the parameter table from our analysis (they are found at the bottom of the table), based on a run
-of 100,000 generations:
+of 1 M generations:
 
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-   Parameter             Mean      Variance          min ESS*  avg ESS    PSRF+ 
-   -----------------------------------------------------------------------------
-   p(0){1@cynipidae}   0.582241    0.028763    ...     28.07     30.99    1.004
-   p(1){1@cynipidae}   0.417759    0.028763    ...     28.07     30.99    1.004
-   -----------------------------------------------------------------------------
+ Parameter           Mean      Variance     min ESS*  avg ESS  PSRF+
+ --------------------------------------------------------------------
+
+ p(0){1@cynipidae}   0.547910  0.019476 ... 36.72     43.47    1.000
+ p(1){1@cynipidae}   0.452090  0.019476 ... 36.72     43.47    1.000
+ --------------------------------------------------------------------
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -3350,10 +3365,11 @@ The first line gives the probability of state 0 for character 1 at the constrain
 node. The results indicate that the probability of the ancestral state being 0 at this node is only
 slightly higher than the probability of the state being 1.
 
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
-%%%% JN: tis 23 jul 2019 16:55:36: I started on this section but encountered a bug in mb(!)
+
 \section{The Multi-Species Coalescent}
+
+%%%% JN: Adding `set autoclose=yes nowarnings=yes` to avoid explaining the warning about clock rate
+%%%% JN: when starting the `mcmc`. See github issue #117.
 
 In this tutorial, we will set up an analysis using the multi-species coalescent. Unlike standard
 models, which are based on sequence concatenation, this model does not assume that gene trees are
@@ -3364,11 +3380,14 @@ because of lineage sorting (deep coalescence). However, it does not model introg
 hybridization.
 
 For this tutorial, we will use the \ttt{finch.nex} data set, which contains data from 30 loci for a
-set of four individuals belonging to four different species. As usual, we first read in the data:
+set of four individuals belonging to four different species. As usual, we first read in the data
+(we also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted
+for answering \ttt{yes}/\ttt{no} between steps):
 
 \begin{singlespacing}
 \small
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute finch.nex
 \end{verbatim}
 \end{singlespacing}
@@ -3421,7 +3440,7 @@ MrBayes > unlink topology=(all)
 
 To set the multi-species coalescent as the prior for each of the gene trees, we need to say both
 that the branch lengths should come from a coalescent process within a species tree,and that the
-topology should be constrained by the species tree. This is achieved using the lines:
+topology should be constrained by the species tree. This is achieved using the following commands:
 
 \begin{singlespacing}
 \small
@@ -3472,14 +3491,6 @@ We do that by setting the number of chains to one, \ttt{nchains=1}. Under these 
 run seemed to produce an adequate sample within 1 M generations. To run an analysis of this length
 without Metropolis coupling, use:
 
-%%%% JN: tis 23 jul 2019 16:51:10: Here (mcmc) I get a Warning:
-%%%% JN:     WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.
-%%%% JN:        This is likely to be incorrect unless you have set the population size prior
-%%%% JN:        ('prset popsizepr') to reflect an appropriate prior on theta. 
-%%%% JN:     Do you want to continue with the run regardless? (yes/no):
-%%%% JN: Answering 'yes' to the question ends up in an infinite loop (asking again, and again...)
-%%%% JN: The command works if read from a batch file, so something in the cmd line parser!
-
 \begin{singlespacing}
 \small
 \begin{verbatim}
@@ -3509,34 +3520,34 @@ tree. To summarize the tree samples, simply use the \tb{sumt} command, which wil
 the gene trees and then the species tree. Focus on the last tree, which is the species tree. It
 should look something like this:
 
-\scriptsize
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
-   Clade credibility values:
-
-   /------------------------------------------------------------------ SpeciesA (1)
-   |                                                                               
-   |------------------------------------------------------------------ SpeciesB (2)
-   +                                                                               
-   |------------------------------------------------------------------ SpeciesC (3)
-   |                                                                               
-   \------------------------------------------------------------------ SpeciesD (4)
-                                                                                   
-
-   Phylogram (based on median node depths):
-
-   /------------------------------------------------------------------ SpeciesA (1)
-   |                                                                               
-   |------------------------------------------------------------------ SpeciesB (2)
-   +                                                                               
-   |------------------------------------------------------------------ SpeciesC (3)
-   |                                                                               
-   \------------------------------------------------------------------ SpeciesD (4)
-                                                                                   
-   -----------------|---------------|----------------|---------------|             
-                3.00e-04        2.00e-04         1.00e-04        0.00e-04          
-
-   [Expected changes per site]
+  Clade credibility values:
+ 
+  /------------------------------------------------------------------ SpeciesA (1)
+  |                                                                               
+  |------------------------------------------------------------------ SpeciesB (2)
+  +                                                                               
+  |------------------------------------------------------------------ SpeciesC (3)
+  |                                                                               
+  \------------------------------------------------------------------ SpeciesD (4)
+                                                                                  
+ 
+  Phylogram (based on median node depths):
+ 
+  /------------------------------------------------------------------ SpeciesA (1)
+  |                                                                               
+  |------------------------------------------------------------------ SpeciesB (2)
+  +                                                                               
+  |------------------------------------------------------------------ SpeciesC (3)
+  |                                                                               
+  \------------------------------------------------------------------ SpeciesD (4)
+                                                                                  
+  ----------|-------------|-------------|-------------|-------------|             
+        4.00e-04      3.00e-04      2.00e-04      1.00e-04      2.71e-20          
+ 
+  [Expected changes per site]
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -3545,6 +3556,44 @@ These summaries of the tree samples show that the species tree topology is unres
 that the species tree is very shallow, so the sequences are quite similar to each other. In the
 partition tables printed above the trees, it is possible to find the posterior probability for each
 of the individual clades found in the tree samples.
+
+%%%% JN: tis 23 jul 2019 16:55:36: Ad hoc work around for bug #116.
+{\color{red}
+Please note, a bug in v.3.2.7a (June 2019) prevents the \ttt{sumt} command to complete. See
+\url{https://github.com/NBISweden/MrBayes/issues/116}. One may, however, apply a work-around that
+will allow the analysis to complete:} 
+
+\footnotesize
+To continue the example above based on the data in \ttt{finch.nex}, type \tb{quit} to quit MrBayes
+after attempting the \ttt{sumt}, and continue in your shell (your Terminal window (``bash'',
+applicable on Macintosh, Unix, and later versions of MS Windows), and assuming that your MrBayes
+program is named \tb{mb}):
+
+\scriptsize
+\begin{singlespacing}
+\begin{verbatim}
+$ cat << ADHOC > finch.nex.tree31
+#NEXUS
+Begin data;
+Dimensions ntax=4 nchar=1;
+Format datatype=DNA gap=- missing=?;
+Matrix
+SpeciesA A
+SpeciesB A
+SpeciesC A
+SpeciesD A
+;
+end;
+begin mrbayes;
+set autoclose=yes nowarnings=yes;
+sumt;
+end;
+ADHOC
+
+$ mb -i finch.nex.tree31
+\end{verbatim}
+\end{singlespacing}
+\normalsize
 
 
 \chapter{Working with MrBayes}
