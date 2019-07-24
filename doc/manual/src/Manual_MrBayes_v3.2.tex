@@ -27,8 +27,6 @@
 
 %%%% JN: Draft version, July 2019
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
-%%%% JN: I also added a note on how far (starting from the very beginning), I made it thus
-%%%% JN: far (around line #2477, Feb 2019).
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
 \begin{document}
@@ -3628,9 +3626,9 @@ E, G, H, I, L, K, M, F, P, S, T, W, Y, V, X\} for protein data, \{0, 1\} for res
 data, and \{0, 1, 2, 3, 4, 5, 6, 5, 7, 8, 9\} for standard (morphology) data. In addition to these
 symbols, MrBayes supports the use of separate symbols for gaps, missing characters, and ``match''
 characters; the latter correspond to characters that match the state in the first taxon in the
-matrix. The special symbols are defined using the \ttt{gap}, \ttt{missing}, and
-\ttt{matchchar} parameters of the \ttt{format} command. For instance, \ttt{missing=?} specifies
-that a questionmark is used to denote missing characters.
+matrix. The special symbols are defined using the \ttt{gap}, \ttt{missing}, and \ttt{matchchar}
+parameters of the \ttt{format} command. For instance, \ttt{missing=?} specifies that a questionmark
+is used to denote missing characters.
 
 Typically, the restriction to standard symbols is not a problem. However, some programs that write
 data to Nexus files will use \ttt{equate} macros and \ttt{symbols} lists even when they are not
@@ -3675,16 +3673,16 @@ taxon names to be replaced by indices in the tree specifications. If a \ttt{tran
 not present, the taxon names need to be spelled out in each tree statement.
 
 Note that the Nexus tree statement includes a name for each tree; in this case, the tree is named
-\ttt{mytree}. It is this name that is used in MrBayes to refer to the tree and its branch
-lengths. The command \ttt{showusertrees} will print to screen a simple representation of the
-user-defined trees that are currently held in memory. If two user-defined trees have the same name,
-the second tree, when read in, will replace the first. All user-defined trees will be cleared from
-memory when a new data matrix is read in.
+\ttt{mytree}. It is this name that is used in MrBayes to refer to the tree and its branch lengths.
+The command \ttt{showusertrees} will print to screen a simple representation of the user-defined
+trees that are currently held in memory. If two user-defined trees have the same name, the second
+tree, when read in, will replace the first. All user-defined trees will be cleared from memory when
+a new data matrix is read in.
 
-The Nexus tree format allows you to specify both trees with branch lengths and topologies --- trees
-without branch lengths. Both rooted and unrooted trees are handled, and the trees need not be fully
-resolved. Typically, a special comment is used to explicitly declare whether a tree is rooted or
-unrooted. The special comments start with a bracket followed immediately by an ampersand. For
+The Nexus tree format allows you to specify both trees with branch lengths, and topologies ---
+trees without branch lengths. Both rooted and unrooted trees are handled, and the trees need not be
+fully resolved. Typically, a special comment is used to explicitly declare whether a tree is rooted
+or unrooted. The special comments start with a bracket followed immediately by an ampersand. For
 instance, the special comment \ttt{[\&R]} is used to declare that a tree is rooted.
 
 When MrBayes prints trees to file, it uses such special comments to specify branch and node
@@ -3708,10 +3706,10 @@ with the selected models, and share some of our experiences with models for vari
 Since version 3.2, MrBayes sets up a default model as soon as you have read in a data matrix. The
 default model will have one partition for each data type, and will apply a simple substitution
 model to each of them. You modify the model settings primarily by using the \ttt{lset} and
-\ttt{prset} commands. Appendix \ref{appendixOverview} contains graphical summaries of the available models
-for different data types, and the appropriate \ttt{lset} and \ttt{prset} parameters needed to
-invoke them. Chapter \ref{evolutionaryModels} gives more detail about each model and how you set it
-up in MrBayes.
+\ttt{prset} commands. Appendix \ref{appendixOverview} contains graphical summaries of the available
+models for different data types, and the appropriate \ttt{lset} and \ttt{prset} parameters needed
+to invoke them. Chapter \ref{evolutionaryModels} gives more detail about each model and how you set
+it up in MrBayes.
 
 In principle, the \ttt{lset} command is used to set the structure of the model, while the
 \ttt{prset} command is used to set the prior parameters. However, the distinction is somewhat
@@ -3728,8 +3726,8 @@ To set up a partitioned model, you first define the partition using the \ttt{par
 \ttt{set} commands, possibly using previously named character sets specified with the \ttt{charset}
 command. Once that has been accomplished, you use the \ttt{applyto} option of \ttt{lset} and
 \ttt{prset} to apply model settings to particular parts of the data set. To link or unlink
-parameters across partitions, you use the \ttt{link} and \ttt{unlink} commands. For more
-instructions on how to set up a partitioned model, see the tutorial in chapter
+parameters across partitions, you use the \ttt{link} and \ttt{unlink} commands, respectively. For
+more instructions on how to set up a partitioned model, see the tutorial in chapter
 \ref{tutorialPartitioned} and the model specification in the \ttt{cynmix.nex} example file. More
 details are provided in section \ref{partitionedModels}.
 
@@ -3832,12 +3830,12 @@ model for the loops. The reason is that the doublet model captures the dependenc
 substitutions at the paired stem sites. If the stem sites are modeled with the standard
 four-by-four model, the changes in stem sites will be weighted too heavily and this might cause
 problems if there are homoplasies in these characters. Of course, a doublet model is
-computationally more complex than a four-by-four model, so if this means you cannot get convergence
-in a reasonable amount of time, you may still be better off with the four-by-four model. If it is
-difficult or impossible to separate out the stem sites, then a standard four-by-four nucleotide
-model is the only option. Alignment is often a significant issue when analyzing ribosomal
-sequences. There are Bayesian approaches that accommodate alignment uncertainty, but none of them
-is implemented currently in MrBayes.
+computationally more complex than a four-by-four model, so if this means you cannot get MCMC
+convergence in a reasonable amount of time, you may still be better off with the four-by-four
+model. If it is difficult or impossible to separate out the stem sites, then a standard
+four-by-four nucleotide model is the only option. Alignment is often a significant issue when
+analyzing ribosomal sequences. There are Bayesian approaches that accommodate alignment
+uncertainty, but none of them is implemented currently in MrBayes.
 
 For protein-coding sequences, there are numerous options. Is it best to analyze such sequences
 using a nucleotide, amino acid or codon model? In principle, a codon model could also capture
@@ -3879,10 +3877,10 @@ seen several instances where this misfit causes long branch attraction phenomena
 
 With amino acid models, it seems plausible that dividing up the sites by the selective environment
 of the amino acid residue will be better than dividing up the sites simply by gene. For instance,
-hydrophilic sites in one group and hydrophobic sites in another. Unfortunately, such a
-partitioning scheme requires detailed knowledge of protein structure or careful analysis of the
-aligned character matrix. MrBayes currently does not implement models that automatically finds
-these partitions and models for you.
+hydrophilic sites in one group and hydrophobic sites in another. Unfortunately, such a partitioning
+scheme requires detailed knowledge of protein structure or careful analysis of the aligned
+character matrix. MrBayes currently does not implement models that automatically finds these
+partitions and models for you.
 
 If you have decided on using a four-by-four nucleotide model, then a very popular approach for
 selecting a specific substitution model is to use so-called model testing, as implemented in
@@ -3968,9 +3966,9 @@ knowledge than represented by the vague default priors.
 A phenomenon related to over-parameterization is ``burn out''. The likelihood monitored during the
 MCMC sampling typically increases in the early phase of a run (burn in) and then stabilizes close
 to the peak values. However, with over-parameterized models, one sometimes finds that the
-likelihood first increases but then \emph{decreases} significantly before stabilizing. The cause
-of this behavior is the default starting values used in MrBayes. They often tend to be closer to
-the maximum likelihood estimate (MLE) of the parameter than a random sample from the default vague
+likelihood first increases but then \emph{decreases} significantly before stabilizing. The cause of
+this behavior is the default starting values used in MrBayes. They often tend to be closer to the
+maximum likelihood estimate (MLE) of the parameter than a random sample from the default vague
 prior. For instance, the starting value of all relative rate parameters is set to $1.0$ by default.
 
 In most cases, you expect the bulk of the probability mass in the posterior probability
@@ -3987,14 +3985,14 @@ likelihood will decrease.
 A particularly common situation is that the MLE region, which includes trees with short branch
 lengths, has considerably lower probability mass than a much larger region of tree space at longer
 branch lengths. The reason is that a standard phylogenetic model, particularly a non-clock model,
-is entirely dominated by the many branch length parameters. For instance, a non-clock
-GTR + I + $\Gamma$ model for 100 taxa has 10 free substitution model parameters but roughly 200 branch
-length parameters. As a branch becomes longer, its exact value has little influence on likelihood
-and we can end up with the huge office complex situation.
+is entirely dominated by the many branch length parameters. For instance, a non-clock GTR + I +
+$\Gamma$ model for 100 taxa has 10 free substitution model parameters but roughly 200 branch length
+parameters. As a branch becomes longer, its exact value has little influence on likelihood and we
+can end up with the ``huge office complex'' situation.
 
-Regardless of the cause, there are two ways of correcting an over-parameterized model: either you
-decrease the model complexity by reducing the number of model parameters, or you incorporate more
-background information into your prior distributions.
+Regardless of the cause, there are two ways of correcting an over-parameterized model for a given
+data set: either you decrease the model complexity by reducing the number of model parameters, or
+you incorporate more background information into your prior distributions.
 
 \subsection{Bayesian Model Choice}
 \label{bayesianModelChoice}
@@ -4102,7 +4100,7 @@ possible time-reversible rate matrices according to their posterior probability
 \citep{huelsenbeck04d}. This can be accomplished simply by using the option \ttt{mixed} for the
 \ttt{Nst} parameter in the \ttt{lset} command. For example:
 
-\footnotesize
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > lset applyto=(all) nst=mixed
@@ -4120,7 +4118,7 @@ according to its probability. Currently, ten different rate matrices will be sam
 \ref{estimatingTheFixedRateModel}). To achive the integration over rate matrices, one need to use
 the \ttt{mixed} option for \ttt{Aamodelpr} parameter in the \ttt{prset} command. For example:
 
-\footnotesize
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > prset applyto=(all) aamodelpr=mixed
@@ -4128,9 +4126,9 @@ MrBayes > prset applyto=(all) aamodelpr=mixed
 \end{singlespacing}
 \normalsize
 
-
-%%% \section{Starting Values}
-%%% \subsection{Default Starting Values}
+%%%% JN: Section not finished
+% \section{Starting Values}
+% \subsection{Default Starting Values}
 % \subsection{Changing Starting Values}
 % One can change the default, or current, starting values for parameters in a model using the command
 % \ttt{startvals}. The basic format is:                                                          
@@ -4161,25 +4159,25 @@ MrBayes > prset applyto=(all) aamodelpr=mixed
 % multipliers.  
 
 
-%%% 
-%%% \section{Sampling the Posterior}
-%%% \subsection{Convergence and Mixing}
-%%% \subsection{Proposal Mechanisms}
-%%% \subsubsection{Scalar Moves}
-%%% \tb{\it Slider}
-%%% \tb{\it Scaler}
-%%% \subsubsection{Simplex Moves}
-%%% \tb{\it Dirichlet Move}
-%%% \tb{\it Pair Slider}
-%%% 
-%%% \subsubsection{Tree Moves}
-%%% \tb{\it Node Slider}
-%%% \tb{\it LOCAL}
-%%% \tb{\it Nearest Neighbor Interchange}
-%%% \tb{\it Subtree Pruning and Regrafting}
-%%% \tb{\it Subtree Swapping}
-%%% \tb{\it Tree Bisection and Reconnection}
-%%% \tb{\it Parsimony-Biased SPR}
+%%%% JN: Sections planned, but not written
+% \section{Sampling the Posterior}
+% \subsection{Convergence and Mixing}
+% \subsection{Proposal Mechanisms}
+% \subsubsection{Scalar Moves}
+% \tb{\it Slider}
+% \tb{\it Scaler}
+% \subsubsection{Simplex Moves}
+% \tb{\it Dirichlet Move}
+% \tb{\it Pair Slider}
+% 
+% \subsubsection{Tree Moves}
+% \tb{\it Node Slider}
+% \tb{\it LOCAL}
+% \tb{\it Nearest Neighbor Interchange}
+% \tb{\it Subtree Pruning and Regrafting}
+% \tb{\it Subtree Swapping}
+% \tb{\it Tree Bisection and Reconnection}
+% \tb{\it Parsimony-Biased SPR}
 
 \subsection{Tuning Proposals}
 
@@ -4201,15 +4199,15 @@ random SPR move tends to do well on some data sets but it is switched off by def
 general, it is less efficient than the default moves.
 
 You can add and remove proposal mechanisms, or change the frequency with which they are used, by
-adjusting their relative proposal probabilities using the \ttt{propset} command. Use
-\ttt{showmoves allavailable=yes} first to see a list of all the available moves.
+adjusting their relative proposal probabilities using the \ttt{propset} command. Use \ttt{showmoves
+allavailable=yes} first to see a list of all the available moves.
 
 In general, however, if your chains are not converging then it may be more productive to add more
 heated chains, especially if you have access to a large computer cluster, than it is to try to
 fine-tune proposal tuning parameters or proposal frequencies.
 
-%% \subsubsection{Adaptive Tuning}
-
+%%%% JN: Section planned, but not written
+% \subsubsection{Adaptive Tuning}
 
 \subsection{Monitoring Convergence}
 \label{monitoringConvergence}
@@ -4223,16 +4221,16 @@ that ideally should be started from different randomly chosen starting trees \ci
 ASDSF should approach $0.0$ as runs converge to the same distribution. The frequencies of rare
 splits or clades are difficult to estimate accurately and these groupings are usually of marginal
 interest. Therefore, it may be advantageous to exclude them from the diagnostic. MrBayes allows the
-user to set a cutoff frequency (using the \ttt{Minpartfreq} option for the \ttt{sumt} command); all
-splits or clades occurring minimally at that frequency (default value $0.10$)in at least one of the
-runs will be incorporated in the ASDSF.
+user to set a cutoff frequency (using the \ttt{minpartfreq} option for the \ttt{sumt} command); all
+splits or clades occurring minimally at that frequency (default value $0.10$), in at least one of
+the runs will be incorporated in the ASDSF.
 
-To allow users to monitor MCMC progress, MrBayes can run several analyses in parallel (by ensuring 
-that the \ttt{nruns} parameter for the \ttt{mcmc} command is $>1$) and report the average (ASDSF) or
-maximum standard deviation of split frequencies at regular intervals. For example (command given on
-several lines for readability):
+To allow users to monitor MCMC progress, MrBayes can run several analyses in parallel (by ensuring
+that the \ttt{nruns} parameter for the \ttt{mcmc} command is $>1$) and report the average (ASDSF),
+or maximum standard deviation of split frequencies at regular intervals. For example (command given
+on several lines for readability):
 
-\footnotesize
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > mcmcp nruns=2 mcmcdiagn=yes diagnfreq=5000
@@ -4253,7 +4251,7 @@ average (\ttt{diagnstat=avgstddev}), but there is also a choice of using the max
 frequency $<0.10$ from being included in the calculation of the diagnostic statistic. The
 \ttt{savetrees} option becomes relevant if you are using a relative burnin for run-time convergence
 diagnostics (as given by \ttt{relburnin=yes burninfrac=0.25}. Tree samples need to be deleted from
-split frequency counters as the cut-off point for the burnin moves during the run. If \t{avetrees}
+split frequency counters as the cut-off point for the burnin moves during the run. If \t{savetrees}
 is set to \ttt{no}, tree samples to be discarded are read back in from file. If \ttt{savetrees} is
 set to \ttt{yes}, the tree samples to be removed will be stored in the internal memory instead.
 This can use up a lot of memory in large analyses.
@@ -4262,7 +4260,7 @@ If one wishes to rely on the ASDSF as the crucial statistic for deciding when to
 MrBayes provides a convenient ``automatic stopping rule''. For example (note that other default
 values are omitted):
 
-\footnotesize
+\small
 \begin{singlespacing}
 \begin{verbatim}
 MrBayes > mcmc stoprule=yes stopval=0.01
@@ -4301,8 +4299,8 @@ multicore processors using the MPI version of the program, greatly speeding up t
 
 MrBayes uses an incremental heating scheme, in which chain $i$ is heated by raising its posterior
 probability to the power $1/ (1 + i\lambda)$, where $\lambda$ is the heating coefficient controlled
-by the \ttt{Temp} parameter. Every \ttt{Swapfreq} generation, two chains are picked at random
-and an attempt is made to swap their states. For many analyses, the default settings should work
+by the \ttt{Temp} parameter. Every \ttt{Swapfreq} generation, two chains are picked at random and
+an attempt is made to swap their states. For many analyses, the default settings should work
 nicely. If you are running many more than three heated chains, however, you may want to increase
 the number of swaps (\ttt{Nswaps}) that are tried each time the chain stops for swapping. If the
 frequency of swapping between chains that are adjacent in temperature is low, you may want to
@@ -4316,8 +4314,8 @@ by setting \ttt{nchains} to a value larger than $1$.
 
 If you do use heated chains, try to make sure that the acceptance rates of swaps between adjacent
 chains are in the approximate range of 10 to 70 \%. The acceptance rates are printed to the
-\ttt{.mcmc} file and to screen at the end of the run. The latter output contains a table that
-looks like this (you find the critical values in a different format in the \ttt{.mcmc} file):
+\ttt{.mcmc} file and to screen at the end of the run. The latter output contains a table that looks
+like this (you find the critical values in a different format in the \ttt{.mcmc} file):
 
 \footnotesize
 \begin{singlespacing}
@@ -4334,9 +4332,9 @@ looks like this (you find the critical values in a different format in the \ttt{
 
 It is the values just above the diagonal, $\{0.53, 0.55, 0.53\}$ in this case, that you should
 focus on. If the acceptance rates are low, say below 10 \%, you can try decreasing the temperature
-constant (\ttt{mcmc temp=<value>}); if the acceptance rates are high, say above 70 \%, you can
-try increasing it. Acceptance rates outside the optimal range do not invalidate the results from
-your analysis, but they do suggest that you could make your analysis more efficient.
+constant (\ttt{mcmc temp=<value>}); if the acceptance rates are high, say above 70 \%, you can try
+increasing it. Acceptance rates outside the optimal range do not invalidate the results from your
+analysis, but they do suggest that you could make your analysis more efficient.
 
 We often observe considerable improvements in convergence and mixing for difficult problems when
 you use Metropolis coupling. If your chains are not converging, it may worthwhile to explore the
@@ -4360,7 +4358,7 @@ run). The Metropolis proposals used by MrBayes work best when their acceptance r
 low nor too high. A rough guide is to try to get them within the range of 10 \% to 70 \%. Rates
 outside this range are not necessarily a big problem but they typically mean that the analysis is
 inefficient. If the rate is too high, you can make the proposal bolder by changing tuning
-parameters (see Appendix) using the props command. Be warned, however, that changing tuning
+parameters (see Appendix) using the \ttt{props} command. Be warned, however, that changing tuning
 parameters of proposals and proposal probabilities may destroy any hope of getting convergence. For
 instance, you need at least one move changing each parameter in your model.
 
@@ -4390,13 +4388,13 @@ tree; this is requested using \ttt{mcmcp nperts=<integer\_value>}.
 If you are running a long analysis and want to extend it, or if there is a risk that a long
 analysis will be inadvertently interrupted by hardware failure or other factors that are out of
 your control, checkpointing will come handy. The option \ttt{checkpoint} for the \ttt{mcmc} command
-will create a check-pointing file contaning all the current parameter values of all chains.
-This is done on a regular interval as set by the \ttt{checkfreq} option (units ar MCMC generations).
-The check-point file is written in the current directory with file suffix `.ckp'.
+will create a check-pointing file contaning all the current parameter values of all chains. This
+is done on a regular interval as set by the \ttt{checkfreq} option (units are MCMC generations).
+The check-point file is written in the current directory with file suffix \ttt{.ckp}.
 
-To start from an existing `.ckp' file, you need to use the \ttt{append=yes} option when starting
-a new (continued) MCMC analysis using the \ttt{mcmc} command. Also make sure that the output file
-names used in the previous run are the same as those in the current run.
+To start from an existing \ttt{.ckp} file, you need to use the \ttt{append=yes} option when
+starting a new (continued) MCMC analysis using the \ttt{mcmc} command. Also make sure that the
+output file names used in the previous run are the same as those in the current run.
 
 \section{Stepping-stone Sampling}
 
@@ -4404,7 +4402,7 @@ names used in the previous run are the same as those in the current run.
 Since version 3.2 MrBayes allows you to use stepping-stone sampling \citep{xie11} to estimating the
 marginal likelihood of the currently specified model. Stepping-stone sampling (SS) is considerably
 more accurate than the harmonic mean of the likelihoods from a standard MCMC run on the model
-(calculated by the \ttt{Sump} command) and it was shown to be more efficient than thermodynamic
+(calculated by the \ttt{sump} command) and it was shown to be more efficient than thermodynamic
 integration \citep{xie11}.
 
 It is very easy to use stepping-stone sampling to estimate marginal likelihood. All you should do
@@ -4418,14 +4416,16 @@ the cases it does not have to be more complicated than that. For example, if you
 marginal likelihood of a model which is setup in file \ttt{primates.nex} then you may issue the
 commands:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
-MrBayes > exe primates.nex
+MrBayes > execute primates.nex
 MrBayes > ss ngen=1000000 samplefreq=1000
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
-That will start MCMC-like run. Once completed a table containing estimate of marginal likelihood
+That will start MCMC-like run. Once completed, a table containing estimate of marginal likelihood
 for each run is printed along with the mean value:
 
 \begin{singlespacing}
@@ -4447,9 +4447,8 @@ for each run is printed along with the mean value:
 Note that unlike with ordinary MCMC run you can not stop the SS-run and process results for sampled
 generations or extend your run beyond originally specified length. Thus, it is extremely important
 to chose right length of the SS-run at the beginning, you will not be able to change it later on.
-That said, it does not mean that if your SS-run did not finish it is completly wasted. As with
-any other MCMC run, if you enable checkpointing you can ``resurrect'' you run from the last
-checkpoint.
+That said, it does not mean that if your SS-run did not finish it is completly wasted. As with any
+other MCMC run, if you enable checkpointing you can ``resurrect'' you run from the last checkpoint.
 
 Now you know how to get the result, but how much we can trust the numbers? As usually you need to
 have at least two independent runs in order to get a feeling of result quality. The first thing to
@@ -4489,7 +4488,7 @@ The dots on this graph represent deviation of split frequencies among different 
 progresses. Ideally the values of deviation of split frequencies in the beginning of SS-run (x-axis
 around 1) should be as good as at the end of your ordinary MCMC analyzes on this dataset. It is
 quite normal that towards right hand side of the graph the values start to increase. If you have
-datasets with many taxons then towards the end of the run you may even get  values indicating that
+datasets with many taxons then towards the end of the run you may even get values indicating that
 there were no splits above minimum frequency.
 
 \subsection{How stepping-stone sampling works}
@@ -4502,26 +4501,26 @@ the prior ($\beta$ = 0).
 
 The power posterior distributions are sampled using MCMC. First, we start a standard MCMC chain on
 the posterior distribution, and let it run until we have reached the criterion specified by the
-\ttt{Burninss} option. After this, we step through the power posterior distributions until we reach
-the prior distribution. In each of the \ttt{Nsteps} steps, we sample from a new power posterior
-distribution with a distinct $\beta$ value. The $\beta$ values correspond to \ttt{Nsteps} evenly
-spaced quantiles in a Beta(\ttt{Alpha},1.0) distribution. For the first sampling step, the $\beta$
+\ttt{burninss} option. After this, we step through the power posterior distributions until we reach
+the prior distribution. In each of the \ttt{nsteps} steps, we sample from a new power posterior
+distribution with a distinct $\beta$ value. The $\beta$ values correspond to \ttt{nsteps} evenly
+spaced quantiles in a Beta(\ttt{alpha},1.0) distribution. For the first sampling step, the $\beta$
 value is equal to the last quantile, i.e., it is close to $1.0$. For each successive step, the
 $\beta$ value takes on the value of the next quantile, in decreasing order, until it reaches the
 value of $0.0$.
 
-%%%% JN: Check if this is true: "However, the \ttt{mcmc} burnin parameters are ignored."
+%%%% JN: Check if this applies: "However, the \ttt{mcmc} burnin parameters are ignored."
 The \ttt{ss} procedure uses the same machinery as the standard \ttt{mcmc} algorithm, and shares
 most of its parameters with the \ttt{mcmc} and \ttt{mcmcp} commands. All \ttt{mcmc} parameters,
 except those related to burnin, have the same meaning and usage in the \ttt{ss} command as they
 have in the \ttt{mcmc} command. However, the \ttt{mcmc} burnin parameters are ignored. Instead, the
-\ttt{ss} command uses its own burnin parameter, \ttt{Burninss}. The \ttt{ss} command also has its
+\ttt{ss} command uses its own burnin parameter, \ttt{burninss}. The \ttt{ss} command also has its
 own parameters for specifying the number of steps and the shape of the Beta distribution from which
 the $\beta$ values are computed.
 
-Note that the \ttt{Ngen} parameter of \ttt{mcmc} is used to set the maximum number of generations
+Note that the \ttt{ngen} parameter of \ttt{mcmc} is used to set the maximum number of generations
 processed, including both the burnin and the following steps in the stepping-stone sampling phase.
-For instance, assume that \ttt{Burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{Ngen} to
+For instance, assume that \ttt{burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{ngen} to
 $1000000$ and \ttt{Samplefreq} to $1000$. We will then get 1,000 samples in total (1,000,000 /
 1,000). These will fall into 50 bins, one of which represents the burnin and is discarded. Each
 step in the algorithm will thus be represented by 20 samples.
@@ -4533,55 +4532,57 @@ marginal likelihood in log units is obtained simply by summing of the log ratios
 Examining the values of ratio estimates allows you to asses there quality and judge convergence of
 different runs for specific steps. If you observe huge differences among estimates for the same
 step then the runs did not converge for the step. If you observe poor convergence for later steps
-then in your next SS analyzes you may consider reducing \ttt{Alpha} to increase skewness of the
-$\beta$ values. If you have diagnostic turned the file contains information about standard
+then in your next SS analyzes, you may consider reducing \ttt{alpha} to increase skewness of the
+$\beta$ values. If you have diagnostic turned on, the file contains information about standard
 deviation of split frequencies for each step. So, instead of looking at the graph with split
-frequencies plotted at the end of SS analyzes, you may examine the \ttt{.ss} file to analyze precise
-values. If you have dataset with many taxa ($>20$) you should not wary if standard deviation of
-split frequencies is poor or even can not be evaluated for later steps.
+frequencies plotted at the end of SS analyzes, you may examine the \ttt{.ss} file to analyze
+precise values. If you have dataset with many taxa ($>20$) you should not worry if standard
+deviation of split frequencies is poor, or even can not be evaluated for later steps.
 
-%% \section{Analyzing the Posterior Sample}
-%% \subsection{Reporting Parameter Values}
-%% \subsubsection{Parameter Formats}
-%% \subsubsection{dN/dS Ratios}
-%% \subsubsection{Site Rates}
-%% \subsubsection{Tree Parameters}
-%% \subsubsection{Node Ages}
+%%%% JN: Sections planned, but not started:
+% \section{Analyzing the Posterior Sample}
+% \subsection{Reporting Parameter Values}
+% \subsubsection{Parameter Formats}
+% \subsubsection{dN/dS Ratios}
+% \subsubsection{Site Rates}
+% \subsubsection{Tree Parameters}
+% \subsubsection{Node Ages}
 
-\subsubsection{Ancestral State Reconstruction}
-MrBayes allows you to infer ancestral states at ancestral nodes using the full hierarchical
-Bayesian approach (integrating out uncertainty concerning topology and other model parameters). The
-basic approach is described by \citet{huelsenbeck01a} as well as in a recent review
-\citep{ronquist04a}. You first need to constrain the node you want to infer ancestral states for
-using a \ttt{constraint} definition and the \ttt{topologypr=constraints(...)} command as described
-above for constrained topology models. Then ancestral state reconstruction is requested using
-\tb{report ancstates=yes.}
-
-The probability of each state will be printed to the \ttt{.p} file(s) under the heading
-\ttt{p(<state\_code>){character\_number}}. For instance, the probability of an A at site $215$ in a
-nucleotide data set would be found under the heading \ttt{p(A)\{215\}}. If you constrain several
-nodes in your data set, the node number will be given as well. If you had constrained two nodes,
-the probabilities of the above character would be distinguished as \ttt{p(A)\{215@1\}} and
-\ttt{p(A)\{215@2\}}. However, if you are interested in inferring ancestral states at two or more
-different nodes, we recommend running separate analyses, each constraining a single node. The
-reason is that when you focus on one node, you probably want to integrate over uncertainty in the
-rest of the tree, including the potential uncertainty concerning the presence of the other node(s).
-
-Often, there is interest in mapping only one or a few characters onto trees inferred using largely
-other types of data. For instance, a behavioral or ecological trait may be mapped onto trees based
-on molecular data. To do this type of analysis in MrBayes, you would set up a mixed data set
-including both the character to be mapped and the data used to infer the phylogeny, with the
-character to be mapped in a separate data partition. How to do this is explained in the tutorial
-given in section \ref{tutorialPartitioned} of this manual as well as in the description of
-partitioned models above. Typically, you also want to assume that the evolutionary rate for the
-mapped character is proportional to that of the other data (rather than identical). This is
-achieved by setting up a partitioned rate model using \tb{prset ratepr=variable}. Then you need to
-set up a constraint for the node of interest, as described above. Finally, you request that
-ancestral states are inferred for the partition with the mapped character (there is no need to wade
-through ancestral state probabilities for the other partition(s)). For instance, if the character
-to be mapped is in partition 2, request ancestral state sampling using \ttt{prset applyto=(2)
-ancstates=yes.} Now only the ancestral states for the character of interest will be printed to the
-\ttt{.p} file(s). The sampled values can be summarized as usual with the \ttt{sump} command.
+%%%% JN: The following section is a duplicate. Move to/replace "4.8 Inferring Ancestral States"
+% \subsubsection{Ancestral State Reconstruction}
+% MrBayes allows you to infer ancestral states at ancestral nodes using the full hierarchical
+% Bayesian approach (integrating out uncertainty concerning topology and other model parameters). The
+% basic approach is described by \citet{huelsenbeck01a} as well as in a recent review
+% \citep{ronquist04a}. You first need to constrain the node you want to infer ancestral states for
+% using a \ttt{constraint} definition and the \ttt{topologypr=constraints(...)} command as described
+% above for constrained topology models. Then ancestral state reconstruction is requested using
+% \tb{report ancstates=yes.}
+% 
+% The probability of each state will be printed to the \ttt{.p} file(s) under the heading
+% \ttt{p(<state\_code>){character\_number}}. For instance, the probability of an A at site $215$ in a
+% nucleotide data set would be found under the heading \ttt{p(A)\{215\}}. If you constrain several
+% nodes in your data set, the node number will be given as well. If you had constrained two nodes,
+% the probabilities of the above character would be distinguished as \ttt{p(A)\{215@1\}} and
+% \ttt{p(A)\{215@2\}}. However, if you are interested in inferring ancestral states at two or more
+% different nodes, we recommend running separate analyses, each constraining a single node. The
+% reason is that when you focus on one node, you probably want to integrate over uncertainty in the
+% rest of the tree, including the potential uncertainty concerning the presence of the other node(s).
+% 
+% Often, there is interest in mapping only one or a few characters onto trees inferred using largely
+% other types of data. For instance, a behavioral or ecological trait may be mapped onto trees based
+% on molecular data. To do this type of analysis in MrBayes, you would set up a mixed data set
+% including both the character to be mapped and the data used to infer the phylogeny, with the
+% character to be mapped in a separate data partition. How to do this is explained in the tutorial
+% given in section \ref{tutorialPartitioned} of this manual as well as in the description of
+% partitioned models above. Typically, you also want to assume that the evolutionary rate for the
+% mapped character is proportional to that of the other data (rather than identical). This is
+% achieved by setting up a partitioned rate model using \ttt{prset ratepr=variable}. Then you need to
+% set up a constraint for the node of interest, as described above. Finally, you request that
+% ancestral states are inferred for the partition with the mapped character (there is no need to wade
+% through ancestral state probabilities for the other partition(s)). For instance, if the character
+% to be mapped is in partition 2, request ancestral state sampling using \ttt{prset applyto=(2)
+% ancstates=yes.} Now only the ancestral states for the character of interest will be printed to the
+% \ttt{.p} file(s). The sampled values can be summarized as usual with the \ttt{sump} command.
 
 \subsection{Convergence Diagnostics}
 The convergence diagnostics provided by MrBayes are quite powerful (see section
@@ -4593,28 +4594,27 @@ can examine the output from your analysis. Two of the most popular tools are Tra
 of the output from MCMC analyses. Another set of tools is provided by the CODA \citep{plummer06}
 and RWTY \citep{warren17} packages for R \citep{rcoreteam18}.
 
-%% \subsection{Plotting}
-%% \subsection{Tree Summaries}
+%%%% JN: Planned sections but not started:
+% \subsection{Plotting}
+% \subsection{Tree Summaries}
 
 \section{Working Effectively With MrBayes}
 
 \subsection{Running MrBayes in Batch Mode}
 
-When you become more familiar with MrBayes, you will undoubtedly want to run it
-in batch mode instead of typing all commands at the prompt. This is done by
-adding a \ttt{MRBAYES} block to a Nexus file, either the same file containing
-the \ttt{DATA} block or a separate Nexus file. The \ttt{MRBAYES} block simply
-contains the commands as you would have given them from the command line, with
-the difference that each command line is ended with a semi-colon. For instance,
-a \ttt{MRBAYES} block that performs three single-run analyses of the data set
-in \ttt{primates.nex} under the GTR + $\Gamma$ model and stores each result in a
-separate file is given below:
+When you become more familiar with MrBayes, you will undoubtedly want to run it in batch mode
+instead of typing all commands at the prompt. This is done by adding a \ttt{MRBAYES} block to a
+Nexus file, either the same file containing the \ttt{DATA} block or a separate Nexus file. The
+\ttt{MRBAYES} block simply contains the commands as you would have given them from the command
+line, with the difference that each command line is ended with a semi-colon. For instance, a
+\ttt{MRBAYES} block that performs three single-run analyses of the data set in \ttt{primates.nex}
+under the GTR + $\Gamma$ model and stores each result in a separate file is given below:
 
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
 begin mrbayes;
-   set autoclose=yes nowarn=yes;
+   set autoclose=yes nowarnings=yes;
    execute primates.nex;
    lset nst=6 rates=gamma;
    mcmc nruns=1 ngen=10000 samplefreq=10 file=primates.nex1;
@@ -4627,20 +4627,20 @@ end;
 
 Since this file contains the \ttt{execute} command, it must be in a file separate from the
 \ttt{primates.nex} file. You start the analysis simply by typing \tb{execute <filename>}, where
-filename is the name of the file containing the \ttt{MRBAYES} block. The set command is needed to
-change the behavior of MrBayes such that it is appropriate for batch mode. When
+filename is the name of the file containing the \ttt{MRBAYES} block. The \ttt{set} command is
+needed to change the behavior of MrBayes such that it is appropriate for batch mode. When
 \ttt{autoclose=yes}, MrBayes will finish the MCMC analysis without asking you whether you want to
-add more generations. When \ttt{nowarn=yes}, MrBayes will overwrite existing files without warning
-you, so make sure that your batch file does not inadvertently cause the deletion of previous result
-files that should be saved for future reference.
+add more generations. When \ttt{nowarnings=yes}, MrBayes will overwrite existing files without
+warning you, so make sure that your batch file does not inadvertently cause the deletion of
+previous result files that should be saved for future reference.
 
 The UNIX version of MrBayes can execute batch files in the background from the command prompt. Just
 type \tb{mb <file> > log.txt \&} at the UNIX prompt, where \ttt{<file>} is the name of your Nexus
 batch file, to have MrBayes run in the background, logging its output to the file \ttt{log.txt}. If
 you want MrBayes to process more than one file, just list the files one after the other with space
-between them, before the output redirection sign (>). When MrBayes is run in this way, it will quit
-automatically when it has processed all files; it will also terminate with an error signal if it
-encounters an error.
+between them, before the output redirection sign (\ttt{>}). When MrBayes is run in this way, it
+will quit automatically when it has processed all files; it will also terminate with an error
+signal if it encounters an error.
 
 Alternatively, the UNIX version of MrBayes can also be run in batch mode using input redirection.
 For that you need a text file containing the commands exactly as you would have typed them from the
@@ -4652,7 +4652,7 @@ both angle brackets are essential and must be included in the command line) with
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-set autoclose=yes nowarn=yes
+set autoclose=yes nowarnings=yes
 execute primates.nex
 lset nst=6 rates=gamma
 mcmc ngen=10000 savebrlens=yes file=primates.nex1
@@ -4663,11 +4663,10 @@ quit
 \normalsize
 \end{singlespacing}
 
-The \ttt{quit} command forces MrBayes to terminate. With previous versions of MrBayes we have had
-problems with infinite loops when the quit command is not included at the end of the file. This
-problem should have been solved since version 3.1.0.
+The \ttt{quit} command forces MrBayes to terminate.
 
-%% \subsection{Running MrBayes on a Cluster}
+%%%% JN: Planned section but not started:
+% \subsection{Running MrBayes on a Cluster}
 
 \subsection{Turbo-charging MrBayes with BEAGLE and MPI}
 \vspace{5 pt}
@@ -4698,9 +4697,11 @@ calculators, and to set various BEAGLE-related options. Before looking into that
 be a good idea to examine the available BEAGLE CPU and GPU resources. You can find out by using the
 following command:
 
+\small
 \begin{verbatim}
 MrBayes > showbeagle
 \end{verbatim}
+\normalsize
 
 If BEAGLE finds an available GPU resource, it will be listed here. This is the listing from a
 machine with an available GPU detected by BEAGLE:
@@ -4755,10 +4756,12 @@ If you run BEAGLE on the CPU, then your best option (when these lines are writte
 the double-precision SSE code with dynamic scaling. This would be requested with the following
 lines:
 
+\small
 \begin{verbatim}
 MrBayes > set usebeagle=yes beagledevice=cpu beagleprecision=double
 MrBayes > set beaglescaling=dynamic beaglesse=yes
 \end{verbatim}
+\normalsize
 
 The default MrBayes likelihood calculator uses single-precision SSE code, which should
 theoretically be the fastest option on the CPU. Currently, BEAGLE only supports double-precision
@@ -4771,10 +4774,12 @@ To use the GPU, you simply switch from CPU to GPU (if you have an available GPU)
 fastest option should be the single-precision code with dynamic scaling. The SSE option is not
 applicable in the GPU case. The fastest GPU option should therefore be:
 
+\small
 \begin{verbatim}
 MrBayes > set usebeagle=yes beagledevice=gpu
 MrBayes > set beagleprecision=single beaglescaling=dynamic
 \end{verbatim}
+\normalsize
 
 The GPU code can be a lot faster than the CPU code, particularly for amino acid and codon models.
 However, the length of the sequences also influences the speed-up. In general, the longer the
@@ -4825,13 +4830,8 @@ Compiling MrBayes from source code can be done with several different compilers 
 common operating systems: Macintosh, Windows, and Unix. The easiest way to build MrBayes on a
 Unix-like system is to use the GNU tool-chain. You can also compile MrBayes with Xcode (on a
 Macintosh) and the Microsoft Visual Studio suite (on a Windows machine).
-
-Some performance gain can be achieved by using compiler optimization flags that are not set by
-default. Keep in mind, however, that not all such options are safe. A number of optimization
-methods might give a slowdown instead of a speedup, and some options relax numerical stringency,
-leading to a program that might produce incorrect results. If you encounter problems with MrBayes,
-please make sure they are not due to unusual compiler optimization settings before submitting a bug
-report.
+Please refer to the GitHub pages \url{https://github.com/NBISweden/MrBayes}, and especially the
+files \ttt{INSTALL}, and \ttt{README} that comes with the source code, for further details.
 
 \subsection{Compiling and Running the MPI Version of MrBayes}
 \label{MPIversion}
@@ -4972,8 +4972,8 @@ command line:
 $ git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 \end{verbatim}
 
-In the copy of the \ttt{MrBayes} repository on the local system, you will find the compile
-instructions in the file INSTALL.
+In the copy of the \ttt{MrBayes} repository you get on the local system, you will find the compile
+instructions in the file \ttt{INSTALL}.
 
 \subsection{Modifying or Extending MrBayes}
 
@@ -5087,6 +5087,7 @@ character matrix.
 \section{More Information}
 For more information on how to use MrBayes, turn to the MrBayes web site
 (\ttt{www.mrbayes.net}).
+
 
 \chapter{Evolutionary Models in MrBayes}
 \label{evolutionaryModels}
