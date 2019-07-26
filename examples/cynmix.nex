@@ -688,7 +688,7 @@ begin mrbayes;
     lset app=(1) rates=gamma;
     lset app=(2,3,4,5) rates=invgamma nst=6;
     unlink revmat=(all) pinvar=(all) shape=(all) statefreq=(all);    
-    prset ratepr=variable;
+    prset applyto=(all) ratepr=variable;
     ]
 
 end;

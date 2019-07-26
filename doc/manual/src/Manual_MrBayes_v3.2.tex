@@ -153,7 +153,7 @@ MrBayes 3 is distributed without charge by download from the MrBayes web site,
 \url{http://mrbayes.net}, or from the linked code repository on GitHub
 \url{https://github.com/NBISweden/MrBayes}. If someone has given you a copy of MrBayes 3, we
 strongly suggest that you download the most recent version from the official MrBayes site. The site
-also gives detailed information about installation on different platforms (Window, Macintosh, UNIX)
+also gives detailed information about installation on different platforms (Window, Macintosh, Unix)
 and describes how you can report bugs or contribute to the project.
 
 MrBayes 3 is a plain-vanilla program that uses a command line interface and therefore behaves
@@ -409,10 +409,10 @@ not make any distinction between polymorphic states or uncertainty in states, bu
 same way (as uncertainty), so it does not matter whether you use parentheses or braces.
 
 If you have other symbols in your matrix than the ones supported by MrBayes, you need to replace
-them before processing the data block in MrBayes. You also need to remove the \ttt{Equate} and
-\ttt{Symbols} statements in the \ttt{Format} line if they are included. Unlike the Nexus standard,
-MrBayes supports data blocks that contain mixed data types as described in the tutorial in chapter
-\ref{tutorialPartitioned}.
+them before processing the \ttt{DATA} block in MrBayes. You also need to remove the \ttt{Equate}
+and \ttt{Symbols} statements in the \ttt{Format} line if they are included. Unlike the Nexus
+standard, MrBayes supports data blocks that contain mixed data types as described in the tutorial
+in chapter \ref{tutorialPartitioned}.
 
 To put the data into MrBayes type \tb{execute $<$filename$>$} at the \ttt{MrBayes >} prompt, where
 \tb{$<$filename$>$} is the name of the input file. To process our example file, type \tb{execute
@@ -858,7 +858,7 @@ generated for each chain and most substitution model parameters are set to prede
 instance, stationary state frequencies start out being equal and unrooted trees have all branch
 lengths set to $0.1$. The starting values can be changed by using the \tb{Startparams} command.
 For instance, user-defined trees can be read into MrBayes by executing a Nexus file with a
-\ttt{trees} block. The available user trees can then be assigned to different chains using the
+\ttt{TREES} block. The available user trees can then be assigned to different chains using the
 \ttt{Startparams} command. After a completed analysis, MrBayes keeps the parameter values of the
 last generation and will use those as the starting values for the next analysis unless the values
 are reset using \ttt{mcmc starttree=random startparams=reset}.
@@ -1439,10 +1439,10 @@ morphological data or one of the gene regions.
 By default, MrBayes partitions the data according to data type. There are only two data types in
 the matrix, so the default model will include only a morphology (standard) and a DNA partition. To
 divide the DNA partition into gene regions or other appropriate subsets, it is convenient to first
-specify character sets. In principle, this can be done from the command line but it is easier to
-do it in a MrBayes block in the data file. At the end of the \ttt{cynmix.nex}, there is such a
-block (starting with \ttt{begin mrbayes;}). Any text between square brackets (\ttt{[]}) are comments
-and ignored by MrBayes. Note also that each command ends with a semicolon.
+specify character sets. In principle, this can be done from the command line but it is easier to do
+it in a \ttt{MRBAYES} block in the data file. At the end of the \ttt{cynmix.nex}, there is such a
+block (starting with \ttt{begin mrbayes;}). Any text between square brackets (\ttt{[]}) are
+comments and ignored by MrBayes. Note also that each command ends with a semicolon.
 
 The relevant lines for setting up partitions starts with the command \ttt{charset}. That command
 simply associates a name with a set of characters. For instance, the character set \ttt{COI} is
@@ -1462,8 +1462,8 @@ The elements of the \ttt{partition} command are: (1) the name of the partitionin
 (\ttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
 The list of characters can simply be an enumeration of the character numbers (the above line is
 equivalent to \ttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
-it is often more convenient to use predefined character sets as given in the mrbayes block. The
-\ttt{end;} statement closes the MrBayes block.
+it is often more convenient to use predefined character sets as given in the \ttt{MRBAYES} block.
+The \ttt{end;} statement closes the \ttt{MRBAYES} block.
 
 When we read this block into MrBayes, we will have defined variables that can be used for setting
 up a partitioned analysis with the first character division being morphology, the second division
@@ -1541,9 +1541,9 @@ when \tb{showmodel} is invoked:
 
 As you can see, all molecular partitions now evolve under the correct model but all parameters
 (\ttt{statefreq}, \ttt{revmat}, \ttt{shape}, \ttt{pinvar}) are shared across partitions. To unlink
-them such that each partition has its own set of parameters, type: \tb{unlink statefreq=(all)
-revmat=(all) shape=(all) pinvar=(all)}. Gamma-shaped rate variation for the morphological data is
-enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
+them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)
+pinvar=(all) shape=(all) statefreq=(all)}. Gamma-shaped rate variation for the morphological data
+is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
 rate to be different across partitions. This is achieved using the \ttt{ratepr} parameter of the
 \ttt{prset} command. By default, \ttt{ratepr} is set to \ttt{fixed}, meaning that all partitions
 have the same overall rate. By changing this to \ttt{variable}, the rates are allowed to vary under
@@ -1591,13 +1591,13 @@ names of the parameters are followed by the character division (partition) numbe
 For instance, \ttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3,
 which is the EF1a division in the above analysis.
 
-In this section we have used a separate Nexus file for the MrBayes block. Although one can add this
-command block to the data file itself, there are several advantages to keeping the commands and the
-data blocks separate. For example, one can create a set of different analyses with different
-parameters in separate command files and submit all those files to a job scheduling system on a
-computer cluster. It is important to remember, though, that MrBayes uses the name of the file
-containing the character matrix as the default for all output files. Thus, if you run all your
-analyses in the same directory, results from different analyses will overwrite each other.
+In this section we have used a separate Nexus file for the \ttt{MRBAYES} block. Although one can
+add this command block to the data file itself, there are several advantages to keeping the
+commands and the data blocks separate. For example, one can create a set of different analyses with
+different parameters in separate command files and submit all those files to a job scheduling
+system on a computer cluster. It is important to remember, though, that MrBayes uses the name of
+the file containing the character matrix as the default for all output files. Thus, if you run all
+your analyses in the same directory, results from different analyses will overwrite each other.
 
 To change this behavior, include the command \tb{mcmcp filename=$<$filename$>$;} in each of your
 run files, just before issuing the \ttt{mcmc} command, using a different file name for each run
@@ -3102,7 +3102,7 @@ Now we turn our attention to a larger data set, and more complex dating scenario
 about 5 kb data from seven molecular markers for recent taxa, and about 350 morphological
 characters coded for both recent and fossil taxa.
 
-At the end of the data file, in the MrBayes block, you will find two dating analyses specified.
+At the end of the data file, in the \ttt{MRBAYES} block, you will find two dating analyses specified.
 The first is based on the standard node dating approach, in which the fossil record is used to
 derive calibration points that can help date the tree of extant taxa. The second uses
 total-evidence dating, in which the fossils are analyzed together with the extant taxa. The
@@ -3123,8 +3123,8 @@ taking the age of the fossils into account.
 To run any of these two analyses, simply uncomment one of the two analysis blocks by removing the
 pair of square brackets enclosing it. Then you execute the data file from MrBayes and use the
 standard \ttt{mcmc} command to run the analysis. We will not comment the results here but will
-simply walk you through the MrBayes block in the data file to help explain all the steps needed in
-setting up the node dating and total-evidence dating analyses.
+simply walk you through the \ttt{MRBAYES} block in the data file to help explain all the steps
+needed in setting up the node dating and total-evidence dating analyses.
 
 The block starts out by defining a number of character sets. Then there is a set of lines that
 define the model for the morphological partition. It first defines a set of morphological
@@ -3268,9 +3268,6 @@ This completes the description of the analysis specifications. As you will notic
 setting up some \ttt{mcmc} parameters using the \ttt{mcmcp} command but it leaves it up to you to
 actually start the analysis.
 
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
-
 \section{Inferring Ancestral States}
 
 The purpose of the analysis discussed in this tutorial is to infer the ancestral state
@@ -3378,7 +3375,7 @@ slightly higher than the probability of the state being 1.
 
 
 \section{The Multi-Species Coalescent}
-
+\label{theMultiSpeciesCoalescent}
 %%%% JN: Adding `set autoclose=yes nowarnings=yes` to avoid explaining the warning about clock rate
 %%%% JN: when starting the `mcmc`. See github issue #117.
 
@@ -3660,7 +3657,7 @@ the character states in the specified set are assigned a conditional likelihood 
 that are not in the set have $0.0$ likelihood.
 
 Since version 3.2, MrBayes supports Nexus files that divide up the character matrix into a
-\ttt{taxa} block and a \ttt{characters} block instead of using a single \ttt{data} block. If you
+\ttt{TAXA} block and a \ttt{CHARACTERS} block instead of using a single \ttt{DATA} block. If you
 have formatting errors in your matrix, MrBayes should report the line and position of the error,
 which should help you find the problem. After you have successfully read a data matrix into
 MrBayes, you can examine it using the \ttt{showmatrix} command.
@@ -3675,7 +3672,7 @@ memory by the \ttt{execute} command. If you have your tree in a separate file, s
 \ttt{execute usertree.tre}. It is important that the spelling of taxon labels in the user tree
 matches those in the data matrix. 
 
-Here is an example of a simple Nexus file containing a tree block with a single tree in it:
+Here is an example of a simple Nexus file containing a \ttt{TREES} block with a single tree in it:
 
 \footnotesize
 \begin{singlespacing}
@@ -3689,7 +3686,7 @@ end;
 \end{singlespacing}
 \normalsize
 
-Typically, a Nexus \ttt{trees} block will start with a \ttt{translate} statement, which allows
+Typically, a Nexus \ttt{TREES} block will start with a \ttt{translate} statement, which allows
 taxon names to be replaced by indices in the tree specifications. If a \ttt{translate} statement is
 not present, the taxon names need to be spelled out in each tree statement.
 
@@ -3716,7 +3713,7 @@ parameters that belong to the tree, for instance, branch rate parameters in a re
 If you are interested in manipulating these parameters, we suggest that you set up the model you
 are interested in and then run a short MCMC analysis to the first checkpoint. The correct
 specification of all tree parameters can then be found by examining the checkpoint file, which will
-include a trees block with all relevant parameter values specified.
+include a \ttt{TREES} block with all relevant parameter values specified.
 
 \section{Dealing with Models}
 
@@ -3768,11 +3765,12 @@ used to specify a step criterion after a range. For instance, \ttt{1-.\\3} would
 third character from character 1 to the end. This mechanism is commonly used to group sites in
 protein-coding sequences based on their position in the codon.
 
-Character and taxon sets are usually best defined in a MrBayes block in the data file. Here we give
-some examples of character and taxon sets defined in such a block. In principle, the same commands
-could be issued from the command line, without the ending semicolon. For these examples, we assume
-that the gene sequence starts with the first character being a site in the first codon position.
-Comments are given in square brackets; they are ignored by MrBayes when the data file is processed.
+Character and taxon sets are usually best defined in a \ttt{MRBAYES} block in the data file. Here
+we give some examples of character and taxon sets defined in such a block. In principle, the same
+commands could be issued from the command line, without the ending semicolon. For these examples,
+we assume that the gene sequence starts with the first character being a site in the first codon
+position.  Comments are given in square brackets; they are ignored by MrBayes when the data file is
+processed.
 
 \footnotesize
 \begin{singlespacing}
@@ -4403,8 +4401,8 @@ consider to increase number of parallel chain to improve the efficiency of the M
 
 A good way of improving convergence is to start the analysis from a good tree instead of starting
 it from a randomly chosen tree. To do this, you first define a good tree, with or without branch
-lengths, and put it in the tree block of a Nexus file. Say you name the tree \ttt{usertree}. Then
-start the chains from this tree using \ttt{startvals tau=usertree} just before you issue your
+lengths, and put it in the \ttt{TREES} block of a Nexus file. Say you name the tree \ttt{usertree}.
+Then start the chains from this tree using \ttt{startvals tau=usertree} just before you issue your
 \ttt{mcmc} command. Note that changing the number of chains or runs after you have set the starting
 tree will cause the starting trees to be changed. Therefore, set the number of runs and chains with
 \ttt{mcmcp} before you set the starting tree and run your analysis with the \ttt{mcmc} command.
@@ -4668,15 +4666,15 @@ add more generations. When \ttt{nowarnings=yes}, MrBayes will overwrite existing
 warning you, so make sure that your batch file does not inadvertently cause the deletion of
 previous result files that should be saved for future reference.
 
-The UNIX version of MrBayes can execute batch files in the background from the command prompt. Just
-type \tb{mb <file> > log.txt \&} at the UNIX prompt, where \ttt{<file>} is the name of your Nexus
+The Unix version of MrBayes can execute batch files in the background from the command prompt. Just
+type \tb{mb <file> > log.txt \&} at the Unix prompt, where \ttt{<file>} is the name of your Nexus
 batch file, to have MrBayes run in the background, logging its output to the file \ttt{log.txt}. If
 you want MrBayes to process more than one file, just list the files one after the other with space
 between them, before the output redirection sign (\ttt{>}). When MrBayes is run in this way, it
 will quit automatically when it has processed all files; it will also terminate with an error
 signal if it encounters an error.
 
-Alternatively, the UNIX version of MrBayes can also be run in batch mode using input redirection.
+Alternatively, the Unix version of MrBayes can also be run in batch mode using input redirection.
 For that you need a text file containing the commands exactly as you would have typed them from the
 command line. For instance, assume that your data set is in \ttt{primates.nex} and that you want to
 perform the same analyses specified above. Then type \tb{mb < batch.txt > log.txt \&} (note that
@@ -5606,7 +5604,7 @@ Note that the instantaneous rate of going between the two end states is 0, that 
 from 0 to 2, or from 2 to 0, has to go through state 1. By default, MrBayes treats all standard
 characters as unordered. To change this, use the \ttt{ctype} command. For instance, if you want to
 treat characters 3 and 4 as ordered you need to include the statement \ttt{ctype ordered: 3 4;} in
-your MrBayes block (or enter it using the command line, if you prefer).
+your \ttt{MRBAYES} block (or enter it using the command line, if you prefer).
 
 The number of states of each standard character is determined by MrBayes simply by looking at the
 state codes in your matrix. Thus, a three-state model will be used for a three-state character and
@@ -5915,42 +5913,115 @@ branch lengths.
 
 \subsection{Unconstrained and Constrained Topology}
 
-There are two choices for the prior probability distribution on topology: uniform or constrained.
-By default, topologies are not constrained in the prior (\ttt{prset topologypr=uniform}), resulting
-in equal prior probability being associated with all possible labeled trees (unless a different
-topology prior is induced by the branch length model, see below). There are two instances in which
-you might want to constrain the topology: (1) when you want to contrast a hypothesis of monophyly
-for a group with the more general hypothesis with no topological constraints; and (2) when you want
-to infer ancestral states for a particular node in the tree. In both cases, you specify the
-constraint(s) first by listing the taxa that should form a monophyletic group. For instance, if you
-wanted to constrain taxa 4, 5 and 6 to be monophyletic, you would use
+In MrBayes 3, there are four choices for the prior probability distribution on topology:
+\ttt{uniform}, \ttt{speciestree}, \ttt{fixed}, or \ttt{constraints}. By default, topologies are not
+constrained in the prior (\ttt{prset topologypr=uniform}), resulting in equal prior probability
+being associated with all possible labeled trees (unless a different topology prior is induced by
+the branch length model, see below).
+
+There are some cases where one wish to constrain the topology. For example, if you are interested
+in branch lengths or other parameters in your model, but where the tree topology is assumed to be
+true, you may apply a \ttt{fixed} prior probality for the tree. This will keep the topology (the
+relationships between the clades) fixed, but still integrate over branch lengths in the MCMC (if
+you also want to fix branch lengths, you do that by using the \ttt{brlenspr} option).
+
+Another special case is when you are using the multi-species coalescent to infer species trees from
+gene trees. Then the topology is constrained to fold inside a species tree together with other
+(gene) trees. This is accomplished by using the \ttt{speciestree} argument for the \ttt{topologypr}
+option. See section \ref{theMultiSpeciesCoalescent} for more information on the multi-species
+coalescent.
+
+Other scenarios might be when you want to contrast a hypothesis of monophyly for a group with the
+more general hypothesis with no topological constraints; or you may want to infer ancestral states
+for a particular node in the tree. In both those cases, you need to specify the constraint(s) first
+by listing the taxa that should form a monophyletic group.
+
+There are three types of constraints implemented in MrBayes v3.2. The type of the constraint is
+specified by using one of the three keywords \ttt{hard}, \ttt{negative}, or \ttt{partial} right
+after the name of the constraint (see example below). If no type is specified, then the constraint
+is assumed to be hard.
+
+In a rooted tree, a \ttt{hard} constraint forces the taxa in the list to form a monophyletic group.
+In an unrooted tree, the taxon split that separates the taxa in the list from other taxa is forced
+to be present. The interpretation of this depends on whether the tree is rooted on a taxon outside
+the list or a taxon in the list. If the outgroup is excluded, the taxa in the list are assumed to
+form a monophyletic group, but if the outgroup is included, the taxa that are not in the list are
+forced together.
+
+A \ttt{negative} constraint ``bans'' all the trees that have the listed taxa in the same subtree.
+In other words, it is the opposite of a hard constraint.
+
+A \ttt{partial} or ``backbone'' constraint is defined in terms of two sets of taxa separated by a
+colon character. The constraint forces all taxa in the first list to form a monophyletic group that
+does not include any taxon in the second list. Taxa that are not included in either list can be
+placed in any position on the tree, either inside or outside the constrained group. In an unrooted
+tree, the two taxon lists can be switched with each other with no effect. For a rooted tree, it is
+the taxa in the first list that have to be monophyletic, that is, these taxa must share a common
+ancestor not shared with any taxon in the second list. The taxa in the second list may or may not
+fall in a monophyletic group depending on the rooting of the tree.
+
+A list of taxa can be specified using a taxset, taxon names, taxon numbers, or any combination of
+the above, sepatated by spaces. The constraint is treated as an absolute requirement of trees, that
+is, trees that are not compatible with the constraint have zero prior (and hence zero posterior)
+probabilty.
+
+If you are interested in inferring ancestral states for a particular node, you need to hard
+constrain that node first using the \ttt{constraint} command. The same applies if you wish to
+calibrate an interior node in a dated analysis. It is important to note that simply defining a
+constraint using this command is not sufficient for the program to actually implement the
+constraint in an analysis. You must also enforce the constraints using \ttt{prset topologypr =
+constraints (<list of constraints>)}.
+
+Examples:
 
 \begin{singlespacing}
 \small
 \begin{verbatim}
-constraint my_constraint -1 = 4 5 6;
+   constraint myclade = Homo Pan Gorilla
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-This defines a constraint called ``my\_constraint'' forcing taxa 4, 5 and 6 to form a monophyletic
-group in all trees that are sampled from the chain. In future versions of MrBayes, the value
-following the name of the constraint (-1 here), will give the relative probability of trees having
-the constrained partition. A negative number will force the constraint to always be present in the
-sampled trees; a positive number will specify how many times more likely the trees with the
-constraint are compared to the trees not having it. In version 3.2, however, MrBayes ignores this
-value and always treats the constraint as absolute.
+Defines a hard constraint forcing \textit{Homo}, \textit{Pan}, and \textit{Gorilla} to form a
+monophyletic group or a split that does not include any other taxa.
+
+\begin{singlespacing}
+\small
+\begin{verbatim}
+   constraint forbiddenclade negative = Homo Pan Gorilla
+\end{verbatim}
+\normalsize
+\end{singlespacing}
+
+Defines a negative constraint that associates all trees where \textit{Homo}, \textit{Pan}, and
+\textit{Gorilla} form a monophyletic group with zero posterior probability. In other words, such
+trees will not be sampled during MCMC.
+
+\begin{singlespacing}
+\small
+\begin{verbatim}
+   constraint backbone partial = Homo Gorilla : Mus
+\end{verbatim}
+\normalsize
+\end{singlespacing}
+
+Defines a partial constraint that keeps \textit{Mus} outside of the clade defined by the most
+recent common ancestor of \textit{Homo} and \textit{Gorilla}. Other taxa are allowed to sit
+anywhere in the tree. Note that this particular constraint is meaningless in unrooted trees.
+MrBayes does not assume anything about the position of the outgroup unless it is explicitly
+included in the partial constraint. Therefore a partial constraint must have at least two taxa on
+each side of the `\ttt{:}' to be useful in analyses of unrooted trees. The case is different for
+rooted trees, where it is sufficient for a partial constraint to have more than one taxon before
+the `\ttt{:}', as in the example given above, to constrain tree space.
 
 When you define constraints, make sure that you have the outgroup selected correctly. By default,
 MrBayes uses the first taxon in the data matrix as the outgroup. You can change this by using the
-\ttt{outgroup} command. For instance, if you want taxon number 7 called ``My\_taxon'' to be the
-outgroup, either use \tb{outgroup 7} or \tb{outgroup My\_taxon}. MrBayes 3.2 only allows a single
-taxon as the outgroup.
+\ttt{outgroup} command. For instance, if you want taxon number 7 called \textit{Hylobates} to be
+the outgroup, either use \tb{outgroup 7} or \tb{outgroup Hylobates}. MrBayes 3.2 only allows a
+single taxon as the outgroup.
 
-Before the constraints take effect, you have to invoke them by using \ttt{prset
-topologypr=constraints(<comma-separated list of constraints>)}. For instance, to enforce the
-constraint \ttt{my\_constraint} defined above, use \tb{prset
-topologypr=constraints(my\_constraint)}.
+To define a more complex constraint tree, simply combine constraints into a list when issuing the
+\ttt{prset topologypr} command.
 
 \subsection{Non-clock (Standard) Trees}
 %%%% JN: Paragraph taken directly from built-in documentation. Might need some softening.
@@ -5988,22 +6059,9 @@ specifies a compound Dirichlet prior on branch lengths, where tree length is ass
 gamma distribution with mean $10$, and branch length proportions are associated with a uniform
 Dirichlet distribution (default).
 
-%%%% JN: Old text
-%The default is an exponential distribution with parameter $10$
-%(\ttt{Exponential(10)}); it has an expectation of $0.1$ ($= 1/10$) but (in principle) it allows
-%branch lengths to vary from $0$ to infinity. The exponential distribution apparently puts a lot
-%more probability on short branches than on long branches. However, because transition
-%(substitution) probabilities change rapidly at small branch lengths but only very slowly at long
-%branch lengths, the exponential prior is actually closer to an uninformative prior than the uniform
-%distribution. We advise against using a uniform prior on branch lengths because of the large prior
-%probability it puts on long branches and their close-to-random substitution probabilities.
-%
-%To change the prior on unconstrained branch lengths you use \ttt{prset brlenspr}. For instance,
-%assume you wanted to use an exponential prior with parameter $1$ instead of the default prior. This
-%prior is set by typing \tb{prset brlenspr=unconstrained:exponential(1)}.
-
 \subsection{Strict Clock Trees}
 %%%% JN: subsection need to be expanded
+
 MrBayes implements three strict clock models: the simple (uniform) model, the birthdeath model, and
 the coalescence model. The birth-death model and coalescence models both have additional parameters
 describing the tree-generating process, whereas the simple model does not.
@@ -6027,6 +6085,7 @@ parameter is set by \ttt{prset treeheightpr}. The default prior is an exponentia
 parameter 1.0 (\ttt{Exponential(1.0)}).
 
 \subsection{Relaxed Clock Trees}
+
 %%%% JN: subsection need to be expanded
 
 Relaxed clock models and functions for dating are not implemented in MrBayes 3.1. They are
@@ -6039,7 +6098,7 @@ MrBayes provides great flexibility in setting up partitioned models. By default,
 divided into partitions based on the data type. If there is only one data type in the matrix, then
 all characters will be in a single partition. The default partitioning scheme is called
 \ttt{default}. For information on how to set up a file with mixed data types, see the example file
-cynmix.nex and the tutorial in section \ref{tutorialPartitioned} of this manual.
+\ttt{cynmix.nex} and the tutorial in section \ref{tutorialPartitioned} of this manual.
 
 You can easily set up partitioning schemes that divide the characters up further than the default
 partition does using the \ttt{partition} command. The most convenient way of partitioning data is
@@ -6048,7 +6107,7 @@ concatenated nucleotide sequences from three genes in your data set of length 19
 sites, respectively. Then you create character sets for those three genes using
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 charset gene1 = 1-1962;
 charset gene2 = 1963-3012;
@@ -6057,14 +6116,14 @@ charset gene3 = 3013-.;
 \normalsize
 \end{singlespacing}
 
-in a MrBayes block. Note the use of the dot (.) as a synonym of the last site. You can also use the
-``backslash n'' sequence to include every $n$th character in the preceding range of characters (see
-the description of the site specific rate model above). Once the character sets are defined, the
-partitioning scheme based on the genes is defined with the \ttt{partition} command and selected
-using the \ttt{set} command:
+in a \ttt{MRBAYES} block. Note the use of the dot (\ttt{.}) as a synonym of the last site. You can
+also use the ``backslash n'' sequence to include every $n$th character in the preceding range of
+characters (see the description of the site-specific rate model above). Once the character sets are
+defined, the partitioning scheme based on the genes is defined with the \ttt{partition} command and
+selected using the \ttt{set} command:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 partition by_gene = 3:gene1,gene2,gene3;
 set partition=by_gene;
@@ -6079,16 +6138,16 @@ for instance, that you wanted to run an analysis with only gene 1 and gene 2. Th
 two-partition scheme and exclude the characters represented by gene 3:
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
-partition gene1&2 = 2:gene1,gene2 gene3;
+partition genes_1_2 = 2:gene1,gene2 gene3;
 exclude gene3;
-set partition=gene1&2;
+set partition=genes_1_2;
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-If the only purpose of the partition \ttt{gene1\&2} is to allow exclusion of gene 3, then gene 3
+If the only purpose of the partition \ttt{genes\_1\_2} is to allow exclusion of gene 3, then gene 3
 can of course be included in either of the two partitions before being excluded.
 
 Once the partitions have been correctly set up, MrBayes allows you to set models for individual
@@ -6098,7 +6157,7 @@ that we have two partitions, a standard data partition (partition 1) and a nucle
 both partitions, and allow the partition rates to be different. Then we would use the commands
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 lset applyto=(2) nst=6;
 lset applyto=(all) rates=gamma;
@@ -6106,7 +6165,6 @@ prset applyto=(all) ratepr=variable;
 \end{verbatim}
 \normalsize
 \end{singlespacing}
-
 
 By default, all model parameters that are identical and have the same prior probability
 distribution associated with them, are linked across partitions (they are assumed to be one and the
@@ -6116,7 +6174,7 @@ standard data and the molecular data have the same distribution of rates across 
 be achieved using
 
 \begin{singlespacing}
-\footnotesize
+\small
 \begin{verbatim}
 unlink shape=(all);
 \end{verbatim}
@@ -6124,12 +6182,12 @@ unlink shape=(all);
 \end{singlespacing}
 
 If you unlink parameters by mistake, they can be linked again using the \ttt{link} command. All of
-the commands mentioned above and given as they would appear in a MrBayes block in a Nexus file can
-of course be entered from the command line as well (without the trailing semicolon). However, it is
-often more convenient to have them in either your data file or in a separate Nexus file that you
-process after you have read in your data. MrBayes will keep the data set in memory until you read
-in a new data block, so you can have your different MrBayes blocks pertaining to the same data file
-distributed over as many separate Nexus files as you like.
+the commands mentioned above and given as they would appear in a \ttt{MRBAYES} block in a Nexus
+file can of course be entered from the command line as well (without the trailing semicolon).
+However, it is often more convenient to have them in either your data file or in a separate Nexus
+file that you process after you have read in your data. MrBayes will keep the data set in memory
+until you read in a new \ttt{DATA} block, so you can have your different \ttt{MRBAYES} blocks
+pertaining to the same data file distributed over as many separate Nexus files as you like.
 
 We recommend that, before you run your analysis, you check the current model settings using the
 \ttt{showmodel} command. This command will list all the active parameters and how they are linked
@@ -6140,8 +6198,8 @@ complex and parameter-rich models, and the Bayesian MCMC approach is good at han
 think carefully about the parameters you introduce in your model. There should be at least some
 reasonable chance of estimating the parameters based on your data. For instance, a common mistake
 is to use a separate GTR model for a partition with so few substitutions that there is not a single
-observation for several rate categories. Making sure there are at least some observations allowing
-you to estimate each parameter is good practice. Over-parameterized models often result in problems
+observation for some rate categories. Making sure there are at least some observations allowing you
+to estimate each parameter is good practice. Over-parameterized models often result in problems
 with convergence in addition to the excessive variance seen in the parameter estimates.
 
 \appendix

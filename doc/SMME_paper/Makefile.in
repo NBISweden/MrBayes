@@ -284,7 +284,7 @@ envvars = \
 deps = \
 	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.tex \
 	$(srcdir)/src/svmult.cls \
-	$(srcdir)/src/bayes.bib\
+	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.bib\
 	$(srcdir)/src/fig1.png \
 	$(srcdir)/src/fig2.png \
 	$(srcdir)/src/fig3.png \

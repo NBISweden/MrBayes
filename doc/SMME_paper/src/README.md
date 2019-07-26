@@ -1,6 +1,6 @@
 # Files for building "Bayesian Analysis of Molecular Evolution using MrBayes"
 
-- Last modified: fre jul 19, 2019  04:33
+- Last modified: fre jul 26, 2019  07:04
 - Sign: Johan Nylander
 
 
@@ -10,7 +10,7 @@
 the LaTeX file `Huelsenbeck_Ronquist_SMME_2005.tex`. The build process works, 
 but see **Issues** below.
 
-* The manuscript was published as
+* This is a **draft version** to what was published as
 
 > Huelsenbeck J.P., Ronquist F. (2005) Bayesian Analysis of Molecular Evolution
 > Using MrBayes. Pp 183-226 in: Statistical Methods in Molecular Evolution. Statistics
@@ -28,7 +28,8 @@ but see **Issues** below.
 ## Files included 
 
     Huelsenbeck_Ronquist_SMME_2005.tex
-    svmult.cls  bayes.bib
+    Huelsenbeck_Ronquist_SMME_2005.bib
+    svmult.cls
     fig1.png  fig2.png  fig3.png  fig4.png
     fig5.png  fig6.png  fig7.png  fig8.png
     fig9.png  fig10.png fig11.png fig12.png
@@ -36,7 +37,9 @@ but see **Issues** below.
 
 ## Compile
 
-    pdfplatex Huelsenbeck_Ronquist_SMME_2005.tex
+    pdflatex Huelsenbeck_Ronquist_SMME_2005.tex
+    bibtex Huelsenbeck_Ronquist_SMME_2005
+    pdflatex Huelsenbeck_Ronquist_SMME_2005
 
 Or, if `latexmk` is available:
 
@@ -45,9 +48,8 @@ Or, if `latexmk` is available:
 
 ## Issues
 
-- `LaTeX Warning: Empty 'thebibliography' environment on input line 3.`
-  This basically mean that we have no citations in the document.
-  Issue not yet resolved -- and, I'm using an empty `bayes.bib` in the meantime.
+- The bibliography list is not yet complete. See the file
+  `Huelsenbeck_Ronquist_SMME_2005.bib`.
 
 - Figures are not original versions.
   I did not have access to the original image material, so all PNG images
