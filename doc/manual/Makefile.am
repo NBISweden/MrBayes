@@ -36,10 +36,15 @@ Manual_MrBayes_v3.2.pdf: $(deps)
 
 else # !HAVE_LATEXMK
 
+# The order of pdflatex and bibtex runs below (and the number of runs)
+# mirrors what laxexmf seems to want to do.
 Manual_MrBayes_v3.2.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
 	env $(envvars) $(BIBTEX) -terse Manual_MrBayes_v3.2
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+	env $(envvars) $(BIBTEX) -terse Manual_MrBayes_v3.2
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
+	env $(envvars) $(BIBTEX) -terse Manual_MrBayes_v3.2
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Manual_MrBayes_v3.2
 
 endif
