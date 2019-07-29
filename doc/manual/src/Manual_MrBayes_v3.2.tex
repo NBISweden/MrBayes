@@ -2485,32 +2485,31 @@ space. This is what happens here, resulting in a strong preference for the stric
 For a brief discussion on convergence diagnostics and the plot printed by the \ttt{ss} command,
 see the previous tutorial.
 
-%%%% JN: Have done this far tis 23 jul 2019 16:17:35
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
 
 \section{Using a Relaxed Clock Model}
 \label{relaxedClock}
 
-In this analysis, we will set up a relaxed clock model for the same data set,
-\ttt{primates.nex}, used in the previous two tutorials. A relaxed clock model is intermediate
-between a strict clock model and a non-clock model. It has one or a few more parameters than a
-strict clock model, but much fewer than a non-clock model. Unlike a non-clock model, it produces a
-rooted tree, but the information about the position of the root is not as strong as in a non-clock
-analysis. Because the information about the position of the root might be weak, it is often
-beneficial to add a rooting constraint to a relaxed clock analysis. It can help a relaxed clock
-analysis correctly infer rate variation close to the base of the tree, variation that might
-otherwise cause rooting artifacts. It can also help speed up convergence, since it may be difficult
-for an MCMC analysis to mix adequately across multiple alternative root positions in a relaxed
-clock tree; this is going to be the case for this data set. To speed up convergence, and to show
-you how to set up a rooting constraint, we will choose the rooting option for this tutorial.
-Specifically, we will accept the common view that lemurs form the sister group of other primates.
+In this analysis, we will set up a relaxed clock model for the same data set, \ttt{primates.nex},
+used in the previous tutorials. A relaxed clock model is intermediate between a strict clock model
+and a non-clock model. It has one or a few more parameters than a strict clock model, but much
+fewer than a non-clock model. Unlike a non-clock model, it produces a rooted tree, but the
+information about the position of the root is not as strong as in a non-clock analysis. Because the
+information about the position of the root might be weak, it is often beneficial to add a rooting
+constraint to a relaxed clock analysis. It can help a relaxed clock analysis correctly infer rate
+variation close to the base of the tree, variation that might otherwise cause rooting artifacts. It
+can also help speed up convergence, since it may be difficult for an MCMC analysis to mix
+adequately across multiple alternative root positions in a relaxed clock tree; this is going to be
+the case for this data set. To speed up convergence, and to show you how to set up a rooting
+constraint, we will choose the rooting option for this tutorial. Specifically, we will accept the
+common view that lemurs form the sister group of other primates.
 
-As usual, we first read in the data:
+As usual, we first read in the data (we also use \ttt{set autoclose=yes nowarnings=yes} for
+allowing execution without being prompted for answering \ttt{yes}/\ttt{no} between steps):
 
 \small
 \begin{singlespacing}
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute primates.nex
 \end{verbatim}
 \end{singlespacing}
@@ -2529,23 +2528,24 @@ MrBayes > lset nst=6 rates=invgamma
 To specify a rooting constraint, we first need to know the order of the taxa in the data matrix, or
 their names. We can do this by looking into the data file or by printing the matrix using the
 \tb{showmatrix} command. In either case, we will discover that the only lemur in the matrix,
-\textit{Lemur catta}, is taxon number 2. To specify a hard constraint that includes all taxa but
-taxon 2, we can use the following command:
+\textit{Lemur catta}, is taxon number 2. To specify a constraint that includes all taxa but the
+single taxon 2, we need to use the following command:
 
 \small
 \begin{singlespacing}
 \begin{verbatim}
-MrBayes > constraint ingroup = 1 3-.
+MrBayes > constraint ingroup partial = 1 3-. : 2
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-The constraint command first gives the name of the constraint, and then the constraint is specified
-after the equal sign using a list of taxa, where the taxa can be specified using either their index
-in the matrix (1, 2, etc) or their name. A period is synonymous with the last taxon in the matrix,
-and a range is indicated using a dash. By default, the constraint is assumed to be positive or
-hard, that is, we wish to enforce the specified split or clade to always be present in the sampled
-trees.
+The \ttt{constraint} command first gives the name of the constraint (`ingroup'), then the type of
+constraint (`partial'). The list of taxa are given after the equal sign using a list of taxa, where
+the taxa can be specified using either their index in the matrix (1, 2, etc) or their name. A
+period is synonymous with the last taxon in the matrix, and a range is indicated using a dash. In
+our case, we constrain taxon 2 (\textit{Lemur catta}) to always be outside taxa number 1, and 3 to
+12, in a rooted tree. See section \ref{unconstrainedAndConstrainedTopology} for more information of
+using constraints.
 
 To enforce the constraint, we also need to set the topology prior using the following command:
 
@@ -2570,11 +2570,12 @@ MrBayes > prset brlenspr=clock:uniform
 \end{singlespacing}
 \normalsize
 
-Other options include the coalescent and the birth -- death models. In the next step, we select a
-model for the variation of the clock rate across lineages. MrBayes offers three relaxed clock
-models: the Thorne--Kishino 2002 (TK02), the compound poisson process (CPP), and the independent
-gamma rates (IGR) models. Let us use the independent gamma rates model, which is a continuous
-uncorrelated model of rate variation across lineages. We invoke this model using:
+Other options include the coalescent and the birth -- death models. In the next step, we are going
+to ``relax'' the strict clock assumption by selecting a model for the variation of the clock rate
+across lineages. MrBayes offers three relaxed clock models: the Thorne--Kishino 2002 (TK02), the
+compound poisson process (CPP), and the independent gamma rates (IGR) models. Let us use the
+independent gamma rates model, which is a continuous uncorrelated model of rate variation across
+lineages. We invoke this model using:
 
 \small
 \begin{singlespacing}
@@ -2591,7 +2592,7 @@ the variance to increase much over time. The default prior for this parameter, a
 distribution with rate $10.0$, should be more than generous enough for our analysis.
 
 To check the model settings, it is wise to first run the \tb{showmodel} command. Once you are
-convinced that the model settings are OK, run the analysis for 100,000 generation using:
+convinced that the model settings are OK, run the analysis for 100,000 generation using :
 
 \small
 \begin{singlespacing}
@@ -2604,38 +2605,37 @@ MrBayes > mcmc ngen=100000
 We can now verify using the \tb{sumt} command that the tree is rooted correctly and that it
 looks reasonable. We focus on the phylogram, the second tree to be displayed:
 
-%\footnotesize
-\scriptsize
+\footnotesize
 \begin{singlespacing}
 \begin{verbatim}
    Phylogram (based on median node depths):
 
    /---------------------------------------------------------- Lemur_catta (2)
    |                                                                               
-   |  /------------------------------------------------------- Tarsius_syrichta (1)
-   |  |                                                                            
-   |  |                                               /------- Homo_sapiens (3)
-   |  |                                            /--+                            
-   +  |                                            |  \------- Pan (4)
-   |  |                                    /-------+                               
-   |  |                                    |       \---------- Gorilla (5)
-   |  |                               /----+                                       
-   |  |                               |    \------------------ Pongo (6)
-   \--+                    /----------+                                            
-      |                    |          \----------------------- Hylobates (7)
-      |                    |                                                       
-      |                    |                             /---- Macaca_fuscata (8)
-      |          /---------+                          /--+                         
-      |          |         |                          |  \---- M_mulatta (9)
-      |          |         |                      /---+                            
-      |          |         |                      |   \------- M_fascicularis (10)
-      \----------+         \----------------------+                                
-                 |                                \----------- M_sylvanus (11)
-                 |                                                                 
-                 \-------------------------------------------- Saimiri_sciure~ (12)
+   |/--------------------------------------------------------- Tarsius_syrichta (1)
+   ||                                                                              
+   ||                                                   /----- Homo_sapiens (3)
+   ||                                                 /-+                          
+   +|                                                 | \----- Pan (4)
+   ||                                         /-------+                            
+   ||                                         |       \------- Gorilla (5)
+   ||                                     /---+                                    
+   ||                                     |   \--------------- Pongo (6)
+   \+                        /------------+                                        
+    |                        |            \------------------- Hylobates (7)
+    |                        |                                                     
+    |                        |                             /-- Macaca_fuscata (8)
+    |             /----------+                         /---+                       
+    |             |          |                         |   \-- M_mulatta (9)
+    |             |          |                      /--+                           
+    |             |          |                      |  \------ M_fascicularis (10)
+    \-------------+          \----------------------+                              
+                  |                                 \--------- M_sylvanus (11)
+                  |                                                                
+                  \------------------------------------------- Saimiri_sciure~ (12)
                                                                                    
-   -----|--------|--------|--------|--------|--------|-------|                     
-      0.60     0.50     0.40     0.30     0.20     0.10    0.00                    
+   ----------|---------|--------|---------|---------|--------|                     
+           0.50      0.40     0.30      0.20      0.10     0.00 
 
    [Expected changes per site]
 \end{verbatim}
@@ -2658,8 +2658,8 @@ which is critical to interpreting where the different parameters belong:
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-   List of taxa in bipartitions:
-
+   List of taxa in bipartitions:                                                 
+                                                                                   
       1 -- Tarsius_syrichta
       2 -- Lemur_catta
       3 -- Homo_sapiens
@@ -2690,16 +2690,16 @@ which is critical to interpreting where the different parameters belong:
    10 -- .........*..
    11 -- ..........*.
    12 -- ...........*
-   13 -- ..**........
-   14 -- *.**********
-   15 -- ..**********
-   16 -- .......**...
-   17 -- .......****.
-   18 -- ..*****.....
+   13 -- .......****.
+   14 -- .......***..
+   15 -- ..*********.
+   16 -- ..**********
+   17 -- ..**........
+   18 -- .......**...
    19 -- ..***.......
-   20 -- ..****......
-   21 -- ..*********.
-   22 -- .......***..
+   20 -- *.**********
+   21 -- ..*****.....
+   22 -- ..****......
    ------------------
 \end{verbatim}
 \end{singlespacing}
@@ -2712,8 +2712,8 @@ bipartition that separates \textit{Lemur catta} from all other taxa. Not surpris
 bipartition ID is 2. The sister lineage of \textit{Lemur catta} includes all taxa except
 \textit{Lemur catta}. To find the corresponding bipartition ID, we need to find the ID that has a
 partition descriptor with a single dot in the second position; all other positions should be filled
-with stars. This bipartition has ID 14. Similarly, we find that the bipartition IDs of
-\textit{Tarsius syrichta} and its sister lineage are 1 and 15, respectively.
+with stars. This bipartition has ID 20. Similarly, we find that the bipartition IDs of
+\textit{Tarsius syrichta} and its sister lineage are 1 and 16, respectively.
 
 Now we examine the posterior distribution of IGR branch rates for these taxon bipartitions. If the
 clock is accelerated, the branch rate should be above $1.0$; if the rate is decelerated, the branch
@@ -2722,27 +2722,27 @@ rate should be below $1.0$. This is the relevant rows of the table:
 \scriptsize
 \begin{singlespacing}
 \begin{verbatim}
-                                                         95% HPD Interval
-                                                       --------------------
-   Parameter                    Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
-   ----------------------------------------------------------------------------------------------------
-   Igrbranchlens_rate[1]       0.916002    0.037357    0.545476    1.196117    0.947514    1.002    2
-   Igrbranchlens_rate[2]       0.688266    0.033214    0.345016    0.946393    0.703381    0.997    2
-   Igrbranchlens_rate[14]      0.776625    1.237010    0.000000    2.947193    0.424638    1.001    2
-   Igrbranchlens_rate[15]      2.635028    8.175572    0.634393    6.162516    1.809020    0.997    2
-   ----------------------------------------------------------------------------------------------------
+                                                   95% HPD Interval
+                                                 --------------------
+ Parameter                Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
+ ------------------------------------------------------------------------------------------------
+ IgrBrlens_rate[1]       1.007293    0.003879    0.888841    1.124742    1.009719    1.003    2
+ IgrBrlens_rate[2]       0.929211    0.007155    0.758538    1.053767    0.938230    1.044    2
+ ...
+ IgrBrlens_rate[16]      1.117410    0.065654    0.808765    1.595881    1.064906    1.018    2
+ ...
+ IgrBrlens_rate[20]      0.765294    0.301914    0.020191    1.648757    0.743613    1.000    2
+
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
 We see that there is considerable uncertainty about the branch rates but some of our predictions
-seem to be supported. In particular, the evolutionary rate is decelerated in the lineage leading to
-\textit{Lemur catta}, with bipartition ID 2; the entire 95\% HPD interval is below $1.0$. Although
-the evidence is less compelling, there is also an indication that the rate is decelerated in the
-lineage leading to \textit{Tarsius syrichta}, bipartition ID 1, and considerably accelerated in its
-sister lineage with bipartition ID 15. However, there is no evidence that the rate is accelerated
-in the sister lineage of \textit{Lemur catta} with bipartition ID 14. On the contrary, both the
-mean and median indicate that this rate is more likely to be below than above $1.0$.
+may have some support. The evolutionary rate seems slightly decelerated in the lineage leading to
+\textit{Lemur catta}, with bipartition ID 2, but no evidence about a decelerated in the
+\textit{Tarsius syrichta} lineage. On the other hand, there seems to be an acceleration in the
+sister lineage to \textit{Tarsius syrichta} with with bipartition ID 16, which would be in
+accordance with our predictions.
 
 To help you visualize parameters such as branch rates inferred by a relaxed clock model, the
 \ttt{sumt} command produces a \ttt{.con.tre} file that contains summaries of all branch and node
@@ -2756,10 +2756,10 @@ rooting constraint that we enforced above. To get an accurate comparison, we run
 sampling method. We refer to the previous two tutorials for details, but briefly give the commands
 here for the two stepping-stone analyses that are required for this comparison:
 
-\begin{singlespacing}
 \small
+\begin{singlespacing}
 \begin{verbatim}
-MrBayes > ss ngen=250000 diagnfreq=2500
+MrBayes > ss ngen=500000 diagnfreq=2500
 MrBayes > prset clockvarpr=strict
 MrBayes > ss
 \end{verbatim}
@@ -2772,44 +2772,42 @@ summarized below, with the relaxed clock model first, followed by the strict clo
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
-       Run   Marginal likelihood (ln)
-       ---------------------------
-         1     -5785.05   
-         2     -5785.76   
-       ---------------------------
-       Mean:   -5785.34
-       
-       ...
-       
-       Run   Marginal likelihood (ln)
-       ---------------------------
-         1     -5780.04   
-         2     -5781.53   
-       ---------------------------
-       Mean:   -5780.53
+
+  Run   Marginal likelihood (ln)
+   ------------------------------
+     1     -6357.90   
+     2     -6358.78   
+   ------------------------------
+   Mean:   -6358.25
+
+   Run   Marginal likelihood (ln)
+   ------------------------------
+     1     -6371.97   
+     2     -6372.22   
+   ------------------------------
+   Mean:   -6372.08
+
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-Note that the models are close, but it is still the strict clock model that carries the day. The
-difference is almost five log units, which is considered strong evidence in favor of the better
-model \citep{kass95}. Our runs indicate that the result is going to be similar if we were to repeat
-the comparison without enforcing a rooting constraint. We end by pointing out that this is a rather
-unusual data set; most other data sets will strongly favor relaxed over strict clock models.
+By comparing the model likelihoods we see that the relaxed clock model is a better explanation of
+the data. The difference is almost 14 log units, which is considered very strong evidence in favor
+of the better model \citep{kass95}.
 
-\vspace{10 pt}
-{\LARGE\color{red} Please note, the following section of the manual is not revised for v.3.2.7!}
 
 \section{Node Dating and Total-Evidence Dating}
+
+\vspace{10 pt}
+{\large\color{red} Please note, this section of the manual is not revised for v.3.2.7!}
 
 In this tutorial, we will use three different approaches to dating. First, we will show how to
 calibrate a tree based on information about the clock rate (rate dating), then we will date the
 tree based on node calibrations (node dating), and finally we will use total-evidence dating (or
 tip dating), in which the tree is dated based on simultaneous analysis of fossil and recent taxa.
-Rate dating and node dating will be demonstrated on a small data set, \ttt{primates.nex}, which
-has been analyzed in several previous tutorials, while a much larger data set,
-\ttt{hymfossil.nex} will be used to demonstrate total-evidence dating and node dating in a more
-typical setting.
+Rate dating and node dating will be demonstrated on a small data set, \ttt{primates.nex}, which has
+been analyzed in several previous tutorials, while a much larger data set, \ttt{hymfossil.nex} will
+be used to demonstrate total-evidence dating and node dating in a more typical setting.
 
 We begin by reading in the smaller data set using the command
 
@@ -2848,7 +2846,7 @@ the tree will be measured in terms of the number of expected substitutions per s
 dated tree, it is sufficient to change this assumption. For instance, let us assume that we know
 that the rate is approximately $0.01 \pm 0.005$ substitutions per site per million years. To use
 this assumption, we could for instance use a normal distribution as the prior for the clock rate,
-using $0.02$ as the mean and $0.005$ as the standard deviation. Since we give these values using
+using $0.01$ as the mean and $0.005$ as the standard deviation. Since we give these values using
 millions of years as the unit, the resulting tree will be calibrated in millions of years.
 
 Setting the prior on the clock rate is thus achieved with
@@ -2862,11 +2860,11 @@ MrBayes > prset clockratepr=normal(0.01,0.005)
 \normalsize
 
 There is one more thing to consider before we can run the analysis. By default, the clock rate is
-fixed to $1.0$. This means that the tree age (or height, if you wish) measured in substitutions
-per site is the same as tree age measured in time units. As soon as these two measures are
-decoupled, it is important to consider whether the clock tree prior is defined in terms of
-substitution units or time units. MrBayes uses clock tree priors that are defined on parameters
-(speciation rate, extinction rate etc) measured in time rather than substitution units.
+fixed to $1.0$. This means that the tree age (or height, if you wish) measured in substitutions per
+site is the same as tree age measured in time units. As soon as these two measures are decoupled,
+it is important to consider whether the clock tree prior is defined in terms of substitution units
+or time units. MrBayes uses clock tree priors that are defined on parameters (speciation rate,
+extinction rate etc) measured in time rather than substitution units.
 
 The uniform clock tree prior has only one prior parameter, tree age. The default prior is an
 exponential distribution with rate parameter $1.0$, which usually works well as long as the clock
@@ -2878,6 +2876,7 @@ the expected clock rate. Since the expectation of the exponential distribution i
 inverse of the rate parameter, we thus need to modify the tree age prior to an exponential
 distribution with the rate $0.01$. We do this using the following command line.
 
+%%%% JN: 'exponential' is no longer avaialble for treeagepr in 3.2.7
 \small
 \begin{singlespacing}
 \begin{verbatim}
@@ -3016,10 +3015,10 @@ estimates. Here are the relevant rows in this table in our analysis:
 \normalsize
 
 For instance, we see that the posterior distribution of the age of the human--chimp split has a
-mean of $5.4$ Ma, a median of $5.0$ Ma, and a 95\% HPD ranging from $2.3$ to $10.2$ Ma. By default, the
-\ttt{sumt} command will print all the summaries of node and branch parameters to the tree in the
-file with the ending \ttt{.con.tre} in a format that can be understood by FigTree. When you open
-the file in FigTree, you will have access to a range of options for visualizing the parameter
+mean of $5.4$ Ma, a median of $5.0$ Ma, and a 95\% HPD ranging from $2.3$ to $10.2$ Ma. By default,
+the \ttt{sumt} command will print all the summaries of node and branch parameters to the tree in
+the file with the ending \ttt{.con.tre} in a format that can be understood by FigTree. When you
+open the file in FigTree, you will have access to a range of options for visualizing the parameter
 summaries of your interest.
 
 We now turn our attention to dating of the tree using node calibrations (node dating). Assume, for
@@ -3096,15 +3095,17 @@ to consider the priors on the clock tree parameters (such as the tree age for th
 the node ages and the clock rate carefully. It is good practice to examine the influence of these
 priors on the dating results.
 
+%%%% JN: HymFossil
+%%%% JN: The two analyses are NOT described in the MrBayes/examples/hymfossil.nex file.
+%%%% JN: Text AND nexus file needs to be updated.
 Now we turn our attention to a larger data set, and more complex dating scenarios. The data set,
-\ttt{hymfossil.nex}, is from a study of the early radiation of the Hymenoptera
-\citep{ronquist12b}, and includes 68 recent taxa and 45 fossil taxa. The data matrix comprises
-about 5 kb data from seven molecular markers for recent taxa, and about 350 morphological
-characters coded for both recent and fossil taxa.
-
-At the end of the data file, in the \ttt{MRBAYES} block, you will find two dating analyses specified.
-The first is based on the standard node dating approach, in which the fossil record is used to
-derive calibration points that can help date the tree of extant taxa. The second uses
+\ttt{hymfossil.nex}, is from a study of the early radiation of the Hymenoptera \citep{ronquist12b},
+and includes 68 recent taxa and 45 fossil taxa. The data matrix comprises about 5 kb data from
+seven molecular markers for recent taxa, and about 350 morphological characters coded for both
+recent and fossil taxa.
+At the end of the data file, in the \ttt{MRBAYES} block, you will find two dating analyses
+specified. The first is based on the standard node dating approach, in which the fossil record is
+used to derive calibration points that can help date the tree of extant taxa. The second uses
 total-evidence dating, in which the fossils are analyzed together with the extant taxa. The
 advantage of the total-evidence approach is that it integrates out the uncertainty in the placement
 of the fossils in the tree, while simultaneously extracting the dating information they provide.
@@ -3116,8 +3117,8 @@ Specifically, both analyses specified in the \ttt{hymfossil.nex} data file use t
 calibration nodes for the outgroups, one corresponding to the root of the tree and the other to the
 ancestor of Holometabola. In addition, the node dating analysis relies on seven hymenopteran
 calibration points derived from the 45 hymenopteran fossils. The fossils themselves, however, are
-not included in the analysis. In the total-evidence analysis, no node calibrations are used for
-the Hymenoptera. Instead, dating is based on simultaneous analysis of the fossil and recent taxa,
+not included in the analysis. In the total-evidence analysis, no node calibrations are used for the
+Hymenoptera. Instead, dating is based on simultaneous analysis of the fossil and recent taxa,
 taking the age of the fossils into account.
 
 To run any of these two analyses, simply uncomment one of the two analysis blocks by removing the
@@ -3129,18 +3130,21 @@ needed in setting up the node dating and total-evidence dating analyses.
 The block starts out by defining a number of character sets. Then there is a set of lines that
 define the model for the morphological partition. It first defines a set of morphological
 characters to be ordered (\ttt{morphOrdered}), and then a set of morphological characters to be
-excluded (\ttt{morphExcluded}). Then these characters are ordered and excluded with the
-following two lines:
+excluded (\ttt{morphExcluded}). Then these characters are ordered and excluded with the following
+two lines:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     ctype ordered : morphOrdered;
     exclude morphExcluded;
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 The next set of lines define the partitioning of the data:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     partition without_CO1_3 = 7: MV MS, 12S 16S, 18S, 28S,
@@ -3149,6 +3153,7 @@ The next set of lines define the partitioning of the data:
     set partition=without_CO1_3;
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Note that the morphological data (sets \ttt{MV} and \ttt{MS}) are lumped into one partition, as are
 the 12S and 16S sequences (because these are very short sequences). The protein-coding CO1, Ef1aF1,
@@ -3166,18 +3171,21 @@ with the \ttt{set} command.
 
 The next lines define the substitution models for the data partitions based on a priori model
 testing. You should already be familiar with the structure of these commands; if not, refer to the
-tutorial in chapter \ref{tutorialPartitioned}. The following block first defines an outgroup, to
-be used in drawing trees from unrooted non-clock analyses. This line is irrelevant for the dating
+tutorial in chapter \ref{tutorialPartitioned}. The following block first defines an outgroup, to be
+used in drawing trees from unrooted non-clock analyses. This line is irrelevant for the dating
 analyses, since they produce rooted trees. The next line defines a set of taxa including the
 fossils, called \ttt{fossils}:
 
+\small
 \begin{verbatim}
     taxset fossils= Triassoxyela Asioxyela ...
 \end{verbatim}
+\normalsize
 
 This will be convenient when we want to exclude the fossils from the node dating analysis. Finally,
 all the constraints corresponding to the calibration nodes are defined:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     constraint root = 1-.;
@@ -3187,6 +3195,7 @@ all the constraints corresponding to the calibration nodes are defined:
     ...
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Note that the file uses two versions of the holometabola constraint, one with the fossils for the
 total-evidence analysis and one without for the node dating analysis. Strictly speaking, this is
@@ -3196,6 +3205,7 @@ second version of the constraint would have been adequate for both analyses.
 We now come to the specification of the two dating analyses. The first is the total-evidence
 analysis, which starts out by specifying the date of all fossil taxa:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     calibrate Triassoxyela=Fixed(235)
@@ -3203,6 +3213,7 @@ analysis, which starts out by specifying the date of all fossil taxa:
     ...
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Here, we assume that the uncertainty concerning the age of each fossil is negligible compared to
 other sources of uncertainty, so we simply fix the age of each fossil instead of associating it
@@ -3211,6 +3222,7 @@ with a prior probability distribution.
 The next three lines set up an IGR relaxed clock model. You should recognize the commands from the
 tutorial in section \ref{relaxedClock}.
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     prset brlenspr=clock:uniform;
@@ -3218,6 +3230,7 @@ tutorial in section \ref{relaxedClock}.
     prset igrvarpr=exp(37.12);
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 An appropriate prior for the \ttt{igrvarpr} parameter, the variance increase parameter of the IGR
 model, was found by simulations. Specifically, strict-clock and non-clock branch lengths were
@@ -3228,6 +3241,7 @@ IGR model matched these data better than the other two relaxed clock models prov
 The final five lines define a prior on the clock rate and sets the two outgroup calibration points
 using the same commands discussed previously in this tutorial:
 
+\small
 \begin{singlespacing}
 \begin{verbatim}
     prset clockratepr=lognorm(-7.08069,2.458582);
@@ -3237,6 +3251,7 @@ using the same commands discussed previously in this tutorial:
     prset nodeagepr=calibrated;
 \end{verbatim}
 \end{singlespacing}
+\normalsize
 
 Note that a tree age prior is not used here; instead, we define a root calibration point. MrBayes
 will use the root calibration as your tree age prior if you provide one; otherwise, it is the
@@ -3245,12 +3260,14 @@ parameter values used in defining the priors on the calibration points and the c
 derived from the fossil record \citep{ronquist12b}.
 
 This completes the definition of the total-evidence analysis. Let us now turn our attention to the
-node-dating analysis. It starts out by deleting the fossils from the analysis, using the
-previously defined taxon set called \ttt{fossils}:
+node-dating analysis. It starts out by deleting the fossils from the analysis, using the previously
+defined taxon set called \ttt{fossils}:
 
+\small
 \begin{verbatim}
     delete fossils
 \end{verbatim}
+\normalsize
 
 It then continues by defining the relaxed clock model in the same way as the total-evidence
 analysis. This is followed by a specification of the clock rate prior and then the specification of
@@ -3258,7 +3275,7 @@ the two outgroup and seven ingroup calibration points. The commands are essentia
 in the total-evidence analysis. Note that all nine constraints have to be enforced when specifying
 the topology prior:
 
-\footnotesize
+\small
 \begin{verbatim}
     prset topologypr=constraints(root,holometabola,hymenoptera,...,Vespina);
 \end{verbatim}
@@ -4852,19 +4869,14 @@ running on a specially designed cluster.
 
 \section{Working with the Source Code}
 
-%%%% JN: Ad hoc comment Feb 2019
-\vspace{5 pt}
-{\large Please note that the instructions in these sections are not up to date
-(Feb 2019). Please refer to the GitHub pages \url{https://github.com/NBISweden/MrBayes}
-for further details.}
-\vspace{5 pt}
-
 Compiling MrBayes from source code can be done with several different compilers targeting all the
 common operating systems: Macintosh, Windows, and Unix. The easiest way to build MrBayes on a
 Unix-like system is to use the GNU tool-chain. You can also compile MrBayes with Xcode (on a
 Macintosh) and the Microsoft Visual Studio suite (on a Windows machine).
-Please refer to the GitHub pages \url{https://github.com/NBISweden/MrBayes}, and especially the
-files \ttt{INSTALL}, and \ttt{README} that comes with the source code, for further details.
+
+For a more updated description on compiling the current MrBayes code, please refer to the GitHub
+pages \url{https://github.com/NBISweden/MrBayes}, and especially the files \ttt{INSTALL}, and
+\ttt{README} that comes with the distribution.
 
 \subsection{Compiling and Running the MPI Version of MrBayes}
 \label{MPIversion}
@@ -4876,8 +4888,8 @@ eight chains, which the MPI version will farm out to different processors. The s
 linear with the number of processors. Assume, for instance, that you want to run an analysis with
 four runs and four chains for a total of 16 chains. Compared to the serial version, this analysis
 will run almost twice as fast on two processors, almost four times as fast on four processors, and
-almost sixteen times as fast on sixteen processors. MrBayes will refuse to use more processors
-than the total number of chains, as there is no additional speedup beyond this point.
+almost sixteen times as fast on sixteen processors. MrBayes will refuse to use more processors than
+the total number of chains, as there is no additional speedup beyond this point.
 
 The MPI version will run both on clusters and on single machines with multicore CPUs, provided that
 the system supports MPI. The dominant current implementation of MPI is Open MPI, which runs on most
@@ -4893,48 +4905,16 @@ compiler, otherwise you do not. In addition, your system needs to have the relev
 the correct locations, which is typically the case if you have an MPI compiler installed.
 
 Once you have ensured that the system environment supports MPI compilation, you need to run the
-configure script with the \ttt{--enable-mpi=yes} option. Otherwise, the compilation process is
-quite similar to the one used to produce the serial version. A typical make session would look as
-follows:
+configure script with the \ttt{--with-mpi=yes} option. Otherwise, the compilation process is
+quite similar to the one used to produce the serial version (please refer to the \ttt{INSTALL} file
+that comes with the MrBayes distribution from GitHub for details).
 
-\begin{singlespacing}
-\scriptsize
-\begin{verbatim}
-~/mrbayes-3.2 $ ./configure --enable-mpi=yes
-...
-checking for mpicc... yes
-...
-~/mrbayes-3.2 $ make
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o bayes.o bayes.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o command.o command.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mbmath.o mbmath.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mcmc.o mcmc.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o model.o model.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o plot.o plot.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o sump.o sump.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o sumt.o sumt.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o tree.o tree.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o utils.o utils.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o mbbeagle.o mbbeagle.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H   -c -o best.o best.c
-mpicc -O3 -ffast-math -Wall -DNDEBUG -DUSECONFIG_H  -lreadline -lm  mb.c bayes.o
-command.o mbmath.o mcmc.o model.o plot.o sump.o sumt.o tree.o utils.o mbbeagle.o
-best.o   -o mb
-\end{verbatim}
-\normalsize
-\end{singlespacing}
-
-This produces an MPI-enabled version of MrBayes called \ttt{mb}. Make sure that the mpicc compiler
-is invoked instead of a normal C compiler; this is indicated by each of the compile lines starting
-with \ttt{mpicc}. It is perfectly normal if the build process takes some time; optimization of the
-source code is computationally demanding, especially for the largest source files such as
-\ttt{mcmc.c}.
-
-Note that the default name of the executable is the same as for the serial version, \ttt{mb}. This
-means that the parallel version will overwrite any previously existing serial version kept in the
-same directory. If you would like to have both the serial and parallel versions installed on the
-same system, you probably want to name the differently and put both in your path. We often rename
-the parallel executable \ttt{pmb} to separate it from the serial version.
+A successful compilation will produce an MPI-enabled version of MrBayes called \ttt{mb}. Note that
+the default name of the executable is the same as for the serial version, \ttt{mb}. This means that
+the parallel version will overwrite any previously existing serial version kept in the same
+directory. If you would like to have both the serial and parallel versions installed on the same
+system, you probably want to name the differently and put both in your path. We often rename the
+parallel executable \ttt{pmb} to separate it from the serial version.
 
 Although the MPI version is a lot faster than the serial version, it has one drawback: it does not
 support the readline library. This means that you do not have access to your command history, or
@@ -4956,39 +4936,22 @@ keep both a serial and a parallel version of MrBayes on your system, make sure y
 parallel version with your \ttt{mpirun} command. When executing the command, you should get a
 process ID number back. It is handy to keep this number for future reference. For instance, you
 might want to kill your job if you find you made a mistake when starting it. You can do this using
-\tb{kill -9 <PID>}, where \ttt{<PID>} is the process ID. Just make sure you kill the right process
-or some really bad things can happen.
+\tb{kill -9 <PID>}, where \ttt{<PID>} is the process ID.
 
 To examine how the analysis is doing, you can simply look at the last few lines in the screen dump
-file. Say that you dump the screen output to a file called \ttt{log.txt}. We can look at the end
-of that file by using \tb{tail log.txt}. If you would like the output to be dynamically updated,
-you can use \tb{tail -f log.txt} instead, in which case each new line printed to the file
-\ttt{log.txt} will be echoed to screen. To stop the display of new lines, press Control-C (this
-will only stop the echoing of new lines, it will not affect the analysis). Another way of examining
-how the analysis is doing is to look into the output files from the analysis, such as the
-\ttt{.mcmc} file.
+file. Say that you dump the screen output to a file called \ttt{log.txt}. We can look at the end of
+that file by using \tb{tail log.txt}. If you would like the output to be dynamically updated, you
+can use \tb{tail -f log.txt} instead, in which case each new line printed to the file \ttt{log.txt}
+will be echoed to screen. To stop the display of new lines, press Control-C (this will only stop
+the echoing of new lines, it will not affect the analysis). Another way of examining how the
+analysis is doing is to look into the output files from the analysis, such as the \ttt{.mcmc} file.
 
 We strongly recommend that you use checkpointing with the MPI version of MrBayes. This allows you
 to restart the analysis from the last checkpoint, should your analysis crash or be terminated
-prematurely. By default, MrBayes outputs a checkpoint file every 100,000 generations. See section
+prematurely. By default, MrBayes outputs a checkpoint file every 2,000 generations. See section
 \ref{checkpointing} for more details on checkpointing and how to restart your analysis from a
 checkpoint file.
 
-There are two typical cases when parallel runs fail due to different MPI implementations getting
-mixed:
-
-\begin{enumerate}
-\item You install one MPI implementation on your system and after that you install another. In
-such cases, it could happen that, in your path, the compiler command \ttt{mpicc} and the command
-that runs MPI jobs, \ttt{mpirun}, refer to different MPI implementations. You may use
-\tb{which mpicc} and \tb{which mpirun} to check which exact files are being called by these
-commands. Often \tb{mpicc} and \tb{mpirun} are symbolic links, so you have to follow them to see
-the actual files that get called. If the commands refer to different implementations, you will
-have to change one of them so that both refer to the same implementation.
-\item Typically on a cluster you will have a variety of MPI implementations that could be loaded
-to your environment using the \tb{module add} command. Check that the same module is added both
-during compilation and before the analysis. If they are different, your analyses will fail.
-\end{enumerate}
 
 \subsection{Compiling the Development Version of MrBayes}
 \label{compileDevVersion}
@@ -5912,6 +5875,7 @@ which deal with the tree topology prior, and the \ttt{prset brlenspr} options, w
 branch lengths.
 
 \subsection{Unconstrained and Constrained Topology}
+\label{unconstrainedAndConstrainedTopology}
 
 In MrBayes 3, there are four choices for the prior probability distribution on topology:
 \ttt{uniform}, \ttt{speciestree}, \ttt{fixed}, or \ttt{constraints}. By default, topologies are not
@@ -6060,7 +6024,6 @@ gamma distribution with mean $10$, and branch length proportions are associated 
 Dirichlet distribution (default).
 
 \subsection{Strict Clock Trees}
-%%%% JN: subsection need to be expanded
 
 MrBayes implements three strict clock models: the simple (uniform) model, the birthdeath model, and
 the coalescence model. The birth-death model and coalescence models both have additional parameters
@@ -6079,14 +6042,14 @@ into fewer and fewer ancestral lineages. This process occurs at a rate determine
 for the theta parameter is set using \ttt{prset thetapr}. The ploidy level is set using \ttt{lset
 ploidy}.
 
-The $simple$ $clock$ model is invoked by \tb{prset brlenspr=clock:uniform}. There is only one
+The $simple$ $clock$ model is invoked by \ttt{prset brlenspr=clock:uniform}. There is only one
 additional parameter in the simple clock model, namely the total tree height. The prior for this
 parameter is set by \ttt{prset treeheightpr}. The default prior is an exponential distribution with
 parameter 1.0 (\ttt{Exponential(1.0)}).
 
 \subsection{Relaxed Clock Trees}
-
 %%%% JN: subsection need to be expanded
+{\large\color{red} Please note, this section of the manual is not revised for v.3.2.7!}
 
 Relaxed clock models and functions for dating are not implemented in MrBayes 3.1. They are
 available in version 3.2.
