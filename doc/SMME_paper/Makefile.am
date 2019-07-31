@@ -22,9 +22,8 @@ envvars=	\
 	BSTINPUTS=$(srcdir)/src:
 
 deps=	\
+	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.bib \
 	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.tex \
-	$(srcdir)/src/svmult.cls \
-	$(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005.bib\
 	$(srcdir)/src/fig1.png \
 	$(srcdir)/src/fig2.png \
 	$(srcdir)/src/fig3.png \
@@ -36,7 +35,8 @@ deps=	\
 	$(srcdir)/src/fig9.png \
 	$(srcdir)/src/fig10.png \
 	$(srcdir)/src/fig11.png \
-	$(srcdir)/src/fig12.png
+	$(srcdir)/src/fig12.png \
+	$(srcdir)/src/svmult.cls
 
 if HAVE_LATEX
 
@@ -47,10 +47,14 @@ Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 
 else # !HAVE_LATEXMK
 
+# The order of pdflatex and bibtex runs below (and the number of runs)
+# mirrors what laxexmf seems to want to do.
 Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
+	env $(envvars) $(MAKEINDEX) Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
+	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 
 endif
