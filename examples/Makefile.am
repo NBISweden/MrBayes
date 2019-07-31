@@ -6,6 +6,6 @@ dist_examples_DATA=	\
 	cynmix.nex \
 	finch.nex \
 	hymfossil.nex \
+	kim.nex \
 	primates.nex \
-	replicase.nex \
-	sceloporus.nex
+	replicase.nex

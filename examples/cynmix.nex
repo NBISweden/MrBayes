@@ -1,4 +1,4 @@
-#NEXUS 
+#NEXUS
 
 [ Data from: Nylander JAA, Ronquist F, Huelsenbeck JP, Nieves-Aldrey JL. 2004. Bayesian phylogenetic analysis of combined data. Systematic Biology 53:47-67. ]
 
@@ -687,8 +687,8 @@ begin mrbayes;
     set partition=favored;
     lset app=(1) rates=gamma;
     lset app=(2,3,4,5) rates=invgamma nst=6;
-    unlink revmat=(all) pinvar=(all) shape=(all) statefreq=(all);    
-    prset ratepr=variable;
+    unlink revmat=(all) pinvar=(all) shape=(all) statefreq=(all);
+    prset applyto=(all) ratepr=variable;
     ]
 
 end;

@@ -23,7 +23,6 @@ deps=	\
 	$(srcdir)/src/Appendix_Fig2.pdf \
 	$(srcdir)/src/Appendix_Fig3.pdf \
 	$(srcdir)/src/Manual_MrBayes_v3.2.tex \
-	$(srcdir)/src/StatisticalMethods_Chapter.tex \
 	$(srcdir)/src/bayes.bib \
 	$(srcdir)/src/sysbio.bst
 

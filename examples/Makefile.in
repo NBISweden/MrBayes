@@ -188,6 +188,7 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
+MAKEINDEX = @MAKEINDEX@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 MPICC = @MPICC@
@@ -267,9 +268,9 @@ dist_examples_DATA = \
 	cynmix.nex \
 	finch.nex \
 	hymfossil.nex \
+	kim.nex \
 	primates.nex \
-	replicase.nex \
-	sceloporus.nex
+	replicase.nex
 
 all: all-am
 

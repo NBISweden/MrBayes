@@ -226,6 +226,15 @@
   pages     = {130--157}
 }
 
+@article{ayres12,
+    author  = {Ayres, Daniel L. and Darling, Aaron and Zwickl, Derrick J. and Beerli, Peter and Holder, Mark T. and Lewis, Paul O. and Huelsenbeck, John P. and Ronquist, Fredrik and Swofford, David L. and Cummings, Michael P. and Rambaut, Andrew and Suchard, Marc A.},
+    title   = "{BEAGLE: An Application Programming Interface and High-Performance Computing Library for Statistical Phylogenetics}",
+    journal = {Systematic Biology},
+    volume  = {61},
+    pages   = {170-173},
+    year    = {2012}
+}
+
 %*********************************************************************************
 % B
 %*********************************************************************************
@@ -3819,13 +3828,31 @@ pages = {504--514}
 }
 
 @Article{nylander04,
-  author    = {J. A. A. Nylander and F. Ronquist and J. P. Huelsenbeck and J. L. Nieves Aldrey},
+  author    = {Johan A. A. Nylander and F. Ronquist and J. P. Huelsenbeck and J. L. Nieves Aldrey},
   title     = {Bayesian phylogenetic analysis of combined data},
   journal   = {Systematic Biology},
-  year      = 2004,
-  volume    = 53,
+  year      = {2004},
+  volume    = {53},
   pages     = {47--67}
 }
+
+@misc{nylander04b,
+  author       = {Johan A. A. Nylander},
+  title        = {Mr{M}odeltest v2},
+  howpublished = {Program distributed by the author. Evolutionary Biology Centre, Uppsala University},
+  year         = {2004},
+  url          = {https://github.com/nylander/MrModeltest2}
+}
+
+@article{nylander07,
+    author  = {Johan A. A. Nylander and  James C. Wilgenbusch and Dan L. Warren and David L. Swofford},
+    title   = {{AWTY} (are we there yet?): a system for graphical exploration of {MCMC} convergence in {B}ayesian phylogenetics},
+    journal = {Bioinformatics},
+    volume  = {24},
+    pages   = {581-583},
+    year    = {2007}
+}
+
 
 %*********************************************************************************
 % O
@@ -3880,6 +3907,15 @@ pages = {504--514}
 % P
 %*********************************************************************************
 
+@Article{page96,
+    author  = {Page, Roderic},
+    year    = {1996},
+    pages   = {357--358},
+    title   = {{TREEVIEW}: An application to display phylogenetic trees on personal computers},
+    volume  = {12},
+    journal = {Computer applications in the biosciences : CABIOS},
+}
+
 @Article{page01,
   author    = {S. L. Page and M. Goodman},
   title     = {Catarrhine phylogeny: noncoding {DNA} evidence for a diphyletic origin of the mangabeys and for a human-chimpanzee clade},
@@ -3916,7 +3952,6 @@ pages = {504--514}
   pages     = {121--142}
 }
 
-
 @Article{palumbi89,
   author    = {S. R. Palumbi},
   title     = {Rates of molecular evolution and the function of nucleotide positions free to vary},
@@ -3942,6 +3977,16 @@ pages = {504--514}
   year      = 1993,
   volume    = 10,
   pages     = {271--281}
+}
+
+@InProceedings{patterson82,
+  author    = {C. Patterson},
+  editor    = {K. A. Joysey and A. B. Friday},
+  title     = {Morphological Characters and Homology},
+  booktitle = {Problems of {P}hylogenetic {R}econstruction},
+  publisher = {Academic Press},
+  year      = 1982,
+  pages     = {21-74}
 }
 
 @Article{patterson88,
@@ -4073,16 +4118,6 @@ pages = {504--514}
   address   = {Cambridge}
 }
 
-@InProceedings{patterson82,
-  author    = {C. Patterson},
-  editor    = {K. A. Joysey and A. B. Friday},
-  title     = {Morphological Characters and Homology},
-  booktitle = {Problems of {P}hylogenetic {R}econstruction},
-  publisher = {Academic Press},
-  year      = 1982,
-  pages     = {21-74}
-}
-
 @Article{pritchard00,
   author    = {J. K. Pritchard and M. Stephens and P. Donnelly},
   title     = {Inference of population structure using multilocus genotype data},
@@ -4093,21 +4128,30 @@ pages = {504--514}
 }
 
 @article{posada98,
-author = "David Posada",
-title = "Model{T}est: testing the model of {DNA} substitution",
-journal = "Bioinformatics",
-year = "1998",
-volume = "14",
-pages = "817--818"
+    author  = {David Posada},
+    title   = {Model{T}est: testing the model of {DNA} substitution},
+    journal = {Bioinformatics},
+    year    = {1998},
+    volume  = {14},
+    pages   = {817--818}
 }
 
 @article{posada08,
-author = "David Posada", 
-journal = "Mol. Biol. Evol.",
-title = "j{M}odel{T}est: phylogenetic model averaging",
-year = "2008",
-volume = "25",
-pages = "1253--1256",
+    author  = {David Posada}, 
+    journal = {Molecular Biology and Evolution},
+    title   = {j{M}odel{T}est: phylogenetic model averaging},
+    year    = {2008},
+    volume  = {25},
+    pages   = {1253--1256},
+}
+
+@article{plummer06,
+  title = {{CODA}: Convergence Diagnosis and Output Analysis for {MCMC}},
+  author = {Martyn Plummer and Nicky Best and Kate Cowles and Karen Vines},
+  journal = {R News},
+  year = {2006},
+  volume = {6},
+  pages = {7--11}
 }
 
 %*********************************************************************************
@@ -4141,16 +4185,27 @@ pages = "1253--1256",
   author    = {A. Rambaut and N. C. Grassly},
   title     = {{Seq-Gen}: an application for the {M}onte {C}arlo simulation of {DNA} sequence evolution along phylogenetic trees},
   journal   = {Computer Applications in the Biosciences},
-  year      = 1997,
-  volume    = 13,
+  year      = {1997},
+  volume    = {13},
   pages     = {235--238}
 }
 
-@Misc{rambaut07,
-  author       = {A. Rambaut and A. J. Drummond},
-  title        = {Tracer v1.4},
-  howpublished = {http://beast.bio.ed.ac.uk/Tracer},
-  year         = 2007
+@misc{rambaut12,
+  author       = {Andrew Rambaut and Alexei J Drummond},
+  title        = {Fig{T}ree version 1.4},
+  howpublished = {https://github.com/rambaut/figtree},
+  year         = {2012}
+}
+
+@article{rambaut18,
+    author  = {Andrew Rambaut and Alexei J Drummond and Dong Xie and Guy Baele and Marc A Suchard},
+    title   = {Posterior Summarization in {B}ayesian Phylogenetics Using {T}racer 1.7},
+    journal = {Systematic Biology},
+    volume  = {67},
+    number  = {5},
+    pages   = {901-904},
+    year    = {2018},
+    url     = {https://doi.org/10.1093/sysbio/syy032},
 }
 
 @Article{rannala98,
@@ -4180,6 +4235,15 @@ pages = "1253--1256",
   pages     = {453--466}
 }
 
+@Article{rannala12,
+  author    = {B. Rannala and T. Zhu and Z. Yang},
+  title     = {Tail paradox, partial identifiability and influential priors in {B}ayesian branch length inference},
+  journal   = {Molecular Biology and Evolution},
+  year      = {2012},
+  volume    = {29},
+  pages     = {325--335}
+}
+
 @Article{raup74,
   author    = {D. M. Raup and S. J. Gould},
   title     = {Stochastic simulation and evolution of morphology---towards a nomothetic paleontology},
@@ -4196,6 +4260,15 @@ pages = "1253--1256",
   year      = 1973,
   volume    = 81,
   pages     = {525--542}
+}
+
+@manual{rcoreteam18,
+  title        = {R: A Language and Environment for Statistical
+                  Computing},
+  author       = {{R Core Team}},
+  organization = {R Foundation for Statistical Computing},
+  address      = {Vienna, Austria},
+  year         = {2018}
 }
 
 @Article{redelings05,
@@ -4231,6 +4304,13 @@ pages = "1253--1256",
   publisher = {Duxbury Press},
   year      = 1995,
   address   = {Belmont, California}
+}
+
+@book{ripley87,
+    author    = {Brian D. Ripley},
+    title     = {Stochastic Simulation},
+    year      = {1987},
+    publisher = {Wiley Series in Probability and Statistics}
 }
 
 @Article{ritland87,
@@ -5240,6 +5320,16 @@ pages = "1253--1256",
 % W
 %*********************************************************************************
 
+@Article{warren17,
+    title = {{RWTY} ({R} {W}e {T}here {Y}et): An {R} package for examining
+      convergence of {B}ayesian phylogenetic analyses},
+    author = {Dan Warren and Anthony Geneva and Rob Lanfear},
+    journal = {Molecular Biology and Evolution},
+    year = {2017},
+    volume = {34},
+    pages = {1016-1020}
+  }
+
 @Article{westneat05,
   author    = {M. W. Westneat and M. E. Alfaro},
   title     = {Phylogenetic relationships and evolutionary history of the reef fish family {L}abridae},
@@ -5553,7 +5643,6 @@ year = {2011}
   pages     = {431--449}
 }
 
-
 @Article{yang02,
   author    = {Z. Yang and R. Nielsen},
   title     = {Codon-substitution models for detecting molecular adaptation at individual sites along specific lineages},
@@ -5579,6 +5668,24 @@ year = {2011}
   title     = {Detecting positive selection using {PAML}},
   publisher = {Springer-Verlag},
   year      = 2004
+}
+
+@Article{yang05,
+  author    = {Z. Yang and B. Rannala},
+  title     = {Branch-length prior influences {B}ayesian posterior probability of phylogeny},
+  journal   = {Systematic Biology},
+  year      = {2005},
+  volume    = {54},
+  pages     = {455--470}
+}
+
+@Article{yang07,
+  author    = {Z. Yang},
+  title     = {Fair-balance paradox, star-tree paradox and {B}ayesian phylogenetics},
+  journal   = {Molecular Biology and Evolution},
+  year      = {2005},
+  volume    = {24},
+  pages     = {1639--1655}
 }
 
 @Article{yeldandi91,

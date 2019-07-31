@@ -1,1 +1,1 @@
-SUBDIRS=	manual tutorial
+SUBDIRS=	manual SMME_paper tutorial
