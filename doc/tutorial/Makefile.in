@@ -531,10 +531,15 @@ uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/MBDating
 
+# The order of pdflatex and bibtex runs below (and the number of runs)
+# mirrors what laxexmf seems to want to do.
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
 @HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 
 @HAVE_LATEX_FALSE@MBDating.pdf:
