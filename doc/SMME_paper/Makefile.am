@@ -51,7 +51,6 @@ else # !HAVE_LATEXMK
 # mirrors what laxexmf seems to want to do.
 Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
-	env $(envvars) $(MAKEINDEX) Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
