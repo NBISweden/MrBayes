@@ -101,12 +101,11 @@ PKG_PROG_PKG_CONFIG
 # This does not affect the pre-built PDF documents unless these are deleted.
 AC_PATH_PROG(PDFLATEX, [pdflatex])
 AC_PATH_PROG(BIBTEX, [bibtex])
-AC_PATH_PROG(MAKEINDEX, [makeindex])
 AC_PATH_PROG(LATEXMK, [latexmk])
 
-AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX" && test -n "$MAKEINDEX"])
+AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
 AM_COND_IF([HAVE_LATEX], [],
-           [AC_MSG_WARN([pdflatex, bibtex, and/or makeindex is missing, documentation will not be rebuilt])])
+           [AC_MSG_WARN([pdflatex and/or bibtex is missing, documentation will not be rebuilt])])
 
 AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
 
