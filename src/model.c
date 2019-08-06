@@ -19033,7 +19033,7 @@ int SetModelParams (void)
             {
             /* Set up rateMult for partition specific rates ***********************************************************/
             p->paramType = P_RATEMULT;
-            if (!strcmp(mp->ratePr,"Fixed"))
+            if (!strcmp(mp->ratePr,"Fixed") || numCurrentDivisions == 1)
                 {
                 p->nValues = 1;
                 p->nSubValues = 0;
