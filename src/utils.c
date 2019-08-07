@@ -13045,38 +13045,9 @@ MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt
 
 
 /* Log probability for a value drawn from a lognormal distribution */
-MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
+MrBFlt LnProbLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x)
 {
     MrBFlt lnProb, z;
-    
-    z = (log(x) - exp) / sd;
-    
-    lnProb = - log (x * sd * sqrt (2.0 * M_PI)) - (z * z / 2.0);
-    
-    return lnProb;
-}
-
-
-/* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
-{
-    MrBFlt  newZ, oldZ;
-    
-    newZ = (log(xNew) - exp) / sd;
-    oldZ = (log(xOld) - exp) / sd;
-    
-    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
-}
-
-
-/* Log probability for a value drawn from a lognormal distribution;
-   parameters are mean and variance of value (not of log value) */
-MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
-{
-    MrBFlt  z, lnProb, mu, sigma;
-    
-    sigma = sqrt(log(1.0 + (var / (mean*mean))));
-    mu    = log(mean) - sigma * sigma / 2.0;
     
     z = (log(x) - mu) / sigma;
     
@@ -13087,17 +13058,39 @@ MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
 
 
 /* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+MrBFlt LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld)
 {
-    MrBFlt  newZ, oldZ, mu, sigma;
-
-    sigma = sqrt(log(1.0 + (var / (mean*mean))));
-    mu    = log(mean) - sigma * sigma / 2.0;
-
+    MrBFlt  newZ, oldZ;
+    
     newZ = (log(xNew) - mu) / sigma;
     oldZ = (log(xOld) - mu) / sigma;
-
+    
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
+}
+
+
+/* Log probability for a value drawn from a lognormal distribution;
+   parameters are mean and variance of value (not of log value) */
+MrBFlt LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x)
+{
+    MrBFlt  mu, sigma;
+    
+    sigma = sqrt(log(1.0 + var / (mean*mean)));
+    mu    = log(mean) - sigma * sigma / 2.0;
+    
+    return LnProbLogNormal(mu, sigma, x);
+}
+
+
+/* Log ratio for two values drawn from a lognormal distribution */
+MrBFlt LnRatioLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+{
+    MrBFlt  mu, sigma;
+
+    sigma = sqrt(log(1.0 + var / (mean*mean)));
+    mu    = log(mean) - sigma * sigma / 2.0;
+
+    return LnRatioLogNormal (mu, sigma, xNew, xOld);
 }
 
 

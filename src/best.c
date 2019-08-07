@@ -1601,15 +1601,15 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             /* prior ratio */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
                 }
 
             /* update effective evolutionary lengths */

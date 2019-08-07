@@ -8259,7 +8259,7 @@ MrBFlt LogPrior (int chain)
                 {
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbTK02LogNormal (st[branch->anc->index], nu*branch->length, st[branch->index]);
+                    lnPrior += LnProbLogNormal_Mean_Var (st[branch->anc->index], nu*branch->length, st[branch->index]);
                 }
             }
         else if (p->paramType == P_IGRVAR)
