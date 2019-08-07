@@ -760,8 +760,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     q = oldT->allDownPass[j];
                     if (p->length > 0.0)  // not ancestral fossil
                         {
-                        (*lnPriorRatio) -= LnProbGamma (q->length/igrvar, q->length/igrvar, igrRate[q->index]);
-                        (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, igrRate[p->index]);
+                        (*lnPriorRatio) -= LnProbGamma (1.0/q->length/igrvar, 1.0/q->length/igrvar, igrRate[q->index]);
+                        (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, igrRate[p->index]);
 
                         brlens[p->index] = igrRate[p->index] * p->length;
                         }
@@ -1316,13 +1316,13 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             
             /* prior ratio */
             igrRate[p->index] = igrRate[q->index];
-            (*lnPriorRatio) -= LnProbGamma (oldRLength/igrvar, oldRLength/igrvar, igrRate[r->index]);
-            (*lnPriorRatio) += LnProbGamma (p->length /igrvar, p->length /igrvar, igrRate[p->index]);
-            (*lnPriorRatio) += LnProbGamma (r->length /igrvar, r->length /igrvar, igrRate[r->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldRLength/igrvar, 1.0/oldRLength/igrvar, igrRate[r->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/p->length /igrvar, 1.0/p->length /igrvar, igrRate[p->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/r->length /igrvar, 1.0/r->length /igrvar, igrRate[r->index]);
             if (q->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldQLength/igrvar, oldQLength/igrvar, igrRate[q->index]);
-                (*lnPriorRatio) += LnProbGamma (q->length /igrvar, q->length /igrvar, igrRate[q->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/oldQLength/igrvar, 1.0/oldQLength/igrvar, igrRate[q->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/q->length /igrvar, 1.0/q->length /igrvar, igrRate[q->index]);
                 }
             
             /* update effective evolutionary lengths */
@@ -1543,13 +1543,13 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             igrRate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, oldPLength/igrvar, igrRate[p->index]);
-            (*lnPriorRatio) -= LnProbGamma (oldRLength/igrvar, oldRLength/igrvar, igrRate[r->index]);
-            (*lnPriorRatio) += LnProbGamma (r->length /igrvar, r->length /igrvar, igrRate[r->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldPLength/igrvar, 1.0/oldPLength/igrvar, igrRate[p->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldRLength/igrvar, 1.0/oldRLength/igrvar, igrRate[r->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/r->length /igrvar, 1.0/r->length /igrvar, igrRate[r->index]);
             if (q->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldQLength/igrvar, oldQLength/igrvar, igrRate[q->index]);
-                (*lnPriorRatio) += LnProbGamma (q->length /igrvar, q->length /igrvar, igrRate[q->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/oldQLength/igrvar, 1.0/oldQLength/igrvar, igrRate[q->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/q->length /igrvar, 1.0/q->length /igrvar, igrRate[q->index]);
                 }
             
             /* update effective evolutionary lengths */
@@ -1940,10 +1940,10 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, v->length/igrvar, igrRate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, u->length/igrvar, igrRate[u->index]);
-            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
             
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -2172,11 +2172,11 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (v->length/igrvar, v->length/igrvar, igrRate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3376,10 +3376,10 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
              /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, v->length/igrvar, igrRate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, u->length/igrvar, igrRate[u->index]);
-            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
 
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3608,11 +3608,11 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (v->length/igrvar, v->length/igrvar, igrRate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -4539,10 +4539,10 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbGamma (oldALength/igrvar, oldALength/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma (oldCLength/igrvar, oldCLength/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (a->length /igrvar, a->length /igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (c->length /igrvar, c->length /igrvar, igrRate[c->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldALength/igrvar, 1.0/oldALength/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldCLength/igrvar, 1.0/oldCLength/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/a->length /igrvar, 1.0/a->length /igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/c->length /igrvar, 1.0/c->length /igrvar, igrRate[c->index]);
             brlens[a->index] = igrRate[a->index] * a->length;
             brlens[c->index] = igrRate[c->index] * c->length;
             }
@@ -5265,8 +5265,8 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
     /* calculate prior ratio */
     igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
-    (*lnPriorRatio) = LnProbGamma (p->length/igrvar, p->length/igrvar, newRate)
-                    - LnProbGamma (p->length/igrvar, p->length/igrvar, oldRate);
+    (*lnPriorRatio) = LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, newRate)
+                    - LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, oldRate);
 
     /* calculate proposal ratio */
     (*lnProposalRatio) = log (newRate / oldRate);
@@ -5341,8 +5341,8 @@ int Move_IgrBranchRate2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     
     /* calculate prior ratio */
     igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
-    (*lnPriorRatio) = LnProbGamma (p->length/igrvar, p->length/igrvar, newRate)
-                    - LnProbGamma (p->length/igrvar, p->length/igrvar, oldRate);
+    (*lnPriorRatio) = LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, newRate)
+                    - LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, oldRate);
     
     /* calculate proposal ratio */
     (*lnProposalRatio) = 0.0;
@@ -5418,8 +5418,8 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             p = t->allDownPass[j];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbGamma (p->length/oldIgrvar, p->length/oldIgrvar, igrRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (p->length/newIgrvar, p->length/newIgrvar, igrRate[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/p->length/oldIgrvar, 1.0/p->length/oldIgrvar, igrRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/p->length/newIgrvar, 1.0/p->length/newIgrvar, igrRate[p->index]);
                 }
             }
         }
@@ -5529,8 +5529,8 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
         }
     else if (*rclModel == RCL_IGR)
         {
-        (*lnPriorRatio) -= LnProbGamma (p->length/mxvar, p->length/mxvar, oldRate);
-        (*lnPriorRatio) += LnProbGamma (p->length/mxvar, p->length/mxvar, newRate);
+        (*lnPriorRatio) -= LnProbGamma (1.0/p->length/mxvar, 1.0/p->length/mxvar, oldRate);
+        (*lnPriorRatio) += LnProbGamma (1.0/p->length/mxvar, 1.0/p->length/mxvar, newRate);
         
         brlens[p->index] = newRate * p->length;
 
@@ -5625,8 +5625,8 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 p = t->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbGamma (p->length/oldVar, p->length/oldVar, igrRate[p->index]);
-                    (*lnPriorRatio) += LnProbGamma (p->length/newVar, p->length/newVar, igrRate[p->index]);
+                    (*lnPriorRatio) -= LnProbGamma (1.0/p->length/oldVar, 1.0/p->length/oldVar, igrRate[p->index]);
+                    (*lnPriorRatio) += LnProbGamma (1.0/p->length/newVar, 1.0/p->length/newVar, igrRate[p->index]);
                     }
                 }
             }
@@ -5702,7 +5702,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             if (p->length > 0.0)  // not ancestral fossil
                 {
                 (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (mxRate[p->anc->index], tk02var*p->length, mxRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, mxRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, mxRate[p->index]);
 
                 brlens[p->index] = mxRate[p->index] * p->length;
                 }
@@ -5739,7 +5739,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbGamma (p->length/igrvar, p->length/igrvar, mxRate[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, mxRate[p->index]);
                 (*lnPriorRatio) += LnProbLogNormal_Mean_Var (mxRate[p->anc->index], tk02var*p->length, mxRate[p->index]);
 
                 brlens[p->index] = p->length * (mxRate[p->index] + mxRate[p->anc->index]) /2.0;
@@ -7774,10 +7774,10 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
             /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbGamma (oldALength/igrvar, oldALength/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma (oldCLength/igrvar, oldCLength/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (a->length /igrvar, a->length /igrvar, igrRate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (c->length /igrvar, c->length /igrvar, igrRate[c->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldALength/igrvar, 1.0/oldALength/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/oldCLength/igrvar, 1.0/oldCLength/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/a->length /igrvar, 1.0/a->length /igrvar, igrRate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/c->length /igrvar, 1.0/c->length /igrvar, igrRate[c->index]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = igrRate[a->index] * a->length;
             brlens[c->index] = igrRate[c->index] * c->length;
@@ -8291,21 +8291,21 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                 {
                 if (p->left->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbGamma (oldLeftLength/igrvar, oldLeftLength/igrvar, igrRate[p->left->index ]);
-                    (*lnPriorRatio) += LnProbGamma (p->left->length/igrvar, p->left->length/igrvar, igrRate[p->left->index ]);
+                    (*lnPriorRatio) -= LnProbGamma (1.0/oldLeftLength/igrvar, 1.0/oldLeftLength/igrvar, igrRate[p->left->index ]);
+                    (*lnPriorRatio) += LnProbGamma (1.0/p->left->length/igrvar, 1.0/p->left->length/igrvar, igrRate[p->left->index ]);
                     brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
                     }
                 if (p->right->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, oldRightLength/igrvar, igrRate[p->right->index]);
-                    (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, p->right->length/igrvar, igrRate[p->right->index]);
+                    (*lnPriorRatio) -= LnProbGamma (1.0/oldRightLength/igrvar, 1.0/oldRightLength/igrvar, igrRate[p->right->index]);
+                    (*lnPriorRatio) += LnProbGamma (1.0/p->right->length/igrvar, 1.0/p->right->length/igrvar, igrRate[p->right->index]);
                     brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
                     }
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, oldPLength/igrvar, igrRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, p->length /igrvar, igrRate[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/oldPLength/igrvar, 1.0/oldPLength/igrvar, igrRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/p->length /igrvar, 1.0/p->length /igrvar, igrRate[p->index]);
                 brlens[p->index] = igrRate[p->index] * p->length;
                 }
             }
@@ -9635,10 +9635,10 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, v->length/igrvar, igrRate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, u->length/igrvar, igrRate[u->index]);
-            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -9988,11 +9988,11 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/igrvar, (c->length+u->length)/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (c->length/igrvar, c->length/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/(c->length+u->length)/igrvar, 1.0/(c->length+u->length)/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/c->length/igrvar, 1.0/c->length/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (v->length/igrvar, v->length/igrvar, igrRate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12011,10 +12011,10 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(v->length/igrvar, v->length/igrvar, igrRate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(a->length/igrvar, a->length/igrvar, igrRate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(u->length/igrvar, u->length/igrvar, igrRate[u->index]);
-            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/igrvar, (a->length+u->length)/igrvar, igrRate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, igrRate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, igrRate[a->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12363,11 +12363,11 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             igrRate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/igrvar, (c->length+u->length)/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (c->length/igrvar, c->length/igrvar, igrRate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (u->length/igrvar, u->length/igrvar, igrRate[u->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/(c->length+u->length)/igrvar, 1.0/(c->length+u->length)/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/c->length/igrvar, 1.0/c->length/igrvar, igrRate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, igrRate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (v->length/igrvar, v->length/igrvar, igrRate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, igrRate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -16185,8 +16185,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 q = oldT->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbGamma (q->length/igrvar, q->length/igrvar, igrRate[q->index]);
-                    (*lnPriorRatio) += LnProbGamma (p->length/igrvar, p->length/igrvar, igrRate[p->index]);
+                    (*lnPriorRatio) -= LnProbGamma (1.0/q->length/igrvar, 1.0/q->length/igrvar, igrRate[q->index]);
+                    (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, igrRate[p->index]);
                     brlens[p->index] = p->length * igrRate[p->index];
                     if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {

@@ -866,14 +866,19 @@ int InitializeMrBayes (void)
     defaultModel.tk02varFix = 1.0;
     defaultModel.tk02varUni[0] = 0.0;
     defaultModel.tk02varUni[1] = 5.0;
-    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance increase parameter for IGR rel clock */
-    defaultModel.igrvarExp = 10.0;
-    defaultModel.igrvarFix = 0.1;
+    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance parameter for IGR rel clock */
+    defaultModel.igrvarExp = 1.0;
+    defaultModel.igrvarFix = 1.0;
     defaultModel.igrvarUni[0] = 0.0;
-    defaultModel.igrvarUni[1] = 0.5;
+    defaultModel.igrvarUni[1] = 5.0;
+    strcpy(defaultModel.ilnvarPr, "Exponential");       /* prior on variance parameter for ILN rel clock */
+    defaultModel.ilnvarExp = 1.0;
+    defaultModel.ilnvarFix = 1.0;
+    defaultModel.ilnvarUni[0] = 0.0;
+    defaultModel.ilnvarUni[1] = 5.0;
     strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for mixed rel clock */
-    defaultModel.mixedvarExp = 10.0;
-    defaultModel.mixedvarFix = 0.1;
+    defaultModel.mixedvarExp = 1.0;
+    defaultModel.mixedvarFix = 1.0;
     defaultModel.mixedvarUni[0] = 0.0;
     defaultModel.mixedvarUni[1] = 5.0;
     strcpy(defaultModel.ratePr, "Fixed");               /* prior on rate for a partition              */

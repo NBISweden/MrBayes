@@ -354,6 +354,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define TK02VAR_MAX             10000.0f
 #define IGRVAR_MIN              0.000001f
 #define IGRVAR_MAX              10000.0f
+#define ILNVAR_MIN              0.000001f
+#define ILNVAR_MAX              10000.0f
 #define MIXEDVAR_MIN            0.000001f
 #define MIXEDVAR_MAX            10000.0f
 #define OMEGA_MIN               0.001f
@@ -434,7 +436,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              32
+#define NUM_LINKED              34
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -461,12 +463,14 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_TK02BRANCHRATES       23
 #define P_IGRVAR                24
 #define P_IGRBRANCHRATES        25
-#define P_CLOCKRATE             26
-#define P_SPECIESTREE           27
-#define P_GENETREERATE          28
-#define P_MIXEDVAR              29
-#define P_MIXEDBRCHRATES        30
+#define P_ILNVAR                26
+#define P_ILNBRANCHRATES        27
+#define P_CLOCKRATE             28
+#define P_SPECIESTREE           29
+#define P_GENETREERATE          30
 #define P_MIXTURE_RATES         31
+#define P_MIXEDVAR              32
+#define P_MIXEDBRCHRATES        33
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
@@ -832,40 +836,44 @@ typedef struct param
 #define OMEGA_10FEF                     111
 #define OMEGA_10FFB                     112
 #define OMEGA_10FFF                     113
-#define CPPRATE_FIX                     114
-#define CPPRATE_EXP                     115
-#define CPPMULTDEV_FIX                  116
-#define TK02VAR_FIX                     117
-#define TK02VAR_EXP                     118
-#define TK02VAR_UNI                     119
-#define TOPOLOGY_RCL_UNIFORM            120
-#define TOPOLOGY_RCL_CONSTRAINED        121
-#define TOPOLOGY_RCL_FIXED              122
-#define TOPOLOGY_RCCL_UNIFORM           123
-#define TOPOLOGY_RCCL_CONSTRAINED       124
-#define TOPOLOGY_RCCL_FIXED             125
-#define TOPOLOGY_SPECIESTREE            126
-#define CPPEVENTS                       127
-#define TK02BRANCHRATES                 128
-#define TOPOLOGY_FIXED                  129
+#define TOPOLOGY_RCL_UNIFORM            114
+#define TOPOLOGY_RCL_CONSTRAINED        115
+#define TOPOLOGY_RCL_FIXED              116
+#define TOPOLOGY_RCCL_UNIFORM           117
+#define TOPOLOGY_RCCL_CONSTRAINED       118
+#define TOPOLOGY_RCCL_FIXED             119
+#define TOPOLOGY_SPECIESTREE            120
+#define TOPOLOGY_FIXED                  121
+#define CPPRATE_FIX                     122
+#define CPPRATE_EXP                     123
+#define CPPMULTDEV_FIX                  124
+#define CPPEVENTS                       125
+#define TK02VAR_FIX                     126
+#define TK02VAR_EXP                     127
+#define TK02VAR_UNI                     128
+#define TK02BRANCHRATES                 129
 #define IGRVAR_FIX                      130
 #define IGRVAR_EXP                      131
 #define IGRVAR_UNI                      132
 #define IGRBRANCHRATES                  133
-#define CLOCKRATE_FIX                   134
-#define CLOCKRATE_NORMAL                135
-#define CLOCKRATE_LOGNORMAL             136
-#define CLOCKRATE_GAMMA                 137
-#define CLOCKRATE_EXP                   138
-#define SPECIESTREE_UNIFORM             139
-#define GENETREERATEMULT_DIR            140
-#define GENETREERATEMULT_FIX            141
-#define REVMAT_MIX                      142
-#define MIXEDVAR_FIX                    143
-#define MIXEDVAR_EXP                    144
-#define MIXEDVAR_UNI                    145
-#define MIXEDBRCHRATES                  146
-#define MIXTURE_RATES                   147
+#define ILNVAR_FIX                      134
+#define ILNVAR_EXP                      135
+#define ILNVAR_UNI                      136
+#define ILNBRANCHRATES                  137
+#define MIXEDVAR_FIX                    138
+#define MIXEDVAR_EXP                    139
+#define MIXEDVAR_UNI                    140
+#define MIXEDBRCHRATES                  141
+#define CLOCKRATE_FIX                   142
+#define CLOCKRATE_NORMAL                143
+#define CLOCKRATE_LOGNORMAL             144
+#define CLOCKRATE_GAMMA                 145
+#define CLOCKRATE_EXP                   146
+#define SPECIESTREE_UNIFORM             147
+#define GENETREERATEMULT_DIR            148
+#define GENETREERATEMULT_FIX            149
+#define REVMAT_MIX                      150
+#define MIXTURE_RATES                   151
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1137,6 +1145,10 @@ typedef struct model
     MrBFlt      igrvarFix;
     MrBFlt      igrvarUni[2];
     MrBFlt      igrvarExp;
+    char        ilnvarPr[100];         /* prior on independent lognormal rate variance      */
+    MrBFlt      ilnvarFix;
+    MrBFlt      ilnvarUni[2];
+    MrBFlt      ilnvarExp;
     char        mixedvarPr[100];       /* prior on mixed relaxed clock rate variance    */
     MrBFlt      mixedvarFix;
     MrBFlt      mixedvarUni[2];
@@ -1256,6 +1268,8 @@ typedef struct modelinfo
     Param       *tk02BranchRates;           /* ptr to branch rates for TK02 relaxed clock */
     Param       *igrvar;                    /* ptr to gamma var for IGR relaxed clock   */
     Param       *igrBranchRates;            /* ptr to branch rates for IGR relaxed clock*/
+    Param       *ilnvar;                    /* ptr to variance for ILN relaxed clock   */
+    Param       *ilnBranchRates;            /* ptr to branch rates for ILN relaxed clock*/
     Param       *mixedvar;                  /* ptr to var for mixed relaxed clock       */
     Param       *mixedBrchRates;            /* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
