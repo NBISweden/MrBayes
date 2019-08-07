@@ -9398,6 +9398,10 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -9531,6 +9535,10 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -9654,6 +9662,10 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
     else if (m->tk02BranchRates != NULL)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
         }
     else if (m->igrBranchRates != NULL)
         {
@@ -9797,7 +9809,11 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
-    else if (m->igrBranchRates != NULL)
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
+   else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
         }
@@ -9913,6 +9929,10 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -10022,6 +10042,10 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -10120,6 +10144,10 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     else if (m->tk02BranchRates != NULL)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
         }
     else if (m->igrBranchRates != NULL)
         {

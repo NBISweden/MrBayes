@@ -7135,6 +7135,7 @@ int InitPrintParams (void)
             p->paramType != P_CPPEVENTS &&
             p->paramType != P_TK02BRANCHRATES &&
             p->paramType != P_IGRBRANCHRATES &&
+            p->paramType != P_ILNBRANCHRATES &&
             p->paramType != P_MIXEDBRCHRATES)
             numPrintParams++;
         }
@@ -7191,6 +7192,7 @@ int InitPrintParams (void)
             p->paramType != P_CPPEVENTS &&
             p->paramType != P_TK02BRANCHRATES &&
             p->paramType != P_IGRBRANCHRATES &&
+            p->paramType != P_ILNBRANCHRATES &&
             p->paramType != P_MIXEDBRCHRATES)
             printParam[j++] = p;
         }
@@ -8262,6 +8264,33 @@ MrBFlt LogPrior (int chain)
                     lnPrior += LnProbLogNormal_Mean_Var (st[branch->anc->index], nu*branch->length, st[branch->index]);
                 }
             }
+        else if (p->paramType == P_ILNVAR)
+            {
+            /* variance of rates in independent lognormal rates model */
+            if (p->paramId == ILNVAR_EXP)
+                {
+                lnPrior += log (mp->ilnvarExp) - mp->ilnvarExp * st[0];
+                }
+            else if (p->paramId == ILNVAR_UNI)
+                {
+                lnPrior += log(1.0) - log (mp->ilnvarUni[1] - mp->ilnvarUni[0]);
+                }
+            }
+        else if (p->paramType == P_ILNBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, chain, state[chain]) == RCL_ILN))
+            {
+            /* branch rates of independent branch rate model */
+            t = GetTree (p, chain, state[chain]);
+            if (p->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (m->ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (m->mixedvar, chain, state[chain]);
+            for (i=0; i<t->nNodes-2; i++)
+                {
+                branch = t->allDownPass[i];
+                if (branch->length > 0.0)  // not ancestral fossil
+                    lnPrior += LnProbLogNormal_Mean_Var (1.0, nu*branch->length, st[branch->index]);
+                }
+            }
         else if (p->paramType == P_IGRVAR)
             {
             /* variance of rates in independent gamma rates model */
@@ -8274,7 +8303,7 @@ MrBFlt LogPrior (int chain)
                 lnPrior += log(1.0) - log (mp->igrvarUni[1] - mp->igrvarUni[0]);
                 }
             }
-        else if (p->paramType == P_IGRBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, chain, state[chain]) == RCL_IGR))
+        else if (p->paramType == P_IGRBRANCHRATES)
             {
             /* branch rates of independent branch rate model */
             t = GetTree (p, chain, state[chain]);
@@ -11369,8 +11398,8 @@ if (proc_id == 0)
                         if (SafeSprintf (&tempString, &tempStrSize, " [&E %s]", subParm->name) == ERROR) nErrors++;
                         if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
                         }
-                    if (nErrors == 0 && (subParm->paramType == P_CPPEVENTS || subParm->paramType == P_TK02BRANCHRATES ||
-                                         subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_MIXEDBRCHRATES))
+                    if (nErrors == 0 && (subParm->paramType == P_CPPEVENTS || subParm->paramType == P_IGRBRANCHRATES ||
+                                         subParm->paramType == P_TK02BRANCHRATES || subParm->paramType == P_ILNBRANCHRATES || subParm->paramType == P_MIXEDBRCHRATES))
                         {
                         if (subParm->paramType == P_MIXEDBRCHRATES)
                             {
@@ -15093,11 +15122,12 @@ int RedistributeParamVals (void)
                         tree = GetTree (p, i, 0);
                         UpdateTK02EvolLengths (p, tree, i);
                         }
-                    else if (p->paramType == P_IGRBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_IGR))
+                    else if (p->paramType == P_ILNBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_ILN) ||
+                             p->paramType == P_IGRBRANCHRATES)
                         {
                         tree = GetTree(p, i, 0);
-                        UpdateIgrBrachLengths (p, tree, i);
-                        }
+                        UpdateIndBrachLengths (p, tree, i);
+                        }                        
                     }
                 }
             }

@@ -6,7 +6,7 @@
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
-#   define PACKAGE_VERSION "3.2.7"
+#   define PACKAGE_VERSION "3.2.7b"
 #   define HOST_CPU "x86_64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
@@ -476,7 +476,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 // #define CPPm                 0       /* CPP rate multipliers */
 // #define CPPi                 1       /* CPP independent rates */
 #define RCL_TK02                0
-#define RCL_IGR                 1       /* type of mixed relaxed clock model */
+#define RCL_ILN                 1       /* type of mixed relaxed clock model */
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
 #define MAX_CHAINS              256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */

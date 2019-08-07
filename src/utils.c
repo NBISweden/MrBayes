@@ -4906,7 +4906,21 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (subParm->paramId == IGRBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_IGR))
+        else if (subParm->paramId == ILNBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_ILN))
+            {
+            for (j=0; j<tree->nNodes-2; j++)
+                {
+                p = tree->allDownPass[j];
+                b = GetParamSubVals(subParm, chain, state)[p->index];
+                r = GetParamVals(subParm, chain, state)[p->index];
+                if (fabs(p->length * r - b) > 0.000001)
+                    {
+                    printf ("%s   Iln relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    return NO;
+                    }
+                }
+            }
+        else if (subParm->paramId == IGRBRANCHRATES)
             {
             for (j=0; j<tree->nNodes-2; j++)
                 {

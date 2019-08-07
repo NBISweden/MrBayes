@@ -2279,10 +2279,11 @@ int DoCitations (void)
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   MrBayes implements three relaxed clock models: the Compound Poisson Process   \n");
-    MrBayesPrint ("   (CPP), the Thorne-Kishino 2002 (TK02), and the Independent Gamma Rates (IGR)  \n");
-    MrBayesPrint ("   models.  The CPP model was first described by Huelsenbeck et al. (2000).  It  \n");
-    MrBayesPrint ("   is an autocorrelated discrete model of rate variation over time.  Instead of  \n");
+    MrBayesPrint ("   MrBayes implements four relaxed clock models: the Compound Poisson Process    \n");
+    MrBayesPrint ("   (CPP), the Autocorrelated Lognormal (TK02), the Independent Gamma Rates (IGR),\n");
+    MrBayesPrint ("   and the Independent Lognormal (ILN) models.                                   \n");
+    MrBayesPrint ("   The CPP model was first described by Huelsenbeck et al. (2000).  It is an     \n");
+    MrBayesPrint ("   autocorrelated discrete model of rate variation over time.  Instead of        \n");
     MrBayesPrint ("   the modified gamma distribution originally proposed for the rate multipliers, \n");
     MrBayesPrint ("   MrBayes uses a lognormal distribution.  The extensions necessary to sample    \n");
     MrBayesPrint ("   over tree space under this model are original to MrBayes; the original paper  \n");
@@ -11195,7 +11196,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
         MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
         MrBayesPrint ("                    constant throughout the tree. For relaxed clock models, you  \n");
-        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr'. ('mixed' is not working)       \n");
+        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr', or 'iln'.                      \n");
         MrBayesPrint ("                    'cpp' invokes a relaxed clock model where the rate evolves   \n");
         MrBayesPrint ("                    according to a Compound Poisson Process (CPP) (Huelsenbeck   \n");
         MrBayesPrint ("                    et al., 2000).                                               \n");
@@ -11211,7 +11212,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    The 'clockvarpr' parameter is only relevant for clock trees. \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For backward compatibility, 'bm' is allowed as a synonym of  \n");
-        MrBayesPrint ("                    'tk02', and 'ibr' as a synonym of 'igr'.                     \n");
+        MrBayesPrint ("                    'tk02'.                                                      \n");
         MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
         MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
         MrBayesPrint ("                    changes in the evolutionary rate in the CPP relaxed clock    \n");
@@ -11282,8 +11283,6 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset igrvarpr = exponential(<number>)                    \n");
         MrBayesPrint ("                       prset igrvarpr = uniform(<number>,<number>)               \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'ibrvarpr' is allowed as a syn-  \n");
-        MrBayesPrint ("                    onym of 'igrvarpr'.                                          \n");
         MrBayesPrint ("   Ratepr        -- This parameter allows you to specify the site specific rates \n");
         MrBayesPrint ("                    model or any other model that allows different partitions to \n");
         MrBayesPrint ("                    evolve at different rates. First, you must have defined a    \n");
@@ -11629,7 +11628,7 @@ int GetUserHelp (char *helpTkn)
                 }
             MrBayesPrint ("                    Exponential/Gamma            \n");
 
-            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    %s\n", mp->clockVarPr);
+            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Iln      %s\n", mp->clockVarPr);
 
             MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
             if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -11662,6 +11661,16 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
                 }
             
+            MrBayesPrint ("   Ilnvarpr         Fixed/Exponential/Uniform    %s", mp->ilnvarPr);
+            if (!strcmp(mp->ilnvarPr, "Fixed"))
+                MrBayesPrint ("(%1.2lf)\n", mp->ilnvarFix);
+            else if (!strcmp(mp->ilnvarPr,"Exponential"))
+                MrBayesPrint ("(%1.2lf)\n", mp->ilnvarExp);
+            else
+                {
+                assert (!strcmp(mp->ilnvarPr,"Uniform"));
+                MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->ilnvarUni[0], mp->ilnvarUni[1]);
+                }
             /*  MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
             if (!strcmp(mp->mixedvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);
@@ -12696,10 +12705,10 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
+    //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12744,10 +12753,10 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
+    //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14546,8 +14555,8 @@ void SetUpParms (void)
     PARAM (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
     PARAM (173, "Cppmultdevpr",   DoPrsetParm,       "Fixed|\0");
     PARAM (174, "TK02varpr",      DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (175, "Pfile",          DoSumtParm,        "\0");
-    PARAM (176, "Pfile",          DoSumtParm,        "\0");
+    PARAM (175, "Tfile",          DoSumtParm,        "\0");
+    PARAM (176, "Pfile",          DoSumpParm,        "\0");
     PARAM (177, "Autocomplete",   DoSumtParm,        "Yes|No|\0");
     PARAM (178, "Autocomplete",   DoSumpParm,        "Yes|No|\0");
     PARAM (179, "Userlevel",      DoSetParm,         "Standard|Developer|\0");
@@ -14556,7 +14565,7 @@ void SetUpParms (void)
     PARAM (182, "Swapseed",       DoSetParm,         "\0");
     PARAM (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
     PARAM (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Ibr|Mixed|\0");
+    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Iln|Mixed|\0");
     PARAM (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
     PARAM (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
     PARAM (188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -14625,9 +14634,9 @@ void SetUpParms (void)
     PARAM (251, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (252, "Bmvar",          DoLinkParm,        "\0");
     PARAM (253, "Bmbranchrates",  DoLinkParm,        "\0");
-    PARAM (254, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (255, "Ibrvar",         DoLinkParm,        "\0");
-    PARAM (256, "Ibrbranchlens",  DoLinkParm,        "\0");
+    PARAM (254, "Ilnvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (255, "Ilnvar",         DoLinkParm,        "\0");
+    PARAM (256, "Ilnbranchlens",  DoLinkParm,        "\0");
     PARAM (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
     PARAM (258, "Filename",       DoSumSsParm,       "\0");
     PARAM (259, "Burnin",         DoSumSsParm,       "\0");
