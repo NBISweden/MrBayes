@@ -5906,7 +5906,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* move the var parameter */
         tk02var = (*mxvar);
         ilnvar  = tk02var;
-        if (ilnvar < IGRVAR_MIN || ilnvar > IGRVAR_MAX)
+        if (ilnvar < ILNVAR_MIN || ilnvar > ILNVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);
@@ -16506,7 +16506,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            /* prior ratio and update of igr branch lengths and rates (stretched in the same way as tree) */
+            /* prior ratio and update of iln branch lengths and rates (stretched in the same way as tree) */
             for (j=0; j<t->nNodes-2; j++)
                 {
                 p = t->allDownPass[j];

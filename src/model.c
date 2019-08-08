@@ -8986,9 +8986,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].mixedvarPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < IGRVAR_MIN || tempD > IGRVAR_MAX || tempD < TK02VAR_MIN || tempD > TK02VAR_MAX)
+                            if (tempD < ILNVAR_MIN || tempD > ILNVAR_MAX || tempD < TK02VAR_MIN || tempD > TK02VAR_MAX)
                                 {
-                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, IGRVAR_MIN, IGRVAR_MAX);
+                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, TK02VAR_MIN, TK02VAR_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].mixedvarFix = tempD;
@@ -25022,15 +25022,15 @@ int UpdateTK02EvolLengths (Param *param, Tree *t, int chain)
 int UpdateIndBrachLengths (Param *param, Tree *t, int chain)
 {
     int         i;
-    MrBFlt      *igrRate, *brlens;
+    MrBFlt      *indRate, *brlens;
     TreeNode    *p;
     
-    igrRate = GetParamVals (param, chain, state[chain]);
+    indRate = GetParamVals (param, chain, state[chain]);
     brlens = GetParamSubVals (param, chain, state[chain]);
     for (i=0; i<t->nNodes-2; i++)
         {
         p = t->allDownPass[i];
-        brlens[p->index] = p->length * igrRate[p->index];
+        brlens[p->index] = p->length * indRate[p->index];
         }
 
     return (NO_ERROR);
