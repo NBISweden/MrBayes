@@ -66,8 +66,8 @@ Make a shallow clone of the MrBayes repository:
 
     git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 
-(a shallow clone requires less than 30 Mb of disk space, a full clone
-requires about 205 Mb)
+(a shallow clone requires about 27 MB of disk space, a full clone
+requires about 77 MB)
 
 
 Building MrBayes using the supplied "configure" script:
