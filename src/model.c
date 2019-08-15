@@ -8986,9 +8986,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].mixedvarPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < ILNVAR_MIN || tempD > ILNVAR_MAX || tempD < TK02VAR_MIN || tempD > TK02VAR_MAX)
+                            if (tempD < ILNVAR_MIN || tempD > ILNVAR_MAX || tempD < IGRVAR_MIN || tempD > IGRVAR_MAX)
                                 {
-                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, TK02VAR_MIN, TK02VAR_MAX);
+                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, IGRVAR_MIN, IGRVAR_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].mixedvarFix = tempD;
@@ -10780,8 +10780,8 @@ int DoStartvalsParm (char *parmName, char *tkn)
             MrBayesPrint ("%s   The parameter '%s' is fixed so the starting value cannot be set\n", spacer, param->name);
             return (ERROR);
             }
-        if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS || param->paramType == P_IGRBRANCHRATES ||
-            param->paramType == P_TK02BRANCHRATES || param->paramType == P_ILNBRANCHRATES || param->paramType == P_MIXEDBRCHRATES ||
+        if (param->paramType == P_BRLENS || param->paramType == P_TOPOLOGY || param->paramType == P_CPPEVENTS || param->paramType == P_TK02BRANCHRATES ||
+            param->paramType == P_IGRBRANCHRATES || param->paramType == P_ILNBRANCHRATES || param->paramType == P_MIXEDBRCHRATES ||
             param->paramType == P_SPECIESTREE || (param->paramType == P_POPSIZE && param->nValues > 1))
             {
             /* all these parameters are set from a tree */
@@ -11631,7 +11631,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
             else if (p->paramType == P_MIXEDBRCHRATES)
                 {
                 /* initialize the mixed relaxed clock model to TK02 or ILN */
-                intValue[0] = (RandomNumber(seed) <0.5) ? RCL_TK02 : RCL_ILN;
+                intValue[0] = (RandomNumber(seed) <0.5) ? RCL_IGR : RCL_ILN;
                 /* We fill in the rest when we fill in tree params **************************************************************************/
                 }
             else if (p->paramType == P_CLOCKRATE)
@@ -20486,8 +20486,7 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
                     }
                 }
             }
-        else if (param->paramType == P_TK02BRANCHRATES ||
-                 (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_TK02))
+        else if (param->paramType == P_TK02BRANCHRATES)
             {
             if (p->anc->anc == NULL)
                 branchRate[p->index] = 1.0;
@@ -20496,15 +20495,8 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
             else
                 branchRate[p->index] = branchRate[p->anc->index];
             }
-        else if (param->paramType == P_ILNBRANCHRATES ||
-                 (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_ILN))
-            {
-            if (p->length > 0.0)
-                branchRate[p->index] = effectiveBranchLengthP[pp->index] / p->length;
-            else
-                branchRate[p->index] = branchRate[p->anc->index];
-            }
-        else if (param->paramType == P_IGRBRANCHRATES)
+        else if (param->paramType == P_ILNBRANCHRATES || (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_ILN) ||
+                 param->paramType == P_IGRBRANCHRATES || (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_IGR))
             {
             if (p->length > 0.0)
                 branchRate[p->index] = effectiveBranchLengthP[pp->index] / p->length;
@@ -20518,14 +20510,13 @@ int SetRelaxedClockParam (Param *param, int chn, int state, PolyTree *pt)
         if (UpdateCppEvolLengths (param, t->root->left, chn) == ERROR)
             return (ERROR);
         }
-    else if (param->paramType == P_TK02BRANCHRATES ||
-             (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_TK02))
+    else if (param->paramType == P_TK02BRANCHRATES)
         {
         if (UpdateTK02EvolLengths (param, t, chn) == ERROR)
             return (ERROR);
         }
-    else if (param->paramType == P_ILNBRANCHRATES || param->paramType == P_IGRBRANCHRATES ||
-             (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_ILN))
+    else if (param->paramType == P_ILNBRANCHRATES || (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_ILN) ||
+             param->paramType == P_IGRBRANCHRATES || (param->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(param, chn, state) == RCL_IGR))
         {
         if (UpdateIndBrachLengths (param, t, chn) == ERROR)
             return (ERROR);
@@ -22589,14 +22580,14 @@ void SetUpMoveTypes (void)
     mt = &moveTypes[i++];
     mt->name = "rjMCMC among Relaxed Clock Models";
     mt->shortName = "rjMCMC_RCL";
-    mt->tuningName[0] = "Sliding window size";
+    mt->tuningName[0] = "Ratio between variances";
     mt->shortTuningName[0] = "delta";
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 10.0;  /* window size */
+    mt->tuningParam[0] = 1.0;
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 1000.0;
     mt->parsimonyBased = NO;
@@ -24186,9 +24177,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_MIXEDBRCHRATES)
             {
-            MrBayesPrint ("%s            Prior      = Mixed TK02 and ILN (variance = %s * v)\n", spacer, modelSettings[p->relParts[0]].mixedvar->name);
+            MrBayesPrint ("%s            Prior      = Mixed IGR and ILN (mean = 1, variance = %s * v)\n", spacer, modelSettings[p->relParts[0]].mixedvar->name);
             MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
-            MrBayesPrint ("%s                         Uniform prior on relaxed clock models [Pr(TK02)=Pr(ILN)=0.5]\n", spacer);
+            MrBayesPrint ("%s                         Uniform prior on relaxed clock models [Pr(IGR)=Pr(ILN)=0.5]\n", spacer);
             }
         else if (j == P_CLOCKRATE)
             {
@@ -24213,7 +24204,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->clockVarPr,"Igr"))
                 MrBayesPrint ("%s                         The clock rate varies according to an independent gamma (white noise) model\n", spacer);
             else /* if (!strcmp(mp->clockVarPr,"Mixed")) */
-                MrBayesPrint ("%s                         The clock rate varies according to mixed TK02 and ILN models\n", spacer);
+                MrBayesPrint ("%s                         The clock rate varies according to mixed IGR and ILN models\n", spacer);
             }
         else if (j == P_SPECIESTREE)
             {

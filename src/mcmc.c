@@ -8249,7 +8249,7 @@ MrBFlt LogPrior (int chain)
                 lnPrior += log(1.0) - log (mp->tk02varUni[1] - mp->tk02varUni[0]);
                 }
             }
-        else if (p->paramType == P_TK02BRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, chain, state[chain]) == RCL_TK02))
+        else if (p->paramType == P_TK02BRANCHRATES)
             {
             /* branch rates of Thorne-Kishino model */
             t = GetTree (p, chain, state[chain]);
@@ -8303,7 +8303,7 @@ MrBFlt LogPrior (int chain)
                 lnPrior += log(1.0) - log (mp->igrvarUni[1] - mp->igrvarUni[0]);
                 }
             }
-        else if (p->paramType == P_IGRBRANCHRATES)
+        else if (p->paramType == P_IGRBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, chain, state[chain]) == RCL_IGR))
             {
             /* branch rates of independent branch rate model */
             t = GetTree (p, chain, state[chain]);
@@ -11398,8 +11398,8 @@ if (proc_id == 0)
                         if (SafeSprintf (&tempString, &tempStrSize, " [&E %s]", subParm->name) == ERROR) nErrors++;
                         if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
                         }
-                    if (nErrors == 0 && (subParm->paramType == P_CPPEVENTS || subParm->paramType == P_IGRBRANCHRATES ||
-                                         subParm->paramType == P_TK02BRANCHRATES || subParm->paramType == P_ILNBRANCHRATES || subParm->paramType == P_MIXEDBRCHRATES))
+                    if (nErrors == 0 && (subParm->paramType == P_CPPEVENTS || subParm->paramType == P_TK02BRANCHRATES ||
+                                         subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES || subParm->paramType == P_MIXEDBRCHRATES))
                         {
                         if (subParm->paramType == P_MIXEDBRCHRATES)
                             {
@@ -15117,13 +15117,13 @@ int RedistributeParamVals (void)
                         tree = GetTree(p, i, 0);
                         UpdateCppEvolLengths (p, tree->root->left, i);
                         }
-                    else if (p->paramType == P_TK02BRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_TK02))
+                    else if (p->paramType == P_TK02BRANCHRATES)
                         {
                         tree = GetTree (p, i, 0);
                         UpdateTK02EvolLengths (p, tree, i);
                         }
                     else if (p->paramType == P_ILNBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_ILN) ||
-                             p->paramType == P_IGRBRANCHRATES)
+                             p->paramType == P_IGRBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_IGR))
                         {
                         tree = GetTree(p, i, 0);
                         UpdateIndBrachLengths (p, tree, i);

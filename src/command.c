@@ -324,7 +324,7 @@ CmdType     commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 43,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+            { 33,           "Prset",  NO,           DoPrset, 44,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
                                                                                                  168,172,173,174,183,184,185,218,241,246,247,251,254,269,271,272},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
@@ -344,7 +344,7 @@ CmdType     commands[] =
             { 48,             "Ssp",  NO,             DoSsp, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
                                                                      153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,"Sets parameters of stepping-stone analysis (without starting)",IN_CMD, SHOW },
             { 49,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-            { 50,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+            { 50,            "Sump",  NO,            DoSump, 14,                                          {96,97,137,138,139,140,141,161,162,176,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 51,           "Sumss",  NO,           DoSumSs, 10,                                                        {258,259,260,261,262,263,264,265,266,267},       36,         "Summarizes parameters from stepping-stone analysis",  IN_CMD, SHOW },
             { 52,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
             { 53,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
@@ -11671,6 +11671,7 @@ int GetUserHelp (char *helpTkn)
                 assert (!strcmp(mp->ilnvarPr,"Uniform"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->ilnvarUni[0], mp->ilnvarUni[1]);
                 }
+            
             /*  MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
             if (!strcmp(mp->mixedvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);

@@ -475,7 +475,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 // #define CPPm                 0       /* CPP rate multipliers */
 // #define CPPi                 1       /* CPP independent rates */
-#define RCL_TK02                0
+#define RCL_IGR                 0
 #define RCL_ILN                 1       /* type of mixed relaxed clock model */
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */

@@ -4885,7 +4885,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
     for (i=0; i<param->nSubParams; i++)
         {
         subParm = param->subParams[i];
-        if (subParm->paramId == TK02BRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_TK02))
+        if (subParm->paramId == TK02BRANCHRATES)
             {
             rAnc = GetParamVals(subParm, chain, state)[tree->root->left->index];
             if (fabs(rAnc - 1.0) > 1E-6)
@@ -4920,7 +4920,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (subParm->paramId == IGRBRANCHRATES)
+        else if (subParm->paramId == IGRBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_IGR))
             {
             for (j=0; j<tree->nNodes-2; j++)
                 {
