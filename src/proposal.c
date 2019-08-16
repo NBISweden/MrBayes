@@ -5864,7 +5864,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
      //chi */
     
     int         i, *rclModel;
-    MrBFlt      *mxvar, *mxRate, *brlens, igrvar, ilnvar, ratio;
+    MrBFlt      *mxvar, *mxRate, /* *brlens, */ igrvar, ilnvar, ratio;
     Tree        *t;
     TreeNode    *p = NULL;
     ModelInfo   *m;
@@ -5875,7 +5875,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     mp = &modelParams[param->relParts[0]];
     mxvar  = GetParamVals (m->mixedvar, chain, state[chain]);
     mxRate = GetParamVals (param, chain, state[chain]);
-    brlens = GetParamSubVals (param, chain, state[chain]);
+    //brlens = GetParamSubVals (param, chain, state[chain]);
     t = GetTree (param, chain, state[chain]);
     
     /* get current value of model indicator */
