@@ -30,7 +30,7 @@ typedef struct
     Stat;
 
 
-/* For explanantion why the following two macros exists, see
+/* For explanation why the following two macros exists, see
  * http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
  */
 
