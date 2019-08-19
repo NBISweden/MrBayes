@@ -2836,7 +2836,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Seed (globalSeed) ***************************************************************/
         if (!strcmp(parmName, "Seed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Seed\" in Mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -2860,7 +2860,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Swapseed (global variable swapSeed) ***************************************************************/
         else if (!strcmp(parmName, "Swapseed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in Mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -10570,8 +10570,8 @@ int PreparePrintFiles (void)
             else
                 {
                 MrBayesPrint("\n");
-                MrBayesPrint("%s   Please specify a different file name before running the mcmc analysis.\n", spacer);
-                MrBayesPrint("%s      You can do that using 'mcmc filename=<name>'. You can also move or\n", spacer);
+                MrBayesPrint("%s   Please specify a different file name before running the MCMC analysis.\n", spacer);
+                MrBayesPrint("%s      You can do that using 'Mcmc filename=<name>'. You can also move or\n", spacer);
                 MrBayesPrint("%s      rename the old result files.\n", spacer);
                 return ERROR;
                 }

@@ -155,7 +155,7 @@ char        colonPr[100], clockPr[30];
 extern int  fromI, toJ, foundDash, foundExp, foundEqual, isNegative;
 
 /* other local variables (this file) */
-MrBFlt          empiricalFreqs[200];         /* emprical base frequencies for partition                 */
+MrBFlt          empiricalFreqs[200];         /* empirical base frequencies for partition                 */
 int             intValsRowSize = 0;          /* row size of intValues matrix                            */
 int             *intValues = NULL;           /* stores int values of chain parameters                   */
 Tree            **mcmcTree;                  /* pointers to trees for mcmc                              */
@@ -768,7 +768,7 @@ int AllocateTreeParams (void)
         if (mcmcTree) free (mcmcTree);
         subParamPtrs = NULL;
         mcmcTree = NULL;
-        MrBayesPrint ("%s   Problem allocating mcmc trees\n", spacer);
+        MrBayesPrint ("%s   Problem allocating MCMC trees\n", spacer);
         return (ERROR);
         }
     else
@@ -892,7 +892,7 @@ int AllocateTreeParams (void)
                 {
                 /* there is no brlen subparam */
                 /* so let subparam point to the param itself */
-                q = p->subParams[0] = p; /* FIXME: Not used (from clang static anasyzer) */
+                q = p->subParams[0] = p; /* FIXME: Not used (from clang static analyzer) */
                 /* p->tree and p->treeIndex have been set above */
                 }
             else
@@ -1541,7 +1541,7 @@ int ChangeNumRuns (int from, int to)
         params[i].intValues += (intValues - oldintValues);
         }
 
-    /* fill new chains paramiters with appropriate values */
+    /* fill new chains parameters with appropriate values */
     if (to > from)
         FillNormalParams (&globalSeed, from*nChains, to*nChains);
 
@@ -2132,7 +2132,7 @@ int CheckExpandedModels (void)
                             nuc1 = matrix[pos(t,c+0,numChar)];
                             nuc2 = matrix[pos(t,c+1,numChar)];
                             nuc3 = matrix[pos(t,c+2,numChar)];
-                            /*nucX is in range 0-15 to represent any possible set of states that nucleatide could be in*/
+                            /*nucX is in range 0-15 to represent any possible set of states that nucleotide could be in*/
                             GetPossibleNucs (nuc1, posNucs1);
                             GetPossibleNucs (nuc2, posNucs2);
                             GetPossibleNucs (nuc3, posNucs3);
@@ -2572,7 +2572,7 @@ int CompressData (void)
                     {
                     compColPos[col[k]] = i;
                     compCharPos[col[k]] = a;
-                    /* tempChar (pointing from compressed to uncompresed) */
+                    /* tempChar (pointing from compressed to uncompressed) */
                     /* can only be set for first pattern */
                     }
                 }
@@ -10414,7 +10414,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                              param->paramType == P_IGRBRANCHRATES || param->paramType == P_MIXEDBRCHRATES)
                         {
                         if (theTree->isCalibrated == YES && theTree->fromUserTree == NO)
-                            { /* if theTree is not set from user tree then we can not garanty that branch lengths will stay the same
+                            { /* if theTree is not set from user tree then we can not guarantee that branch lengths will stay the same
                                  by the time we start mcmc run because of clockrate adjustment. */
                             MrBayesPrint ("%s    Set starting values for branch lengths first before setting starting values of relaxed parameters!\n", spacer);
                             return (ERROR);
@@ -11960,8 +11960,8 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 }
 
 
-/* Note: In PruneConstraintPartitions() we can not relay on specific rootnes of a tree since different partitions
-   may theoreticly have different clock models, while constraints apply to all partitions/trees */
+/* Note: In PruneConstraintPartitions() we can not rely on specific rooting of a tree since different partitions
+   may theoretically have different clock models, while constraints apply to all partitions/trees */
 int PruneConstraintPartitions()
 {
     int             i, j, constraintId, nLongsNeeded;
@@ -12042,7 +12042,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
 {
     int         i, k, numTaxa, nLongsNeeded;
     TreeNode    *p;
-    int         CheckFirst, CheckSecond; /*Flag indicating wheather corresponding set(first/second) of partial constraint has to be checked*/
+    int         CheckFirst, CheckSecond; /*Flag indicating whether corresponding set(first/second) of partial constraint has to be checked*/
 #   if defined (DEBUG_CONSTRAINTS)
     int         locks_count=0;
 #   endif
@@ -12155,7 +12155,7 @@ int DoesTreeSatisfyConstraints(Tree *t)
                 {
                 if (NumBits(definedConstraintPruned[k], nLongsNeeded) == 1 || NumBits(definedConstraintTwoPruned[k], nLongsNeeded) == 1)
                     continue;
-                /*one or two of the next two statments will be YES*/
+                /*one or two of the next two statements will be YES*/
                 CheckFirst = IsBitSet(localOutGroup, definedConstraintPruned[k])==YES ? NO : YES;
                 CheckSecond = IsBitSet(localOutGroup, definedConstraintTwoPruned[k])==YES ? NO : YES;
                 assert ((CheckFirst|CheckSecond)==1);
@@ -12516,7 +12516,7 @@ int FreeModel (void)
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
             /* FIXME: Trees needs to be deallocated, but I can't figure
-                out how many there are.  The loop below tries te free
+                out how many there are.  The loop below tries to free
                 unallocated memory...
              */
             /*
@@ -13099,7 +13099,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
             {
-            MrBayesPrint ("%s   Problem allocating mcmc trees\n",
+            MrBayesPrint ("%s   Problem allocating MCMC trees\n",
                           spacer);
             return (ERROR);
             }
@@ -13111,7 +13111,7 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 
         if ((*treeHandle = AllocateTree (nTaxa)) == NULL)
             {
-            MrBayesPrint ("%s   Problem allocating mcmc trees\n",
+            MrBayesPrint ("%s   Problem allocating MCMC trees\n",
                           spacer);
             return (ERROR);
             }
@@ -15430,7 +15430,7 @@ int LargestMovableSubtree(Param *treeParam)
                     subtreePartition[k] = subtreePartition[k] & testPartition[k];
                 }
             }
-        k += NumBits (subtreePartition, nLongsNeeded);  /* add remaming free tips in subtreePartition */
+        k += NumBits (subtreePartition, nLongsNeeded);  /* add remaining free tips in subtreePartition */
         /* add calculation root if an unrooted tree and we are dealing with the root partition */
         if (strcmp(mp->brlensPr,"Clock") != 0 && NumBits (constraintPartition[i], nLongsNeeded) == numLocalTaxa - 1)
             k++;
@@ -18243,7 +18243,7 @@ int SetModelInfo (void)
 
         /* number of observable states */
         if (m->dataType == STANDARD)
-            m->numStates = 0;   /* zero, meaining variable */
+            m->numStates = 0;   /* zero, meaning variable */
         else if (!strcmp(mp->nucModel,"Protein") && (mp->dataType == DNA || mp->dataType == RNA))
             m->numStates = 20;
         else
@@ -18341,7 +18341,7 @@ int SetModelInfo (void)
             if (m->printAncStates == YES)
                 inferAncStates = YES;
             else
-                MrBayesPrint ("%s   Print out of ancestral states is not applicable for devision %d.\n",spacer,i);
+                MrBayesPrint ("%s   Print out of ancestral states is not applicable for partition %d.\n",spacer,i);
             }
 
         /* check if we should calculate site rates */
@@ -18402,7 +18402,7 @@ int SetModelParams (void)
     int             c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
     char            tempCodon[15], tempMult[15], *tempStr,temp[30];
-    char static     *partString=NULL; /* mad static to avoid posible memory leak on return ERROR if it would be introduced later */
+    char static     *partString=NULL; /* mad static to avoid possible memory leak on return ERROR if it would be introduced later */
     Param           *p;
     ModelParams     *mp;
     ModelInfo       *m;
@@ -19990,7 +19990,7 @@ int SetModelParams (void)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].igrvar = p;
 
-            p->paramTypeName = "Variance increase of igr model branch lenths";
+            p->paramTypeName = "Variance increase of igr model branch lengths";
             SafeStrcat(&p->name, "Igrvar");
             SafeStrcat(&p->name, partString);
             
@@ -20044,7 +20044,7 @@ int SetModelParams (void)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].ilnvar = p;
 
-            p->paramTypeName = "Variance increase of iln model branch lenths";
+            p->paramTypeName = "Variance increase of iln model branch lengths";
             SafeStrcat(&p->name, "Ilnvar");
             SafeStrcat(&p->name, partString);
             
@@ -20098,7 +20098,7 @@ int SetModelParams (void)
                 if (isPartTouched[i] == YES)
                     modelSettings[i].mixedvar = p;
             
-            p->paramTypeName = "Variance shared for mixed relaxed clock moodel";
+            p->paramTypeName = "Variance shared for mixed relaxed clock model";
             SafeStrcat(&p->name, "Mixedvar");
             SafeStrcat(&p->name, partString);
             
@@ -22179,7 +22179,7 @@ void SetUpMoveTypes (void)
     mt->maximum[0] = 1000.0;        /* Maximum value of tuning param */
     mt->parsimonyBased = NO;        /* It does not use parsimony scores */
     mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a mutliplier move (larger is more bold) */
+    mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a multiplier move (larger is more bold) */
     mt->targetRate = 0.25;              /* Target acceptance rate */
 
     /* Move_Statefreqs */
