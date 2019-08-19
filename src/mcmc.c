@@ -74,7 +74,7 @@ typedef void (*sighandler_t) (int);
 #define MAXTUNINGPARAM              10000       /* limit to ensure convergence for autotuning */
 #define SAMPLE_ALL_SS                           /* if defined makes ss sample every generation instead of every sample frequency */
 #define BEAGLE_RESCALE_FREQ         160
-#define BEAGLE_RESCALE_FREQ_DOUBLE  10          /* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double presicion is used */
+#define BEAGLE_RESCALE_FREQ_DOUBLE  10          /* The factor by which BEAGLE_RESCALE_FREQ get multiplied if double precision is used */
 #define TARGETLENDELTA              100
 
 /* debugging compiler statements */
@@ -277,7 +277,7 @@ int             *stdType;                    /* compressed std char type: ord, u
 int             *tiIndex;                    /* compressed std char ti index                 */
 
 #if defined (BEAGLE_ENABLED)
-int             recalcScalers;               /* shoud we recalculate scalers for current state YES/NO */
+int             recalcScalers;               /* should we recalculate scalers for current state YES/NO */
 #endif
 
 /* globals used here but declared elsewhere (in likelihood.c) */
@@ -291,11 +291,11 @@ int             *chainId = NULL;             /* information on the id (0 ...) of
 MrBFlt          *curLnL = NULL;              /* stores log likelihood                        */
 MrBFlt          *curLnPr = NULL;             /* stores log prior probability                 */
 int             stepRelativeBurninSS;        /* Should we use relative burn in within each step or not    */
-MrBFlt          powerSS;                     /* power (betta) in power posterior destribution used in SS  */
-MrBFlt          *marginalLnLSS = NULL;       /* marginal liklihood obtained using stepppingstone sampling */
-MrBFlt          *stepAcumulatorSS = NULL;    /* accumulates liklihoods for current step in SS             */
+MrBFlt          powerSS;                     /* power (beta) in power posterior distribution used in SS  */
+MrBFlt          *marginalLnLSS = NULL;       /* marginal likelihood obtained using steppingstone sampling */
+MrBFlt          *stepAcumulatorSS = NULL;    /* accumulates likelihoods for current step in SS             */
 MrBFlt          *stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale in SS             */
-MrBFlt          *splitfreqSS = NULL;         /* array holding split frequencis for each step in SS        */
+MrBFlt          *splitfreqSS = NULL;         /* array holding split frequencies for each step in SS        */
 int             *sympiIndex;                 /* sympi state freq index for multistate chars  */
 int             stdStateFreqsRowSize;        /* row size for std state frequencies           */
 int             *weight;                     /* weight of each compressed char               */
@@ -673,7 +673,7 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
     if (doISwap == YES)
         {
         
-        /* no need to communicate accross processors if swapping chains are in the same proc */
+        /* no need to communicate across processors if swapping chains are in the same proc */
         if (procIdForA == procIdForB)
             {
             if (reweightingChars == YES)
@@ -1118,7 +1118,7 @@ int AttemptSwap (int swapA, int swapB, RandLong *seed)
                     }
                 }
 
-            /*We exchange only if swap successful and (my id is cold or patner id is cold)*/
+            /*We exchange only if swap successful and (my id is cold or partner id is cold)*/
             if (chainParams.isSS == YES && isSwapSuccessful == YES && (tempIdMy % chainParams.numChains == 0 || (areWeA == YES && chainId[whichElementA] % chainParams.numChains == 0) || (areWeA == NO && chainId[whichElementB] % chainParams.numChains == 0)))
                 {
                     run = tempIdMy/chainParams.numChains;
@@ -2836,7 +2836,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Seed (globalSeed) ***************************************************************/
         if (!strcmp(parmName, "Seed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Seed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Seed\" in Mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -2860,7 +2860,7 @@ int DoMcmcParm (char *parmName, char *tkn)
         /* set Swapseed (global variable swapSeed) ***************************************************************/
         else if (!strcmp(parmName, "Swapseed"))
             {
-                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
+                MrBayesPrint ("%s   Error: Setting \"Swapseed\" in Mcmc command is deprecated. Use \"set\" command instead.\n", spacer);
                 MrBayesPrint ("%s   For more information type \"help set\";\n", spacer);
                 free (tempStr);
                 return (ERROR);
@@ -3154,7 +3154,7 @@ int DoMcmcParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid argument for mcmc diagnostics\n", spacer);
+                    MrBayesPrint ("%s   Invalid argument for MCMC diagnostics\n", spacer);
                     free(tempStr);
                     return (ERROR);
                     }
@@ -5282,7 +5282,7 @@ void GetSwappers (int *swapA, int *swapB, int run)
         processors, ensuring they all get the same sequence of chainIds to swap */
 #   if defined (MPI_ENABLED)
 
-    /* For now, we wonly allow random swaps in the MPI version. Other schemes require
+    /* For now, we only allow random swaps in the MPI version. Other schemes require
        tagging of messages, or a dedicated server node doing message processing.      */
     (*swapA) = (int) (RandomNumber(&swapSeed) * chainParams.numChains);
     (*swapB) = (int) (RandomNumber(&swapSeed) * (chainParams.numChains - 1));
@@ -5345,7 +5345,7 @@ MrBFlt GibbsSampleGamma (int chain, int division, RandLong *seed)
     /* find tree scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
     
-    /* find category like array and associated sccaler */
+    /* find category like array and associated scaler */
     catLike = m->catLike[chain];
     catLnScaler = m->catLnScaler[chain];
     
@@ -6143,7 +6143,7 @@ int InitChainCondLikes (void)
         for (i=0; i<numLocalTaxa; i++)
             {
 #   if !defined (DEBUG_NOSHORTCUTS)
-            /* TODO: Untill CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncoment down the function */
+            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
             /* if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
                 continue;
             */
@@ -6291,7 +6291,7 @@ int InitChainCondLikes (void)
             m->isScalerNode = (int**) SafeMalloc((numLocalChains) * sizeof(int*));
             /* we will use m->isScalerNode[chain][node->index] to determine whether the node is scaled or not. We do it only for internal nodes whose indexes start from numLocalTaxa thus we skew the pointer */
             m->isScalerNodeScratch = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa; 
-            assert (NO == 0); /* SafeMalloc set the allocated memmory to 0 while we need to set it to NO */
+            assert (NO == 0); /* SafeMalloc set the allocated memory to 0 while we need to set it to NO */
             for (i=0; i<numLocalChains; i++)
                {
                m->isScalerNode[i] = (int*) SafeMalloc(nIntNodes * sizeof(int)) - numLocalTaxa;
@@ -6398,7 +6398,7 @@ int InitChainCondLikes (void)
             for (i=0; i<numLocalTaxa; i++)
                 {
 #   if !defined (DEBUG_NOSHORTCUTS) && !defined (SSE_ENABLED)
-                /* TODO: Untill CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncomment up the function */
+                /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncomment up the function */
                 /* if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
                     continue;
                 */
@@ -6428,7 +6428,7 @@ int InitChainCondLikes (void)
                             }
                         if (m->numChars % m->numFloatsPerVec > 0)
                             {
-                            /* add last characters and padd */
+                            /* add last characters and pad */
                             for (j=0; j<m->numModelStates/m->numStates; j++)
                                 {
                                 for (s=0; s<m->numStates; s++)
@@ -8408,7 +8408,7 @@ int LnBirthDeathPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt sR, MrB
 |        speciation times from a point process
 |   tau: the labeled unoriented tree
 |   b:   birth (speciation) rate
-|   d:   death (extintion) rate
+|   d:   death (extinction) rate
 |   f:   sampling fraction
 |   n:   number of (extant) taxa in the sampled tree
 |
@@ -8802,7 +8802,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
  |
  |   T:   oriented tree
  |   b:   birth (speciation) rate
- |   d:   death (extintion) rate
+ |   d:   death (extinction) rate
  |   p:   extant sampling prob
  |   q:   fossil sampling rate
  |   n:   number of extant taxa
@@ -9066,7 +9066,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     {
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
-                else              /* fossil ancestor at silice time t[j] */
+                else              /* fossil ancestor at slice time t[j] */
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -9084,7 +9084,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
-                else              /* fossil tip at silice time t[j] */
+                else              /* fossil tip at slice time t[j] */
                     {
                     (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
@@ -9097,7 +9097,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                 }
             }
         
-        for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
+        for (j = 0; j < sl; j++)  /* degree-two vertices at slice time t_j */
             {
             if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
                 {
@@ -9273,7 +9273,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     {
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
-                else              /* fossil ancestor at silice time t[j] */
+                else              /* fossil ancestor at slice time t[j] */
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
@@ -9291,7 +9291,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     (*prob) += LnPi_fossil(x, t_f, sl, c1,c2, lambda,mu,psi) - LnQi_fossil(x, t_f, sl, c1,c2);
                     (*prob) += log(psi[Slice_i(x, t_f, sl)]);
                     }
-                else              /* fossil tip at silice time t[j] */
+                else              /* fossil tip at slice time t[j] */
                     {
                     (*prob) += log(p_t[j+1]) + log(rho[j]);
                     }
@@ -9304,7 +9304,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                 }
             }
         
-        for (j = 0; j < sl; j++)  /* degree-two vertices at silice time t_j */
+        for (j = 0; j < sl; j++)  /* degree-two vertices at slice time t_j */
             {
             if (p->length > 0.0 && (p->nodeDepth +BRLENS_MIN/10 < t_f[j]*clockRate) && (t_f[j]*clockRate < p->anc->nodeDepth +BRLENS_MIN/10))
                 {
@@ -10570,8 +10570,8 @@ int PreparePrintFiles (void)
             else
                 {
                 MrBayesPrint("\n");
-                MrBayesPrint("%s   Please specify a different file name before running the mcmc analysis.\n", spacer);
-                MrBayesPrint("%s      You can do that using 'mcmc filename=<name>'. You can also move or\n", spacer);
+                MrBayesPrint("%s   Please specify a different file name before running the MCMC analysis.\n", spacer);
+                MrBayesPrint("%s      You can do that using 'Mcmc filename=<name>'. You can also move or\n", spacer);
                 MrBayesPrint("%s      rename the old result files.\n", spacer);
                 return ERROR;
                 }
@@ -15806,7 +15806,7 @@ void ResetFlips (int chain)
 |   ResetScalersPartition: reset scaler nodes of the given tree by appropriately setting isScalerNode array.
 | @param isScalerNode   is an array which gets set with information about scaler node. 
 |                       For each internal node isScalerNode[node->index] is set to YES if it has to be scaler node.
-|                       Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for elemnts in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
+|                       Note: Only internal nodes can become scaler nodes thus isScalerNode is set only for elements in interval [numLocalTaxa, numLocalTaxa+t->nIntNodes]
 |
 | @param rescaleFreq    effectively represent gaps between rescaling, higher number means more sparse choice of rescaling nodes 
 |
@@ -16418,8 +16418,8 @@ int RunChain (RandLong *seed)
         if ((numGenInStepSS-numGenInStepBurninSS)/chainParams.sampleFreq < 1)
             {
             MrBayesPrint ("%s   There is less then one sample in each step of stepping-stone sampling.  \n", spacer);
-            MrBayesPrint ("%s   Please adjust burnin, nuber of generations, sampling frequency or       \n", spacer);
-            MrBayesPrint ("%s   numnber of step in order to allow at least one sample per step.         \n", spacer);
+            MrBayesPrint ("%s   Please adjust burnin, number of generations, sampling frequency or      \n", spacer);
+            MrBayesPrint ("%s   number of step in order to allow at least one sample per step.          \n", spacer);
             return ERROR; /*All MPI run will return here since all of them have the same values*/
             }
         if (numPreviousGen==0 || numPreviousGen < chainParams.burninSS * chainParams.sampleFreq)
@@ -16443,7 +16443,7 @@ int RunChain (RandLong *seed)
             }
         else
             {
-            stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully complited*/
+            stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully completed*/
             lastStepEndSS   = chainParams.burninSS * chainParams.sampleFreq + stepIndexSS*numGenInStepSS;
             removeTo        = chainParams.burninSS + (stepIndexSS*numGenInStepSS+numGenInStepBurninSS)/chainParams.sampleFreq + 1;
             if (numPreviousGen < (removeTo-1)*chainParams.sampleFreq)
@@ -16468,7 +16468,7 @@ int RunChain (RandLong *seed)
                 samplesCountSS=0;
 
             MrBayesPrint("%s   Continue sampling step %d out of %d steps...\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS);
-            /*marginalLnLSS will be red from file and destributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if (samplesCountSS!=0) they will be redestributed. */
+            /*marginalLnLSS will be read from file and distributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if (samplesCountSS!=0) they will be redistributed. */
             }
 
         if (samplesCountSS == 0) /* in appended case it also can happen */
@@ -16692,7 +16692,7 @@ int RunChain (RandLong *seed)
             {
             if (PrintMCMCDiagnosticsToFile (0) == ERROR)
                 {
-                MrBayesPrint ("%s   Problem printing mcmc diagnostics headers to file\n", spacer);
+                MrBayesPrint ("%s   Problem printing MCMC diagnostics headers to file\n", spacer);
 #   if defined (MPI_ENABLED)
                 nErrors++;
 #   else
@@ -17206,7 +17206,7 @@ int RunChain (RandLong *seed)
             /* part of the following function needs to be performed by all MPI processors. Blocking for MPI. */
             if (PrintMCMCDiagnosticsToFile (n) == ERROR)
                 {
-                MrBayesPrint ("%s   Problem printing mcmc diagnostics to file\n", spacer);
+                MrBayesPrint ("%s   Problem printing MCMC diagnostics to file\n", spacer);
 #   if defined (MPI_ENABLED)
                 nErrors++;
 #   else
@@ -17272,7 +17272,7 @@ int RunChain (RandLong *seed)
 
             if ((n-lastStepEndSS) == numGenInStepBurninSS)
                 {
-                /* Remove all previouse samples from diagnostics */
+                /* Remove all previous samples from diagnostics */
                 if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
                     {
                     removeFrom = removeTo;
@@ -17854,7 +17854,7 @@ void SetChainIds (void)
 }
 
 
-/* It sets chainParams.tFilePos[] to point immidiatly after sampled tree in position "samplePos" for all .t files. */
+/* It sets chainParams.tFilePos[] to point immediately after sampled tree in position "samplePos" for all .t files. */
 int SetFilePositions (int samplePos)
 {
     int i, j, k, longestLine;

@@ -479,7 +479,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define RCL_ILN                 1       /* type of mixed relaxed clock model */
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
-#define MAX_CHAINS              256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
+#define MAX_CHAINS              256     /* maximum number of chains you can run actually only half of it because of m->lnLike[MAX_CHAINS] */
 
 // #define PARAM_NAME_SIZE      400
 
@@ -619,7 +619,7 @@ typedef struct
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
     BitsLong        *flags;             /*!< pointer to cond like flags                   */
-    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
+    int             fromUserTree;       /*!< YES is set for the trees whose branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
     }
     Tree;
 
@@ -1191,7 +1191,7 @@ typedef struct chain
     int         calcPbf;               /* should we calculate the pseudo Bayes factor   */
     int         pbfInitBurnin;         /* initial burnin when calculating pseudo BF     */
     int         pbfSampleFreq;         /* sample frequency for pseudo BF                */
-    int         pbfSampleTime;         /* how many cycles to calcualate site prob.      */
+    int         pbfSampleTime;         /* how many cycles to calculate site prob.       */
     int         pbfSampleBurnin;       /* burnin period for each site for pseudo BF     */
     int         swapAdjacentOnly;      /* whether we only swap adjacent temperatures    */
     int         redirect;              /* should output go to stdout                    */
@@ -1283,7 +1283,7 @@ typedef struct modelinfo
     int         compCharStart;              /* start char among compressed chars        */
     int         compCharStop;               /* stop char among compressed chars         */
     int         parsMatrixStart;            /* start column in parsimony matrix         */
-    int         parsMatrixStop;             /* stop collumn in parsimony matrix         */
+    int         parsMatrixStop;             /* stop column in parsimony matrix          */
     int         nParsIntsPerSite;           /* # parsimony ints per character           */  
     int         nCharsPerSite;              /* number chars per site (eg 3 for codon)   */
     int         rateProbStart;              /* start of rate probs (for adgamma)        */
@@ -1368,7 +1368,7 @@ typedef struct modelinfo
     LikeUpFxn           CondLikeUp;         /* final-pass calculation of cond likes         */
     PrintAncStFxn       PrintAncStates;     /* function for sampling ancestral states       */
     StateCodeFxn        StateCode;          /* function for getting states from codes       */
-    PrintSiteRateFxn    PrintSiteRates;     /* function for samling site rates              */
+    PrintSiteRateFxn    PrintSiteRates;     /* function for sampling site rates             */
     PosSelProbsFxn      PosSelProbs;        /* function for sampling pos. selection probs   */
     SiteOmegasFxn       SiteOmegas;         /* function for sampling site omega values      */
 
@@ -1401,7 +1401,7 @@ typedef struct modelinfo
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
     int         rescaleFreqOld;             /* holds rescale frequency of current state     */
     int         rescaleFreqNew;             /* holds temporary new rescale frequency        */
-    int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
+    int         recalculateScalers;         /* should we recalculate scalers for current state YES/NO */
     int*        successCount;               /* count of successful computations since last reset of scalers */
     int**       isScalerNode;               /* for each node and chain set to YES if scaled node */
     int*        isScalerNodeScratch;        /* scratch space to hold isScalerNode of proposed state*/
@@ -1445,7 +1445,7 @@ typedef struct sumt
     int        *order;                 /* for storing topology read from file           */
     int         orderLen;              /* length of order array                         */
     int         numTreesInLastBlock;   /* number of trees in last block                 */
-    int         numTreesEncountered;   /* number of trees encounted in total            */
+    int         numTreesEncountered;   /* number of trees encountered in total          */
     int         numTreesSampled;       /* number of sampled trees in total              */
     int         isRooted;              /* is sumt tree rooted ?                         */
     int         isRelaxed;             /* is sumt tree a relaxed clock tree ?           */
@@ -1501,8 +1501,8 @@ typedef struct sumss
     int         allRuns;               /* should data for all runs be printed (yes/no)? */
     int         stepToPlot;            /* Which step to plot in the step plot           */
     int         askForMorePlots;       /* Should user be asked to plot for different discardfraction (y/n)?  */
-    int         smoothing;             /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
-    MrBFlt      discardFraction;       /* Proportion of samples discarded when ploting step plot.*/
+    int         smoothing;             /* An integer indicating number of neighbors to average over when doing smoothing of curves on plots */
+    MrBFlt      discardFraction;       /* Proportion of samples discarded when plotting step plot.*/
     } Sumss;
 
 typedef struct plot
@@ -1606,13 +1606,13 @@ extern Comptree         comptreeParams;                         /* holds paramet
 extern char             **constraintNames;                      /* holds names of constraints                    */
 extern BitsLong         **definedConstraint;                    /* holds information about defined constraints   */
 extern BitsLong         **definedConstraintTwo;                 /* bitfields representing second taxa sets of defined constraints (for PARTIAL constraints) */
-extern BitsLong         **definedConstraintPruned;              /* bitfields representing taxa sets of defined constraints after delited taxa are removed */
-extern BitsLong         **definedConstraintTwoPruned;           /* bitfields representing second taxa sets of defined constraints after delited taxa are removed (for PARTIAL constraints) */
+extern BitsLong         **definedConstraintPruned;              /* bitfields representing taxa sets of defined constraints after deleted taxa are removed */
+extern BitsLong         **definedConstraintTwoPruned;           /* bitfields representing second taxa sets of defined constraints after deleted taxa are removed (for PARTIAL constraints) */
 extern int              dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */
 extern int              defChars;                               /* flag for whether number of characters is known*/
-extern int              defMatrix;                              /* flag for whether matrix is successfull read   */
+extern int              defMatrix;                              /* flag for whether matrix is successful read    */
 extern int              defPairs;                               /* flag for whether constraints on tree are read */
 extern int              defPartition;                           /* flag for whether character partition is read  */
 extern int              defTaxa;                                /* are taxon labels defined ?                    */
@@ -1758,10 +1758,10 @@ extern int              beagleResourceCount;                    /* BEAGLE resour
 extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
 extern int              beagleScalingScheme;                    /* BEAGLE dynamic scaling                        */
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
-extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
+extern int              recalcScalers;                          /* should we recalculate scalers for one of divisions for current state YES/NO */
 #if defined (BEAGLE_V3_ENABLED)
 extern int              beagleThreadCount;                      /* max number of BEAGLE CPU threads  */
-extern int              beagleAllFloatTips;                     /* use floating-point represantion for all tips  */
+extern int              beagleAllFloatTips;                     /* use floating-point representation for all tips  */
 #endif
 #endif
 
