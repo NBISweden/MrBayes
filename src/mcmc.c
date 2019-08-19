@@ -16064,7 +16064,7 @@ int RunChain (RandLong *seed)
     /* Stepping-stone sampling variables */
     int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
     MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
-    char        ckpFileName[220], bkupFileName[220];
+    char        ckpFileName[220], bkupFileName[234];
 
 #   if defined (BEAGLE_ENABLED)
 #       ifdef DEBUG_BEAGLE
