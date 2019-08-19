@@ -4849,7 +4849,7 @@ int DoSumt (void)
     MrBFlt          f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
     PartCtr         *x;
-    char            *s=NULL, tempName[120], fileName[120], treeName[100], divString[100];
+    char            *s=NULL, tempName[137], fileName[120], treeName[100], divString[100];
     char            *tempStr=NULL; /*not static because error ext is handled*/
     int             tempStrLength;
     FILE            *fp=NULL;
