@@ -79,7 +79,7 @@ BitsLong    bitsLongWithAllBitsSet;      /* BitsLong with all bits set, for bit 
 ModelParams defaultModel;                /* Default model; vals set in InitializeMrBayes  */
 int         defTaxa;                     /* flag for whether number of taxa is known      */
 int         defChars;                    /* flag for whether number of chars is known     */
-int         defMatrix;                   /* flag for whether matrix is successfull read   */
+int         defMatrix;                   /* flag for whether matrix is successful read    */
 int         defPartition;                /* flag for whether character partition is read  */
 int         defPairs;                    /* flag for whether pairs are read               */
 Doublet     doublet[16];                 /* holds information on states for doublets      */
@@ -261,7 +261,7 @@ int CommandLine (int argc, char **argv)
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
-                   * "Version" interactive command and terminate succesfully */
+                   * "Version" interactive command and terminate successfully */
             puts("MrBayes, Bayesian Analysis of Phylogeny\n");
             printf("Version:   %s\n", VERSION_NUMBER);
             fputs("Features: ", stdout);
@@ -603,7 +603,7 @@ int InitializeMrBayes (void)
  *
  * */
 
-    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO until SSE single prec. works) */
 
 #       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;   /* use BEAGLE dynamic scaling                     */
@@ -1019,7 +1019,7 @@ int ReinitializeMrBayes (void)
     chainParams.calcPbf = NO;                        /* should we calculate the pseudo-BF?            */
     chainParams.pbfInitBurnin = 100000;              /* initial burnin for pseudo BF                  */
     chainParams.pbfSampleFreq = 10;                  /* sample frequency for pseudo BF                */
-    chainParams.pbfSampleTime = 2000;                /* how many cycles to calcualate site prob.      */
+    chainParams.pbfSampleTime = 2000;                /* how many cycles to calculate site prob.       */
     chainParams.pbfSampleBurnin = 2000;              /* burnin period for each site for pseudo BF     */
     chainParams.userDefinedTemps = NO;               /* should we use the users temperatures?         */
     for (i=0; i<MAX_CHAINS; i++)
@@ -1069,9 +1069,9 @@ int ReinitializeMrBayes (void)
     sumssParams.allRuns = YES;                       /* should data for all runs be printed (yes/no)? */
     sumssParams.stepToPlot = 0;                      /* Which step to plot in the step plot, 0 means burnin */
     sumssParams.askForMorePlots = YES;               /* Should user be asked to plot for different discardfraction (y/n)?  */
-    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when ploting step plot.*/
+    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when plotting step plot.*/
     sumssParams.smoothing = 0;                       /* An integer indicating number of neighbors to average over
-                                                        when dooing smoothing of curvs on plots */
+                                                        when doing smoothing of curves on plots */
     /* comparetree parameters */
     strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
     strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */

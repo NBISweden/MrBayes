@@ -10680,7 +10680,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         d->right = u;
     u->anc = d;
 
-    /* c cannot be a, as a is skiped in the selection for reattachment point */
+    /* c cannot be a, as a is skipped in the selection for reattachment point */
     assert (c != a);
     /* transfer lock if necessary */
     /* if u is locked, then we have moved upwards and need to leave the u lock behind */
