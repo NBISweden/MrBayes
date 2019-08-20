@@ -187,6 +187,7 @@ int main (int argc, char *argv[])
     
 #   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
+    using_history();
 #   endif
     /* Set up parameter table. */
     SetUpParms ();
