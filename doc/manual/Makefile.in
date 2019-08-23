@@ -270,6 +270,7 @@ CLEANFILES = \
 	Manual_MrBayes_v3.2.fdb_latexmk \
 	Manual_MrBayes_v3.2.fls \
 	Manual_MrBayes_v3.2.log \
+	Manual_MrBayes_v3.2.out \
 	Manual_MrBayes_v3.2.toc
 
 envvars = \
