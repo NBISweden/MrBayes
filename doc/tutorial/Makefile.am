@@ -44,7 +44,7 @@ MBDating.pdf: $(deps)
 else # !HAVE_LATEXMK
 
 # The order of pdflatex and bibtex runs below (and the number of runs)
-# mirrors what laxexmf seems to want to do.
+# mirrors what latexmk seems to want to do.
 MBDating.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 	env $(envvars) $(BIBTEX) -terse MBDating

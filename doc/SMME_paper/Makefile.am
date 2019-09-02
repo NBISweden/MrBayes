@@ -48,7 +48,7 @@ Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 else # !HAVE_LATEXMK
 
 # The order of pdflatex and bibtex runs below (and the number of runs)
-# mirrors what laxexmf seems to want to do.
+# mirrors what latexmk seems to want to do.
 Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 	env $(envvars) $(BIBTEX) -terse Huelsenbeck_Ronquist_SMME_2005
