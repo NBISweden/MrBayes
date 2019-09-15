@@ -24149,8 +24149,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_IGRBRANCHRATES)
             {
-            MrBayesPrint ("%s            Prior      = Gamma (expectation = 1.0, variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].igrvar->name);
-            MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
+            MrBayesPrint ("%s            Prior      = Gamma (expectation = 1.0, variance = %s) \n", spacer, modelSettings[p->relParts[0]].igrvar->name);
             }
         else if (j == P_ILNVAR)
             {
@@ -24163,8 +24162,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_ILNBRANCHRATES)
             {
-            MrBayesPrint ("%s            Prior      = LogNormal (expectation = 1.0, variance = %s * v) \n", spacer, modelSettings[p->relParts[0]].ilnvar->name);
-            MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
+            MrBayesPrint ("%s            Prior      = LogNormal (expectation = 1.0, variance = %s) \n", spacer, modelSettings[p->relParts[0]].ilnvar->name);
             }
         else if (j == P_MIXEDVAR)
             {
@@ -24177,8 +24175,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_MIXEDBRCHRATES)
             {
-            MrBayesPrint ("%s            Prior      = Mixed IGR and ILN (mean = 1, variance = %s * v)\n", spacer, modelSettings[p->relParts[0]].mixedvar->name);
-            MrBayesPrint ("%s                            [where v is branch length]\n", spacer);
+            MrBayesPrint ("%s            Prior      = Mixed IGR and ILN (mean = 1, variance = %s) \n", spacer, modelSettings[p->relParts[0]].mixedvar->name);
             MrBayesPrint ("%s                         Uniform prior on relaxed clock models [Pr(IGR)=Pr(ILN)=0.5]\n", spacer);
             }
         else if (j == P_CLOCKRATE)

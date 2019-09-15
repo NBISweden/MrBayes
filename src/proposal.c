@@ -759,8 +759,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     q = oldT->allDownPass[j];
                     if (p->length > 0.0)  // not ancestral fossil
                         {
-                        (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*q->length, rate[q->index]);
-                        (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->length, rate[p->index]);
+                        (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu, rate[q->index]);
+                        (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[p->index]);
 
                         brlens[p->index] = rate[p->index] * p->length;
                         }
@@ -783,8 +783,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     q = oldT->allDownPass[j];
                     if (p->length > 0.0)  // not ancestral fossil
                         {
-                        (*lnPriorRatio) -= LnProbGamma (1.0/q->length/igrvar, 1.0/q->length/igrvar, rate[q->index]);
-                        (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, rate[p->index]);
+                        (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[q->index]);
+                        (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
 
                         brlens[p->index] = rate[p->index] * p->length;
                         }
@@ -1338,14 +1338,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             
             /* prior ratio */
             rate[p->index] = rate[q->index];
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldRLength, rate[r->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* p->length, rate[p->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* r->length, rate[r->index]);
-            if (q->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldQLength, rate[q->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* q->length, rate[q->index]);
-                }
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = rate[p->index] * p->length;
@@ -1367,14 +1360,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             
             /* prior ratio */
             rate[p->index] = rate[q->index];
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldRLength/igrvar, 1.0/oldRLength/igrvar, rate[r->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/p->length /igrvar, 1.0/p->length /igrvar, rate[p->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/r->length /igrvar, 1.0/r->length /igrvar, rate[r->index]);
-            if (q->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldQLength/igrvar, 1.0/oldQLength/igrvar, rate[q->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/q->length /igrvar, 1.0/q->length /igrvar, rate[q->index]);
-                }
+            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = rate[p->index] * p->length;
@@ -1593,14 +1579,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldPLength, rate[p->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldRLength, rate[r->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* r->length, rate[r->index]);
-            if (q->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldQLength, rate[q->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* q->length, rate[q->index]);
-                }
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // rate[p->index] = rate[q->index];
@@ -1620,14 +1599,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldPLength/igrvar, 1.0/oldPLength/igrvar, rate[p->index]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldRLength/igrvar, 1.0/oldRLength/igrvar, rate[r->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/r->length /igrvar, 1.0/r->length /igrvar, rate[r->index]);
-            if (q->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldQLength/igrvar, 1.0/oldQLength/igrvar, rate[q->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/q->length /igrvar, 1.0/q->length /igrvar, rate[q->index]);
-                }
+            (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // rate[p->index] = rate[q->index];
@@ -2016,10 +1988,8 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(1.0, nu*(a->length+u->length), rate[a->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
             
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -2036,10 +2006,8 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
-            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
             
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -2267,11 +2235,9 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*(a->length+u->length), rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*v->length, rate[v->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -2288,11 +2254,9 @@ int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnP
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3491,10 +3455,8 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
              /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(1.0, nu*(a->length+u->length), rate[a->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
 
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3511,10 +3473,8 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 
              /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
-            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
 
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3742,11 +3702,9 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*(a->length+u->length), rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*v->length, rate[v->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3763,11 +3721,9 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -4692,11 +4648,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
-            /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldALength, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldCLength, rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*c->length, rate[c->index]);
+            /* update of effective evolutionary lengths */
             brlens[a->index] = rate[a->index] * a->length;
             brlens[c->index] = rate[c->index] * c->length;
             }
@@ -4711,11 +4663,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
-            /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldALength/igrvar, 1.0/oldALength/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldCLength/igrvar, 1.0/oldCLength/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/a->length /igrvar, 1.0/a->length /igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/c->length /igrvar, 1.0/c->length /igrvar, rate[c->index]);
+            /* update of effective evolutionary lengths */
             brlens[a->index] = rate[a->index] * a->length;
             brlens[c->index] = rate[c->index] * c->length;
             }
@@ -5438,8 +5386,8 @@ int Move_IgrBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
     /* calculate prior ratio */
     igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
-    (*lnPriorRatio) = LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, newRate)
-                    - LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, oldRate);
+    (*lnPriorRatio) = LnProbGamma (1.0/igrvar, 1.0/igrvar, newRate)
+                    - LnProbGamma (1.0/igrvar, 1.0/igrvar, oldRate);
 
     /* calculate proposal ratio */
     (*lnProposalRatio) = log (newRate / oldRate);
@@ -5515,8 +5463,8 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             p = t->allDownPass[j];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbGamma (1.0/p->length/oldVar, 1.0/p->length/oldVar, rate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->length/newVar, 1.0/p->length/newVar, rate[p->index]);
+                (*lnPriorRatio) -= LnProbGamma (1.0/oldVar, 1.0/oldVar, rate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/newVar, 1.0/newVar, rate[p->index]);
                 }
             }
         }
@@ -5590,8 +5538,8 @@ int Move_IlnBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
 
     /* calculate prior ratio */
     ilnvar = *GetParamVals (m->ilnvar, chain, state[chain]);
-    (*lnPriorRatio) = LnProbLogNormal_Mean_Var (1.0, ilnvar*p->length, newRate)
-                    - LnProbLogNormal_Mean_Var (1.0, ilnvar*p->length, oldRate);
+    (*lnPriorRatio) = LnProbLogNormal_Mean_Var (1.0, ilnvar, newRate)
+                    - LnProbLogNormal_Mean_Var (1.0, ilnvar, oldRate);
 
     /* calculate proposal ratio */
     (*lnProposalRatio) = log (newRate / oldRate);
@@ -5667,8 +5615,8 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             p = t->allDownPass[j];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, oldVar*p->length, ilnRate[p->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, newVar*p->length, ilnRate[p->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, oldVar, ilnRate[p->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, newVar, ilnRate[p->index]);
                 }
             }
         }
@@ -5745,13 +5693,13 @@ int Move_MixedBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     mxvar = *GetParamVals (m->mixedvar, chain, state[chain]);
     if (*rclModel == RCL_IGR)
         {
-        (*lnPriorRatio) -= LnProbGamma (1.0/p->length/mxvar, 1.0/p->length/mxvar, oldRate);
-        (*lnPriorRatio) += LnProbGamma (1.0/p->length/mxvar, 1.0/p->length/mxvar, newRate);
+        (*lnPriorRatio) -= LnProbGamma (1.0/mxvar, 1.0/mxvar, oldRate);
+        (*lnPriorRatio) += LnProbGamma (1.0/mxvar, 1.0/mxvar, newRate);
         }
     else if (*rclModel == RCL_ILN)
         {
-        (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, mxvar*p->length, oldRate);
-        (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, mxvar*p->length, newRate);
+        (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, mxvar, oldRate);
+        (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, mxvar, newRate);
         }
 
     /* calculate proposal ratio */
@@ -5829,13 +5777,13 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             if (p->length > 0.0) { // not ancestral fossil
                 if (*rclModel == RCL_IGR)
                     {
-                    (*lnPriorRatio) -= LnProbGamma (1.0/p->length/oldVar, 1.0/p->length/oldVar, rate[p->index]);
-                    (*lnPriorRatio) += LnProbGamma (1.0/p->length/newVar, 1.0/p->length/newVar, rate[p->index]);
+                    (*lnPriorRatio) -= LnProbGamma (1.0/oldVar, 1.0/oldVar, rate[p->index]);
+                    (*lnPriorRatio) += LnProbGamma (1.0/newVar, 1.0/newVar, rate[p->index]);
                     }
                 else if (*rclModel == RCL_ILN)
                     {
-                    (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, oldVar*p->length, rate[p->index]);
-                    (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, newVar*p->length, rate[p->index]);
+                    (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, oldVar, rate[p->index]);
+                    (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, newVar, rate[p->index]);
                     }
                 }
             }
@@ -5903,16 +5851,14 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         if (!strcmp(mp->mixedvarPr,"Exponential"))
             (*lnPriorRatio) += mp->mixedvarExp * (igrvar - ilnvar);
 
-        /* match the rates and change the effective branch lengths */
+        /* match the rates */
         for (i = 0; i < t->nNodes -2; i++)
             {
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, mxRate[p->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, ilnvar*p->length, mxRate[p->index]);
-
-                // brlens[p->index] = mxRate[p->index] * p->length;
+                (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, mxRate[p->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, ilnvar, mxRate[p->index]);
                 }
             }
         
@@ -5940,16 +5886,14 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         if (!strcmp(mp->mixedvarPr,"Exponential"))
             (*lnPriorRatio) += mp->mixedvarExp * (ilnvar - igrvar);
 
-        /* match the rates and change the effective branch lengths */
+        /* match the rates */
         for (i = 0; i < t->nNodes -2; i++)
             {
             p = t->allDownPass[i];
             if (p->length > 0.0)  // not ancestral fossil
                 {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, ilnvar*p->length, mxRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, mxRate[p->index]);
-
-                // brlens[p->index] = mxRate[p->index] * p->length;
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, ilnvar, mxRate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, mxRate[p->index]);
                 }
             }
 
@@ -7977,11 +7921,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldALength, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldCLength, rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* a->length, rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu* c->length, rate[c->index]);
+            /* update of effective evolutionary lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = rate[a->index] * a->length;
             brlens[c->index] = rate[c->index] * c->length;
@@ -7994,11 +7934,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            /* prior ratio and update of effective evolutionary lengths */
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldALength/igrvar, 1.0/oldALength/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/oldCLength/igrvar, 1.0/oldCLength/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/a->length /igrvar, 1.0/a->length /igrvar, rate[a->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/c->length /igrvar, 1.0/c->length /igrvar, rate[c->index]);
+            /* update of effective evolutionary lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = rate[a->index] * a->length;
             brlens[c->index] = rate[c->index] * c->length;
@@ -8506,26 +8442,20 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
                 
-            /* prior ratio & update effective evolutionary lengths */
+            /* update effective evolutionary lengths */
             if (p->left != NULL)
                 {
                 if (p->left->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldLeftLength, rate[p->left->index ]);
-                    (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->left->length, rate[p->left->index ]);
                     brlens[p->left->index ] = rate[p->left->index] * p->left->length;
                     }
                 if (p->right->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldRightLength, rate[p->right->index]);
-                    (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->right->length, rate[p->right->index]);
                     brlens[p->right->index] = rate[p->right->index] * p->right->length;
                     }
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldPLength, rate[p->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->length, rate[p->index]);
                 brlens[p->index] = rate[p->index] * p->length;
                 }
             }
@@ -8539,26 +8469,20 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
                 
-            /* prior ratio & update effective evolutionary lengths */
+            /* update effective evolutionary lengths */
             if (p->left != NULL)
                 {
                 if (p->left->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbGamma (1.0/oldLeftLength/igrvar, 1.0/oldLeftLength/igrvar, rate[p->left->index ]);
-                    (*lnPriorRatio) += LnProbGamma (1.0/p->left->length/igrvar, 1.0/p->left->length/igrvar, rate[p->left->index ]);
                     brlens[p->left->index ] = rate[p->left->index] * p->left->length;
                     }
                 if (p->right->length > 0.0)
                     {
-                    (*lnPriorRatio) -= LnProbGamma (1.0/oldRightLength/igrvar, 1.0/oldRightLength/igrvar, rate[p->right->index]);
-                    (*lnPriorRatio) += LnProbGamma (1.0/p->right->length/igrvar, 1.0/p->right->length/igrvar, rate[p->right->index]);
                     brlens[p->right->index] = rate[p->right->index] * p->right->length;
                     }
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldPLength/igrvar, 1.0/oldPLength/igrvar, rate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->length /igrvar, 1.0/p->length /igrvar, rate[p->index]);
                 brlens[p->index] = rate[p->index] * p->length;
                 }
             }
@@ -9887,10 +9811,8 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(1.0, nu*(a->length+u->length), rate[a->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -9907,10 +9829,8 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
-            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -10259,11 +10179,9 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*(c->length+u->length), rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*c->length, rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*v->length, rate[v->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -10281,11 +10199,9 @@ int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbGamma (1.0/(c->length+u->length)/igrvar, 1.0/(c->length+u->length)/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/c->length/igrvar, 1.0/c->length/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
             
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12303,10 +12219,8 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(1.0, nu*(a->length+u->length), rate[a->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12323,10 +12237,8 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/a->length/igrvar, 1.0/a->length/igrvar, rate[a->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
-            (*lnPriorRatio) += LnProbGamma(1.0/(a->length+u->length)/igrvar, 1.0/(a->length+u->length)/igrvar, rate[a->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12674,11 +12586,9 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*(c->length+u->length), rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*c->length, rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*v->length, rate[v->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12695,11 +12605,9 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             else
                 igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbGamma (1.0/(c->length+u->length)/igrvar, 1.0/(c->length+u->length)/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/c->length/igrvar, 1.0/c->length/igrvar, rate[c->index]);
-            (*lnPriorRatio) += LnProbGamma (1.0/u->length/igrvar, 1.0/u->length/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/v->length/igrvar, 1.0/v->length/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -16516,8 +16424,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 q = oldT->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*q->length, rate[q->index]);
-                    (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->length, rate[p->index]);
+                    // (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu, rate[q->index]);
+                    // (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[p->index]);
                     brlens[p->index] = p->length * rate[p->index];
                     if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {
@@ -16544,8 +16452,8 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                 q = oldT->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    (*lnPriorRatio) -= LnProbGamma (1.0/q->length/igrvar, 1.0/q->length/igrvar, rate[q->index]);
-                    (*lnPriorRatio) += LnProbGamma (1.0/p->length/igrvar, 1.0/p->length/igrvar, rate[p->index]);
+                    // (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[q->index]);
+                    // (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
                     brlens[p->index] = p->length * rate[p->index];
                     if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {

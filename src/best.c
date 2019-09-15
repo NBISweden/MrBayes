@@ -1634,19 +1634,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldLeftLength, rate[p->left->index]);
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldRightLength, rate[p->right->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->left->length, rate[p->left->index ]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->right->length, rate[p->right->index]);
-                }
-            if (p->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (1.0, nu*oldPLength, rate[p->index]);
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu*p->length, rate[p->index]);
-                }
-
-            if (p->left != NULL)
-                {
                 brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
                 brlens[p->right->index] = rate[p->right->index] * p->right->length;
                 }
@@ -1665,19 +1652,6 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            if (p->left != NULL)
-                {
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldLeftLength/igrvar, 1.0/oldLeftLength/igrvar, rate[p->left->index ]);
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldRightLength/igrvar, 1.0/oldRightLength/igrvar, rate[p->right->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->left->length/igrvar, 1.0/p->left->length/igrvar, rate[p->left->index ]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->right->length/igrvar, 1.0/p->right->length/igrvar, rate[p->right->index]);
-                }
-            if (p->anc->anc != NULL)
-                {
-                (*lnPriorRatio) -= LnProbGamma (1.0/oldPLength/igrvar, 1.0/oldPLength/igrvar, rate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (1.0/p->length /igrvar, 1.0/p->length /igrvar, rate[p->index]);
-                }
-
             if (p->left != NULL)
                 {
                 brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
