@@ -1899,7 +1899,8 @@ int CheckModel (void)
                 {
                 MrBayesPrint("%s   WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.\n", spacer);
                 MrBayesPrint("%s      This is likely to be incorrect unless you have set the population size prior\n", spacer);
-                MrBayesPrint("%s      ('prset popsizepr') to reflect an appropriate prior on theta. \n", spacer);
+                MrBayesPrint("%s      ('prset popsizepr') to reflect an appropriate prior on theta. Please check that \n", spacer);
+                MrBayesPrint("%s      the prior on theta is reasonable for your data.\n", spacer);
 
                 if (noWarn == NO)
                     {
