@@ -1834,8 +1834,10 @@ int AddToTreeList (TreeList *treeList, Tree *tree)
         return (ERROR);
 
     listElement->order = (int *) SafeCalloc (tree->nIntNodes-1, sizeof(int));
-    if (!listElement->order)
+    if (!listElement->order) {
+        listElement = SafeFree(listElement);
         return (ERROR);
+    }
     listElement->next = NULL;
 
     if (treeList->last == NULL)
