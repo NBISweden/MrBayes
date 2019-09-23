@@ -1895,21 +1895,25 @@ int CheckModel (void)
         if ((!strcmp(modelParams[t->relParts[0]].clockPr,"Coalescence") || !strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence"))
             && !strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
             {
-            MrBayesPrint("%s   WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.\n", spacer);
-            MrBayesPrint("%s      This is likely to be incorrect unless you have set the population size prior\n", spacer);
-            MrBayesPrint("%s      ('prset popsizepr') to reflect an appropriate prior on theta. \n", spacer);
-
-            if (noWarn == NO)
+            if (i == 0) // We only warn for the first tree
                 {
-                answer = WantTo("Do you want to continue with the run regardless");
-                if (answer == YES)
+                MrBayesPrint("%s   WARNING: You are using a coalescent model but the clock rate is fixed to 1.0.\n", spacer);
+                MrBayesPrint("%s      This is likely to be incorrect unless you have set the population size prior\n", spacer);
+                MrBayesPrint("%s      ('prset popsizepr') to reflect an appropriate prior on theta. Please check that \n", spacer);
+                MrBayesPrint("%s      the prior on theta is reasonable for your data.\n", spacer);
+
+                if (noWarn == NO)
                     {
-                    MrBayesPrint("%s   Continuing with the run...\n\n", spacer);
-                    }
-                else
-                    {
-                    MrBayesPrint("%s   Stopping the run...\n\n", spacer);
-                    return (ERROR);
+                    answer = WantTo("Do you want to continue with the run regardless");
+                    if (answer == YES)
+                        {
+                        MrBayesPrint("%s   Continuing with the run...\n\n", spacer);
+                        }
+                    else
+                        {
+                        MrBayesPrint("%s   Stopping the run...\n\n", spacer);
+                        return (ERROR);
+                        }
                     }
                 }
             }
