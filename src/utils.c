@@ -2702,6 +2702,7 @@ int CheckConstraints (Tree *t)
     
     if (AllocateTreePartitions(t) == ERROR)
         {
+        constraintPartition = SafeFree(constraintPartition);
         MrBayesPrint ("%s   Problems allocating tree partitions in CheckConstraints", spacer);
         return (ERROR);
         }
