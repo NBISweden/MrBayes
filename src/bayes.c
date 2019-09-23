@@ -142,7 +142,7 @@ int main (int argc, char *argv[])
         {
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
-        sprintf(poltmp, "\nlastError = %d", lastError);
+        sprintf(poltmp, "\nlastError = %ld", lastError);
         // printf (poltmp);
         }
 #   endif
