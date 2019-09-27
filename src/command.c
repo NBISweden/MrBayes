@@ -11196,23 +11196,25 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
         MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
         MrBayesPrint ("                    constant throughout the tree. For relaxed clock models, you  \n");
-        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr', or 'iln'.                      \n");
+        MrBayesPrint ("                    can use 'cpp', 'tk02', 'wn', 'igr', or 'iln'.                \n");
         MrBayesPrint ("                    'cpp' invokes a relaxed clock model where the rate evolves   \n");
         MrBayesPrint ("                    according to a Compound Poisson Process (CPP) (Huelsenbeck   \n");
         MrBayesPrint ("                    et al., 2000).                                               \n");
-        MrBayesPrint ("                    'tk02' invokes the Brownian Motion model described by Thorne \n");
-        MrBayesPrint ("                    and Kishino (2002). [autocorrelated lognormal distributions] \n");
-        MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate (IGR) model where   \n");
-        MrBayesPrint ("                    each branch has an independent rate drawn from a gamma       \n");
-        MrBayesPrint ("                    distribution (LePage et al., 2007).                          \n");
+        MrBayesPrint ("                    'tk02' invokes the geometric Brownian Motion model described \n");
+        MrBayesPrint ("                    by Thorne and Kishino (2002). [autocorrelated lognormal]     \n");
+        MrBayesPrint ("                    'wn' invokes the white noise model (LePage et al., 2007)     \n");
+        MrBayesPrint ("                    where each branch has an independent rate drawn from a gamma \n");
+        MrBayesPrint ("                    distribution with variance propotional to the branch length. \n");
+        MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate model. The differ-  \n");
+        MrBayesPrint ("                    ence from 'wn' is that these gamma distributions are i.i.d.  \n");
+        MrBayesPrint ("                    thus the variances do not depend on the branch lengths.      \n");
+        MrBayesPrint ("                    'iln' invokes the Independent Lognormal model. It is similar \n");
+        MrBayesPrint ("                    with 'igr' but the rates are i.i.d. lognormal distributions.\n");
         MrBayesPrint ("                    Each of the relaxed clock models has additional parameters   \n");
         MrBayesPrint ("                    with priors. For the CPP model, it is 'cppratepr' and        \n");
         MrBayesPrint ("                    'cppmultdevpr'; for the TK02 model, it is 'tk02varpr'; for   \n");
         MrBayesPrint ("                    the IGR  model, it is 'igrvarpr'.                            \n");
         MrBayesPrint ("                    The 'clockvarpr' parameter is only relevant for clock trees. \n");
-        MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'bm' is allowed as a synonym of  \n");
-        MrBayesPrint ("                    'tk02'.                                                      \n");
         MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
         MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
         MrBayesPrint ("                    changes in the evolutionary rate in the CPP relaxed clock    \n");
@@ -11255,7 +11257,6 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    linear, not the logarithm scale). The mean is the same as the\n");
         MrBayesPrint ("                    rate multiplier at the start of the branch (again on the     \n");
         MrBayesPrint ("                    linear scale).                                               \n");
-        MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11263,25 +11264,50 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset tk02varpr = exponential(<number>)                   \n");
         MrBayesPrint ("                       prset tk02varpr = uniform(<number>,<number>)              \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'bmvarpr' is allowed as a synonym\n");
-        MrBayesPrint ("                    of 'tko2varpr'.                                              \n");
-        MrBayesPrint ("   Igrvarpr      -- This parameter allows you to specify a prior on the variance \n");
-        MrBayesPrint ("                    of the gamma distribution from which the branch lengths are  \n");
-        MrBayesPrint ("                    drawn in the independent branch rate (IGR) relaxed clock     \n");
-        MrBayesPrint ("                    model. Specifically, the parameter specifies the rate at     \n");
-        MrBayesPrint ("                    which the variance increases with respect to the base rate of\n");
-        MrBayesPrint ("                    the clock. If you have a branch of a length corresponding to \n");
-        MrBayesPrint ("                    0.4 expected changes per site according to the base rate of  \n");
-        MrBayesPrint ("                    the clock, and the igrvar parameter has a value of 2.0, then \n");
-        MrBayesPrint ("                    the effective branch length will be drawn from a distribution\n");
-        MrBayesPrint ("                    with a variance of 0.4*2.0.                                  \n");
+        MrBayesPrint ("   WNvarpr       -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent branch rate (white noise)\n");
+        MrBayesPrint ("                    relaxed clock model. Specifically, the parameter specifies   \n");
+        MrBayesPrint ("                    the rate at which the variance increases with respect to the \n");
+        MrBayesPrint ("                    base rate of the clock. If you have a branch of a length     \n");
+        MrBayesPrint ("                    corresponding to 0.4 expected changes per site according to  \n");
+        MrBayesPrint ("                    the base rate of the clock, and the wnvar parameter has a   \n");
+        MrBayesPrint ("                    value of 2.0 , then the effective branch length will be drawn\n");
+        MrBayesPrint ("                    from a distribution with a variance of 0.4*2.0.              \n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset wnvarpr = fixed(<number>)                           \n");
+        MrBayesPrint ("                       prset wnvarpr = exponential(<number>)                     \n");
+        MrBayesPrint ("                       prset wnvarpr = uniform(<number>,<number>)                \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   IGRvarpr      -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent gamma rate (IGR) relaxed \n");
+        MrBayesPrint ("                    clock model. Specifically, the parameter specifies the rate  \n");
+        MrBayesPrint ("                    at which the variance increases with respect to the base rate\n");
+        MrBayesPrint ("                    of the clock. The difference from the white noise (WN) model \n");
+        MrBayesPrint ("                    is that the variance is the same for all branch rates and    \n");
+        MrBayesPrint ("                    does not depend on the branch length.  If igrvar parameter   \n");
+        MrBayesPrint ("                    has a value of 0.8 , then the rate multiplier will be drawn  \n");
+        MrBayesPrint ("                    from a gamma distribution with mean 1.0 and variance 0.8.    \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                       prset igrvarpr = fixed(<number>)                          \n");
         MrBayesPrint ("                       prset igrvarpr = exponential(<number>)                    \n");
         MrBayesPrint ("                       prset igrvarpr = uniform(<number>,<number>)               \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   ILNvarpr      -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent lognormal (ILN) relaxed  \n");
+        MrBayesPrint ("                    clock model. It is similar with IGR but each rate multiplier \n");
+        MrBayesPrint ("                    has a lognormal instead of a gamma distribution. If ilnvar   \n");
+        MrBayesPrint ("                    has a value of 0.8 , then the rate multiplier will be drawn  \n");
+        MrBayesPrint ("                    from a lognormal distribution with mean 1.0 and variance 0.8.\n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset ilnvarpr = fixed(<number>)                          \n");
+        MrBayesPrint ("                       prset ilnvarpr = exponential(<number>)                    \n");
+        MrBayesPrint ("                       prset ilnvarpr = uniform(<number>,<number>)               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Ratepr        -- This parameter allows you to specify the site specific rates \n");
         MrBayesPrint ("                    model or any other model that allows different partitions to \n");
@@ -11628,7 +11654,7 @@ int GetUserHelp (char *helpTkn)
                 }
             MrBayesPrint ("                    Exponential/Gamma            \n");
 
-            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Iln      %s\n", mp->clockVarPr);
+            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/WN/Igr/Iln   %s\n", mp->clockVarPr);
 
             MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
             if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -11648,6 +11674,17 @@ int GetUserHelp (char *helpTkn)
                 {
                 assert (!strcmp(mp->tk02varPr,"Uniform"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->tk02varUni[0], mp->tk02varUni[1]);
+                }
+
+            MrBayesPrint ("   WNvarpr          Fixed/Exponential/Uniform    %s", mp->wnvarPr);
+            if (!strcmp(mp->wnvarPr, "Fixed"))
+                MrBayesPrint ("(%1.2lf)\n", mp->wnvarFix);
+            else if (!strcmp(mp->wnvarPr,"Exponential"))
+                MrBayesPrint ("(%1.2lf)\n", mp->wnvarExp);
+            else
+                {
+                assert (!strcmp(mp->wnvarPr,"Uniform"));
+                MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->wnvarUni[0], mp->wnvarUni[1]);
                 }
 
             MrBayesPrint ("   Igrvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
@@ -12705,9 +12742,11 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
+        MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
         MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
+    //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
     //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12753,9 +12792,11 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n");
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
+        MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
         MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
         MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
+    //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
     //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
     //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14566,7 +14607,7 @@ void SetUpParms (void)
     PARAM (182, "Swapseed",       DoSetParm,         "\0");
     PARAM (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
     PARAM (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Iln|Mixed|\0");
+    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|WN|Igr|Iln|Mixed|\0");
     PARAM (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
     PARAM (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
     PARAM (188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -14632,9 +14673,9 @@ void SetUpParms (void)
     PARAM (248, "Burninss",       DoSsParm,          "\0");
     PARAM (249, "Nsteps",         DoSsParm,          "\0");
     PARAM (250, "Alpha",          DoSsParm,          "\0");
-    PARAM (251, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (252, "Bmvar",          DoLinkParm,        "\0");
-    PARAM (253, "Bmbranchrates",  DoLinkParm,        "\0");
+    PARAM (251, "WNvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (252, "WNvar",          DoLinkParm,        "\0");
+    PARAM (253, "WNbranchrates",  DoLinkParm,        "\0");
     PARAM (254, "Ilnvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (255, "Ilnvar",         DoLinkParm,        "\0");
     PARAM (256, "Ilnbranchlens",  DoLinkParm,        "\0");

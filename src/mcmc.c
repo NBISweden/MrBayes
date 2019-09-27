@@ -7134,6 +7134,7 @@ int InitPrintParams (void)
             p->paramType != P_SPECIESTREE &&
             p->paramType != P_CPPEVENTS &&
             p->paramType != P_TK02BRANCHRATES &&
+            p->paramType != P_WNBRANCHRATES &&
             p->paramType != P_IGRBRANCHRATES &&
             p->paramType != P_ILNBRANCHRATES &&
             p->paramType != P_MIXEDBRCHRATES)
@@ -7191,6 +7192,7 @@ int InitPrintParams (void)
             p->paramType != P_SPECIESTREE &&
             p->paramType != P_CPPEVENTS &&
             p->paramType != P_TK02BRANCHRATES &&
+            p->paramType != P_WNBRANCHRATES &&
             p->paramType != P_IGRBRANCHRATES &&
             p->paramType != P_ILNBRANCHRATES &&
             p->paramType != P_MIXEDBRCHRATES)
@@ -7648,7 +7650,7 @@ MrBFlt LogPrior (int chain)
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
     const int       *rateCat;
     MrBFlt          *st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
-                    sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, igrvar, **rateMultiplier;
+                    sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, var, **rateMultiplier;
     char            *sS;
     CLFlt           *nSitesOfPat;
     Param           *p;
@@ -8264,6 +8266,33 @@ MrBFlt LogPrior (int chain)
                     lnPrior += LnProbLogNormal_Mean_Var (st[branch->anc->index], nu*branch->length, st[branch->index]);
                 }
             }
+        else if (p->paramType == P_WNVAR)
+            {
+            /* variance of rates in white noise model */
+            if (p->paramId == WNVAR_EXP)
+                {
+                lnPrior += log (mp->wnvarExp) - mp->wnvarExp * st[0];
+                }
+            else if (p->paramId == WNVAR_UNI)
+                {
+                lnPrior += log(1.0) - log (mp->wnvarUni[1] - mp->wnvarUni[0]);
+                }
+            }
+        else if (p->paramType == P_WNBRANCHRATES)
+            {
+            /* branch rates of white noise model */
+            t = GetTree (p, chain, state[chain]);
+            if (p->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (m->wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (m->mixedvar, chain, state[chain]);
+            for (i=0; i<t->nNodes-2; i++)
+                {
+                branch = t->allDownPass[i];
+                if (branch->length > 0.0)  // not ancestral fossil
+                    lnPrior += LnProbGamma (branch->length/var, branch->length/var, st[branch->index]);
+                }
+            }
         else if (p->paramType == P_ILNVAR)
             {
             /* variance of rates in independent lognormal rates model */
@@ -8308,16 +8337,14 @@ MrBFlt LogPrior (int chain)
             /* branch rates of independent branch rate model */
             t = GetTree (p, chain, state[chain]);
             if (p->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (m->igrvar, chain, state[chain]);
+                var = *GetParamVals (m->igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (m->mixedvar, chain, state[chain]);
+                var = *GetParamVals (m->mixedvar, chain, state[chain]);
             for (i=0; i<t->nNodes-2; i++)
                 {
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbGamma (1.0/igrvar, 1.0/igrvar, st[branch->index]);
-                assert (fabs(sst[branch->index] - branch->length * st[branch->index]) < BRLENS_MIN);
-                assert (fabs(branch->length - (branch->anc->nodeDepth - branch->nodeDepth)) < BRLENS_MIN);
+                    lnPrior += LnProbGamma (1.0/var, 1.0/var, st[branch->index]);
                 }
             }
         else if (p->paramType == P_MIXEDVAR)
@@ -11399,7 +11426,8 @@ if (proc_id == 0)
                         if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
                         }
                     if (nErrors == 0 && (subParm->paramType == P_CPPEVENTS || subParm->paramType == P_TK02BRANCHRATES ||
-                                         subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES || subParm->paramType == P_MIXEDBRCHRATES))
+                                         subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES ||
+                                         subParm->paramType == P_MIXEDBRCHRATES || subParm->paramType == P_WNBRANCHRATES))
                         {
                         if (subParm->paramType == P_MIXEDBRCHRATES)
                             {
@@ -15122,9 +15150,9 @@ int RedistributeParamVals (void)
                         tree = GetTree (p, i, 0);
                         UpdateTK02EvolLengths (p, tree, i);
                         }
-                    else if (p->paramType == P_ILNBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_ILN) ||
-                             p->paramType == P_IGRBRANCHRATES || (p->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(p, i, 0) == RCL_IGR))
-                        {
+                    else if (p->paramType == P_ILNBRANCHRATES || p->paramType == P_IGRBRANCHRATES ||
+                             p->paramType == P_MIXEDBRCHRATES || p->paramType == P_WNBRANCHRATES)
+                        {    // *GetParamIntVals(p, i, 0) == RCL_IGR or RCL_ILN
                         tree = GetTree(p, i, 0);
                         UpdateIndBrachLengths (p, tree, i);
                         }                        

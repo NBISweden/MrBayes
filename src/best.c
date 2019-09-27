@@ -1424,7 +1424,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     int         i, *nEvents;
     MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth,
                 oldLeftLength=0.0, oldRightLength=0.0, clockRate,
-                oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
+                oldPLength=0.0, lambda=0.0, nu=0.0, var=0.0,
                 *brlens=NULL, *rate=NULL, *popSizePtr;
     TreeNode    *p, *q;
     ModelInfo   *m;
@@ -1622,6 +1622,38 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 brlens[p->index] = p->length * (rate[p->index]+rate[p->anc->index])/2.0;
                 }
             }
+        else if (subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            if (p->left != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength/var, oldLeftLength/var, rate[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (oldRightLength/var, oldRightLength/var, rate[p->right->index]);
+                (*lnPriorRatio) += LnProbGamma (p->left->length/var, p->left->length/var, rate[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (p->right->length/var, p->right->length/var, rate[p->right->index]);
+                }
+            if (p->anc->anc != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/var, oldPLength/var, rate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length /var, p->length /var, rate[p->index]);
+                }
+
+            if (p->left != NULL)
+                {
+                brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = rate[p->right->index] * p->right->length;
+                }
+            if (p->anc->anc != NULL)
+                {
+                brlens[p->index] = rate[p->index] * p->length;
+                }
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -1646,9 +1678,9 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             

@@ -4906,8 +4906,9 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (subParm->paramId == ILNBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_ILN))
-            {
+        else if (subParm->paramId == ILNBRANCHRATES || subParm->paramId == IGRBRANCHRATES ||
+                 subParm->paramId == MIXEDBRCHRATES || subParm->paramId == WNBRANCHRATES)
+            {    // *GetParamIntVals(subParm, chain, state) == RCL_ILN or RCL_IGR
             for (j=0; j<tree->nNodes-2; j++)
                 {
                 p = tree->allDownPass[j];
@@ -4915,21 +4916,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 r = GetParamVals(subParm, chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
-                    printf ("%s   Iln relaxed clock mismatch in branch %d\n", spacer, p->index);
-                    return NO;
-                    }
-                }
-            }
-        else if (subParm->paramId == IGRBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_IGR))
-            {
-            for (j=0; j<tree->nNodes-2; j++)
-                {
-                p = tree->allDownPass[j];
-                b = GetParamSubVals(subParm, chain, state)[p->index];
-                r = GetParamVals(subParm, chain, state)[p->index];
-                if (fabs(p->length * r - b) > 0.000001)
-                    {
-                    printf ("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    printf ("%s   Independent relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }
