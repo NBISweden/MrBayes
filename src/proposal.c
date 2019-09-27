@@ -5600,12 +5600,12 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = IGRVAR_MIN;
-    maxVar = IGRVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->igrvarPr,"Uniform"))
         {
-        minVar = (mp->igrvarUni[0] < IGRVAR_MIN) ? IGRVAR_MIN : mp->igrvarUni[0];
-        maxVar = (mp->igrvarUni[1] > IGRVAR_MAX) ? IGRVAR_MAX : mp->igrvarUni[1];
+        minVar = (mp->igrvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->igrvarUni[0];
+        maxVar = (mp->igrvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->igrvarUni[1];
         }
     
     /* get the igr variance */
@@ -5642,7 +5642,7 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             }
         }
 
-    /* take prior on Igrvar into account */
+    /* take prior on IGRvar into account */
     if (!strcmp(mp->igrvarPr, "Exponential"))
         (*lnPriorRatio) += mp->igrvarExp * (oldVar - newVar);
     
@@ -5752,12 +5752,12 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = ILNVAR_MIN;
-    maxVar = ILNVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->ilnvarPr,"Uniform"))
         {
-        minVar = (mp->ilnvarUni[0] < ILNVAR_MIN) ? ILNVAR_MIN : mp->ilnvarUni[0];
-        maxVar = (mp->ilnvarUni[1] > ILNVAR_MAX) ? ILNVAR_MAX : mp->ilnvarUni[1];
+        minVar = (mp->ilnvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->ilnvarUni[0];
+        maxVar = (mp->ilnvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->ilnvarUni[1];
         }
     
     /* get the iln variance */
@@ -5794,7 +5794,7 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             }
         }
 
-    /* take prior on Ilnvar into account */
+    /* take prior on ILNvar into account */
     if (!strcmp(mp->ilnvarPr, "Exponential"))
         (*lnPriorRatio) += mp->ilnvarExp * (oldVar - newVar);
     
@@ -5911,12 +5911,12 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = MIXEDVAR_MIN;
-    maxVar = MIXEDVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->mixedvarPr,"Uniform"))
         {
-        minVar = (mp->mixedvarUni[0] < MIXEDVAR_MIN) ? MIXEDVAR_MIN : mp->mixedvarUni[0];
-        maxVar = (mp->mixedvarUni[1] > MIXEDVAR_MAX) ? MIXEDVAR_MAX : mp->mixedvarUni[1];
+        minVar = (mp->mixedvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->mixedvarUni[0];
+        maxVar = (mp->mixedvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->mixedvarUni[1];
         }
     
     /* get the variance */
@@ -6014,7 +6014,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* move the var parameter */
         igrvar = (*mxvar);
         ilnvar  = igrvar * ratio;
-        if (ilnvar < ILNVAR_MIN || ilnvar > ILNVAR_MAX)
+        if (ilnvar < INDRVAR_MIN || ilnvar > INDRVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);
@@ -6049,7 +6049,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* move the var parameter */
         ilnvar  = (*mxvar);
         igrvar = ilnvar / ratio;
-        if (igrvar < IGRVAR_MIN || igrvar > IGRVAR_MAX)
+        if (igrvar < INDRVAR_MIN || igrvar > INDRVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);

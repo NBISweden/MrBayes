@@ -11654,7 +11654,7 @@ int GetUserHelp (char *helpTkn)
                 }
             MrBayesPrint ("                    Exponential/Gamma            \n");
 
-            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/WN/Igr/Iln   %s\n", mp->clockVarPr);
+            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/WN/IGR/ILN   %s\n", mp->clockVarPr);
 
             MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
             if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -11687,7 +11687,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->wnvarUni[0], mp->wnvarUni[1]);
                 }
 
-            MrBayesPrint ("   Igrvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
+            MrBayesPrint ("   IGRvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
             if (!strcmp(mp->igrvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->igrvarFix);
             else if (!strcmp(mp->igrvarPr,"Exponential"))
@@ -11698,7 +11698,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
                 }
             
-            MrBayesPrint ("   Ilnvarpr         Fixed/Exponential/Uniform    %s", mp->ilnvarPr);
+            MrBayesPrint ("   ILNvarpr         Fixed/Exponential/Uniform    %s", mp->ilnvarPr);
             if (!strcmp(mp->ilnvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->ilnvarFix);
             else if (!strcmp(mp->ilnvarPr,"Exponential"))
@@ -11709,7 +11709,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->ilnvarUni[0], mp->ilnvarUni[1]);
                 }
             
-            /*  MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
+            MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
             if (!strcmp(mp->mixedvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);
             else if (!strcmp(mp->mixedvarPr,"Exponential"))
@@ -11718,7 +11718,7 @@ int GetUserHelp (char *helpTkn)
                 {
                 assert (!strcmp(mp->mixedvarPr,"Uniform"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->mixedvarUni[0], mp->mixedvarUni[1]);
-                }  */
+                }
 
             MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
             if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -12743,12 +12743,12 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
         MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
-        MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
+        MrBayesPrint ("      IGRvar          -- Variance increase in IGR relaxed clock model            \n");
+        MrBayesPrint ("      ILNvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
-    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
+    //  MrBayesPrint ("      IGRbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      ILNbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12793,12 +12793,12 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
         MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
-        MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Ilnvar          -- Variance increase in ILN relaxed clock model            \n");
+        MrBayesPrint ("      IGRvar          -- Variance increase in IGR relaxed clock model            \n");
+        MrBayesPrint ("      ILNvar          -- Variance increase in ILN relaxed clock model            \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
     //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
-    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Ilnbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
+    //  MrBayesPrint ("      IGRbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      ILNbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14607,7 +14607,7 @@ void SetUpParms (void)
     PARAM (182, "Swapseed",       DoSetParm,         "\0");
     PARAM (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
     PARAM (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|WN|Igr|Iln|Mixed|\0");
+    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|WN|IGR|ILN|Mixed|\0");
     PARAM (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
     PARAM (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
     PARAM (188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -14640,7 +14640,7 @@ void SetUpParms (void)
     PARAM (215, "Tunefreq",       DoMcmcParm,        "\0");
     PARAM (216, "Scientific",     DoSetParm,         "Yes|No|\0");
     PARAM (217, "Siteomega",      DoReportParm,      "Yes|No|\0");
-    PARAM (218, "Igrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (218, "IGRvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (219, "Symbols",        DoFormatParm,      "\0");
     PARAM (220, "Equate",         DoFormatParm,      "\0");
     PARAM (221, "Relburnin",      DoCompareTreeParm, "Yes|No|\0");
@@ -14664,8 +14664,8 @@ void SetUpParms (void)
     PARAM (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
     PARAM (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
-    PARAM (242, "Igrvar",         DoLinkParm,        "\0");
-    PARAM (243, "Igrbranchrates", DoLinkParm,        "\0");
+    PARAM (242, "IGRvar",         DoLinkParm,        "\0");
+    PARAM (243, "IGRbranchrates", DoLinkParm,        "\0");
     PARAM (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
     PARAM (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
@@ -14676,9 +14676,9 @@ void SetUpParms (void)
     PARAM (251, "WNvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (252, "WNvar",          DoLinkParm,        "\0");
     PARAM (253, "WNbranchrates",  DoLinkParm,        "\0");
-    PARAM (254, "Ilnvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (255, "Ilnvar",         DoLinkParm,        "\0");
-    PARAM (256, "Ilnbranchlens",  DoLinkParm,        "\0");
+    PARAM (254, "ILNvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (255, "ILNvar",         DoLinkParm,        "\0");
+    PARAM (256, "ILNbranchlens",  DoLinkParm,        "\0");
     PARAM (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
     PARAM (258, "Filename",       DoSumSsParm,       "\0");
     PARAM (259, "Burnin",         DoSumSsParm,       "\0");

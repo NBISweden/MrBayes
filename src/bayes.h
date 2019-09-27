@@ -354,12 +354,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define TK02VAR_MAX             10000.0f
 #define WNVAR_MIN               0.000001f
 #define WNVAR_MAX               10000.0f
-#define IGRVAR_MIN              0.000001f
-#define IGRVAR_MAX              10000.0f
-#define ILNVAR_MIN              0.000001f
-#define ILNVAR_MAX              10000.0f
-#define MIXEDVAR_MIN            0.000001f
-#define MIXEDVAR_MAX            10000.0f
+#define INDRVAR_MIN             0.000001f
+#define INDRVAR_MAX             10000.0f
 #define OMEGA_MIN               0.001f
 #define OMEGA_MAX               1000.0f
 
@@ -1149,7 +1145,7 @@ typedef struct model
     MrBFlt      tk02varFix;
     MrBFlt      tk02varUni[2];
     MrBFlt      tk02varExp;
-    char        wnvarPr[100];         /* prior on WN gamma distribution variance        */
+    char        wnvarPr[100];          /* prior on WN gamma distribution variance       */
     MrBFlt      wnvarFix;
     MrBFlt      wnvarUni[2];
     MrBFlt      wnvarExp;

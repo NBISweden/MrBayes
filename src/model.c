@@ -2925,22 +2925,22 @@ int DoLinkParm (char *parmName, char *tkn)
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_WNBRANCHRATES][i] = tempLinkUnlinkVec[i];
             }
-        else if (!strcmp(parmName, "Igrvar"))
+        else if (!strcmp(parmName, "IGRvar"))
             {
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_IGRVAR][i] = tempLinkUnlinkVec[i];
             }
-        else if (!strcmp(parmName, "Igrbranchrates"))
+        else if (!strcmp(parmName, "IGRbranchrates"))
             {
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_IGRBRANCHRATES][i] = tempLinkUnlinkVec[i];
             }
-        else if (!strcmp(parmName, "Ilnvar"))
+        else if (!strcmp(parmName, "ILNvar"))
             {
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_ILNVAR][i] = tempLinkUnlinkVec[i];
             }
-        else if (!strcmp(parmName, "Ilnbranchrates"))
+        else if (!strcmp(parmName, "ILNbranchrates"))
             {
             for (i=0; i<numCurrentDivisions; i++)
                 tempLinkUnlink[P_ILNBRANCHRATES][i] = tempLinkUnlinkVec[i];
@@ -8857,7 +8857,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 return (ERROR);
             }
         /* set prior for variance of lognormal of independent rates (ilnvarPr) ***********************/
-        else if (!strcmp(parmName, "Ilnvarpr"))
+        else if (!strcmp(parmName, "ILNvarpr"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
@@ -8874,7 +8874,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid Ilnvarpr argument\n", spacer);
+                    MrBayesPrint ("%s   Invalid ILNvarpr argument\n", spacer);
                     return (ERROR);
                     }
                 expecting  = Expecting(LEFTPAR);
@@ -8906,9 +8906,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     return (ERROR);
                                     }
                                 if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Ilnvarpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].ilnvarUni[0], modelParams[i].ilnvarUni[1]);
+                                    MrBayesPrint ("%s   Setting ILNvarpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].ilnvarUni[0], modelParams[i].ilnvarUni[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Ilnvarpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarUni[0], modelParams[i].ilnvarUni[1], i+1);
+                                    MrBayesPrint ("%s   Setting ILNvarpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarUni[0], modelParams[i].ilnvarUni[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -8917,24 +8917,24 @@ int DoPrsetParm (char *parmName, char *tkn)
                             sscanf (tkn, "%lf", &tempD);
                             modelParams[i].ilnvarExp = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Ilnvarpr to Exponential(%1.2lf)\n", spacer, modelParams[i].ilnvarExp);
+                                MrBayesPrint ("%s   Setting ILNvarpr to Exponential(%1.2lf)\n", spacer, modelParams[i].ilnvarExp);
                             else
-                                MrBayesPrint ("%s   Setting Ilnvarpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarExp, i+1);
+                                MrBayesPrint ("%s   Setting ILNvarpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarExp, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         else if (!strcmp(modelParams[i].ilnvarPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < ILNVAR_MIN || tempD > ILNVAR_MAX)
+                            if (tempD < INDRVAR_MIN || tempD > INDRVAR_MAX)
                                 {
-                                MrBayesPrint ("%s   Ratevar (nu) must be in the range %f - %f\n", spacer, ILNVAR_MIN, ILNVAR_MAX);
+                                MrBayesPrint ("%s   ILNvar must be in the range %f - %f\n", spacer, INDRVAR_MIN, INDRVAR_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].ilnvarFix = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Ilnvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].ilnvarFix);
+                                MrBayesPrint ("%s   Setting ILNvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].ilnvarFix);
                             else
-                                MrBayesPrint ("%s   Setting Ilnvarpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarFix, i+1);
+                                MrBayesPrint ("%s   Setting ILNvarpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].ilnvarFix, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         }
@@ -8952,7 +8952,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 return (ERROR);
             }
         /* set prior for variance of independent branch rate gamma distribution (igrvarPr) ***********************/
-        else if (!strcmp(parmName, "Igrvarpr"))
+        else if (!strcmp(parmName, "IGRvarpr"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
@@ -8969,7 +8969,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   Invalid Igrvarpr argument\n", spacer);
+                    MrBayesPrint ("%s   Invalid IGRvarpr argument\n", spacer);
                     return (ERROR);
                     }
                 expecting  = Expecting(LEFTPAR);
@@ -9001,9 +9001,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     return (ERROR);
                                     }
                                 if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Igrvarpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].igrvarUni[0], modelParams[i].igrvarUni[1]);
+                                    MrBayesPrint ("%s   Setting IGRvarpr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].igrvarUni[0], modelParams[i].igrvarUni[1]);
                                 else
-                                    MrBayesPrint ("%s   Setting Igrvarpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarUni[0], modelParams[i].igrvarUni[1], i+1);
+                                    MrBayesPrint ("%s   Setting IGRvarpr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarUni[0], modelParams[i].igrvarUni[1], i+1);
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
@@ -9012,24 +9012,24 @@ int DoPrsetParm (char *parmName, char *tkn)
                             sscanf (tkn, "%lf", &tempD);
                             modelParams[i].igrvarExp = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Igrvarpr to Exponential(%1.2lf)\n", spacer, modelParams[i].igrvarExp);
+                                MrBayesPrint ("%s   Setting IGRvarpr to Exponential(%1.2lf)\n", spacer, modelParams[i].igrvarExp);
                             else
-                                MrBayesPrint ("%s   Setting Igrvarpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarExp, i+1);
+                                MrBayesPrint ("%s   Setting IGRvarpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarExp, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         else if (!strcmp(modelParams[i].igrvarPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < IGRVAR_MIN || tempD > IGRVAR_MAX)
+                            if (tempD < INDRVAR_MIN || tempD > INDRVAR_MAX)
                                 {
-                                MrBayesPrint ("%s   Igrvar must be in the range %f - %f\n", spacer, IGRVAR_MIN, IGRVAR_MAX);
+                                MrBayesPrint ("%s   IGRvar must be in the range %f - %f\n", spacer, INDRVAR_MIN, INDRVAR_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].igrvarFix = tempD;
                             if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Igrvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].igrvarFix);
+                                MrBayesPrint ("%s   Setting IGRvarpr to Fixed(%1.2lf)\n", spacer, modelParams[i].igrvarFix);
                             else
-                                MrBayesPrint ("%s   Setting Igrvarpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarFix, i+1);
+                                MrBayesPrint ("%s   Setting IGRvarpr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].igrvarFix, i+1);
                             expecting  = Expecting(RIGHTPAR);
                             }
                         }
@@ -9115,9 +9115,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].mixedvarPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < ILNVAR_MIN || tempD > ILNVAR_MAX || tempD < IGRVAR_MIN || tempD > IGRVAR_MAX)
+                            if (tempD < INDRVAR_MIN || tempD > INDRVAR_MAX)
                                 {
-                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, IGRVAR_MIN, IGRVAR_MAX);
+                                MrBayesPrint ("%s   Mixedvar must be in the range %f - %f\n", spacer, INDRVAR_MIN, INDRVAR_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].mixedvarFix = tempD;
@@ -15257,9 +15257,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic2 = NO;
 
         /* Check that the clock rate prior is igr for both partitions */
-        if (strcmp(modelParams[part1].clockVarPr, "Igr"))
+        if (strcmp(modelParams[part1].clockVarPr, "IGR"))
             *isApplic1 = NO;
-        if (strcmp(modelParams[part2].clockVarPr, "Igr"))
+        if (strcmp(modelParams[part2].clockVarPr, "IGR"))
             *isApplic2 = NO;
         
         /* Now, check that the prior on igr shape is the same. */
@@ -15305,9 +15305,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic2 = NO;
 
         /* Check that the clock rate prior is igr for both partitions */
-        if (strcmp(modelParams[part1].clockVarPr, "Igr"))
+        if (strcmp(modelParams[part1].clockVarPr, "IGR"))
             *isApplic1 = NO;
-        if (strcmp(modelParams[part2].clockVarPr, "Igr"))
+        if (strcmp(modelParams[part2].clockVarPr, "IGR"))
             *isApplic2 = NO;
         
         /* Now, check that the igr shape parameter is the same */
@@ -15344,9 +15344,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic2 = NO;
 
         /* Check that the clock rate prior is iln for both partitions */
-        if (strcmp(modelParams[part1].clockVarPr, "Iln"))
+        if (strcmp(modelParams[part1].clockVarPr, "ILN"))
             *isApplic1 = NO;
-        if (strcmp(modelParams[part2].clockVarPr, "Iln"))
+        if (strcmp(modelParams[part2].clockVarPr, "ILN"))
             *isApplic2 = NO;
         
         /* Now, check that the prior on iln variance is the same. */
@@ -15392,9 +15392,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic2 = NO;
 
         /* Check that the clock rate prior is iln for both partitions */
-        if (strcmp(modelParams[part1].clockVarPr, "Iln"))
+        if (strcmp(modelParams[part1].clockVarPr, "ILN"))
             *isApplic1 = NO;
-        if (strcmp(modelParams[part2].clockVarPr, "Iln"))
+        if (strcmp(modelParams[part2].clockVarPr, "ILN"))
             *isApplic2 = NO;
         
         /* Now, check that the iln shape parameter is the same */
@@ -20267,7 +20267,7 @@ int SetModelParams (void)
                     modelSettings[i].igrvar = p;
 
             p->paramTypeName = "Variance of IGR model branch rates";
-            SafeStrcat(&p->name, "Igrvar");
+            SafeStrcat(&p->name, "IGRvar");
             SafeStrcat(&p->name, partString);
             
             /* find the parameter x prior type */
@@ -20321,7 +20321,7 @@ int SetModelParams (void)
                     modelSettings[i].ilnvar = p;
 
             p->paramTypeName = "Variance of ILN model branch rates";
-            SafeStrcat(&p->name, "Ilnvar");
+            SafeStrcat(&p->name, "ILNvar");
             SafeStrcat(&p->name, partString);
             
             /* find the parameter x prior type */
@@ -23897,19 +23897,19 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             }
         else if (j == P_IGRVAR)
             {
-            MrBayesPrint ("%s      Igrvar            ", spacer);
+            MrBayesPrint ("%s      IGRvar            ", spacer);
             }
         else if (j == P_IGRBRANCHRATES)
             {
-            MrBayesPrint ("%s      Igrbranchrates    ", spacer);
+            MrBayesPrint ("%s      IGRbranchrates    ", spacer);
             }
         else if (j == P_ILNVAR)
             {
-            MrBayesPrint ("%s      Ilnvar            ", spacer);
+            MrBayesPrint ("%s      ILNvar            ", spacer);
             }
         else if (j == P_ILNBRANCHRATES)
             {
-            MrBayesPrint ("%s      Ilnbranchrates    ", spacer);
+            MrBayesPrint ("%s      ILNbranchrates    ", spacer);
             }
         else if (j == P_MIXEDVAR)
             {
@@ -24536,9 +24536,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 MrBayesPrint ("%s                         The clock rate varies according to a autocorrelated lognromal model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"WN"))
                 MrBayesPrint ("%s                         The clock rate varies according to a white noise model\n", spacer);
-            else if (!strcmp(mp->clockVarPr,"Igr"))
+            else if (!strcmp(mp->clockVarPr,"IGR"))
                 MrBayesPrint ("%s                         The clock rate varies according to an independent gamma model\n", spacer);
-            else if (!strcmp(mp->clockVarPr,"Iln"))
+            else if (!strcmp(mp->clockVarPr,"ILN"))
                 MrBayesPrint ("%s                         The clock rate varies according to an independent lognromal model\n", spacer);
             else /* if (!strcmp(mp->clockVarPr,"Mixed")) */
                 MrBayesPrint ("%s                         The clock rate varies according to mixed IGR and ILN models\n", spacer);
