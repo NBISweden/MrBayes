@@ -21241,32 +21241,6 @@ void SetUpMoveTypes (void)
     mt->level =STANDARD_USER;
     mt->isApplicable = &IsApplicable_AncestralFossil;
 
-    /* Move_ExtFossilSPRClock */
-    mt = &moveTypes[i++];
-    mt->name = "Extending fossil SPR for clock trees";
-    mt->shortName = "ExtFossilSprClock";
-    mt->subParams = YES;
-    mt->tuningName[0] = "Extension probability";
-    mt->shortTuningName[0] = "p_ext";
-    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
-    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
-    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
-    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
-    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
-    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
-    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
-    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
-    mt->nApplicable = 8;
-    mt->moveFxn = &Move_ExtFossilSPRClock;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.5; /* extension probability */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 0.99999;
-    mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
-    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
-    
     /* Move_ExtSPR */
     mt = &moveTypes[i++];
     mt->name = "Extending SPR";
@@ -21343,6 +21317,32 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
+    /* Move_ExtSPRClock_Fossil */
+    mt = &moveTypes[i++];
+    mt->name = "Extending fossil SPR for clock trees";
+    mt->shortName = "ExtFossilSprClock";
+    mt->subParams = YES;
+    mt->tuningName[0] = "Extension probability";
+    mt->shortTuningName[0] = "p_ext";
+    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
+    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
+    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
+    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
+    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
+    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
+    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
+    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
+    mt->nApplicable = 8;
+    mt->moveFxn = &Move_ExtSPRClock_Fossil;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.5; /* extension probability */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 0.99999;
+    mt->parsimonyBased = NO;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
+    
     /* Move_ExtSS */
     mt = &moveTypes[i++];
     mt->name = "Extending subtree swapper";
@@ -21391,7 +21391,7 @@ void SetUpMoveTypes (void)
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 0.99999;
     mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
+    mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
     /* Move_ExtTBR */
@@ -21555,7 +21555,7 @@ void SetUpMoveTypes (void)
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
+    mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
     /* Move_MixtureRates */
@@ -21640,7 +21640,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_NNI;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 0;
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
@@ -21959,32 +21959,6 @@ void SetUpMoveTypes (void)
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
-    /* Move_ParsFossilSPRClock */
-    mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased fossil SPR for clock trees";
-    mt->shortName = "ParsFossilSPRClock";
-    mt->subParams = YES;
-    mt->tuningName[0] = "parsimony warp factor";
-    mt->shortTuningName[0] = "warp";
-    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
-    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
-    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
-    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
-    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
-    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
-    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
-    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
-    mt->nApplicable = 8;
-    mt->moveFxn = &Move_ParsFossilSPRClock;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.1;  /* warp */
-    mt->minimum[0] = 0.0;
-    mt->maximum[0] = 1.0;
-    mt->parsimonyBased = YES;
-    mt->level = STANDARD_USER;
-    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
-    
     /* Move_ParsSPR asym */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased SPR";
@@ -22002,7 +21976,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsSPR;
-    mt->relProposalProb = 5.0;
+    mt->relProposalProb = 0.0;
     mt->numTuningParams = 4;
     mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
@@ -22029,35 +22003,30 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[0] = "warp";
     mt->tuningName[1] = "reweighting probability";
     mt->shortTuningName[1] = "r";
-    mt->tuningName[2] = "typical branch length";
-    mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
-    mt->tuningName[4] = "moving distance";
-    mt->shortTuningName[4] = "d";
+    mt->tuningName[2] = "multiplier tuning parameter";
+    mt->shortTuningName[2] = "lambda";
+    mt->tuningName[3] = "moving distance";
+    mt->shortTuningName[3] = "d";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsSPR1;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 5;
+    mt->relProposalProb = 3.0;
+    mt->numTuningParams = 4;
     mt->tuningParam[0] = 0.5;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
-    mt->tuningParam[2] = 0.03;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
-    mt->tuningParam[4] = 10.0;             /* distance to move picked branch */
+    mt->tuningParam[2] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[3] = 10.0;             /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 5.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
-    mt->minimum[2] = 0.0001;
-    mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
-    mt->minimum[4] = 2.0;
-    mt->maximum[4] = 1000.0;
+    mt->minimum[2] = 2.0 * log (0.001);
+    mt->maximum[2] = 2.0 * log (1000.);
+    mt->minimum[3] = 2.0;
+    mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
-    mt->level = DEVELOPER;
+    mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ParsSPR2 S/N */
@@ -22126,6 +22095,32 @@ void SetUpMoveTypes (void)
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
 
+    /* Move_ParsSPRClock_Fossil */
+    mt = &moveTypes[i++];
+    mt->name = "Parsimony-biased fossil SPR for clock trees";
+    mt->shortName = "ParsFossilSPRClock";
+    mt->subParams = YES;
+    mt->tuningName[0] = "parsimony warp factor";
+    mt->shortTuningName[0] = "warp";
+    mt->applicableTo[0] = TOPOLOGY_CL_UNIFORM;
+    mt->applicableTo[1] = TOPOLOGY_CCL_UNIFORM;
+    mt->applicableTo[2] = TOPOLOGY_CL_CONSTRAINED;
+    mt->applicableTo[3] = TOPOLOGY_CCL_CONSTRAINED;
+    mt->applicableTo[4] = TOPOLOGY_RCL_UNIFORM;
+    mt->applicableTo[5] = TOPOLOGY_RCL_CONSTRAINED;
+    mt->applicableTo[6] = TOPOLOGY_RCCL_UNIFORM;
+    mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
+    mt->nApplicable = 8;
+    mt->moveFxn = &Move_ParsSPRClock_Fossil;
+    mt->relProposalProb = 0.0;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.1;  /* warp */
+    mt->minimum[0] = 0.0;
+    mt->maximum[0] = 1.0;
+    mt->parsimonyBased = YES;
+    mt->level = DEVELOPER;
+    mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
+    
     /* Move_ParsTBR1 e^{-S} */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased TBR variant 1";
@@ -22135,35 +22130,30 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[0] = "warp";
     mt->tuningName[1] = "reweighting probability";
     mt->shortTuningName[1] = "r";
-    mt->tuningName[2] = "typical branch length";
-    mt->shortTuningName[2] = "v_t";
-    mt->tuningName[3] = "multiplier tuning parameter";
-    mt->shortTuningName[3] = "lambda";
-    mt->tuningName[4] = "moving distance";
-    mt->shortTuningName[4] = "d";
+    mt->tuningName[2] = "multiplier tuning parameter";
+    mt->shortTuningName[2] = "lambda";
+    mt->tuningName[3] = "moving distance";
+    mt->shortTuningName[3] = "d";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsTBR1;
-    mt->relProposalProb = 0.0;
-    mt->numTuningParams = 5;
+    mt->relProposalProb = 3.0;
+    mt->numTuningParams = 4;
     mt->tuningParam[0] = 0.5;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
-    mt->tuningParam[2] = 0.05;             /* typical branch length */
-    mt->tuningParam[3] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
-    mt->tuningParam[4] = 5.0;              /* distance to move picked branch */
+    mt->tuningParam[2] = 2.0 * log (1.05); /* multiplier tuning parameter lambda */
+    mt->tuningParam[3] = 5.0;              /* distance to move picked branch */
     mt->minimum[0] = 0.0;
     mt->maximum[0] = 5.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
-    mt->minimum[2] = 0.0001;
-    mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
-    mt->minimum[4] = 2.0;
-    mt->maximum[4] = 1000.0;
+    mt->minimum[2] = 2.0 * log (0.001);
+    mt->maximum[2] = 2.0 * log (1000.);
+    mt->minimum[3] = 2.0;
+    mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
-    mt->level = DEVELOPER;
+    mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FiveTaxaOrMore;
 
     /* Move_ParsTBR2 S/N */
