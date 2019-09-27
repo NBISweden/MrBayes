@@ -21294,7 +21294,7 @@ void SetUpMoveTypes (void)
     /* Move_ExtSPRClock */
     mt = &moveTypes[i++];
     mt->name = "Extending SPR for clock trees";
-    mt->shortName = "ExtSprClock";
+    mt->shortName = "ExtSPRClock";
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
@@ -21320,7 +21320,7 @@ void SetUpMoveTypes (void)
     /* Move_ExtSPRClock_Fossil */
     mt = &moveTypes[i++];
     mt->name = "Extending fossil SPR for clock trees";
-    mt->shortName = "ExtFossilSprClock";
+    mt->shortName = "ExtSPRClockFossil";
     mt->subParams = YES;
     mt->tuningName[0] = "Extension probability";
     mt->shortTuningName[0] = "p_ext";
@@ -22098,7 +22098,7 @@ void SetUpMoveTypes (void)
     /* Move_ParsSPRClock_Fossil */
     mt = &moveTypes[i++];
     mt->name = "Parsimony-biased fossil SPR for clock trees";
-    mt->shortName = "ParsFossilSPRClock";
+    mt->shortName = "ParsSPRClockFossil";
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
     mt->shortTuningName[0] = "warp";
