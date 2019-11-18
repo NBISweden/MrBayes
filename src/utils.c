@@ -4916,7 +4916,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 r = GetParamVals(subParm, chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
-                    printf ("%s   Independent relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    printf ("%s   Independent/uncorrelated relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }

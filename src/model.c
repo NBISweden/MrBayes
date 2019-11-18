@@ -24523,13 +24523,13 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else if (!strcmp(mp->clockVarPr,"Cpp"))
                 MrBayesPrint ("%s                         The clock rate varies according to a CPP model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"TK02"))
-                MrBayesPrint ("%s                         The clock rate varies according to a autocorrelated lognromal model\n", spacer);
+                MrBayesPrint ("%s                         The clock rate varies according to a autocorrelated lognormal model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"WN"))
                 MrBayesPrint ("%s                         The clock rate varies according to a white noise model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"IGR"))
                 MrBayesPrint ("%s                         The clock rate varies according to an independent gamma model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"ILN"))
-                MrBayesPrint ("%s                         The clock rate varies according to an independent lognromal model\n", spacer);
+                MrBayesPrint ("%s                         The clock rate varies according to an independent lognormal model\n", spacer);
             else /* if (!strcmp(mp->clockVarPr,"Mixed")) */
                 MrBayesPrint ("%s                         The clock rate varies according to mixed IGR and ILN models\n", spacer);
             }
