@@ -2976,7 +2976,7 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                     {
                     r->bLen [i][runId][n] = t->effectiveBrLen[i][p->index];
                     r->bRate[i][runId][n] = t->effectiveBrLen[i][p->index] / p->length;
-                    if (p->length == 0.0)   r->bRate[i][runId][n] = 1.0;  // deal with zero brl
+                    if (p->length == 0.0)   r->bRate[i][runId][n] = 1.0;  // deal with zero length
                     }
                 }
             if (sumtParams.popSizeSet == YES)
@@ -7542,13 +7542,13 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
             {
             GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
             if (sumtParams.HPD == YES)
-                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%HPD={%lf,%lf}",
+                fprintf (fp, ",brlen%s_mean=%lf,brlen%s_median=%lf,brlen%s_95%%HPD={%lf,%lf}",
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,
                     theStats.upper);
             else
-                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%CredInt={%lf,%lf}",
+                fprintf (fp, ",brlen%s_mean=%lf,brlen%s_median=%lf,brlen%s_95%%CredInt={%lf,%lf}",
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,

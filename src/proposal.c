@@ -611,7 +611,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* change clock rate using multiplier */
     
     int             i, j, k, *nEvents;
-    MrBFlt          oldRate, newRate, factor, lambda, nu, igrvar, *brlens, *rate,
+    MrBFlt          oldRate, newRate, factor, lambda, nu, var, *brlens, *rate,
                     N, newTheta, oldTheta, growth, newLnPrior, oldLnPrior;
     Tree            *t, *oldT;
     TreeNode        *p, *q;
@@ -742,6 +742,29 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                         }
                     }
                 }
+            else if ( subParm->paramType == P_WNBRANCHRATES)
+                {
+                if (subParm->paramType == P_WNBRANCHRATES)
+                    var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+                else
+                    var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                rate = GetParamVals (subParm, chain, state[chain]);
+                brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+                /* prior ratio and update of brlens */
+                for (j = 0; j < t->nNodes-2; j++)
+                    {
+                    p = t->allDownPass[j];
+                    q = oldT->allDownPass[j];
+                    if (p->length > 0.0)  // not ancestral fossil
+                        {
+                        (*lnPriorRatio) -= LnProbGamma (q->length/var, q->length/var, rate[q->index]);
+                        (*lnPriorRatio) += LnProbGamma (p->length/var, p->length/var, rate[p->index]);
+
+                        brlens[p->index] = rate[p->index] * p->length;
+                        }
+                    }
+                }
             else if ( subParm->paramType == P_ILNBRANCHRATES ||
                      (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
                 {
@@ -770,9 +793,9 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                      (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
                 {
                 if (subParm->paramType == P_IGRBRANCHRATES)
-                    igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                    var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
                 else
-                    igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                    var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
                 rate = GetParamVals (subParm, chain, state[chain]);
                 brlens = GetParamSubVals (subParm, chain, state[chain]);
             
@@ -783,8 +806,8 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     q = oldT->allDownPass[j];
                     if (p->length > 0.0)  // not ancestral fossil
                         {
-                        (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[q->index]);
-                        (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
+                        (*lnPriorRatio) -= LnProbGamma (1.0/var, 1.0/var, rate[q->index]);
+                        (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[p->index]);
 
                         brlens[p->index] = rate[p->index] * p->length;
                         }
@@ -1148,7 +1171,7 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, newLength, clockRate, x, oldQLength, oldRLength,
-           *brlens=NULL, nu=0.0, igrvar=0.0, *rate=NULL;
+           *brlens=NULL, nu=0.0, var=0.0, *rate=NULL;
     TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
     ModelParams *mp;
@@ -1326,6 +1349,34 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                 brlens[q->index] = q->length * (rate[q->index]+rate[q->anc->index])/2.0;
                 }
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            /* prior ratio */
+            rate[p->index] = rate[q->index];
+            (*lnPriorRatio) -= LnProbGamma (oldRLength/var, oldRLength/var, rate[r->index]);
+            (*lnPriorRatio) += LnProbGamma (p->length /var, p->length /var, rate[p->index]);
+            (*lnPriorRatio) += LnProbGamma (r->length /var, r->length /var, rate[r->index]);
+            if (q->anc->anc != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldQLength/var, oldQLength/var, rate[q->index]);
+                (*lnPriorRatio) += LnProbGamma (q->length /var, q->length /var, rate[q->index]);
+                }
+            
+            /* update effective evolutionary lengths */
+            brlens[p->index] = rate[p->index] * p->length;
+            brlens[r->index] = rate[r->index] * r->length;
+            if (q->anc->anc != NULL)
+                {
+                brlens[q->index] = rate[q->index] * q->length;
+                }
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -1352,15 +1403,15 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
             /* prior ratio */
             rate[p->index] = rate[q->index];
-            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = rate[p->index] * p->length;
@@ -1393,7 +1444,7 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     
     int    i, j, k, mFossil, kFossil;
     MrBFlt minDepth, maxDepth, clockRate, x, oldPLength, oldQLength, oldRLength,
-           *brlens=NULL, nu=0.0, igrvar=0.0, *rate=NULL;
+           *brlens=NULL, nu=0.0, var=0.0, *rate=NULL;
     TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
     ModelParams *mp;
@@ -1569,6 +1620,32 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                 brlens[q->index] = q->length * (rate[q->index]+rate[q->anc->index])/2.0;
                 }
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            (*lnPriorRatio) -= LnProbGamma (oldPLength/var, oldPLength/var, rate[p->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldRLength/var, oldRLength/var, rate[r->index]);
+            (*lnPriorRatio) += LnProbGamma (r->length /var, r->length /var, rate[r->index]);
+            if (q->anc->anc != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldQLength/var, oldQLength/var, rate[q->index]);
+                (*lnPriorRatio) += LnProbGamma (q->length /var, q->length /var, rate[q->index]);
+                }
+            
+            /* update effective evolutionary lengths */
+            brlens[p->index] = 0.0;  // rate[p->index] = rate[q->index];
+            brlens[r->index] = rate[r->index] * r->length;
+            if (q->anc->anc != NULL)
+                {
+                brlens[q->index] = rate[q->index] * q->length;
+                }
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -1593,13 +1670,13 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
+            (*lnPriorRatio) -= LnProbGamma (1.0/var, 1.0/var, rate[p->index]);
             
             /* update effective evolutionary lengths */
             brlens[p->index] = 0.0;  // rate[p->index] = rate[q->index];
@@ -1814,535 +1891,6 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     return (NO_ERROR);
 }
 
-
-int Move_ExtFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* This move is identical to the Move_ExtSPRClock move except that it only moves fossil subtrees. */
-    
-    int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
-                n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
-    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, nu, igrvar, *rate=NULL,
-                v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda,
-                **position=NULL, **rateMultiplier=NULL, *brlens, minV, clockRate;
-    TreeNode    *p, *a, *b, *u, *v, *oldA;
-    Tree        *t;
-    ModelInfo   *m;
-    Param       *subParm;
-    
-    extensionProb = mvp[0]; /* extension probability */
-    
-    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
-    
-    /* get tree */
-    t = GetTree (param, chain, state[chain]);
-    
-    /* get model params and model info */
-    m = &modelSettings[param->relParts[0]];
-    
-    /* get clock rate */
-    clockRate = *GetParamVals (m->clockRate, chain, state[chain]);
-    
-    /* get min and max branch lengths in relative time and substitution units */
-    minV = BRLENS_MIN;
-    
-#   if defined (DEBUG_ExtSPRClock)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, YES);
-    getchar();
-#   endif
-    
-    /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
-    numMovableNodesOld=0;
-    for (i=0; i<t->nNodes-2; ++i)
-    {
-        p = t->allDownPass[i];
-        if (p->left == NULL)
-        {
-            if (p->calibration == NULL)
-                p->x = NO;
-            else
-            {
-                p->x = YES;
-            }
-        }
-        else
-        {
-            if (p->left->x == YES && p->right->x == YES)
-            {
-                p->x = YES;
-            }
-            else
-                p->x = NO;
-        }
-        a = p->anc->left;
-        b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
-            numMovableNodesOld++;
-    }
-    
-    if (numMovableNodesOld==0)
-        return (NO_ERROR);
-    
-    /* pick a branch */
-    do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
-        a = p->anc->left;
-        b = p->anc->right;
-    }
-    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-           || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
-           || (p->length < TIME_MIN && p->calibration->prior == fixed)
-           || p->x == NO);
-    /* skip constraints, siblings of root (and root); and consider ancestral fossils in fbd tree;
-       skip all nodes that subtend extant terminals */
-    
-    /* set up pointers for nodes around the picked branch */
-    v = p;
-    u = p->anc;
-    if (u->left == v)
-        a = u->right;
-    else
-        a = u->left;
-    b = u->anc;
-    oldA = a;
-    
-    /* record branch length for insertion in back move */
-    if (v->length > 0.0)  /* side branch, not anc fossil */
-    {
-        if (v->nodeDepth > a->nodeDepth)
-            oldBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
-        else
-            oldBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
-    }
-    else  /* ancestral fossil */
-    {
-        y = (b->nodeDepth - minV > v->calibration->max * clockRate) ? (v->calibration->max * clockRate) : (b->nodeDepth - minV);
-        x = (a->nodeDepth + minV < v->calibration->min * clockRate) ? (v->calibration->min * clockRate) : (a->nodeDepth + minV);
-        oldBrlen = y - x;
-    }
-    v1 = a->length;
-    v2 = u->length;
-    v3 = v->length;
-    
-    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
-    for (i=0; i<param->subParams[0]->nSubParams; i++)
-    {
-        subParm = param->subParams[0]->subParams[i];
-        if (subParm->paramType == P_CPPEVENTS)
-        {
-            /* get pointers to CPP events */
-            nEvents = subParm->nEvents[2*chain+state[chain]];
-            position = subParm->position[2*chain+state[chain]];
-            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-            n1 = nEvents[a->index];
-            n2 = nEvents[u->index];
-            n3 = nEvents[v->index];
-            if (n2 > 0)
-            {
-                position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
-                rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
-            }
-            for (j=0; j<n1; j++)
-                position[a->index][j] *= v1 / (v1+v2);
-            for (j=n1; j<n1+n2; j++)
-            {
-                position[a->index][j] = (position[u->index][j-n1] * v2 + v1) / (v1+v2);
-                rateMultiplier[a->index][j] = rateMultiplier[u->index][j-n1];
-            }
-            nEvents[a->index] = n1+n2;
-            nEvents[u->index] = 0;
-            if (n2 > 0)
-            {
-                free (position[u->index]);
-                free (rateMultiplier[u->index]);
-                position[u->index] = rateMultiplier[u->index] = NULL;
-            }
-        }   /* end CPP events parm */
-        else if ( subParm->paramType == P_TK02BRANCHRATES)
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_TK02BRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
-        }   /* end tk02 branch rate parameter */
-        else if ( subParm->paramType == P_ILNBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
-        {
-            if (subParm->paramType == P_ILNBRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            /* adjust prior ratio for old branches */
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
-            
-            /* adjust effective branch lengths and rates */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = rate[a->index] * (a->length + u->length);
-        }
-        else if ( subParm->paramType == P_IGRBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
-        {
-            if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
-            else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            /* adjust prior ratio for old branches */
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
-            
-            /* adjust effective branch lengths and rates */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = rate[a->index] * (a->length + u->length);
-        }
-    }   /* next subparameter */
-    
-    /* cut tree */
-    a->anc = b;
-    if (b->left == u)
-        b->left = a;
-    else
-        b->right = a;
-    a->length += u->length;
-    a->upDateTi = YES;
-    
-    /* determine initial direction of move and whether the reverse move would be stopped by constraints */
-    if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
-    {
-        isStartLocked = YES;
-        directionUp = NO;
-    }
-    else
-    {
-        isStartLocked = NO;
-        if (RandomNumber(seed) < 0.5)
-            directionUp = YES;
-        else
-            directionUp = NO;
-    }
-    
-    /* move around in root subtree */
-    for (nRootNodes=0; nRootNodes==0 || RandomNumber(seed)<extensionProb; nRootNodes++)
-    {
-        if (directionUp == YES)
-        {   /* going up tree */
-            if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
-                break;      /* can't go farther */
-            topologyHasChanged = YES;
-            b = a;
-            if (a->left->length < TIME_MIN)
-                a = a->right;
-            else if (a->right->length < TIME_MIN)
-                a = a->left;
-            else if (RandomNumber(seed) < 0.5)
-                a = a->left;
-            else
-                a = a->right;
-        }
-        else
-        {   /* going down tree */
-            topologyHasChanged = YES;
-            if (RandomNumber(seed) < 0.5 || b->anc->anc == NULL || b->isLocked == YES)
-            {
-                directionUp = YES; /* switch direction */
-                /* find sister of a */
-                if (b->left == a)
-                    a = b->right;
-                else
-                    a = b->left;
-                /* as long as we are moving upwards
-                 the cond likes to update will be
-                 flagged by the last pass from u to the root */
-            }
-            else
-            {   /* continue down */
-                a = b;
-                b = b->anc;
-                a->upDateCl = YES;
-            }
-        }
-    }
-    
-    /* determine whether the forward move was or would have been stopped by constraints */
-    isStopLocked = NO;
-    if (directionUp == YES)
-    {
-        if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
-            isStopLocked = YES;
-    }
-    
-    /* reattach u */
-    if (u->left == v)
-        u->right = a;
-    else
-        u->left = a;
-    a->anc = u;
-    u->anc = b;
-    if (b->left == a)
-        b->left = u;
-    else
-        b->right = u;
-    
-    if (v->length > 0.0)  /* side branch, not anc fossil */
-    {
-        if (a->nodeDepth > v->nodeDepth)
-            newBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
-        else
-            newBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
-    }
-    else  /* ancestral fossil */
-    {
-        y = (b->nodeDepth - minV > v->calibration->max * clockRate) ? (v->calibration->max * clockRate) : (b->nodeDepth - minV);
-        x = (a->nodeDepth + minV < v->calibration->min * clockRate) ? (v->calibration->min * clockRate) : (a->nodeDepth + minV);
-        newBrlen = y - x;
-    }
-    if (newBrlen <= 0.0)
-    {
-        abortMove = YES;
-        return (NO_ERROR);
-    }
-    
-    /* adjust lengths */
-    if (v->length > 0.0)  /* side branch, not anc fossil */
-    {
-        u->nodeDepth = b->nodeDepth - minV - RandomNumber(seed) * newBrlen;
-        v->length = u->nodeDepth - v->nodeDepth;
-    }
-    else  /* ancestral fossil */
-    {
-        u->nodeDepth = y - RandomNumber(seed) * newBrlen;
-        v->nodeDepth = u->nodeDepth;
-        v->age = u->age = u->nodeDepth / clockRate;
-    }
-    u->length = b->nodeDepth - u->nodeDepth;
-    a->length = u->nodeDepth - a->nodeDepth;
-    
-    v3new = v->length;
-    v4 = a->length;
-    v5 = u->length;
-    
-    /* adjust events, prior ratio and proposal ratio for relaxed clock models */
-    for (i=0; i<param->subParams[0]->nSubParams; i++)
-    {
-        subParm = param->subParams[0]->subParams[i];
-        if (subParm->paramType == P_CPPEVENTS)
-        {
-            /* reassign events for CPP */
-            nEvents = subParm->nEvents[2*chain+state[chain]];
-            position = subParm->position[2*chain+state[chain]];
-            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-            for (j=0; j<nEvents[a->index]; j++)
-            {
-                if (position[a->index][j] > v4 / (v4+v5))
-                    break;
-            }
-            n4 = j;
-            n5 = nEvents[a->index] - j;
-            nEvents[u->index] = n5;
-            if (n5 > 0)
-            {
-                position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
-                rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));
-                for (j=n4; j<nEvents[a->index]; j++)
-                {
-                    position[u->index][j-n4] = (position[a->index][j] * (v4+v5) - v4) / v5;
-                    rateMultiplier[u->index][j-n4] = rateMultiplier[a->index][j];
-                }
-                if (n4 > 0)
-                {
-                    position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], n4 * sizeof (MrBFlt));
-                    rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], n4 * sizeof (MrBFlt));
-                    for (j=0; j<n4; j++)
-                        position[a->index][j] *= ((v4+v5) / v4);
-                }
-                else
-                {
-                    free (position[a->index]);
-                    free (rateMultiplier[a->index]);
-                    position[a->index] = rateMultiplier[a->index] = NULL;
-                }
-                nEvents[a->index] = n4;
-            }
-            else
-            {
-                for (j=0; j<nEvents[a->index]; j++)
-                    position[a->index][j] *= ((v4+v5) / v4);
-            }
-            
-            /* adjust proposal ratio for length change in v branch*/
-            (*lnProposalRatio) += n3 * log (v3new / v3);
-            
-            /* adjust prior ratio for length change */
-            lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-            (*lnPriorRatio) += lambda * (v3 - v3new);
-            
-            /* update effective branch lengths */
-            if (UpdateCppEvolLengths (subParm, oldA, chain) == ERROR)
-            {
-                abortMove = YES;
-                return (NO_ERROR);
-            }
-            if (UpdateCppEvolLengths (subParm, u, chain) == ERROR)
-            {
-                abortMove = YES;
-                return (NO_ERROR);
-            }
-        }   /* end cpp events parameter */
-        else if ( subParm->paramType == P_TK02BRANCHRATES)
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_TK02BRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = a->length * (rate[a->index] + rate[a->anc->index]) / 2.0;
-            brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
-            brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
-        }   /* end tk02 branch rate parameter */
-        else if ( subParm->paramType == P_ILNBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_ILNBRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[v->index] = rate[v->index] * v->length;
-            brlens[u->index] = rate[u->index] * u->length;
-            brlens[a->index] = rate[a->index] * a->length;
-        }   /* end iln branch rate parameter */
-        else if ( subParm->paramType == P_IGRBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
-            else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[v->index] = rate[v->index] * v->length;
-            brlens[u->index] = rate[u->index] * u->length;
-            brlens[a->index] = rate[a->index] * a->length;
-        }   /* end igr branch rate parameter */
-    }   /* next subparameter */
-    
-    /* set tiprobs update flags */
-    a->upDateTi = YES;
-    u->upDateTi = YES;
-    v->upDateTi = YES;
-    
-    /* set flags for update of cond likes from u and down to root */
-    p = u;
-    while (p->anc != NULL)
-    {
-        p->upDateCl = YES;
-        p = p->anc;
-    }
-    
-    /* adjust prior ratio for clock tree */
-    if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
-        return (ERROR);
-    (*lnPriorRatio) += x;
-    
-    if (topologyHasChanged == YES)
-    {
-        /* get down pass sequence if tree topology has changed */
-        GetDownPass (t);
-        /* calculate proposal ratio for tree change */
-        (*lnProposalRatio) += log (newBrlen / oldBrlen);
-        if (isStartLocked == NO && isStopLocked == YES)
-            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
-        else if (isStartLocked == YES && isStopLocked == NO)
-            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
-    }
-    
-    /* adjust proposal prob for number movable nodes in new tree */
-    numMovableNodesNew=0;
-    for (i=0; i<t->nNodes-2; ++i)
-    {
-        p = t->allDownPass[i];
-        if (p->left == NULL)
-        {
-            if (p->calibration == NULL)
-                p->x = NO;
-            else
-            {
-                p->x = YES;
-            }
-        }
-        else
-        {
-            if (p->left->x == YES && p->right->x == YES)
-            {
-                p->x = YES;
-            }
-            else
-                p->x = NO;
-        }
-        a = p->anc->left;
-        b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
-            numMovableNodesNew++;
-    }
-    
-    
-    if (numMovableNodesNew!=numMovableNodesOld)
-    {
-        /* FIXME: numMovableNodesNew may be zero (from clang static analyzer) */
-        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
-    }
-    
-#   if defined (DEBUG_ExtSPRClock)
-    ShowNodes (t->root, 2, YES);
-    printf ("After\nProposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
-    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
-    printf ("Has topology changed? %d\n",topologyHasChanged);
-#   endif
-    
-    return (NO_ERROR);
-}
 
 
 int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
@@ -3323,7 +2871,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     
     int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
                 n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
-    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, nu, igrvar, *rate=NULL,
+    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, nu, var, *rate=NULL,
                 v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda,
                 **position=NULL, **rateMultiplier=NULL, *brlens, minV, clockRate;
     TreeNode    *p, *a, *b, *u, *v, *oldA;
@@ -3444,6 +2992,25 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
             }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+
+             /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(v->length/var, v->length/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/var, u->length/var, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+
+            /* adjust effective branch lengths and rates */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -3466,15 +3033,15 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
 
              /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[u->index]);
 
             /* adjust effective branch lengths and rates */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3693,6 +3260,26 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
             brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
             }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/var, u->length/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (v->length/var, v->length/var, rate[v->index]);
+
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[a->index] = rate[a->index] * a->length;
+            }   /* end wn branch rate parameter */
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -3717,13 +3304,13 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             {
             /* adjust prior ratio */
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -3771,6 +3358,575 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     printf ("Has topology changed? %d\n",topologyHasChanged);
 #   endif
 
+    return (NO_ERROR);
+}
+
+
+int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* This move is identical to the Move_ExtSPRClock move except that it only moves fossil subtrees. */
+    
+    int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
+                n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
+    MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, nu, var, *rate=NULL,
+                v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda,
+                **position=NULL, **rateMultiplier=NULL, *brlens, minV, clockRate;
+    TreeNode    *p, *a, *b, *u, *v, *oldA;
+    Tree        *t;
+    ModelInfo   *m;
+    Param       *subParm;
+    
+    extensionProb = mvp[0]; /* extension probability */
+    
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
+    
+    /* get tree */
+    t = GetTree (param, chain, state[chain]);
+    
+    /* get model params and model info */
+    m = &modelSettings[param->relParts[0]];
+    
+    /* get clock rate */
+    clockRate = *GetParamVals (m->clockRate, chain, state[chain]);
+    
+    /* get min and max branch lengths in relative time and substitution units */
+    minV = BRLENS_MIN;
+    
+#   if defined (DEBUG_ExtSPRClock)
+    printf ("Before:\n");
+    ShowNodes (t->root, 2, YES);
+    getchar();
+#   endif
+    
+    /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
+    numMovableNodesOld=0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL)
+            {
+            if (p->calibration == NULL)
+                p->x = NO;
+            else
+                {
+                p->x = YES;
+                }
+            }
+        else
+            {
+            if (p->left->x == YES && p->right->x == YES)
+                {
+                p->x = YES;
+                }
+            else
+                p->x = NO;
+            }
+        a = p->anc->left;
+        b = p->anc->right;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+            numMovableNodesOld++;
+        }
+    
+    if (numMovableNodesOld==0)
+        return (NO_ERROR);
+    
+    /* pick a branch */
+    do  {
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
+        a = p->anc->left;
+        b = p->anc->right;
+        }
+    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+           || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
+           || (p->length < TIME_MIN && p->calibration->prior == fixed)
+           || p->x == NO);
+    /* skip constraints, siblings of root (and root); and consider ancestral fossils in fbd tree;
+       skip all nodes that subtend extant terminals */
+    
+    /* set up pointers for nodes around the picked branch */
+    v = p;
+    u = p->anc;
+    if (u->left == v)
+        a = u->right;
+    else
+        a = u->left;
+    b = u->anc;
+    oldA = a;
+    
+    /* record branch length for insertion in back move */
+    if (v->length > 0.0)  /* side branch, not anc fossil */
+        {
+        if (v->nodeDepth > a->nodeDepth)
+            oldBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
+        else
+            oldBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
+        }
+    else  /* ancestral fossil */
+        {
+        y = (b->nodeDepth - minV > v->calibration->max * clockRate) ? (v->calibration->max * clockRate) : (b->nodeDepth - minV);
+        x = (a->nodeDepth + minV < v->calibration->min * clockRate) ? (v->calibration->min * clockRate) : (a->nodeDepth + minV);
+        oldBrlen = y - x;
+        }
+    v1 = a->length;
+    v2 = u->length;
+    v3 = v->length;
+    
+    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
+    for (i=0; i<param->subParams[0]->nSubParams; i++)
+        {
+        subParm = param->subParams[0]->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
+            {
+            /* get pointers to CPP events */
+            nEvents = subParm->nEvents[2*chain+state[chain]];
+            position = subParm->position[2*chain+state[chain]];
+            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
+            n1 = nEvents[a->index];
+            n2 = nEvents[u->index];
+            n3 = nEvents[v->index];
+            if (n2 > 0)
+                {
+                position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
+                rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
+                }
+            for (j=0; j<n1; j++)
+                position[a->index][j] *= v1 / (v1+v2);
+            for (j=n1; j<n1+n2; j++)
+                {
+                position[a->index][j] = (position[u->index][j-n1] * v2 + v1) / (v1+v2);
+                rateMultiplier[a->index][j] = rateMultiplier[u->index][j-n1];
+                }
+            nEvents[a->index] = n1+n2;
+            nEvents[u->index] = 0;
+            if (n2 > 0)
+                {
+                free (position[u->index]);
+                free (rateMultiplier[u->index]);
+                position[u->index] = rateMultiplier[u->index] = NULL;
+                }
+            }   /* end CPP events parm */
+        else if ( subParm->paramType == P_TK02BRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_TK02BRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
+            }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(v->length/var, v->length/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/var, u->length/var, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+            
+            /* adjust effective branch lengths and rates */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }
+        else if ( subParm->paramType == P_ILNBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
+            {
+            if (subParm->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
+            
+            /* adjust effective branch lengths and rates */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
+            {
+            if (subParm->paramType == P_IGRBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[u->index]);
+            
+            /* adjust effective branch lengths and rates */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }
+        }   /* next subparameter */
+    
+    /* cut tree */
+    a->anc = b;
+    if (b->left == u)
+        b->left = a;
+    else
+        b->right = a;
+    a->length += u->length;
+    a->upDateTi = YES;
+    
+    /* determine initial direction of move and whether the reverse move would be stopped by constraints */
+    if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
+        {
+        isStartLocked = YES;
+        directionUp = NO;
+        }
+    else
+        {
+        isStartLocked = NO;
+        if (RandomNumber(seed) < 0.5)
+            directionUp = YES;
+        else
+            directionUp = NO;
+        }
+    
+    /* move around in root subtree */
+    for (nRootNodes=0; nRootNodes==0 || RandomNumber(seed)<extensionProb; nRootNodes++)
+        {
+        if (directionUp == YES)
+            {   /* going up tree */
+            if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
+                break;      /* can't go farther */
+            topologyHasChanged = YES;
+            b = a;
+            if (a->left->length < TIME_MIN)
+                a = a->right;
+            else if (a->right->length < TIME_MIN)
+                a = a->left;
+            else if (RandomNumber(seed) < 0.5)
+                a = a->left;
+            else
+                a = a->right;
+            }
+        else
+            {   /* going down tree */
+            topologyHasChanged = YES;
+            if (RandomNumber(seed) < 0.5 || b->anc->anc == NULL || b->isLocked == YES)
+                {
+                directionUp = YES; /* switch direction */
+                /* find sister of a */
+                if (b->left == a)
+                    a = b->right;
+                else
+                    a = b->left;
+                /* as long as we are moving upwards
+                 the cond likes to update will be
+                 flagged by the last pass from u to the root */
+                }
+            else
+                {   /* continue down */
+                a = b;
+                b = b->anc;
+                a->upDateCl = YES;
+                }
+            }
+        }
+    
+    /* determine whether the forward move was or would have been stopped by constraints */
+    isStopLocked = NO;
+    if (directionUp == YES)
+        {
+        if (a->left == NULL || a->isLocked == YES || a->nodeDepth < v->nodeDepth + minV)
+            isStopLocked = YES;
+        }
+    
+    /* reattach u */
+    if (u->left == v)
+        u->right = a;
+    else
+        u->left = a;
+    a->anc = u;
+    u->anc = b;
+    if (b->left == a)
+        b->left = u;
+    else
+        b->right = u;
+    
+    if (v->length > 0.0)  /* side branch, not anc fossil */
+        {
+        if (a->nodeDepth > v->nodeDepth)
+            newBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
+        else
+            newBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
+        }
+    else  /* ancestral fossil */
+        {
+        y = (b->nodeDepth - minV > v->calibration->max * clockRate) ? (v->calibration->max * clockRate) : (b->nodeDepth - minV);
+        x = (a->nodeDepth + minV < v->calibration->min * clockRate) ? (v->calibration->min * clockRate) : (a->nodeDepth + minV);
+        newBrlen = y - x;
+        }
+    if (newBrlen <= 0.0)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+    
+    /* adjust lengths */
+    if (v->length > 0.0)  /* side branch, not anc fossil */
+        {
+        u->nodeDepth = b->nodeDepth - minV - RandomNumber(seed) * newBrlen;
+        v->length = u->nodeDepth - v->nodeDepth;
+        }
+    else  /* ancestral fossil */
+        {
+        u->nodeDepth = y - RandomNumber(seed) * newBrlen;
+        v->nodeDepth = u->nodeDepth;
+        v->age = u->age = u->nodeDepth / clockRate;
+        }
+    u->length = b->nodeDepth - u->nodeDepth;
+    a->length = u->nodeDepth - a->nodeDepth;
+    
+    v3new = v->length;
+    v4 = a->length;
+    v5 = u->length;
+    
+    /* adjust events, prior ratio and proposal ratio for relaxed clock models */
+    for (i=0; i<param->subParams[0]->nSubParams; i++)
+        {
+        subParm = param->subParams[0]->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
+            {
+            /* reassign events for CPP */
+            nEvents = subParm->nEvents[2*chain+state[chain]];
+            position = subParm->position[2*chain+state[chain]];
+            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
+            for (j=0; j<nEvents[a->index]; j++)
+                {
+                if (position[a->index][j] > v4 / (v4+v5))
+                    break;
+                }
+            n4 = j;
+            n5 = nEvents[a->index] - j;
+            nEvents[u->index] = n5;
+            if (n5 > 0)
+                {
+                position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
+                rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));
+                for (j=n4; j<nEvents[a->index]; j++)
+                    {
+                    position[u->index][j-n4] = (position[a->index][j] * (v4+v5) - v4) / v5;
+                    rateMultiplier[u->index][j-n4] = rateMultiplier[a->index][j];
+                    }
+                if (n4 > 0)
+                    {
+                    position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], n4 * sizeof (MrBFlt));
+                    rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], n4 * sizeof (MrBFlt));
+                    for (j=0; j<n4; j++)
+                        position[a->index][j] *= ((v4+v5) / v4);
+                    }
+                else
+                    {
+                    free (position[a->index]);
+                    free (rateMultiplier[a->index]);
+                    position[a->index] = rateMultiplier[a->index] = NULL;
+                    }
+                nEvents[a->index] = n4;
+                }
+            else
+                {
+                for (j=0; j<nEvents[a->index]; j++)
+                    position[a->index][j] *= ((v4+v5) / v4);
+                }
+            
+            /* adjust proposal ratio for length change in v branch*/
+            (*lnProposalRatio) += n3 * log (v3new / v3);
+            
+            /* adjust prior ratio for length change */
+            lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+            (*lnPriorRatio) += lambda * (v3 - v3new);
+            
+            /* update effective branch lengths */
+            if (UpdateCppEvolLengths (subParm, oldA, chain) == ERROR)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+            if (UpdateCppEvolLengths (subParm, u, chain) == ERROR)
+                {
+                abortMove = YES;
+                return (NO_ERROR);
+                }
+            }   /* end cpp events parameter */
+        else if ( subParm->paramType == P_TK02BRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_TK02BRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = a->length * (rate[a->index] + rate[a->anc->index]) / 2.0;
+            brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
+            brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
+            }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) -= LnProbGamma ((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/var, u->length/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (v->length/var, v->length/var, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[a->index] = rate[a->index] * a->length;
+            }   /* end wn branch rate parameter */
+        else if ( subParm->paramType == P_ILNBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[a->index] = rate[a->index] * a->length;
+            }   /* end iln branch rate parameter */
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_IGRBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[a->index] = rate[a->index] * a->length;
+            }   /* end igr branch rate parameter */
+        }   /* next subparameter */
+    
+    /* set tiprobs update flags */
+    a->upDateTi = YES;
+    u->upDateTi = YES;
+    v->upDateTi = YES;
+    
+    /* set flags for update of cond likes from u and down to root */
+    p = u;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    
+    /* adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
+        return (ERROR);
+    (*lnPriorRatio) += x;
+    
+    if (topologyHasChanged == YES)
+        {
+        /* get down pass sequence if tree topology has changed */
+        GetDownPass (t);
+        /* calculate proposal ratio for tree change */
+        (*lnProposalRatio) += log (newBrlen / oldBrlen);
+        if (isStartLocked == NO && isStopLocked == YES)
+            (*lnProposalRatio) += log (2.0 * (1.0 - extensionProb));
+        else if (isStartLocked == YES && isStopLocked == NO)
+            (*lnProposalRatio) -= log (2.0 * (1.0 - extensionProb));
+        }
+    
+    /* adjust proposal prob for number movable nodes in new tree */
+    numMovableNodesNew=0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL)
+            {
+            if (p->calibration == NULL)
+                p->x = NO;
+            else
+                {
+                p->x = YES;
+                }
+            }
+        else
+            {
+            if (p->left->x == YES && p->right->x == YES)
+                {
+                p->x = YES;
+                }
+            else
+                p->x = NO;
+            }
+        a = p->anc->left;
+        b = p->anc->right;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+            numMovableNodesNew++;
+        }
+    
+    
+    if (numMovableNodesNew!=numMovableNodesOld)
+        {
+        /* FIXME: numMovableNodesNew may be zero (from clang static analyzer) */
+        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
+        }
+    
+#   if defined (DEBUG_ExtSPRClock)
+    ShowNodes (t->root, 2, YES);
+    printf ("After\nProposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d\n",v->index, u->index, a->index, b->index);
+    printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
+    printf ("Has topology changed? %d\n",topologyHasChanged);
+#   endif
+    
     return (NO_ERROR);
 }
 
@@ -4281,7 +4437,7 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* Note: this move is not compatible with fossilized birth-death model with ancestral fossils */
     
     int         i, *nEvents, numFreeOld, numFreeNew;
-    MrBFlt      x, oldALength, oldCLength, extensionProb, nu, igrvar, *rate,
+    MrBFlt      x, oldALength, oldCLength, extensionProb, nu, var, *rate,
                 *brlens, ran, cumulativeProb, forwardProb,
                 backwardProb, minV;
     TreeNode    *p, *q, *a, *c;
@@ -4637,6 +4793,24 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             brlens[a->index] = a->length * (rate[a->index] + rate[a->anc->index])/2.0;
             brlens[c->index] = c->length * (rate[c->index] + rate[c->anc->index])/2.0;
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            /* get relevant parameters */
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+
+            /* prior ratio and update of effective evolutionary lengths */
+            (*lnPriorRatio) -= LnProbGamma (oldALength/var, oldALength/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldCLength/var, oldCLength/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (a->length /var, a->length /var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length /var, c->length /var, rate[c->index]);
+            brlens[a->index] = rate[a->index] * a->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -4657,9 +4831,9 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             {
             /* get relevant parameters */
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
@@ -5427,12 +5601,12 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = IGRVAR_MIN;
-    maxVar = IGRVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->igrvarPr,"Uniform"))
         {
-        minVar = (mp->igrvarUni[0] < IGRVAR_MIN) ? IGRVAR_MIN : mp->igrvarUni[0];
-        maxVar = (mp->igrvarUni[1] > IGRVAR_MAX) ? IGRVAR_MAX : mp->igrvarUni[1];
+        minVar = (mp->igrvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->igrvarUni[0];
+        maxVar = (mp->igrvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->igrvarUni[1];
         }
     
     /* get the igr variance */
@@ -5469,7 +5643,7 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             }
         }
 
-    /* take prior on Igrvar into account */
+    /* take prior on IGRvar into account */
     if (!strcmp(mp->igrvarPr, "Exponential"))
         (*lnPriorRatio) += mp->igrvarExp * (oldVar - newVar);
     
@@ -5579,12 +5753,12 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = ILNVAR_MIN;
-    maxVar = ILNVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->ilnvarPr,"Uniform"))
         {
-        minVar = (mp->ilnvarUni[0] < ILNVAR_MIN) ? ILNVAR_MIN : mp->ilnvarUni[0];
-        maxVar = (mp->ilnvarUni[1] > ILNVAR_MAX) ? ILNVAR_MAX : mp->ilnvarUni[1];
+        minVar = (mp->ilnvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->ilnvarUni[0];
+        maxVar = (mp->ilnvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->ilnvarUni[1];
         }
     
     /* get the iln variance */
@@ -5621,7 +5795,7 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
             }
         }
 
-    /* take prior on Ilnvar into account */
+    /* take prior on ILNvar into account */
     if (!strcmp(mp->ilnvarPr, "Exponential"))
         (*lnPriorRatio) += mp->ilnvarExp * (oldVar - newVar);
     
@@ -5738,12 +5912,12 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     mp = &modelParams[param->relParts[0]];
 
     /* get the min and max values */
-    minVar = MIXEDVAR_MIN;
-    maxVar = MIXEDVAR_MAX;
+    minVar = INDRVAR_MIN;
+    maxVar = INDRVAR_MAX;
     if (!strcmp(mp->mixedvarPr,"Uniform"))
         {
-        minVar = (mp->mixedvarUni[0] < MIXEDVAR_MIN) ? MIXEDVAR_MIN : mp->mixedvarUni[0];
-        maxVar = (mp->mixedvarUni[1] > MIXEDVAR_MAX) ? MIXEDVAR_MAX : mp->mixedvarUni[1];
+        minVar = (mp->mixedvarUni[0] < INDRVAR_MIN) ? INDRVAR_MIN : mp->mixedvarUni[0];
+        maxVar = (mp->mixedvarUni[1] > INDRVAR_MAX) ? INDRVAR_MAX : mp->mixedvarUni[1];
         }
     
     /* get the variance */
@@ -5841,7 +6015,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* move the var parameter */
         igrvar = (*mxvar);
         ilnvar  = igrvar * ratio;
-        if (ilnvar < ILNVAR_MIN || ilnvar > ILNVAR_MAX)
+        if (ilnvar < INDRVAR_MIN || ilnvar > INDRVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);
@@ -5876,7 +6050,7 @@ int Move_RelaxedClockModel (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         /* move the var parameter */
         ilnvar  = (*mxvar);
         igrvar = ilnvar / ratio;
-        if (igrvar < IGRVAR_MIN || igrvar > IGRVAR_MAX)
+        if (igrvar < INDRVAR_MIN || igrvar > INDRVAR_MAX)
             {
             abortMove = YES;
             return (NO_ERROR);
@@ -6697,7 +6871,7 @@ int Move_LocalClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
                 brlens[v->index] = v->length * (tk02Rate[v->index] + tk02Rate[v->anc->index])/2.0;
                 }
             }
-        else if (subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES)
+        else
             {
             /* to do */
             }
@@ -7752,7 +7926,7 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change clock tree using NNI move */
     
     int         i, *nEvents, numFreeOld, numFreeNew;
-    MrBFlt      x, *brlens, *rate=NULL, igrvar=0.0, nu=0.0, oldALength, oldCLength;
+    MrBFlt      x, *brlens, *rate=NULL, var=0.0, nu=0.0, oldALength, oldCLength;
     TreeNode    *p, *q, *a, *c, *u, *v;
     Tree        *t;
     Param       *subParm;
@@ -7913,6 +8087,22 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             brlens[a->index] = a->length * (rate[a->index] + rate[a->anc->index])/2.0;
             brlens[c->index] = c->length * (rate[c->index] + rate[c->anc->index])/2.0;
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            /* prior ratio and update of effective evolutionary lengths */
+            (*lnPriorRatio) -= LnProbGamma (oldALength/var, oldALength/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma (oldCLength/var, oldCLength/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (a->length /var, a->length /var, rate[a->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length /var, c->length /var, rate[c->index]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * a->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -7930,9 +8120,9 @@ int Move_NNIClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             /* update of effective evolutionary lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -8180,7 +8370,7 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     int         i, *nEvents;
     MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth, minL, minR,
                 oldLeftLength=0.0, oldRightLength=0.0, oldPLength=0.0, x, clockRate,
-                lambda=0.0, nu=0.0, igrvar=0.0, *brlens=NULL, *rate=NULL;
+                lambda=0.0, nu=0.0, var=0.0, *brlens=NULL, *rate=NULL;
     TreeNode    *p, *q;
     ModelParams *mp;
     ModelInfo   *m;
@@ -8432,6 +8622,38 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                 brlens[p->index] = p->length * (rate[p->index]+rate[p->anc->index])/2.0;
                 }
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+                
+            /* prior ratio & update effective evolutionary lengths */
+            if (p->left != NULL)
+                {
+                if (p->left->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbGamma (oldLeftLength/var, oldLeftLength/var, rate[p->left->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->left->length/var, p->left->length/var, rate[p->left->index]);
+                    brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
+                    }
+                if (p->right->length > 0.0)
+                    {
+                    (*lnPriorRatio) -= LnProbGamma (oldRightLength/var, oldRightLength/var, rate[p->right->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->right->length/var, p->right->length/var, rate[p->right->index]);
+                    brlens[p->right->index] = rate[p->right->index] * p->right->length;
+                    }
+                }
+            if (p->anc->anc != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/var, oldPLength/var, rate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length /var, p->length /var, rate[p->index]);
+                brlens[p->index] = rate[p->index] * p->length;
+                }
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -8463,9 +8685,9 @@ int Move_NodeSliderClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
                 
@@ -9642,652 +9864,6 @@ errorExit:
 }
 
 
-int Move_ParsFossilSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    /* Change branch lengths and topology (potentially) using SPR-type move, parsimony-biased */
-    
-    /* This move is identical to ParsSPRClock except that it uses s/n weighting and it only picks fossil subtrees. */
-    
-    int         i, j, n, division, n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
-    BitsLong    *pA, *pV, *pP, y[2];
-    MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
-                v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
-                nu, igrvar, *rate=NULL, minLength=0.0, length=0.0,
-                cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
-                divFactor, nStates, v_approx, minV;
-    CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
-    Tree        *t;
-    ModelInfo   *m=NULL;
-    Param       *subParm;
-    
-    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
-    increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
-    
-    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
-    
-    /* get tree */
-    t = GetTree (param, chain, state[chain]);
-    
-    /* get model params and model info */
-    m = &modelSettings[param->relParts[0]];
-    
-    /* get min and max brlen in relative time and subst units */
-    minV = BRLENS_MIN;
-    
-#   if defined (DEBUG_ParsSPRClock)
-    printf ("Before:\n");
-    ShowNodes (t->root, 2, YES);
-    getchar();
-#   endif
-    
-    /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
-    numMovableNodesOld=0;
-    for (i=0; i<t->nNodes-2; ++i)
-    {
-        p = t->allDownPass[i];
-        if (p->left == NULL)
-        {
-            if (p->calibration == NULL)
-                p->x = NO;
-            else
-            {
-                p->x = YES;
-            }
-        }
-        else
-        {
-            if (p->left->x == YES && p->right->x == YES)
-            {
-                p->x = YES;
-            }
-            else
-                p->x = NO;
-        }
-        a = p->anc->left;
-        b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
-            numMovableNodesOld++;
-    }
-    
-    if (numMovableNodesOld==0)
-        return (NO_ERROR);
-    
-    /* pick a branch */
-    do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
-        a = p->anc->left;
-        b = p->anc->right;
-    }
-    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-           || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO);
-    /* skip constraints, siblings of root (and root); and consider ancestral fossils in fbd tree;
-     skip all nodes that subtend extant terminals */
-    
-    /* set up pointers for nodes around the picked branch */
-    v = p;
-    u = p->anc;
-    if (u->left == v)
-        a = u->right;
-    else
-        a = u->left;
-    b = u->anc;
-    
-    /* record branch length for insertion in back move */
-    if (v->length > 0.0)  /* side branch, not anc fossil */
-    {
-        if (v->nodeDepth > a->nodeDepth)
-            oldBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
-        else
-            oldBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
-    }
-    v1 = a->length;
-    v2 = u->length;
-    v3 = v->length;
-    
-    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
-    for (i=0; i<param->subParams[0]->nSubParams; i++)
-    {
-        subParm = param->subParams[0]->subParams[i];
-        if (subParm->paramType == P_CPPEVENTS)
-        {
-            nEvents = subParm->nEvents[2*chain+state[chain]];
-            position = subParm->position[2*chain+state[chain]];
-            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-            n1 = nEvents[a->index];
-            n2 = nEvents[u->index];
-            n3 = nEvents[v->index];
-            if (n2 > 0)
-            {
-                position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
-                rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
-            }
-            for (j=0; j<n1; j++)
-                position[a->index][j] *= v1 / (v1+v2);
-            for (j=n1; j<n1+n2; j++)
-            {
-                position[a->index][j] = (position[u->index][j-n1] * v2 + v1) / (v1+v2);
-                rateMultiplier[a->index][j] = rateMultiplier[u->index][j-n1];
-            }
-            nEvents[a->index] = n1+n2;
-            nEvents[u->index] = 0;
-            if (n2 > 0)
-            {
-                free (position[u->index]);
-                free (rateMultiplier[u->index]);
-                position[u->index] = rateMultiplier[u->index] = NULL;
-            }
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] += brlens[u->index];   /* only change in effective branch lengths so far */
-        }   /* end CPP events parm */
-        else if ( subParm->paramType == P_TK02BRANCHRATES)
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_TK02BRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
-        }   /* end tk02 branch rate parameter */
-        else if ( subParm->paramType == P_ILNBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
-        {
-            if (subParm->paramType == P_ILNBRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            /* adjust prior ratio for old branches */
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = rate[a->index] * (a->length + u->length);
-        }   /* end iln branch rate parameter */
-        else if ( subParm->paramType == P_IGRBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
-        {
-            if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
-            else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            /* adjust prior ratio for old branches */
-            if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[a->index] = rate[a->index] * (a->length + u->length);
-        }   /* end igr branch rate parameter */
-    }   /* next subparameter */
-    
-    /* cut tree */
-    a->anc = b;
-    if (b->left == u)
-        b->left = a;
-    else
-        b->right = a;
-    a->length += u->length;
-    a->upDateTi = YES;
-    
-    /* get final parsimony states for the root part */
-    GetParsDP (t, t->root->left, chain);
-    GetParsFP (t, t->root->left->left, chain);
-    GetParsFP (t, t->root->left->right, chain);
-    
-    /* get downpass parsimony states for the crown part */
-    GetParsDP (t, v, chain);
-    
-    /* reset node variables that will be used */
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        p->marked = NO;
-        p->d = 0.0;
-    }
-    
-    /* mark nodes in the root part of the tree, first mark a */
-    a->marked = YES;
-    /* then move down towards root taking constraints into account */
-    p = b;
-    while (p->isLocked == NO && p->anc->anc != NULL)
-    {
-        p->marked = YES;
-        p = p->anc;
-    }
-    /* make sure sisters of last node are marked otherwise it will not be marked in the uppass */
-    p->left->marked = YES;
-    p->right->marked = YES;
-    /* finally move up, skip constraints and ancestral fossil */
-    for (i=t->nNodes-2; i>=0; i--)
-    {
-        p = t->allDownPass[i];
-        if (p != u && p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO
-            && p->anc->nodeDepth > v->nodeDepth + minV && p->length > 0.0)
-            p->marked = YES;
-    }
-    
-    /* unmark nodes if the picked branch is 0 (ancestral fossil) */
-    if (v->length < TIME_MIN)
-    {
-        n = 0;
-        for (i=0; i<t->nNodes-1; i++)
-        {
-            p = t->allDownPass[i];
-            if (p->nodeDepth > v->nodeDepth - minV || p->anc->nodeDepth < v->nodeDepth + minV)
-                p->marked = NO;
-            if (p->marked == YES)
-                n++;
-        }
-        if (n < 2)  /* no new position to move */
-        {
-            abortMove = YES;
-            return (NO_ERROR);
-        }
-    }
-    
-    /* find number of site patterns and modify randomly */
-    globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
-    nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
-    if (!nSitesOfPat)
-    {
-        MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPRClock\n", spacer);
-        return (ERROR);
-    }
-    for (i=0; i<numCompressedChars; i++)
-    {
-        nSitesOfPat[i] = globalNSitesOfPat[i];
-        for (j=0; j<globalNSitesOfPat[i]; j++)
-        {
-            ran = RandomNumber(seed);
-            if (ran < decreaseProb)
-                nSitesOfPat[i]--;
-            else if (ran > 1.0 - increaseProb)
-                nSitesOfPat[i]++;
-        }
-    }
-    
-    /* cycle through the possibilities and record the parsimony length */
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == NO)
-            continue;
-        /* find the parsimony length */
-        p->d = 0.0;
-        for (n=0; n<t->nRelParts; n++)
-        {
-            division = t->relParts[n];
-            
-            /* Find model settings */
-            m = &modelSettings[division];
-            
-            /* find nSitesOfPat */
-            nSites = nSitesOfPat + m->compCharStart;
-            
-            /* find downpass parsimony sets for the node and its environment */
-            pP   = m->parsSets[p->index     ];
-            pA   = m->parsSets[p->anc->index];
-            pV   = m->parsSets[v->index     ];
-            
-            length = 0.0;
-            if (m->nParsIntsPerSite == 1)
-            {
-                for (j=0; j<m->numChars; j++)
-                {
-                    y[0] = (pP[j] | pA[j]) & pV[j];
-                    if (y[0] == 0)
-                        length += nSites[j];
-                }
-            }
-            else /* if (m->nParsIntsPerSite == 2) */
-            {
-                for (j=0; j<2*m->numChars; j+=2)
-                {
-                    y[0] = (pP[j] | pA[j]) & pV[j];
-                    y[1] = (pP[j+1] | pA[j+1]) & pV[j+1];
-                    if ((y[0] | y[1]) == 0)
-                        length += nSites[j/2];
-                }
-            }
-            
-            /* find nStates and v approximation using parsimony-based s/n approximation */
-            nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
-                nStates = 2;
-            v_approx = length/m->numUncompressedChars + 0.0001;
-            
-            /* get division warp factor (prop. to prob. of change) */
-            divFactor = - warpFactor * log(1.0/nStates - exp(-nStates/(nStates-1)*v_approx)/nStates);
-            
-            p->d += divFactor * length;
-        }
-    }
-    
-    /* find the min length and the sum for the forward move */
-    minLength = -1.0;
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == NO || p == a)
-            continue;
-        if (minLength < 0.0 || p->d < minLength)
-            minLength = p->d;
-    }
-    sum1 = 0.0;
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == YES && p != a)
-            sum1 += exp (minLength - p->d);
-    }
-    
-    /* generate a random uniform */
-    ran = RandomNumber(seed) * sum1;
-    
-    /* select the appropriate reattachment point (not a!) */
-    cumulativeProb = 0.0;
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == YES && p != a)
-        {
-            c = p;
-            cumulativeProb += exp (minLength - p->d);
-            if (cumulativeProb > ran)
-                break;
-        }
-    }
-    
-    /* calculate the proposal ratio */
-    (*lnProposalRatio) = c->d - minLength + log(sum1);
-    
-    /* find the min length and the sum for the backward move */
-    minLength = -1.0;
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == NO || p == c)
-            continue;
-        if (minLength < 0.0 || p->d < minLength)
-            minLength = p->d;
-    }
-    sum2 = 0.0;
-    for (i=0; i<t->nNodes; i++)
-    {
-        p = t->allDownPass[i];
-        if (p->marked == YES && p != c)
-            sum2 += exp (minLength - p->d);
-    }
-    
-    /* calculate the proposal ratio */
-    (*lnProposalRatio) += minLength - a->d - log(sum2);
-    
-    /* reattach u */
-    d = c->anc;
-    c->anc = u;
-    if (u->left == v)
-        u->right = c;
-    else
-        u->left = c;
-    u->anc = d;
-    if (d->left == c)
-        d->left = u;
-    else
-        d->right = u;
-    
-    if (v->length > 0.0)  /* side branch, not anc fossil */
-    {
-        if (c->nodeDepth > v->nodeDepth)
-            newBrlen = d->nodeDepth - c->nodeDepth - 2.0*minV;
-        else
-            newBrlen = d->nodeDepth - v->nodeDepth - 2.0*minV;
-        if (newBrlen <= 0.0)
-        {
-            abortMove = YES;
-            free (nSitesOfPat);
-            return (NO_ERROR);
-        }
-        
-        /* adjust lengths */
-        u->nodeDepth = d->nodeDepth - minV - RandomNumber(seed) * newBrlen;
-        v->length = u->nodeDepth - v->nodeDepth;
-        
-        /* calculate proposal ratio for tree change */
-        (*lnProposalRatio) += log (newBrlen / oldBrlen);
-    }
-    u->length = d->nodeDepth - u->nodeDepth;
-    c->length = u->nodeDepth - c->nodeDepth;
-    
-    v3new = v->length;
-    v4 = c->length;
-    v5 = u->length;
-    
-    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
-    for (i=0; i<param->subParams[0]->nSubParams; i++)
-    {
-        subParm = param->subParams[0]->subParams[i];
-        if (subParm->paramType == P_CPPEVENTS)
-        {
-            nEvents = subParm->nEvents[2*chain+state[chain]];
-            position = subParm->position[2*chain+state[chain]];
-            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
-            for (j=0; j<nEvents[c->index]; j++)
-            {
-                if (position[c->index][j] > v4 / (v4+v5))
-                    break;
-            }
-            n4 = j;
-            n5 = nEvents[c->index] - j;
-            nEvents[u->index] = n5;
-            if (n5 > 0)
-            {
-                position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
-                rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));
-                for (j=n4; j<nEvents[c->index]; j++)
-                {
-                    position[u->index][j-n4] = (position[c->index][j] * (v4+v5) - v4) / v5;
-                    rateMultiplier[u->index][j-n4] = rateMultiplier[c->index][j];
-                }
-                if (n4 > 0)
-                {
-                    position[c->index] = (MrBFlt *) SafeRealloc ((void *) position[c->index], n4 * sizeof (MrBFlt));
-                    rateMultiplier[c->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[c->index], n4 * sizeof (MrBFlt));
-                    for (j=0; j<n4; j++)
-                        position[c->index][j] *= ((v4+v5) / v4);
-                }
-                else
-                {
-                    free (position[c->index]);
-                    free (rateMultiplier[c->index]);
-                    position[c->index] = rateMultiplier[c->index] = NULL;
-                }
-                nEvents[c->index] = n4;
-            }
-            else
-            {
-                for (j=0; j<nEvents[c->index]; j++)
-                    position[c->index][j] *= ((v4+v5) / v4);
-            }
-            
-            /* adjust proposal ratio */
-            (*lnProposalRatio) += n3 * log (v3new / v3);
-            
-            /* adjust prior ratio */
-            lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
-            (*lnPriorRatio) += lambda * (v3 - v3new);
-            
-            /* update effective branch lengths */
-            if (UpdateCppEvolLengths (subParm, a, chain) == ERROR)
-            {
-                abortMove = YES;
-                free (nSitesOfPat);
-                return (NO_ERROR);
-            }
-            
-            if (UpdateCppEvolLengths (subParm, u, chain) == ERROR)
-            {
-                abortMove = YES;
-                free (nSitesOfPat);
-                return (NO_ERROR);
-            }
-        }   /* end cpp events parameter */
-        else if ( subParm->paramType == P_TK02BRANCHRATES)
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_TK02BRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(c->length+u->length), rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[c->anc->index], nu*c->length, rate[c->index]);
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[c->index] = c->length * (rate[c->index] + rate[c->anc->index]) / 2.0;
-            brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
-            brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
-        }   /* end tk02 branch rate parameter */
-        else if ( subParm->paramType == P_ILNBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_ILNBRANCHRATES)
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
-            else
-                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[v->index] = rate[v->index] * v->length;
-            brlens[u->index] = rate[u->index] * u->length;
-            brlens[c->index] = rate[c->index] * c->length;
-        }   /* end iln branch rate parameter */
-        else if ( subParm->paramType == P_IGRBRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
-        {
-            /* adjust prior ratio */
-            if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
-            else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            rate = GetParamVals (subParm, chain, state[chain]);
-            
-            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
-            if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            
-            /* adjust effective branch lengths */
-            brlens = GetParamSubVals (subParm, chain, state[chain]);
-            brlens[v->index] = rate[v->index] * v->length;
-            brlens[u->index] = rate[u->index] * u->length;
-            brlens[c->index] = rate[c->index] * c->length;
-        }   /* end igr branch rate parameter */
-    }   /* next subparameter */
-
-    /* set tiprobs update flags */
-    c->upDateTi = YES;
-    u->upDateTi = YES;
-    v->upDateTi = YES;
-    
-    /* set flags for update of cond likes down to root */
-    p = u;
-    while (p->anc != NULL)
-    {
-        p->upDateCl = YES;
-        p = p->anc;
-    }
-    p = b;
-    while (p->anc != NULL)
-    {
-        p->upDateCl = YES;
-        p = p->anc;
-    }
-    
-    /* get down pass sequence */
-    GetDownPass (t);
-    
-    /* adjust prior ratio for clock tree */
-    if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
-    {
-        free (nSitesOfPat);
-        return (ERROR);
-    }
-    (*lnPriorRatio) += x;
-    
-    /* adjust proposal prob for number movable nodes in new tree */
-    numMovableNodesNew=0;
-    for (i=0; i<t->nNodes-2; ++i)
-    {
-        p = t->allDownPass[i];
-        if (p->left == NULL)
-        {
-            if (p->calibration == NULL)
-                p->x = NO;
-            else
-            {
-                p->x = YES;
-            }
-        }
-        else
-        {
-            if (p->left->x == YES && p->right->x == YES)
-            {
-                p->x = YES;
-            }
-            else
-                p->x = NO;
-        }
-        a = p->anc->left;
-        b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
-            numMovableNodesNew++;
-    }
-    
-    if (numMovableNodesNew!=numMovableNodesOld)
-    {
-        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
-    }
-    
-#   if defined (DEBUG_ParsSPRClock)
-    ShowNodes (t->root, 2, YES);
-    printf ("After\nProposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  a: %d  b: %d c: %d\n",v->index, u->index, a->index, b->index, c->index);
-    getchar();
-#   endif
-    
-    free (nSitesOfPat);
-    return (NO_ERROR);
-}
-
-
 int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Change topology (and branch lengths) using SPR (asymmetric) biased according to parsimony scores. */
@@ -10766,9 +10342,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
 //  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
-//  v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
-    tuning = mvp[3];                      /* multiplier tuning parameter */
-    nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
+    tuning = mvp[2];                      /* multiplier tuning parameter */
+    nNeighbor = (int)mvp[3];              /* distance to move picked branch in root and crown part */
     
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
@@ -12085,7 +11660,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     BitsLong    *pA, *pV, *pP, y[2];
     MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
                 v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
-                nu, igrvar, *rate=NULL, minLength=0.0, length=0.0,
+                nu, var, *rate=NULL, minLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, sum1, sum2, ran, divFactor, nStates, v_approx, minV;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
     TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
@@ -12208,6 +11783,25 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
             }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(v->length/var, v->length/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/var, u->length/var, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            } /* end wn branch rate parameter */
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -12230,15 +11824,15 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
 
             /* adjust prior ratio for old branches */
             if (v->length > 0.0)
-                (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[v->index]);
-            (*lnPriorRatio) -= LnProbGamma(1.0/igrvar, 1.0/igrvar, rate[u->index]);
+                (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[u->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12577,6 +12171,26 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
             brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
             }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/var, (c->length+u->length)/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length/var, c->length/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/var, u->length/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (v->length/var, v->length/var, rate[v->index]);
+
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }   /* end wn branch rate parameter */
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -12601,13 +12215,13 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
             {
             /* adjust prior ratio */
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
-            (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[u->index]);
             if (v->length > 0.0)
-                (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[v->index]);
+                (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[v->index]);
 
             /* adjust effective branch lengths */
             brlens = GetParamSubVals (subParm, chain, state[chain]);
@@ -12673,6 +12287,692 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 }
 
 
+int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* Change branch lengths and topology (potentially) using SPR-type move, parsimony-biased */
+    
+    /* This move is identical to ParsSPRClock except that it uses s/n weighting and it only picks fossil subtrees. */
+    
+    int         i, j, n, division, n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
+    BitsLong    *pA, *pV, *pP, y[2];
+    MrBFlt      x, oldBrlen=0.0, newBrlen=0.0, v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0,
+                v3new=0.0, lambda, **position=NULL, **rateMultiplier=NULL, *brlens,
+                nu, var, *rate=NULL, minLength=0.0, length=0.0,
+                cumulativeProb, warpFactor, sum1, sum2, ran, increaseProb, decreaseProb,
+                divFactor, nStates, v_approx, minV;
+    CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
+    TreeNode    *p, *a, *b, *u, *v, *c=NULL, *d;
+    Tree        *t;
+    ModelInfo   *m=NULL;
+    Param       *subParm;
+    
+    warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
+    increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
+    
+    (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
+    
+    /* get tree */
+    t = GetTree (param, chain, state[chain]);
+    
+    /* get model params and model info */
+    m = &modelSettings[param->relParts[0]];
+    
+    /* get min and max brlen in relative time and subst units */
+    minV = BRLENS_MIN;
+    
+#   if defined (DEBUG_ParsSPRClock)
+    printf ("Before:\n");
+    ShowNodes (t->root, 2, YES);
+    getchar();
+#   endif
+    
+    /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
+    numMovableNodesOld=0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL)
+            {
+            if (p->calibration == NULL)
+                p->x = NO;
+            else
+                {
+                p->x = YES;
+                }
+            }
+        else
+            {
+            if (p->left->x == YES && p->right->x == YES)
+                {
+                p->x = YES;
+                }
+            else
+                p->x = NO;
+            }
+        a = p->anc->left;
+        b = p->anc->right;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+            numMovableNodesOld++;
+        }
+    
+    if (numMovableNodesOld==0)
+        return (NO_ERROR);
+    
+    /* pick a branch */
+    do  {
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
+        a = p->anc->left;
+        b = p->anc->right;
+        }
+    while (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+           || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO);
+    /* skip constraints, siblings of root (and root); and consider ancestral fossils in fbd tree;
+     skip all nodes that subtend extant terminals */
+    
+    /* set up pointers for nodes around the picked branch */
+    v = p;
+    u = p->anc;
+    if (u->left == v)
+        a = u->right;
+    else
+        a = u->left;
+    b = u->anc;
+    
+    /* record branch length for insertion in back move */
+    if (v->length > 0.0)  /* side branch, not anc fossil */
+        {
+        if (v->nodeDepth > a->nodeDepth)
+            oldBrlen = b->nodeDepth - v->nodeDepth - 2.0*minV;
+        else
+            oldBrlen = b->nodeDepth - a->nodeDepth - 2.0*minV;
+        }
+    v1 = a->length;
+    v2 = u->length;
+    v3 = v->length;
+    
+    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
+    for (i=0; i<param->subParams[0]->nSubParams; i++)
+        {
+        subParm = param->subParams[0]->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
+            {
+            nEvents = subParm->nEvents[2*chain+state[chain]];
+            position = subParm->position[2*chain+state[chain]];
+            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
+            n1 = nEvents[a->index];
+            n2 = nEvents[u->index];
+            n3 = nEvents[v->index];
+            if (n2 > 0)
+                {
+                position[a->index] = (MrBFlt *) SafeRealloc ((void *) position[a->index], (n1+n2) * sizeof (MrBFlt));
+                rateMultiplier[a->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[a->index], (n1+n2) * sizeof (MrBFlt));
+                }
+            for (j=0; j<n1; j++)
+                position[a->index][j] *= v1 / (v1+v2);
+            for (j=n1; j<n1+n2; j++)
+                {
+                position[a->index][j] = (position[u->index][j-n1] * v2 + v1) / (v1+v2);
+                rateMultiplier[a->index][j] = rateMultiplier[u->index][j-n1];
+                }
+            nEvents[a->index] = n1+n2;
+            nEvents[u->index] = 0;
+            if (n2 > 0)
+                {
+                free (position[u->index]);
+                free (rateMultiplier[u->index]);
+                position[u->index] = rateMultiplier[u->index] = NULL;
+                }
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] += brlens[u->index];   /* only change in effective branch lengths so far */
+            }   /* end CPP events parm */
+        else if ( subParm->paramType == P_TK02BRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_TK02BRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[a->anc->index], nu*a->length, rate[a->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(a->length+u->length), rate[a->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = (rate[a->index] + rate[b->index]) / 2.0 * (a->length + u->length);
+            }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+                if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(v->length/var, v->length/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(a->length/var, a->length/var, rate[a->index]);
+            (*lnPriorRatio) -= LnProbGamma(u->length/var, u->length/var, rate[u->index]);
+            (*lnPriorRatio) += LnProbGamma((a->length+u->length)/var, (a->length+u->length)/var, rate[a->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }   /* end wn branch rate parameter */
+        else if ( subParm->paramType == P_ILNBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
+            {
+            if (subParm->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[v->index]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(1.0, nu, rate[u->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }   /* end iln branch rate parameter */
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
+            {
+            if (subParm->paramType == P_IGRBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            /* adjust prior ratio for old branches */
+            if (v->length > 0.0)
+                (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[v->index]);
+            (*lnPriorRatio) -= LnProbGamma(1.0/var, 1.0/var, rate[u->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[a->index] = rate[a->index] * (a->length + u->length);
+            }   /* end igr branch rate parameter */
+        }   /* next subparameter */
+    
+    /* cut tree */
+    a->anc = b;
+    if (b->left == u)
+        b->left = a;
+    else
+        b->right = a;
+    a->length += u->length;
+    a->upDateTi = YES;
+    
+    /* get final parsimony states for the root part */
+    GetParsDP (t, t->root->left, chain);
+    GetParsFP (t, t->root->left->left, chain);
+    GetParsFP (t, t->root->left->right, chain);
+    
+    /* get downpass parsimony states for the crown part */
+    GetParsDP (t, v, chain);
+    
+    /* reset node variables that will be used */
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        p->marked = NO;
+        p->d = 0.0;
+        }
+    
+    /* mark nodes in the root part of the tree, first mark a */
+    a->marked = YES;
+    /* then move down towards root taking constraints into account */
+    p = b;
+    while (p->isLocked == NO && p->anc->anc != NULL)
+        {
+        p->marked = YES;
+        p = p->anc;
+        }
+    /* make sure sisters of last node are marked otherwise it will not be marked in the uppass */
+    p->left->marked = YES;
+    p->right->marked = YES;
+    /* finally move up, skip constraints and ancestral fossil */
+    for (i=t->nNodes-2; i>=0; i--)
+        {
+        p = t->allDownPass[i];
+        if (p != u && p->marked == NO && p->anc->marked == YES && p->anc->isLocked == NO
+            && p->anc->nodeDepth > v->nodeDepth + minV && p->length > 0.0)
+            p->marked = YES;
+        }
+    
+    /* unmark nodes if the picked branch is 0 (ancestral fossil) */
+    if (v->length < TIME_MIN)
+        {
+        n = 0;
+        for (i=0; i<t->nNodes-1; i++)
+            {
+            p = t->allDownPass[i];
+            if (p->nodeDepth > v->nodeDepth - minV || p->anc->nodeDepth < v->nodeDepth + minV)
+                p->marked = NO;
+            if (p->marked == YES)
+                n++;
+            }
+        if (n < 2)  /* no new position to move */
+            {
+            abortMove = YES;
+            return (NO_ERROR);
+            }
+        }
+    
+    /* find number of site patterns and modify randomly */
+    globalNSitesOfPat = numSitesOfPat + ((chainId[chain] % chainParams.numChains) * numCompressedChars) + m->compCharStart;
+    nSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
+    if (!nSitesOfPat)
+        {
+        MrBayesPrint ("%s   Problem allocating nSitesOfPat in Move_ParsSPRClock\n", spacer);
+        return (ERROR);
+        }
+    for (i=0; i<numCompressedChars; i++)
+        {
+        nSitesOfPat[i] = globalNSitesOfPat[i];
+        for (j=0; j<globalNSitesOfPat[i]; j++)
+            {
+            ran = RandomNumber(seed);
+            if (ran < decreaseProb)
+                nSitesOfPat[i]--;
+            else if (ran > 1.0 - increaseProb)
+                nSitesOfPat[i]++;
+            }
+        }
+    
+    /* cycle through the possibilities and record the parsimony length */
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == NO)
+            continue;
+        /* find the parsimony length */
+        p->d = 0.0;
+        for (n=0; n<t->nRelParts; n++)
+            {
+            division = t->relParts[n];
+            
+            /* Find model settings */
+            m = &modelSettings[division];
+            
+            /* find nSitesOfPat */
+            nSites = nSitesOfPat + m->compCharStart;
+            
+            /* find downpass parsimony sets for the node and its environment */
+            pP   = m->parsSets[p->index     ];
+            pA   = m->parsSets[p->anc->index];
+            pV   = m->parsSets[v->index     ];
+            
+            length = 0.0;
+            if (m->nParsIntsPerSite == 1)
+                {
+                for (j=0; j<m->numChars; j++)
+                    {
+                    y[0] = (pP[j] | pA[j]) & pV[j];
+                    if (y[0] == 0)
+                        length += nSites[j];
+                    }
+                }
+            else /* if (m->nParsIntsPerSite == 2) */
+                {
+                for (j=0; j<2*m->numChars; j+=2)
+                    {
+                    y[0] = (pP[j] | pA[j]) & pV[j];
+                    y[1] = (pP[j+1] | pA[j+1]) & pV[j+1];
+                    if ((y[0] | y[1]) == 0)
+                        length += nSites[j/2];
+                    }
+                }
+            
+            /* find nStates and v approximation using parsimony-based s/n approximation */
+            nStates = m->numModelStates;
+            if (m->dataType == STANDARD)
+                nStates = 2;
+            v_approx = length/m->numUncompressedChars + 0.0001;
+            
+            /* get division warp factor (prop. to prob. of change) */
+            divFactor = - warpFactor * log(1.0/nStates - exp(-nStates/(nStates-1)*v_approx)/nStates);
+            
+            p->d += divFactor * length;
+            }
+        }
+    
+    /* find the min length and the sum for the forward move */
+    minLength = -1.0;
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == NO || p == a)
+            continue;
+        if (minLength < 0.0 || p->d < minLength)
+            minLength = p->d;
+        }
+    sum1 = 0.0;
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == YES && p != a)
+            sum1 += exp (minLength - p->d);
+        }
+    
+    /* generate a random uniform */
+    ran = RandomNumber(seed) * sum1;
+    
+    /* select the appropriate reattachment point (not a!) */
+    cumulativeProb = 0.0;
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == YES && p != a)
+            {
+            c = p;
+            cumulativeProb += exp (minLength - p->d);
+            if (cumulativeProb > ran)
+                break;
+            }
+        }
+    
+    /* calculate the proposal ratio */
+    (*lnProposalRatio) = c->d - minLength + log(sum1);
+    
+    /* find the min length and the sum for the backward move */
+    minLength = -1.0;
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == NO || p == c)
+            continue;
+        if (minLength < 0.0 || p->d < minLength)
+            minLength = p->d;
+        }
+    sum2 = 0.0;
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->marked == YES && p != c)
+            sum2 += exp (minLength - p->d);
+        }
+    
+    /* calculate the proposal ratio */
+    (*lnProposalRatio) += minLength - a->d - log(sum2);
+    
+    /* reattach u */
+    d = c->anc;
+    c->anc = u;
+    if (u->left == v)
+        u->right = c;
+    else
+        u->left = c;
+    u->anc = d;
+    if (d->left == c)
+        d->left = u;
+    else
+        d->right = u;
+    
+    if (v->length > 0.0)  /* side branch, not anc fossil */
+        {
+        if (c->nodeDepth > v->nodeDepth)
+            newBrlen = d->nodeDepth - c->nodeDepth - 2.0*minV;
+        else
+            newBrlen = d->nodeDepth - v->nodeDepth - 2.0*minV;
+        if (newBrlen <= 0.0)
+            {
+            abortMove = YES;
+            free (nSitesOfPat);
+            return (NO_ERROR);
+            }
+        
+        /* adjust lengths */
+        u->nodeDepth = d->nodeDepth - minV - RandomNumber(seed) * newBrlen;
+        v->length = u->nodeDepth - v->nodeDepth;
+        
+        /* calculate proposal ratio for tree change */
+        (*lnProposalRatio) += log (newBrlen / oldBrlen);
+        }
+    u->length = d->nodeDepth - u->nodeDepth;
+    c->length = u->nodeDepth - c->nodeDepth;
+    
+    v3new = v->length;
+    v4 = c->length;
+    v5 = u->length;
+    
+    /* reassign events for CPP and adjust prior and proposal ratios for relaxed clock models */
+    for (i=0; i<param->subParams[0]->nSubParams; i++)
+        {
+        subParm = param->subParams[0]->subParams[i];
+        if (subParm->paramType == P_CPPEVENTS)
+            {
+            nEvents = subParm->nEvents[2*chain+state[chain]];
+            position = subParm->position[2*chain+state[chain]];
+            rateMultiplier = subParm->rateMult[2*chain+state[chain]];
+            for (j=0; j<nEvents[c->index]; j++)
+                {
+                if (position[c->index][j] > v4 / (v4+v5))
+                    break;
+                }
+            n4 = j;
+            n5 = nEvents[c->index] - j;
+            nEvents[u->index] = n5;
+            if (n5 > 0)
+                {
+                position[u->index] = (MrBFlt *) SafeRealloc ((void *) position[u->index], n5 * sizeof (MrBFlt));
+                rateMultiplier[u->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[u->index], n5 * sizeof (MrBFlt));
+                for (j=n4; j<nEvents[c->index]; j++)
+                    {
+                    position[u->index][j-n4] = (position[c->index][j] * (v4+v5) - v4) / v5;
+                    rateMultiplier[u->index][j-n4] = rateMultiplier[c->index][j];
+                    }
+                if (n4 > 0)
+                    {
+                    position[c->index] = (MrBFlt *) SafeRealloc ((void *) position[c->index], n4 * sizeof (MrBFlt));
+                    rateMultiplier[c->index] = (MrBFlt *) SafeRealloc ((void *) rateMultiplier[c->index], n4 * sizeof (MrBFlt));
+                    for (j=0; j<n4; j++)
+                        position[c->index][j] *= ((v4+v5) / v4);
+                    }
+                else
+                    {
+                    free (position[c->index]);
+                    free (rateMultiplier[c->index]);
+                    position[c->index] = rateMultiplier[c->index] = NULL;
+                    }
+                nEvents[c->index] = n4;
+                }
+            else
+                {
+                for (j=0; j<nEvents[c->index]; j++)
+                    position[c->index][j] *= ((v4+v5) / v4);
+                }
+            
+            /* adjust proposal ratio */
+            (*lnProposalRatio) += n3 * log (v3new / v3);
+            
+            /* adjust prior ratio */
+            lambda = *GetParamVals (modelSettings[subParm->relParts[0]].cppRate, chain, state[chain]);
+            (*lnPriorRatio) += lambda * (v3 - v3new);
+            
+            /* update effective branch lengths */
+            if (UpdateCppEvolLengths (subParm, a, chain) == ERROR)
+                {
+                abortMove = YES;
+                free (nSitesOfPat);
+                return (NO_ERROR);
+                }
+            
+            if (UpdateCppEvolLengths (subParm, u, chain) == ERROR)
+                {
+                abortMove = YES;
+                free (nSitesOfPat);
+                return (NO_ERROR);
+                }
+            }   /* end cpp events parameter */
+        else if ( subParm->paramType == P_TK02BRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_TK02BRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            (*lnPriorRatio) -= LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*(c->length+u->length), rate[c->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[c->anc->index], nu*c->length, rate[c->index]);
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[u->anc->index], nu*u->length, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var(rate[v->anc->index], nu*v->length, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[c->index] = c->length * (rate[c->index] + rate[c->anc->index]) / 2.0;
+            brlens[v->index] = v->length * (rate[v->index] + rate[v->anc->index]) / 2.0;
+            brlens[u->index] = u->length * (rate[u->index] + rate[u->anc->index]) / 2.0;
+            }   /* end tk02 branch rate parameter */
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            (*lnPriorRatio) -= LnProbGamma ((c->length+u->length)/var, (c->length+u->length)/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (c->length/var, c->length/var, rate[c->index]);
+            (*lnPriorRatio) += LnProbGamma (u->length/var, u->length/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (v->length/var, v->length/var, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }   /* end wn branch rate parameter */
+        else if ( subParm->paramType == P_ILNBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (1.0, nu, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }   /* end iln branch rate parameter */
+        else if ( subParm->paramType == P_IGRBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
+            {
+            /* adjust prior ratio */
+            if (subParm->paramType == P_IGRBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            
+            (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[u->index]);
+            if (v->length > 0.0)
+                (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[v->index]);
+            
+            /* adjust effective branch lengths */
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            brlens[v->index] = rate[v->index] * v->length;
+            brlens[u->index] = rate[u->index] * u->length;
+            brlens[c->index] = rate[c->index] * c->length;
+            }   /* end igr branch rate parameter */
+        }   /* next subparameter */
+
+    /* set tiprobs update flags */
+    c->upDateTi = YES;
+    u->upDateTi = YES;
+    v->upDateTi = YES;
+    
+    /* set flags for update of cond likes down to root */
+    p = u;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    p = b;
+    while (p->anc != NULL)
+        {
+        p->upDateCl = YES;
+        p = p->anc;
+        }
+    
+    /* get down pass sequence */
+    GetDownPass (t);
+    
+    /* adjust prior ratio for clock tree */
+    if (LogClockTreePriorRatio (param, chain, &x) == ERROR)
+        {
+        free (nSitesOfPat);
+        return (ERROR);
+        }
+    (*lnPriorRatio) += x;
+    
+    /* adjust proposal prob for number movable nodes in new tree */
+    numMovableNodesNew=0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL)
+            {
+            if (p->calibration == NULL)
+                p->x = NO;
+            else
+                {
+                p->x = YES;
+                }
+            }
+        else
+            {
+            if (p->left->x == YES && p->right->x == YES)
+                {
+                p->x = YES;
+                }
+            else
+                p->x = NO;
+            }
+        a = p->anc->left;
+        b = p->anc->right;
+        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
+            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+            numMovableNodesNew++;
+        }
+    
+    if (numMovableNodesNew!=numMovableNodesOld)
+        {
+        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
+        }
+    
+#   if defined (DEBUG_ParsSPRClock)
+    ShowNodes (t->root, 2, YES);
+    printf ("After\nProposal ratio: %f\n",(*lnProposalRatio));
+    printf ("v: %d  u: %d  a: %d  b: %d c: %d\n",v->index, u->index, a->index, b->index, c->index);
+    getchar();
+#   endif
+    
+    free (nSitesOfPat);
+    return (NO_ERROR);
+}
+
+
 int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* Change topology and map branch lengths using TBR-type move biased according to parsimony scores,
@@ -12690,9 +12990,8 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
 //  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
-//  v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
-    tuning = mvp[3];                      /* multiplier tuning parameter */
-    nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
+    tuning = mvp[2];                      /* multiplier tuning parameter */
+    nNeighbor = (int)mvp[3];              /* distance to move picked branch in root and crown part */
 
     (*lnProposalRatio) = (*lnPriorRatio) = 0.0;
     
@@ -13202,6 +13501,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     warpFactor = mvp[0];                  /* tuning parameter determining how heavily to weight according to parsimony scores */
 //  increaseProb = decreaseProb = mvp[1]; /* reweighting probabilities */
+    v_typical = mvp[2];                   /* typical branch length for conversion of parsimony score to log prob ratio */
     tuning = mvp[3];                      /* multiplier tuning parameter */
     nNeighbor = (int)mvp[4];              /* distance to move picked branch in root and crown part */
 
@@ -16225,7 +16525,7 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 {
     int         i, j, *nEvents, numChangedNodes;
     MrBFlt      minV, maxV, tuning, factor, lambda=0.0, x,
-                *brlens=NULL, nu=0.0, igrvar=0.0, *rate=NULL;
+                *brlens=NULL, nu=0.0, var=0.0, *rate=NULL;
     TreeNode    *p, *q;
     ModelParams *mp;
     ModelInfo   *m;
@@ -16407,6 +16707,33 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                     }
                 }
             }
+        else if ( subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            /* prior ratio and update of branch lengths and rates (stretched in the same way as tree) */
+            for (j=0; j<t->nNodes-2; j++)
+                {
+                p = t->allDownPass[j];
+                q = oldT->allDownPass[j];
+                if (p->length > 0.0)  // not ancestral fossil
+                    {
+                    (*lnPriorRatio) -= LnProbGamma (q->length/var, q->length/var, rate[q->index]);
+                    (*lnPriorRatio) += LnProbGamma (p->length/var, p->length/var, rate[p->index]);
+                    brlens[p->index] = p->length * rate[p->index];
+                    if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
+                        {
+                        abortMove = YES;
+                        return (NO_ERROR);
+                        }
+                    }
+                }
+            }
         else if ( subParm->paramType == P_ILNBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
             {
@@ -16439,21 +16766,21 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
             rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
-            /* prior ratio and update of igr branch lengths and rates (stretched in the same way as tree) */
+            /* prior ratio and update of branch lengths and rates (stretched in the same way as tree) */
             for (j=0; j<t->nNodes-2; j++)
                 {
                 p = t->allDownPass[j];
                 q = oldT->allDownPass[j];
                 if (p->length > 0.0)  // not ancestral fossil
                     {
-                    // (*lnPriorRatio) -= LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[q->index]);
-                    // (*lnPriorRatio) += LnProbGamma (1.0/igrvar, 1.0/igrvar, rate[p->index]);
+                    // (*lnPriorRatio) -= LnProbGamma (1.0/var, 1.0/var, rate[q->index]);
+                    // (*lnPriorRatio) += LnProbGamma (1.0/var, 1.0/var, rate[p->index]);
                     brlens[p->index] = p->length * rate[p->index];
                     if (brlens[p->index] < RELBRLENS_MIN || brlens[p->index] > RELBRLENS_MAX)
                         {
@@ -16591,5 +16918,158 @@ void TouchAllTreeNodes (ModelInfo *m, int chain)
         p->upDateTi = YES;
         }
     m->upDateAll = YES;
+}
+
+
+int Move_WNBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* move one WN relaxed clock branch rate using multiplier */
+
+    int         i;
+    MrBFlt      newRate, oldRate, tuning, minR, maxR, wnvar, *wnRate, *brlens;
+    TreeNode    *p = NULL;
+    ModelInfo   *m;
+    Tree        *t;
+    TreeNode    *q;
+
+    /* get the tuning parameter */
+    tuning = mvp[0];
+    
+    /* get the model settings */
+    m = &modelSettings[param->relParts[0]];
+
+    /* get the WN branch rate and effective branch length data */
+    wnRate = GetParamVals (param, chain, state[chain]);
+    brlens = GetParamSubVals (param, chain, state[chain]);
+
+    /* get tree */
+    t = GetTree (param, chain, state[chain]);
+
+    /* get minimum and maximum rate */
+    minR = RATE_MIN;
+    maxR = RATE_MAX;
+    
+    /* randomly pick a branch */
+    do  {
+        i = (int) (RandomNumber(seed) * (t->nNodes -2));
+        p = t->allDownPass[i];
+        }
+    while (p->length < TIME_MIN);  // not ancestral fossil
+    
+    /* find new rate using multiplier */
+    oldRate = wnRate[p->index];
+    newRate = oldRate * exp ((0.5 - RandomNumber(seed)) * tuning);
+    
+    /* reflect if necessary */
+    while (newRate < minR || newRate > maxR)
+        {
+        if (newRate < minR)
+            newRate = minR * minR / newRate;
+        if (newRate > maxR)
+            newRate = maxR * maxR / newRate;
+        }
+    
+    wnRate[p->index] = newRate;
+
+    /* calculate prior ratio */
+    wnvar = *GetParamVals (m->wnvar, chain, state[chain]);
+    (*lnPriorRatio) = LnProbGamma (p->length/wnvar, p->length/wnvar, newRate)
+                    - LnProbGamma (p->length/wnvar, p->length/wnvar, oldRate);
+
+    /* calculate proposal ratio */
+    (*lnProposalRatio) = log (newRate / oldRate);
+    
+    /* update branch evolution lengths */
+    brlens[p->index] = newRate * p->length;
+
+    /* set update of transition probability */
+    p->upDateTi = YES;
+
+    /* set update of cond likes down to root */
+    q = p->anc;
+    while (q->anc != NULL)
+        {
+        q->upDateCl = YES;
+        q = q->anc;
+        }
+
+    return (NO_ERROR);
+
+}
+
+
+int Move_WNVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* move the variance of the WN relaxed clock model using multiplier */
+
+    int         i, j;
+    MrBFlt      oldVar, newVar, minVar, maxVar, tuning, *rate;
+    Model       *mp;
+    TreeNode    *p;
+    Tree        *t;
+
+    /* get tuning parameter */
+    tuning = mvp[0];
+
+    /* get model params */
+    mp = &modelParams[param->relParts[0]];
+
+    /* get the min and max values */
+    minVar = WNVAR_MIN;
+    maxVar = WNVAR_MAX;
+    if (!strcmp(mp->wnvarPr,"Uniform"))
+        {
+        minVar = (mp->wnvarUni[0] < WNVAR_MIN) ? WNVAR_MIN : mp->wnvarUni[0];
+        maxVar = (mp->wnvarUni[1] > WNVAR_MAX) ? WNVAR_MAX : mp->wnvarUni[1];
+        }
+    
+    /* get the wn variance */
+    oldVar = *GetParamVals (param, chain, state[chain]);
+
+    /* set new value */
+    newVar = oldVar * exp ((0.5 - RandomNumber(seed))*tuning);
+    
+    /* reflect if necessary */
+    while (newVar < minVar || newVar > maxVar)
+        {
+        if (newVar < minVar)
+            newVar = minVar * minVar / newVar;
+        if (newVar > maxVar)
+            newVar = maxVar * maxVar / newVar;
+        }
+    
+    /* store new value */
+    (*GetParamVals (param, chain, state[chain])) = newVar;
+
+    /* calculate prior ratio */
+    for (i=0; i<param->nSubParams; i++)
+        {
+        rate = GetParamVals (param->subParams[i], chain, state[chain]);
+        t = GetTree (param->subParams[i], chain, state[chain]);
+        for (j=0; j<t->nNodes-2; j++)
+            {
+            p = t->allDownPass[j];
+            if (p->length > 0.0)  // not ancestral fossil
+                {
+                (*lnPriorRatio) -= LnProbGamma (p->length/oldVar, p->length/oldVar, rate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length/newVar, p->length/newVar, rate[p->index]);
+                }
+            }
+        }
+
+    /* take prior on WNvar into account */
+    if (!strcmp(mp->wnvarPr,"Exponential"))
+        (*lnPriorRatio) += mp->wnvarExp * (oldVar - newVar);
+    
+    /* calculate proposal ratio */
+    (*lnProposalRatio) = log (newVar / oldVar);
+
+    /* we do not need to update likelihoods */
+    for (i=0; i<param->nRelParts; i++)
+        {
+        modelSettings[param->relParts[i]].upDateCl = NO;
+        }
+
+    return (NO_ERROR);
 }
 

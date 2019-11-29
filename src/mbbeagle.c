@@ -1432,6 +1432,10 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
                 {
                 length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
                 }
+            else if (m->wnBranchRates != NULL)
+                {
+                length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+                }
             else if (m->ilnBranchRates != NULL)
                 {
                 length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
@@ -2073,6 +2077,10 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
                 else if (m->tk02BranchRates != NULL)
                     {
                     length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+                    }
+                else if (m->wnBranchRates != NULL)
+                    {
+                    length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
                     }
                 else if (m->ilnBranchRates != NULL)
                     {

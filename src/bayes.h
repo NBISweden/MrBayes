@@ -352,12 +352,10 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define CPPLAMBDA_MAX           100.0f
 #define TK02VAR_MIN             0.000001f
 #define TK02VAR_MAX             10000.0f
-#define IGRVAR_MIN              0.000001f
-#define IGRVAR_MAX              10000.0f
-#define ILNVAR_MIN              0.000001f
-#define ILNVAR_MAX              10000.0f
-#define MIXEDVAR_MIN            0.000001f
-#define MIXEDVAR_MAX            10000.0f
+#define WNVAR_MIN               0.000001f
+#define WNVAR_MAX               10000.0f
+#define INDRVAR_MIN             0.000001f
+#define INDRVAR_MAX             10000.0f
 #define OMEGA_MIN               0.001f
 #define OMEGA_MAX               1000.0f
 
@@ -436,7 +434,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              34
+#define NUM_LINKED              36
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -471,6 +469,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_MIXTURE_RATES         31
 #define P_MIXEDVAR              32
 #define P_MIXEDBRCHRATES        33
+#define P_WNVAR                 34
+#define P_WNBRANCHRATES         35
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
@@ -852,28 +852,32 @@ typedef struct param
 #define TK02VAR_EXP                     127
 #define TK02VAR_UNI                     128
 #define TK02BRANCHRATES                 129
-#define IGRVAR_FIX                      130
-#define IGRVAR_EXP                      131
-#define IGRVAR_UNI                      132
-#define IGRBRANCHRATES                  133
-#define ILNVAR_FIX                      134
-#define ILNVAR_EXP                      135
-#define ILNVAR_UNI                      136
-#define ILNBRANCHRATES                  137
-#define MIXEDVAR_FIX                    138
-#define MIXEDVAR_EXP                    139
-#define MIXEDVAR_UNI                    140
-#define MIXEDBRCHRATES                  141
-#define CLOCKRATE_FIX                   142
-#define CLOCKRATE_NORMAL                143
-#define CLOCKRATE_LOGNORMAL             144
-#define CLOCKRATE_GAMMA                 145
-#define CLOCKRATE_EXP                   146
-#define SPECIESTREE_UNIFORM             147
-#define GENETREERATEMULT_DIR            148
-#define GENETREERATEMULT_FIX            149
-#define REVMAT_MIX                      150
-#define MIXTURE_RATES                   151
+#define WNVAR_FIX                       130
+#define WNVAR_EXP                       131
+#define WNVAR_UNI                       132
+#define WNBRANCHRATES                   133
+#define IGRVAR_FIX                      134
+#define IGRVAR_EXP                      135
+#define IGRVAR_UNI                      136
+#define IGRBRANCHRATES                  137
+#define ILNVAR_FIX                      138
+#define ILNVAR_EXP                      139
+#define ILNVAR_UNI                      140
+#define ILNBRANCHRATES                  141
+#define MIXEDVAR_FIX                    142
+#define MIXEDVAR_EXP                    143
+#define MIXEDVAR_UNI                    144
+#define MIXEDBRCHRATES                  145
+#define CLOCKRATE_FIX                   146
+#define CLOCKRATE_NORMAL                147
+#define CLOCKRATE_LOGNORMAL             148
+#define CLOCKRATE_GAMMA                 149
+#define CLOCKRATE_EXP                   150
+#define SPECIESTREE_UNIFORM             151
+#define GENETREERATEMULT_DIR            152
+#define GENETREERATEMULT_FIX            153
+#define REVMAT_MIX                      154
+#define MIXTURE_RATES                   155
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1092,7 +1096,7 @@ typedef struct model
     char        speciesTreeBrlensPr[100];  /* prior on branch lengths of species tree       */
     char        unconstrainedPr[100];  /* prior on branch lengths if unconstrained          */
     char        clockPr[100];          /* prior on branch if clock enforced                 */
-    char        clockVarPr[100];       /* prior on clock rate variation (strict, cpp, tk02, igr, ...) */
+    char        clockVarPr[100];       /* prior on clock rate variation (strict, cpp, tk02, wn, igr, iln, ...) */
     char        nodeAgePr[100];        /* prior on node depths (unconstrained, constraints) */
     char        speciationPr[100];     /* prior on speciation rate (net diversification)    */
     MrBFlt      speciationFix;
@@ -1135,17 +1139,21 @@ typedef struct model
     char        cppRatePr[100];        /* prior on CPP rate                             */
     MrBFlt      cppRateFix;
     MrBFlt      cppRateExp;
-    char        cppMultDevPr[100];     /* prior on CPP rate multiplier Lognormal variance */
+    char        cppMultDevPr[100];     /* prior on CPP rate multiplier lognormal variance */
     MrBFlt      cppMultDevFix;
     char        tk02varPr[100];        /* prior on TK02 lognormal rate variance         */
     MrBFlt      tk02varFix;
     MrBFlt      tk02varUni[2];
     MrBFlt      tk02varExp;
+    char        wnvarPr[100];          /* prior on WN gamma distribution variance       */
+    MrBFlt      wnvarFix;
+    MrBFlt      wnvarUni[2];
+    MrBFlt      wnvarExp;
     char        igrvarPr[100];         /* prior on IGR gamma distribution variance      */
     MrBFlt      igrvarFix;
     MrBFlt      igrvarUni[2];
     MrBFlt      igrvarExp;
-    char        ilnvarPr[100];         /* prior on independent lognormal rate variance      */
+    char        ilnvarPr[100];         /* prior on independent lognormal rate variance  */
     MrBFlt      ilnvarFix;
     MrBFlt      ilnvarUni[2];
     MrBFlt      ilnvarExp;
@@ -1233,7 +1241,7 @@ typedef struct modelinfo
     int         parsModelId;                /* is parsimony model used YES/NO           */
 
     /* Specific model information */
-    int         numRateCats;                /* number of rate cats (1 if inapplic.)    */
+    int         numRateCats;                /* number of rate cats (1 if inapplic.)     */
     int         numBetaCats;                /* number of beta cats (1 if inapplic.)     */
     int         numOmegaCats;               /* number of omega cats (1 if inapplic.)    */
     int         numTiCats;                  /* number of cats needing different tis     */
@@ -1266,10 +1274,12 @@ typedef struct modelinfo
     Param       *cppEvents;                 /* ptr to CPP events                        */
     Param       *tk02var;                   /* ptr to variance for TK02 relaxed clock   */
     Param       *tk02BranchRates;           /* ptr to branch rates for TK02 relaxed clock */
+    Param       *wnvar;                     /* ptr to gamma var for WN relaxed clock    */
+    Param       *wnBranchRates;             /* ptr to branch rates for WN relaxed clock */
     Param       *igrvar;                    /* ptr to gamma var for IGR relaxed clock   */
-    Param       *igrBranchRates;            /* ptr to branch rates for IGR relaxed clock*/
-    Param       *ilnvar;                    /* ptr to variance for ILN relaxed clock   */
-    Param       *ilnBranchRates;            /* ptr to branch rates for ILN relaxed clock*/
+    Param       *igrBranchRates;            /* ptr to branch rates for IGR relaxed clock */
+    Param       *ilnvar;                    /* ptr to variance for ILN relaxed clock    */
+    Param       *ilnBranchRates;            /* ptr to branch rates for ILN relaxed clock */
     Param       *mixedvar;                  /* ptr to var for mixed relaxed clock       */
     Param       *mixedBrchRates;            /* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
