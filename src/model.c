@@ -1141,24 +1141,27 @@ int ChangeNumChains (int from, int to)
         if (p->paramType == P_CPPEVENTS)
             nCppEventParams++;
         }
-    cppEventParams = (Param *) SafeCalloc (nCppEventParams, sizeof(Param));
-    for (i=0; i<nCppEventParams; i++)
+    if (nCppEventParams > 0)
         {
-        cppEventParams[i].paramType = P_CPPEVENTS;
-        AllocateCppEvents (&cppEventParams[i]);
-        }
-    for (i=j=0; i<numParams; i++)
-        {
-        p = &params[i];
-        if (p->paramType == P_CPPEVENTS)
+        cppEventParams = (Param *) SafeCalloc ((size_t)(nCppEventParams), sizeof(Param));
+        for (i=0; i<nCppEventParams; i++)
             {
-            cppEventParams[j].nEvents = p->nEvents;
-            p->nEvents = NULL;
-            cppEventParams[j].position = p->position;
-            p->position = NULL;
-            cppEventParams[j].rateMult = p->rateMult;
-            p->rateMult = NULL;
-            j++;
+            cppEventParams[i].paramType = P_CPPEVENTS;
+            AllocateCppEvents (&cppEventParams[i]);
+            }
+        for (i=j=0; i<numParams; i++)
+            {
+            p = &params[i];
+            if (p->paramType == P_CPPEVENTS)
+                {
+                cppEventParams[j].nEvents = p->nEvents;
+                p->nEvents = NULL;
+                cppEventParams[j].position = p->position;
+                p->position = NULL;
+                cppEventParams[j].rateMult = p->rateMult;
+                p->rateMult = NULL;
+                j++;
+                }
             }
         }
     if (AllocateNormalParams () == ERROR)
@@ -1525,20 +1528,30 @@ int ChangeNumRuns (int from, int to)
         }
     /* and finally the normal parameters */
     oldParamValues = paramValues;
-    paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, paramValsRowSize * 2 * numGlobalChains * sizeof (MrBFlt));
+    if (paramValues != NULL)
+        paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, (size_t)(paramValsRowSize * 2 * numGlobalChains * sizeof (MrBFlt)));
     oldintValues = intValues;
-    intValues = (int *) SafeRealloc ((void *) intValues, intValsRowSize * 2 * numGlobalChains * sizeof (int));
+    if (intValues != NULL)
+        intValues = (int *) SafeRealloc ((void *) intValues, (size_t)(intValsRowSize * 2 * numGlobalChains * sizeof (int)));
     if (paramValues == NULL)
         {
-        memAllocs[ALLOC_PARAMVALUES] = NO;
         MrBayesPrint ("%s   Problem reallocating paramValues\n", spacer);
+        return (ERROR);
+        }
+    if (intValues == NULL && intValsRowSize > 0)
+        {
+        MrBayesPrint ("%s   Problem reallocating intValues\n", spacer);
         return (ERROR);
         }
     for (i=0; i<numParams; i++)
         {
-        params[i].values += (paramValues - oldParamValues);
-        params[i].subValues += (paramValues - oldParamValues);
-        params[i].intValues += (intValues - oldintValues);
+        if (paramValues)
+            {
+            params[i].values += (paramValues - oldParamValues);
+            params[i].subValues += (paramValues - oldParamValues);
+            }
+        if (intValues)
+            params[i].intValues += (intValues - oldintValues);
         }
 
     /* fill new chains parameters with appropriate values */
@@ -1596,7 +1609,8 @@ int ChangeNumRuns (int from, int to)
         {
         mvt = moves[i]->moveType;
         moves[i]->tuningParam = (MrBFlt **) SafeRealloc ((void *) moves[i]->tuningParam, (size_t)numGlobalChains * sizeof (MrBFlt *));
-        moves[i]->tuningParam[0] = (MrBFlt *) SafeRealloc ((void *) moves[i]->tuningParam[0], (size_t)numGlobalChains * (size_t)(mvt->numTuningParams) * sizeof (MrBFlt));
+        if (mvt->numTuningParams > 0)
+            moves[i]->tuningParam[0] = (MrBFlt *) SafeRealloc ((void *) moves[i]->tuningParam[0], (size_t)numGlobalChains * (size_t)(mvt->numTuningParams) * sizeof (MrBFlt));
         for (j=1; j<numGlobalChains; j++)
             moves[i]->tuningParam[j] = moves[i]->tuningParam[0] + j * mvt->numTuningParams;
         moves[i]->relProposalProb = (MrBFlt *) SafeRealloc ((void *) moves[i]->relProposalProb, 4 * (size_t)numGlobalChains * sizeof (MrBFlt));
