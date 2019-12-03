@@ -22730,7 +22730,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = TK02BRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_TK02BranchRate;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22769,7 +22769,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = WNBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_WNBranchRate;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22808,7 +22808,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = IGRBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IgrBranchRate;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22847,7 +22847,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = ILNBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IlnBranchRate;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -22886,7 +22886,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_MixedBranchRate;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
