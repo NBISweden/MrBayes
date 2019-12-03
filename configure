@@ -1403,7 +1403,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-mpi              Build w$ith MPI parallelization support [default=no]
+  --with-mpi              Build with MPI parallelization support [default=no]
   --with-readline         Build with the Readline library [default=check]
   --with-beagle[=PATH]    Build with the Beagle library [default=check]. The
                           PATH argument should be the prefix path where Beagle

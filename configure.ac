@@ -73,7 +73,7 @@ AC_ARG_ENABLE([fma],
 
 AC_ARG_WITH([mpi],
     [AS_HELP_STRING([--with-mpi],
-        [Build w$ith MPI parallelization support @<:@default=no@:>@])],
+        [Build with MPI parallelization support @<:@default=no@:>@])],
     [],
     [with_mpi=no])
 
