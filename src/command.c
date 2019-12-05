@@ -4112,7 +4112,11 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            dataType = CONTINUOUS;
+                            {
+                            MrBayesPrint ("%s   MrBayes currently does not allow the use of the 'Continuous' datatype\n", spacer);
+                            return ERROR;
+                            /* dataType = CONTINUOUS; */
+                            }
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             dataType = MIXED;
