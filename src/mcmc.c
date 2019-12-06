@@ -7649,7 +7649,7 @@ MrBFlt LogPrior (int chain)
 {
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
     const int       *rateCat;
-    MrBFlt          *st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
+    MrBFlt          *st, *sst, lnPrior, sum, x=0.0, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
                     sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, var, **rateMultiplier;
     char            *sS;
     CLFlt           *nSitesOfPat;
@@ -8030,7 +8030,7 @@ MrBFlt LogPrior (int chain)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for coalescence process\n", spacer);
                         }
-                    lnPrior += x;
+                    lnPrior += x;   /* Note that x is assigned an appropriate value in the call to LnCoalescencePriorPr above */
                     }
                 else if (p->paramId == BRLENS_CLOCK_BD)
                     {
@@ -8047,7 +8047,7 @@ MrBFlt LogPrior (int chain)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for birth-death process\n", spacer);
                         }
-                    lnPrior += x;
+                    lnPrior += x;   /* Note that x is assigned an appropriate value in the call to LnBirthDeathPriorPr above */
                     }
                 else if (p->paramId == BRLENS_CLOCK_FOSSIL)
                     {
@@ -8065,7 +8065,7 @@ MrBFlt LogPrior (int chain)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
                         }
-                    lnPrior += x; /* FIXME: x undefined? (from clang static analyzer) */
+                    lnPrior += x;   /* Note that x is assigned an appropriate value in the call to LnFossilizationPriorPr above */
                     }
                 else if (p->paramId == BRLENS_CLOCK_SPCOAL)
                     {
