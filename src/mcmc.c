@@ -7649,7 +7649,7 @@ MrBFlt LogPrior (int chain)
 {
     int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
     const int       *rateCat;
-    MrBFlt          *st, *sst, lnPrior, sum, x, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
+    MrBFlt          *st, *sst, lnPrior, sum, x=0.0, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
                     sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, var, **rateMultiplier;
     char            *sS;
     CLFlt           *nSitesOfPat;
