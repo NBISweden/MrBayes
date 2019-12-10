@@ -4146,7 +4146,11 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            dataType = CONTINUOUS;
+                            {
+                            MrBayesPrint ("%s   MrBayes currently does not allow the use of the 'Continuous' datatype\n", spacer);
+                            return ERROR;
+                            /* dataType = CONTINUOUS;*/
+                            }
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             MrBayesPrint ("%s   Cannot have mixed datatype within a mixed datatype\n", spacer);
@@ -9809,7 +9813,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                               G,H,I,L,K,M,F,P,S,T,W,Y,V)                        \n");
         MrBayesPrint ("                    Datatype = Restriction: Restriction site (0,1) states        \n");
         MrBayesPrint ("                    Datatype = Standard: Morphological (0,1) states              \n");
-        MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");
+      /*MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");*/
         MrBayesPrint ("                    Datatype = Mixed(<type>:<range>,...,<type>:<range>): A       \n");
         MrBayesPrint ("                               mixture of the above datatypes. For example,      \n");
         MrBayesPrint ("                               \"datatype=mixed(dna:1-100,protein:101-200)\"     \n");
@@ -9872,10 +9876,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    ;                                                            \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The only non-standard NEXUS format option is the use of the \"mixed\",        \n");
-        MrBayesPrint ("   \"restriction\", \"standard\" and \"continuous\" datatypes. Hence, if         \n");
-        MrBayesPrint ("   you use any of these datatype specifiers, a program like PAUP* or             \n");
-        MrBayesPrint ("   MacClade will report an error (as they should because MrBayes is not          \n");
-        MrBayesPrint ("   strictly NEXUS compliant).                                                    \n");
+        MrBayesPrint ("   \"restriction\", and \"standard\" datatypes. Hence, if you use any of these   \n");
+        MrBayesPrint ("   datatype specifiers, a program like PAUP* or MacClade will report an error    \n");
+        MrBayesPrint ("   (as they should because MrBayes is not strictly NEXUS compliant).             \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Matrix"))
@@ -14434,7 +14437,7 @@ void SetUpParms (void)
     PARAM   (4, "Ntax",           DoDimensionsParm,  "\0");
     PARAM   (5, "Nchar",          DoDimensionsParm,  "\0");
     PARAM   (6, "Interleave",     DoFormatParm,      "Yes|No|\0");
-    PARAM   (7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Continuous|Mixed|\0");
+    PARAM   (7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Mixed|\0");
     PARAM   (8, "Gap",            DoFormatParm,      "\0");
     PARAM   (9, "Missing",        DoFormatParm,      "\0");
     PARAM  (10, "Matchchar",      DoFormatParm,      "\0");
