@@ -14437,7 +14437,7 @@ void SetUpParms (void)
     PARAM   (4, "Ntax",           DoDimensionsParm,  "\0");
     PARAM   (5, "Nchar",          DoDimensionsParm,  "\0");
     PARAM   (6, "Interleave",     DoFormatParm,      "Yes|No|\0");
-    PARAM   (7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Continuous|Mixed\0");
+    PARAM   (7, "Datatype",       DoFormatParm,      "Dna|Rna|Protein|Restriction|Standard|Continuous|Mixed|\0");
     PARAM   (8, "Gap",            DoFormatParm,      "\0");
     PARAM   (9, "Missing",        DoFormatParm,      "\0");
     PARAM  (10, "Matchchar",      DoFormatParm,      "\0");
