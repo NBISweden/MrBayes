@@ -13786,7 +13786,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             
         /* Now, check that the data are the same (i.e., both nucleotide or both amino acid, or whatever). */
         if (isFirstNucleotide != isSecondNucleotide)
-            isSame = NO; /* data are not both nucleotide or both note nucleotide */
+            isSame = NO; /* data are not both nucleotide or both not nucleotide */
         else if (modelParams[part1].dataType != modelParams[part2].dataType && isFirstNucleotide == NO)
             isSame = NO; /* data are not the same */
 
@@ -13838,14 +13838,12 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (modelSettings[part1].dataType == PROTEIN && modelSettings[part2].dataType == PROTEIN)
             {
             /* We are dealing with protein data. */
-            if (!strcmp(modelParams[part1].aaModelPr, modelParams[part2].aaModelPr))
+            if (strcmp(modelParams[part1].aaModelPr, modelParams[part2].aaModelPr) == 0)
                 {
-                if (!strcmp(modelParams[part1].aaModelPr, "Fixed"))
+                if (strcmp(modelParams[part1].aaModelPr, "Fixed") == 0)
                     {
                     /* only have a single, fixed, amino acid rate matrix */
-                    if (!strcmp(modelParams[part1].aaModel, modelParams[part2].aaModel))
-                        {}
-                    else
+                    if (strcmp(modelParams[part1].aaModel, modelParams[part2].aaModel) != 0)
                         isSame = NO; /* we have different amino acid models, and the state frequencies must be different */
                     /* if we have an equalin model or Gtr model, then we need to check the prior on the state frequencies */
                     if (!strcmp(modelParams[part1].aaModel, "Equalin") || !strcmp(modelParams[part1].aaModel, "Gtr"))
@@ -14856,28 +14854,27 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (isSecondProtein == NO)
             *isApplic2 = NO; /* part2 is not amino acid data so tratio does not apply */
             
-        /* If the model is fixed for a partition, then it is not a free parameter and
-           we set it to isApplic = NO */
-        if (!strcmp(modelParams[part1].aaModelPr,"Fixed"))
-            *isApplic1 = NO; 
-        if (!strcmp(modelParams[part2].aaModelPr,"Fixed"))
-            *isApplic2 = NO;
-
         /* We now need to check if the prior is the same for both. */
         if (!strcmp(modelParams[part1].aaModelPr,"Mixed") && !strcmp(modelParams[part2].aaModelPr,"Mixed"))
             {
+            /* Check if the state frequency parameter is unlinked across partitions (then aamodel cannot be the same) */
+            if (linkTable[P_PI][part1] != linkTable[P_PI][part2])
+                isSame = NO; /* the state frequencies are unlinked, so the aamodels cannot be linked */
             }
         else if (!strcmp(modelParams[part1].aaModelPr,"Fixed") && !strcmp(modelParams[part2].aaModelPr,"Fixed"))
             {
             if (strcmp(modelParams[part1].aaModel,modelParams[part2].aaModel))
                 isSame = NO;
+            /* Check if the state frequency parameter is unlinked across partitions (then aamodel cannot be the same) */
+            if (linkTable[P_PI][part1] != linkTable[P_PI][part2])
+                isSame = NO; /* the state frequencies are unlinked, so the aamodels cannot be linked */
             }
         else
             isSame = NO; /* the priors are not the same, so we cannot set the parameter to be equal for both partitions */
 
         /* Check to see if amino acid model is inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
-            isSame = NO; /* if tratio is inapplicable for either partition, then the parameter cannot be the same */
+            isSame = NO; /* if aamodel is inapplicable for either partition, then the parameter cannot be the same */
         }
     else if (whichParam == P_BRCORR)
         {
