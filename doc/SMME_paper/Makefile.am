@@ -39,7 +39,6 @@ deps=	\
 	$(srcdir)/src/svmult.cls
 
 if HAVE_LATEX
-
 if HAVE_LATEXMK
 
 Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
