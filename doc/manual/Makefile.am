@@ -28,7 +28,6 @@ deps=	\
 	$(srcdir)/src/sysbio.bst
 
 if HAVE_LATEX
-
 if HAVE_LATEXMK
 
 Manual_MrBayes_v3.2.pdf: $(deps)

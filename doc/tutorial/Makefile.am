@@ -35,7 +35,6 @@ deps=	\
 	$(srcdir)/src/sysbio.bst
 
 if HAVE_LATEX
-
 if HAVE_LATEXMK
 
 MBDating.pdf: $(deps)

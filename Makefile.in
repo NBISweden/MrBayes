@@ -88,6 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@BUILD_DOC_TRUE@am__append_1 = doc
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps =  \
@@ -187,7 +188,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = src examples doc
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/autotools/compile \
 	$(top_srcdir)/autotools/config.guess \
@@ -349,7 +350,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_doc_DATA = COPYING README NEWS
 EXTRA_DIST = INSTALL
-SUBDIRS = src doc examples
+SUBDIRS = src examples $(am__append_1)
 all: all-recursive
 
 .SUFFIXES:
