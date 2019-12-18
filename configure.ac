@@ -69,6 +69,16 @@ AC_ARG_ENABLE([fma],
     [enable_fma=$enableval],
     [enable_fma=yes])
 
+# Optional feature: Enable/disable building of documentation under doc/
+# (enabled by default)
+
+AC_ARG_ENABLE([doc],
+    [AS_HELP_STRING([--enable-doc],
+        [Enable building supplied documentation from sources in doc/
+         @<:@default=yes@:>@])],
+    [enable_doc=$enableval],
+    [enable_doc=yes])
+
 # Optional external libraries:  MPI, Readline, Beagle
 
 AC_ARG_WITH([mpi],
