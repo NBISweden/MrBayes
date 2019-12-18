@@ -116,13 +116,14 @@ AM_COND_IF([BUILD_DOC], [
     AC_PATH_PROG(BIBTEX, [bibtex])
     AC_PATH_PROG(LATEXMK, [latexmk])
 
-    AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
+]) dnl AM_COND_IF([BUILD_DOC])
+
+AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
+AM_COND_IF([BUILD_DOC], [
     AM_COND_IF([HAVE_LATEX], [],
                [AC_MSG_WARN([pdflatex and/or bibtex is missing, documentation will not be rebuilt])])
-
-    AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
-
-]) dnl AM_COND_IF([BUILD_DOC])
+])
+AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
 
 # Determine if we can (and want) to use an MPI C compiler.
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
@@ -275,8 +276,8 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/manual/Makefile
-                 doc/tutorial/Makefile
                  doc/SMME_paper/Makefile
+                 doc/tutorial/Makefile
                  examples/Makefile
                  src/Makefile
 ])
