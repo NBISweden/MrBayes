@@ -131,6 +131,11 @@ MrBFlt  QuantileLogNormal (MrBFlt prob, MrBFlt mu, MrBFlt sigma);
 int     DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median);
 MrBFlt  LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 
+#if defined (BEAGLE_V3_ENABLED)
+int     Height(TreeNode *p);
+void    ReverseLevelOrder(Tree *t, TreeNode *p, int *i);
+void    StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i);
+#endif
 
 /* qsort compare function for MrBFlt */
 int cmpMrBFlt(const void *a, const void *b)
@@ -358,7 +363,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
                 tmpcp = strtok(NULL,"\t\n");
                 if (tmpcp == NULL)
                     {
-                    MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
+                    MrBayesPrint ("%s   Error: In .ss file not enough elements on the string :%s         \n", spacer, strBuf);
                     return ERROR;
                     }
                 tmp = atof(tmpcp);
@@ -374,7 +379,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
                 tmpcp = strtok(NULL,"\t\n");
                 if (tmpcp == NULL)
                     {
-                    MrBayesPrint ("%s   Error: In .ss file not enough ellements on the string :%s        \n", spacer, strBuf);
+                    MrBayesPrint ("%s   Error: In .ss file not enough elements on the string :%s         \n", spacer, strBuf);
                     return ERROR;
                     }
                 tmp = atof(tmpcp);
@@ -1037,7 +1042,7 @@ MrBFlt MinimumValue (MrBFlt x, MrBFlt y)
 }
 
 
-/* NOTE!!!! The result of this function should be used before consequtive call to it again.
+/* NOTE!!!! The result of this function should be used before consecutive call to it again.
    It means NEVER use it like this:  printf ("%s %s", MbPrintNum (a),MbPrintNum (b)) */
 char *MbPrintNum (MrBFlt num)
 {
@@ -1080,11 +1085,11 @@ void MeanVariance (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var)
 /*  Compute mean and variance of log scaled values.
 @param vals    pointer to values in log scale
 @param nVals   number of "vals", minimum 1
-@param mean    adress of variable where computed mean is returned by the function
-@param var     adress of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returened. 
-@param varEst  adress of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returened. 
-               Could be set to NULL if this value need not to be returened.
-Note: We devide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
+@param mean    address of variable where computed mean is returned by the function
+@param var     address of variable where computed variance is returned by the function. Could be set to NULL if this value need not to be returned. 
+@param varEst  address of variable where computed estimate of the population variance is returned, could be set to NULL if this value need not to be returned. 
+               Could be set to NULL if this value need not to be returned.
+Note: We divide by nVals or by (nVals-1) when var and varEst is calculated from the sum of square differences. */
 void MeanVarianceLog (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt *var, MrBFlt *varEst)
 {
     int             i;
@@ -1419,7 +1424,7 @@ MrBFlt PotentialScaleReduction (MrBFlt **vals, int nRuns, int *count)
 \param vals [0..nRuns][count[]]  All records for all runs
 \param nRuns                     Number of runs
 \param count [0..nRuns]          Number of records in each run
-\param returnESS [0..nRuns]      Is an arry in which the routine returns ESS values for each run.
+\param returnESS [0..nRuns]      Is an array in which the routine returns ESS values for each run.
 */
 void EstimatedSampleSize (MrBFlt **vals, int nRuns, int *count, MrBFlt *returnESS)
 {
@@ -1564,7 +1569,7 @@ void *SafeRealloc (void *ptr, size_t s)
 
     if (s == 0)
         {
-        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        //MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         free (ptr);
         return NULL;
         }
@@ -2035,6 +2040,10 @@ Tree *AllocateTree (int numTaxa)
 
     t->intDownPass = t->allDownPass + t->memNodes;
 
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
+#endif
+
     /* initialize nodes and set index and memoryIndex */
     for (i = 0; i < t->memNodes; i++)
         {
@@ -2103,6 +2112,10 @@ Tree *AllocateFixedTree (int numTaxa, int isRooted)
         return NULL;
         }
     t->intDownPass = t->allDownPass + t->nNodes;
+
+#if defined (BEAGLE_V3_ENABLED)
+    t->levelPassEnabled = 0;
+#endif
     
     /* initialize nodes and set index and memoryIndex */
     for (i=0; i<t->memNodes; i++)
@@ -3008,7 +3021,7 @@ int CopyToPolyTreeFromPolyTree (PolyTree *to, PolyTree *from)
         }
     else
         {
-        assert (to->memNodes >= from->memNodes);/*Otherwise partition length woould not be long enough for nodes in "to" */
+        assert (to->memNodes >= from->memNodes);/*Otherwise partition length would not be long enough for nodes in "to" */
         nLongsNeeded = (from->memNodes/2 - 1) / nBitsInALong + 1;
         }
 
@@ -3672,8 +3685,8 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
 |   findAllowedClockrate: Finds the range of clock rates allowed for the tree.
 |
 |   @param t        - tree to check (IN)  
-|   @minClockRate   - adress where minimum allowed clock rate is stored (OUT)
-|   @maxClockRate   - adress where maximum allowed clock rate is stored (OUT)
+|   @minClockRate   - address where minimum allowed clock rate is stored (OUT)
+|   @maxClockRate   - address where maximum allowed clock rate is stored (OUT)
 |
 ----------------------------------------------------------------*/
 void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
@@ -3812,6 +3825,9 @@ void FreeTree (Tree *t)
         free (t->bitsets);
         free (t->flags);
         free (t->allDownPass);
+#if defined (BEAGLE_V3_ENABLED)
+        free (t->intDownPassLevel);
+#endif 
         free (t->nodes);
         free (t);
         }
@@ -3881,6 +3897,13 @@ void GetDownPass (Tree *t)
 
     i = j = 0;
     GetNodeDownPass (t, t->root, &i, &j);
+#if defined (BEAGLE_V3_ENABLED)
+    if (t->levelPassEnabled)
+        {
+        i = 0;
+        ReverseLevelOrder (t, t->root, &i);
+        }
+#endif
 }
 
 
@@ -3907,6 +3930,54 @@ void GetNodeDownPass (Tree *t, TreeNode *p, int *i, int *j)
         }
 }
 
+#if defined (BEAGLE_V3_ENABLED)
+ /* Compute the "height" of a tree -- the number of
+    nodes along the longest path from the root node
+    down to the farthest leaf node.*/
+int Height(TreeNode *p)
+{
+    if (p==NULL)
+        return 0;
+    else
+        {
+        /* compute the height of each subtree */
+        int lheight = Height(p->left);
+        int rheight = Height(p->right);
+ 
+        /* use the larger one */
+        if (lheight > rheight)
+            return(lheight+1);
+        else
+            return(rheight+1);
+        }
+}
+ /* Function to perform reverse level order traversal a tree*/
+void ReverseLevelOrder(Tree *t, TreeNode *p, int *i)
+{
+    int h = Height(p);
+    int l;
+    for (l=h; l>=1; l--) 
+        StoreGivenLevel(t, p, l, i);
+}
+ /* Store nodes at a given level */
+void StoreGivenLevel(Tree *t, TreeNode *p, int level, int *i)
+{
+    if (p == NULL)
+        return;
+    if (level == 1)
+        {
+        if (p->left != NULL && p->right != NULL && p->anc != NULL)
+            {
+            t->intDownPassLevel[(*i)++] = p;
+            }
+        }
+    else if (level > 1)
+        {
+        StoreGivenLevel(t, p->left, level-1, i);
+        StoreGivenLevel(t, p->right, level-1, i);
+        }
+}
+#endif
 
 /* GetPolyAges: Get PolyTree node ages */
 void GetPolyAges (PolyTree *t)
@@ -4201,12 +4272,12 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
                 p->length = p->anc->nodeDepth - p->nodeDepth;
                 if (p->length < BRLENS_MIN)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too small.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too small.\n", spacer);
                     //return (ERROR);
                     }
                 if (p->length > BRLENS_MAX)
                     {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lenghts too long.\n", spacer);
+                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too long.\n", spacer);
                     //return (ERROR);
                     }
                 }
@@ -4408,9 +4479,9 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengthes
+| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengths
 |     and checks that user defined brlens satisfy the specified calibration(s) up to tolerance tol
-| TODO: clock rate is devived here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistancy)
+| TODO: clock rate is divided here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistency)
 |
 |------------------------------------------------------------------------------*/
 int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
@@ -4419,7 +4490,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
     MrBFlt          f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
     TreeNode        *p, *q, *r, *s;
 
-    /* By defauult assume the tree does not have allowed range of clockrate */
+    /* By default assume the tree does not have allowed range of clockrate */
     *minClockRate = 2.0;
     *maxClockRate = 1.0;
 
@@ -4501,7 +4572,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
             q = t->allDownPass[j];
             if (x[q->index] < 0.0 && y[q->index] < 0.0)
                 continue;
-            if (p->nodeDepth == q->nodeDepth) // becouse clock rate could be as low as possible we can not take approximate equality. 
+            if (p->nodeDepth == q->nodeDepth) // because clock rate could be as low as possible we can not take approximate equality. 
                 {
                 /* same depth so they must share a possible age */
                 if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index]) ||
@@ -4575,7 +4646,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         return (NO);
         }
     
-    /* Allow tollerance */
+    /* Allow tolerance */
     if (minRateConstrained == YES && maxRateConstrained == YES && AreDoublesEqual (minRate, maxRate, tol) == YES && minRate > maxRate) 
         {
         maxRate = minRate;
@@ -4612,7 +4683,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         p->age = p->nodeDepth / clockRate;
         }
 
-    /* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inacuracy) */
+    /* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inaccuracy) */
     ageToAdd = 0.0;
     for (i=0; i<t->nNodes-1; i++)
         {
@@ -4683,7 +4754,7 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
                 {
                 if (AreDoublesEqual (firstLength, length, tol) == NO)
                     {
-                    MrBayesPrint ("%s   Node (%s) is not at the same depth as some other tip taking colibration into account. \n", spacer, p->label);
+                    MrBayesPrint ("%s   Node (%s) is not at the same depth as some other tip taking calibration into account. \n", spacer, p->label);
                     isClockLike = NO;
                     }
                 }
@@ -4814,7 +4885,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
     for (i=0; i<param->nSubParams; i++)
         {
         subParm = param->subParams[i];
-        if (subParm->paramId == TK02BRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_TK02))
+        if (subParm->paramId == TK02BRANCHRATES)
             {
             rAnc = GetParamVals(subParm, chain, state)[tree->root->left->index];
             if (fabs(rAnc - 1.0) > 1E-6)
@@ -4835,8 +4906,9 @@ int IsTreeConsistent (Param *param, int chain, int state)
                     }
                 }
             }
-        else if (subParm->paramId == IGRBRANCHRATES || (subParm->paramId == MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state) == RCL_IGR))
-            {
+        else if (subParm->paramId == ILNBRANCHRATES || subParm->paramId == IGRBRANCHRATES ||
+                 subParm->paramId == MIXEDBRCHRATES || subParm->paramId == WNBRANCHRATES)
+            {    // *GetParamIntVals(subParm, chain, state) == RCL_ILN or RCL_IGR
             for (j=0; j<tree->nNodes-2; j++)
                 {
                 p = tree->allDownPass[j];
@@ -4844,7 +4916,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
                 r = GetParamVals(subParm, chain, state)[p->index];
                 if (fabs(p->length * r - b) > 0.000001)
                     {
-                    printf ("%s   Igr relaxed clock mismatch in branch %d\n", spacer, p->index);
+                    printf ("%s   Independent/uncorrelated relaxed clock mismatch in branch %d\n", spacer, p->index);
                     return NO;
                     }
                 }
@@ -5415,7 +5487,7 @@ void PrintPolyNodes (PolyTree *pt)
             printf ("Cpp event set '%s'\n", pt->eSetName[i]);
             for (j=0; j<pt->nNodes; j++)
                 {
-                if (pt->nEvents[i*pt->nNodes+j] > 0)
+                if (pt->nEvents[i][j] > 0)
                     {
                     printf ("\tNode %d -- %d:(", j, pt->nEvents[i][j]);
                     for (k=0; k<pt->nEvents[i][j]; k++)
@@ -5503,7 +5575,7 @@ void AppendRelaxedBranch (int a,int b,PolyTree *t)
 
 
 /**
-Swap relaxed clock paramiters of the branch of nodes with index "a" and "b".
+Swap relaxed clock parameters of the branch of nodes with index "a" and "b".
 */
 void SwapRelaxedBranchInfo (int a,int b,PolyTree *t)
 {
@@ -5544,7 +5616,7 @@ void SwapRelaxedBranchInfo (int a,int b,PolyTree *t)
 |      included taxa.  NB! All tree nodes cannot be accessed by cycling over the
 |      pt->nodes array after the deletion, because some spaces will be occupied by deleted
 |      nodes and pt->nNodes is no longer the length of this array
-|      (if proper re-arangment of pt->nodes needed then remove "#if 0" and make changes to p->x, see below).
+|      (if proper rearrangement of pt->nodes needed then remove "#if 0" and make changes to p->x, see below).
 |
 ---------------------------------------------------------------------------------------------*/
 int PrunePolyTree (PolyTree *pt)
@@ -5794,15 +5866,15 @@ int RandPerturb (Tree *t, int nPert, RandLong *seed)
 
 
 /*
-|       Reorder array of nodes "nodeArray" such that first nodes in it could be paired with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint.  
+|       Reorder array of nodes "nodeArray" such that first nodes in it could be paired with "w" to create immediate common ancestor and this ancestor node would not violate any constraint.  
 |       
 | @param w                      Reference node as described 
 | @param nodeArray              A set of node to order as described
-| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
-| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition.
-| @param isRooted               Do constraints apply to rootet tree YES or NO
+| @param activeConstraints      Array containing indices of active constraints in the set of defined constraints
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint definition.
+| @param isRooted               Do constraints apply to rooted tree YES or NO
 |
-| @return                       Number of nodes in "nodeArray" that could be paired  with "w" to create imediat common ancestor and this ancesor node would not vialate any constraint
+| @return                       Number of nodes in "nodeArray" that could be paired  with "w" to create immediate common ancestor and this ancestor node would not violate any constraint
 */
 int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, int *activeConstraints, int activeConstraintsSize, int nLongsNeeded, int isRooted)
 {
@@ -5818,11 +5890,11 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
             {
             if ((IsPartNested(definedConstraintPruned[k], w->partition, nLongsNeeded) == YES) ||
                 (isRooted == NO && IsPartNested(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES))
-                continue;/* all nodes are compartable because condition of the constraint has to be sutsfied in the subtree rooted at w*/
+                continue;/* all nodes are comparable because condition of the constraint has to be satisfied in the subtree rooted at w*/
 
             FirstEmpty = IsSectionEmpty(definedConstraintPruned[k], w->partition, nLongsNeeded);
             if (FirstEmpty == YES &&  IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded) == YES)
-                continue; /* all nodes are compartable becouse w does not contain any constraint taxa*/
+                continue; /* all nodes are comparable because w does not contain any constraint taxa*/
 
             assert (FirstEmpty^IsSectionEmpty(definedConstraintTwoPruned[k], w->partition, nLongsNeeded));
 
@@ -5839,7 +5911,7 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
                 {
                 if (IsSectionEmpty(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO &&
                     ((FirstEmpty == NO && isRooted== YES) ||  IsPartNested(constraintPartition[k], nodeArray[i]->partition, nLongsNeeded) == NO))
-                  /*second part of if statment is to bail out "nodeArray[i]" when "w" contains nodes for example from definedConstraintPruned and "nodeArray[i]" have definedConstraintTwoPruned fully nested in it
+                  /*second part of if statement is to bail out "nodeArray[i]" when "w" contains nodes for example from definedConstraintPruned and "nodeArray[i]" have definedConstraintTwoPruned fully nested in it
                   This bail out not applicable if t->isRooted== YES Since we should create a rooting node for the first set of taxa in the constraint.
                   Note that such case possible because we may have hard constraint node that fully nest definedConstraintTwoPruned but also having taxa from definedConstraintPruned keeping constraint active.*/
                     {
@@ -5883,9 +5955,9 @@ int ConstraintAllowedSet(PolyNode *w, PolyNode **nodeArray, int nodeArraySize, i
 |               Check if "partition" violate any constraint.  
 |       
 | @param partiton               Partition to check 
-| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints  
-| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition
-| @param isRooted               Do constraints apply to rootet tree YES or NO
+| @param activeConstraints      Array containing indices of active constraints in the set of defined constraints  
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint definition
+| @param isRooted               Do constraints apply to rooted tree YES or NO
 |
 | @return                       Index of first violated constraint in activeConstraints array, -1 if no constraint is violated.
 */
@@ -5925,11 +5997,11 @@ int ViolatedConstraint(BitsLong *partition, int *activeConstraints, int activeCo
 
 
 /*
-|         Remove from activeConstraints references to constraints that become satisfied if PolyNode "w" exist, i.e. they do not need to be checked furter thus become not active  
+|         Remove from activeConstraints references to constraints that become satisfied if PolyNode "w" exist, i.e. they do not need to be checked further thus become not active  
 |
-| @param activeConstraints      Array containing indeces of active constraints in the set of defined constraints
-| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint deffinition.
-| @param isRooted               Do constraints apply to rootet tree YES or NO
+| @param activeConstraints      Array containing indices of active constraints in the set of defined constraints
+| @param nLongsNeeded           Length of partition information (in BitsLong) in a node and constraint definition.
+| @param isRooted               Do constraints apply to rooted tree YES or NO
 |
 | @return                       Size of pruned "activeConstraints" array
 */
@@ -5982,7 +6054,7 @@ int PruneActiveConstraints (PolyNode *w, int *activeConstraints, int activeConst
 |
 | @param    tt is a tree which contains information about applicable constraints. If it is set to NULL then no constraints will be used. 
 |           If t!=NULL then partitions of nodes of polytree should be allocated for example by AllocatePolyTreePartitions (t);
-| @return   NO_ERROR on succes, ABORT if could not resolve a tree without vialating some consraint, ERROR if any other error occur 
+| @return   NO_ERROR on success, ABORT if could not resolve a tree without violating some constraint, ERROR if any other error occur 
 ---------------------------------------------------------------------*/
 int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
 {
@@ -5995,7 +6067,7 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
     assert (tt==NULL || t->bitsets!=NULL); /* partition fields of t nodes need to be allocated if constraints are used*/
     nTaxa = t->nNodes - t->nIntNodes;     /* different from numLocalTaxa potentially if a species tree */
     assert (nTaxa <= t->memNodes/2); /* allocated tree has to be big enough*/
-    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated lenght of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
+    nLongsNeeded = (nTaxa - 1) / nBitsInALong + 1; /* allocated length of partitions is t->memNodes/2 bits but only first nTaxa bits are used */
 
     nodeArray = t->allDownPass; /*temporary use t->allDownPass for different purpose. It get properly reset at the end. */
     activeConstraints = tempActiveConstraints;
@@ -6074,9 +6146,9 @@ int RandResolve (Tree *tt, PolyTree *t, RandLong *seed, int destinationIsRooted)
             nodeArray[rand1] = nodeArray[--nodeArraySize];
 
             if (nodeArraySize==0)
-                return ABORT; /* Potentaily here we could instead revert by removing last added node and try again. */
+                return ABORT; /* Potentially here we could instead revert by removing last added node and try again. */
 
-            /* Move all nodes in nodeArray which can be paired with w to the begining of array */
+            /* Move all nodes in nodeArray which can be paired with w to the beginning of array */
             nodeArrayAllowedSize=ConstraintAllowedSet(w1, nodeArray, nodeArraySize, activeConstraints, activeConstraintsSize, nLongsNeeded, t->isRooted);
             /* TODO optimization for Maxim (if not Maxim remove it if you still see it): if nodeArrayAllowedSize==0 then set w1->y */
             } while (nodeArrayAllowedSize == 0);
@@ -6351,7 +6423,7 @@ void ResetTipIndices(PolyTree *pt)
 /*----------------------------------------------
 |
 |   ResetTopology: rebuild the tree t to fit the 
-|      Newick string s. Everyting except topology
+|      Newick string s. Everything except topology
 |      is left in the same state in t.
 |
 -----------------------------------------------*/
@@ -7198,7 +7270,7 @@ void SetNodeDepths (Tree *t)
 }
 
 
-/* Set ages of a clock tree according to depth and clockrate. Check that resulting ages are consistant with calibration.
+/* Set ages of a clock tree according to depth and clockrate. Check that resulting ages are consistent with calibration.
 |  return YES if tree is age consistent, No otherwise.
 */
 int SetTreeNodeAges (Param *param, int chain, int state)
@@ -7219,7 +7291,7 @@ int SetTreeNodeAges (Param *param, int chain, int state)
 
     /* Clock trees */
 
-    /* Check that lengths and depths are consistant. That would work for the case when we set up branch length from starting tree  */
+    /* Check that lengths and depths are consistent. That would work for the case when we set up branch length from starting tree  */
     for (i=0; i<tree->nNodes-1; i++) {
         p = tree->allDownPass[i];
         p->age =  p->nodeDepth / clockRate;
@@ -9961,7 +10033,7 @@ void ComplexLUBackSubstitution (int dim, MrBComplex **a, int *indx, MrBComplex *
 |      a        -- the matrix
 |      dim      -- the dimension of the square matrix a and its inverse
 |      vv       -- a work vector of doubles
-|      indx     -- row permutation according to partitial pivoting sequence
+|      indx     -- row permutation according to partial pivoting sequence
 |      pd       -- 1 if number of row interchanges was even, -1 if number of
 |                  row interchanges was odd. Can be NULL.
 |      
@@ -10510,7 +10582,7 @@ MrBFlt D_sign (MrBFlt a, MrBFlt b)
 |
 |   Eigens
 |
-|   The matrix of interest is a. The ouptut is the real and imaginary parts of the 
+|   The matrix of interest is a. The output is the real and imaginary parts of the 
 |   eigenvalues (wr and wi). z contains the real and imaginary parts of the 
 |   eigenvectors. iv2 and fv1 are working vectors.
 |      
@@ -11057,7 +11129,7 @@ void GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat)
 |
 |   GetEigens
 |
-|   returns NO if non complex eigendecomposition, YES if complex eigendecomposition,  ABORT if an error has occured
+|   returns NO if non complex eigendecomposition, YES if complex eigendecomposition,  ABORT if an error has occurred
 |
 ---------------------------------------------------------------------------------*/
 int GetEigens (int dim, MrBFlt **q, MrBFlt *eigenValues, MrBFlt *eigvalsImag, MrBFlt **eigvecs, MrBFlt **inverseEigvecs, MrBComplex **Ceigvecs, MrBComplex **CinverseEigvecs)
@@ -12974,38 +13046,9 @@ MrBFlt LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt
 
 
 /* Log probability for a value drawn from a lognormal distribution */
-MrBFlt LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x)
+MrBFlt LnProbLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x)
 {
     MrBFlt lnProb, z;
-    
-    z = (log(x) - exp) / sd;
-    
-    lnProb = - log (x * sd * sqrt (2.0 * M_PI)) - (z * z / 2.0);
-    
-    return lnProb;
-}
-
-
-/* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld)
-{
-    MrBFlt  newZ, oldZ;
-    
-    newZ = (log(xNew) - exp) / sd;
-    oldZ = (log(xOld) - exp) / sd;
-    
-    return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
-}
-
-
-/* Log probability for a value drawn from a lognormal distribution;
-   parameters are mean and variance of value (not of log value) */
-MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
-{
-    MrBFlt  z, lnProb, mu, sigma;
-    
-    sigma = sqrt(log(1.0 + (var / (mean*mean))));
-    mu    = log(mean) - sigma * sigma / 2.0;
     
     z = (log(x) - mu) / sigma;
     
@@ -13016,17 +13059,39 @@ MrBFlt LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x)
 
 
 /* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+MrBFlt LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld)
 {
-    MrBFlt  newZ, oldZ, mu, sigma;
-
-    sigma = sqrt(log(1.0 + (var / (mean*mean))));
-    mu    = log(mean) - sigma * sigma / 2.0;
-
+    MrBFlt  newZ, oldZ;
+    
     newZ = (log(xNew) - mu) / sigma;
     oldZ = (log(xOld) - mu) / sigma;
-
+    
     return (oldZ * oldZ - newZ * newZ) / 2.0 + log(xOld) - log(xNew);
+}
+
+
+/* Log probability for a value drawn from a lognormal distribution;
+   parameters are mean and variance of value (not of log value) */
+MrBFlt LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x)
+{
+    MrBFlt  mu, sigma;
+    
+    sigma = sqrt(log(1.0 + var / (mean*mean)));
+    mu    = log(mean) - sigma * sigma / 2.0;
+    
+    return LnProbLogNormal(mu, sigma, x);
+}
+
+
+/* Log ratio for two values drawn from a lognormal distribution */
+MrBFlt LnRatioLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+{
+    MrBFlt  mu, sigma;
+
+    sigma = sqrt(log(1.0 + var / (mean*mean)));
+    mu    = log(mean) - sigma * sigma / 2.0;
+
+    return LnRatioLogNormal (mu, sigma, xNew, xOld);
 }
 
 

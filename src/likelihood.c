@@ -400,8 +400,8 @@ int CondLikeDown_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a, b, catStart;
@@ -1747,8 +1747,8 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP;
     __m128          mTiPL, mTiPR, mL, mR, mAcumL, mAcumR;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
 #   endif
@@ -1852,7 +1852,7 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mAcumR = _mm_setzero_ps();
                         for (j=0; j<nStates; j++)
@@ -1880,7 +1880,7 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         mAcumL = _mm_setzero_ps();
                         for (j=0; j<nStates; j++)
@@ -1908,7 +1908,7 @@ int CondLikeDown_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following 2 statments we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following 2 statements we assume that SSE register can hold exactly 4 ClFlts. */
                         mL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         *(clP++) = _mm_mul_ps (mL,mR);
@@ -2424,9 +2424,9 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int a, b, catStart;
@@ -2597,7 +2597,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumL = _mm_setzero_ps();
                         mAcumR = _mm_setzero_ps();
@@ -2633,7 +2633,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumR = _mm_setzero_ps();
@@ -2664,7 +2664,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumL = _mm_setzero_ps();
@@ -2695,7 +2695,7 @@ int CondLikeRoot_Gen_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following 2 statments we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following 2 statements we assume that SSE register can hold exactly 4 ClFlts. */
                         mL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         mA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
@@ -3191,7 +3191,7 @@ int CondLikeRoot_NUC4 (TreeNode *p, int division, int chain)
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_NUC4_GibbsGamma: 4by4 nucleotide model with rate
-|       variation approimated by Gibbs sampling from gamma
+|       variation approximated by Gibbs sampling from gamma
 |
 -----------------------------------------------------------------*/
 int CondLikeRoot_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
@@ -4247,9 +4247,9 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
     __m128          *clL, *clR, *clP, *clA;
     __m128          mTiPL, mTiPR, mTiPA, mL, mR, mA, mAcumL, mAcumR, mAcumA;
     ModelInfo       *m;
-    CLFlt           *preLikeRV[4];
-    CLFlt           *preLikeLV[4];
-    CLFlt           *preLikeAV[4];
+    CLFlt           *preLikeRV[4] = {0};
+    CLFlt           *preLikeLV[4] = {0};
+    CLFlt           *preLikeAV[4] = {0};
 
 #   if !defined (DEBUG_NOSHORTCUTS)
     int             a;
@@ -4388,7 +4388,7 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumL = _mm_setzero_ps();
                         mAcumR = _mm_setzero_ps();
@@ -4424,7 +4424,7 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumR = _mm_setzero_ps();
@@ -4455,7 +4455,7 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=h=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following statment we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following statement we assume that SSE register can hold exactly 4 ClFlts. */
                         mAcumR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         mAcumA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
                         mAcumL = _mm_setzero_ps();
@@ -4486,7 +4486,7 @@ int CondLikeRoot_NY98_SSE (TreeNode *p, int division, int chain)
                         }
                     for (i=0; i<nStates; i++)
                         {
-                        assert (m->numFloatsPerVec == 4); /* In the following 2 statments we assume that SSE register can hold exactly 4 ClFlts. */
+                        assert (m->numFloatsPerVec == 4); /* In the following 2 statements we assume that SSE register can hold exactly 4 ClFlts. */
                         mL = _mm_set_ps (*(preLikeLV[3]++), *(preLikeLV[2]++), *(preLikeLV[1]++), *(preLikeLV[0]++));
                         mR = _mm_set_ps (*(preLikeRV[3]++), *(preLikeRV[2]++), *(preLikeRV[1]++), *(preLikeRV[0]++));
                         mA = _mm_set_ps (*(preLikeAV[3]++), *(preLikeAV[2]++), *(preLikeAV[1]++), *(preLikeAV[0]++));
@@ -7925,6 +7925,64 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     return (NO_ERROR);
 }
 
+#if defined(BEAGLE_V3_ENABLED)
+/*-----------------------------------------------------------------
+|
+|   LaunchLogLikeForBeagleMultiPartition: calculate the log likelihood of the 
+|       new state of the chain for all divisions with Beagle
+|
+-----------------------------------------------------------------*/
+void LaunchLogLikeForBeagleMultiPartition(int chain, MrBFlt* lnL)
+{
+    int             d, divisionCount;
+    int             *divisions;
+    ModelInfo       *m;    
+     divisions = (int *) SafeCalloc (numCurrentDivisions, sizeof(int));
+    divisionCount = 0;
+     /* Cycle through divisions and recalculate tis and cond likes as necessary. */
+    /* Code below does not try to avoid recalculating ti probs for divisions    */
+    /* that could share ti probs with other divisions.                          */
+    for (d=0; d<numCurrentDivisions; d++)
+        {
+#   if defined (BEST_MPI_ENABLED)
+        if (isDivisionActive[d] == NO)
+            continue;
+#   endif
+        m = &modelSettings[d];
+        if (m->upDateCl == YES) 
+            {   
+            if (m->upDateCijk == YES)
+                {
+                if (UpDateCijk(d, chain) == ERROR)
+                    {
+                    (*lnL) = MRBFLT_NEG_MAX; /* effectively abort the move */
+                    continue;
+                    }
+                m->upDateAll = YES;
+                }
+            divisions[divisionCount++] = d;
+#if defined (DEBUG_MB_BEAGLE_MULTIPART)
+            printf("divisions[%d] = %d\n", divisionCount-1, d);
+#endif
+            }
+        }
+     LaunchBEAGLELogLikeMultiPartition(divisions, divisionCount, chain, lnL);
+     if (divisionCount != numCurrentDivisions)
+        {
+        for (d=0; d<numCurrentDivisions; d++)
+            {
+            m = &modelSettings[d];
+            if (m->upDateCl == NO) 
+                {   
+                /* add log likelihood of divisions that were not updated */
+                (*lnL) += m->lnLike[2*chain + state[chain]];
+                }
+            }
+        }
+     free(divisions);
+     return;
+}
+#endif /* BEAGLE_MULTI_PART_ENABLED */
 
 /*-----------------------------------------------------------------
 |
@@ -8189,7 +8247,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
        a transition/transversion rate ratio or the GTR rate parameters. The 
        "rateValues" will either be
        
-          rateValues[0] = transtion/transversion rate (kappa)
+          rateValues[0] = transition/transversion rate (kappa)
        
        for nst=2 models or
        
@@ -8549,7 +8607,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
         /* 64(ish) X 64(ish) codon model:
         
            Here, we set the rate matrix for the codon model (see Goldman and
-           Yang, 1994). Note that we can specifiy any general type of codon
+           Yang, 1994). Note that we can specify any general type of codon
            model, with these constraints:
            
             a[i][j] = 0                      -> if i and j differ at 2 or 3 nucleotides
@@ -8568,7 +8626,7 @@ int SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateM
             a[i][j] = rateValues[5] * nonsyn * bs[j]  -> if nonsynonymous G <-> T change
             
           Other models, such as the one used by Nielsen & Yang (1998) can be obtained
-          from this model by restricing transitions and transversions to have the same rate.
+          from this model by restricting transitions and transversions to have the same rate.
           nonsyn is the nonsynonymous/synonymous rate ratio (often called the
           dN/dS ratio). If we are in this part of the function, then we rely on it
           being called with the "rateMult" parameter specifying the dN/dS ratio. Note
@@ -9340,6 +9398,14 @@ int TiProbs_Fels (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -9473,6 +9539,14 @@ int TiProbs_Gen (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -9596,6 +9670,14 @@ int TiProbs_GenCov (TreeNode *p, int division, int chain)
     else if (m->tk02BranchRates != NULL)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
         }
     else if (m->igrBranchRates != NULL)
         {
@@ -9739,7 +9821,15 @@ int TiProbs_Hky (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
-    else if (m->igrBranchRates != NULL)
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
+   else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
         }
@@ -9855,6 +9945,14 @@ int TiProbs_JukesCantor (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -9964,6 +10062,14 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
         }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+        }
     else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -10056,6 +10162,14 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     else if (m->tk02BranchRates != NULL)
         {
         length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
         }
     else if (m->igrBranchRates != NULL)
         {
@@ -10224,7 +10338,7 @@ int UpDateCijk (int whichPart, int whichChain)
     ModelInfo   *m;
     Param       *p;
 #   if defined (BEAGLE_ENABLED)
-    int         u;
+    int         u, divisionOffset;
     double      *beagleEigvecs=NULL, *beagleInverseEigvecs=NULL;
 #   endif
 
@@ -10390,8 +10504,11 @@ int UpDateCijk (int whichPart, int whichChain)
                             k++;
                             }
                         }
+                    divisionOffset = 0;
+                    if (m->useBeagleMultiPartitions == YES)
+                        divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
                     beagleSetEigenDecomposition(m->beagleInstance,
-                                                m->cijkIndex[whichChain],
+                                                m->cijkIndex[whichChain] + divisionOffset,
                                                 beagleEigvecs,
                                                 beagleInverseEigvecs,
                                                 eigenValues);
@@ -10487,9 +10604,11 @@ int UpDateCijk (int whichPart, int whichChain)
                                 u++;
                                 }
                             }
-
+                        divisionOffset = 0;
+                        if (m->useBeagleMultiPartitions == YES)
+                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
                         beagleSetEigenDecomposition(m->beagleInstance,
-                                                    m->cijkIndex[whichChain] + k,
+                                                    m->cijkIndex[whichChain] + k + divisionOffset,
                                                     beagleEigvecs,
                                                     beagleInverseEigvecs,
                                                     eigenValues);

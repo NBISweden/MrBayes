@@ -3,6 +3,9 @@
 /* Define if you want to enable Beagle */
 #undef BEAGLE_ENABLED
 
+/* Define to enable Beagle v3.1 extensions */
+#undef BEAGLE_V3_ENABLED
+
 /* Compiler vendor */
 #undef COMPILER_VENDOR
 
@@ -97,10 +100,6 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
-   to 0 otherwise. */
-#undef HAVE_MALLOC
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -133,10 +132,6 @@
 
 /* Define to 1 if you have the <readline/readline.h> header file. */
 #undef HAVE_READLINE_READLINE_H
-
-/* Define to 1 if your system has a GNU libc compatible `realloc' function,
-   and to 0 otherwise. */
-#undef HAVE_REALLOC
 
 /* Define to 1 to support Secure Hash Algorithm Extension */
 #undef HAVE_SHA
@@ -233,12 +228,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Define to rpl_malloc if the replacement function should be used. */
-#undef malloc
-
-/* Define to rpl_realloc if the replacement function should be used. */
-#undef realloc
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t

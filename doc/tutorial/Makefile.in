@@ -90,11 +90,12 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = doc/tutorial
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_reset_header_cache.m4 \
+am__aclocal_m4_deps =  \
+	$(top_srcdir)/autotools/ax_reset_header_cache.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-DIST_COMMON = $(srcdir)/Makefile.am $(dist_doc_DATA) \
+DIST_COMMON = $(srcdir)/Makefile.am $(dist_doc_DATA) $(dist_pdf_DATA) \
 	$(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
@@ -146,8 +147,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(docdir)"
-DATA = $(dist_doc_DATA)
+am__installdirs = "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pdfdir)"
+DATA = $(dist_doc_DATA) $(dist_pdf_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -160,6 +161,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BEAGLE_CFLAGS = @BEAGLE_CFLAGS@
 BEAGLE_LIBS = @BEAGLE_LIBS@
+BIBTEX = @BIBTEX@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -180,6 +182,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LATEXMK = @LATEXMK@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -197,6 +200,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PDFLATEX = @PDFLATEX@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -256,9 +260,38 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dist_doc_DATA = \
-	MBDating.pdf \
-	hym.nex
+dist_doc_DATA = hym.nex
+dist_pdf_DATA = MBDating.pdf
+EXTRA_DIST = src
+DISTCLEANFILES = MBDating.pdf
+CLEANFILES = \
+	MBDating.aux \
+	MBDating.bbl \
+	MBDating.blg \
+	MBDating.fdb_latexmk \
+	MBDating.fls \
+	MBDating.log \
+	MBDating.out
+
+envvars = \
+	TEXINPUTS=$(srcdir)/src: \
+	BIBINPUTS=$(srcdir)/src: \
+	BSTINPUTS=$(srcdir)/src:
+
+deps = \
+	$(srcdir)/src/MBDating.tex \
+	$(srcdir)/src/figures/ccby.pdf \
+	$(srcdir)/src/figures/clockr.pdf \
+	$(srcdir)/src/figures/cltree.pdf \
+	$(srcdir)/src/figures/fbdtree.pdf \
+	$(srcdir)/src/figures/gamdir.pdf \
+	$(srcdir)/src/figures/gamma.pdf \
+	$(srcdir)/src/figures/nctree.pdf \
+	$(srcdir)/src/figures/nodecali.pdf \
+	$(srcdir)/src/figures/relaxcl.pdf \
+	$(srcdir)/src/figures/treeage.pdf \
+	$(srcdir)/src/master_refs.bib \
+	$(srcdir)/src/sysbio.bst
 
 all: all-am
 
@@ -313,6 +346,27 @@ uninstall-dist_docDATA:
 	@list='$(dist_doc_DATA)'; test -n "$(docdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
+install-dist_pdfDATA: $(dist_pdf_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_pdf_DATA)'; test -n "$(pdfdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pdfdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pdfdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pdfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pdfdir)" || exit $$?; \
+	done
+
+uninstall-dist_pdfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_pdf_DATA)'; test -n "$(pdfdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pdfdir)'; $(am__uninstall_files_from_dir)
 tags TAGS:
 
 ctags CTAGS:
@@ -354,7 +408,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(docdir)"; do \
+	for dir in "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pdfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -379,10 +433,12 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -407,7 +463,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_docDATA
+install-data-am: install-dist_docDATA install-dist_pdfDATA
 
 install-dvi: install-dvi-am
 
@@ -451,24 +507,43 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_docDATA
+uninstall-am: uninstall-dist_docDATA uninstall-dist_pdfDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic cscopelist-am \
 	ctags-am distclean distclean-generic distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-dist_docDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic pdf pdf-am ps ps-am tags-am uninstall \
-	uninstall-am uninstall-dist_docDATA
+	install-data-am install-dist_docDATA install-dist_pdfDATA \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags-am \
+	uninstall uninstall-am uninstall-dist_docDATA \
+	uninstall-dist_pdfDATA
 
 .PRECIOUS: Makefile
 
+
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/MBDating
+
+# The order of pdflatex and bibtex runs below (and the number of runs)
+# mirrors what latexmk seems to want to do.
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@MBDating.pdf: $(deps)
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(BIBTEX) -terse MBDating
+@HAVE_LATEXMK_FALSE@@HAVE_LATEX_TRUE@	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+
+@HAVE_LATEX_FALSE@MBDating.pdf:
+@HAVE_LATEX_FALSE@	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+@HAVE_LATEX_FALSE@	exit 0
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

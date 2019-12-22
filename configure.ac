@@ -2,10 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([MrBayes],[pre-3.2.7])
+AC_INIT([MrBayes],[3.2.7a])
 
-AC_CONFIG_AUX_DIR([build])
-AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_AUX_DIR([autotools])
+AC_CONFIG_MACRO_DIRS([autotools])
 
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
@@ -69,11 +69,21 @@ AC_ARG_ENABLE([fma],
     [enable_fma=$enableval],
     [enable_fma=yes])
 
+# Optional feature: Enable/disable building of documentation under doc/
+# (enabled by default)
+
+AC_ARG_ENABLE([doc],
+    [AS_HELP_STRING([--enable-doc],
+        [Enable building supplied documentation from sources in doc/
+         @<:@default=yes@:>@])],
+    [enable_doc=$enableval],
+    [enable_doc=yes])
+
 # Optional external libraries:  MPI, Readline, Beagle
 
 AC_ARG_WITH([mpi],
     [AS_HELP_STRING([--with-mpi],
-        [Build with MPI parallelization support @<:@default=check@:>@])],
+        [Build with MPI parallelization support @<:@default=no@:>@])],
     [],
     [with_mpi=no])
 
@@ -95,9 +105,27 @@ AC_ARG_WITH([beagle],
 # Checks for programs.
 
 AC_PROG_INSTALL
+PKG_PROG_PKG_CONFIG
+
+AM_CONDITIONAL([BUILD_DOC], [test "$enable_doc" = "yes"])
+AM_COND_IF([BUILD_DOC], [
+
+    # Test whether we can rebuild the documentation.
+    # This does not affect the pre-built PDF documents unless these are deleted.
+    AC_PATH_PROG(PDFLATEX, [pdflatex])
+    AC_PATH_PROG(BIBTEX, [bibtex])
+    AC_PATH_PROG(LATEXMK, [latexmk])
+
+]) dnl AM_COND_IF([BUILD_DOC])
+
+AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
+AM_COND_IF([BUILD_DOC], [
+    AM_COND_IF([HAVE_LATEX], [],
+               [AC_MSG_WARN([pdflatex and/or bibtex is missing, documentation will not be rebuilt])])
+])
+AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
 
 # Determine if we can (and want) to use an MPI C compiler.
-
 AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
     [use_mpi=yes
      AC_DEFINE([MPI_ENABLED], [1], [Define if you want to enable MPI])],
@@ -113,78 +141,90 @@ AC_CHECK_LIB([m], [sqrt])
 # Check for the Beagle library.
 
 # Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
-# and headers with the given prefix, or in /usr/local if no prefix path
-# was given, and if that fails use PKG_CHECK_MODULES (and trust its
-# result).
+# and headers with the given prefix, or in /usr/local followed by /usr
+# if no prefix path was given, and if that fails use PKG_CHECK_MODULES
+# (and trust its result).
 
-# Note: Beagle is at API version 1, however, there was a version 2
-# available up until November 2013.  This was then renamed "1" again.
-# Since Ubuntu 14.04 seems to have packaged version 2, we need to loop
-# over both versions in our Beagle checks below.
-# To complicate things, version 2 reports the wrong include path with
-# pkg-config.
+# Note: We assume that Beagle's top-level include directory is located under
+# include/libhmsbeagle-1 and nowhere else.
 
 AS_IF([test "x$with_beagle" != "xno"], [
     old_cppflags="$CPPFLAGS"
     old_ldflags="$LDFLAGS"
+    old_ldlibs="$LDLIBS"
 
-    for beagle_api_version in 1 2; do
-        beagle_subinc="include/libhmsbeagle-$beagle_api_version"
-        beagle_sublib="lib"
+    beagle_pkg_name="hmsbeagle-1"
+    beagle_subinc="include/lib$beagle_pkg_name"
+    beagle_sublib="lib"
 
-        AS_IF([test -d "$with_beagle"],
+    AS_IF([test -n "$BEAGLE_CFLAGS" || test -n "$BEAGLE_LIBS"],
+        [AC_MSG_NOTICE([Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS])
+         beagle_found="yes"],
+        [AS_IF([test -d "$with_beagle"],
               [beagle_prefix_list="$with_beagle"],
-              [beagle_prefix_list="/usr/local /usr"])
+              [beagle_prefix_list="/usr/local /usr"])])
 
-        for beagle_prefix in $beagle_prefix_list; do
+    for beagle_prefix in $beagle_prefix_list; do
 
-            AC_MSG_NOTICE([Trying to locate Beagle (API version $beagle_api_version) in '$beagle_prefix'])
+        AC_MSG_NOTICE([Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'])
 
-            CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-            LDFLAGS="-L$beagle_prefix/$beagle_sublib -lhmsbeagle"
+        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
+        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
+        LDLIBS="-lhmsbeagle"
 
-            AC_CHECK_HEADER([libhmsbeagle/beagle.h],
-                [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
-            AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
-                [AC_SUBST([BEAGLE_LIBS], [$LDFLAGS])], [])
+        AC_CHECK_HEADER([libhmsbeagle/beagle.h],
+            [AC_SUBST([BEAGLE_CFLAGS], [$CPPFLAGS])], [])
+        AC_CHECK_LIB(hmsbeagle, beagleCreateInstance,
+            [AC_SUBST([BEAGLE_LIBS], ["$LDFLAGS $LDLIBS"])], [])
 
-            CPPFLAGS="$old_cppflags"
-            LDFLAGS="$old_ldflags"
+        CPPFLAGS="$old_cppflags"
+        LDFLAGS="$old_ldflags"
+        LDLIBS="$old_ldlibs"
 
-            AS_IF([test -n "$BEAGLE_CFLAGS" -a -n "$BEAGLE_LIBS"],
-                [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
-                 beagle_found="yes"])
+        AS_IF([test -n "$BEAGLE_CFLAGS" && test -n "$BEAGLE_LIBS"],
+            [AC_MSG_NOTICE([Found Beagle in '$beagle_prefix'])
+             beagle_found="yes"])
 
-            AS_IF([test "x$beagle_found" = "xyes"], [break 2],
-                  [unset BEAGLE_LIBS BEAGLE_CFLAGS
-                   AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
-        done
+        AS_IF([test "x$beagle_found" = "xyes"], [break],
+              [AS_UNSET(BEAGLE_LIBS)
+               AS_UNSET(BEAGLE_CFLAGS)
+               AX_RESET_HEADERS_CACHE([libhmsbeagle_beagle_h])])
     done
 
     AS_IF([test "x$beagle_found" != "xyes"], [
         AC_MSG_WARN([Failed to locate Beagle, falling back on pkg-config])
 
-        for beagle_api_version in 1 2; do
-             PKG_CHECK_MODULES([BEAGLE], [hmsbeagle-$beagle_api_version],
+             PKG_CHECK_MODULES([BEAGLE], [$beagle_pkg_name],
                 [AC_MSG_NOTICE([Found Beagle with pkg-config])
-                 beagle_found="yes"],
+                 beagle_found="yes"
+                 # Augument the BEAGLE_LIBS value with -Wl,-rpath,...
+                BEAGLE_LIBS="$BEAGLE_LIBS -Wl,-rpath,$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//')"],
                 [beagle_found="no"])
-            AS_IF([test "x$beagle_found" = "xyes"], [break])
-        done
     ]) dnl AS_IF
 
     AS_IF([test "x$beagle_found" != "xyes"],
         [AS_IF([test "x$with_beagle" != "xcheck"],
             [AC_MSG_ERROR(
                 [--with-beagle was given, but test for Beagle failed])]
-        )], dnl AS_IF
-        [AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
-         AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
-         AC_DEFINE([BEAGLE_ENABLED], [1],
-            [Define if you want to enable Beagle])])
+        )], dnl AS_IF - ELSE
+        [
+            AC_DEFINE([BEAGLE_ENABLED], [1],
+                [Define if you want to enable Beagle])
+            # Test whether we should enable Beagle3 support.
+            old_ldflags=$LDFLAGS
+            LDFLAGS="$BEAGLE_LIBS"
+            AC_CHECK_LIB(hmsbeagle, beagleSetCPUThreadCount,
+                [AC_DEFINE([BEAGLE_V3_ENABLED], [1],
+                    [Define to enable Beagle v3.1 extensions])
+                BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"])
+            LDFLAGS=$old_ldflags
+            AS_UNSET(old_ldflags)
+            AC_MSG_NOTICE([Using BEAGLE_CFLAGS="$BEAGLE_CFLAGS"])
+            AC_MSG_NOTICE([Using BEAGLE_LIBS="$BEAGLE_LIBS"])
+        ])
 ]) dnl AS_IF
 
-# Check for readline, but only if we don't have MPI, because aparantly
+# Check for readline, but only if we don't have MPI, because apparently
 # it won't work.
 
 AS_IF([test "x$use_mpi" = "xno"],
@@ -231,9 +271,14 @@ AS_IF([test "x$enable_fma" = "xno"],
         [FMA code path should not be compiled.])])
 
 # Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 
-AC_CONFIG_FILES([Makefile doc/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile
+                 doc/Makefile
+                 doc/manual/Makefile
+                 doc/SMME_paper/Makefile
+                 doc/tutorial/Makefile
+                 examples/Makefile
+                 src/Makefile
+])
 AC_OUTPUT
