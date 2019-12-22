@@ -16109,11 +16109,11 @@ int ProcessStdChars (RandLong *seed)
                 MrBayesPrint ("%s            less than two observed states; it will be assumed to have two states.\n", spacer);
                 m->nStates[c] = 2;
                 }
-            /* if (m->nStates[c] > 6 && m->cType[c] != UNORD)
+            if (m->nStates[c] > 6 && m->cType[c] != UNORD)
                 {
                 MrBayesPrint ("%s   Only unordered model supported for characters with more than 6 states\n", spacer);
                 return ERROR;
-                } */
+                }
             if (m->nStates[c] == 2 && m->cType[c] == ORD)
                 m->cType[c] = UNORD;
             if (m->cType[c] == IRREV)
