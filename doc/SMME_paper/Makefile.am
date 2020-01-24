@@ -59,7 +59,7 @@ endif
 else # !HAVE_LATEX
 
 Huelsenbeck_Ronquist_SMME_2005.pdf:
-	echo 'Can not build the Huelsenbeck and Ronquist 2005 PDF since LaTeX was not detected' >&2
-	exit 0
+	@echo 'Can not build the Huelsenbeck and Ronquist 2005 PDF since LaTeX was not detected' >&2
+	@exit 0
 
 endif
