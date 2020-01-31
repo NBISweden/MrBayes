@@ -8217,6 +8217,11 @@ int DoTreeParm (char *parmName, char *tkn)
                 MrBayesPrint ("%s   Overwriting tree '%s'.\n", spacer, userTree[treeIndex]);
                 FreePolyTree (userTree[treeIndex]);
                 }
+            if (treeIndex > MAX_NUM_USERTREES)
+                {
+                MrBayesPrint ("%s   MrBayes can only store %d user trees.\n", spacer, MAX_NUM_USERTREES);
+                return (ERROR);
+                }
             if ((userTree[treeIndex] = AllocatePolyTree (numTaxa)) == NULL)
                 return (ERROR);
             t = userTree[treeIndex];
