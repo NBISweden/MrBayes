@@ -57,7 +57,7 @@ endif
 else # !HAVE_LATEX
 
 MBDating.pdf:
-	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
-	exit 0
+	@echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+	@exit 0
 
 endif

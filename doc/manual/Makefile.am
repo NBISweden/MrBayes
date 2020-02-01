@@ -50,7 +50,7 @@ endif
 else # !HAVE_LATEX
 
 Manual_MrBayes_v3.2.pdf:
-	echo 'Can not build the manual PDF since LaTeX was not detected' >&2
-	exit 0
+	@echo 'Can not build the manual PDF since LaTeX was not detected' >&2
+	@exit 0
 
 endif
