@@ -15964,7 +15964,7 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, Mr
        but we do not have the mechanism for doing that in the current version of mrbayes, so
        take the hit of updating all chars of the morph partition(s). */
     int     i, nStates, charIndex;
-    MrBFlt  dirichletParameters[MAX_CHAR_STATES], symDirAlphai, *newPi, *oldPi, sum, alphaPi, x, y;
+    MrBFlt  dirichletParameters[MAX_STD_STATES], symDirAlphai, *newPi, *oldPi, sum, alphaPi, x, y;
     Model   *mp;
 
     /* tuning parameters */

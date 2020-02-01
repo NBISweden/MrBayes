@@ -480,6 +480,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
 #define MAX_CHAINS              256     /* maximum number of chains you can run actually only half of it because of m->lnLike[MAX_CHAINS] */
+#define MAX_STD_STATES 24  // 0-9 A-N
 
 // #define PARAM_NAME_SIZE      400
 
@@ -1309,7 +1310,7 @@ typedef struct modelinfo
     int         *nStates;                   /* # states of each compressed char             */
     int         *cType;                     /* whether char is ord, unord or irrev          */
     int         *weight;                    /* prior weight of each compressed char         */
-    int         isTiNeeded[100];            /* marks whether a trans prob matrix is needed  */
+    int         isTiNeeded[MAX_STD_STATES*3];  /* marks whether a trans prob matrix is needed */
 
     /* Gibbs sampling of gamma site rate parameters */
     CLFlt       ***catLike;                 /* likelihood for Gibbs sampling of gamma       */
@@ -1542,14 +1543,13 @@ typedef struct matrix
     int row;
     } Matrix;
 
-#define MAX_CHAR_STATES 24  // 0-9 a-n
 typedef struct charinfo
     {
     int dType;
     int cType;
     int nStates;
-    int constant[MAX_CHAR_STATES];
-    int singleton[MAX_CHAR_STATES];
+    int constant[MAX_STD_STATES];
+    int singleton[MAX_STD_STATES];
     int variable;
     int informative;
     } CharInfo;
