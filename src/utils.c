@@ -1569,7 +1569,7 @@ void *SafeRealloc (void *ptr, size_t s)
 
     if (s == 0)
         {
-        //MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         free (ptr);
         return NULL;
         }
