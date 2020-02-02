@@ -2707,9 +2707,9 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* Pick only internal branches. For a description, see Lakner et al. (2008). */
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained;
+                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     
@@ -2721,6 +2721,10 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* get tree */
     t = GetTree (param, chain, state[chain]);
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
@@ -3209,6 +3213,14 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p = p->anc;
         }
 
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+    {   
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+    }
+
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
         {
@@ -3694,9 +3706,9 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
        */
     
     int         i, numFree, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, moveInRoot;
+                isVPriorExp, moveInRoot, tempInt;
     MrBFlt      m, x, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v;
+    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
 
@@ -3709,6 +3721,10 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+    
     /* get model params */
     mp = &modelParams[param->relParts[0]];
     
@@ -4138,6 +4154,14 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
             p->upDateCl = YES;
             p = p->anc;
             }
+        }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+        {   
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
         }
 
     /* get down pass sequence if tree topology has changed */
